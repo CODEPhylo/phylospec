@@ -1,0 +1,453 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PhyloSpec Types Schema",
+  "description": "Machine-readable definitions of the PhyloSpec type system",
+  "version": "1.0.0",
+  
+  "primitiveTypes": [
+    {
+      "name": "Real",
+      "description": "Real-valued number",
+      "examples": [1.0, -0.5, 3.14159],
+      "constraints": []
+    },
+    {
+      "name": "Integer",
+      "description": "Integer-valued number",
+      "examples": [1, -5, 42],
+      "constraints": [
+        {
+          "type": "WholeNumber"
+        }
+      ]
+    },
+    {
+      "name": "Boolean",
+      "description": "Logical value",
+      "examples": [true, false],
+      "constraints": []
+    },
+    {
+      "name": "String",
+      "description": "Text value",
+      "examples": ["human", "ACGT"],
+      "constraints": []
+    }
+  ],
+  
+  "restrictedTypes": [
+    {
+      "name": "PositiveReal",
+      "baseType": "Real",
+      "description": "Positive real number",
+      "examples": [0.1, 1.0, 3.14],
+      "constraints": [
+        {
+          "type": "GreaterThan",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "Probability",
+      "baseType": "Real",
+      "description": "Probability value",
+      "examples": [0.0, 0.5, 1.0],
+      "constraints": [
+        {
+          "type": "GreaterThanEqual",
+          "value": 0
+        },
+        {
+          "type": "LessThanEqual",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "NonNegReal",
+      "baseType": "Real",
+      "description": "Non-negative real number",
+      "examples": [0.0, 1.0, 42.0],
+      "constraints": [
+        {
+          "type": "GreaterThanEqual",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "PosInteger",
+      "baseType": "Integer",
+      "description": "Positive integer",
+      "examples": [1, 2, 42],
+      "constraints": [
+        {
+          "type": "GreaterThan",
+          "value": 0
+        }
+      ]
+    }
+  ],
+  
+  "collectionTypes": [
+    {
+      "name": "Vector",
+      "typeParams": ["T"],
+      "description": "Ordered collection of values",
+      "examples": ["[1.0, 2.0, 3.0]", "[\"human\", \"chimp\"]"],
+      "constraints": []
+    },
+    {
+      "name": "Matrix",
+      "typeParams": ["T"],
+      "description": "2D grid of values",
+      "examples": ["[[1.0, 2.0], [3.0, 4.0]]"],
+      "constraints": [
+        {
+          "type": "RectangularShape"
+        }
+      ]
+    },
+    {
+      "name": "Map",
+      "typeParams": ["K", "V"],
+      "description": "Key-value mapping",
+      "examples": ["{\"A\": 0.25, \"C\": 0.25}"],
+      "constraints": [
+        {
+          "type": "UniqueKeys"
+        }
+      ]
+    },
+    {
+      "name": "Set",
+      "typeParams": ["T"],
+      "description": "Unordered collection with unique elements",
+      "examples": ["{\"human\", \"chimp\", \"gorilla\"}"],
+      "constraints": [
+        {
+          "type": "UniqueElements"
+        }
+      ]
+    }
+  ],
+  
+  "typeAliases": [
+    {
+      "name": "RealVector",
+      "target": {"type": "Vector", "params": ["Real"]},
+      "description": "Vector of real values"
+    },
+    {
+      "name": "IntVector",
+      "target": {"type": "Vector", "params": ["Integer"]},
+      "description": "Vector of integer values"
+    },
+    {
+      "name": "StringVector",
+      "target": {"type": "Vector", "params": ["String"]},
+      "description": "Vector of strings"
+    },
+    {
+      "name": "RealMatrix",
+      "target": {"type": "Matrix", "params": ["Real"]},
+      "description": "Matrix of real values"
+    }
+  ],
+  
+  "specializedTypes": [
+    {
+      "name": "Simplex",
+      "baseType": {"type": "Vector", "params": ["Real"]},
+      "description": "Probability vector with elements that sum to 1.0",
+      "examples": ["[0.25, 0.25, 0.25, 0.25]", "[0.1, 0.2, 0.7]"],
+      "constraints": [
+        {
+          "type": "ElementsNonNegative"
+        },
+        {
+          "type": "SumTo",
+          "value": 1.0
+        }
+      ]
+    },
+    {
+      "name": "QMatrix",
+      "baseType": {"type": "Matrix", "params": ["Real"]},
+      "description": "Rate matrix for substitution models",
+      "constraints": [
+        {
+          "type": "RowsSumToZero"
+        },
+        {
+          "type": "OffDiagonalsNonNegative"
+        }
+      ]
+    },
+    {
+      "name": "IndexSet",
+      "baseType": {"type": "Set", "params": ["Integer"]},
+      "description": "Set of integer indices",
+      "constraints": [
+        {
+          "type": "ElementsNonNegative"
+        }
+      ]
+    }
+  ],
+  
+  "phylogeneticTypes": [
+    {
+      "name": "Taxon",
+      "description": "Taxonomic unit",
+      "properties": [
+        {
+          "name": "name",
+          "type": "String",
+          "description": "Name of the taxon",
+          "required": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "equals",
+          "params": [{"name": "t", "type": "Taxon"}],
+          "returnType": "Boolean",
+          "description": "Check if this taxon equals another"
+        }
+      ]
+    },
+    {
+      "name": "TaxonSet",
+      "description": "Collection of taxa",
+      "properties": [
+        {
+          "name": "taxa",
+          "type": {"type": "Set", "params": ["Taxon"]},
+          "description": "Set of taxa",
+          "required": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "contains",
+          "params": [{"name": "t", "type": "Taxon"}],
+          "returnType": "Boolean",
+          "description": "Check if this set contains a specific taxon"
+        }
+      ]
+    },
+    {
+      "name": "TreeNode",
+      "description": "Node in a phylogenetic tree",
+      "properties": [
+        {
+          "name": "parent",
+          "type": "TreeNode",
+          "description": "Parent node (null for root)",
+          "required": false
+        },
+        {
+          "name": "children",
+          "type": {"type": "Vector", "params": ["TreeNode"]},
+          "description": "Child nodes",
+          "required": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "isLeaf",
+          "params": [],
+          "returnType": "Boolean",
+          "description": "Check if this node is a leaf (tip)"
+        },
+        {
+          "name": "isRoot",
+          "params": [],
+          "returnType": "Boolean",
+          "description": "Check if this node is the root"
+        }
+      ]
+    },
+    {
+      "name": "Tree",
+      "description": "Phylogenetic tree structure",
+      "properties": [
+        {
+          "name": "root",
+          "type": "TreeNode",
+          "description": "Root node of the tree",
+          "required": true
+        },
+        {
+          "name": "nodes",
+          "type": {"type": "Vector", "params": ["TreeNode"]},
+          "description": "All nodes in the tree",
+          "required": true
+        },
+        {
+          "name": "taxa",
+          "type": "TaxonSet",
+          "description": "Set of taxa in the tree",
+          "required": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "getNode",
+          "params": [{"name": "id", "type": "String"}],
+          "returnType": "TreeNode",
+          "description": "Get a node by its identifier"
+        },
+        {
+          "name": "getTips",
+          "params": [],
+          "returnType": {"type": "Vector", "params": ["TreeNode"]},
+          "description": "Get all tip nodes"
+        }
+      ]
+    },
+    {
+      "name": "TimeTree",
+      "extends": "Tree",
+      "description": "Time-calibrated tree",
+      "methods": [
+        {
+          "name": "getAge",
+          "params": [{"name": "node", "type": "TreeNode"}],
+          "returnType": "Real",
+          "description": "Get the age of a node"
+        },
+        {
+          "name": "getHeight",
+          "params": [],
+          "returnType": "Real",
+          "description": "Get the height (age) of the tree"
+        }
+      ]
+    }
+  ],
+  
+  "sequenceTypes": [
+    {
+      "name": "Sequence",
+      "typeParams": ["A"],
+      "description": "Biological sequence",
+      "properties": [
+        {
+          "name": "data",
+          "type": {"type": "Vector", "params": ["A"]},
+          "description": "Sequence data",
+          "required": true
+        },
+        {
+          "name": "taxon",
+          "type": "Taxon",
+          "description": "Associated taxon",
+          "required": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "length",
+          "params": [],
+          "returnType": "Integer",
+          "description": "Get the length of the sequence"
+        }
+      ]
+    },
+    {
+      "name": "Alignment",
+      "typeParams": ["A"],
+      "description": "Multiple sequence alignment",
+      "properties": [
+        {
+          "name": "sequences",
+          "type": {"type": "Vector", "params": [{"type": "Sequence", "params": ["A"]}]},
+          "description": "Aligned sequences",
+          "required": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "getNSites",
+          "params": [],
+          "returnType": "Integer",
+          "description": "Get the number of sites in the alignment"
+        }
+      ],
+      "constraints": [
+        {
+          "type": "EqualSequenceLengths"
+        }
+      ]
+    }
+  ],
+  
+  "alphabets": [
+    {
+      "name": "Nucleotide",
+      "description": "DNA/RNA nucleotide",
+      "values": ["A", "C", "G", "T", "U"]
+    },
+    {
+      "name": "AminoAcid",
+      "description": "Standard amino acids",
+      "values": ["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V"]
+    }
+  ],
+  
+  "typeAliasesSequence": [
+    {
+      "name": "DNASequence",
+      "target": {"type": "Sequence", "params": ["Nucleotide"]},
+      "description": "DNA sequence"
+    },
+    {
+      "name": "ProteinSequence",
+      "target": {"type": "Sequence", "params": ["AminoAcid"]},
+      "description": "Protein sequence"
+    },
+    {
+      "name": "DNAAlignment",
+      "target": {"type": "Alignment", "params": ["Nucleotide"]},
+      "description": "DNA sequence alignment"
+    }
+  ],
+  
+  "conversions": [
+    {
+      "from": "Integer",
+      "to": "Real",
+      "implicit": true,
+      "description": "Integers are automatically converted to reals when needed"
+    },
+    {
+      "from": "PosInteger",
+      "to": "PositiveReal",
+      "implicit": true,
+      "description": "Positive integers are automatically converted to positive reals"
+    },
+    {
+      "from": "PositiveReal",
+      "to": "NonNegReal",
+      "implicit": true,
+      "description": "Positive reals are by definition non-negative"
+    },
+    {
+      "from": "Real",
+      "to": "Integer",
+      "implicit": false,
+      "function": "toInteger",
+      "description": "Truncates a real to an integer (may lose precision)"
+    },
+    {
+      "from": {"type": "Vector", "params": ["Real"]},
+      "to": "Simplex",
+      "implicit": false,
+      "function": "toSimplex",
+      "description": "Normalizes a vector to create a simplex (elements must be non-negative)"
+    }
+  ]
+}

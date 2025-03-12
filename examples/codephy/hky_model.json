@@ -1,0 +1,112 @@
+{
+  "codephyVersion": "1.0.0",
+  "model": "HKY_Yule_Example",
+  
+  "metadata": {
+    "title": "HKY Model with Yule Tree Prior",
+    "description": "A simple phylogenetic model using HKY substitution model and Yule tree prior",
+    "authors": [
+      {
+        "name": "PhyloSpec Team",
+        "email": "info@phylospec.org"
+      }
+    ],
+    "created": "2025-03-12T10:00:00Z",
+    "version": "1.0.0",
+    "license": "MIT"
+  },
+  
+  "randomVariables": {
+    "kappa": {
+      "distribution": {
+        "type": "LogNormal",
+        "generates": "Real",
+        "parameters": {
+          "meanlog": 1.0,
+          "sdlog": 0.5
+        }
+      }
+    },
+    
+    "baseFreqs": {
+      "distribution": {
+        "type": "Dirichlet",
+        "generates": "Simplex",
+        "parameters": {
+          "alpha": [1.0, 1.0, 1.0, 1.0]
+        }
+      }
+    },
+    
+    "birthRate": {
+      "distribution": {
+        "type": "Exponential",
+        "generates": "Real",
+        "parameters": {
+          "rate": 1.0
+        }
+      }
+    },
+    
+    "tree": {
+      "distribution": {
+        "type": "Yule",
+        "generates": "Tree",
+        "parameters": {
+          "birthRate": {
+            "variable": "birthRate"
+          }
+        }
+      }
+    },
+    
+    "dnaSequences": {
+      "distribution": {
+        "type": "PhyloCTMC",
+        "generates": "Alignment",
+        "parameters": {
+          "tree": {
+            "variable": "tree"
+          },
+          "Q": {
+            "variable": "hkyModel"
+          },
+          "siteRates": {
+            "variable": "siteRateDistribution"
+          }
+        }
+      },
+      "observedValue": "data/primates.fasta"
+    }
+  },
+  
+  "deterministicFunctions": {
+    "hkyModel": {
+      "function": "HKY",
+      "arguments": {
+        "kappa": {
+          "variable": "kappa"
+        },
+        "baseFrequencies": {
+          "variable": "baseFreqs"
+        }
+      }
+    },
+    
+    "siteRateDistribution": {
+      "function": "DiscreteGamma",
+      "arguments": {
+        "shape": 0.5,
+        "categories": 4
+      }
+    }
+  },
+  
+  "constraints": [
+    {
+      "type": "lessThan",
+      "left": "birthRate",
+      "right": 10.0
+    }
+  ]
+}

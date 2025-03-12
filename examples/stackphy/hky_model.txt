@@ -1,0 +1,29 @@
+// HKY Model with Yule Tree Prior
+// A simple phylogenetic model using HKY substitution model and Yule tree prior
+
+// Define kappa parameter (transition/transversion ratio)
+1.0 0.5 lognormal "kappa" ~
+
+// Define base frequencies
+[ 1.0 1.0 1.0 1.0 ] dirichlet "baseFreqs" ~
+
+// Create HKY substitution model
+"kappa" var "baseFreqs" var hky "hkyModel" =
+
+// Define birth rate for tree prior
+1.0 exponential "birthRate" ~
+
+// Create Yule tree prior
+"birthRate" var yule "tree" ~
+
+// Create gamma-distributed rate heterogeneity across sites
+0.5 4 discreteGamma "siteRates" =
+
+// Create the PhyloCTMC model for DNA sequences
+"tree" var "hkyModel" var "siteRates" var phyloCTMC "dnaSequences" ~
+
+// Attach observed sequence data
+"data/primates.fasta" "dnaSequences" observe
+
+// Add constraint on birth rate
+"birthRate" var 10.0 lessThan "birthRateConstraint" =
