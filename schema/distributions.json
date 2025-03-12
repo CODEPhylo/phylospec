@@ -1,0 +1,477 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PhyloSpec Distributions Schema",
+  "description": "Machine-readable definitions of the PhyloSpec distribution signatures",
+  "version": "1.0.0",
+  
+  "standardDistributions": [
+    {
+      "name": "Normal",
+      "description": "Normal (Gaussian) distribution",
+      "parameters": [
+        {
+          "name": "mean",
+          "type": "Real",
+          "description": "Mean of the distribution",
+          "required": true,
+          "default": 0.0
+        },
+        {
+          "name": "sd",
+          "type": "PositiveReal",
+          "description": "Standard deviation",
+          "required": true,
+          "default": 1.0
+        }
+      ],
+      "returnType": "Real"
+    },
+    {
+      "name": "LogNormal",
+      "description": "Log-normal distribution for positive real values",
+      "parameters": [
+        {
+          "name": "meanlog",
+          "type": "Real",
+          "description": "Mean of the distribution in log space",
+          "required": true,
+          "default": 0.0
+        },
+        {
+          "name": "sdlog",
+          "type": "PositiveReal",
+          "description": "Standard deviation in log space",
+          "required": true,
+          "default": 1.0
+        }
+      ],
+      "returnType": "PositiveReal"
+    },
+    {
+      "name": "Gamma",
+      "description": "Gamma distribution for positive real values",
+      "parameters": [
+        {
+          "name": "shape",
+          "type": "PositiveReal",
+          "description": "Shape parameter",
+          "required": true,
+          "default": 1.0
+        },
+        {
+          "name": "rate",
+          "type": "PositiveReal",
+          "description": "Rate parameter",
+          "required": true,
+          "default": 1.0
+        }
+      ],
+      "returnType": "PositiveReal"
+    },
+    {
+      "name": "Beta",
+      "description": "Beta distribution for values in (0,1)",
+      "parameters": [
+        {
+          "name": "alpha",
+          "type": "PositiveReal",
+          "description": "Alpha parameter",
+          "required": true,
+          "default": 1.0
+        },
+        {
+          "name": "beta",
+          "type": "PositiveReal",
+          "description": "Beta parameter",
+          "required": true,
+          "default": 1.0
+        }
+      ],
+      "returnType": "Probability"
+    },
+    {
+      "name": "Exponential",
+      "description": "Exponential distribution for rate parameters",
+      "parameters": [
+        {
+          "name": "rate",
+          "type": "PositiveReal",
+          "description": "Rate parameter",
+          "required": true,
+          "default": 1.0
+        }
+      ],
+      "returnType": "PositiveReal"
+    },
+    {
+      "name": "Uniform",
+      "description": "Uniform distribution for bounded values",
+      "parameters": [
+        {
+          "name": "lower",
+          "type": "Real",
+          "description": "Lower bound",
+          "required": true
+        },
+        {
+          "name": "upper",
+          "type": "Real",
+          "description": "Upper bound",
+          "required": true
+        }
+      ],
+      "returnType": "Real",
+      "constraints": [
+        {
+          "type": "LessThan",
+          "left": "lower",
+          "right": "upper"
+        }
+      ]
+    },
+    {
+      "name": "Dirichlet",
+      "description": "Dirichlet distribution for probability vectors",
+      "parameters": [
+        {
+          "name": "alpha",
+          "type": {"type": "Vector", "params": ["PositiveReal"]},
+          "description": "Concentration parameters",
+          "required": true,
+          "default": [1.0, 1.0, 1.0, 1.0]
+        }
+      ],
+      "returnType": "Simplex"
+    },
+    {
+      "name": "MultivariateNormal",
+      "description": "Multivariate normal for correlated values",
+      "parameters": [
+        {
+          "name": "mean",
+          "type": {"type": "Vector", "params": ["Real"]},
+          "description": "Mean vector",
+          "required": true
+        },
+        {
+          "name": "covariance",
+          "type": {"type": "Matrix", "params": ["Real"]},
+          "description": "Covariance matrix",
+          "required": true
+        }
+      ],
+      "returnType": {"type": "Vector", "params": ["Real"]},
+      "constraints": [
+        {
+          "type": "SymmetricPositiveDefinite",
+          "parameter": "covariance"
+        },
+        {
+          "type": "DimensionsMatch",
+          "parameters": ["mean", "covariance"]
+        }
+      ]
+    }
+  ],
+  
+  "vectorDistributions": [
+    {
+      "name": "NormalVector",
+      "description": "Vector of normal random variables",
+      "parameters": [
+        {
+          "name": "mean",
+          "type": "Real",
+          "description": "Mean of each component",
+          "required": true,
+          "default": 0.0
+        },
+        {
+          "name": "sd",
+          "type": "PositiveReal",
+          "description": "Standard deviation of each component",
+          "required": true,
+          "default": 1.0
+        },
+        {
+          "name": "dimension",
+          "type": "PosInteger",
+          "description": "Number of elements in the vector",
+          "required": true
+        }
+      ],
+      "returnType": {"type": "Vector", "params": ["Real"]}
+    },
+    {
+      "name": "GammaVector",
+      "description": "Vector of gamma random variables",
+      "parameters": [
+        {
+          "name": "shape",
+          "type": "PositiveReal",
+          "description": "Shape parameter for each component",
+          "required": true,
+          "default": 1.0
+        },
+        {
+          "name": "rate",
+          "type": "PositiveReal",
+          "description": "Rate parameter for each component",
+          "required": true,
+          "default": 1.0
+        },
+        {
+          "name": "dimension",
+          "type": "PosInteger",
+          "description": "Number of elements in the vector",
+          "required": true
+        }
+      ],
+      "returnType": {"type": "Vector", "params": ["PositiveReal"]}
+    }
+  ],
+  
+  "treeDistributions": [
+    {
+      "name": "Yule",
+      "description": "Yule pure-birth process for trees",
+      "parameters": [
+        {
+          "name": "birthRate",
+          "type": "PositiveReal",
+          "description": "Birth rate parameter",
+          "required": true,
+          "default": 1.0
+        }
+      ],
+      "returnType": "Tree"
+    },
+    {
+      "name": "BirthDeath",
+      "description": "Birth-death process for trees",
+      "parameters": [
+        {
+          "name": "birthRate",
+          "type": "PositiveReal",
+          "description": "Birth rate parameter",
+          "required": true
+        },
+        {
+          "name": "deathRate",
+          "type": "PositiveReal",
+          "description": "Death rate parameter",
+          "required": true
+        },
+        {
+          "name": "rootHeight",
+          "type": "PositiveReal",
+          "description": "Height of the tree root",
+          "required": false
+        }
+      ],
+      "returnType": "Tree",
+      "constraints": [
+        {
+          "type": "LessThan",
+          "left": "deathRate",
+          "right": "birthRate"
+        }
+      ]
+    },
+    {
+      "name": "Coalescent",
+      "description": "Coalescent process for population genetics",
+      "parameters": [
+        {
+          "name": "populationSize",
+          "type": "PositiveReal",
+          "description": "Effective population size",
+          "required": true,
+          "default": 1.0
+        }
+      ],
+      "returnType": "Tree"
+    },
+    {
+      "name": "FossilBirthDeath",
+      "description": "Birth-death process with fossilization",
+      "parameters": [
+        {
+          "name": "birthRate",
+          "type": "PositiveReal",
+          "description": "Birth rate parameter",
+          "required": true
+        },
+        {
+          "name": "deathRate",
+          "type": "PositiveReal",
+          "description": "Death rate parameter",
+          "required": true
+        },
+        {
+          "name": "samplingRate",
+          "type": "PositiveReal",
+          "description": "Rate of fossil sampling",
+          "required": true
+        },
+        {
+          "name": "rho",
+          "type": "Probability",
+          "description": "Probability of sampling at present",
+          "required": true
+        }
+      ],
+      "returnType": "TimeTree"
+    }
+  ],
+  
+  "sequenceEvolutionDistributions": [
+    {
+      "name": "PhyloCTMC",
+      "description": "Phylogenetic continuous-time Markov chain",
+      "typeParams": ["A"],
+      "parameters": [
+        {
+          "name": "tree",
+          "type": "Tree",
+          "description": "Phylogenetic tree",
+          "required": true
+        },
+        {
+          "name": "Q",
+          "type": "QMatrix",
+          "description": "Rate matrix",
+          "required": true
+        },
+        {
+          "name": "siteRates",
+          "type": {"type": "Vector", "params": ["PositiveReal"]},
+          "description": "Rate heterogeneity across sites",
+          "required": false
+        },
+        {
+          "name": "branchRates",
+          "type": {"type": "Vector", "params": ["PositiveReal"]},
+          "description": "Rate heterogeneity across branches",
+          "required": false
+        }
+      ],
+      "returnType": {"type": "Alignment", "params": ["A"]}
+    },
+    {
+      "name": "PhyloBM",
+      "description": "Phylogenetic Brownian motion",
+      "parameters": [
+        {
+          "name": "tree",
+          "type": "Tree",
+          "description": "Phylogenetic tree",
+          "required": true
+        },
+        {
+          "name": "sigma",
+          "type": "PositiveReal",
+          "description": "Rate parameter",
+          "required": true,
+          "default": 1.0
+        },
+        {
+          "name": "rootValue",
+          "type": "Real",
+          "description": "Value at the root",
+          "required": true,
+          "default": 0.0
+        }
+      ],
+      "returnType": {"type": "Vector", "params": ["Real"]}
+    },
+    {
+      "name": "PhyloOU",
+      "description": "Phylogenetic Ornstein-Uhlenbeck process",
+      "parameters": [
+        {
+          "name": "tree",
+          "type": "Tree",
+          "description": "Phylogenetic tree",
+          "required": true
+        },
+        {
+          "name": "sigma",
+          "type": "PositiveReal",
+          "description": "Rate parameter",
+          "required": true,
+          "default": 1.0
+        },
+        {
+          "name": "alpha",
+          "type": "PositiveReal",
+          "description": "Selection strength",
+          "required": true,
+          "default": 1.0
+        },
+        {
+          "name": "optimum",
+          "type": "Real",
+          "description": "Optimal trait value",
+          "required": true,
+          "default": 0.0
+        }
+      ],
+      "returnType": {"type": "Vector", "params": ["Real"]}
+    }
+  ],
+  
+  "mixtureDistributions": [
+    {
+      "name": "Mixture",
+      "description": "Mixture of distributions with the same return type",
+      "typeParams": ["T"],
+      "parameters": [
+        {
+          "name": "components",
+          "type": {"type": "Vector", "params": [{"type": "Distribution", "params": ["T"]}]},
+          "description": "Component distributions",
+          "required": true
+        },
+        {
+          "name": "weights",
+          "type": "Simplex",
+          "description": "Mixture weights",
+          "required": true
+        }
+      ],
+      "returnType": "T",
+      "constraints": [
+        {
+          "type": "NotEmpty",
+          "parameter": "components"
+        },
+        {
+          "type": "LengthsMatch",
+          "parameters": ["components", "weights"]
+        }
+      ]
+    },
+    {
+      "name": "DiscreteGammaMixture",
+      "description": "Discretized gamma mixture for rate heterogeneity",
+      "parameters": [
+        {
+          "name": "shape",
+          "type": "PositiveReal",
+          "description": "Shape parameter",
+          "required": true,
+          "default": 1.0
+        },
+        {
+          "name": "categories",
+          "type": "PosInteger",
+          "description": "Number of categories",
+          "required": true,
+          "default": 4
+        }
+      ],
+      "returnType": {"type": "Mixture", "params": ["PositiveReal"]}
+    }
+  ]
+}

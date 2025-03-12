@@ -1,0 +1,355 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PhyloSpec Constraints Schema",
+  "description": "Machine-readable definitions of the PhyloSpec constraint system",
+  "version": "1.0.0",
+  
+  "numericConstraints": [
+    {
+      "name": "LessThan",
+      "description": "Ensures the left value is less than the right value",
+      "parameters": [
+        {
+          "name": "left",
+          "type": "Real",
+          "description": "Value that should be less",
+          "required": true
+        },
+        {
+          "name": "right",
+          "type": "Real",
+          "description": "Value that should be greater",
+          "required": true
+        }
+      ],
+      "returnType": "Constraint"
+    },
+    {
+      "name": "GreaterThan",
+      "description": "Ensures the left value is greater than the right value",
+      "parameters": [
+        {
+          "name": "left",
+          "type": "Real",
+          "description": "Value that should be greater",
+          "required": true
+        },
+        {
+          "name": "right",
+          "type": "Real",
+          "description": "Value that should be less",
+          "required": true
+        }
+      ],
+      "returnType": "Constraint"
+    },
+    {
+      "name": "Equals",
+      "description": "Enforces equality between two values of the same type",
+      "typeParams": ["T"],
+      "parameters": [
+        {
+          "name": "left",
+          "type": "T",
+          "description": "First value to compare",
+          "required": true
+        },
+        {
+          "name": "right",
+          "type": "T",
+          "description": "Second value to compare",
+          "required": true
+        }
+      ],
+      "returnType": "Constraint"
+    },
+    {
+      "name": "Bounded",
+      "description": "Restricts a parameter to a specific range",
+      "parameters": [
+        {
+          "name": "variable",
+          "type": "Real",
+          "description": "Value to constrain",
+          "required": true
+        },
+        {
+          "name": "lower",
+          "type": "Real",
+          "description": "Lower bound (inclusive)",
+          "required": true
+        },
+        {
+          "name": "upper",
+          "type": "Real",
+          "description": "Upper bound (inclusive)",
+          "required": true
+        }
+      ],
+      "returnType": "Constraint",
+      "constraints": [
+        {
+          "type": "LessThanEqual",
+          "left": "lower",
+          "right": "upper"
+        }
+      ]
+    },
+    {
+      "name": "SumTo",
+      "description": "Requires a set of parameters to sum to a target value",
+      "parameters": [
+        {
+          "name": "variables",
+          "type": {"type": "Vector", "params": ["Real"]},
+          "description": "Values to sum",
+          "required": true
+        },
+        {
+          "name": "target",
+          "type": "Real",
+          "description": "Target sum value",
+          "required": true
+        }
+      ],
+      "returnType": "Constraint",
+      "constraints": [
+        {
+          "type": "NotEmpty",
+          "parameter": "variables"
+        }
+      ]
+    }
+  ],
+  
+  "treeConstraints": [
+    {
+      "name": "Monophyly",
+      "description": "Requires a set of taxa to form a monophyletic group in the tree",
+      "parameters": [
+        {
+          "name": "taxa",
+          "type": "TaxonSet",
+          "description": "Taxa to constrain",
+          "required": true
+        },
+        {
+          "name": "tree",
+          "type": "Tree",
+          "description": "Tree to apply constraint",
+          "required": true
+        }
+      ],
+      "returnType": "Constraint",
+      "constraints": [
+        {
+          "type": "AtLeastTwo",
+          "parameter": "taxa"
+        }
+      ]
+    },
+    {
+      "name": "Calibration",
+      "description": "Age calibration for a node in the tree",
+      "parameters": [
+        {
+          "name": "node",
+          "type": "TreeNode",
+          "description": "Node to calibrate",
+          "required": true
+        },
+        {
+          "name": "distribution",
+          "type": {"type": "Distribution", "params": ["Real"]},
+          "description": "Age prior distribution",
+          "required": true
+        }
+      ],
+      "returnType": "Constraint",
+      "constraints": [
+        {
+          "type": "NotLeaf",
+          "parameter": "node"
+        }
+      ]
+    },
+    {
+      "name": "FixedTopology",
+      "description": "Fixes the topology of a tree to match a reference topology",
+      "parameters": [
+        {
+          "name": "tree",
+          "type": "Tree",
+          "description": "Tree to constrain",
+          "required": true
+        },
+        {
+          "name": "topology",
+          "type": "Tree",
+          "description": "Reference topology",
+          "required": true
+        }
+      ],
+      "returnType": "Constraint",
+      "constraints": [
+        {
+          "type": "SameTaxa",
+          "parameters": ["tree", "topology"]
+        }
+      ]
+    }
+  ],
+  
+  "sequenceConstraints": [
+    {
+      "name": "MolecularClock",
+      "description": "Enforces a strict molecular clock on a tree",
+      "parameters": [
+        {
+          "name": "tree",
+          "type": "Tree",
+          "description": "Tree to constrain",
+          "required": true
+        }
+      ],
+      "returnType": "Constraint"
+    },
+    {
+      "name": "SitePattern",
+      "description": "Constrains specific sites in an alignment to match a pattern",
+      "typeParams": ["A"],
+      "parameters": [
+        {
+          "name": "alignment",
+          "type": {"type": "Alignment", "params": ["A"]},
+          "description": "Alignment to constrain",
+          "required": true
+        },
+        {
+          "name": "pattern",
+          "type": {"type": "Vector", "params": ["A"]},
+          "description": "Pattern to enforce",
+          "required": true
+        },
+        {
+          "name": "indices",
+          "type": {"type": "Vector", "params": ["Integer"]},
+          "description": "Site indices to constrain",
+          "required": true
+        }
+      ],
+      "returnType": "Constraint",
+      "constraints": [
+        {
+          "type": "NotEmpty",
+          "parameter": "pattern"
+        },
+        {
+          "type": "IndicesInAlignment",
+          "parameters": ["indices", "alignment"]
+        }
+      ]
+    }
+  ],
+  
+  "complexConstraints": [
+    {
+      "name": "CompoundConstraint",
+      "description": "Combines multiple constraints with a logical operator",
+      "parameters": [
+        {
+          "name": "constraints",
+          "type": {"type": "Vector", "params": ["Constraint"]},
+          "description": "Constraints to combine",
+          "required": true
+        },
+        {
+          "name": "operator",
+          "type": "String",
+          "description": "Logical operator",
+          "required": false,
+          "default": "AND"
+        }
+      ],
+      "returnType": "Constraint",
+      "constraints": [
+        {
+          "type": "NotEmpty",
+          "parameter": "constraints"
+        },
+        {
+          "type": "OneOf",
+          "parameter": "operator",
+          "values": ["AND", "OR", "XOR"]
+        }
+      ]
+    },
+    {
+      "name": "Correlation",
+      "description": "Enforces a minimum correlation between variables",
+      "parameters": [
+        {
+          "name": "variables",
+          "type": {"type": "Vector", "params": ["Real"]},
+          "description": "Variables to correlate",
+          "required": true
+        },
+        {
+          "name": "threshold",
+          "type": "Probability",
+          "description": "Minimum correlation",
+          "required": true,
+          "default": 0.0
+        }
+      ],
+      "returnType": "Constraint",
+      "constraints": [
+        {
+          "type": "AtLeastTwo",
+          "parameter": "variables"
+        }
+      ]
+    }
+  ],
+  
+  "constraintApplicationModes": [
+    {
+      "name": "ModelLevel",
+      "description": "Constraint applied at the model level",
+      "example": "constraints: [LessThan(left: \"birthRate\", right: \"deathRate\")]"
+    },
+    {
+      "name": "DistributionLevel",
+      "description": "Constraint built into a distribution",
+      "example": "Uniform(lower: 0.0, upper: 10.0)"
+    },
+    {
+      "name": "DynamicReference",
+      "description": "Constraint references other model parameters",
+      "example": "Bounded(variable: \"kappa\", lower: 0.0, upper: \"maxKappa\")"
+    }
+  ],
+  
+  "constraintChecking": [
+    {
+      "name": "ValidateBeforeExecution",
+      "description": "Check constraints before model execution"
+    },
+    {
+      "name": "CheckOnParameterUpdate",
+      "description": "Check constraints when parameter values change"
+    },
+    {
+      "name": "CheckDuringInitialization",
+      "description": "Check constraints during model initialization"
+    }
+  ],
+  
+  "errorHandling": {
+    "recommendedPractices": [
+      "Provide clear error messages indicating which constraint failed",
+      "Include current values of relevant parameters",
+      "Suggest possible fixes if applicable"
+    ]
+  }
+}
