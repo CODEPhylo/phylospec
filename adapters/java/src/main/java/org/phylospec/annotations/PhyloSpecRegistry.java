@@ -106,7 +106,7 @@ public class PhyloSpecRegistry {
                 String paramName = param.value();
                 mappings.put(paramName, new ParameterMapping(
                     paramName, field.getName(), ParameterMapping.Type.FIELD,
-                    param.required(), param.defaultValue(), param.type()
+                    param.required(), param.defaultValue()
                 ));
             }
         }
@@ -118,7 +118,7 @@ public class PhyloSpecRegistry {
                 String paramName = param.value();
                 mappings.put(paramName, new ParameterMapping(
                     paramName, method.getName(), ParameterMapping.Type.METHOD,
-                    param.required(), param.defaultValue(), param.type()
+                    param.required(), param.defaultValue()
                 ));
             }
         }
@@ -198,16 +198,14 @@ public class PhyloSpecRegistry {
         private final Type type;
         private final boolean required;
         private final String defaultValue;
-        private final PhyloParam.ParamType paramType;
         
         public ParameterMapping(String phyloSpecName, String implementationName, Type type,
-                                boolean required, String defaultValue, PhyloParam.ParamType paramType) {
+                                boolean required, String defaultValue) {
             this.phyloSpecName = phyloSpecName;
             this.implementationName = implementationName;
             this.type = type;
             this.required = required;
             this.defaultValue = defaultValue;
-            this.paramType = paramType;
         }
         
         /**
@@ -243,13 +241,6 @@ public class PhyloSpecRegistry {
          */
         public String getDefaultValue() {
             return defaultValue;
-        }
-        
-        /**
-         * Get the parameter type.
-         */
-        public PhyloParam.ParamType getParamType() {
-            return paramType;
         }
         
         /**

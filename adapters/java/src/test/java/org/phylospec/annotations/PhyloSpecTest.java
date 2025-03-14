@@ -28,7 +28,6 @@ public class PhyloSpecTest {
         assertEquals("testParam", annotation.value(), "Parameter name should match");
         assertTrue(annotation.required(), "Parameter should be required");
         assertEquals("1.0", annotation.defaultValue(), "Default value should match");
-        assertEquals(PhyloParam.ParamType.DIRECT, annotation.type(), "Parameter type should match");
     }
     
     // Simple test class with annotations

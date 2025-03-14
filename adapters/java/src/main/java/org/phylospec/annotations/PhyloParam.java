@@ -28,26 +28,4 @@ public @interface PhyloParam {
      * Empty string indicates no default value.
      */
     String defaultValue() default "";
-    
-    /**
-     * How this parameter should be interpreted and processed.
-     */
-    ParamType type() default ParamType.DIRECT;
-    
-    /**
-     * Parameter types defining how values should be processed
-     */
-    enum ParamType {
-        /** Direct value (number, string, etc.) */
-        DIRECT,
-        
-        /** Reference to another model component */
-        REFERENCE,
-        
-        /** Array of values */
-        ARRAY,
-        
-        /** Complex object that needs special handling */
-        COMPLEX
-    }
 }
