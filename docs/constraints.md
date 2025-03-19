@@ -91,16 +91,6 @@ Enforces a strict molecular clock on a tree.
 |-----------|--------|------------------|---------|-------------|
 | `tree`    | `Tree` | Tree to constrain| None    | None        |
 
-#### `SitePattern(alignment: Alignment<A>, pattern: Vector<A>, indices: Vector<Integer>) -> Constraint`
-
-Constrains specific sites in an alignment to match a pattern.
-
-| Parameter   | Type              | Description                  | Default | Constraints                     |
-|-------------|-------------------|------------------------------|---------|--------------------------------|
-| `alignment` | `Alignment<A>`    | Alignment to constrain       | None    | None                           |
-| `pattern`   | `Vector<A>`       | Pattern to enforce           | None    | Not empty                      |
-| `indices`   | `Vector<Integer>` | Site indices to constrain    | None    | All indices within alignment   |
-
 ### 1.4 Complex Constraints
 
 #### `CompoundConstraint(constraints: Vector<Constraint>, operator: String) -> Constraint`

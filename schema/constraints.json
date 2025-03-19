@@ -213,42 +213,6 @@
         }
       ],
       "returnType": "Constraint"
-    },
-    {
-      "name": "SitePattern",
-      "description": "Constrains specific sites in an alignment to match a pattern",
-      "typeParams": ["A"],
-      "parameters": [
-        {
-          "name": "alignment",
-          "type": {"type": "Alignment", "params": ["A"]},
-          "description": "Alignment to constrain",
-          "required": true
-        },
-        {
-          "name": "pattern",
-          "type": {"type": "Vector", "params": ["A"]},
-          "description": "Pattern to enforce",
-          "required": true
-        },
-        {
-          "name": "indices",
-          "type": {"type": "Vector", "params": ["Integer"]},
-          "description": "Site indices to constrain",
-          "required": true
-        }
-      ],
-      "returnType": "Constraint",
-      "constraints": [
-        {
-          "type": "NotEmpty",
-          "parameter": "pattern"
-        },
-        {
-          "type": "IndicesInAlignment",
-          "parameters": ["indices", "alignment"]
-        }
-      ]
     }
   ],
   
