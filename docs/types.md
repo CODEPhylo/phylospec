@@ -187,7 +187,54 @@ For floating-point comparisons, implementations should use a tolerance of ε=1e-
 - Stochastic matrix row sum validation  
 - Q-matrix row sum validation
 
-## 7. Implementation Requirements
+## 7. Indexing and Element Access
+
+### 7.1 Indexable Types
+
+The following types support element access through indexing:
+
+| Type | Indexing Syntax | Return Type | Index Type | Notes |
+|------|-----------------|-------------|------------|-------|
+| `Vector<T>` | `v[i]` | `T` | `Integer` | 0-based indexing |
+| `Matrix<T>` | `m[i,j]` or `m[i][j]` | `T` | `Integer, Integer` | Row, column indices |
+| `Simplex` | `s[i]` | `Probability` | `Integer` | 0-based indexing |
+| `StochasticMatrix` | `p[i,j]` | `Probability` | `Integer, Integer` | Row, column indices |
+| `QMatrix` | `q[i,j]` | `Real` | `Integer, Integer` | Row, column indices |
+| `Sequence<A>` | `seq[i]` | `A` | `Integer` | 0-based position |
+| `Alignment<A>` | `aln[i,j]` | `A` | `Integer, Integer` | Sequence, position |
+| `String` | `s[i]` | `Character` | `Integer` | 0-based position |
+
+### 7.2 Indexing Rules
+
+1. **Bounds Checking**: All indexing operations must check bounds and report errors for out-of-range indices
+2. **0-Based**: All indices are 0-based (first element is at index 0)
+3. **Return Types**: Indexing returns the element type, not a wrapped type
+4. **Immutability**: Indexing provides read-only access; elements cannot be modified through indexing
+
+### 7.3 Special Indexing Cases
+
+```
+# Examples of valid indexing
+Simplex pi ~ Dirichlet(1.0, 1.0, 1.0, 1.0);
+Real freqA = pi[0];  # First element (A frequency)
+
+Matrix<Real> m = ...;
+Real element = m[2,3];  # Row 2, column 3
+
+# Slicing (optional feature)
+Vector<Real> subvector = v[1:3];  # Elements 1 and 2
+Matrix<Real> submatrix = m[0:2, 1:4];  # Rows 0-1, columns 1-3
+```
+
+### 7.4 Non-Indexable Types
+
+The following types do NOT support direct indexing:
+- Primitive types (`Real`, `Integer`, `Boolean`)
+- `Map<K,V>` - Use key-based access instead
+- `Set<T>` - Unordered, no positional access
+- Tree types - Use navigation methods instead
+
+## 8. Implementation Requirements
 
 Language implementations must:
 
