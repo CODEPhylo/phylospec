@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.phylospec</groupId>
-    <artifactId>phylospec-annotations</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <artifactId>phylospec-core</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>PhyloSpec Annotations</name>
-    <description>Java annotations for implementing PhyloSpec compatibility in phylogenetic software</description>
+    <name>PhyloSpec Core Java</name>
+    <description>Core Java implementation of the PhyloSpec type system and annotations framework for phylogenetic modeling</description>
     <url>https://github.com/CODEPhylo/phylospec</url>
+
+    <organization>
+        <name>CODEPhylo</name>
+        <url>https://github.com/CODEPhylo</url>
+    </organization>
 
     <licenses>
         <license>
@@ -23,12 +29,9 @@
 
     <developers>
         <developer>
-            <id>codephylo</id>
-            <name>CODEPhylo Team</name>
-            <email>info@codephylo.org</email>
-            <url>https://codephylo.org</url>
+            <name>CODEPhylo steering group</name>
             <organization>CODEPhylo</organization>
-            <organizationUrl>https://codephylo.org</organizationUrl>
+            <organizationUrl>https://github.com/CODEPhylo</organizationUrl>
         </developer>
     </developers>
 
@@ -39,20 +42,38 @@
     </scm>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        
+        <!-- Dependency versions -->
+        <junit.jupiter.version>5.10.1</junit.jupiter.version>
+        <auto-service.version>1.1.1</auto-service.version>
+        
+        <!-- Plugin versions -->
+        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.2.2</maven-surefire-plugin.version>
+        <maven-javadoc-plugin.version>3.6.2</maven-javadoc-plugin.version>
+        <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
+        <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
     </properties>
 
     <dependencies>
-        <!-- No external dependencies required for basic annotation functionality -->
-        
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.9.3</version>
+            <version>${junit.jupiter.version}</version>
             <scope>test</scope>
+        </dependency>
+        
+        <!-- Optional: Annotation processing support -->
+        <dependency>
+            <groupId>com.google.auto.service</groupId>
+            <artifactId>auto-service-annotations</artifactId>
+            <version>${auto-service.version}</version>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 
@@ -62,33 +83,62 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>${maven-compiler-plugin.version}</version>
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <showWarnings>true</showWarnings>
+                    <showDeprecation>true</showDeprecation>
                 </configuration>
             </plugin>
             
-            <!-- Source plugin for including source code in the jar -->
+            <!-- Test plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.3.0</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar-no-fork</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                    </includes>
+                </configuration>
             </plugin>
             
-            <!-- Javadoc plugin for generating documentation -->
+            <!-- JavaDoc plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>${maven-javadoc-plugin.version}</version>
+                <configuration>
+                    <show>public</show>
+                    <nohelp>true</nohelp>
+                    <header>PhyloSpec Core, ${project.version}</header>
+                    <footer>PhyloSpec Core, ${project.version}</footer>
+                    <doctitle>PhyloSpec Core API, ${project.version}</doctitle>
+                    <links>
+                        <link>https://docs.oracle.com/en/java/javase/11/docs/api/</link>
+                    </links>
+                    <groups>
+                        <group>
+                            <title>Type System</title>
+                            <packages>org.phylospec.types:org.phylospec.types.impl</packages>
+                        </group>
+                        <group>
+                            <title>Annotations</title>
+                            <packages>org.phylospec.annotations</packages>
+                        </group>
+                        <group>
+                            <title>Factory and Utilities</title>
+                            <packages>org.phylospec.factory</packages>
+                        </group>
+                        <group>
+                            <title>Examples</title>
+                            <packages>org.phylospec.examples</packages>
+                        </group>
+                    </groups>
+                </configuration>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -99,29 +149,50 @@
                 </executions>
             </plugin>
             
-            <!-- Surefire plugin for running tests -->
+            <!-- Source plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.1.2</version>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${maven-source-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             
-            <!-- Optional: Deployment to Maven Central -->
-            <!-- 
+            <!-- JAR plugin -->
             <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.13</version>
-                <extensions>true</extensions>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven-jar-plugin.version}</version>
                 <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                        </manifest>
+                        <manifestEntries>
+                            <Automatic-Module-Name>org.phylospec.core</Automatic-Module-Name>
+                        </manifestEntries>
+                    </archive>
                 </configuration>
             </plugin>
-            -->
         </plugins>
     </build>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven-javadoc-plugin.version}</version>
+            </plugin>
+        </plugins>
+    </reporting>
 
     <profiles>
         <!-- Profile for releasing to Maven Central -->
@@ -129,7 +200,7 @@
             <id>release</id>
             <build>
                 <plugins>
-                    <!-- GPG signing for Maven Central releases -->
+                    <!-- GPG signing -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
@@ -148,17 +219,17 @@
             </build>
         </profile>
     </profiles>
-
-    <!-- Distribution management for Maven Central -->
+    
+    <!-- Distribution management for Maven Central (uncomment when ready to publish) -->
     <!--
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
         <repository>
             <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
     -->
