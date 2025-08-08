@@ -9,7 +9,12 @@
       "name": "Real",
       "description": "Real-valued number",
       "examples": [1.0, -0.5, 3.14159],
-      "constraints": []
+      "constraints": [
+        {
+          "type": "Finite",
+          "description": "Must not be NaN or Infinity"
+        }
+      ]
     },
     {
       "name": "Integer",
@@ -31,7 +36,12 @@
       "name": "String",
       "description": "Text value",
       "examples": ["human", "ACGT"],
-      "constraints": []
+      "constraints": [
+        {
+          "type": "NotNull",
+          "description": "Must not be null"
+        }
+      ]
     }
   ],
   
@@ -45,6 +55,24 @@
         {
           "type": "GreaterThan",
           "value": 0
+        },
+        {
+          "type": "Finite"
+        }
+      ]
+    },
+    {
+      "name": "NonNegativeReal",
+      "baseType": "Real",
+      "description": "Non-negative real number",
+      "examples": [0.0, 1.0, 42.0],
+      "constraints": [
+        {
+          "type": "GreaterThanEqual",
+          "value": 0
+        },
+        {
+          "type": "Finite"
         }
       ]
     },
@@ -61,23 +89,14 @@
         {
           "type": "LessThanEqual",
           "value": 1
-        }
-      ]
-    },
-    {
-      "name": "NonNegReal",
-      "baseType": "Real",
-      "description": "Non-negative real number",
-      "examples": [0.0, 1.0, 42.0],
-      "constraints": [
+        },
         {
-          "type": "GreaterThanEqual",
-          "value": 0
+          "type": "Finite"
         }
       ]
     },
     {
-      "name": "PosInteger",
+      "name": "PositiveInteger",
       "baseType": "Integer",
       "description": "Positive integer",
       "examples": [1, 2, 42],
@@ -96,16 +115,39 @@
       "typeParams": ["T"],
       "description": "Ordered collection of values",
       "examples": ["[1.0, 2.0, 3.0]", "[\"human\", \"chimp\"]"],
-      "constraints": []
+      "constraints": [
+        {
+          "type": "ValidElements",
+          "description": "All elements must be valid instances of T"
+        }
+      ]
     },
     {
       "name": "Matrix",
       "typeParams": ["T"],
-      "description": "2D grid of values",
+      "description": "2D array of values",
       "examples": ["[[1.0, 2.0], [3.0, 4.0]]"],
       "constraints": [
         {
-          "type": "RectangularShape"
+          "type": "RectangularShape",
+          "description": "All rows must have the same number of columns"
+        },
+        {
+          "type": "ValidElements",
+          "description": "All elements must be valid instances of T"
+        }
+      ]
+    },
+    {
+      "name": "SquareMatrix",
+      "typeParams": ["T"],
+      "baseType": {"type": "Matrix", "params": ["T"]},
+      "description": "Square matrix with equal rows and columns",
+      "examples": ["[[1.0, 2.0], [3.0, 4.0]]"],
+      "constraints": [
+        {
+          "type": "SquareShape",
+          "description": "Number of rows must equal number of columns"
         }
       ]
     },
@@ -159,29 +201,55 @@
   "specializedTypes": [
     {
       "name": "Simplex",
-      "baseType": {"type": "Vector", "params": ["Real"]},
+      "baseType": {"type": "Vector", "params": ["Probability"]},
       "description": "Probability vector with elements that sum to 1.0",
       "examples": ["[0.25, 0.25, 0.25, 0.25]", "[0.1, 0.2, 0.7]"],
       "constraints": [
         {
-          "type": "ElementsNonNegative"
+          "type": "SumTo",
+          "value": 1.0,
+          "tolerance": 1e-10,
+          "description": "Elements must sum to 1.0 within tolerance"
         },
         {
-          "type": "SumTo",
-          "value": 1.0
+          "type": "NonEmpty",
+          "description": "Must contain at least one element"
+        }
+      ]
+    },
+    {
+      "name": "StochasticMatrix",
+      "baseType": {"type": "Matrix", "params": ["Probability"]},
+      "description": "Probability transition matrix for discrete-time Markov chains",
+      "examples": ["[[0.7, 0.3], [0.2, 0.8]]"],
+      "constraints": [
+        {
+          "type": "RowsSumToOne",
+          "tolerance": 1e-10,
+          "description": "Each row must sum to 1.0 within tolerance"
         }
       ]
     },
     {
       "name": "QMatrix",
-      "baseType": {"type": "Matrix", "params": ["Real"]},
-      "description": "Rate matrix for substitution models",
+      "baseType": {"type": "SquareMatrix", "params": ["Real"]},
+      "description": "Rate matrix for continuous-time Markov chains",
+      "examples": [
+        "[[-1.0, 0.5, 0.5], [0.3, -0.6, 0.3], [0.2, 0.4, -0.6]]"
+      ],
       "constraints": [
         {
-          "type": "RowsSumToZero"
+          "type": "RowsSumToZero",
+          "tolerance": 1e-10,
+          "description": "Each row must sum to 0 within tolerance"
         },
         {
-          "type": "OffDiagonalsNonNegative"
+          "type": "OffDiagonalsNonNegative",
+          "description": "Off-diagonal elements must be non-negative"
+        },
+        {
+          "type": "DiagonalsNonPositive",
+          "description": "Diagonal elements must be non-positive"
         }
       ]
     },
@@ -191,7 +259,8 @@
       "description": "Set of integer indices",
       "constraints": [
         {
-          "type": "ElementsNonNegative"
+          "type": "ElementsNonNegative",
+          "description": "All indices must be non-negative"
         }
       ]
     }
@@ -379,7 +448,8 @@
       ],
       "constraints": [
         {
-          "type": "EqualSequenceLengths"
+          "type": "EqualSequenceLengths",
+          "description": "All sequences must have the same length"
         }
       ]
     }
@@ -395,6 +465,11 @@
       "name": "AminoAcid",
       "description": "Standard amino acids",
       "values": ["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V"]
+    },
+    {
+      "name": "Codon",
+      "description": "Nucleotide triplet",
+      "values": ["AAA", "AAC", "AAG", "AAT", "ACA", "ACC", "ACG", "ACT", "AGA", "AGC", "AGG", "AGT", "ATA", "ATC", "ATG", "ATT", "CAA", "CAC", "CAG", "CAT", "CCA", "CCC", "CCG", "CCT", "CGA", "CGC", "CGG", "CGT", "CTA", "CTC", "CTG", "CTT", "GAA", "GAC", "GAG", "GAT", "GCA", "GCC", "GCG", "GCT", "GGA", "GGC", "GGG", "GGT", "GTA", "GTC", "GTG", "GTT", "TAA", "TAC", "TAG", "TAT", "TCA", "TCC", "TCG", "TCT", "TGA", "TGC", "TGG", "TGT", "TTA", "TTC", "TTG", "TTT"]
     }
   ],
   
@@ -410,9 +485,19 @@
       "description": "Protein sequence"
     },
     {
+      "name": "CodonSequence",
+      "target": {"type": "Sequence", "params": ["Codon"]},
+      "description": "Codon sequence"
+    },
+    {
       "name": "DNAAlignment",
       "target": {"type": "Alignment", "params": ["Nucleotide"]},
       "description": "DNA sequence alignment"
+    },
+    {
+      "name": "ProteinAlignment",
+      "target": {"type": "Alignment", "params": ["AminoAcid"]},
+      "description": "Protein sequence alignment"
     }
   ],
   
@@ -424,14 +509,14 @@
       "description": "Integers are automatically converted to reals when needed"
     },
     {
-      "from": "PosInteger",
+      "from": "PositiveInteger",
       "to": "PositiveReal",
       "implicit": true,
       "description": "Positive integers are automatically converted to positive reals"
     },
     {
       "from": "PositiveReal",
-      "to": "NonNegReal",
+      "to": "NonNegativeReal",
       "implicit": true,
       "description": "Positive reals are by definition non-negative"
     },
@@ -449,5 +534,10 @@
       "function": "toSimplex",
       "description": "Normalizes a vector to create a simplex (elements must be non-negative)"
     }
-  ]
+  ],
+  
+  "validationSettings": {
+    "numericalTolerance": 1e-10,
+    "description": "Default tolerance for floating-point comparisons in constraint validation"
+  }
 }
