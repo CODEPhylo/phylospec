@@ -90,14 +90,14 @@ Goldman-Yang 1994 model for codon evolution.
 
 These functions create models for variation in evolutionary rates.
 
-#### `DiscreteGamma(shape: PositiveReal, categories: PosInteger) -> Vector<PositiveReal>`
+#### `DiscreteGamma(shape: PositiveReal, categories: PositiveInteger) -> Vector<PositiveReal>`
 
 Discrete gamma-distributed rates across sites.
 
-| Parameter    | Type          | Description                | Default | Constraints |
-|--------------|---------------|----------------------------|---------|-------------|
-| `shape`      | `PositiveReal`| Shape parameter            | 1.0     | > 0         |
-| `categories` | `PosInteger`  | Number of discrete categories | 4     | > 0         |
+| Parameter    | Type             | Description                | Default | Constraints |
+|--------------|------------------|----------------------------|---------|-------------|
+| `shape`      | `PositiveReal`   | Shape parameter            | 1.0     | > 0         |
+| `categories` | `PositiveInteger`| Number of discrete categories | 4     | > 0         |
 
 #### `FreeRates(rates: Vector<PositiveReal>, weights: Simplex) -> Vector<PositiveReal>`
 
@@ -114,7 +114,7 @@ Model with a proportion of invariant sites.
 
 | Parameter    | Type          | Description                | Default | Constraints           |
 |--------------|---------------|----------------------------|---------|----------------------|
-| `proportion` | `Probability` | Proportion of invariant sites | 0.0  | 0.0 <= value <= 1.0  |
+| `proportion` | `Probability` | Proportion of invariant sites | 0.0  | [0, 1]               |
 
 #### `StrictClock(rate: PositiveReal) -> Vector<PositiveReal>`
 
@@ -188,6 +188,12 @@ Compute pairwise distances between all pairs of tips in the tree.
 |-----------|--------|-------------------|---------|-------------|
 | `tree`    | `Tree` | Phylogenetic tree | None    | None        |
 
+**Indexing**: The result can be indexed with two indices to get pairwise distances:
+```
+Matrix<Real> D = distanceMatrix(tree);
+Real dist = D[i,j];  // Distance between tips i and j
+```
+
 #### `descendantTaxa(tree: Tree, node: TreeNode) -> TaxonSet`
 
 Get all taxa descended from a node.
@@ -210,6 +216,8 @@ Extract an element from a vector.
 | `vector`  | `Vector<T>` | Source vector   | None    | None                 |
 | `index`   | `Integer`   | Index to extract| None    | 0 <= index < length  |
 
+**Note**: This function is equivalent to direct indexing (`vector[index]`).
+
 #### `matrixElement(matrix: Matrix<T>, row: Integer, col: Integer) -> T`
 
 Extract an element from a matrix.
@@ -219,6 +227,8 @@ Extract an element from a matrix.
 | `matrix`  | `Matrix<T>` | Source matrix    | None    | None                    |
 | `row`     | `Integer`   | Row index        | None    | 0 <= row < rows         |
 | `col`     | `Integer`   | Column index     | None    | 0 <= col < columns      |
+
+**Note**: This function is equivalent to direct indexing (`matrix[row,col]`).
 
 #### `scale(vector: Vector<Real>, factor: Real) -> Vector<Real>`
 
@@ -236,6 +246,12 @@ Normalize a vector to sum to 1.0, creating a simplex.
 | Parameter | Type           | Description   | Default | Constraints   |
 |-----------|----------------|---------------|---------|--------------|
 | `vector`  | `Vector<Real>` | Source vector | None    | All values ≥ 0 |
+
+**Indexing**: The resulting Simplex can be indexed to access individual probabilities:
+```
+Simplex s = normalize([1.0, 2.0, 3.0]);
+Probability p = s[0];  // Access first probability
+```
 
 #### `log(x: PositiveReal) -> Real`
 
@@ -286,6 +302,10 @@ When a language uses positional parameters, they should follow the order listed 
 ### 5.2 Optional Parameters
 
 Parameters that have default values are optional. Implementations must handle their absence appropriately.
+
+### 5.3 Indexing
+
+Functions that return indexable types (Vector, Matrix, Simplex) produce results that can be indexed according to the type system rules. See the [type system documentation](types.md) for details on indexing behavior.
 
 ## Reference
 

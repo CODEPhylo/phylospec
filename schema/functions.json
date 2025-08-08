@@ -173,7 +173,7 @@
         },
         {
           "name": "categories",
-          "type": "PosInteger",
+          "type": "PositiveInteger",
           "description": "Number of discrete categories",
           "required": true,
           "default": 4

@@ -195,7 +195,7 @@
         },
         {
           "name": "dimension",
-          "type": "PosInteger",
+          "type": "PositiveInteger",
           "description": "Number of elements in the vector",
           "required": true
         }
@@ -222,7 +222,7 @@
         },
         {
           "name": "dimension",
-          "type": "PosInteger",
+          "type": "PositiveInteger",
           "description": "Number of elements in the vector",
           "required": true
         }
@@ -258,7 +258,7 @@
         },
         {
           "name": "deathRate",
-          "type": "PositiveReal",
+          "type": "NonNegativeReal",
           "description": "Death rate parameter",
           "required": true
         },
@@ -304,13 +304,13 @@
         },
         {
           "name": "deathRate",
-          "type": "PositiveReal",
+          "type": "NonNegativeReal",
           "description": "Death rate parameter",
           "required": true
         },
         {
           "name": "samplingRate",
-          "type": "PositiveReal",
+          "type": "NonNegativeReal",
           "description": "Rate of fossil sampling",
           "required": true
         },
@@ -322,6 +322,27 @@
         }
       ],
       "returnType": "TimeTree"
+    },
+    {
+      "name": "ConstrainedYule",
+      "description": "Yule process with topological or temporal constraints",
+      "parameters": [
+        {
+          "name": "birthRate",
+          "type": "PositiveReal",
+          "description": "Birth rate parameter",
+          "required": true,
+          "default": 1.0
+        },
+        {
+          "name": "constraints",
+          "type": {"type": "Vector", "params": ["Constraint"]},
+          "description": "Tree constraints",
+          "required": true,
+          "default": []
+        }
+      ],
+      "returnType": "Tree"
     }
   ],
   
@@ -465,7 +486,7 @@
         },
         {
           "name": "categories",
-          "type": "PosInteger",
+          "type": "PositiveInteger",
           "description": "Number of categories",
           "required": true,
           "default": 4

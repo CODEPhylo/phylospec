@@ -69,6 +69,12 @@ Dirichlet distribution for probability vectors.
 |-----------|-------------------------|-----------------------|--------------|-------------|
 | `alpha`   | `Vector<PositiveReal>`  | Concentration parameters | [1.0,...,1.0] | All > 0 |
 
+**Indexing**: The result can be indexed to access individual probabilities:
+```
+Simplex pi ~ Dirichlet(1.0, 1.0, 1.0, 1.0);
+Probability p = pi[0];  // Access first probability
+```
+
 #### `MultivariateNormal(mean: Vector<Real>, covariance: Matrix<Real>) -> Vector<Real>`
 
 Multivariate normal distribution for correlated values.
@@ -80,25 +86,25 @@ Multivariate normal distribution for correlated values.
 
 ### 1.3 Vector Variants
 
-#### `NormalVector(mean: Real, sd: PositiveReal, dimension: PosInteger) -> Vector<Real>`
+#### `NormalVector(mean: Real, sd: PositiveReal, dimension: PositiveInteger) -> Vector<Real>`
 
 Vector of independently and identically distributed normal random variables.
 
-| Parameter    | Type          | Description              | Default | Constraints |
-|--------------|---------------|--------------------------|---------|-------------|
-| `mean`       | `Real`        | Mean of each component   | 0.0     | None        |
-| `sd`         | `PositiveReal`| Standard deviation       | 1.0     | > 0         |
-| `dimension`  | `PosInteger`  | Vector dimension         | None    | > 0         |
+| Parameter    | Type             | Description              | Default | Constraints |
+|--------------|------------------|--------------------------|---------|-------------|
+| `mean`       | `Real`           | Mean of each component   | 0.0     | None        |
+| `sd`         | `PositiveReal`   | Standard deviation       | 1.0     | > 0         |
+| `dimension`  | `PositiveInteger`| Vector dimension         | None    | > 0         |
 
-#### `GammaVector(shape: PositiveReal, rate: PositiveReal, dimension: PosInteger) -> Vector<PositiveReal>`
+#### `GammaVector(shape: PositiveReal, rate: PositiveReal, dimension: PositiveInteger) -> Vector<PositiveReal>`
 
 Vector of independently and identically distributed gamma random variables.
 
-| Parameter    | Type          | Description              | Default | Constraints |
-|--------------|---------------|--------------------------|---------|-------------|
-| `shape`      | `PositiveReal`| Shape parameter          | 1.0     | > 0         |
-| `rate`       | `PositiveReal`| Rate parameter           | 1.0     | > 0         |
-| `dimension`  | `PosInteger`  | Vector dimension         | None    | > 0         |
+| Parameter    | Type             | Description              | Default | Constraints |
+|--------------|------------------|--------------------------|---------|-------------|
+| `shape`      | `PositiveReal`   | Shape parameter          | 1.0     | > 0         |
+| `rate`       | `PositiveReal`   | Rate parameter           | 1.0     | > 0         |
+| `dimension`  | `PositiveInteger`| Vector dimension         | None    | > 0         |
 
 ## 2. Tree Distributions
 
@@ -112,15 +118,15 @@ Yule pure-birth process for trees.
 |--------------|---------------|--------------------------|---------|-------------|
 | `birthRate`  | `PositiveReal`| Birth rate parameter     | 1.0     | > 0         |
 
-#### `BirthDeath(birthRate: PositiveReal, deathRate: PositiveReal, rootHeight: PositiveReal?) -> Tree`
+#### `BirthDeath(birthRate: PositiveReal, deathRate: NonNegativeReal, rootHeight: PositiveReal?) -> Tree`
 
 Birth-death process for trees.
 
-| Parameter    | Type            | Description              | Default | Constraints |
-|--------------|-----------------|--------------------------|---------|-------------|
-| `birthRate`  | `PositiveReal`  | Birth rate parameter     | None    | > deathRate |
-| `deathRate`  | `PositiveReal`  | Death rate parameter     | None    | >= 0        |
-| `rootHeight` | `PositiveReal?` | Height of the tree root  | None    | > 0         |
+| Parameter    | Type               | Description              | Default | Constraints |
+|--------------|--------------------|--------------------------|---------|-------------|
+| `birthRate`  | `PositiveReal`     | Birth rate parameter     | None    | > deathRate |
+| `deathRate`  | `NonNegativeReal`  | Death rate parameter     | None    | >= 0        |
+| `rootHeight` | `PositiveReal?`    | Height of the tree root  | None    | > 0         |
 
 #### `Coalescent(populationSize: PositiveReal) -> Tree`
 
@@ -130,16 +136,16 @@ Coalescent process for population genetics.
 |-----------------|-----------------|------------------------|---------|-------------|
 | `populationSize`| `PositiveReal`  | Effective population size | 1.0  | > 0         |
 
-#### `FossilBirthDeath(birthRate: PositiveReal, deathRate: PositiveReal, samplingRate: PositiveReal, rho: Probability) -> TimeTree`
+#### `FossilBirthDeath(birthRate: PositiveReal, deathRate: NonNegativeReal, samplingRate: NonNegativeReal, rho: Probability) -> TimeTree`
 
 Birth-death process with fossilization.
 
-| Parameter      | Type            | Description                      | Default | Constraints |
-|----------------|-----------------|----------------------------------|---------|-------------|
-| `birthRate`    | `PositiveReal`  | Birth rate parameter             | None    | > 0         |
-| `deathRate`    | `PositiveReal`  | Death rate parameter             | None    | >= 0        |
-| `samplingRate` | `PositiveReal`  | Rate of fossil sampling          | None    | >= 0        |
-| `rho`          | `Probability`   | Probability of sampling at present | None  | 0 <= rho <= 1 |
+| Parameter      | Type               | Description                      | Default | Constraints |
+|----------------|--------------------|----------------------------------|---------|-------------|
+| `birthRate`    | `PositiveReal`     | Birth rate parameter             | None    | > 0         |
+| `deathRate`    | `NonNegativeReal`  | Death rate parameter             | None    | >= 0        |
+| `samplingRate` | `NonNegativeReal`  | Rate of fossil sampling          | None    | >= 0        |
+| `rho`          | `Probability`      | Probability of sampling at present | None  | [0, 1]      |
 
 ### 2.2 Constrained Tree Distributions
 
@@ -201,16 +207,40 @@ Mixture of distributions with the same return type.
 | `components` | `Vector<Distribution<T>>`| Component distributions       | None    | Not empty   |
 | `weights`    | `Simplex`               | Mixture weights               | None    | Sum to 1.0  |
 
-#### `DiscreteGammaMixture(shape: PositiveReal, categories: PosInteger) -> Mixture<PositiveReal>`
+#### `DiscreteGammaMixture(shape: PositiveReal, categories: PositiveInteger) -> Mixture<PositiveReal>`
 
 Discretized gamma mixture for rate heterogeneity.
 
-| Parameter    | Type          | Description              | Default | Constraints |
-|--------------|---------------|--------------------------|---------|-------------|
-| `shape`      | `PositiveReal`| Shape parameter          | 1.0     | > 0         |
-| `categories` | `PosInteger`  | Number of categories     | 4       | > 0         |
+| Parameter    | Type             | Description              | Default | Constraints |
+|--------------|------------------|--------------------------|---------|-------------|
+| `shape`      | `PositiveReal`   | Shape parameter          | 1.0     | > 0         |
+| `categories` | `PositiveInteger`| Number of categories     | 4       | > 0         |
 
-## 5. Implementation Requirements
+## 5. Special Cases and Usage Notes
+
+### 5.1 Indexing Distribution Results
+
+When a distribution returns an indexable type, elements can be accessed directly:
+
+```
+# Simplex from Dirichlet
+Simplex pi ~ Dirichlet(1.0, 1.0, 1.0, 1.0);
+Probability freqA = pi[0];  // First element
+
+# Vector from MultivariateNormal
+Vector<Real> x ~ MultivariateNormal(mu, Sigma);
+Real x1 = x[0];  // First component
+```
+
+### 5.2 Parameter Constraints
+
+Some distributions have interdependent parameter constraints:
+
+- `BirthDeath`: birthRate must be greater than deathRate for a valid process
+- `Uniform`: lower bound must be less than upper bound
+- Matrix parameters (e.g., covariance) must satisfy mathematical properties
+
+## 6. Implementation Requirements
 
 Language implementations must:
 
@@ -219,12 +249,13 @@ Language implementations must:
 3. Enforce parameter constraints
 4. Return values of the correct type
 5. Support type parameterization where specified
+6. Allow indexing of returned collection types where appropriate
 
-### 5.1 Parameter Order
+### 6.1 Parameter Order
 
 When a language uses positional parameters, they should follow the order listed in each signature.
 
-### 5.2 Optional Parameters
+### 6.2 Optional Parameters
 
 Parameters marked with `?` or that have default values are optional. Implementations must handle their absence appropriately.
 
