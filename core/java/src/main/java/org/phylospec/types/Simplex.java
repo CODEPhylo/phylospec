@@ -20,7 +20,7 @@ public interface Simplex extends Vector<Probability> {
      * @return "Simplex"
      */
     @Override
-    default String getTypeName() {
+    default java.lang.String getTypeName() {
         return "Simplex";
     }
     

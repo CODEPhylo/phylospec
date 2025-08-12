@@ -26,7 +26,7 @@ public final class PositiveIntegerImpl implements PositiveInteger {
     }
     
     @Override
-    public int getValue() {
+    public java.lang.Integer getValue() {
         return value;
     }
     

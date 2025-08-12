@@ -16,7 +16,7 @@ public interface NonNegativeReal extends Real {
      * @return "NonNegativeReal"
      */
     @Override
-    default String getTypeName() {
+    default java.lang.String getTypeName() {
         return "NonNegativeReal";
     }
     

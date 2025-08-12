@@ -29,7 +29,7 @@ public interface StochasticMatrix extends Matrix<Probability> {
      * @return "StochasticMatrix"
      */
     @Override
-    default String getTypeName() {
+    default java.lang.String getTypeName() {
         return "StochasticMatrix";
     }
     

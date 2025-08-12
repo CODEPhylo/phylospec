@@ -16,7 +16,7 @@ public interface PositiveInteger extends Integer {
      * @return "PositiveInteger"
      */
     @Override
-    default String getTypeName() {
+    default java.lang.String getTypeName() {
         return "PositiveInteger";
     }
     

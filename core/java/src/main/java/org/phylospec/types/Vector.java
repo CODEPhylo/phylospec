@@ -43,7 +43,7 @@ public interface Vector<T extends PhyloSpecType> extends PhyloSpecType {
      * @return "Vector"
      */
     @Override
-    default String getTypeName() {
+    default java.lang.String getTypeName() {
         return "Vector";
     }
     

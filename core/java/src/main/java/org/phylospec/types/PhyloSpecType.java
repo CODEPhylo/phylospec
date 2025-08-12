@@ -9,7 +9,8 @@ package org.phylospec.types;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface PhyloSpecType {
+public interface PhyloSpecType<T> {
+
     /**
      * Validate that this instance satisfies the type constraints.
      * 
@@ -22,5 +23,5 @@ public interface PhyloSpecType {
      * 
      * @return the name of this type (e.g., "Real", "PositiveInteger", "Simplex")
      */
-    String getTypeName();
+    java.lang.String getTypeName();
 }

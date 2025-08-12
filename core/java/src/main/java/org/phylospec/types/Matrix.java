@@ -51,7 +51,7 @@ public interface Matrix<T extends PhyloSpecType> extends PhyloSpecType {
      * @return "Matrix"
      */
     @Override
-    default String getTypeName() {
+    default java.lang.String getTypeName() {
         return "Matrix";
     }
     

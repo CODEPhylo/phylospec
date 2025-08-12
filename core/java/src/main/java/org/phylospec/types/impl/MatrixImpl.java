@@ -100,11 +100,13 @@ public class MatrixImpl<T extends PhyloSpecType> implements Matrix<T> {
                 if (j > 0) sb.append(", ");
                 T element = elements.get(i).get(j);
                 // Get the actual value for cleaner output
-                if (element.getValue() instanceof Number) {
-                    sb.append(String.format("%.4f", element.getValue()));
-                } else {
-                    sb.append(element.getValue());
-                }
+//                if (element.getValue() instanceof Number) {
+//                    sb.append(String.format("%.4f", element.getValue()));
+//                } else {
+//                    sb.append(element.getValue());
+//                }
+                //TODO make it complied for now
+                sb.append(element.toString());
             }
             sb.append("]");
             if (i < rows - 1) sb.append(",");

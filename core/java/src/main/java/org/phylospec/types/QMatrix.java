@@ -32,7 +32,7 @@ public interface QMatrix extends SquareMatrix<Real> {
      * @return "QMatrix"
      */
     @Override
-    default String getTypeName() {
+    default java.lang.String getTypeName() {
         return "QMatrix";
     }
     

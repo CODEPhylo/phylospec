@@ -16,7 +16,7 @@ public interface Probability extends Real {
      * @return "Probability"
      */
     @Override
-    default String getTypeName() {
+    default java.lang.String getTypeName() {
         return "Probability";
     }
     

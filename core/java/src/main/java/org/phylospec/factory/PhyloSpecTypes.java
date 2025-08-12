@@ -2,7 +2,6 @@ package org.phylospec.factory;
 
 import org.phylospec.types.*;
 import org.phylospec.types.impl.*;
-import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -74,7 +73,7 @@ public final class PhyloSpecTypes {
      * @param value the integer value
      * @return an Integer instance
      */
-    public static Integer integer(int value) {
+    public static org.phylospec.types.Integer integer(int value) {
         return new IntegerImpl(value);
     }
     
@@ -95,7 +94,7 @@ public final class PhyloSpecTypes {
      * @param value the boolean value
      * @return a Boolean instance
      */
-    public static Boolean bool(boolean value) {
+    public static org.phylospec.types.Boolean bool(boolean value) {
         return new BooleanImpl(value);
     }
     
@@ -106,7 +105,7 @@ public final class PhyloSpecTypes {
      * @return a String instance
      * @throws IllegalArgumentException if value is null
      */
-    public static String string(java.lang.String value) {
+    public static org.phylospec.types.String string(java.lang.String value) {
         return new StringImpl(value);
     }
     

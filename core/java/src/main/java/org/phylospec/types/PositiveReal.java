@@ -16,7 +16,7 @@ public interface PositiveReal extends Real {
      * @return "PositiveReal"
      */
     @Override
-    default String getTypeName() {
+    default java.lang.String getTypeName() {
         return "PositiveReal";
     }
     

@@ -1,5 +1,7 @@
 package org.phylospec.types;
 
+import java.lang.String;
+
 /**
  * Boolean type.
  * 
@@ -22,7 +24,7 @@ public interface Boolean extends PhyloSpecType {
     
     /**
      * {@inheritDoc}
-     * 
+     *
      * @return "Boolean"
      */
     @Override

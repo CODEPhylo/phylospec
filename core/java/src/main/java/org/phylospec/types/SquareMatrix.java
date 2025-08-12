@@ -18,7 +18,7 @@ public interface SquareMatrix<T extends PhyloSpecType> extends Matrix<T> {
      * @return "SquareMatrix"
      */
     @Override
-    default String getTypeName() {
+    default java.lang.String getTypeName() {
         return "SquareMatrix";
     }
     

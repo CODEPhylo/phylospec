@@ -10,13 +10,13 @@ package org.phylospec.types;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface Integer extends PhyloSpecType {
+public interface Integer extends PhyloSpecType<java.lang.Integer> {
     /**
      * Get the integer value.
      * 
      * @return the integer value
      */
-    int getValue();
+    java.lang.Integer getValue();
     
     /**
      * {@inheritDoc}
@@ -24,7 +24,7 @@ public interface Integer extends PhyloSpecType {
      * @return "Integer"
      */
     @Override
-    default String getTypeName() {
+    default java.lang.String getTypeName() {
         return "Integer";
     }
     

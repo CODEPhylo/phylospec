@@ -21,7 +21,7 @@ public final class IntegerImpl implements Integer {
     }
     
     @Override
-    public int getValue() {
+    public java.lang.Integer getValue() {
         return value;
     }
     

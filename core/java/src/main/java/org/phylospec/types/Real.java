@@ -23,7 +23,7 @@ public interface Real extends PhyloSpecType {
      * @return "Real"
      */
     @Override
-    default String getTypeName() {
+    default java.lang.String getTypeName() {
         return "Real";
     }
     
