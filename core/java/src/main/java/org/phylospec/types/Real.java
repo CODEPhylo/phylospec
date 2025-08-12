@@ -36,6 +36,19 @@ public interface Real extends PhyloSpecType {
      */
     @Override
     default boolean isValid() {
-        return !Double.isNaN(getValue()) && !Double.isInfinite(getValue());
+        return isReal(getValue());
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * The logic to determine if a value is a {@link Real}.
+     * This can be used by phylospec extensions.
+     *
+     * @param value  Java’s double
+     * @return true if the value is {@link Real}, false otherwise
+     */
+    static boolean isReal(double value) {
+        return !Double.isNaN(value) && !Double.isInfinite(value);
     }
 }

@@ -29,6 +29,19 @@ public interface Probability extends Real {
      */
     @Override
     default boolean isValid() {
-        return Real.super.isValid() && getValue() >= 0.0 && getValue() <= 1.0;
+        return isProbability(getValue());
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * The logic to determine if a value is a {@link Probability}.
+     * This can be used by phylospec extensions.
+     *
+     * @param value  Java’s double
+     * @return true if the value is {@link Probability}, false otherwise
+     */
+    static boolean isProbability(double value) {
+        return Real.isReal(value) && value >= 0.0 && value <= 1.0;
     }
 }
