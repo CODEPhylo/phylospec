@@ -42,7 +42,7 @@ public interface Simplex extends Vector<Probability> {
         
         double sum = 0.0;
         for (Probability p : getElements()) {
-            sum += p.getValue();
+            sum += p.getPrimitive();
         }
         
         // Check if sum is approximately 1 (with small epsilon for floating point errors)

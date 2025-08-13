@@ -10,13 +10,13 @@ package org.phylospec.types;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface Real extends PhyloSpecType<java.lang.Double> {
+public interface Real extends Primitive<java.lang.Double> {
     /**
      * Get the numeric value.
      * 
      * @return the real number value
      */
-    Double getValue();
+    Double getPrimitive();
     
     /**
      * {@inheritDoc}
@@ -37,7 +37,7 @@ public interface Real extends PhyloSpecType<java.lang.Double> {
      */
     @Override
     default boolean isValid() {
-        return isReal(getValue());
+        return isReal(getPrimitive());
     }
 
     /**

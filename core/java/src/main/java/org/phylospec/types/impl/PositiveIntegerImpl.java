@@ -26,7 +26,7 @@ public final class PositiveIntegerImpl implements PositiveInteger {
     }
     
     @Override
-    public java.lang.Integer getValue() {
+    public java.lang.Integer getPrimitive() {
         return value;
     }
     
@@ -35,7 +35,7 @@ public final class PositiveIntegerImpl implements PositiveInteger {
         if (this == obj) return true;
         if (!(obj instanceof PositiveInteger)) return false;
         PositiveInteger other = (PositiveInteger) obj;
-        return value == other.getValue();
+        return value == other.getPrimitive();
     }
     
     @Override

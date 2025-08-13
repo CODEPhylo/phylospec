@@ -24,7 +24,7 @@ public final class SimplexImpl extends VectorImpl<Probability> implements Simple
         if (!isValid()) {
             double sum = 0.0;
             for (Probability p : probabilities) {
-                sum += p.getValue();
+                sum += p.getPrimitive();
             }
             throw new IllegalArgumentException(
                 String.format("Simplex elements must sum to 1.0 (within tolerance 1e-10), but sum was: %f", sum));

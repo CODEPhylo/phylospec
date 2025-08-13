@@ -26,7 +26,7 @@ public final class StringImpl implements String {
     }
     
     @Override
-    public java.lang.String getValue() {
+    public java.lang.String getPrimitive() {
         return value;
     }
     
@@ -35,7 +35,7 @@ public final class StringImpl implements String {
         if (this == obj) return true;
         if (!(obj instanceof String)) return false;
         String other = (String) obj;
-        return Objects.equals(value, other.getValue());
+        return Objects.equals(value, other.getPrimitive());
     }
     
     @Override

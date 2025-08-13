@@ -26,7 +26,7 @@ public final class NonNegativeRealImpl implements NonNegativeReal {
     }
     
     @Override
-    public double getValue() {
+    public Double getPrimitive() {
         return value;
     }
     
@@ -35,7 +35,7 @@ public final class NonNegativeRealImpl implements NonNegativeReal {
         if (this == obj) return true;
         if (!(obj instanceof NonNegativeReal)) return false;
         NonNegativeReal other = (NonNegativeReal) obj;
-        return Double.compare(value, other.getValue()) == 0;
+        return Double.compare(value, other.getPrimitive()) == 0;
     }
     
     @Override

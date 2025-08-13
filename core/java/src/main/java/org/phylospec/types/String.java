@@ -12,13 +12,13 @@ package org.phylospec.types;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface String extends PhyloSpecType {
+public interface String extends Primitive<java.lang.String> {
     /**
      * Get the string value.
      * 
      * @return the string value
      */
-    java.lang.String getValue();
+    java.lang.String getPrimitive();
     
     /**
      * {@inheritDoc}
@@ -39,6 +39,6 @@ public interface String extends PhyloSpecType {
      */
     @Override
     default boolean isValid() {
-        return getValue() != null;
+        return getPrimitive() != null;
     }
 }

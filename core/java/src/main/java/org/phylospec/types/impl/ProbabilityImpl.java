@@ -26,7 +26,7 @@ public final class ProbabilityImpl implements Probability {
     }
     
     @Override
-    public double getValue() {
+    public Double getPrimitive() {
         return value;
     }
     
@@ -35,7 +35,7 @@ public final class ProbabilityImpl implements Probability {
         if (this == obj) return true;
         if (!(obj instanceof Probability)) return false;
         Probability other = (Probability) obj;
-        return Double.compare(value, other.getValue()) == 0;
+        return Double.compare(value, other.getPrimitive()) == 0;
     }
     
     @Override

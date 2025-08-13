@@ -26,7 +26,7 @@ public final class RealImpl implements Real {
     }
     
     @Override
-    public Double getValue() {
+    public Double getPrimitive() {
         return value;
     }
     
@@ -35,7 +35,7 @@ public final class RealImpl implements Real {
         if (this == obj) return true;
         if (!(obj instanceof Real)) return false;
         Real other = (Real) obj;
-        return Double.compare(value, other.getValue()) == 0;
+        return Double.compare(value, other.getPrimitive()) == 0;
     }
     
     @Override

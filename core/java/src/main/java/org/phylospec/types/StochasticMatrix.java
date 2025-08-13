@@ -52,7 +52,7 @@ public interface StochasticMatrix extends Matrix<Probability> {
         for (int i = 0; i < getRows(); i++) {
             double rowSum = 0.0;
             for (int j = 0; j < getCols(); j++) {
-                rowSum += get(i, j).getValue();
+                rowSum += get(i, j).getPrimitive();
             }
             if (Math.abs(rowSum - 1.0) > 1e-10) {
                 return false;

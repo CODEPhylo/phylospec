@@ -26,7 +26,7 @@ public final class PositiveRealImpl implements PositiveReal {
     }
     
     @Override
-    public double getValue() {
+    public Double getPrimitive() {
         return value;
     }
     
@@ -35,7 +35,7 @@ public final class PositiveRealImpl implements PositiveReal {
         if (this == obj) return true;
         if (!(obj instanceof PositiveReal)) return false;
         PositiveReal other = (PositiveReal) obj;
-        return Double.compare(value, other.getValue()) == 0;
+        return Double.compare(value, other.getPrimitive()) == 0;
     }
     
     @Override

@@ -29,7 +29,7 @@ public interface Probability extends Real {
      */
     @Override
     default boolean isValid() {
-        return isProbability(getValue());
+        return isProbability(getPrimitive());
     }
 
     /**

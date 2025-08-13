@@ -21,8 +21,8 @@ public final class BooleanImpl implements Boolean {
     }
     
     @Override
-    public boolean getValue() {
-        return value;
+    public java.lang.Boolean getPrimitive() {
+        return java.lang.Boolean.valueOf(value);
     }
     
     @Override
@@ -30,7 +30,7 @@ public final class BooleanImpl implements Boolean {
         if (this == obj) return true;
         if (!(obj instanceof Boolean)) return false;
         Boolean other = (Boolean) obj;
-        return value == other.getValue();
+        return value == other.getPrimitive();
     }
     
     @Override

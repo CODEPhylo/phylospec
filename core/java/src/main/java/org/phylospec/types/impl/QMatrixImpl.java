@@ -84,7 +84,7 @@ public final class QMatrixImpl extends SquareMatrixImpl<Real> implements QMatrix
         int maxWidth = 0;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                String formatted = String.format("%.4f", get(i, j).getValue());
+                String formatted = String.format("%.4f", get(i, j).getPrimitive());
                 maxWidth = Math.max(maxWidth, formatted.length());
             }
         }
@@ -94,7 +94,7 @@ public final class QMatrixImpl extends SquareMatrixImpl<Real> implements QMatrix
             sb.append("  [");
             for (int j = 0; j < n; j++) {
                 if (j > 0) sb.append(", ");
-                sb.append(String.format("%" + maxWidth + ".4f", get(i, j).getValue()));
+                sb.append(String.format("%" + maxWidth + ".4f", get(i, j).getPrimitive()));
             }
             sb.append("]");
             if (i < n - 1) sb.append(",");

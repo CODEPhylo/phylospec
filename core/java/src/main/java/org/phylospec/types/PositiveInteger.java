@@ -29,6 +29,6 @@ public interface PositiveInteger extends Integer {
      */
     @Override
     default boolean isValid() {
-        return getValue() > 0;
+        return getPrimitive() > 0;
     }
 }

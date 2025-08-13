@@ -59,7 +59,7 @@ public interface QMatrix extends SquareMatrix<Real> {
             double rowSum = 0.0;
             
             for (int j = 0; j < n; j++) {
-                double value = get(i, j).getValue();
+                double value = get(i, j).getPrimitive();
                 
                 if (i != j) {
                     // Off-diagonal elements must be non-negative

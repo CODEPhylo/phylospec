@@ -21,7 +21,7 @@ public final class IntegerImpl implements Integer {
     }
     
     @Override
-    public java.lang.Integer getValue() {
+    public java.lang.Integer getPrimitive() {
         return value;
     }
     
@@ -30,7 +30,7 @@ public final class IntegerImpl implements Integer {
         if (this == obj) return true;
         if (!(obj instanceof Integer)) return false;
         Integer other = (Integer) obj;
-        return value == other.getValue();
+        return value == other.getPrimitive();
     }
     
     @Override

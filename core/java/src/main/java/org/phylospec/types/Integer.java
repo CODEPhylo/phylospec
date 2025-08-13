@@ -10,13 +10,13 @@ package org.phylospec.types;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface Integer extends PhyloSpecType<java.lang.Integer> {
+public interface Integer extends Primitive<java.lang.Integer> {
     /**
      * Get the integer value.
      * 
      * @return the integer value
      */
-    java.lang.Integer getValue();
+    java.lang.Integer getPrimitive();
     
     /**
      * {@inheritDoc}
