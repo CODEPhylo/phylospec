@@ -5,17 +5,18 @@ package org.phylospec.types;
  * 
  * Represents a floating-point number that must be finite (not NaN or Infinity).
  * This is the base type for all continuous numeric types in PhyloSpec.
+ * Note: this uses the fully qualified java.lang.Double when needed to avoid conflicts.
  * 
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface Real extends PhyloSpecType {
+public interface Real extends PhyloSpecType<java.lang.Double> {
     /**
      * Get the numeric value.
      * 
      * @return the real number value
      */
-    double getValue();
+    Double getValue();
     
     /**
      * {@inheritDoc}

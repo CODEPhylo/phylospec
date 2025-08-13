@@ -26,7 +26,7 @@ public final class RealImpl implements Real {
     }
     
     @Override
-    public double getValue() {
+    public Double getValue() {
         return value;
     }
     
