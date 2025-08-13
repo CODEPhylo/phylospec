@@ -11,11 +11,19 @@ package org.phylospec.types;
 public interface Primitive<T> extends PhyloSpecType<T> {
 
     /**
-     *
      * Get the primitive value with the type T.
      * 
      * @return the primitive value
      */
     T getPrimitive();
+
+    /**
+     * Get the primitive type of the value
+     *
+     * @return the class of the primitive type
+     */
+    default Class getPrimitiveType() {
+        return getPrimitive().getClass();
+    }
 
 }
