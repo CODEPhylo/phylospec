@@ -14,24 +14,24 @@ import java.lang.String;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface Boolean extends Primitive<java.lang.Boolean> {
+public interface Bool extends Primitive<java.lang.Boolean> {
     /**
      * Get the boolean value.
      * 
      * @return the boolean value
      */
     java.lang.Boolean getPrimitive();
-    
+
     /**
      * {@inheritDoc}
      *
-     * @return "Boolean"
+     * @return "Bool"
      */
     @Override
     default String getTypeName() {
-        return "Boolean";
+        return "Bool";
     }
-    
+
     /**
      * {@inheritDoc}
      * 

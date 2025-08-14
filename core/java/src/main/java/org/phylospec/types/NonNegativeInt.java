@@ -9,17 +9,17 @@ package org.phylospec.types;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface NonNegativeInteger extends Integer {
+public interface NonNegativeInt extends Int {
     /**
      * {@inheritDoc}
-     * 
+     *
      * @return "NonNegativeInteger"
      */
     @Override
     default java.lang.String getTypeName() {
         return "NonNegativeInteger";
     }
-    
+
     /**
      * {@inheritDoc}
      * 
@@ -29,6 +29,6 @@ public interface NonNegativeInteger extends Integer {
      */
     @Override
     default boolean isValid() {
-        return Integer.super.isValid() && getPrimitive() >= 0;
+        return Int.super.isValid() && getPrimitive() >= 0;
     }
 }

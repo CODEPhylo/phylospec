@@ -1,6 +1,6 @@
 package org.phylospec.types.impl;
 
-import org.phylospec.types.Integer;
+import org.phylospec.types.Int;
 
 /**
  * Immutable implementation of the Integer type.
@@ -8,7 +8,7 @@ import org.phylospec.types.Integer;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public final class IntegerImpl implements Integer {
+public final class IntImpl implements Int {
     private final int value;
     
     /**
@@ -16,7 +16,7 @@ public final class IntegerImpl implements Integer {
      * 
      * @param value the integer value
      */
-    public IntegerImpl(int value) {
+    public IntImpl(int value) {
         this.value = value;
     }
     
@@ -28,8 +28,8 @@ public final class IntegerImpl implements Integer {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof Integer)) return false;
-        Integer other = (Integer) obj;
+        if (!(obj instanceof Int)) return false;
+        Int other = (Int) obj;
         return value == other.getPrimitive();
     }
     

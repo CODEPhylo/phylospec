@@ -1,6 +1,6 @@
 package org.phylospec.types.impl;
 
-import org.phylospec.types.PositiveInteger;
+import org.phylospec.types.PositiveInt;
 
 /**
  * Immutable implementation of the PositiveInteger type.
@@ -8,7 +8,7 @@ import org.phylospec.types.PositiveInteger;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public final class PositiveIntegerImpl implements PositiveInteger {
+public final class PositiveIntImpl implements PositiveInt {
     private final int value;
     
     /**
@@ -17,7 +17,7 @@ public final class PositiveIntegerImpl implements PositiveInteger {
      * @param value the positive integer value
      * @throws IllegalArgumentException if value is not positive
      */
-    public PositiveIntegerImpl(int value) {
+    public PositiveIntImpl(int value) {
         this.value = value;
         if (!isValid()) {
             throw new IllegalArgumentException(
@@ -33,8 +33,8 @@ public final class PositiveIntegerImpl implements PositiveInteger {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof PositiveInteger)) return false;
-        PositiveInteger other = (PositiveInteger) obj;
+        if (!(obj instanceof PositiveInt)) return false;
+        PositiveInt other = (PositiveInt) obj;
         return value == other.getPrimitive();
     }
     

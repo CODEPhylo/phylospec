@@ -1,6 +1,6 @@
 package org.phylospec.types.impl;
 
-import org.phylospec.types.Boolean;
+import org.phylospec.types.Bool;
 
 /**
  * Immutable implementation of the Boolean type.
@@ -8,7 +8,7 @@ import org.phylospec.types.Boolean;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public final class BooleanImpl implements Boolean {
+public final class BoolImpl implements Bool {
     private final boolean value;
     
     /**
@@ -16,7 +16,7 @@ public final class BooleanImpl implements Boolean {
      * 
      * @param value the boolean value
      */
-    public BooleanImpl(boolean value) {
+    public BoolImpl(boolean value) {
         this.value = value;
     }
     
@@ -24,12 +24,12 @@ public final class BooleanImpl implements Boolean {
     public java.lang.Boolean getPrimitive() {
         return java.lang.Boolean.valueOf(value);
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof Boolean)) return false;
-        Boolean other = (Boolean) obj;
+        if (!(obj instanceof Bool)) return false;
+        Bool other = (Bool) obj;
         return value == other.getPrimitive();
     }
     

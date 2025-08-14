@@ -12,22 +12,22 @@ package org.phylospec.types;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface String extends Primitive<java.lang.String> {
+public interface Str extends Primitive<java.lang.String> {
     /**
      * Get the string value.
      * 
      * @return the string value
      */
     java.lang.String getPrimitive();
-    
+
     /**
      * {@inheritDoc}
-     * 
-     * @return "String"
+     *
+     * @return "Str"
      */
     @Override
     default java.lang.String getTypeName() {
-        return "String";
+        return "Str";
     }
     
     /**

@@ -19,9 +19,9 @@ The PhyloSpec Java library provides:
 | Type | Description | Java Interface |
 |------|-------------|----------------|
 | `Real` | Real-valued number | `org.phylospec.types.Real` |
-| `Integer` | Integer-valued number | `org.phylospec.types.Integer` |
-| `Boolean` | Logical value | `org.phylospec.types.Boolean` |
-| `String` | Text value | `org.phylospec.types.String` |
+| `Integer` | Integer-valued number | `org.phylospec.types.Int` |
+| `Bool` | Logical value | `org.phylospec.types.Bool` |
+| `Str` | Text value | `org.phylospec.types.Str` |
 
 ### Restricted Types
 
@@ -30,7 +30,8 @@ The PhyloSpec Java library provides:
 | `PositiveReal` | `Real` | > 0 | `org.phylospec.types.PositiveReal` |
 | `NonNegativeReal` | `Real` | ≥ 0 | `org.phylospec.types.NonNegativeReal` |
 | `Probability` | `Real` | [0, 1] | `org.phylospec.types.Probability` |
-| `PositiveInteger` | `Integer` | > 0 | `org.phylospec.types.PositiveInteger` |
+| `PositiveInt` | `Integer` | > 0 | `org.phylospec.types.PositiveInt` |
+| `NonNegativeInt` | `Integer` | ≥ 0 | `org.phylospec.types.NonNegativeInt` |
 
 ### Collection Types
 

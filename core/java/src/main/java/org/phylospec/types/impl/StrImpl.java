@@ -1,6 +1,7 @@
 package org.phylospec.types.impl;
 
-import org.phylospec.types.String;
+import org.phylospec.types.Str;
+
 import java.util.Objects;
 
 /**
@@ -9,7 +10,7 @@ import java.util.Objects;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public final class StringImpl implements String {
+public final class StrImpl implements Str {
     private final java.lang.String value;
     
     /**
@@ -18,7 +19,7 @@ public final class StringImpl implements String {
      * @param value the string value
      * @throws IllegalArgumentException if value is null
      */
-    public StringImpl(java.lang.String value) {
+    public StrImpl(java.lang.String value) {
         this.value = value;
         if (!isValid()) {
             throw new IllegalArgumentException("String value cannot be null");
@@ -33,8 +34,8 @@ public final class StringImpl implements String {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof String)) return false;
-        String other = (String) obj;
+        if (!(obj instanceof Str)) return false;
+        Str other = (Str) obj;
         return Objects.equals(value, other.getPrimitive());
     }
     

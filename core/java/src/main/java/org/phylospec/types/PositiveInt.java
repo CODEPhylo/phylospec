@@ -9,17 +9,17 @@ package org.phylospec.types;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface PositiveInteger extends Integer {
+public interface PositiveInt extends Int {
     /**
      * {@inheritDoc}
-     * 
-     * @return "PositiveInteger"
+     *
+     * @return "PositiveInt"
      */
     @Override
     default java.lang.String getTypeName() {
-        return "PositiveInteger";
+        return "PositiveInt";
     }
-    
+
     /**
      * {@inheritDoc}
      * 

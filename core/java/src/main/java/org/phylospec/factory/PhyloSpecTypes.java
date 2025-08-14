@@ -73,8 +73,8 @@ public final class PhyloSpecTypes {
      * @param value the integer value
      * @return an Integer instance
      */
-    public static org.phylospec.types.Integer integer(int value) {
-        return new IntegerImpl(value);
+    public static Int integer(int value) {
+        return new IntImpl(value);
     }
     
     /**
@@ -84,8 +84,8 @@ public final class PhyloSpecTypes {
      * @return a PositiveInteger instance
      * @throws IllegalArgumentException if value is not positive
      */
-    public static PositiveInteger positiveInteger(int value) {
-        return new PositiveIntegerImpl(value);
+    public static PositiveInt positiveInteger(int value) {
+        return new PositiveIntImpl(value);
     }
     
     /**
@@ -94,8 +94,8 @@ public final class PhyloSpecTypes {
      * @param value the boolean value
      * @return a Boolean instance
      */
-    public static org.phylospec.types.Boolean bool(boolean value) {
-        return new BooleanImpl(value);
+    public static Bool bool(boolean value) {
+        return new BoolImpl(value);
     }
     
     /**
@@ -105,8 +105,8 @@ public final class PhyloSpecTypes {
      * @return a String instance
      * @throws IllegalArgumentException if value is null
      */
-    public static org.phylospec.types.String string(java.lang.String value) {
-        return new StringImpl(value);
+    public static Str string(java.lang.String value) {
+        return new StrImpl(value);
     }
     
     // ========== Collection Types ==========

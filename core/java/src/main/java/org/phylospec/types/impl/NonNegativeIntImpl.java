@@ -1,6 +1,6 @@
 package org.phylospec.types.impl;
 
-import org.phylospec.types.NonNegativeInteger;
+import org.phylospec.types.NonNegativeInt;
 
 /**
  * Immutable implementation of the NonNegativeInteger type.
@@ -8,7 +8,7 @@ import org.phylospec.types.NonNegativeInteger;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public final class NonNegativeIntegerImpl implements NonNegativeInteger {
+public final class NonNegativeIntImpl implements NonNegativeInt {
     private final int value;
 
     /**
@@ -17,7 +17,7 @@ public final class NonNegativeIntegerImpl implements NonNegativeInteger {
      * @param value the non-negative integer number value
      * @throws IllegalArgumentException if value is negative or not finite
      */
-    public NonNegativeIntegerImpl(int value) {
+    public NonNegativeIntImpl(int value) {
         this.value = value;
         if (!isValid()) {
             throw new IllegalArgumentException(
@@ -33,8 +33,8 @@ public final class NonNegativeIntegerImpl implements NonNegativeInteger {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof NonNegativeInteger)) return false;
-        NonNegativeInteger other = (NonNegativeInteger) obj;
+        if (!(obj instanceof NonNegativeInt)) return false;
+        NonNegativeInt other = (NonNegativeInt) obj;
         return Double.compare(value, other.getPrimitive()) == 0;
     }
     
