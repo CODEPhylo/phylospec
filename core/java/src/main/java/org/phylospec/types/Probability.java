@@ -9,7 +9,7 @@ package org.phylospec.types;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface Probability extends Real {
+public interface Probability extends NonNegativeReal {
     /**
      * {@inheritDoc}
      * 

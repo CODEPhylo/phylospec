@@ -9,7 +9,7 @@ package org.phylospec.types;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface PositiveInt extends Int {
+public interface PositiveInt extends NonNegativeInt {
     /**
      * {@inheritDoc}
      *

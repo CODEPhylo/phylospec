@@ -17,13 +17,4 @@ public interface Primitive<T> extends PhyloSpecType<T> {
      */
     T getPrimitive();
 
-    /**
-     * Get the primitive type of the value
-     *
-     * @return the class of the primitive type
-     */
-    default Class getPrimitiveType() {
-        return getPrimitive().getClass();
-    }
-
 }
