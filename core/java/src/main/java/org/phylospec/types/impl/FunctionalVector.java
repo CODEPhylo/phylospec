@@ -1,9 +1,10 @@
 package org.phylospec.types.impl;
 
 import org.phylospec.types.*;
+import org.phylospec.types.Vector;
+
 import java.util.*;
 import java.util.function.*;
-import java.util.stream.*;
 
 /**
  * Default implementation of Vector with functional operations.
