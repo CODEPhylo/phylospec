@@ -1,6 +1,7 @@
 package org.phylospec.types;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Vector type - ordered collection of values.
@@ -38,12 +39,21 @@ public interface Vector<T extends PhyloSpecType> extends PhyloSpecType {
     T get(int index);
     
     /**
+     * Get a sequential Stream of the vector elements.
+     * 
+     * @return a stream of this vector's elements
+     */
+    default Stream<T> stream() {
+        return getElements().stream();
+    }
+    
+    /**
      * {@inheritDoc}
      * 
      * @return "Vector"
      */
     @Override
-    default java.lang.String getTypeName() {
+    default String getTypeName() {
         return "Vector";
     }
     
