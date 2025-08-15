@@ -29,6 +29,6 @@ public interface NonNegativeReal extends Real {
      */
     @Override
     default boolean isValid() {
-        return Real.super.isValid() && getPrimitive() >= 0;
+        return Real.isReal(getPrimitive()) && getPrimitive() >= 0;
     }
 }

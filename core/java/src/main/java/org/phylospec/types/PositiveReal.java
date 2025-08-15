@@ -9,7 +9,7 @@ package org.phylospec.types;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface PositiveReal extends Real {
+public interface PositiveReal extends NonNegativeReal {
     /**
      * {@inheritDoc}
      * 
@@ -29,6 +29,6 @@ public interface PositiveReal extends Real {
      */
     @Override
     default boolean isValid() {
-        return Real.super.isValid() && getPrimitive() > 0;
+        return Real.isReal(getPrimitive()) && getPrimitive() > 0;
     }
 }
