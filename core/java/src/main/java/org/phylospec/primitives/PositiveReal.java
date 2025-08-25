@@ -1,0 +1,19 @@
+package org.phylospec.primitives;
+
+/**
+ * Positive real number type (> 0).
+ *
+ * Represents a real number that must be strictly positive.
+ * Common uses include rates, branch lengths, and variance parameters.
+ *
+ * @author PhyloSpec Contributors
+ * @since 1.0
+ */
+public class PositiveReal extends NonNegativeReal{
+    public static final PositiveReal INSTANCE = new PositiveReal();
+
+    protected PositiveReal() {}
+
+    @Override
+    public boolean isValid(double value) { return Real.INSTANCE.isValid(value) && value > 0.0; }
+}
