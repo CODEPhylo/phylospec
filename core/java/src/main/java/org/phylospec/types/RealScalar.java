@@ -3,6 +3,7 @@ package org.phylospec.types;
 import org.phylospec.primitives.Real;
 
 public interface RealScalar<P extends Real> extends Tensor<P, Double> {
+    // rank() == 0 but size == 1
 
     @Override
     default int rank(){ return 0; }
@@ -10,7 +11,6 @@ public interface RealScalar<P extends Real> extends Tensor<P, Double> {
     @Override
     default int[] shape(){ return new int[]{}; }
 
-    // rank() == 0 but size == 1
     default double getDouble() {
         return get(0);
     }
