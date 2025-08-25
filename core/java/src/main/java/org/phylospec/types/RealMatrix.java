@@ -3,7 +3,7 @@ package org.phylospec.types;
 import org.phylospec.primitives.Real;
 
 
-public interface RealMatrix<P extends Real> extends RealTensor<P> {
+public interface RealMatrix<P extends Real> extends RealScalar<P> {
     /**
      * Get the number of rows in the matrix.
      *

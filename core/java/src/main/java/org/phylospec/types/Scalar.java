@@ -1,13 +1,8 @@
 package org.phylospec.types;
 
-@Deprecated
-public interface Scalar extends Tensor {
+import org.phylospec.primitives.Real;
 
-    @Override
-    default int rank(){ return 0; }
+// Readability aliases
+public interface Scalar<P extends Real> extends RealScalar<P> {
 
-    @Override
-    default int[] shape(){ return new int[]{}; }
-
-    // rank() == 0 but size == 1
 }

@@ -2,7 +2,7 @@ package org.phylospec.types;
 
 import org.phylospec.primitives.Real;
 
-public interface RealVector<P extends Real> extends RealTensor<P> {
+public interface RealVector<P extends Real> extends Tensor<P, Double> {
 
     // TODO already has "long size()"
     int length();

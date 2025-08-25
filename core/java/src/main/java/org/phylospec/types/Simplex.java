@@ -15,7 +15,7 @@ import org.phylospec.primitives.UnitInterval;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface Simplex extends Vector<UnitInterval> {
+public interface Simplex<P extends UnitInterval> extends RealVector<P> {
 
     // Invariant: sum(elements) = 1.0, all elements in [0,1]
     default double sum() {

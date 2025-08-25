@@ -2,7 +2,7 @@ package org.phylospec.types;
 
 import org.phylospec.primitives.Int;
 
-public interface IntVector<P extends Int> extends IntTensor<P> {
+public interface IntVector<P extends Int> extends Tensor<P, Integer> {
 
     // TODO already has "long size()"
     int length();
