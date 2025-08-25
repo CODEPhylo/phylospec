@@ -14,11 +14,9 @@ public class NonNegativeReal extends Real {
 
     protected NonNegativeReal() {}
 
-    public boolean isValid(double value) { return Real.INSTANCE.isValid(value) && value >= 0.0;  }
-
     @Override
     public boolean isValid(Double value) {
-        return false;
+        return Real.INSTANCE.isValid(value) && value >= 0.0;
     }
 
 }
