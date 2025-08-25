@@ -1,5 +1,7 @@
 package org.phylospec.types;
 
+import org.phylospec.primitives.Real;
+
 /**
  * Q-Matrix (Rate Matrix) type - used in continuous-time Markov chains.
  * 
@@ -25,16 +27,7 @@ package org.phylospec.types;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface QMatrix extends SquareMatrix<Real> {
-    /**
-     * {@inheritDoc}
-     * 
-     * @return "QMatrix"
-     */
-    @Override
-    default java.lang.String getTypeName() {
-        return "QMatrix";
-    }
+public interface QRealMatrix<P extends Real> extends SquareRealMatrix<P> {
     
     /**
      * {@inheritDoc}
@@ -49,17 +42,17 @@ public interface QMatrix extends SquareMatrix<Real> {
      */
     @Override
     default boolean isValid() {
-        if (!SquareMatrix.super.isValid()) {
+        if (!SquareRealMatrix.super.isValid()) {
             return false;
         }
         
-        int n = getRows();
+        int n = rows();
         
         for (int i = 0; i < n; i++) {
             double rowSum = 0.0;
             
             for (int j = 0; j < n; j++) {
-                double value = get(i, j).getPrimitive();
+                double value = get(i, j);
                 
                 if (i != j) {
                     // Off-diagonal elements must be non-negative

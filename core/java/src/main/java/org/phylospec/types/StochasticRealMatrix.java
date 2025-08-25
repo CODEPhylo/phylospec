@@ -1,5 +1,7 @@
 package org.phylospec.types;
 
+import org.phylospec.primitives.UnitInterval;
+
 /**
  * Stochastic matrix - probability transition matrix for discrete-time Markov chains.
  * 
@@ -22,17 +24,8 @@ package org.phylospec.types;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface StochasticMatrix extends Matrix<Probability> {
-    /**
-     * {@inheritDoc}
-     * 
-     * @return "StochasticMatrix"
-     */
-    @Override
-    default java.lang.String getTypeName() {
-        return "StochasticMatrix";
-    }
-    
+public interface StochasticRealMatrix<P extends UnitInterval> extends RealMatrix<P> {
+
     /**
      * {@inheritDoc}
      * 
@@ -44,15 +37,15 @@ public interface StochasticMatrix extends Matrix<Probability> {
      */
     @Override
     default boolean isValid() {
-        if (!Matrix.super.isValid()) {
+        if (!RealMatrix.super.isValid()) {
             return false;
         }
         
         // Check that each row sums to 1
-        for (int i = 0; i < getRows(); i++) {
+        for (int i = 0; i < rows(); i++) {
             double rowSum = 0.0;
-            for (int j = 0; j < getCols(); j++) {
-                rowSum += get(i, j).getPrimitive();
+            for (int j = 0; j < cols(); j++) {
+                rowSum += get(i, j);
             }
             if (Math.abs(rowSum - 1.0) > 1e-10) {
                 return false;

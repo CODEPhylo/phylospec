@@ -38,16 +38,16 @@ The PhyloSpec Java library provides:
 | Type | Description | Java Interface |
 |------|-------------|----------------|
 | `Vector<T>` | Ordered collection | `org.phylospec.types.Vector<T>` |
-| `Matrix<T>` | 2D array | `org.phylospec.types.Matrix<T>` |
-| `SquareMatrix<T>` | Square matrix | `org.phylospec.types.SquareMatrix<T>` |
+| `Matrix<T>` | 2D array | `org.phylospec.types.RealMatrix<T>` |
+| `SquareMatrix<T>` | Square matrix | `org.phylospec.types.SquareRealMatrix<T>` |
 
 ### Specialized Phylogenetic Types
 
 | Type | Description | Constraints | Java Interface |
 |------|-------------|-------------|----------------|
 | `Simplex` | Probability vector | Elements sum to 1.0 | `org.phylospec.types.Simplex` |
-| `StochasticMatrix` | Transition probability matrix | Rows sum to 1.0 | `org.phylospec.types.StochasticMatrix` |
-| `QMatrix` | Rate matrix for CTMCs | Rows sum to 0, off-diagonals ≥ 0 | `org.phylospec.types.QMatrix` |
+| `StochasticMatrix` | Transition probability matrix | Rows sum to 1.0 | `org.phylospec.types.StochasticRealMatrix` |
+| `QMatrix` | Rate matrix for CTMCs | Rows sum to 0, off-diagonals ≥ 0 | `org.phylospec.types.QRealMatrix` |
 
 ## Quick Start
 
@@ -65,23 +65,24 @@ The PhyloSpec Java library provides:
 
 ```java
 import org.phylospec.types.*;
+
 import static org.phylospec.factory.PhyloSpecTypes.*;
 
 // Basic types
 Real r = real(3.14);
-PositiveReal rate = positiveReal(0.5);
-Probability p = probability(0.7);
+        PositiveReal rate = positiveReal(0.5);
+        Probability p = probability(0.7);
 
-// Collections
-Vector<Real> v = vector(real(1.0), real(2.0), real(3.0));
-Simplex freqs = simplex(0.25, 0.25, 0.25, 0.25);
+        // Collections
+        Vector<Real> v = vector(real(1.0), real(2.0), real(3.0));
+        Simplex freqs = simplex(0.25, 0.25, 0.25, 0.25);
 
-// Matrices
-QMatrix q = qMatrix(new double[][]{
-    {-1.0,  0.5,  0.5},
-    { 0.3, -0.6,  0.3},
-    { 0.2,  0.4, -0.6}
-});
+        // Matrices
+        QRealMatrix q = qMatrix(new double[][]{
+                {-1.0, 0.5, 0.5},
+                {0.3, -0.6, 0.3},
+                {0.2, 0.4, -0.6}
+        });
 ```
 
 ### Using with Annotations

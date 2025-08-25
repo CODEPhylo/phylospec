@@ -1,5 +1,7 @@
 package org.phylospec.types;
 
+import org.phylospec.primitives.Real;
+
 /**
  * Square matrix type.
  * 
@@ -11,17 +13,8 @@ package org.phylospec.types;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface SquareMatrix<T extends PhyloSpecType> extends Matrix<T> {
-    /**
-     * {@inheritDoc}
-     * 
-     * @return "SquareMatrix"
-     */
-    @Override
-    default java.lang.String getTypeName() {
-        return "SquareMatrix";
-    }
-    
+public interface SquareRealMatrix<P extends Real> extends RealMatrix<P> {
+
     /**
      * {@inheritDoc}
      * 
@@ -31,6 +24,6 @@ public interface SquareMatrix<T extends PhyloSpecType> extends Matrix<T> {
      */
     @Override
     default boolean isValid() {
-        return Matrix.super.isValid() && getRows() == getCols();
+        return RealMatrix.super.isValid() && rows() == cols();
     }
 }

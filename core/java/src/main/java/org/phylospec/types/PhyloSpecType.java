@@ -9,15 +9,9 @@ package org.phylospec.types;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
+@Deprecated
 public interface PhyloSpecType<T> {
 
-    /**
-     * Validate that this instance satisfies the type constraints.
-     * 
-     * @return true if this instance is valid according to its type constraints, false otherwise
-     */
-    boolean isValid();
-    
     /**
      * Get a string representation of the type.
      * 
