@@ -1,16 +1,16 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.Int;
+import org.phylospec.primitives.Bool;
 
-public interface IntVector<P extends Int> extends Tensor<P, Integer> {
+public interface BoolVector<P extends Bool> extends Tensor<P, Boolean> {
 
     // TODO already has "long size()"
     int length();
 
-    int get(int i);
+    boolean get(int i);
 
-    default int[] getIntArray() {
-        int[] arr = new int[length()];
+    default boolean[] getBooleanArray() {
+        boolean[] arr = new boolean[length()];
         for (int i = 0; i < length(); i++) {
             arr[i] = get(i);
         }

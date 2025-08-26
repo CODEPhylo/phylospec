@@ -1,8 +1,8 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.Int;
+import org.phylospec.primitives.Bool;
 
-public interface IntScalar<P extends Int> extends Tensor<P, Integer> {
+public interface BoolScalar<P extends Bool> extends Tensor<P, Boolean> {
 
     @Override
     default int rank(){ return 0; }
@@ -15,7 +15,7 @@ public interface IntScalar<P extends Int> extends Tensor<P, Integer> {
      *
      * @return unboxed value
      */
-    int get();
+    boolean get();
 
     @Override
     default boolean isValid() {

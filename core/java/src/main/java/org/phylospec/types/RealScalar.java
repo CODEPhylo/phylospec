@@ -11,13 +11,16 @@ public interface RealScalar<P extends Real> extends Tensor<P, Double> {
     @Override
     default int[] shape(){ return new int[]{}; }
 
-    default double getDouble() {
-        return get(0);
-    }
+    /**
+     * Overload {@link Tensor#get(int...)}
+     *
+     * @return unboxed value
+     */
+    double get();
 
     @Override
     default boolean isValid() {
-        P p = getPrimitive();
+        P p = primitiveType();
         return p.isValid(get());
     }
 

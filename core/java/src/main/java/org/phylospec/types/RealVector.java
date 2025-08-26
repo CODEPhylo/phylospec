@@ -27,7 +27,7 @@ public interface RealVector<P extends Real> extends Tensor<P, Double> {
 
     @Override
     default boolean isValid() {
-        P p = getPrimitive();
+        P p = primitiveType();
         for (int i=0; i<length(); i++)
             if (!p.isValid(get(i)))
                 return false;
