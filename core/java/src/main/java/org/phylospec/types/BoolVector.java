@@ -2,7 +2,7 @@ package org.phylospec.types;
 
 import org.phylospec.primitives.Bool;
 
-public interface BoolVector<P extends Bool> extends Tensor<P, Boolean> {
+public interface BoolVector extends Tensor<Bool, Boolean> {
 
     // TODO already has "long size()"
     int length();
@@ -27,7 +27,7 @@ public interface BoolVector<P extends Bool> extends Tensor<P, Boolean> {
 
     @Override
     default boolean isValid() {
-        P p = primitiveType();
+        Bool p = primitiveType();
         for (int i=0; i<length(); i++)
             if (!p.isValid(get(i)))
                 return false;

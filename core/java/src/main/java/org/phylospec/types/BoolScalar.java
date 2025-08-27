@@ -2,7 +2,7 @@ package org.phylospec.types;
 
 import org.phylospec.primitives.Bool;
 
-public interface BoolScalar<P extends Bool> extends Tensor<P, Boolean> {
+public interface BoolScalar extends Tensor<Bool, Boolean> {
 
     @Override
     default int rank(){ return 0; }
@@ -19,7 +19,7 @@ public interface BoolScalar<P extends Bool> extends Tensor<P, Boolean> {
 
     @Override
     default boolean isValid() {
-        P p = primitiveType();
+        Bool p = primitiveType();
         return p.isValid(get());
     }
 }

@@ -3,7 +3,7 @@ package org.phylospec.types;
 import org.phylospec.primitives.Bool;
 
 
-public interface BoolMatrix<P extends Bool> extends Tensor<P, Boolean> {
+public interface BoolMatrix extends Tensor<Bool, Boolean> {
     /**
      * Get the number of rows in the matrix.
      *
@@ -36,7 +36,7 @@ public interface BoolMatrix<P extends Bool> extends Tensor<P, Boolean> {
 
     @Override
     default boolean isValid() {
-        P p = primitiveType();
+        Bool p = primitiveType();
         for (int r=0;r<rows();r++)
             for (int c=0;c<cols();c++)
                 if (!p.isValid(get(r,c)))
