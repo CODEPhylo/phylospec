@@ -2,7 +2,17 @@ package org.phylospec.types;
 
 import org.phylospec.primitives.Real;
 
-// Readability aliases
-public interface Vector<P extends Real> extends RealVector<P> {
+public interface Vector<P extends Real> extends NumberVector {
+
+
+    double get(int i);
+
+    default double[] getDoubleArray() {
+        double[] arr = new double[length()];
+        for (int i = 0; i < length(); i++) {
+            arr[i] = get(i);
+        }
+        return arr;
+    }
 
 }

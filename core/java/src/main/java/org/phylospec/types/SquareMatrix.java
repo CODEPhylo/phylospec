@@ -13,7 +13,7 @@ import org.phylospec.primitives.Real;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface SquareRealMatrix<P extends Real> extends RealMatrix<P> {
+public interface SquareMatrix<P extends Real> extends Matrix<P> {
 
     /**
      * {@inheritDoc}
@@ -24,6 +24,6 @@ public interface SquareRealMatrix<P extends Real> extends RealMatrix<P> {
      */
     @Override
     default boolean isValid() {
-        return RealMatrix.super.isValid() && rows() == cols();
+        return Matrix.super.isValid() && rows() == cols();
     }
 }

@@ -3,20 +3,7 @@ package org.phylospec.types;
 import org.phylospec.primitives.Int;
 
 
-public interface IntMatrix<P extends Int> extends Tensor<P, Integer> {
-    /**
-     * Get the number of rows in the matrix.
-     *
-     * @return the number of rows
-     */
-    int rows();
-
-    /**
-     * Get the number of columns in the matrix.
-     *
-     * @return the number of columns
-     */
-    int cols();
+public interface IntMatrix<P extends Int> extends NumberMatrix {
 
     /**
      * Get the element at the specified position.
@@ -28,19 +15,4 @@ public interface IntMatrix<P extends Int> extends Tensor<P, Integer> {
      */
     int get(int row, int col);
 
-    @Override
-    default int rank(){ return 2; }
-
-    @Override
-    default int[] shape(){ return new int[]{ rows(), cols() }; }
-
-    @Override
-    default boolean isValid() {
-        P p = primitiveType();
-        for (int r=0;r<rows();r++)
-            for (int c=0;c<cols();c++)
-                if (!p.isValid(get(r,c)))
-                    return false;
-        return true;
-    }
 }

@@ -2,7 +2,13 @@ package org.phylospec.types;
 
 import org.phylospec.primitives.Real;
 
-// Readability aliases
-public interface Scalar<P extends Real> extends RealScalar<P> {
+public interface Scalar<P extends Real> extends NumberScalar {
+
+    /**
+     * Overload {@link Tensor#get(int...)}
+     *
+     * @return unboxed value
+     */
+    double get();
 
 }

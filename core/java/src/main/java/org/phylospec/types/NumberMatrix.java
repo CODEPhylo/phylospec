@@ -1,9 +1,8 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.Real;
+import org.phylospec.primitives.Primitive;
 
-
-public interface RealMatrix<P extends Real> extends Tensor<P, Double> {
+public interface NumberMatrix<P extends Number> extends NumberTensor {
     /**
      * Get the number of rows in the matrix.
      *
@@ -18,15 +17,6 @@ public interface RealMatrix<P extends Real> extends Tensor<P, Double> {
      */
     int cols();
 
-    /**
-     * Get the element at the specified position.
-     *
-     * @param row the row index (0-based)
-     * @param col the column index (0-based)
-     * @return the element at position (row, col)
-     * @throws IndexOutOfBoundsException if indices are out of range
-     */
-    double get(int row, int col);
 
     @Override
     default int rank(){ return 2; }
@@ -36,7 +26,7 @@ public interface RealMatrix<P extends Real> extends Tensor<P, Double> {
 
     @Override
     default boolean isValid() {
-        P p = primitiveType();
+        Primitive p = primitiveType();
         for (int r=0;r<rows();r++)
             for (int c=0;c<cols();c++)
                 if (!p.isValid(get(r,c)))

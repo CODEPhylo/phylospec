@@ -38,16 +38,16 @@ The PhyloSpec Java library provides:
 | Type | Description | Java Interface |
 |------|-------------|----------------|
 | `Vector<T>` | Ordered collection | `org.phylospec.types.Vector<T>` |
-| `Matrix<T>` | 2D array | `org.phylospec.types.RealMatrix<T>` |
-| `SquareMatrix<T>` | Square matrix | `org.phylospec.types.SquareRealMatrix<T>` |
+| `Matrix<T>` | 2D array | `org.phylospec.types.Matrix<T>` |
+| `SquareMatrix<T>` | Square matrix | `org.phylospec.types.SquareMatrix<T>` |
 
 ### Specialized Phylogenetic Types
 
 | Type | Description | Constraints | Java Interface |
 |------|-------------|-------------|----------------|
 | `Simplex` | Probability vector | Elements sum to 1.0 | `org.phylospec.types.Simplex` |
-| `StochasticMatrix` | Transition probability matrix | Rows sum to 1.0 | `org.phylospec.types.StochasticRealMatrix` |
-| `QMatrix` | Rate matrix for CTMCs | Rows sum to 0, off-diagonals ≥ 0 | `org.phylospec.types.QRealMatrix` |
+| `StochasticMatrix` | Transition probability matrix | Rows sum to 1.0 | `org.phylospec.types.StochasticMatrix` |
+| `QMatrix` | Rate matrix for CTMCs | Rows sum to 0, off-diagonals ≥ 0 | `org.phylospec.types.QMatrix` |
 
 ## Quick Start
 
@@ -78,7 +78,7 @@ Real r = real(3.14);
         Simplex freqs = simplex(0.25, 0.25, 0.25, 0.25);
 
         // Matrices
-        QRealMatrix q = qMatrix(new double[][]{
+        QMatrix q = qMatrix(new double[][]{
                 {-1.0, 0.5, 0.5},
                 {0.3, -0.6, 0.3},
                 {0.2, 0.4, -0.6}

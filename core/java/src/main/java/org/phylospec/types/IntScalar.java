@@ -1,14 +1,9 @@
 package org.phylospec.types;
 
 import org.phylospec.primitives.Int;
+import org.phylospec.primitives.Primitive;
 
-public interface IntScalar<P extends Int> extends Tensor<P, Integer> {
-
-    @Override
-    default int rank(){ return 0; }
-
-    @Override
-    default int[] shape(){ return new int[]{}; }
+public interface IntScalar<P extends Int> extends NumberScalar {
 
     /**
      * Overload {@link Tensor#get(int...)}
@@ -17,9 +12,4 @@ public interface IntScalar<P extends Int> extends Tensor<P, Integer> {
      */
     int get();
 
-    @Override
-    default boolean isValid() {
-        P p = primitiveType();
-        return p.isValid(get());
-    }
 }

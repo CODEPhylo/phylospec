@@ -1,8 +1,8 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.Real;
+import org.phylospec.primitives.Primitive;
 
-public interface RealScalar<P extends Real> extends Tensor<P, Double> {
+public interface NumberScalar<P extends Number> extends NumberTensor {
     // rank() == 0 but size == 1
 
     @Override
@@ -11,16 +11,9 @@ public interface RealScalar<P extends Real> extends Tensor<P, Double> {
     @Override
     default int[] shape(){ return new int[]{}; }
 
-    /**
-     * Overload {@link Tensor#get(int...)}
-     *
-     * @return unboxed value
-     */
-    double get();
-
     @Override
     default boolean isValid() {
-        P p = primitiveType();
+        Primitive p = primitiveType();
         return p.isValid(get());
     }
 
