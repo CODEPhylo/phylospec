@@ -4,14 +4,12 @@ import org.phylospec.primitives.Bool;
 
 public interface BoolVector extends Tensor<Bool, Boolean> {
 
-    // TODO already has "long size()"
-    int length();
-
     boolean get(int i);
 
     default boolean[] getBooleanArray() {
-        boolean[] arr = new boolean[length()];
-        for (int i = 0; i < length(); i++) {
+        int length = Math.toIntExact(size());
+        boolean[] arr = new boolean[length];
+        for (int i = 0; i < length; i++) {
             arr[i] = get(i);
         }
         return arr;
@@ -22,13 +20,13 @@ public interface BoolVector extends Tensor<Bool, Boolean> {
 
     @Override
     default int[] shape(){
-        return new int[]{ length() };
+        return new int[]{ Math.toIntExact(size()) };
     }
 
     @Override
     default boolean isValid() {
         Bool p = primitiveType();
-        for (int i=0; i<length(); i++)
+        for (int i=0; i<Math.toIntExact(size()); i++)
             if (!p.isValid(get(i)))
                 return false;
         return true;
