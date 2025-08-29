@@ -2,7 +2,16 @@ package org.phylospec.types;
 
 import org.phylospec.primitives.Primitive;
 
-public interface NumberVector<P extends Number> extends NumberTensor {
+import java.util.List;
+
+public interface NumberVector<P extends NumberScalar> extends NumberTensor {
+
+    /**
+     * Get all elements in the vector.
+     *
+     * @return an unmodifiable list of all elements
+     */
+    List<P> getElements();
 
     @Override
     default int rank(){ return 1; }
