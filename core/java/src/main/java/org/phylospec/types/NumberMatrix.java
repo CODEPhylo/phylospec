@@ -2,7 +2,7 @@ package org.phylospec.types;
 
 import org.phylospec.primitives.Primitive;
 
-public interface NumberMatrix<P extends NumberScalar> extends NumberTensor {
+public interface NumberMatrix<P extends Primitive<Number>> extends NumberTensor<P> {
     /**
      * Get the number of rows in the matrix.
      *
