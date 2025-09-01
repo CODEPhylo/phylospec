@@ -24,7 +24,7 @@ import org.phylospec.primitives.UnitInterval;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface StochasticMatrix<P extends UnitInterval> extends Matrix<P> {
+public interface StochasticMatrix extends Matrix<UnitInterval> {
 
     /**
      * {@inheritDoc}
