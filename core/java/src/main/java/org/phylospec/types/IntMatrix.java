@@ -3,7 +3,7 @@ package org.phylospec.types;
 import org.phylospec.primitives.Int;
 
 
-public interface IntMatrix<P extends Int> extends NumberMatrix {
+public interface IntMatrix<P extends Int> extends NumberMatrix<P, Integer> {
 
     /**
      * Get the element at the specified position.

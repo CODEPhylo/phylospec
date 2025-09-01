@@ -2,7 +2,7 @@ package org.phylospec.types;
 
 import org.phylospec.primitives.Primitive;
 
-public interface NumberScalar<P extends Primitive<Number>> extends NumberTensor {
+public interface NumberScalar<P extends Primitive<T>, T extends Number> extends Tensor<P, T> {
     // rank() == 0 but size == 1
 
     @Override

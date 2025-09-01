@@ -8,7 +8,8 @@ import org.phylospec.primitives.Primitive;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface NumberTensor<P extends Primitive<Number>> extends Tensor {
+@Deprecated
+public interface NumberTensor<P extends Primitive<Number>> extends Tensor<P, Number> {
 
     // computational
 

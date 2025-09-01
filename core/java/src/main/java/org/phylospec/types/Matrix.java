@@ -3,7 +3,7 @@ package org.phylospec.types;
 import org.phylospec.primitives.Real;
 
 
-public interface Matrix<P extends Real> extends NumberMatrix {
+public interface Matrix<P extends Real> extends NumberMatrix<P, Double> {
 
     /**
      * Get the element at the specified position.

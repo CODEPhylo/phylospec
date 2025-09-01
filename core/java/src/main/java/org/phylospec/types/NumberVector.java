@@ -4,7 +4,7 @@ import org.phylospec.primitives.Primitive;
 
 import java.util.List;
 
-public interface NumberVector<P extends Primitive<Number>> extends NumberTensor<P> {
+public interface NumberVector<P extends Primitive<T>, T extends Number> extends Tensor<P, T> {
 
     /**
      * Get all elements in the vector.

@@ -2,7 +2,7 @@ package org.phylospec.types;
 
 import org.phylospec.primitives.Real;
 
-public interface Vector<P extends Real> extends NumberVector {
+public interface Vector<P extends Real> extends NumberVector<P, Double> {
 
 
     double get(int i);
