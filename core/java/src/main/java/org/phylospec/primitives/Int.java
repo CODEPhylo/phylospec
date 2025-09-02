@@ -19,4 +19,9 @@ public class Int implements Primitive<Integer> {
     public boolean isValid(Integer value) {
         return value != null;
     }
+
+    @Override
+    public Class<Integer> getTypeClass() {
+        return Integer.class;
+    }
 }

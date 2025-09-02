@@ -20,4 +20,11 @@ public class Real implements Primitive<Double> {
         // Bound requires Inf
         return !Double.isNaN(value); //&& !Double.isInfinite(value);
     }
+
+    @Override
+    public Class<Double> getTypeClass() {
+        return Double.class;
+    }
+
+
 }

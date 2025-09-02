@@ -11,5 +11,7 @@ public interface Primitive<T> {
      */
     boolean isValid(T value);
 
+    Class<T> getTypeClass();
+
 }
 
