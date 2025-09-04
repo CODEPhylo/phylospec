@@ -27,7 +27,7 @@ import org.phylospec.primitives.Real;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface QMatrix<P extends Real> extends SquareMatrix<P> {
+public interface QRealMatrix<P extends Real> extends SquareRealMatrix<P> {
     
     /**
      * {@inheritDoc}
@@ -42,7 +42,7 @@ public interface QMatrix<P extends Real> extends SquareMatrix<P> {
      */
     @Override
     default boolean isValid() {
-        if (!SquareMatrix.super.isValid()) {
+        if (!SquareRealMatrix.super.isValid()) {
             return false;
         }
         

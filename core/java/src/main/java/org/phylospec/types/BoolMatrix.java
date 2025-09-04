@@ -3,20 +3,7 @@ package org.phylospec.types;
 import org.phylospec.primitives.Bool;
 
 
-public interface BoolMatrix extends Tensor<Bool, Boolean> {
-    /**
-     * Get the number of rows in the matrix.
-     *
-     * @return the number of rows
-     */
-    int rows();
-
-    /**
-     * Get the number of columns in the matrix.
-     *
-     * @return the number of columns
-     */
-    int cols();
+public interface BoolMatrix extends Matrix<Bool, Boolean> {
 
     /**
      * Get the element at the specified position.
@@ -28,19 +15,4 @@ public interface BoolMatrix extends Tensor<Bool, Boolean> {
      */
     boolean get(int row, int col);
 
-    @Override
-    default int rank(){ return 2; }
-
-    @Override
-    default int[] shape(){ return new int[]{ rows(), cols() }; }
-
-    @Override
-    default boolean isValid() {
-        Bool p = primitiveType();
-        for (int r=0;r<rows();r++)
-            for (int c=0;c<cols();c++)
-                if (!p.isValid(get(r,c)))
-                    return false;
-        return true;
-    }
 }

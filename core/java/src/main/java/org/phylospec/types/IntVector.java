@@ -2,7 +2,7 @@ package org.phylospec.types;
 
 import org.phylospec.primitives.Int;
 
-public interface IntVector<P extends Int> extends NumberVector<P, Integer> {
+public interface IntVector<P extends Int> extends Vector<P, Integer> {
 
     int get(int i);
 

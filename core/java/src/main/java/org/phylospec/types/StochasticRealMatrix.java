@@ -24,7 +24,7 @@ import org.phylospec.primitives.UnitInterval;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface StochasticMatrix extends Matrix<UnitInterval> {
+public interface StochasticRealMatrix extends RealMatrix<UnitInterval> {
 
     /**
      * {@inheritDoc}
@@ -37,7 +37,7 @@ public interface StochasticMatrix extends Matrix<UnitInterval> {
      */
     @Override
     default boolean isValid() {
-        if (!Matrix.super.isValid()) {
+        if (!RealMatrix.super.isValid()) {
             return false;
         }
         

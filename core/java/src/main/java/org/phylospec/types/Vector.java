@@ -1,19 +1,33 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.Real;
+import org.phylospec.primitives.Primitive;
 
-public interface Vector<P extends Real> extends NumberVector<P, Double> {
+import java.util.List;
 
+public interface Vector<P extends Primitive<T>, T> extends Tensor<P, T> {
 
-    double get(int i);
+    /**
+     * Get all elements in the vector.
+     *
+     * @return an unmodifiable list of all elements
+     */
+    List<P> getElements();
 
-    default double[] getDoubleArray() {
-        int length = Math.toIntExact(size());
-        double[] arr = new double[length];
-        for (int i = 0; i < length; i++) {
-            arr[i] = get(i);
-        }
-        return arr;
+    @Override
+    default int rank(){ return 1; }
+
+    @Override
+    default int[] shape(){
+        return new int[]{Math.toIntExact(size())};
+    }
+
+    @Override
+    default boolean isValid() {
+        P p = primitiveType();
+        for (int i=0; i<Math.toIntExact(size()); i++)
+            if (!p.isValid(get(i)))
+                return false;
+        return true;
     }
 
 }

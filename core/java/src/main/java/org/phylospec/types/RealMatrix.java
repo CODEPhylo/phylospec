@@ -1,9 +1,9 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.Int;
+import org.phylospec.primitives.Real;
 
 
-public interface IntMatrix<P extends Int> extends Matrix<P, Integer> {
+public interface RealMatrix<P extends Real> extends Matrix<P, Double> {
 
     /**
      * Get the element at the specified position.
@@ -13,6 +13,6 @@ public interface IntMatrix<P extends Int> extends Matrix<P, Integer> {
      * @return the element at position (row, col)
      * @throws IndexOutOfBoundsException if indices are out of range
      */
-    int get(int row, int col);
+    double get(int row, int col);
 
 }

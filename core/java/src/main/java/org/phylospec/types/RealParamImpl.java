@@ -2,7 +2,7 @@ package org.phylospec.types;
 
 import org.phylospec.primitives.Real;
 
-public class RealParamImpl<P extends Real> implements Scalar {
+public class RealParamImpl<P extends Real> implements RealScalar {
 
     double value;
 
@@ -33,25 +33,25 @@ public class RealParamImpl<P extends Real> implements Scalar {
 
     public static void main(String[] args) {
 
-        Scalar scalar = new RealParamImpl(1);
-        System.out.println(scalar.get());
+        RealScalar realScalar = new RealParamImpl(1);
+        System.out.println(realScalar.get());
 
-        scalar = new RealParamImpl(-10.0);
-        System.out.println(scalar.get());
+        realScalar = new RealParamImpl(-10.0);
+        System.out.println(realScalar.get());
 
         int i = 2;
-        scalar = new RealParamImpl(i);
-        System.out.println(scalar.get());
+        realScalar = new RealParamImpl(i);
+        System.out.println(realScalar.get());
 //        scalar = new ScalarImpl(Boolean.FALSE);
 
         try {
-            scalar = new RealParamImpl(Double.POSITIVE_INFINITY);
+            realScalar = new RealParamImpl(Double.POSITIVE_INFINITY);
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
         }
 
         try {
-            scalar = new RealParamImpl(Double.NaN);
+            realScalar = new RealParamImpl(Double.NaN);
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
         }
