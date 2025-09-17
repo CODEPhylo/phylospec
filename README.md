@@ -15,7 +15,7 @@ The core of PhyloSpec consists of:
 
 ## Key Features
 
-- **Engine-Agnostic** - Core components work across RevBayes, BEAST 3, and other compliant engines
+- **Engine-Agnostic** - Core components will work across RevBayes, BEAST 3, and other compliant engines
 - **Extensible** - Engines can add custom components while maintaining compatibility
 - **Type-Safe** - Strong typing with constraints prevents invalid models
 - **Dimension-Aware** - Dynamic sizing based on model structure
