@@ -1,0 +1,264 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://phylospec.org/schemas/model-library-metaschema-v3.json",
+  "title": "Model Library Metaschema v3",
+  "description": "Extended metaschema for validating model library schemas with enhanced metadata, UI hints, and examples",
+  "type": "object",
+  "required": ["$schema", "title", "type", "properties", "definitions"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "http://json-schema.org/draft-07/schema#"
+    },
+    "title": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "const": "object"
+    },
+    "properties": {
+      "type": "object",
+      "required": ["modelLibrary"],
+      "properties": {
+        "modelLibrary": {
+          "type": "object",
+          "required": ["name", "version", "engine", "engineVersion", "description", "types", "generators"],
+          "properties": {
+            "name": { "type": "string" },
+            "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+            "engine": { "type": "string" },
+            "engineVersion": { "type": "string" },
+            "description": { "type": "string" },
+            "authors": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "List of authors or maintainers of the schema"
+            },
+            "license": { "type": "string", "description": "License identifier, e.g., MIT" },
+            "types": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/type" }
+            },
+            "generators": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/generator" }
+            },
+            "uiHints": {
+              "type": "object",
+              "description": "Global UI hints for the model builder",
+              "properties": {
+                "theme": { "type": "string", "enum": ["light", "dark"] },
+                "defaultLanguage": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "type": {
+      "type": "object",
+      "required": ["name", "description"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "isAbstract": { "type": "boolean" },
+        "implements": { "type": "array", "items": { "type": "string" } },
+        "extends": { "type": "string" },
+        "typeParameters": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Type parameters for generic types (e.g., ['T'] for Vector<T>)"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/property" }
+        },
+        "primitiveAssignable": {
+          "type": "boolean",
+          "description": "Whether this type can be assigned primitive values directly"
+        },
+        "acceptedPrimitives": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of primitive types that can be assigned to this type"
+        },
+        "constraint": {
+          "type": "string",
+          "description": "Built-in constraint for this type (e.g., 'positive', 'probability')"
+        },
+        "collectionType": {
+          "type": "object",
+          "description": "Metadata for collection types",
+          "properties": {
+            "elementType": { "type": "string" },
+            "keyType": { "type": "string" },
+            "valueType": { "type": "string" },
+            "kind": { 
+              "type": "string", 
+              "enum": ["array", "matrix", "map", "set"]
+            }
+          }
+        },
+        "package": {
+          "type": "string",
+          "description": "Package/namespace for this type"
+        }
+      }
+    },
+    "generator": {
+      "type": "object",
+      "required": ["name", "generatorType", "generatedType", "arguments"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "package": { "type": "string" },
+        "generatorType": { "type": "string", "enum": ["distribution", "function"] },
+        "generatedType": { "type": "string" },
+        "typeParameters": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Type parameters for generic generators (e.g., ['T'] for Mixture<T>)"
+        },
+        "primaryArgument": {
+          "type": "object",
+          "description": "The primary argument for distributions (the random variable)",
+          "properties": {
+            "name": { "type": "string" },
+            "type": { "type": "string" },
+            "description": { "type": "string" }
+          }
+        },
+        "arguments": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/argument" }
+        },
+        "satisfiesConstraints": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of constraints that this generator satisfies (e.g., ['positive', 'non-negative', '0-1', 'bounded']). For distributions, indicates what constraints the generated values will satisfy."
+        },
+        "ioHints": {
+          "type": "object",
+          "description": "File I/O metadata for data-loading or exporting functions",
+          "properties": {
+            "role": {
+              "type": "string",
+              "enum": ["dataInput", "dataOutput"]
+            },
+            "extensions": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Supported file extensions (e.g. [\".nex\", \".fasta\"])"
+            },
+            "fileArgument": {
+              "type": "string",
+              "description": "Name of the argument that accepts the file path"
+            }
+          }
+        },
+        "examples": {
+          "type": "array",
+          "items": { "type": "object" },
+          "description": "Example usage snippets for this generator"
+        }
+      }
+    },
+    "argument": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "required": { "type": "boolean" },
+        "recommended": { 
+          "type": "boolean",
+          "description": "Indicates that this argument is recommended but not required"
+        },
+        "default": {
+          "description": "Default value for this argument if not specified"
+        },
+        "constraint": { 
+          "type": "string",
+          "description": "Constraint on the values this argument can take",
+          "enum": [
+            "positive",
+            "non-negative",
+            "negative",
+            "0-1",
+            "simplex",
+            "integer",
+            "positive-integer",
+            "bounded",
+            "real",
+            "positive-vector",
+            "vector",
+            "positive-definite-matrix",
+            "boolean"
+          ]
+        },
+        "dimension": {
+          "oneOf": [
+            { 
+              "type": "integer",
+              "minimum": 1,
+              "description": "Fixed dimension as a positive integer"
+            },
+            { 
+              "type": "string",
+              "pattern": "^(parent\\.|self\\.|data\\.|)?[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)*$",
+              "description": "Dimension expression using dot notation (e.g., 'parent.target.dimension', 'tree.nBranches', 'data.ntax')"
+            }
+          ],
+          "description": "Expected dimension of the argument. Can be a fixed integer or an expression that references other parts of the model"
+        },
+        "description": { 
+          "type": "string",
+          "description": "Human-readable description of the argument"
+        },
+        "ui": {
+          "type": "object",
+          "description": "UI hints for rendering this argument",
+          "properties": {
+            "widget": { 
+              "type": "string",
+              "description": "Suggested widget type (e.g., 'slider', 'checkbox', 'file-picker')"
+            },
+            "order": { 
+              "type": "integer",
+              "description": "Display order relative to other arguments"
+            },
+            "group": {
+              "type": "string",
+              "description": "Group name for organizing related arguments"
+            }
+          }
+        }
+      }
+    },
+    "property": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string" },
+        "description": { "type": "string" },
+        "default": {
+          "description": "Default value if not specified"
+        },
+        "value": {
+          "description": "Immutable static value for this property"
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Whether this property is required"
+        },
+        "accessor": {
+          "type": "boolean",
+          "description": "Whether this property can be accessed from the object"
+        }
+      }
+    }
+  }
+}
