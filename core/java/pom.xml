@@ -105,49 +105,49 @@
                     </includes>
                 </configuration>
             </plugin>
-            
+
             <!-- JavaDoc plugin -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>${maven-javadoc-plugin.version}</version>
-                <configuration>
-                    <show>public</show>
-                    <nohelp>true</nohelp>
-                    <header>PhyloSpec Core, ${project.version}</header>
-                    <footer>PhyloSpec Core, ${project.version}</footer>
-                    <doctitle>PhyloSpec Core API, ${project.version}</doctitle>
-                    <links>
-                        <link>https://docs.oracle.com/en/java/javase/11/docs/api/</link>
-                    </links>
-                    <groups>
-                        <group>
-                            <title>Type System</title>
-                            <packages>org.phylospec.types:org.phylospec.types.impl</packages>
-                        </group>
-                        <group>
-                            <title>Annotations</title>
-                            <packages>org.phylospec.annotations</packages>
-                        </group>
-                        <group>
-                            <title>Factory and Utilities</title>
-                            <packages>org.phylospec.factory</packages>
-                        </group>
-                        <group>
-                            <title>Examples</title>
-                            <packages>org.phylospec.examples</packages>
-                        </group>
-                    </groups>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-javadoc-plugin</artifactId>-->
+<!--                <version>${maven-javadoc-plugin.version}</version>-->
+<!--                <configuration>-->
+<!--                    <show>public</show>-->
+<!--                    <nohelp>true</nohelp>-->
+<!--                    <header>PhyloSpec Core, ${project.version}</header>-->
+<!--                    <footer>PhyloSpec Core, ${project.version}</footer>-->
+<!--                    <doctitle>PhyloSpec Core API, ${project.version}</doctitle>-->
+<!--                    <links>-->
+<!--                        <link>https://docs.oracle.com/en/java/javase/11/docs/api/</link>-->
+<!--                    </links>-->
+<!--                    <groups>-->
+<!--                        <group>-->
+<!--                            <title>Type System</title>-->
+<!--                            <packages>org.phylospec.types:org.phylospec.types.impl</packages>-->
+<!--                        </group>-->
+<!--                        <group>-->
+<!--                            <title>Annotations</title>-->
+<!--                            <packages>org.phylospec.annotations</packages>-->
+<!--                        </group>-->
+<!--                        <group>-->
+<!--                            <title>Factory and Utilities</title>-->
+<!--                            <packages>org.phylospec.factory</packages>-->
+<!--                        </group>-->
+<!--                        <group>-->
+<!--                            <title>Examples</title>-->
+<!--                            <packages>org.phylospec.examples</packages>-->
+<!--                        </group>-->
+<!--                    </groups>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>attach-javadocs</id>-->
+<!--                        <goals>-->
+<!--                            <goal>jar</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
             
             <!-- Source plugin -->
             <plugin>

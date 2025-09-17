@@ -1,8 +1,36 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.Real;
+import org.phylospec.primitives.Primitive;
 
-// Readability aliases
-public interface Matrix<P extends Real> extends RealMatrix<P> {
+public interface Matrix<P extends Primitive<T>, T> extends Tensor<P, T> {
+    /**
+     * Get the number of rows in the matrix.
+     *
+     * @return the number of rows
+     */
+    int rows();
 
+    /**
+     * Get the number of columns in the matrix.
+     *
+     * @return the number of columns
+     */
+    int cols();
+
+
+    @Override
+    default int rank(){ return 2; }
+
+    @Override
+    default int[] shape(){ return new int[]{ rows(), cols() }; }
+
+    @Override
+    default boolean isValid() {
+        P p = primitiveType();
+        for (int r=0;r<rows();r++)
+            for (int c=0;c<cols();c++)
+                if (!p.isValid(get(r,c)))
+                    return false;
+        return true;
+    }
 }

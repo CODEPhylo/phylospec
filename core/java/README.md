@@ -37,7 +37,7 @@ The PhyloSpec Java library provides:
 
 | Type | Description | Java Interface |
 |------|-------------|----------------|
-| `Vector<T>` | Ordered collection | `org.phylospec.types.Vector<T>` |
+| `Vector<T>` | Ordered collection | `org.phylospec.types.RealVector<T>` |
 | `Matrix<T>` | 2D array | `org.phylospec.types.RealMatrix<T>` |
 | `SquareMatrix<T>` | Square matrix | `org.phylospec.types.SquareRealMatrix<T>` |
 
@@ -74,7 +74,7 @@ Real r = real(3.14);
         Probability p = probability(0.7);
 
         // Collections
-        Vector<Real> v = vector(real(1.0), real(2.0), real(3.0));
+        RealVector<Real> v = vector(real(1.0), real(2.0), real(3.0));
         Simplex freqs = simplex(0.25, 0.25, 0.25, 0.25);
 
         // Matrices

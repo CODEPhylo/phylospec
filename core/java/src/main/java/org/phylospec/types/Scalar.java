@@ -1,7 +1,9 @@
 package org.phylospec.types;
 
-@Deprecated
-public interface Scalar extends Tensor {
+import org.phylospec.primitives.Primitive;
+
+public interface Scalar<P extends Primitive<T>, T> extends Tensor<P, T> {
+    // rank() == 0 but size == 1
 
     @Override
     default int rank(){ return 0; }
@@ -9,5 +11,10 @@ public interface Scalar extends Tensor {
     @Override
     default int[] shape(){ return new int[]{}; }
 
-    // rank() == 0 but size == 1
+    @Override
+    default boolean isValid() {
+        P p = primitiveType();
+        return p.isValid(get());
+    }
+
 }

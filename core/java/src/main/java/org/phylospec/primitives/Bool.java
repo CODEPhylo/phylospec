@@ -21,4 +21,9 @@ public class Bool implements Primitive<Boolean> {
     public boolean isValid(Boolean value) {
         return value != null;
     }
+
+    @Override
+    public Class<Boolean> getTypeClass() {
+        return Boolean.class;
+    }
 }

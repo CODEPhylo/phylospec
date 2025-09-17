@@ -24,7 +24,7 @@ import org.phylospec.primitives.UnitInterval;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface StochasticRealMatrix<P extends UnitInterval> extends RealMatrix<P> {
+public interface StochasticRealMatrix extends RealMatrix<UnitInterval> {
 
     /**
      * {@inheritDoc}
