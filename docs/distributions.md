@@ -6,241 +6,290 @@ This document defines the standard probability distributions in PhyloSpec. Each 
 
 ### 1.1 Core Continuous Distributions
 
-#### `Normal(mean: Real, sd: PositiveReal) -> Real`
+#### `Normal(mean: Real, sd: PositiveReal) ~ Real`
 
 Normal (Gaussian) distribution.
 
-| Parameter | Type          | Description              | Default | Constraints |
-|-----------|---------------|--------------------------|---------|-------------|
-| `mean`    | `Real`        | Mean of the distribution | 0.0     | None        |
-| `sd`      | `PositiveReal`| Standard deviation       | 1.0     | > 0         |
+**Package:** `phylospec.distributions`
 
-#### `LogNormal(meanlog: Real, sdlog: PositiveReal) -> PositiveReal`
+| Parameter | Type          | Description              | Default | Required |
+|-----------|---------------|--------------------------|---------|----------|
+| `mean`    | `Real`        | Mean of the distribution | 0.0     | Yes      |
+| `sd`      | `PositiveReal`| Standard deviation       | 1.0     | Yes      |
+
+#### `LogNormal(meanlog: Real, sdlog: PositiveReal) ~ PositiveReal`
 
 Log-normal distribution for positive real values.
 
-| Parameter | Type          | Description                  | Default | Constraints |
-|-----------|---------------|------------------------------|---------|-------------|
-| `meanlog` | `Real`        | Mean in log space            | 0.0     | None        |
-| `sdlog`   | `PositiveReal`| Standard deviation in log space | 1.0  | > 0         |
+**Package:** `phylospec.distributions`
 
-#### `Gamma(shape: PositiveReal, rate: PositiveReal) -> PositiveReal`
+| Parameter | Type          | Description                  | Default | Required |
+|-----------|---------------|------------------------------|---------|----------|
+| `meanlog` | `Real`        | Mean of the distribution in log space | 0.0 | Yes |
+| `sdlog`   | `PositiveReal`| Standard deviation in log space | 1.0  | Yes      |
+
+#### `Gamma(shape: PositiveReal, rate: PositiveReal) ~ PositiveReal`
 
 Gamma distribution for positive real values.
 
-| Parameter | Type          | Description        | Default | Constraints |
-|-----------|---------------|--------------------|---------|-------------|
-| `shape`   | `PositiveReal`| Shape parameter    | 1.0     | > 0         |
-| `rate`    | `PositiveReal`| Rate parameter     | 1.0     | > 0         |
+**Package:** `phylospec.distributions`
 
-#### `Beta(alpha: PositiveReal, beta: PositiveReal) -> Probability`
+| Parameter | Type          | Description        | Default | Required |
+|-----------|---------------|--------------------|---------|----------|
+| `shape`   | `PositiveReal`| Shape parameter    | 1.0     | Yes      |
+| `rate`    | `PositiveReal`| Rate parameter     | 1.0     | Yes      |
+
+#### `Beta(alpha: PositiveReal, beta: PositiveReal) ~ Probability`
 
 Beta distribution for values in (0,1).
 
-| Parameter | Type          | Description        | Default | Constraints |
-|-----------|---------------|--------------------|---------|-------------|
-| `alpha`   | `PositiveReal`| Alpha parameter    | 1.0     | > 0         |
-| `beta`    | `PositiveReal`| Beta parameter     | 1.0     | > 0         |
+**Package:** `phylospec.distributions`
 
-#### `Exponential(rate: PositiveReal) -> PositiveReal`
+| Parameter | Type          | Description        | Default | Required |
+|-----------|---------------|--------------------|---------|----------|
+| `alpha`   | `PositiveReal`| Alpha parameter    | 1.0     | Yes      |
+| `beta`    | `PositiveReal`| Beta parameter     | 1.0     | Yes      |
+
+#### `Exponential(rate: PositiveReal) ~ PositiveReal`
 
 Exponential distribution for rate parameters.
 
-| Parameter | Type          | Description        | Default | Constraints |
-|-----------|---------------|--------------------|---------|-------------|
-| `rate`    | `PositiveReal`| Rate parameter     | 1.0     | > 0         |
+**Package:** `phylospec.distributions`
 
-#### `Uniform(lower: Real, upper: Real) -> Real`
+| Parameter | Type          | Description        | Default | Required |
+|-----------|---------------|--------------------|---------|----------|
+| `rate`    | `PositiveReal`| Rate parameter     | 1.0     | Yes      |
+
+#### `Uniform(lower: Real, upper: Real) ~ Real`
 
 Uniform distribution for bounded values.
 
-| Parameter | Type          | Description        | Default | Constraints |
-|-----------|---------------|--------------------|---------|-------------|
-| `lower`   | `Real`        | Lower bound        | None    | < upper     |
-| `upper`   | `Real`        | Upper bound        | None    | > lower     |
+**Package:** `phylospec.distributions`
+
+| Parameter | Type          | Description        | Default | Required |
+|-----------|---------------|--------------------|---------|----------|
+| `lower`   | `Real`        | Lower bound        | None    | Yes      |
+| `upper`   | `Real`        | Upper bound        | None    | Yes      |
 
 ### 1.2 Multivariate Distributions
 
-#### `Dirichlet(alpha: Vector<PositiveReal>) -> Simplex`
+#### `Dirichlet(alpha: Vector<Real>) ~ Simplex`
 
 Dirichlet distribution for probability vectors.
 
-| Parameter | Type                    | Description           | Default      | Constraints |
-|-----------|-------------------------|-----------------------|--------------|-------------|
-| `alpha`   | `Vector<PositiveReal>`  | Concentration parameters | [1.0,...,1.0] | All > 0 |
+**Package:** `phylospec.distributions`
 
-**Indexing**: The result can be indexed to access individual probabilities:
+| Parameter | Type             | Description              | Default            | Required | Constraint | Dimension |
+|-----------|------------------|--------------------------|--------------------|----------|------------|-----------|
+| `alpha`   | `Vector<Real>`   | Concentration parameters | [1.0, 1.0, 1.0, 1.0] | Yes    | positive   | target.dimension |
+
+**Indexing**: The resulting Simplex can be indexed to access individual probabilities:
 ```
-Simplex pi ~ Dirichlet(1.0, 1.0, 1.0, 1.0);
+Simplex pi ~ Dirichlet([1.0, 1.0, 1.0, 1.0]);
 Probability p = pi[0];  // Access first probability
 ```
 
-#### `MultivariateNormal(mean: Vector<Real>, covariance: Matrix<Real>) -> Vector<Real>`
+#### `MultivariateNormal(mean: Vector<Real>, covariance: Matrix<Real>) ~ Vector<Real>`
 
-Multivariate normal distribution for correlated values.
+Multivariate normal for correlated values.
 
-| Parameter    | Type             | Description           | Default | Constraints                 |
-|--------------|-----------------|-----------------------|---------|----------------------------|
-| `mean`       | `Vector<Real>`   | Mean vector           | None    | None                       |
-| `covariance` | `Matrix<Real>`   | Covariance matrix     | None    | Symmetric positive definite |
+**Package:** `phylospec.distributions`
 
-### 1.3 Vector Variants
-
-#### `NormalVector(mean: Real, sd: PositiveReal, dimension: PositiveInteger) -> Vector<Real>`
-
-Vector of independently and identically distributed normal random variables.
-
-| Parameter    | Type             | Description              | Default | Constraints |
-|--------------|------------------|--------------------------|---------|-------------|
-| `mean`       | `Real`           | Mean of each component   | 0.0     | None        |
-| `sd`         | `PositiveReal`   | Standard deviation       | 1.0     | > 0         |
-| `dimension`  | `PositiveInteger`| Vector dimension         | None    | > 0         |
-
-#### `GammaVector(shape: PositiveReal, rate: PositiveReal, dimension: PositiveInteger) -> Vector<PositiveReal>`
-
-Vector of independently and identically distributed gamma random variables.
-
-| Parameter    | Type             | Description              | Default | Constraints |
-|--------------|------------------|--------------------------|---------|-------------|
-| `shape`      | `PositiveReal`   | Shape parameter          | 1.0     | > 0         |
-| `rate`       | `PositiveReal`   | Rate parameter           | 1.0     | > 0         |
-| `dimension`  | `PositiveInteger`| Vector dimension         | None    | > 0         |
+| Parameter    | Type             | Description       | Default | Required | Dimension |
+|--------------|------------------|-------------------|---------|----------|-----------|
+| `mean`       | `Vector<Real>`   | Mean vector       | None    | Yes      | target.dimension |
+| `covariance` | `Matrix<Real>`   | Covariance matrix | None    | Yes      | target.dimension |
 
 ## 2. Tree Distributions
 
 ### 2.1 Tree Priors
 
-#### `Yule(birthRate: PositiveReal) -> Tree`
+#### `Yule(birthRate: PositiveReal, taxa?: TaxonSet) ~ Tree`
 
 Yule pure-birth process for trees.
 
-| Parameter    | Type          | Description              | Default | Constraints |
-|--------------|---------------|--------------------------|---------|-------------|
-| `birthRate`  | `PositiveReal`| Birth rate parameter     | 1.0     | > 0         |
+**Package:** `phylospec.distributions.tree`
 
-#### `BirthDeath(birthRate: PositiveReal, deathRate: NonNegativeReal, rootHeight: PositiveReal?) -> Tree`
+| Parameter    | Type          | Description              | Default | Required |
+|--------------|---------------|--------------------------|---------|----------|
+| `birthRate`  | `PositiveReal`| Birth rate parameter     | 1.0     | Yes      |
+| `taxa`       | `TaxonSet`    | Taxa for the tree        | None    | No       |
+
+#### `BirthDeath(birthRate: PositiveReal, deathRate: PositiveReal, rootHeight?: PositiveReal, taxa?: TaxonSet) ~ Tree`
 
 Birth-death process for trees.
 
-| Parameter    | Type               | Description              | Default | Constraints |
-|--------------|--------------------|--------------------------|---------|-------------|
-| `birthRate`  | `PositiveReal`     | Birth rate parameter     | None    | > deathRate |
-| `deathRate`  | `NonNegativeReal`  | Death rate parameter     | None    | >= 0        |
-| `rootHeight` | `PositiveReal?`    | Height of the tree root  | None    | > 0         |
+**Package:** `phylospec.distributions.tree`
 
-#### `Coalescent(populationSize: PositiveReal) -> Tree`
+| Parameter    | Type               | Description              | Default | Required |
+|--------------|--------------------|--------------------------|---------|----------|
+| `birthRate`  | `PositiveReal`     | Birth rate parameter     | None    | Yes      |
+| `deathRate`  | `PositiveReal`     | Death rate parameter     | None    | Yes      |
+| `rootHeight` | `PositiveReal`     | Height of the tree root  | None    | No       |
+| `taxa`       | `TaxonSet`         | Taxa for the tree        | None    | No       |
+
+#### `Coalescent(populationSize: PositiveReal, taxa?: TaxonSet) ~ Tree`
 
 Coalescent process for population genetics.
 
-| Parameter       | Type            | Description            | Default | Constraints |
-|-----------------|-----------------|------------------------|---------|-------------|
-| `populationSize`| `PositiveReal`  | Effective population size | 1.0  | > 0         |
+**Package:** `phylospec.distributions.tree`
 
-#### `FossilBirthDeath(birthRate: PositiveReal, deathRate: NonNegativeReal, samplingRate: NonNegativeReal, rho: Probability) -> TimeTree`
+| Parameter       | Type            | Description                   | Default | Required |
+|-----------------|-----------------|-------------------------------|---------|----------|
+| `populationSize`| `PositiveReal`  | Effective population size     | 1.0     | Yes      |
+| `taxa`          | `TaxonSet`      | Taxa for the tree             | None    | No       |
 
-Birth-death process with fossilization.
+#### `FossilBirthDeath(birthRate: PositiveReal, deathRate: NonNegativeReal, samplingRate: NonNegativeReal, rho?: Probability, origin?: PositiveReal, taxa?: TaxonSet) ~ TimeTree`
 
-| Parameter      | Type               | Description                      | Default | Constraints |
-|----------------|--------------------|----------------------------------|---------|-------------|
-| `birthRate`    | `PositiveReal`     | Birth rate parameter             | None    | > 0         |
-| `deathRate`    | `NonNegativeReal`  | Death rate parameter             | None    | >= 0        |
-| `samplingRate` | `NonNegativeReal`  | Rate of fossil sampling          | None    | >= 0        |
-| `rho`          | `Probability`      | Probability of sampling at present | None  | [0, 1]      |
+Birth-death process with fossil sampling.
 
-### 2.2 Constrained Tree Distributions
+**Package:** `phylospec.distributions.tree`
 
-#### `ConstrainedYule(birthRate: PositiveReal, constraints: Vector<Constraint>) -> Tree`
-
-Yule process with topological or temporal constraints.
-
-| Parameter     | Type                  | Description              | Default | Constraints |
-|---------------|----------------------|--------------------------|---------|-------------|
-| `birthRate`   | `PositiveReal`       | Birth rate parameter     | 1.0     | > 0         |
-| `constraints` | `Vector<Constraint>` | Tree constraints         | []      | None        |
+| Parameter      | Type               | Description                           | Default | Required |
+|----------------|--------------------|---------------------------------------|---------|----------|
+| `birthRate`    | `PositiveReal`     | Birth (speciation) rate               | None    | Yes      |
+| `deathRate`    | `NonNegativeReal`  | Death (extinction) rate               | None    | Yes      |
+| `samplingRate` | `NonNegativeReal`  | Rate of fossil sampling               | None    | Yes      |
+| `rho`          | `Probability`      | Probability of sampling at present    | 1.0     | No       |
+| `origin`       | `PositiveReal`     | Time of origin                        | None    | No       |
+| `taxa`         | `TaxonSet`         | Taxa for the tree (including fossils) | None    | No       |
 
 ## 3. Sequence Evolution Distributions
 
 ### 3.1 Phylogenetic Processes
 
-#### `PhyloCTMC<A>(tree: Tree, Q: QMatrix, siteRates: Vector<PositiveReal>?, branchRates: Vector<PositiveReal>?) -> Alignment<A>`
+#### `PhyloCTMC(tree: Tree, Q: QMatrix, siteRates?: Vector<Real>, branchRates?: Vector<Real>) ~ Alignment`
 
-Phylogenetic continuous-time Markov chain for sequence evolution.
+Phylogenetic continuous-time Markov chain.
 
-| Parameter     | Type                    | Description                      | Default | Constraints |
-|---------------|------------------------|----------------------------------|---------|-------------|
-| `tree`        | `Tree`                 | Phylogenetic tree                | None    | None        |
-| `Q`           | `QMatrix`              | Rate matrix                      | None    | Valid Q     |
-| `siteRates`   | `Vector<PositiveReal>?`| Rate heterogeneity across sites  | None    | All > 0     |
-| `branchRates` | `Vector<PositiveReal>?`| Rate heterogeneity across branches | None  | All > 0     |
+**Package:** `phylospec.distributions.sequence`
 
-Type parameter `A` specifies sequence alphabet (e.g., Nucleotide, AminoAcid).
+| Parameter     | Type                    | Description                         | Default | Required | Constraint | Dimension |
+|---------------|-------------------------|-------------------------------------|---------|----------|------------|-----------|
+| `tree`        | `Tree`                  | Phylogenetic tree                   | None    | Yes      | -          | -         |
+| `Q`           | `QMatrix`               | Rate matrix                         | None    | Yes      | -          | -         |
+| `siteRates`   | `Vector<Real>`          | Rate heterogeneity across sites     | None    | No       | positive   | target.nchar |
+| `branchRates` | `Vector<Real>`          | Rate heterogeneity across branches  | None    | No       | positive   | 2 * target.ntax - 2 |
 
-#### `PhyloBM(tree: Tree, sigma: PositiveReal, rootValue: Real) -> Vector<Real>`
+#### `PhyloBM(tree: Tree, sigma: PositiveReal, rootValue: Real) ~ Vector<Real>`
 
-Phylogenetic Brownian motion for continuous trait evolution.
+Phylogenetic Brownian motion for the continuous evolution of a single trait.
 
-| Parameter    | Type          | Description              | Default | Constraints |
-|--------------|---------------|--------------------------|---------|-------------|
-| `tree`       | `Tree`        | Phylogenetic tree        | None    | None        |
-| `sigma`      | `PositiveReal`| Rate parameter           | 1.0     | > 0         |
-| `rootValue`  | `Real`        | Value at the root        | 0.0     | None        |
+**Package:** `phylospec.distributions.continuous`
 
-#### `PhyloOU(tree: Tree, sigma: PositiveReal, alpha: PositiveReal, optimum: Real) -> Vector<Real>`
+| Parameter    | Type          | Description              | Default | Required |
+|--------------|---------------|--------------------------|---------|----------|
+| `tree`       | `Tree`        | Phylogenetic tree        | None    | Yes      |
+| `sigma`      | `PositiveReal`| Rate of evolution        | 1.0     | Yes      |
+| `rootValue`  | `Real`        | Trait value at the root  | 0.0     | Yes      |
 
-Phylogenetic Ornstein-Uhlenbeck process for continuous trait evolution with selection.
+#### `PhyloOU(tree: Tree, sigma: PositiveReal, alpha: PositiveReal, optimum: Real) ~ Vector<Real>`
 
-| Parameter   | Type          | Description              | Default | Constraints |
-|-------------|---------------|--------------------------|---------|-------------|
-| `tree`      | `Tree`        | Phylogenetic tree        | None    | None        |
-| `sigma`     | `PositiveReal`| Rate parameter           | 1.0     | > 0         |
-| `alpha`     | `PositiveReal`| Selection strength       | 1.0     | > 0         |
-| `optimum`   | `Real`        | Optimal trait value      | 0.0     | None        |
+Phylogenetic Ornstein-Uhlenbeck process for a univariate trait with selection.
 
-## 4. Mixture Distributions
+**Package:** `phylospec.distributions.continuous`
 
-#### `Mixture<T>(components: Vector<Distribution<T>>, weights: Simplex) -> T`
+| Parameter   | Type          | Description              | Default | Required |
+|-------------|---------------|--------------------------|---------|----------|
+| `tree`      | `Tree`        | Phylogenetic tree        | None    | Yes      |
+| `sigma`     | `PositiveReal`| Rate of random evolution | 1.0     | Yes      |
+| `alpha`     | `PositiveReal`| Selection strength       | 1.0     | Yes      |
+| `optimum`   | `Real`        | Optimal trait value      | 0.0     | Yes      |
+
+## 4. Special Distributions
+
+#### `IID<T>(base: Distribution<T>, n: PositiveInteger) ~ Vector<T>`
+
+Vector of independent and identically distributed random variables.
+
+**Package:** `phylospec.distributions`
+
+**Type Parameters:** `T` - The type of elements generated
+
+**Primary Argument:** `x: Vector<T>` - Vector of IID random variables
+
+| Parameter | Type                | Description                      | Default | Required |
+|-----------|---------------------|----------------------------------|---------|----------|
+| `base`    | `Distribution<T>`   | Base distribution for each component | None | Yes      |
+| `n`       | `PositiveInteger`   | Number of independent draws      | None    | Yes      |
+
+Example usage:
+```
+Vector<Real> x ~ IID(Normal(0, 1), 10);  // 10 independent standard normals
+Vector<PositiveReal> rates ~ IID(Gamma(2, 2), 100);  // 100 independent gamma values
+```
+
+#### `Mixture<T>(components: List<Distribution<T>>, weights: Simplex) ~ T`
 
 Mixture of distributions with the same return type.
 
-| Parameter    | Type                    | Description                   | Default | Constraints |
-|--------------|-------------------------|-------------------------------|---------|-------------|
-| `components` | `Vector<Distribution<T>>`| Component distributions       | None    | Not empty   |
-| `weights`    | `Simplex`               | Mixture weights               | None    | Sum to 1.0  |
+**Package:** `phylospec.distributions.mixture`
 
-#### `DiscreteGammaMixture(shape: PositiveReal, categories: PositiveInteger) -> Mixture<PositiveReal>`
+**Type Parameters:** `T` - The type generated by all component distributions
 
-Discretized gamma mixture for rate heterogeneity.
+| Parameter    | Type                        | Description                                  | Default | Required | Dimension |
+|--------------|----------------------------|----------------------------------------------|---------|----------|-----------|
+| `components` | `List<Distribution<T>>`    | Component distributions that all generate type T | None | Yes      | -         |
+| `weights`    | `Simplex`                  | Mixture weights for each component           | None    | Yes      | components.length |
 
-| Parameter    | Type             | Description              | Default | Constraints |
-|--------------|------------------|--------------------------|---------|-------------|
-| `shape`      | `PositiveReal`   | Shape parameter          | 1.0     | > 0         |
-| `categories` | `PositiveInteger`| Number of categories     | 4       | > 0         |
+Example usage:
+```
+// Mixture of two normal distributions
+Real x ~ Mixture([Normal(-2, 1), Normal(2, 1)], [0.3, 0.7]);
 
-## 5. Special Cases and Usage Notes
+// Mixture of three exponential distributions
+PositiveReal rate ~ Mixture([Exponential(1), Exponential(5), Exponential(10)], [0.2, 0.5, 0.3]);
+```
 
-### 5.1 Indexing Distribution Results
+## 5. Distribution Object Constructors
+
+Each distribution also has a corresponding constructor function that creates a distribution object rather than sampling a value. These constructors have the same names and parameters as their sampling counterparts but return distribution objects:
+
+- `Normal(mean: Real, sd: PositiveReal) -> Normal` - Returns a Normal distribution object
+- `Gamma(shape: PositiveReal, rate: PositiveReal) -> Gamma` - Returns a Gamma distribution object
+- `Coalescent(populationSize: PositiveReal, taxa?: TaxonSet) -> Coalescent` - Returns a Coalescent distribution object
+
+These distribution objects can be used as arguments to other distributions or functions, such as:
+```
+Distribution<Real> prior = Normal(0, 1);
+Vector<Real> x ~ IID(prior, 10);
+```
+
+## 6. Special Cases and Usage Notes
+
+### 6.1 Indexing Distribution Results
 
 When a distribution returns an indexable type, elements can be accessed directly:
 
 ```
-# Simplex from Dirichlet
-Simplex pi ~ Dirichlet(1.0, 1.0, 1.0, 1.0);
+// Simplex from Dirichlet
+Simplex pi ~ Dirichlet([1.0, 1.0, 1.0, 1.0]);
 Probability freqA = pi[0];  // First element
 
-# Vector from MultivariateNormal
+// Vector from MultivariateNormal
 Vector<Real> x ~ MultivariateNormal(mu, Sigma);
 Real x1 = x[0];  // First component
+
+// Vector from PhyloBM
+Vector<Real> traits ~ PhyloBM(tree, sigma, rootValue);
+Real humanTrait = traits[0];  // Trait value for first taxon
 ```
 
-### 5.2 Parameter Constraints
+### 6.2 Dimension Expressions
 
-Some distributions have interdependent parameter constraints:
+Some distributions use dimension expressions to ensure compatibility:
 
-- `BirthDeath`: birthRate must be greater than deathRate for a valid process
-- `Uniform`: lower bound must be less than upper bound
-- Matrix parameters (e.g., covariance) must satisfy mathematical properties
+- `target.dimension` - Refers to the dimension of the variable being sampled
+- `target.nchar` - For alignments, the number of characters/sites
+- `target.ntax` - For alignments or trees, the number of taxa
+- `2 * target.ntax - 2` - Number of branches in a rooted tree
+- `components.length` - Length of the components list (for mixtures)
 
-## 6. Implementation Requirements
+### 6.3 Primary Arguments
+
+Some distributions define a "primary argument" which represents the random variable being modeled. This is mainly for documentation purposes and does not affect usage. For example, the `IID` distribution has `x: Vector<T>` as its primary argument, indicating that it models a vector of IID random variables.
+
+## 7. Implementation Requirements
 
 Language implementations must:
 
@@ -248,17 +297,24 @@ Language implementations must:
 2. Correctly handle optional parameters and default values
 3. Enforce parameter constraints
 4. Return values of the correct type
-5. Support type parameterization where specified
-6. Allow indexing of returned collection types where appropriate
+5. Support type parameterization for generic distributions (`IID<T>`, `Mixture<T>`)
+6. Evaluate dimension expressions correctly
+7. Allow indexing of returned collection types where appropriate
+8. Implement both sampling (`~`) and constructor forms
+9. Maintain proper package/namespace organization
 
-### 6.1 Parameter Order
+### 7.1 Parameter Order
 
 When a language uses positional parameters, they should follow the order listed in each signature.
 
-### 6.2 Optional Parameters
+### 7.2 Optional Parameters
 
 Parameters marked with `?` or that have default values are optional. Implementations must handle their absence appropriately.
 
+### 7.3 Type Safety
+
+Generic distributions must ensure type consistency. For example, all components in a `Mixture<T>` must generate the same type `T`.
+
 ## Reference
 
-For machine-readable definitions, see [distributions.json](../../schema/distributions.json) in the schema directory.
+For machine-readable definitions, see the `phylospec-model-library.json` file in the schema directory.

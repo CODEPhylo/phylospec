@@ -10,282 +10,295 @@ These functions create rate matrices for different evolutionary models.
 
 #### `JC69() -> QMatrix`
 
-Jukes-Cantor model with equal rates between all nucleotides.
+Jukes-Cantor model (equal rates).
+
+**Package:** `phylospec.functions.substitution`
 
 *No parameters*
 
 #### `K80(kappa: PositiveReal) -> QMatrix`
 
-Kimura 2-parameter model with different rates for transitions and transversions.
+Kimura 2-parameter model.
 
-| Parameter | Type          | Description                  | Default | Constraints |
-|-----------|---------------|------------------------------|---------|-------------|
-| `kappa`   | `PositiveReal`| Transition/transversion ratio| 2.0     | > 0         |
+**Package:** `phylospec.functions.substitution`
+
+| Parameter | Type          | Description                  | Default | Required |
+|-----------|---------------|------------------------------|---------|----------|
+| `kappa`   | `PositiveReal`| Transition/transversion ratio| 2.0     | Yes      |
 
 #### `F81(baseFrequencies: Simplex) -> QMatrix`
 
-Felsenstein 81 model with unequal base frequencies.
+Felsenstein 81 model.
 
-| Parameter        | Type      | Description         | Default                  | Constraints |
-|------------------|-----------|---------------------|--------------------------|-------------|
-| `baseFrequencies`| `Simplex` | Nucleotide frequencies | [0.25, 0.25, 0.25, 0.25] | Sum to 1.0 |
+**Package:** `phylospec.functions.substitution`
+
+| Parameter        | Type      | Description         | Default                  | Required | Dimension |
+|------------------|-----------|---------------------|--------------------------|----------|-----------|
+| `baseFrequencies`| `Simplex` | Nucleotide frequencies | [0.25, 0.25, 0.25, 0.25] | Yes    | 4         |
 
 #### `HKY(kappa: PositiveReal, baseFrequencies: Simplex) -> QMatrix`
 
-Hasegawa-Kishino-Yano model with transition/transversion bias and unequal base frequencies.
+Hasegawa-Kishino-Yano model.
 
-| Parameter        | Type          | Description                  | Default                  | Constraints |
-|------------------|---------------|------------------------------|--------------------------|-------------|
-| `kappa`          | `PositiveReal`| Transition/transversion ratio| 2.0                      | > 0         |
-| `baseFrequencies`| `Simplex`     | Nucleotide frequencies       | [0.25, 0.25, 0.25, 0.25] | Sum to 1.0  |
+**Package:** `phylospec.functions.substitution`
 
-#### `GTR(rateMatrix: Vector<PositiveReal>, baseFrequencies: Simplex) -> QMatrix`
+| Parameter        | Type          | Description                  | Default                  | Required | Dimension |
+|------------------|---------------|------------------------------|--------------------------|----------|-----------|
+| `kappa`          | `PositiveReal`| Transition/transversion ratio| 2.0                      | Yes      | -         |
+| `baseFrequencies`| `Simplex`     | Nucleotide frequencies       | [0.25, 0.25, 0.25, 0.25] | Yes      | 4         |
 
-General Time-Reversible model with a symmetric rate matrix and unequal base frequencies.
+#### `GTR(rateMatrix: Vector<Real>, baseFrequencies: Simplex) -> QMatrix`
 
-| Parameter        | Type                    | Description         | Default                  | Constraints      |
-|------------------|-------------------------|---------------------|--------------------------|------------------|
-| `rateMatrix`     | `Vector<PositiveReal>`  | Relative rates      | [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | Length = 6   |
-| `baseFrequencies`| `Simplex`               | Nucleotide frequencies | [0.25, 0.25, 0.25, 0.25] | Sum to 1.0   |
+General Time-Reversible model.
+
+**Package:** `phylospec.functions.substitution`
+
+| Parameter        | Type                    | Description         | Default                         | Required | Dimension | Constraint |
+|------------------|-------------------------|--------------------|---------------------------------|----------|-----------|------------|
+| `rateMatrix`     | `Vector<Real>`          | Relative rate parameters | [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] | Yes    | 6         | positive   |
+| `baseFrequencies`| `Simplex`               | Nucleotide frequencies | [0.25, 0.25, 0.25, 0.25]     | Yes      | 4         | -          |
 
 ### 1.2 Protein Models
 
-#### `WAG(freqsModel: Boolean?) -> QMatrix`
+#### `WAG(baseFrequencies?: Simplex) -> QMatrix`
 
-Whelan And Goldman model for protein evolution.
+Whelan And Goldman model.
 
-| Parameter    | Type         | Description                       | Default | Constraints |
-|--------------|--------------|-----------------------------------|---------|-------------|
-| `freqsModel` | `Boolean?`   | Use frequencies from the model    | true    | None        |
+**Package:** `phylospec.functions.substitution`
 
-#### `JTT(freqsModel: Boolean?) -> QMatrix`
+| Parameter        | Type      | Description           | Default | Required | Dimension |
+|------------------|-----------|----------------------|---------|----------|-----------|
+| `baseFrequencies`| `Simplex` | Amino acid frequencies | None   | No       | 20        |
 
-Jones-Taylor-Thornton model for protein evolution.
+#### `JTT(baseFrequencies?: Simplex) -> QMatrix`
 
-| Parameter    | Type         | Description                       | Default | Constraints |
-|--------------|--------------|-----------------------------------|---------|-------------|
-| `freqsModel` | `Boolean?`   | Use frequencies from the model    | true    | None        |
+Jones-Taylor-Thornton model.
 
-#### `LG(freqsModel: Boolean?) -> QMatrix`
+**Package:** `phylospec.functions.substitution`
 
-Le-Gascuel model for protein evolution.
+| Parameter        | Type      | Description           | Default | Required | Dimension |
+|------------------|-----------|----------------------|---------|----------|-----------|
+| `baseFrequencies`| `Simplex` | Amino acid frequencies | None   | No       | 20        |
 
-| Parameter    | Type         | Description                       | Default | Constraints |
-|--------------|--------------|-----------------------------------|---------|-------------|
-| `freqsModel` | `Boolean?`   | Use frequencies from the model    | true    | None        |
+#### `LG(baseFrequencies?: Simplex) -> QMatrix`
 
-### 1.3 Codon Models
+Le-Gascuel model.
 
-#### `GY94(omega: PositiveReal, kappa: PositiveReal, codonFrequencies: Simplex) -> QMatrix`
+**Package:** `phylospec.functions.substitution`
 
-Goldman-Yang 1994 model for codon evolution.
-
-| Parameter        | Type            | Description                  | Default | Constraints        |
-|------------------|-----------------|------------------------------|---------|-------------------|
-| `omega`          | `PositiveReal`  | dN/dS ratio                  | 1.0     | > 0               |
-| `kappa`          | `PositiveReal`  | Transition/transversion ratio| 2.0     | > 0               |
-| `codonFrequencies`| `Simplex`      | Codon frequencies           | None    | Length = # codons  |
+| Parameter        | Type      | Description           | Default | Required | Dimension |
+|------------------|-----------|----------------------|---------|----------|-----------|
+| `baseFrequencies`| `Simplex` | Amino acid frequencies | None   | No       | 20        |
 
 ## 2. Rate Heterogeneity Functions
 
 These functions create models for variation in evolutionary rates.
 
-#### `DiscreteGamma(shape: PositiveReal, categories: PositiveInteger) -> Vector<PositiveReal>`
+#### `DiscreteGamma(shape: PositiveReal, categories: PositiveInteger) -> Vector<Real>`
 
 Discrete gamma-distributed rates across sites.
 
-| Parameter    | Type             | Description                | Default | Constraints |
-|--------------|------------------|----------------------------|---------|-------------|
-| `shape`      | `PositiveReal`   | Shape parameter            | 1.0     | > 0         |
-| `categories` | `PositiveInteger`| Number of discrete categories | 4     | > 0         |
+**Package:** `phylospec.functions.rateheterogeneity`
 
-#### `FreeRates(rates: Vector<PositiveReal>, weights: Simplex) -> Vector<PositiveReal>`
+| Parameter    | Type             | Description                | Default | Required |
+|--------------|------------------|----------------------------|---------|----------|
+| `shape`      | `PositiveReal`   | Shape parameter            | 1.0     | Yes      |
+| `categories` | `PositiveInteger`| Number of discrete categories | 4     | Yes      |
 
-Freely varying rate categories.
-
-| Parameter | Type                    | Description        | Default | Constraints                |
-|-----------|-------------------------|--------------------|---------|---------------------------|
-| `rates`   | `Vector<PositiveReal>`  | Rate values        | None    | All > 0                   |
-| `weights` | `Simplex`               | Weights for each rate | None | Length matches rates     |
-
-#### `InvariantSites(proportion: Probability) -> Vector<Real>`
-
-Model with a proportion of invariant sites.
-
-| Parameter    | Type          | Description                | Default | Constraints           |
-|--------------|---------------|----------------------------|---------|----------------------|
-| `proportion` | `Probability` | Proportion of invariant sites | 0.0  | [0, 1]               |
-
-#### `StrictClock(rate: PositiveReal) -> Vector<PositiveReal>`
+#### `StrictClock(rate: PositiveReal, tree?: Tree) -> Vector<Real>`
 
 Strict molecular clock for branches.
 
-| Parameter | Type           | Description    | Default | Constraints |
-|-----------|----------------|----------------|---------|-------------|
-| `rate`    | `PositiveReal` | Clock rate     | 1.0     | > 0         |
+**Package:** `phylospec.functions.clock`
 
-#### `UncorrelatedLognormal(mean: Real, stdev: PositiveReal) -> Vector<PositiveReal>`
+| Parameter | Type           | Description              | Default | Required |
+|-----------|----------------|--------------------------|---------|----------|
+| `rate`    | `PositiveReal` | Clock rate               | 1.0     | Yes      |
+| `tree`    | `Tree`         | Tree to apply clock to   | None    | No       |
 
-Uncorrelated lognormal relaxed clock model for branch rates.
+#### `UncorrelatedLognormal(mean: Real, stdev: PositiveReal, tree?: Tree) -> Vector<Real>`
 
-| Parameter | Type           | Description                | Default | Constraints |
-|-----------|----------------|----------------------------|---------|-------------|
-| `mean`    | `Real`         | Mean in log space          | 0.0     | None        |
-| `stdev`   | `PositiveReal` | Standard deviation         | 0.5     | > 0         |
+UCLN clock model for branch rates.
 
-#### `UncorrelatedExponential(mean: PositiveReal) -> Vector<PositiveReal>`
+**Package:** `phylospec.functions.clock`
 
-Uncorrelated exponential relaxed clock model for branch rates.
+| Parameter | Type           | Description              | Default | Required |
+|-----------|----------------|--------------------------|---------|----------|
+| `mean`    | `Real`         | Mean in log space        | 0.0     | Yes      |
+| `stdev`   | `PositiveReal` | Standard deviation       | 0.5     | Yes      |
+| `tree`    | `Tree`         | Tree to apply clock to   | None    | No       |
 
-| Parameter | Type           | Description    | Default | Constraints |
-|-----------|----------------|----------------|---------|-------------|
-| `mean`    | `PositiveReal` | Mean rate      | 1.0     | > 0         |
+## 3. I/O Functions
 
-## 3. Tree Functions
+These functions handle input/output operations for phylogenetic data.
+
+#### `nexus(file: String, id?: String) -> Alignment`
+
+Load alignment from Nexus file.
+
+**Package:** `phylospec.functions.io`
+
+**File extensions:** `.nex`, `.nexus`, `.nxs`
+
+| Parameter | Type     | Description                | Default | Required |
+|-----------|----------|---------------------------|---------|----------|
+| `file`    | `String` | Path to Nexus file        | None    | Yes      |
+| `id`      | `String` | Identifier for the alignment | None  | No       |
+
+#### `fasta(file: String) -> Alignment`
+
+Load alignment from FASTA file.
+
+**Package:** `phylospec.functions.io`
+
+**File extensions:** `.fasta`, `.fas`, `.fa`
+
+| Parameter | Type     | Description        | Default | Required |
+|-----------|----------|--------------------|---------|----------|
+| `file`    | `String` | Path to FASTA file | None    | Yes      |
+
+#### `phylip(file: String, interleaved?: Boolean) -> Alignment`
+
+Load alignment from PHYLIP file.
+
+**Package:** `phylospec.functions.io`
+
+**File extensions:** `.phy`, `.phylip`
+
+| Parameter    | Type      | Description                           | Default | Required |
+|--------------|-----------|---------------------------------------|---------|----------|
+| `file`       | `String`  | Path to PHYLIP file                   | None    | Yes      |
+| `interleaved`| `Boolean` | Whether the file is in interleaved format | false | No     |
+
+## 4. Alignment Functions
+
+These functions operate on sequence alignments.
+
+#### `taxa(alignment: Alignment) -> TaxonSet`
+
+Extract taxa from an alignment.
+
+**Package:** `phylospec.functions.alignment`
+
+| Parameter   | Type        | Description                    | Default | Required |
+|-------------|-------------|--------------------------------|---------|----------|
+| `alignment` | `Alignment` | Alignment to extract taxa from | None    | Yes      |
+
+#### `ntaxa(alignment: Alignment) -> Integer`
+
+Get number of taxa in an alignment.
+
+**Package:** `phylospec.functions.alignment`
+
+| Parameter   | Type        | Description                   | Default | Required |
+|-------------|-------------|-------------------------------|---------|----------|
+| `alignment` | `Alignment` | Alignment to count taxa from  | None    | Yes      |
+
+#### `nchar(alignment: Alignment) -> Integer`
+
+Get number of characters/sites in an alignment.
+
+**Package:** `phylospec.functions.alignment`
+
+| Parameter   | Type        | Description                        | Default | Required |
+|-------------|-------------|------------------------------------|---------|----------|
+| `alignment` | `Alignment` | Alignment to count characters from | None    | Yes      |
+
+#### `dataType(alignment: Alignment) -> String`
+
+Get the data type of an alignment.
+
+**Package:** `phylospec.functions.alignment`
+
+| Parameter   | Type        | Description          | Default | Required |
+|-------------|-------------|----------------------|---------|----------|
+| `alignment` | `Alignment` | Alignment to query   | None    | Yes      |
+
+#### `subset(alignment: Alignment, sites: Vector<Integer>) -> Alignment`
+
+Extract a subset of sites from an alignment.
+
+**Package:** `phylospec.functions.alignment`
+
+| Parameter   | Type              | Description            | Default | Required |
+|-------------|-------------------|------------------------|---------|----------|
+| `alignment` | `Alignment`       | Original alignment     | None    | Yes      |
+| `sites`     | `Vector<Integer>` | Site indices to extract | None    | Yes      |
+
+## 5. Taxa Functions
+
+These functions work with taxonomic data.
+
+#### `taxonset(names: Vector<String>) -> TaxonSet`
+
+Create a taxon set from taxon names.
+
+**Package:** `phylospec.functions.taxa`
+
+| Parameter | Type            | Description        | Default | Required |
+|-----------|-----------------|--------------------|---------|----------|
+| `names`   | `Vector<String>`| Array of taxon names | None  | Yes      |
+
+## 6. Tree Functions
 
 These functions operate on phylogenetic trees.
 
 #### `mrca(tree: Tree, taxa: TaxonSet) -> TreeNode`
 
-Find the most recent common ancestor of a set of taxa.
+Find most recent common ancestor of taxa.
 
-| Parameter | Type       | Description        | Default | Constraints                  |
-|-----------|------------|--------------------|---------|------------------------------|
-| `tree`    | `Tree`     | Phylogenetic tree  | None    | None                         |
-| `taxa`    | `TaxonSet` | Set of taxa        | None    | All taxa must be in the tree |
+**Package:** `phylospec.functions.tree`
+
+| Parameter | Type       | Description       | Default | Required |
+|-----------|------------|-------------------|---------|----------|
+| `tree`    | `Tree`     | Phylogenetic tree | None    | Yes      |
+| `taxa`    | `TaxonSet` | Set of taxa       | None    | Yes      |
 
 #### `treeHeight(tree: Tree) -> Real`
 
-Get the height/depth of a tree (distance from root to furthest tip).
+Get height/depth of a tree.
 
-| Parameter | Type   | Description       | Default | Constraints |
-|-----------|--------|-------------------|---------|-------------|
-| `tree`    | `Tree` | Phylogenetic tree | None    | None        |
+**Package:** `phylospec.functions.tree`
 
-#### `nodeAge(tree: TimeTree, node: TreeNode) -> Real`
+| Parameter | Type   | Description       | Default | Required |
+|-----------|--------|-------------------|---------|----------|
+| `tree`    | `Tree` | Phylogenetic tree | None    | Yes      |
 
-Get the age of a node in a time-calibrated tree.
+## 7. Mathematical Functions
 
-| Parameter | Type       | Description          | Default | Constraints                |
-|-----------|------------|----------------------|---------|---------------------------|
-| `tree`    | `TimeTree` | Time-calibrated tree | None    | None                      |
-| `node`    | `TreeNode` | Node in the tree     | None    | Node must be in the tree  |
-
-#### `branchLength(tree: Tree, node: TreeNode) -> Real`
-
-Get the length of the branch leading to a node.
-
-| Parameter | Type       | Description      | Default | Constraints                    |
-|-----------|------------|------------------|---------|-------------------------------|
-| `tree`    | `Tree`     | Phylogenetic tree| None    | None                          |
-| `node`    | `TreeNode` | Node in the tree | None    | Node must be in tree, not root|
-
-#### `distanceMatrix(tree: Tree) -> Matrix<Real>`
-
-Compute pairwise distances between all pairs of tips in the tree.
-
-| Parameter | Type   | Description       | Default | Constraints |
-|-----------|--------|-------------------|---------|-------------|
-| `tree`    | `Tree` | Phylogenetic tree | None    | None        |
-
-**Indexing**: The result can be indexed with two indices to get pairwise distances:
-```
-Matrix<Real> D = distanceMatrix(tree);
-Real dist = D[i,j];  // Distance between tips i and j
-```
-
-#### `descendantTaxa(tree: Tree, node: TreeNode) -> TaxonSet`
-
-Get all taxa descended from a node.
-
-| Parameter | Type       | Description      | Default | Constraints                |
-|-----------|------------|------------------|---------|---------------------------|
-| `tree`    | `Tree`     | Phylogenetic tree| None    | None                      |
-| `node`    | `TreeNode` | Node in the tree | None    | Node must be in the tree  |
-
-## 4. Mathematical Functions
-
-These functions perform mathematical operations on various types.
-
-#### `vectorElement(vector: Vector<T>, index: Integer) -> T`
-
-Extract an element from a vector.
-
-| Parameter | Type        | Description     | Default | Constraints           |
-|-----------|-------------|-----------------|---------|----------------------|
-| `vector`  | `Vector<T>` | Source vector   | None    | None                 |
-| `index`   | `Integer`   | Index to extract| None    | 0 <= index < length  |
-
-**Note**: This function is equivalent to direct indexing (`vector[index]`).
-
-#### `matrixElement(matrix: Matrix<T>, row: Integer, col: Integer) -> T`
-
-Extract an element from a matrix.
-
-| Parameter | Type        | Description      | Default | Constraints              |
-|-----------|-------------|------------------|---------|-------------------------|
-| `matrix`  | `Matrix<T>` | Source matrix    | None    | None                    |
-| `row`     | `Integer`   | Row index        | None    | 0 <= row < rows         |
-| `col`     | `Integer`   | Column index     | None    | 0 <= col < columns      |
-
-**Note**: This function is equivalent to direct indexing (`matrix[row,col]`).
-
-#### `scale(vector: Vector<Real>, factor: Real) -> Vector<Real>`
-
-Scale all elements of a vector by a factor.
-
-| Parameter | Type           | Description    | Default | Constraints |
-|-----------|----------------|----------------|---------|-------------|
-| `vector`  | `Vector<Real>` | Source vector  | None    | None        |
-| `factor`  | `Real`         | Scaling factor | None    | None        |
-
-#### `normalize(vector: Vector<Real>) -> Simplex`
-
-Normalize a vector to sum to 1.0, creating a simplex.
-
-| Parameter | Type           | Description   | Default | Constraints   |
-|-----------|----------------|---------------|---------|--------------|
-| `vector`  | `Vector<Real>` | Source vector | None    | All values ≥ 0 |
-
-**Indexing**: The resulting Simplex can be indexed to access individual probabilities:
-```
-Simplex s = normalize([1.0, 2.0, 3.0]);
-Probability p = s[0];  // Access first probability
-```
+These functions perform mathematical operations.
 
 #### `log(x: PositiveReal) -> Real`
 
 Natural logarithm.
 
-| Parameter | Type           | Description | Default | Constraints |
-|-----------|----------------|-------------|---------|-------------|
-| `x`       | `PositiveReal` | Input value | None    | > 0         |
+**Package:** `phylospec.functions.math`
+
+| Parameter | Type           | Description | Default | Required |
+|-----------|----------------|-------------|---------|----------|
+| `x`       | `PositiveReal` | Input value | None    | Yes      |
 
 #### `exp(x: Real) -> PositiveReal`
 
 Exponential function.
 
-| Parameter | Type   | Description | Default | Constraints |
-|-----------|--------|-------------|---------|-------------|
-| `x`       | `Real` | Input value | None    | None        |
+**Package:** `phylospec.functions.math`
 
-#### `sum(vector: Vector<Real>) -> Real`
+| Parameter | Type   | Description | Default | Required |
+|-----------|--------|-------------|---------|----------|
+| `x`       | `Real` | Input value | None    | Yes      |
 
-Sum all elements in a vector.
+## 8. Constructor Functions
 
-| Parameter | Type           | Description   | Default | Constraints |
-|-----------|----------------|---------------|---------|-------------|
-| `vector`  | `Vector<Real>` | Source vector | None    | None        |
+PhyloSpec also includes constructor functions for creating distribution objects. These have the same names and parameters as their corresponding distributions but return distribution objects rather than sampled values. For example:
 
-#### `product(vector: Vector<Real>) -> Real`
+- `Normal(mean: Real, sd: PositiveReal) -> Normal` - Creates a Normal distribution object
+- `Gamma(shape: PositiveReal, rate: PositiveReal) -> Gamma` - Creates a Gamma distribution object
+- `Coalescent(populationSize: PositiveReal, taxa?: TaxonSet) -> Coalescent` - Creates a Coalescent distribution object
 
-Multiply all elements in a vector.
+For a complete list of distribution constructors and their parameters, see the [distributions documentation](distributions.md).
 
-| Parameter | Type           | Description   | Default | Constraints |
-|-----------|----------------|---------------|---------|-------------|
-| `vector`  | `Vector<Real>` | Source vector | None    | None        |
-
-## 5. Implementation Requirements
+## 9. Implementation Requirements
 
 Language implementations must:
 
@@ -294,19 +307,27 @@ Language implementations must:
 3. Return the correct type
 4. Handle generic types appropriately
 5. Apply default values where specified
+6. Support optional parameters (marked with `?` in the type)
+7. Validate dimension constraints where specified
+8. Implement proper I/O handling for file-based functions
+9. Maintain package/namespace organization
 
-### 5.1 Parameter Order
+### 9.1 Parameter Order
 
 When a language uses positional parameters, they should follow the order listed in each signature.
 
-### 5.2 Optional Parameters
+### 9.2 Optional Parameters
 
-Parameters that have default values are optional. Implementations must handle their absence appropriately.
+Parameters with a `?` in their type or that have default values are optional. Implementations must handle their absence appropriately.
 
-### 5.3 Indexing
+### 9.3 File I/O
 
-Functions that return indexable types (Vector, Matrix, Simplex) produce results that can be indexed according to the type system rules. See the [type system documentation](types.md) for details on indexing behavior.
+Functions with `ioHints` are designed to load data from files. Implementations should:
+- Validate file existence and readability
+- Support the specified file extensions
+- Handle file parsing errors gracefully
+- Return appropriate error messages for malformed files
 
 ## Reference
 
-For machine-readable definitions, see [functions.json](../../schema/functions.json) in the schema directory.
+For machine-readable definitions, see the `phylospec-model-library.json` file in the schema directory.

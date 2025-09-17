@@ -6,94 +6,121 @@ This document defines the type system that forms the foundation of PhyloSpec. Al
 
 ### 1.1 Basic Types
 
-| Type      | Description                   | Example Values           | Constraints                |
-|-----------|-------------------------------|--------------------------|----------------------------|
-| `Real`    | Real-valued number            | 1.0, -0.5, 3.14159       | Must be finite (not NaN or Infinity) |
-| `Integer` | Integer-valued number         | 1, -5, 42                | Must be a whole number     |
-| `Boolean` | Logical value                 | true, false              | None                       |
-| `String`  | Text value                    | "human", "ACGT"          | Must not be null           |
+| Type      | Description                   | Example Values           | Constraints                | Package |
+|-----------|-------------------------------|--------------------------|----------------------------|----------|
+| `Real`    | Real-valued number            | 1.0, -0.5, 3.14159       | Must be finite (not NaN or Infinity) | phylospec.types |
+| `Integer` | Integer-valued number         | 1, -5, 42                | Must be a whole number     | phylospec.types |
+| `Boolean` | Logical value                 | true, false              | None                       | phylospec.types |
+| `String`  | Text value                    | "human", "ACGT"          | Must not be null           | phylospec.types |
 
 ### 1.2 Restricted Types
 
-| Type               | Base Type  | Description                       | Constraints                        |
-|--------------------|------------|-----------------------------------|-----------------------------------|
-| `PositiveReal`     | `Real`     | Positive real number              | Value > 0                          |
-| `Probability`      | `Real`     | Probability value                 | 0.0 ≤ Value ≤ 1.0                 |
-| `NonNegativeReal`  | `Real`     | Non-negative real number          | Value ≥ 0                          |
-| `PositiveInteger`  | `Integer`  | Positive integer                  | Value > 0                          |
+| Type               | Base Type  | Description                       | Constraints                        | Package |
+|--------------------|------------|-----------------------------------|------------------------------------|----------|
+| `PositiveReal`     | `Real`     | Positive real number (> 0)        | Value > 0                          | phylospec.types |
+| `NonNegativeReal`  | `Real`     | Non-negative real number (>= 0)  | Value ≥ 0                          | phylospec.types |
+| `Probability`      | `Real`     | Probability value [0,1]           | 0.0 ≤ Value ≤ 1.0                  | phylospec.types |
+| `PositiveInteger`  | `Integer`  | Positive integer (> 0)            | Value > 0                          | phylospec.types |
 
 ## 2. Collection Types
 
 ### 2.1 Base Collections
 
-| Type          | Description                    | Type Parameters         | Example                        |
-|---------------|--------------------------------|-------------------------|--------------------------------|
-| `Vector<T>`   | Ordered collection of values   | T: element type         | [1.0, 2.0, 3.0]                |
-| `Matrix<T>`   | 2D grid of values              | T: element type         | [[1.0, 2.0], [3.0, 4.0]]       |
-| `Map<K,V>`    | Key-value mapping              | K: key, V: value type   | {"A": 0.25, "C": 0.25}         |
-| `Set<T>`      | Unordered collection (unique)  | T: element type         | {"human", "chimp", "gorilla"}  |
+| Type          | Description                    | Type Parameters         | Example                        | Package |
+|---------------|--------------------------------|-------------------------|--------------------------------|----------|
+| `Vector<T>`   | Generic ordered collection of elements | T: element type   | [1.0, 2.0, 3.0]                | phylospec.types |
+| `Matrix<T>`   | Generic two-dimensional grid of values | T: element type   | [[1.0, 2.0], [3.0, 4.0]]       | phylospec.types |
+| `List<T>`     | Ordered collection of elements | T: element type         | ["a", "b", "c"]                | phylospec.types |
+| `Map<K,V>`    | Mappings from keys to values  | K: key, V: value type   | {"A": 0.25, "C": 0.25}         | phylospec.types |
+| `Set<T>`      | Unordered collection with unique elements | T: element type | {"human", "chimp", "gorilla"}  | phylospec.types |
 
-### 2.2 Specialized Matrix Types
+### 2.2 Specialized Types
 
-| Type                  | Base Type        | Description                             | Constraints                         |
-|-----------------------|-----------------|-----------------------------------------|-------------------------------------|
-| `SquareMatrix<T>`     | `Matrix<T>`     | Square matrix (n×n)                     | Number of rows equals columns       |
-| `StochasticMatrix`    | `Matrix<Probability>` | Probability transition matrix      | Each row sums to 1.0               |
+| Type                  | Base Type                      | Description                             | Constraints                         | Package |
+|-----------------------|-------------------------------|-----------------------------------------|-------------------------------------|----------|
+| `SquareMatrix<T>`     | `Matrix<T>`                   | Square matrix with equal number of rows and columns | Number of rows equals columns | phylospec.types |
+| `Simplex`             | `Vector<Probability>`         | Probability vector with elements that sum to 1.0 | Elements sum to 1.0 (within ε=1e-10) | phylospec.types |
+| `QMatrix`             | `SquareMatrix<Real>`          | Rate matrix for substitution models     | Rows sum to 0, off-diagonals ≥ 0    | phylospec.types |
+| `StochasticMatrix`    | `Matrix<Probability>`         | Stochastic matrix - probability transition matrix | Each row sums to 1.0 | phylospec.types |
 
-### 2.3 Common Type Aliases
+## 3. Biological Alphabets
 
-| Alias          | Definition              | Description                             |
-|----------------|------------------------|-----------------------------------------|
-| `RealVector`   | `Vector<Real>`         | Vector of real values                   |
-| `IntVector`    | `Vector<Integer>`      | Vector of integer values                |
-| `StringVector` | `Vector<String>`       | Vector of strings                       |
-| `RealMatrix`   | `Matrix<Real>`         | Matrix of real values                   |
+### 3.1 Sequence Alphabets
 
-## 3. Phylogenetic Types
+| Type          | States                              | Ambiguous Codes                    | Description                | Package |
+|---------------|-------------------------------------|------------------------------------|-----------------------------|----------|
+| `Nucleotide`  | A, C, G, T                          | R, Y, S, W, K, M, B, D, H, V, N, -, ? | DNA/RNA nucleotide alphabet | phylospec.types |
+| `AminoAcid`   | A, R, N, D, C, Q, E, G, H, I, L, K, M, F, P, S, T, W, Y, V | B, Z, X, *, -, ? | Standard amino acid alphabet | phylospec.types |
 
-### 3.1 Specialized Types
+## 4. Sequence Types
 
-| Type          | Base Type              | Description                             | Constraints                         |
-|---------------|------------------------|-----------------------------------------|-------------------------------------|
-| `Simplex`     | `Vector<Probability>`  | Probability vector                      | Elements sum to 1.0 (within ε=1e-10) |
-| `QMatrix`     | `SquareMatrix<Real>`   | Rate matrix for CTMCs                   | Rows sum to 0, off-diagonals ≥ 0    |
-| `IndexSet`    | `Set<Integer>`         | Set of integer indices                  | All values are non-negative         |
+| Type                   | Base Type                      | Properties                              | Description                          | Package |
+|------------------------|-------------------------------|-----------------------------------------|--------------------------------------|----------|
+| `Sequence<A>`          | -                             | length: Integer<br>alphabet: String     | Biological sequence with elements from alphabet A | phylospec.types |
+| `DNASequence`          | `Sequence<Nucleotide>`        | (inherited from Sequence)               | DNA sequence                         | phylospec.types |
+| `ProteinSequence`      | `Sequence<AminoAcid>`         | (inherited from Sequence)               | Protein sequence                     | phylospec.types |
 
-### 3.2 Tree Types
+## 5. Phylogenetic Types
 
-| Type           | Properties                                  | Methods                                     | Description                            |
-|----------------|---------------------------------------------|---------------------------------------------|----------------------------------------|
-| `Taxon`        | name: `String`                              | `equals(t: Taxon): Boolean`                 | Taxonomic unit                        |
-| `TaxonSet`     | taxa: `Set<Taxon>`                          | `contains(t: Taxon): Boolean`               | Collection of taxa                    |
-| `TreeNode`     | parent: `TreeNode?`<br>children: `Vector<TreeNode>` | `isLeaf(): Boolean`<br>`isRoot(): Boolean` | Node in a phylogenetic tree          |
-| `Tree`         | root: `TreeNode`<br>nodes: `Vector<TreeNode>`<br>taxa: `TaxonSet` | `getNode(id: String): TreeNode`<br>`getTips(): Vector<TreeNode>` | Phylogenetic tree structure           |
-| `TimeTree`     | All `Tree` properties                        | `getAge(node: TreeNode): Real`<br>`getHeight(): Real` | Time-calibrated tree                 |
+### 5.1 Taxa Types
 
-### 3.3 Sequence Types
+| Type           | Properties                                  | Description                            | Package |
+|----------------|---------------------------------------------|----------------------------------------|----------|
+| `Taxon`        | name: String<br>age: Real (optional)        | Taxonomic unit                        | phylospec.types |
+| `TaxonSet`     | ntax: Integer<br>names: Vector<String> (accessor) | Collection of taxa               | phylospec.types |
 
-| Type                   | Type Parameters                 | Properties                              | Description                          |
-|------------------------|--------------------------------|----------------------------------------|--------------------------------------|
-| `Sequence<A>`          | A: alphabet type               | data: `Vector<A>`<br>taxon: `Taxon`     | Biological sequence of type A        |
-| `Alignment<A>`         | A: alphabet type               | sequences: `Vector<Sequence<A>>`        | Multiple sequence alignment          |
-| `DNASequence`          | N/A (= `Sequence<Nucleotide>`) | data: vector of DNA nucleotides         | DNA sequence                         |
-| `ProteinSequence`      | N/A (= `Sequence<AminoAcid>`)  | data: vector of amino acids             | Protein sequence                     |
-| `CodonSequence`        | N/A (= `Sequence<Codon>`)      | data: vector of codons                  | Codon sequence                       |
-| `DNAAlignment`         | N/A (= `Alignment<Nucleotide>`)| sequences: vector of DNA sequences      | DNA sequence alignment               |
+### 5.2 Tree Types
 
-### 3.4 Alphabets
+| Type           | Base Type | Properties                                  | Description                            | Package |
+|----------------|-----------|---------------------------------------------|----------------------------------------|----------|
+| `TreeNode`     | -         | (implementation-specific)                   | Node in a phylogenetic tree           | phylospec.types |
+| `Tree`         | -         | ntax: Integer<br>nBranches: Integer<br>nInternalNodes: Integer<br>taxa: TaxonSet (accessor) | Phylogenetic tree structure | phylospec.types |
+| `TimeTree`     | Tree      | (inherits all Tree properties)              | Time-calibrated tree                  | phylospec.types |
 
-| Type          | Values                                  | Description                             |
-|---------------|----------------------------------------|-----------------------------------------|
-| `Nucleotide`  | A, C, G, T/U                           | DNA/RNA nucleotide                      |
-| `AminoAcid`   | A, R, N, D, C, Q, E, G, H, I, L, K, M, F, P, S, T, W, Y, V | Standard amino acids |
-| `Codon`       | AAA, AAC, AAG, AAT, ...                | Nucleotide triplet                      |
+### 5.3 Alignment Type
 
-## 4. Type Hierarchies
+| Type           | Properties                                  | Description                            | Package |
+|----------------|---------------------------------------------|----------------------------------------|----------|
+| `Alignment`    | ntax: Integer<br>nchar: Integer<br>dataType: String<br>taxa: TaxonSet (accessor) | Multiple sequence alignment with extractable properties | phylospec.types |
 
-### 4.1 Type Inheritance
+## 6. Distribution Types
+
+### 6.1 Abstract Distribution Type
+
+| Type           | Properties                    | Description                            | Package |
+|----------------|-------------------------------|----------------------------------------|----------|
+| `Distribution` | generatedType: String         | Abstract type representing a probability distribution | phylospec.types |
+
+### 6.2 Concrete Distribution Types
+
+All concrete distribution types extend the base `Distribution` type with a specific generated type:
+
+| Type                  | Extends                    | Description                            | Package |
+|-----------------------|---------------------------|----------------------------------------|----------|
+| `Normal`              | `Distribution<Real>`      | Normal distribution                    | phylospec.distributions |
+| `LogNormal`           | `Distribution<PositiveReal>` | Log-normal distribution              | phylospec.distributions |
+| `Gamma`               | `Distribution<PositiveReal>` | Gamma distribution                   | phylospec.distributions |
+| `Beta`                | `Distribution<Probability>` | Beta distribution                     | phylospec.distributions |
+| `Exponential`         | `Distribution<PositiveReal>` | Exponential distribution             | phylospec.distributions |
+| `Uniform`             | `Distribution<Real>`      | Uniform distribution                   | phylospec.distributions |
+| `Dirichlet`           | `Distribution<Simplex>`   | Dirichlet distribution                 | phylospec.distributions |
+| `MultivariateNormal`  | `Distribution<Vector<Real>>` | Multivariate normal distribution    | phylospec.distributions |
+| `Yule`                | `Distribution<Tree>`      | Yule tree distribution                 | phylospec.distributions |
+| `BirthDeath`          | `Distribution<Tree>`      | Birth-death tree distribution          | phylospec.distributions |
+| `Coalescent`          | `Distribution<Tree>`      | Coalescent tree distribution           | phylospec.distributions |
+| `FossilBirthDeath`    | `Distribution<TimeTree>`  | Birth-death distribution with fossil sampling | phylospec.distributions |
+| `PhyloCTMC`           | `Distribution<Alignment>` | Phylogenetic continuous-time Markov chain distribution | phylospec.distributions |
+| `PhyloBM`             | `Distribution<Vector<Real>>` | Phylogenetic Brownian motion distribution | phylospec.distributions |
+| `PhyloOU`             | `Distribution<Vector<Real>>` | Phylogenetic Ornstein-Uhlenbeck distribution | phylospec.distributions |
+| `IID<T>`              | `Distribution<Vector<T>>` | IID distribution (parameterized)       | phylospec.distributions |
+| `Mixture<T>`          | `Distribution<T>`         | Mixture distribution (parameterized)   | phylospec.distributions |
+
+## 7. Type Hierarchies
+
+### 7.1 Type Inheritance
 
 ```
-PhyloSpecType (base interface for all types)
+Object (base for all types)
 │
 ├── Real
 │   ├── PositiveReal
@@ -110,19 +137,39 @@ PhyloSpecType (base interface for all types)
 ├── Vector<T>
 │   └── Simplex (extends Vector<Probability>)
 │
-└── Matrix<T>
-    ├── SquareMatrix<T>
-    │   └── QMatrix (extends SquareMatrix<Real>)
-    └── StochasticMatrix (extends Matrix<Probability>)
-
-Tree
-└── TimeTree
-
-Set<T>
-└── IndexSet (extends Set<Integer>)
+├── Matrix<T>
+│   ├── SquareMatrix<T>
+│   │   └── QMatrix (extends SquareMatrix<Real>)
+│   └── StochasticMatrix (extends Matrix<Probability>)
+│
+├── Sequence<A>
+│   ├── DNASequence (type alias for Sequence<Nucleotide>)
+│   └── ProteinSequence (type alias for Sequence<AminoAcid>)
+│
+├── Tree
+│   └── TimeTree
+│
+└── Distribution<T> (abstract)
+    ├── Normal (generates Real)
+    ├── LogNormal (generates PositiveReal)
+    ├── Gamma (generates PositiveReal)
+    ├── Beta (generates Probability)
+    ├── Exponential (generates PositiveReal)
+    ├── Uniform (generates Real)
+    ├── Dirichlet (generates Simplex)
+    ├── MultivariateNormal (generates Vector<Real>)
+    ├── Yule (generates Tree)
+    ├── BirthDeath (generates Tree)
+    ├── Coalescent (generates Tree)
+    ├── FossilBirthDeath (generates TimeTree)
+    ├── PhyloCTMC (generates Alignment)
+    ├── PhyloBM (generates Vector<Real>)
+    ├── PhyloOU (generates Vector<Real>)
+    ├── IID<T> (generates Vector<T>)
+    └── Mixture<T> (generates T)
 ```
 
-### 4.2 Type Parameterization
+### 7.2 Type Parameterization
 
 Type parameters enable generic types to be specialized for particular element types:
 
@@ -134,34 +181,19 @@ Vector<Nucleotide>  // Vector of nucleotides
 Matrix<T>           // Generic matrix of any type T
 Matrix<Real>        // Matrix of real values
 Matrix<Probability> // Matrix of probabilities
+
+Sequence<A>         // Generic sequence with alphabet type A
+Sequence<Nucleotide> // DNA sequence
+Sequence<AminoAcid>  // Protein sequence
+
+Distribution<T>     // Generic distribution generating type T
+Distribution<Real>  // Distribution generating real values
+Distribution<Tree>  // Distribution generating trees
 ```
 
-## 5. Type Conversion Rules
+## 8. Type Validation
 
-### 5.1 Implicit Conversions
-
-Implicit conversions are automatically applied where safe:
-
-| From Type          | To Type              | Condition                              |
-|--------------------|---------------------|----------------------------------------|
-| `Integer`          | `Real`              | Always valid                           |
-| `PositiveInteger`  | `PositiveReal`      | Always valid                           |
-| `T`                | `T?`                | Any type to optional version of itself |
-| `PositiveReal`     | `NonNegativeReal`   | Always valid (positive is non-negative)|
-
-### 5.2 Explicit Conversions
-
-Explicit conversions must be requested by the modeler:
-
-| From Type              | To Type        | Function            | Behavior                           |
-|------------------------|----------------|--------------------|------------------------------------|
-| `Real`                 | `Integer`      | `toInteger(r)`     | Truncate to integer (loses precision) |
-| `Vector<Real>`         | `Simplex`      | `toSimplex(v)`     | Normalize vector to sum to 1.0     |
-| `Vector<Real>`         | `QMatrix`      | `toQMatrix(v, dim)`| Convert vector to rate matrix      |
-
-## 6. Type Validation
-
-### 6.1 Validation Rules
+### 8.1 Validation Rules
 
 All types must validate their constraints at construction time. Invalid values should result in an error or exception.
 
@@ -180,76 +212,45 @@ All types must validate their constraints at construction time. Invalid values s
 | `StochasticMatrix` | Each row must sum to 1.0 (within ε=1e-10)          |
 | `QMatrix`          | Rows sum to 0; off-diagonals ≥ 0; diagonal ≤ 0      |
 
-### 6.2 Numerical Tolerance
+### 8.2 Numerical Tolerance
 
 For floating-point comparisons, implementations should use a tolerance of ε=1e-10 for:
 - Simplex sum validation
 - Stochastic matrix row sum validation  
 - Q-matrix row sum validation
 
-## 7. Indexing and Element Access
+## 9. Primitive Type Assignment
 
-### 7.1 Indexable Types
+Certain PhyloSpec types can be directly assigned primitive values:
 
-The following types support element access through indexing:
+| PhyloSpec Type     | Accepted Primitives              | Example                    |
+|--------------------|----------------------------------|----------------------------|
+| `Real`             | Double, Float, Integer, Long     | `Real x = 3.14;`          |
+| `Integer`          | Integer, Long                    | `Integer n = 42;`         |
+| `Boolean`          | Boolean                          | `Boolean flag = true;`    |
+| `String`           | String                           | `String name = "human";`  |
+| `PositiveReal`     | Double, Float                    | `PositiveReal r = 2.5;`   |
+| `NonNegativeReal`  | Double, Float, Integer, Long     | `NonNegativeReal x = 0;`  |
+| `Probability`      | Double, Float                    | `Probability p = 0.95;`   |
+| `PositiveInteger`  | Integer, Long                    | `PositiveInteger n = 5;`  |
 
-| Type | Indexing Syntax | Return Type | Index Type | Notes |
-|------|-----------------|-------------|------------|-------|
-| `Vector<T>` | `v[i]` | `T` | `Integer` | 0-based indexing |
-| `Matrix<T>` | `m[i,j]` or `m[i][j]` | `T` | `Integer, Integer` | Row, column indices |
-| `Simplex` | `s[i]` | `Probability` | `Integer` | 0-based indexing |
-| `StochasticMatrix` | `p[i,j]` | `Probability` | `Integer, Integer` | Row, column indices |
-| `QMatrix` | `q[i,j]` | `Real` | `Integer, Integer` | Row, column indices |
-| `Sequence<A>` | `seq[i]` | `A` | `Integer` | 0-based position |
-| `Alignment<A>` | `aln[i,j]` | `A` | `Integer, Integer` | Sequence, position |
-| `String` | `s[i]` | `Character` | `Integer` | 0-based position |
+Note: Primitive assignment is subject to constraint validation. For example, assigning -1.0 to a `PositiveReal` will fail validation.
 
-### 7.2 Indexing Rules
-
-1. **Bounds Checking**: All indexing operations must check bounds and report errors for out-of-range indices
-2. **0-Based**: All indices are 0-based (first element is at index 0)
-3. **Return Types**: Indexing returns the element type, not a wrapped type
-4. **Immutability**: Indexing provides read-only access; elements cannot be modified through indexing
-
-### 7.3 Special Indexing Cases
-
-```
-# Examples of valid indexing
-Simplex pi ~ Dirichlet(1.0, 1.0, 1.0, 1.0);
-Real freqA = pi[0];  # First element (A frequency)
-
-Matrix<Real> m = ...;
-Real element = m[2,3];  # Row 2, column 3
-
-# Slicing (optional feature)
-Vector<Real> subvector = v[1:3];  # Elements 1 and 2
-Matrix<Real> submatrix = m[0:2, 1:4];  # Rows 0-1, columns 1-3
-```
-
-### 7.4 Non-Indexable Types
-
-The following types do NOT support direct indexing:
-- Primitive types (`Real`, `Integer`, `Boolean`)
-- `Map<K,V>` - Use key-based access instead
-- `Set<T>` - Unordered, no positional access
-- Tree types - Use navigation methods instead
-
-## 8. Implementation Requirements
+## 10. Implementation Requirements
 
 Language implementations must:
 
 1. Support all primitive types and their constraints
-2. Implement the core collection types
-3. Support the phylogenetic types with their properties and methods
-4. Enforce type constraints during model validation
-5. Allow for type parameterization where specified
-6. Apply the defined conversion rules correctly
-7. Use appropriate numerical tolerance for floating-point validations
-
-## 8. Type Extensions
-
-Languages may extend the type system with additional types, but must maintain compatibility with the core types defined here. Extensions should be clearly documented as non-standard.
+2. Implement the core collection types with proper type parameterization
+3. Support the biological alphabet types
+4. Support the phylogenetic types with their properties
+5. Implement the distribution type hierarchy
+6. Enforce type constraints during model validation
+7. Allow for type parameterization where specified
+8. Use appropriate numerical tolerance for floating-point validations
+9. Support primitive type assignment where specified
+10. Provide proper package/namespace organization
 
 ## Reference
 
-For machine-readable definitions, see [types.json](../../schema/types.json) in the schema directory.
+For machine-readable definitions, see the `phylospec-model-library.json` file in the schema directory.
