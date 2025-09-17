@@ -4,61 +4,44 @@ A specification for phylogenetic modeling components and their interfaces.
 
 ## Overview
 
-PhyloSpec provides a standardized way to describe phylogenetic modeling components (distributions, functions, and types) that can be shared across different phylogenetic inference engines. It will enable front-ends such as the [Bayesian Model Builder](https://github.com/alexeid/bayesian-model-builder) web application to construct models that are compatible with multiple engines while maintaining type safety and proper constraints.
+PhyloSpec provides a standardized way to describe phylogenetic modeling components (distributions, functions, and types) that can be shared across different phylogenetic inference engines. It enables front-ends like the [Bayesian Model Builder](https://github.com/alexeid/bayesian-model-builder) web application to construct models that are compatible with multiple engines while maintaining type safety and proper constraints.
 
-The core of PhyloSpec consists of:
+The specification consists of:
 
-1. **ANTLR Grammar** - Defines the syntax for phylogenetic modeling languages
-2. **JSON Schema** - Machine-readable specifications for types, distributions, and functions
+1. **JSON Schema** - Machine-readable specifications for types, distributions, and functions
+2. **Java Reference Implementation** - Core type system with annotations
 3. **Model Library Format** - Standardized way for engines to describe their capabilities
-4. **Type System** - Well-defined types with constraints for phylogenetic concepts
+4. **Documentation** - Comprehensive guides for types, distributions, functions, and constraints
 
 ## Key Features
 
-- **Engine-Agnostic** - Core components will work across RevBayes, BEAST 3, and other compliant engines
-- **Extensible** - Engines can add custom components while maintaining compatibility
+- **Engine-Agnostic** - Core components work across RevBayes, BEAST 3, and other compliant engines
 - **Type-Safe** - Strong typing with constraints prevents invalid models
+- **Extensible** - Engines can add custom components while maintaining compatibility
 - **Dimension-Aware** - Dynamic sizing based on model structure
 - **Machine-Readable** - JSON format enables automated tooling
 
-## Architecture
-
-```
-PhyloSpec Core
-├── ANTLR Grammar (syntax definition)
-└── JSON Specification
-    ├── Common distributions
-    ├── Common functions
-    └── Common types
-
-Bayesian Model Builder (web app)
-├── Loads PhyloSpec core
-├── Loads engine-specific extensions via URLs
-└── Generates engine-compliant models
-
-Phylogenetic Engines
-├── RevBayes
-│   └── Engine-specific JSON (extensions/restrictions)
-├── BEAST 3
-│   └── Engine-specific JSON (extensions/restrictions)
-└── Other engines...
-```
-
-## Proposed Repository Structure
+## Repository Structure
 
 ```
 .
-├── grammar/               # ANTLR grammar files
-│   └── PhyloSpec.g4      # Core grammar definition
-├── schema/               # JSON schemas
-│   ├── model-library.schema.json    # Metaschema for validating model libraries
-│   └── phylospec-model-library.json # Core PhyloSpec components
-├── docs/                 # Documentation
-│   ├── types.md         # Type system specification
-│   ├── distributions.md # Distribution signatures
-│   └── functions.md     # Function signatures
-├── examples/            # Example model specifications
-└── tools/              # Validation and conversion utilities
+├── core/                          # Core implementations
+│   └── java/                      # Java reference implementation
+│       ├── src/main/java/         # Type system and annotations
+│       │   └── org/phylospec/
+│       │       ├── annotations/   # PhyloSpec annotations
+│       │       ├── factory/       # Type factory utilities
+│       │       ├── primitives/    # Primitive types (Real, Int, etc.)
+│       │       └── types/         # Complex types (Matrix, Vector, etc.)
+│       └── src/test/              # Unit tests
+├── docs/                          # Documentation
+│   ├── types.md                   # Type system specification
+│   ├── distributions.md           # Distribution signatures
+│   ├── functions.md               # Function signatures
+│   └── constraints.md             # Constraint definitions
+└── schema/                        # JSON schemas and specifications
+    ├── model-library.schema.json  # Metaschema for validating model libraries
+    └── phylospec-model-library.json # Core PhyloSpec components
 ```
 
 ## JSON Model Library Format
@@ -97,11 +80,39 @@ PhyloSpec uses a JSON format to describe available components. Here's a simplifi
 }
 ```
 
+## Java Reference Implementation
+
+The `core/java` directory contains a reference implementation of the PhyloSpec type system:
+
+```java
+import org.phylospec.primitives.*;
+import org.phylospec.types.*;
+import static org.phylospec.factory.PhyloSpecTypes.*;
+
+// Create typed values
+PositiveReal rate = positiveReal(0.5);
+Simplex frequencies = simplex(0.25, 0.25, 0.25, 0.25);
+
+// Use with annotations
+@PhyloSpec(name = "MyModel")
+public class MyModel {
+    @PhyloParam(name = "rate")
+    private PositiveReal substitutionRate;
+}
+```
+
+### Building the Java Library
+
+```bash
+cd core/java
+mvn clean install
+```
+
 ## For Engine Developers
 
 To make your engine PhyloSpec-compliant:
 
-1. Create a JSON file describing your engine's components
+1. Create a JSON file describing your engine's components following the schema
 2. Include any extensions to the core PhyloSpec types
 3. Document any restrictions (e.g., arguments that must be fixed)
 4. Provide a public URL for the Bayesian Model Builder to load
@@ -110,54 +121,41 @@ Example engine-specific extension:
 ```json
 {
   "extends": "https://phylospec.org/core/v1.3.0",
-  "engineName": "MyEngine",
-  "engineVersion": "2.0",
-  "additions": {
+  "modelLibrary": {
+    "name": "MyEngine Extensions",
+    "engineName": "MyEngine",
+    "engineVersion": "2.0",
     "generators": [
       {
         "name": "CustomDistribution",
         "generatorType": "distribution",
-        "generatedType": "Real"
+        "generatedType": "Real",
+        "arguments": []
       }
     ]
-  },
-  "restrictions": {
-    "BirthDeath": {
-      "arguments": {
-        "conditioning": {
-          "mustBeFixed": true
-        }
-      }
-    }
   }
 }
 ```
 
-## Current Implementation Status
+## Current Status
 
-- ✅ JSON schema for model libraries
-- ✅ Core PhyloSpec types and distributions
-- ✅ Dimension expressions for dynamic sizing
+- ✅ JSON schema for model libraries (`schema/model-library.schema.json`)
+- ✅ Core PhyloSpec component library (`schema/phylospec-model-library.json`)
+- ✅ Java type system implementation (`core/java`)
 - ✅ Integration with Bayesian Model Builder
-- 🚧 ANTLR grammar (in progress)
-- 🚧 Validation tools (in progress)
-- 📋 Additional engine integrations (planned)
+- 📋 ANTLR grammar (planned)
+- 📋 Additional validation tools (planned)
 
-## Standardization Decisions
+## Documentation
 
-Based on community discussions:
-- **Unicode support**: Yes
-- **Parameter naming**: Following R conventions (e.g., `meanlog`/`sdlog`)
-- **Type constraints**: Supported via JSON schema
-- **Vectorization**: Multiple approaches under consideration
+- [Type System](docs/types.md) - Detailed type specifications
+- [Distributions](docs/distributions.md) - Statistical distribution signatures
+- [Functions](docs/functions.md) - Function signatures and semantics
+- [Constraints](docs/constraints.md) - Constraint system documentation
 
 ## Contributing
 
-We welcome contributions! Areas where help is needed:
-1. Expanding the set of common distributions and functions
-2. Improving documentation and examples
-3. Building validation tools
-4. Creating engine-specific extensions
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## Versioning
 
@@ -196,4 +194,3 @@ This project is licensed under the [MIT License](LICENSE).
 
 - **Issues**: [GitHub Issues](https://github.com/CODEPhylo/phylospec/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/CODEPhylo/phylospec/discussions)
-- **Working Group**: [CODEPhylo](https://github.com/CODEPhylo)
