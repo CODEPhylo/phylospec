@@ -20,16 +20,20 @@ This document describes the philosophy and features of the PhyloSpec language.
 PositiveReal rate = 2.0;
 PositiveReal draw ~ Exponential(rate);
 Real logDraw = log(draw);
+
+Alignment alignment = readNexus("file.nex");
+Int numTaxa = alignment.numTaxa()
 ```
 
 - Every statement describes an assignment of an expression to a variable (`=`) or assignment of a distribution to a random variable (`~`).
 - Every (random) variable is assigned a type.
-- There are four types of expressions:
+- There are five types of expressions:
   - Literals (e.g., `2.0`, `"Hallo"`, or `[1.0, 2.0, 3.0]`)
   - Variable references (e.g., `rate`)
   - Distributions (e.g., `Exponential(rate)`)
   - Function calls (e.g., `log(draw)`)
-- All four types of expressions can be used in variable assignments using `=`, while only distributions can be used in random variable assignments using `~`.
+  - Method calls (e.g., `alignment.numTaxa()`)
+- All five types of expressions can be used in variable assignments using `=`, while only distributions can be used in random variable assignments using `~`.
 - Comments start with `//` and continue until the end of the line.
 
 > [!TIP]
@@ -49,7 +53,7 @@ Real logDraw = log(draw);
 - Function and distribution argument names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
 - Redundant prefixes like `dn` or suffixes like `Distribution` are discouraged.
 
-### 2.3. Function and Distribution Calls
+### 2.3. Function, Method and Distribution Calls
 
 ```
 PositiveReal mean ~ Exponential(1.0);
