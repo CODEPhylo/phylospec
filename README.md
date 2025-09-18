@@ -49,7 +49,7 @@ The specification consists of:
 
 ## JSON Component Library Format
 
-PhyloSpec uses a standadized JSON format to describe available components. It's used to define the [**core component library**](schema/phylospec-core-component-library.json) and allows engine and package developers to define **additional external component library**. A simplified example looks as follows:
+PhyloSpec uses a standadized JSON format to describe available components. It's used to define the [**core component library**](schema/phylospec-core-component-library.json) and allows engine and package developers to define **additional external component libraries**. A simplified example looks as follows:
 
 ```json
 {
