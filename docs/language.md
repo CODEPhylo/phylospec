@@ -5,7 +5,7 @@ This document describes the philosophy and features of the PhyloSpec language.
 ## 1. Language Philosophy
 
 - PhyloSpec is a language for describing phylogenetic models. It is _not_ a programming language.
-- PhyloSpec aims to be _expressive_ enough to describe complex models, even if they cannot be efficiently inferred in current engines. However, its scope is explicitly restricted to _phylogenetic_ models. Information like proposal distributions or the specific inference algorithm are not part of the core language (see 3.2 for ways to specify these).
+- PhyloSpec aims to be _expressive_ enough to describe complex models, even if they cannot be efficiently inferred in current engines. However, its scope is explicitly restricted to _phylogenetic models_. Information like proposal distributions or the specific inference algorithm are not part of the core language (see 3.2 for ways to specify these).
 - PhyloSpec is designed to be _human-readable_. It should be concise and easy to understand.
 - PhyloSpec is designed to prevent _invalid models_. Types and other language features are used to detect invalid models before inference.
 - PhyloSpec is designed to be _extensible_. Engines can add custom types, distributions, and functions to the language.
@@ -23,14 +23,17 @@ Real logDraw = log(draw);
 ```
 
 - Every statement describes an assignment of an expression to a variable (`=`) or assignment of a distribution to a random variable (`~`).
-- Every (random) variable is assigned a type [LP4].
+- Every (random) variable is assigned a type.
 - There are four types of expressions:
-  - Literals (e.g., `2.0`)
+  - Literals (e.g., `2.0`, `"Hallo"`, or `[1.0, 2.0, 3.0]`)
   - Variable references (e.g., `rate`)
-  - Distributions (e.g., `Exponential(rate=rate)`)
+  - Distributions (e.g., `Exponential(rate)`)
   - Function calls (e.g., `log(draw)`)
 - All four types of expressions can be used in variable assignments using `=`, while only distributions can be used in random variable assignments using `~`.
 - Comments start with `//` and continue until the end of the line.
+
+> [!TIP]
+> Check out the [types.md](types.md), [distributions.md](distributions.md), and [functions.md](functions.md) documents for a list of all types, distributions, and functions.
 
 > [!NOTE]
 > Open questions:
@@ -41,7 +44,7 @@ Real logDraw = log(draw);
 ### 2.2. Naming Conventions
 
 - Types and distributions names should use PascalCase (e.g., `PositiveReal`). Only alphanumeric characters are allowed, they must start with a letter.
-- Variable names should use camelCase (e.g., `rate`) and can contain Unicode characters. They cannot start with a number.
+- Variable names should use camelCase (e.g., `rate`) and can contain Unicode characters. They must start with a letter.
 - Function names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
 - Function and distribution argument names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
 - Redundant prefixes like `dn` or suffixes like `Distribution` are discouraged.
@@ -55,7 +58,6 @@ Real y ~ Normal(mean=mean, sd=2.0);
 
 - If there is only one argument, it can be passed directly (e.g., `Exponential(1.0)`).
 - If there are multiple arguments, they must be named explicitly (e.g., `Normal(mean=1.0, sd=2.0)`).
-- There may be multiple overloaded versions of a function or distribution to prevent invalid calls [LP4]. However, the number of versions should be kept to a minimum.
 
 > [!NOTE]
 > Open questions:
@@ -96,10 +98,10 @@ Vec<Real> logX = log(x);
 // Explicit vectorization where the vectorized argument is highlighted
 Vec<Real> logX = log(x...);
 
-// Julia-style explicit vectorization
+// Julia and MATLAB-style explicit vectorization
 Vec<Real> logX = log.(x);
 
-// R and python-style explicit vectorization
+// R and python-style explicit vectorization (only works with one argument)
 Vec<Real> logX = map(log, x);
 ```
 
@@ -171,7 +173,7 @@ RlAtlas atlas = readAtlas("atlas.csv");
 
 #### 3.2. Engine Blocks
 
-There can be engine-specific blocks that are not part of the language and can be used to configure the engine. These blocks must not change the model specified and will be ignored by any other engine.
+There can be engine-specific blocks that are not part of the language and can be used to configure the engine. _These blocks must not change the model specified and will be ignored by any other engine._
 
 ```
 revbayes {
@@ -187,10 +189,15 @@ revbayes {
 
 #### 3.3. Engine Decorators
 
-- Function and distribution calls can be decorated with engine-specific information. These decorators must not change the model specified and will be ignored by any other engine.
+- Function and distribution calls can be decorated with engine-specific information. _These decorators must not change the model specified and will be ignored by any other engine._
 - The syntax for the decorator arguments is identical to function call arguments.
 
 ```
 @revbayes(someInternalArgument=true)
 Real x ~ Normal(mean=0.0, sd=1.0);
 ```
+
+> [!NOTE]
+> Open questions:
+>
+> - How do these decorators handle multiple function calls on one line?
