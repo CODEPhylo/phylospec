@@ -145,6 +145,14 @@ Example engine-specific component library:
 }
 ```
 
+## For User Interface Developers
+
+To make a GUI for PhyloSpec:
+
+1. Create a modular editor based on the core component library and additional external component libraries
+2. Implement the engine integration format to respect engine limitations
+3. Provide a PhyloSpec output of the constructed model
+
 ## Current Status
 
 - ✅ JSON schema for core component library (`schema/component-library.schema.json`)
