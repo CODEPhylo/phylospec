@@ -5,7 +5,7 @@ This document describes the philosophy and features of the PhyloSpec language.
 ## 1. Language Philosophy
 
 - PhyloSpec is a language for describing phylogenetic models. It is _not_ a programming language.
-- PhyloSpec aims to be _expressive_ enough to describe complex models, even if they cannot be efficiently inferred in current engines. However, its scope is explicitly restricted to _phylogenetic models_. Information like proposal distributions or the specific inference algorithm are not part of the core language (see 3.2 for ways to specify these).
+- PhyloSpec aims to be expressive enough to describe complex models, even if they cannot be efficiently inferred in current engines. However, its scope is explicitly restricted to _phylogenetic models_. Information like proposal distributions or the specific inference algorithm are not part of the core specification (see 3.2 for ways to specify these).
 - PhyloSpec is designed to be _human-readable_. It should be concise and easy to understand.
 - PhyloSpec is designed to prevent _invalid models_. Types and other language features are used to detect invalid models before inference.
 - PhyloSpec is designed to be _extensible_. Engines can add custom types, distributions, and functions to the language.
@@ -68,7 +68,7 @@ Real y ~ Normal(mean=mean, sd=2.0);
 >
 > - Do we allow optional arguments and default values?
 > - Do we use JSON schemas for more fine-grained definition of valid arguments, or do we use overloading?
-> - Do we allow JS-style syntax when passing a variable with the same name as the argument (e.g., `Exponential(rate)` instead of `Exponential(rate=rate)`)?
+> - Do we allow JS-style syntax when passing a variable with the same name as the argument (e.g., `Normal(mean, sd)` instead of `Normal(mean=mean, sd=sd)`)?
 
 ### 2.4. Nested Expressions
 
