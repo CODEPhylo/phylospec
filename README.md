@@ -8,10 +8,12 @@ PhyloSpec provides a standardized way to describe phylogenetic modeling componen
 
 The specification consists of:
 
-1. **JSON Schema** - Machine-readable specifications for types, distributions, and functions
-2. **Java Reference Implementation** - Core type system with annotations
-3. **Model Library Format** - Standardized way for engines to describe their capabilities
-4. **Documentation** - Comprehensive guides for types, distributions, functions, and constraints
+1. **PhyloSpec Specification** - Written language specification
+2. **ANTLR Grammar** - Machine-readable grammar for the language
+3. **JSON Component Library Format and Core Component Library** - Machine-readable specifications for types, distributions, and functions
+4. **Engine Integration Format** - Standardized way for engines to describe their capabilities
+5. **Java Reference Implementation** - Core type system with annotations
+6. **Documentation** - Comprehensive guides for types, distributions, functions, and constraints
 
 ## Key Features
 
@@ -35,18 +37,19 @@ The specification consists of:
 │       │       └── types/         # Complex types (Matrix, Vector, etc.)
 │       └── src/test/              # Unit tests
 ├── docs/                          # Documentation
+│   ├── language.md                # Written language specification
 │   ├── types.md                   # Type system specification
 │   ├── distributions.md           # Distribution signatures
 │   ├── functions.md               # Function signatures
 │   └── constraints.md             # Constraint definitions
 └── schema/                        # JSON schemas and specifications
-    ├── model-library.schema.json  # Metaschema for validating model libraries
-    └── phylospec-model-library.json # Core PhyloSpec components
+    ├── component-library.schema.json  # Metaschema for component libraries for validating model libraries
+    └── phylospec-core-component-library.json # Core PhyloSpec components
 ```
 
-## JSON Model Library Format
+## JSON Component Library Format
 
-PhyloSpec uses a JSON format to describe available components. Here's a simplified example:
+PhyloSpec uses a standadized JSON format to describe available components. It's used to define the [**core component library**](schema/phylospec-core-component-library.json) and allows engine and package developers to define **additional external component library**. A simplified example looks as follows:
 
 ```json
 {
@@ -79,6 +82,10 @@ PhyloSpec uses a JSON format to describe available components. Here's a simplifi
   }
 }
 ```
+
+## JSON Engine Integration Format
+
+The **engine integration format** allows engines to document engine-specific limitations in a standadized and machine-readable way. The limitations include unsupported core components, arguments which cannot be random variables, and more.
 
 ## Java Reference Implementation
 
@@ -114,10 +121,11 @@ To make your engine PhyloSpec-compliant:
 
 1. Create a JSON file describing your engine's components following the schema
 2. Include any extensions to the core PhyloSpec types
-3. Document any restrictions (e.g., arguments that must be fixed)
+3. Create a JSON file documenting any restrictions
 4. Provide a public URL for the Bayesian Model Builder to load
 
-Example engine-specific extension:
+Example engine-specific component library:
+
 ```json
 {
   "extends": "https://phylospec.org/core/v1.3.0",
@@ -139,15 +147,17 @@ Example engine-specific extension:
 
 ## Current Status
 
-- ✅ JSON schema for model libraries (`schema/model-library.schema.json`)
-- ✅ Core PhyloSpec component library (`schema/phylospec-model-library.json`)
+- ✅ JSON schema for core component library (`schema/component-library.schema.json`)
+- ✅ Core PhyloSpec component library (`schema/component-library.schema.json`)
 - ✅ Java type system implementation (`core/java`)
 - ✅ Integration with Bayesian Model Builder
+- 📋 Engine Integration Format (planned)
 - 📋 ANTLR grammar (planned)
 - 📋 Additional validation tools (planned)
 
 ## Documentation
 
+- [Language](docs/language.md) - Detailed language specifications
 - [Type System](docs/types.md) - Detailed type specifications
 - [Distributions](docs/distributions.md) - Statistical distribution signatures
 - [Functions](docs/functions.md) - Function signatures and semantics
@@ -160,6 +170,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ## Versioning
 
 PhyloSpec follows [Semantic Versioning](https://semver.org/):
+
 - MAJOR: Incompatible specification changes
 - MINOR: Backward-compatible additions
 - PATCH: Bug fixes and clarifications

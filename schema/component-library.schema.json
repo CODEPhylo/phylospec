@@ -23,7 +23,15 @@
       "properties": {
         "modelLibrary": {
           "type": "object",
-          "required": ["name", "version", "engine", "engineVersion", "description", "types", "generators"],
+          "required": [
+            "name",
+            "version",
+            "engine",
+            "engineVersion",
+            "description",
+            "types",
+            "generators"
+          ],
           "properties": {
             "name": { "type": "string" },
             "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
@@ -35,7 +43,10 @@
               "items": { "type": "string" },
               "description": "List of authors or maintainers of the schema"
             },
-            "license": { "type": "string", "description": "License identifier, e.g., MIT" },
+            "license": {
+              "type": "string",
+              "description": "License identifier, e.g., MIT"
+            },
             "types": {
               "type": "array",
               "items": { "$ref": "#/definitions/type" }
@@ -96,8 +107,8 @@
             "elementType": { "type": "string" },
             "keyType": { "type": "string" },
             "valueType": { "type": "string" },
-            "kind": { 
-              "type": "string", 
+            "kind": {
+              "type": "string",
               "enum": ["array", "matrix", "map", "set"]
             }
           }
@@ -115,7 +126,10 @@
         "name": { "type": "string" },
         "description": { "type": "string" },
         "package": { "type": "string" },
-        "generatorType": { "type": "string", "enum": ["distribution", "function"] },
+        "generatorType": {
+          "type": "string",
+          "enum": ["distribution", "function"]
+        },
         "generatedType": { "type": "string" },
         "typeParameters": {
           "type": "array",
@@ -173,14 +187,14 @@
         "name": { "type": "string" },
         "type": { "type": "string" },
         "required": { "type": "boolean" },
-        "recommended": { 
+        "recommended": {
           "type": "boolean",
           "description": "Indicates that this argument is recommended but not required"
         },
         "default": {
           "description": "Default value for this argument if not specified"
         },
-        "constraint": { 
+        "constraint": {
           "type": "string",
           "description": "Constraint on the values this argument can take",
           "enum": [
@@ -201,12 +215,12 @@
         },
         "dimension": {
           "oneOf": [
-            { 
+            {
               "type": "integer",
               "minimum": 1,
               "description": "Fixed dimension as a positive integer"
             },
-            { 
+            {
               "type": "string",
               "pattern": "^(parent\\.|self\\.|data\\.|)?[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)*$",
               "description": "Dimension expression using dot notation (e.g., 'parent.target.dimension', 'tree.nBranches', 'data.ntax')"
@@ -214,7 +228,7 @@
           ],
           "description": "Expected dimension of the argument. Can be a fixed integer or an expression that references other parts of the model"
         },
-        "description": { 
+        "description": {
           "type": "string",
           "description": "Human-readable description of the argument"
         },
@@ -222,11 +236,11 @@
           "type": "object",
           "description": "UI hints for rendering this argument",
           "properties": {
-            "widget": { 
+            "widget": {
               "type": "string",
               "description": "Suggested widget type (e.g., 'slider', 'checkbox', 'file-picker')"
             },
-            "order": { 
+            "order": {
               "type": "integer",
               "description": "Display order relative to other arguments"
             },
