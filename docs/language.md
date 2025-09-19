@@ -7,6 +7,7 @@ This document describes the philosophy and features of the PhyloSpec language.
 - PhyloSpec is a language for describing phylogenetic models. It is _not_ a programming language.
 - PhyloSpec aims to be expressive enough to describe complex models, even if they cannot be efficiently inferred in current engines. However, its scope is explicitly restricted to _phylogenetic models_. Information like proposal distributions or the specific inference algorithm are not part of the core specification (see 3.2 for ways to specify these).
 - PhyloSpec is designed to be _human-readable_. It should be concise and easy to understand.
+- PhyloSpec is designed to be _declarative_. Models should describe _what_ the relationships are, not _how_ to compute them. This promotes clarity, prevents side effects, and aligns with mathematical notation.
 - PhyloSpec is designed to prevent _invalid models_. Types and other language features are used to detect invalid models before inference.
 - PhyloSpec is designed to be _extensible_. Engines can add custom types, distributions, and functions to the language.
 
@@ -21,8 +22,8 @@ PositiveReal rate = 2.0;
 PositiveReal draw ~ Exponential(rate);
 Real logDraw = log(draw);
 
-Alignment alignment = readNexus("file.nex");
-Int numTaxa = alignment.numTaxa()
+Alignment alignment = readNexus(file="file.nex");
+PositiveInteger numTaxa = alignment.numTaxa()
 ```
 
 - Every statement describes an assignment of an expression to a variable (`=`) or assignment of a distribution to a random variable (`~`).
@@ -91,23 +92,30 @@ Real y = Normal(mean=mean, sd=2.0);
 > - Do we allow inline draws (e.g., `Real y = Normal(mean~Exponential(1.0), sd=log(~Exponential(1.0)))`)?
 
 ### 2.5. Vectorization
-
 Instead of overly flexible loops, vectorization is used. There are multiple proposed syntaxes for vectorization:
-
 ```
 // LPhy-style implicit vectorization
-Vec<Real> x = [1.0, 2.0, 3.0];
-Vec<Real> logX = log(x);
-
+Vector<Real> x = [1.0, 2.0, 3.0];
+Vector<Real> logX = log(x);
 // Explicit vectorization where the vectorized argument is highlighted
-Vec<Real> logX = log(x...);
-
+Vector<Real> logX = log(x...);
 // Julia and MATLAB-style explicit vectorization
-Vec<Real> logX = log.(x);
-
+Vector<Real> logX = log.(x);
 // R and python-style explicit vectorization (only works with one argument)
-Vec<Real> logX = map(log, x);
+Vector<Real> logX = map(log, x);
+// List comprehension style
+Vector<Real> logX = [log(xi) for xi in x];
 ```
+
+**Justification for list comprehensions:**
+List comprehensions provide a declarative, mathematically-inspired syntax that naturally extends beyond simple function application. They excel at:
+- Creating collections with complex expressions: `[xi^2 + yi for xi, yi in zip(x, y)]`
+- Conditional filtering: `[log(xi) for xi in x if xi > 0]`
+- Index-aware operations: `[i * xi for i, xi in enumerate(x)]`
+- Nested structures: `[[f(xi, yj) for yj in y] for xi in x]`
+
+This syntax aligns well with mathematical set-builder notation and provides more flexibility than map-style vectorization while remaining declarative and side-effect free - ideal for model specification languages where clarity and mathematical expressiveness are paramount.
+
 
 > [!NOTE]
 > Open questions:
@@ -115,13 +123,24 @@ Vec<Real> logX = map(log, x);
 > - What version of vectorization should we use?
 
 ### 2.6. Distributions as Arguments
-
 Distributions can be assigned to variables and passed as arguments (distributions as first-class citizens):
-
 ```
-Vec<Real> components ~ IID(dist=Normal(mean=0.0, sd=1.0), rep=10);
-Vec<Real> weights = repeat(x=0.1, rep=10);
+// Create a vector of distribution objects
+Vector<Distribution> components = [
+    Normal(mean=0.0, sd=1.0),
+    Normal(mean=5.0, sd=2.0),
+    Normal(mean=10.0, sd=1.5)
+];
+Vector<Real> weights = [0.3, 0.5, 0.2];
 Mixture mixture = Mixture(components=components, weights=weights);
+
+// Or using list comprehension for programmatic creation
+Vector<Distribution> components = [Normal(mean=i*2.0, sd=1.0) for i in 1:10];
+Vector<Real> weights = repeat(x=0.1, rep=10);
+Mixture mixture = Mixture(components=components, weights=weights);
+
+// Sample from the mixture
+Real x ~ mixture;
 ```
 
 ### 2.7. Clamping
@@ -137,6 +156,8 @@ x.clamp(50);
 @observed(50)
 Real x ~ Normal(mean=0.0, sd=1.0);
 ```
+
+The decorator approach is more declarative - it describes _what_ x is (an observed value) rather than _how_ to make it observed (through a method call). This aligns better with the language philosophy.
 
 > [!NOTE]
 > Open questions:
