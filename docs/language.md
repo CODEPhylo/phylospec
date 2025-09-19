@@ -183,6 +183,71 @@ model {
 >
 > - Should blocks be used?
 
+### 2.9. Numerical Expressions
+
+PhyloSpec supports standard numerical operations to enable mathematical transformations of variables. These operations are particularly useful when canonical distributions provide convenient priors, but transformed values are needed for downstream model components.
+
+#### Supported Operations
+
+- **Arithmetic**: `+`, `-`, `*`, `/` (division), `^` (exponentiation)
+- **Element-wise operations**: When applied to vectors, operations are performed element-wise
+- **Scalar-vector operations**: Scalars are broadcast to match vector dimensions
+
+#### Syntax Rules
+
+- Numerical expressions can be used anywhere functions can be used (right-hand side of `=` assignments)
+- Numerical expressions cannot be mixed with random variable declarations (`~`) on the same line
+- Standard operator precedence applies: `^` > `*,/` > `+,-`
+- Parentheses can be used to override precedence
+
+#### Examples
+
+**Example 1: Dirichlet with weighted transformation**
+```
+// Define weights and concentration parameters
+Vector<PositiveReal> weights = [2.0, 3.0, 1.0, 4.0];
+Vector<PositiveReal> alpha = [1, 1, 1, 1];
+
+// Sample from Dirichlet with weighted concentration
+Simplex unr ~ Dirichlet(alpha=alpha * weights);
+
+// Transform to get weighted rates
+Vector<Real> r = unr * weights / sum(weights);
+```
+
+In this example, the Dirichlet distribution provides a convenient prior over simplex values, but the model requires weighted rates. The transformation `r = unr * weights / sum(weights)` converts the raw simplex values to the needed parameterization.
+Concretely this is needed for relative rates of partitions of different sizes (weights).
+
+**Example 2: Multinomial with offset transformation**
+```
+// Model parameters
+PositiveInteger k = 10;
+PositiveInteger numTaxa = 100;
+
+// Sample counts from multinomial
+Vector<NonNegativeInteger> x ~ Multinomial(p=repeat(1/k, k), n=numTaxa-k);
+
+// Transform to positive integers by adding 1
+Vector<PositiveInteger> y = x + 1;
+```
+
+Here, the Multinomial distribution naturally produces counts including zeros, but downstream components may require strictly positive integers. The simple transformation `y = x + 1` ensures all values are positive while maintaining the stochastic structure from the prior.
+Concretely this is needed for group sizes in the skyline model, which must sum to numTaxa-1 and must all be positive.
+
+#### Design Rationale
+
+Separating random variable declarations from deterministic transformations:
+- Maintains clarity about which variables are stochastic vs. deterministic
+- Preserves the declarative nature of distribution statements
+- Makes the computational graph explicit for inference engines
+- Allows type checking to ensure operations are valid
+
+> [!NOTE]
+> Open questions:
+> - Should we support additional operations like modulo (`%`) or integer division (`//`)?
+> - Should we allow more complex expressions like `x[i] + y[j]` with indexing?
+> - How do we handle type promotion in mixed-type operations (e.g., `Integer + Real`)?
+
 ### 3. Engine-Specific Features
 
 #### 3.1. Extensions
