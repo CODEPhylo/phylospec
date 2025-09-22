@@ -1,6 +1,6 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.Primitive;
+import org.phylospec.domain.Domain;
 
 /**
  * Tensor type - ordered value or values.
@@ -9,7 +9,7 @@ import org.phylospec.primitives.Primitive;
  * @since 1.0
  */
 @Deprecated
-public interface NumberTensor<P extends Primitive<Number>> extends Tensor<P, Number> {
+public interface NumberTensor<P extends Domain<Number>> extends Tensor<P, Number> {
 
     // computational
 

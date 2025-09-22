@@ -1,6 +1,6 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.Bool;
+import org.phylospec.domain.Bool;
 
 public interface BoolVector extends Vector<Bool, Boolean> {
 

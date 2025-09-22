@@ -92,7 +92,7 @@ The **engine integration format** allows engines to document engine-specific lim
 The `core/java` directory contains a reference implementation of the PhyloSpec type system:
 
 ```java
-import org.phylospec.primitives.*;
+import org.phylospec.domain.*;
 import org.phylospec.types.*;
 import static org.phylospec.factory.PhyloSpecTypes.*;
 

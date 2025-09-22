@@ -14,24 +14,23 @@ The PhyloSpec Java library provides:
 
 ## Type System
 
-### Primitive Types
+### Domain Types
 
-| Type | Description | Java Interface |
-|------|-------------|----------------|
-| `Real` | Real-valued number | `org.phylospec.types.Real` |
-| `Integer` | Integer-valued number | `org.phylospec.types.Int` |
-| `Bool` | Logical value | `org.phylospec.types.Bool` |
-| `Str` | Text value | `org.phylospec.types.Str` |
+| Type | Description | Java Interface              |
+|------|-------------|-----------------------------|
+| `Real` | Real-valued number | `org.phylospec.domain.Real` |
+| `Integer` | Integer-valued number | `org.phylospec.domain.Int`   |
+| `Bool` | Logical value | `org.phylospec.domain.Bool`  |
 
 ### Restricted Types
 
 | Type | Base Type | Constraint | Java Interface |
 |------|-----------|------------|----------------|
-| `PositiveReal` | `Real` | > 0 | `org.phylospec.types.PositiveReal` |
-| `NonNegativeReal` | `Real` | ≥ 0 | `org.phylospec.types.NonNegativeReal` |
-| `Probability` | `Real` | [0, 1] | `org.phylospec.types.Probability` |
-| `PositiveInt` | `Integer` | > 0 | `org.phylospec.types.PositiveInt` |
-| `NonNegativeInt` | `Integer` | ≥ 0 | `org.phylospec.types.NonNegativeInt` |
+| `PositiveReal` | `Real` | > 0 | `org.phylospec.domain.PositiveReal` |
+| `NonNegativeReal` | `Real` | ≥ 0 | `org.phylospec.domain.NonNegativeReal` |
+| `Probability` | `Real` | [0, 1] | `org.phylospec.domain.Probability` |
+| `PositiveInt` | `Integer` | > 0 | `org.phylospec.domain.PositiveInt` |
+| `NonNegativeInt` | `Integer` | ≥ 0 | `org.phylospec.domain.NonNegativeInt` |
 
 ### Collection Types
 
@@ -183,16 +182,19 @@ After building, API documentation is available at `target/site/apidocs/index.htm
 
 ```
 src/main/java/org/phylospec/
-├── types/                    # Type interfaces
-│   ├── PhyloSpecType.java   # Base interface
+├── domain/                 # Domain interfaces
 │   ├── Real.java            # Numeric types
-│   ├── Integer.java
-│   ├── Boolean.java
-│   ├── String.java
-│   ├── PositiveReal.java    # Constrained types
-│   ├── NonNegativeReal.java
-│   ├── Probability.java
-│   ├── PositiveInteger.java
+│   ├── Int.java
+│   ├── Bool.java
+│   ├── NonNegativeReal.java # Constrained types
+│   ├── PositiveReal.java    
+│   ├── UnitInterval.java
+│   ├── NonNegativeInt.java
+│   ├── PositiveInt.java
+├── types/                    # Shape interfaces
+│   ├── PhyloSpecType.java   # Base interface
+│   ├── Tensor.java   # Base interface
+│   ├── Scalar.java          # one value types
 │   ├── Vector.java          # Collection types
 │   ├── Matrix.java
 │   ├── SquareMatrix.java

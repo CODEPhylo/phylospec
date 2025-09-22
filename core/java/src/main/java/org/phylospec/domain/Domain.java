@@ -1,10 +1,10 @@
-package org.phylospec.primitives;
+package org.phylospec.domain;
 
 /**
  * Primitive types define constraints and validation.
  * The type parameter T is the Java type this primitive works with.
  */
-public interface Primitive<T> {
+public interface Domain<T> {
 
     /**
      * Check if a value is valid for this primitive type.

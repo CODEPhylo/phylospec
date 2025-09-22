@@ -1,6 +1,6 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.Real;
+import org.phylospec.domain.Real;
 
 /**
  * Q-Matrix (Rate Matrix) type - used in continuous-time Markov chains.

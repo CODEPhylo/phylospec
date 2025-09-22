@@ -1,6 +1,6 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.UnitInterval;
+import org.phylospec.domain.UnitInterval;
 
 /**
  * Simplex type - vector of probabilities that sum to 1.

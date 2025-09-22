@@ -1,8 +1,8 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.Primitive;
+import org.phylospec.domain.Domain;
 
-public interface Scalar<P extends Primitive<T>, T> extends Tensor<P, T> {
+public interface Scalar<D extends Domain<T>, T> extends Tensor<D, T> {
     // rank() == 0 but size == 1
 
     @Override
@@ -13,8 +13,8 @@ public interface Scalar<P extends Primitive<T>, T> extends Tensor<P, T> {
 
     @Override
     default boolean isValid() {
-        P p = primitiveType();
-        return p.isValid(get());
+        D d = domainType();
+        return d.isValid(get());
     }
 
 }

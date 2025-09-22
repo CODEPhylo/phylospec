@@ -1,8 +1,8 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.Primitive;
+import org.phylospec.domain.Domain;
 
-public interface Matrix<P extends Primitive<T>, T> extends Tensor<P, T> {
+public interface Matrix<P extends Domain<T>, T> extends Tensor<P, T> {
     /**
      * Get the number of rows in the matrix.
      *
@@ -26,7 +26,7 @@ public interface Matrix<P extends Primitive<T>, T> extends Tensor<P, T> {
 
     @Override
     default boolean isValid() {
-        P p = primitiveType();
+        P p = domainType();
         for (int r=0;r<rows();r++)
             for (int c=0;c<cols();c++)
                 if (!p.isValid(get(r,c)))

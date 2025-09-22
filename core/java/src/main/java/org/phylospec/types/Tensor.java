@@ -1,17 +1,17 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.Primitive;
+import org.phylospec.domain.Domain;
 
 /**
  * Tensor type - ordered value or values.
  *
- * @param <P> the type of {@link Primitive<T>}.
+ * @param <D> the type of {@link Domain <T>}.
  * @param <T> the primitive type in Java.
  * 
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public interface Tensor<P extends Primitive<T>, T> {
+public interface Tensor<D extends Domain<T>, T> {
 
     /**
      * The order or degree of a tensor.
@@ -39,11 +39,11 @@ public interface Tensor<P extends Primitive<T>, T> {
     T get(int... idx);
 
     /**
-     * Get the primitive type P.
+     * Get the domain type D.
      *
-     * @return the primitive value
+     * @return the domain value
      */
-    P primitiveType();
+    D domainType();
 
     default long size(){
         long s=1;

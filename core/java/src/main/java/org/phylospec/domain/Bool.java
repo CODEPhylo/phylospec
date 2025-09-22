@@ -1,4 +1,4 @@
-package org.phylospec.primitives;
+package org.phylospec.domain;
 
 /**
  * Boolean type.
@@ -12,7 +12,7 @@ package org.phylospec.primitives;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public class Bool implements Primitive<Boolean> {
+public class Bool implements Domain<Boolean> {
     public static final Bool INSTANCE = new Bool();
 
     protected Bool() {}

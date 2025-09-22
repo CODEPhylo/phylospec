@@ -1,6 +1,6 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.Int;
+import org.phylospec.domain.Int;
 
 
 public interface IntMatrix<P extends Int> extends Matrix<P, Integer> {

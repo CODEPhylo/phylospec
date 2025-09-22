@@ -1,4 +1,4 @@
-package org.phylospec.primitives;
+package org.phylospec.domain;
 
 /**
  * Positive real number type (> 0).

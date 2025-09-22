@@ -1,14 +1,31 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.Int;
+import org.phylospec.Bounded;
+import org.phylospec.domain.Int;
 
-public interface IntScalar<P extends Int> extends Scalar<P, Integer> {
+public interface IntScalar<D extends Int> extends Scalar<D, Integer>, Bounded<Integer> {
 
-    /**
-     * Overload {@link Tensor#get(int...)}
-     *
-     * @return unboxed value
-     */
-    int get();
+    Integer get();
 
+    @Override
+    default Integer getLower() {
+        D domain = domainType();
+        return domain.getLower();
+    }
+
+    @Override
+    default Integer getUpper() {
+        D domain = domainType();
+        return domain.getUpper();
+    }
+
+    @Override
+    default boolean lowerInclusive() {
+        return true;
+    }
+
+    @Override
+    default boolean upperInclusive() {
+        return true;
+    }
 }

@@ -1,4 +1,4 @@
-package org.phylospec.primitives;
+package org.phylospec.domain;
 
 /**
  * Probability type (value in [0, 1]).

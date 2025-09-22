@@ -1,6 +1,6 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.UnitInterval;
+import org.phylospec.domain.UnitInterval;
 
 /**
  * Stochastic matrix - probability transition matrix for discrete-time Markov chains.

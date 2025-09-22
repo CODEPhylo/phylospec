@@ -1,17 +1,17 @@
 package org.phylospec.types;
 
-import org.phylospec.primitives.Primitive;
+import org.phylospec.domain.Domain;
 
 import java.util.List;
 
-public interface Vector<P extends Primitive<T>, T> extends Tensor<P, T> {
+public interface Vector<D extends Domain<T>, T> extends Tensor<D, T> {
 
     /**
      * Get all elements in the vector.
      *
      * @return an unmodifiable list of all elements
      */
-    List<P> getElements();
+    List<D> getElements();
 
     @Override
     default int rank(){ return 1; }
@@ -23,9 +23,9 @@ public interface Vector<P extends Primitive<T>, T> extends Tensor<P, T> {
 
     @Override
     default boolean isValid() {
-        P p = primitiveType();
+        D d = domainType();
         for (int i=0; i<Math.toIntExact(size()); i++)
-            if (!p.isValid(get(i)))
+            if (!d.isValid(get(i)))
                 return false;
         return true;
     }
