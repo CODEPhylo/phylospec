@@ -1,9 +1,12 @@
 package org.phylospec.parser;
 import org.phylospec.PhyloSpec;
 import org.phylospec.ast.Expr;
+import org.phylospec.ast.Stmt;
+import org.phylospec.ast.Type;
 import org.phylospec.lexer.Token;
 import org.phylospec.lexer.TokenType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,13 +16,15 @@ import java.util.List;
 public class Parser {
     /**
      * Parses the following grammar:
-     * expression     → equality
-     * equality       → comparison ( ( "!=" | "==" ) comparison )*
+     * statement      → type IDENTIFIER ( "=" | "~" ) expression;
+     * type           → IDENTIFIER ("<" type ("," type)* ">" );
+     * expression     → equality ;
+     * equality       → comparison ( ( "!=" | "==" ) comparison )* ;
      * comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
      * term           → factor ( ( "-" | "+" ) factor )* ;
      * factor         → unary ( ( "/" | "*" ) unary )* ;
-     * unary          → ( "!" | "-" ) unary | primary
-     * primary        → INT | FLOAT | STRING | "true" | "false" | "(" expression ")"
+     * unary          → ( "!" | "-" ) unary | type ;
+     * primary        → INT | FLOAT | STRING | "true" | "false" | IDENTIFIER | "(" expression ")" ;
      */
 
     private final List<Token> tokens;
@@ -40,15 +45,55 @@ public class Parser {
      *
      * @return list of scanned tokens.
      */
-    public Expr parse() {
-        try {
-            return expression();
-        } catch (ParseError error) {
-            return null;
+    public List<Stmt> parse() {
+        List<Stmt> statements = new ArrayList<>();
+
+        while (!isAtEnd()) {
+            statements.add(statement());
         }
+
+        return statements;
     }
 
     /* parser methods */
+
+    private Stmt statement() {
+        Type type = type();
+
+        Token name = consume(TokenType.IDENTIFIER, "Invalid variable name.");
+
+        if (match(TokenType.EQUAL)) {
+            Expr expression = expression();
+            return new Stmt.Assignment(type, name.lexeme, expression);
+        }
+
+        if (match(TokenType.TILDE)) {
+            Expr expression = expression();
+            return new Stmt.Draw(type, name.lexeme, expression);
+        }
+
+        throw error(peek(), "Except assignment or draw.");
+    }
+
+    private Type type() {
+        Token typeName = consume(TokenType.IDENTIFIER, "Invalid variable type.");
+
+        if (match(TokenType.LESS)) {
+            List<Type> innerTypes = new ArrayList<>();
+            innerTypes.add(type());
+
+            while (match(TokenType.COMMA)) {
+                innerTypes.add(type());
+            }
+
+            // parse closing brackets
+            consume(TokenType.GREATER, "Generic type must be closed with a '>'.");
+
+            return new Type.Generic(typeName.lexeme, innerTypes.toArray(Type[]::new));
+        }
+
+        return new Type.Atomic(typeName.lexeme);
+    }
 
     private Expr expression() {
         return equality();
@@ -124,6 +169,10 @@ public class Parser {
             Expr expr = expression();
             consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
             return new Expr.Grouping(expr);
+        }
+
+        if (match(TokenType.IDENTIFIER)) {
+            return new Expr.Variable(previous());
         }
 
         throw error(peek(), "Expect expression.");

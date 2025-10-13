@@ -4,7 +4,7 @@ import java.util.Objects;
 
 public class Token {
     public final TokenType type;
-    final String lexeme;
+    public final String lexeme;
     public final Object literal;
     public final int line;
 

@@ -2,6 +2,8 @@ package org.phylospec.parser;
 
 import org.junit.jupiter.api.Test;
 import org.phylospec.ast.Expr;
+import org.phylospec.ast.Stmt;
+import org.phylospec.ast.Type;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.lexer.TokenType;
@@ -15,25 +17,28 @@ public class ParserTest {
     @Test
     public void testSimpleMathematicalExpression() {
         testExpression(
-                "10 + (-25.2 - 100 / (2 + 4))",
-                new Expr.Binary(
-                        new Expr.Literal(10),
-                        new Token(TokenType.PLUS, "+", null, 1),
-                        new Expr.Grouping(
-                                new Expr.Binary(
-                                        new Expr.Unary(
-                                                new Token(TokenType.MINUS, "-", null, 1),
-                                                new Expr.Literal(25.2)
-                                        ),
-                                        new Token(TokenType.MINUS, "-", null, 1),
+                "Object var = 10 + (-25.2 - 100 / (2 + 4))",
+                new Stmt.Assignment(
+                        new Type.Atomic("Object"), "var",
+                        new Expr.Binary(
+                                new Expr.Literal(10),
+                                new Token(TokenType.PLUS, "+", null, 1),
+                                new Expr.Grouping(
                                         new Expr.Binary(
-                                                new Expr.Literal(100),
-                                                new Token(TokenType.SLASH, "/", null, 1),
-                                                new Expr.Grouping(
-                                                        new Expr.Binary(
-                                                                new Expr.Literal(2),
-                                                                new Token(TokenType.PLUS, "+", null, 1),
-                                                                new Expr.Literal(4)
+                                                new Expr.Unary(
+                                                        new Token(TokenType.MINUS, "-", null, 1),
+                                                        new Expr.Literal(25.2)
+                                                ),
+                                                new Token(TokenType.MINUS, "-", null, 1),
+                                                new Expr.Binary(
+                                                        new Expr.Literal(100),
+                                                        new Token(TokenType.SLASH, "/", null, 1),
+                                                        new Expr.Grouping(
+                                                                new Expr.Binary(
+                                                                        new Expr.Literal(2),
+                                                                        new Token(TokenType.PLUS, "+", null, 1),
+                                                                        new Expr.Literal(4)
+                                                                )
                                                         )
                                                 )
                                         )
@@ -46,17 +51,20 @@ public class ParserTest {
     @Test
     public void testSimpleLogicalExpression() {
         testExpression(
-                "true == !(10 >= 11)",
-                new Expr.Binary(
-                        new Expr.Literal(true),
-                        new Token(TokenType.EQUAL_EQUAL, "==", null, 1),
-                        new Expr.Unary(
-                                new Token(TokenType.BANG, "!", null, 1),
-                                new Expr.Grouping(
-                                        new Expr.Binary(
-                                                new Expr.Literal(10),
-                                                new Token(TokenType.GREATER_EQUAL, ">=", null, 1),
-                                                new Expr.Literal(11)
+                "Object var = true == !(10 >= 11)",
+                new Stmt.Assignment(
+                        new Type.Atomic("Object"), "var",
+                        new Expr.Binary(
+                                new Expr.Literal(true),
+                                new Token(TokenType.EQUAL_EQUAL, "==", null, 1),
+                                new Expr.Unary(
+                                        new Token(TokenType.BANG, "!", null, 1),
+                                        new Expr.Grouping(
+                                                new Expr.Binary(
+                                                        new Expr.Literal(10),
+                                                        new Token(TokenType.GREATER_EQUAL, ">=", null, 1),
+                                                        new Expr.Literal(11)
+                                                )
                                         )
                                 )
                         )
@@ -64,13 +72,65 @@ public class ParserTest {
         );
     }
 
-    void testExpression(String source, Expr expectedExpression) {
+    @Test
+    public void testTypes() {
+        testExpression(
+                "PositiveReal value = 10.4",
+                new Stmt.Assignment(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Literal(10.4)
+                )
+        );
+
+        testExpression(
+                "PositiveReal value ~ 10.4",
+                new Stmt.Draw(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Literal(10.4)
+                )
+        );
+
+        testExpression(
+                "PositiveReal<T> value = 10.4",
+                new Stmt.Assignment(
+                        new Type.Generic("PositiveReal", new Type.Atomic("T")),
+                        "value",
+                        new Expr.Literal(10.4)
+                )
+        );
+
+        testExpression(
+                "PositiveReal<T<M>> value ~ 10.4",
+                new Stmt.Draw(
+                        new Type.Generic("PositiveReal", new Type.Generic("T", new Type.Atomic("M"))),
+                        "value",
+                        new Expr.Literal(10.4)
+                )
+        );
+
+        testExpression(
+                "PositiveReal<T<M>, B<B,D>> value ~ 10.4",
+                new Stmt.Draw(
+                        new Type.Generic("PositiveReal",
+                                new Type.Generic("T", new Type.Atomic("M")),
+                                new Type.Generic("B", new Type.Atomic("B"), new Type.Atomic("D"))
+                        ),
+                        "value",
+                        new Expr.Literal(10.4)
+                )
+        );
+    }
+
+    void testExpression(String source, Stmt expectedStatement) {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
 
         Parser parser = new Parser(tokens);
-        Expr actualExpression = parser.parse();
+        List<Stmt> actualStatements = parser.parse();
 
-        assertEquals(expectedExpression, actualExpression);
+        assertEquals(1, actualStatements.size());
+        assertEquals(expectedStatement, actualStatements.get(0));
     }
 }

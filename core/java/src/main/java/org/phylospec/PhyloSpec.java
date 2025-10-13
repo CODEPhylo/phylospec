@@ -1,6 +1,7 @@
 package org.phylospec;
 
 import org.phylospec.ast.Expr;
+import org.phylospec.ast.Stmt;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
@@ -51,7 +52,7 @@ public class PhyloSpec {
         List<Token> tokens = lexer.scanTokens();
 
         Parser parser = new Parser(tokens);
-        Expr expression = parser.parse();
+        List<Stmt> statements = parser.parse();
 
         // Stop if there was a syntax error.
         if (hadError) return;

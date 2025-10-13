@@ -6,7 +6,7 @@ import java.util.Objects;
 
 public abstract class Expr {
 
-	public static class Grouping extends Expr {
+    public static class Grouping extends Expr {
 		public Grouping(Expr expression) {
 			this.expression = expression;
 		}
@@ -23,6 +23,26 @@ public abstract class Expr {
         @Override
         public int hashCode() {
             return Objects.hashCode(expression);
+        }
+    }
+
+    public static class Variable extends Expr {
+        public Variable(Token variable) {
+            this.variable = variable;
+        }
+
+        public final Token variable;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Variable variable1 = (Variable) o;
+            return Objects.equals(variable, variable1.variable);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(variable);
         }
     }
 
