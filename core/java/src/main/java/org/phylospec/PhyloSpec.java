@@ -1,7 +1,9 @@
 package org.phylospec;
 
+import org.phylospec.ast.Expr;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
+import org.phylospec.parser.Parser;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -48,14 +50,19 @@ public class PhyloSpec {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
 
-        // For now, just print the tokens.
-        for (Token token : tokens) {
-            System.out.println(token);
-        }
+        Parser parser = new Parser(tokens);
+        Expr expression = parser.parse();
+
+        // Stop if there was a syntax error.
+        if (hadError) return;
     }
 
     public static void error(int line, String message) {
         report(line, "", message);
+    }
+
+    public static void error(Token token, String message) {
+        report(token.line, "", message);
     }
 
     private static void report(int line, String where, String message) {

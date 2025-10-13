@@ -2,36 +2,74 @@ package org.phylospec.ast;
 
 import org.phylospec.lexer.Token;
 
-abstract class Expr {
+import java.util.Objects;
 
-	static class Grouping extends Expr {
-		Grouping(Expr expression) {
+public abstract class Expr {
+
+	public static class Grouping extends Expr {
+		public Grouping(Expr expression) {
 			this.expression = expression;
 		}
 
 		final Expr expression;
-	}
 
-	static class Literal extends Expr {
-		Literal(Object value) {
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Grouping grouping = (Grouping) o;
+            return Objects.equals(expression, grouping.expression);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(expression);
+        }
+    }
+
+	public static class Literal extends Expr {
+		public Literal(Object value) {
 			this.value = value;
 		}
 
 		final Object value;
-	}
 
-	static class Unary extends Expr {
-		Unary(Token operator, Expr right) {
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Literal literal = (Literal) o;
+            return Objects.equals(value, literal.value);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(value);
+        }
+    }
+
+	public static class Unary extends Expr {
+		public Unary(Token operator, Expr right) {
 			this.operator = operator;
 			this.right = right;
 		}
 
 		final Token operator;
 		final Expr right;
-	}
 
-	static class Binary extends Expr {
-		Binary(Expr left, Token operator, Expr right) {
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Unary unary = (Unary) o;
+            return Objects.equals(operator, unary.operator) && Objects.equals(right, unary.right);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(operator, right);
+        }
+    }
+
+	public static class Binary extends Expr {
+		public Binary(Expr left, Token operator, Expr right) {
 			this.left = left;
 			this.operator = operator;
 			this.right = right;
@@ -40,6 +78,18 @@ abstract class Expr {
 		final Expr left;
 		final Token operator;
 		final Expr right;
-	}
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Binary binary = (Binary) o;
+            return Objects.equals(left, binary.left) && Objects.equals(operator, binary.operator) && Objects.equals(right, binary.right);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(left, operator, right);
+        }
+    }
 
 }

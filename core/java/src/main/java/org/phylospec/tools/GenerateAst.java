@@ -31,7 +31,7 @@ public class GenerateAst {
         writer.println();
         writer.println("import org.phylospec.lexer.Token;");
         writer.println();
-        writer.println("abstract class " + baseName + " {");
+        writer.println("public abstract class " + baseName + " {");
         writer.println();
 
         // the AST classes
@@ -49,11 +49,11 @@ public class GenerateAst {
     private static void defineType(
             PrintWriter writer, String baseName,
             String className, String fieldList) {
-        writer.println("\tstatic class " + className + " extends " +
+        writer.println("\tpublic static class " + className + " extends " +
                 baseName + " {");
 
         // constructor.
-        writer.println("\t\t" + className + "(" + fieldList + ") {");
+        writer.println("\t\tpublic " + className + "(" + fieldList + ") {");
 
         // store parameters in fields
         String[] fields = fieldList.split(", ");

@@ -1,6 +1,6 @@
 package org.phylospec.lexer;
 
-enum TokenType {
+public enum TokenType {
     // single-character tokens
     LEFT_PAREN, RIGHT_PAREN, COMMA, DOT, MINUS, PLUS,
     SLASH, STAR, TILDE, AT,
