@@ -23,7 +23,10 @@ public class Parser {
      * comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
      * term           → factor ( ( "-" | "+" ) factor )* ;
      * factor         → unary ( ( "/" | "*" ) unary )* ;
-     * unary          → ( "!" | "-" ) unary | type ;
+     * unary          → ( "!" | "-" ) unary | call ;
+     * call           → primary ( "(" arguments? ")" )* ;
+     * arguments      → argument ( "," argument )*;
+     * argument       → IDENTIFIER "=" expression | IDENTIFIER;
      * primary        → INT | FLOAT | STRING | "true" | "false" | IDENTIFIER | "(" expression ")" ;
      */
 
@@ -153,8 +156,44 @@ public class Parser {
             Expr rightExpr = unary();
             return new Expr.Unary(operator, rightExpr);
         } else {
-            return primary();
+            return call();
         }
+    }
+
+    private Expr call() {
+        Expr expr = primary();
+
+        while (match(TokenType.LEFT_PAREN)) {
+            expr = finishCall(expr);
+        }
+
+        return expr;
+    }
+
+    private Expr finishCall(Expr callee) {
+        List<Expr.Argument> arguments = new ArrayList<>();
+        if (!check(TokenType.RIGHT_PAREN)) {
+            do {
+                arguments.add(argument());
+            } while (match(TokenType.COMMA));
+        }
+
+        consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
+
+        return new Expr.Call(callee, arguments.toArray(Expr.Argument[]::new));
+    }
+
+    private Expr.Argument argument() {
+        Token argumentName = consume(TokenType.IDENTIFIER, "Invalid argument name.");
+
+        Expr expression;
+        if (match(TokenType.EQUAL)) {
+            expression = expression();
+        } else {
+            expression = new Expr.Variable(argumentName);
+        }
+
+        return new Expr.Argument(argumentName.lexeme, expression);
     }
 
     private Expr primary() {

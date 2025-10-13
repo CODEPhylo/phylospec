@@ -2,6 +2,7 @@ package org.phylospec.ast;
 
 import org.phylospec.lexer.Token;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 public abstract class Expr {
@@ -109,6 +110,50 @@ public abstract class Expr {
         @Override
         public int hashCode() {
             return Objects.hash(left, operator, right);
+        }
+    }
+
+    public static class Call extends Expr {
+        public Call(Expr function, Argument... arguments) {
+            this.function = function;
+            this.arguments = arguments;
+        }
+
+        final Expr function;
+        final Argument[] arguments;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Call call = (Call) o;
+            return Objects.equals(function, call.function) && Objects.deepEquals(arguments, call.arguments);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(function, Arrays.hashCode(arguments));
+        }
+    }
+
+    public static class Argument extends Expr {
+        public Argument(String name, Expr expression) {
+            this.name = name;
+            this.expression = expression;
+        }
+
+        final String name;
+        final Expr expression;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Argument argument = (Argument) o;
+            return Objects.equals(name, argument.name) && Objects.equals(expression, argument.expression);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, expression);
         }
     }
 

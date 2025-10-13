@@ -123,6 +123,47 @@ public class ParserTest {
         );
     }
 
+    @Test
+    public void testFunctionCalls() {
+        testStatement(
+                "PositiveReal value ~ LogNormal()",
+                new Stmt.Draw(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Call(
+                                new Expr.Variable(new Token(TokenType.IDENTIFIER, "LogNormal", null, 1))
+                        )
+                )
+        );
+
+        testStatement(
+                "PositiveReal value ~ IID(LogNormal)()",
+                new Stmt.Draw(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Call(
+                                new Expr.Call(
+                                    new Expr.Variable(new Token(TokenType.IDENTIFIER, "IID", null, 1)),
+                                    new Expr.Argument("LogNormal", new Expr.Variable(new Token(TokenType.IDENTIFIER, "LogNormal", null, 1)))
+                                )
+                        )
+                )
+        );
+
+        testStatement(
+                "PositiveReal value ~ LogNormal(meanLog = 10.5, sdLog)",
+                new Stmt.Draw(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Call(
+                                new Expr.Variable(new Token(TokenType.IDENTIFIER, "LogNormal", null, 1)),
+                                new Expr.Argument("meanLog", new Expr.Literal(10.5)),
+                                new Expr.Argument("sdLog", new Expr.Variable(new Token(TokenType.IDENTIFIER, "sdLog", null, 1)))
+                        )
+                )
+        );
+    }
+
     void testStatement(String source, Stmt expectedStatement) {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
