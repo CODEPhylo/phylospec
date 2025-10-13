@@ -136,13 +136,18 @@ public abstract class Expr {
     }
 
     public static class Argument extends Expr {
+        public Argument(Expr expression) {
+            this.name = null;
+            this.expression = expression;
+        }
+
         public Argument(String name, Expr expression) {
             this.name = name;
             this.expression = expression;
         }
 
-        final String name;
-        final Expr expression;
+        public final String name;
+        public final Expr expression;
 
         @Override
         public boolean equals(Object o) {

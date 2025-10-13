@@ -126,6 +126,22 @@ public class ParserTest {
     @Test
     public void testFunctionCalls() {
         testStatement(
+                "PositiveReal value ~ LogNormal(10 + 20)",
+                new Stmt.Draw(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Call(
+                                new Expr.Variable(new Token(TokenType.IDENTIFIER, "LogNormal", null, 1)),
+                                new Expr.Argument(new Expr.Binary(
+                                        new Expr.Literal(10),
+                                        new Token(TokenType.PLUS, "+", null, 1),
+                                        new Expr.Literal(20)
+                                ))
+                        )
+                )
+        );
+
+        testStatement(
                 "PositiveReal value ~ LogNormal()",
                 new Stmt.Draw(
                         new Type.Atomic("PositiveReal"),
@@ -143,8 +159,8 @@ public class ParserTest {
                         "value",
                         new Expr.Call(
                                 new Expr.Call(
-                                    new Expr.Variable(new Token(TokenType.IDENTIFIER, "IID", null, 1)),
-                                    new Expr.Argument("LogNormal", new Expr.Variable(new Token(TokenType.IDENTIFIER, "LogNormal", null, 1)))
+                                        new Expr.Variable(new Token(TokenType.IDENTIFIER, "IID", null, 1)),
+                                        new Expr.Argument("LogNormal", new Expr.Variable(new Token(TokenType.IDENTIFIER, "LogNormal", null, 1)))
                                 )
                         )
                 )

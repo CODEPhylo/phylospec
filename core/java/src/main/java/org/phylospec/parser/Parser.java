@@ -25,7 +25,7 @@ public class Parser {
      * factor         → unary ( ( "/" | "*" ) unary )* ;
      * unary          → ( "!" | "-" ) unary | call ;
      * call           → primary ( "(" arguments? ")" )* ;
-     * arguments      → argument ( "," argument )*;
+     * arguments      → argument ( "," argument )* | expression;
      * argument       → IDENTIFIER "=" expression | IDENTIFIER;
      * primary        → INT | FLOAT | STRING | "true" | "false" | IDENTIFIER | "(" expression ")" ;
      */
@@ -175,6 +175,10 @@ public class Parser {
         if (!check(TokenType.RIGHT_PAREN)) {
             do {
                 arguments.add(argument());
+
+                if (arguments.get(0).name == null && check(TokenType.COMMA)) {
+                    error(peek(), "Arguments can only be omitted when there is only one argument.");
+                }
             } while (match(TokenType.COMMA));
         }
 
@@ -184,9 +188,14 @@ public class Parser {
     }
 
     private Expr.Argument argument() {
-        Token argumentName = consume(TokenType.IDENTIFIER, "Invalid argument name.");
+        Expr expression = expression();
 
-        Expr expression;
+        if (!(expression instanceof Expr.Variable)) {
+            return new Expr.Argument(expression);
+        }
+
+        Token argumentName = ((Expr.Variable) expression).variable;
+
         if (match(TokenType.EQUAL)) {
             expression = expression();
         } else {
