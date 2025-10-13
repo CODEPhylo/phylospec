@@ -66,10 +66,36 @@ public class Lexer {
                 addToken(TokenType.STAR);
                 break;
             case '!':
-                addToken(TokenType.BANG);
+                if (peek() == '=') {
+                    advance();
+                    addToken(TokenType.BANG_EQUAL);
+                } else {
+                    addToken(TokenType.BANG);
+                }
                 break;
             case '=':
-                addToken(TokenType.EQUAL);
+                if (peek() == '=') {
+                    advance();
+                    addToken(TokenType.EQUAL_EQUAL);
+                } else {
+                    addToken(TokenType.EQUAL);
+                }
+                break;
+            case '<':
+                if (peek() == '=') {
+                    advance();
+                    addToken(TokenType.LESS_EQUAL);
+                } else {
+                    addToken(TokenType.LESS);
+                }
+                break;
+            case '>':
+                if (peek() == '=') {
+                    advance();
+                    addToken(TokenType.GREATER_EQUAL);
+                } else {
+                    addToken(TokenType.GREATER);
+                }
                 break;
             case '~':
                 addToken(TokenType.TILDE);

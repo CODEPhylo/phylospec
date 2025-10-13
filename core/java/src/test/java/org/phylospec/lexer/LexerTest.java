@@ -9,7 +9,7 @@ public class LexerTest {
 
     @Test
     public void testSingleCharacterTokens() {
-        String source = "(),.-+/*!=~@";
+        String source = "(),.-+/*=!~@==!=<>>=<=";
 
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
@@ -22,13 +22,19 @@ public class LexerTest {
         assertEquals(new Token(TokenType.PLUS, "+", null, 1), tokens.get(5));
         assertEquals(new Token(TokenType.SLASH, "/", null, 1), tokens.get(6));
         assertEquals(new Token(TokenType.STAR, "*", null, 1), tokens.get(7));
-        assertEquals(new Token(TokenType.BANG, "!", null, 1), tokens.get(8));
-        assertEquals(new Token(TokenType.EQUAL, "=", null, 1), tokens.get(9));
+        assertEquals(new Token(TokenType.EQUAL, "=", null, 1), tokens.get(8));
+        assertEquals(new Token(TokenType.BANG, "!", null, 1), tokens.get(9));
         assertEquals(new Token(TokenType.TILDE, "~", null, 1), tokens.get(10));
         assertEquals(new Token(TokenType.AT, "@", null, 1), tokens.get(11));
-        assertEquals(new Token(TokenType.EOF, "", null, 1), tokens.get(12));
+        assertEquals(new Token(TokenType.EQUAL_EQUAL, "==", null, 1), tokens.get(12));
+        assertEquals(new Token(TokenType.BANG_EQUAL, "!=", null, 1), tokens.get(13));
+        assertEquals(new Token(TokenType.LESS, "<", null, 1), tokens.get(14));
+        assertEquals(new Token(TokenType.GREATER, ">", null, 1), tokens.get(15));
+        assertEquals(new Token(TokenType.GREATER_EQUAL, ">=", null, 1), tokens.get(16));
+        assertEquals(new Token(TokenType.LESS_EQUAL, "<=", null, 1), tokens.get(17));
+        assertEquals(new Token(TokenType.EOF, "", null, 1), tokens.get(18));
 
-        assertEquals(tokens.size(), 13);
+        assertEquals(tokens.size(), 19);
     }
 
     @Test
@@ -83,7 +89,7 @@ public class LexerTest {
 
     @Test
     public void testMisc() {
-        String source = "(),.-+/*!=~\ntrue\rfalse\r\n\"Hallo\"10\n\r\n10.5\nsomeFun()";
+        String source = "(),.-+/*=!~\ntrue\rfalse\r\n\"Hallo\"10\n\r\n10.5\nsomeFun()";
 
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
@@ -97,8 +103,8 @@ public class LexerTest {
         assertEquals(new Token(TokenType.PLUS, "+", null, 1), tokens.get(5));
         assertEquals(new Token(TokenType.SLASH, "/", null, 1), tokens.get(6));
         assertEquals(new Token(TokenType.STAR, "*", null, 1), tokens.get(7));
-        assertEquals(new Token(TokenType.BANG, "!", null, 1), tokens.get(8));
-        assertEquals(new Token(TokenType.EQUAL, "=", null, 1), tokens.get(9));
+        assertEquals(new Token(TokenType.EQUAL, "=", null, 1), tokens.get(8));
+        assertEquals(new Token(TokenType.BANG, "!", null, 1), tokens.get(9));
         assertEquals(new Token(TokenType.TILDE, "~", null, 1), tokens.get(10));
         assertEquals(new Token(TokenType.EOL, "\n", null, 1), tokens.get(11));
 
