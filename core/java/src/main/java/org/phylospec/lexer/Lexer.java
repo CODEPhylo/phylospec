@@ -74,6 +74,9 @@ public class Lexer {
             case '~':
                 addToken(TokenType.TILDE);
                 break;
+            case '@':
+                addToken(TokenType.AT);
+                break;
             case '/': {
                 if (match('/')) {
                     // this is a comment, it goes until the end of the line
