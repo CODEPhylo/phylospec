@@ -15,8 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ParserTest {
 
     @Test
-    public void testSimpleMathematicalExpression() {
-        testExpression(
+    public void testMathematicalStatement() {
+        testStatement(
                 "Object var = 10 + (-25.2 - 100 / (2 + 4))",
                 new Stmt.Assignment(
                         new Type.Atomic("Object"), "var",
@@ -49,8 +49,8 @@ public class ParserTest {
     }
 
     @Test
-    public void testSimpleLogicalExpression() {
-        testExpression(
+    public void testLogicalStatement() {
+        testStatement(
                 "Object var = true == !(10 >= 11)",
                 new Stmt.Assignment(
                         new Type.Atomic("Object"), "var",
@@ -74,7 +74,7 @@ public class ParserTest {
 
     @Test
     public void testTypes() {
-        testExpression(
+        testStatement(
                 "PositiveReal value = 10.4",
                 new Stmt.Assignment(
                         new Type.Atomic("PositiveReal"),
@@ -83,7 +83,7 @@ public class ParserTest {
                 )
         );
 
-        testExpression(
+        testStatement(
                 "PositiveReal value ~ 10.4",
                 new Stmt.Draw(
                         new Type.Atomic("PositiveReal"),
@@ -92,7 +92,7 @@ public class ParserTest {
                 )
         );
 
-        testExpression(
+        testStatement(
                 "PositiveReal<T> value = 10.4",
                 new Stmt.Assignment(
                         new Type.Generic("PositiveReal", new Type.Atomic("T")),
@@ -101,7 +101,7 @@ public class ParserTest {
                 )
         );
 
-        testExpression(
+        testStatement(
                 "PositiveReal<T<M>> value ~ 10.4",
                 new Stmt.Draw(
                         new Type.Generic("PositiveReal", new Type.Generic("T", new Type.Atomic("M"))),
@@ -110,7 +110,7 @@ public class ParserTest {
                 )
         );
 
-        testExpression(
+        testStatement(
                 "PositiveReal<T<M>, B<B,D>> value ~ 10.4",
                 new Stmt.Draw(
                         new Type.Generic("PositiveReal",
@@ -123,7 +123,7 @@ public class ParserTest {
         );
     }
 
-    void testExpression(String source, Stmt expectedStatement) {
+    void testStatement(String source, Stmt expectedStatement) {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
 
