@@ -7,6 +7,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This class takes a PhyloSpec source code and splits it up
+ * into tokens.
+ */
 public class Lexer {
     private static final Map<String, TokenType> keywords;
 
@@ -25,10 +29,22 @@ public class Lexer {
     private int current = 0;
     private int line = 1;
 
+    /**
+     * Creates a new Lexer capable of reading a PhyloSpec script and
+     * splitting it up into tokens.
+     *
+     * @param source - the PhyloSpec script as a string.
+     */
     public Lexer(String source) {
         this.source = source;
     }
 
+    /**
+     * Reads the source code provided in the constructor and returns a list
+     * of tokens.
+     *
+     * @return list of scanned tokens.
+     */
     public List<Token> scanTokens() {
         while (!isAtEnd()) {
             start = current;
@@ -65,6 +81,14 @@ public class Lexer {
             case '*':
                 addToken(TokenType.STAR);
                 break;
+            case '~':
+                addToken(TokenType.TILDE);
+                break;
+            case '@':
+                addToken(TokenType.AT);
+                break;
+
+            // one or two character tokens
             case '!':
                 if (peek() == '=') {
                     advance();
@@ -96,12 +120,6 @@ public class Lexer {
                 } else {
                     addToken(TokenType.GREATER);
                 }
-                break;
-            case '~':
-                addToken(TokenType.TILDE);
-                break;
-            case '@':
-                addToken(TokenType.AT);
                 break;
             case '/': {
                 if (match('/')) {
@@ -136,8 +154,8 @@ public class Lexer {
                 string();
                 break;
 
+            // all other types of tokens
             default:
-                // handle all other types of tokens
                 if (isAlpha(c)) {
                     identifier();
                 } else if (isDigit(c)) {
@@ -203,6 +221,8 @@ public class Lexer {
         }
     }
 
+    /* general helper methods */
+
     private boolean isDigit(char c) {
         return c >= '0' && c <= '9';
     }
@@ -217,20 +237,27 @@ public class Lexer {
         return isAlpha(c) || isDigit(c);
     }
 
+    /* helper methods to inspect the source code */
+
+    /** Returns the current character and advances the cursor afterward. */
     private char advance() {
         return source.charAt(current++);
     }
 
+    /** Returns the current character without advancing the cursor. */
     private char peek() {
         if (isAtEnd()) return '\0';
         return source.charAt(current);
     }
 
+    /** Returns the next current character without advancing the cursor. */
     private char peekNext() {
         if (source.length() < current + 1) return '\0';
         return source.charAt(current + 1);
     }
 
+    /** Checks if the current character matches the expected one and
+     * advances the cursor if that is the case. */
     private boolean match(Character expected) {
         if (isAtEnd()) return false;
         if (source.charAt(current) != expected) return false;
@@ -239,20 +266,21 @@ public class Lexer {
         return true;
     }
 
+    /** Checks if the current cursor points to the end of the file. */
+    private boolean isAtEnd() {
+        return current >= source.length();
+    }
+
+    /* methods to add the found tokens */
+
+    /** Adds a new token with no corresponding literal. */
     private void addToken(TokenType type) {
         addToken(type, null);
     }
 
+    /** Adds a new token with a corresponding literal. */
     private void addToken(TokenType type, Object literal) {
         String text = source.substring(start, current);
         tokens.add(new Token(type, text, literal, line));
-    }
-
-    private boolean isAtBeginning() {
-        return current == 0;
-    }
-
-    private boolean isAtEnd() {
-        return current >= source.length();
     }
 }
