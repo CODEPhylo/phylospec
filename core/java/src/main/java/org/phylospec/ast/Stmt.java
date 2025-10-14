@@ -2,10 +2,16 @@ package org.phylospec.ast;
 
 import java.util.Objects;
 
+/**
+ * Statements are the top-level nodes in the AST tree and correspond to executable
+ * statements. This class has a number of subclasses for different types of expressions
+ * like {@link Stmt.Assignment} or {@link Stmt.Draw}.
+ */
 public abstract class Stmt {
 
     abstract public <T> T accept(AstVisitor<T> visitor);
 
+    /** Represents an assignment like `Real value = 10`. */
     public static class Assignment extends Stmt {
         public Assignment(Type type, String name, Expr expression) {
             this.type = type;
@@ -34,6 +40,7 @@ public abstract class Stmt {
         }
     }
 
+    /** Represents a draw like `Real value ~ Normal(mean=1, sd=1)`. */
     public static class Draw extends Stmt {
         public Draw(Type type, String name, Expr expression) {
             this.type = type;
@@ -62,6 +69,9 @@ public abstract class Stmt {
         }
     }
 
+    /** Represents a decorated statement like `@observed() Real value ~ Normal(mean=1, sd=1)`.
+     * The decorator itself is always a function call, whereas the decorated statement
+     * can be any statement (even another decorated one).*/
     public static class Decorated extends Stmt {
         public Decorated(Expr.Call decorator, Stmt statememt) {
             this.decorator = decorator;

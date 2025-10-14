@@ -14,6 +14,16 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+/**
+ * This class can be used to run the PhyloSpec parser.
+ * <br>
+ * You can either pass the path to a PhyloSpec script, or
+ * you can pass no argument and use the REPL to interact
+ * with the language.
+ * <br>
+ * Note that there is no interpreter so far, only a parser.
+ * The output of this script is the printed AST tree.
+ */
 public class PhyloSpec {
     private static boolean hadError;
 
@@ -54,7 +64,7 @@ public class PhyloSpec {
         Parser parser = new Parser(tokens);
         List<Stmt> statements = parser.parse();
 
-        // Stop if there was a syntax error.
+        // stop if there was a syntax error
         if (hadError) return;
 
         AstPrinter printer = new AstPrinter();
@@ -63,10 +73,13 @@ public class PhyloSpec {
         }
     }
 
+    /** Report an error on a specific line but not directly connected
+     * to a specified token. */
     public static void error(int line, String message) {
         report(line, "", message);
     }
 
+    /** Report an error related to specific token. */
     public static void error(Token token, String message) {
         report(token.line, "", message);
     }

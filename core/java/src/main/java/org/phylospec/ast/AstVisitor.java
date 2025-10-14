@@ -1,5 +1,10 @@
 package org.phylospec.ast;
 
+/**
+ * This interface can be implemented by classes that do some operation
+ * on the AST tree (e.g. pretty-printing or syntax checking). It follows
+ * the visitor pattern.
+ */
 public interface AstVisitor<T> {
     public T visitDecoratedStmt(Stmt.Decorated stmt);
     public T visitAssignment(Stmt.Assignment stmt);

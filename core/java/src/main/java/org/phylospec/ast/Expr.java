@@ -6,35 +6,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Expressions are a type of node in the AST tree. This class has a number of
+ * subclasses for different types of expressions like {@link Expr.Variable} or
+ * {@link Expr.Call}.
+ * Expressions are always part of a {@link Stmt}.
+ */
 public abstract class Expr {
 
     abstract public <T> T accept(AstVisitor<T> visitor);
 
-    public static class Grouping extends Expr {
-		public Grouping(Expr expression) {
-			this.expression = expression;
-		}
-
-		final Expr expression;
-
-        @Override
-        public boolean equals(Object o) {
-            if (o == null || getClass() != o.getClass()) return false;
-            Grouping grouping = (Grouping) o;
-            return Objects.equals(expression, grouping.expression);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(expression);
-        }
-
-        @Override
-        public <T> T accept(AstVisitor<T> visitor) {
-            return visitor.visitGrouping(this);
-        }
-    }
-
+    /** Represents a variable. Function and distribution names are also treated
+     * as variables. */
     public static class Variable extends Expr {
         public Variable(String variable) {
             this.variable = variable;
@@ -60,11 +43,14 @@ public abstract class Expr {
         }
     }
 
+    /** Represents a literal, i.e. either a String, an Integer, or a
+     * Real. */
 	public static class Literal extends Expr {
 		public Literal(Object value) {
 			this.value = value;
 		}
 
+        // TODO: make this type generic
 		final Object value;
 
         @Override
@@ -85,6 +71,7 @@ public abstract class Expr {
         }
     }
 
+    /** Represents a unary operation, e.g. a negation. */
 	public static class Unary extends Expr {
 		public Unary(Token operator, Expr right) {
 			this.operator = operator;
@@ -112,6 +99,7 @@ public abstract class Expr {
         }
     }
 
+    /** Represents a binary operation, e.g. addition. */
 	public static class Binary extends Expr {
 		public Binary(Expr left, Token operator, Expr right) {
 			this.left = left;
@@ -141,6 +129,41 @@ public abstract class Expr {
         }
     }
 
+    /** Represents a grouping of operations using parenthesis. */
+    public static class Grouping extends Expr {
+        public Grouping(Expr expression) {
+            this.expression = expression;
+        }
+
+        final Expr expression;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Grouping grouping = (Grouping) o;
+            return Objects.equals(expression, grouping.expression);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(expression);
+        }
+
+        @Override
+        public <T> T accept(AstVisitor<T> visitor) {
+            return visitor.visitGrouping(this);
+        }
+    }
+
+    /** Represents a function or distribution call.
+     * <br>
+     * The function itself can be represented by any expression.
+     * This means that for `readData().getValue()`, `function`
+     * corresponds to `readData().getValue`.
+     * <br>
+     * Arguments are either of type {@link Expr.AssignedArgument}
+     * (for `exp(mean = someValue)`) or {@link Expr.DrawnArgument}
+     * (for `exp(mean ~ someDist)`).*/
     public static class Call extends Expr {
         public Call(Expr function, Argument... arguments) {
             this.function = function;
@@ -168,6 +191,7 @@ public abstract class Expr {
         }
     }
 
+    /** The base class for function arguments. */
     public static abstract class Argument extends Expr {
         public String name;
         public Expr expression;
@@ -185,9 +209,11 @@ public abstract class Expr {
         }
     }
 
+    /** Represents an assigned argument (e.g. `log(mean=1)`). If the
+     * argument name is omitted (`log(1)`), then `name` is null.  */
     public static class AssignedArgument extends Argument {
         public AssignedArgument(Expr expression) {
-            this.name = null;
+            this.name = null; // argument name is omitted
             this.expression = expression;
         }
 
@@ -202,6 +228,8 @@ public abstract class Expr {
         }
     }
 
+    /** Represents a drawn argument (e.g. `log(mean~someDistribution)`). The
+     * argument can never be omitted for this type of argument. */
     public static class DrawnArgument extends Argument {
         public DrawnArgument(String name, Expr expression) {
             this.name = name;
@@ -214,6 +242,7 @@ public abstract class Expr {
         }
     }
 
+    /** Represents an array. */
     public static class Array extends Expr {
         public Array(List<Expr> elements) {
             this.elements = elements;
@@ -239,6 +268,11 @@ public abstract class Expr {
         }
     }
 
+    /** Represents an accessor (`readData().nchars`) or method call
+     * (`readData().getNChars()`). The left-hand side (`readData()`)
+     * can be an arbitrary expression, whereas the right-hand side
+     * (`nchars`) is always a string.
+     * Look at {@link Expr.Call} to see how method calls are parsed. */
     public static class Get extends Expr {
         public Get(Expr object, String propery) {
             this.object = object;

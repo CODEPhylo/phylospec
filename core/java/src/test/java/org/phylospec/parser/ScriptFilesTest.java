@@ -22,6 +22,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ScriptFilesTest {
 
+    /**
+     * Goes through every .phylospec file in the test folder, parses it, and compares
+     * the obtained AST tree with the AST tree specified in the PhyloSpec files as
+     * comments.
+     */
     @TestFactory
     public Iterable<DynamicTest> testAllPsScriptsAgainstExpectedAst() throws IOException {
         List<Path> psFiles = findPsFiles(Paths.get("src/test/java"));
@@ -40,7 +45,7 @@ public class ScriptFilesTest {
         try (Stream<Path> paths = Files.walk(root)) {
             return paths
                     .filter(Files::isRegularFile)
-                    .filter(p -> p.getFileName().toString().endsWith(".ps"))
+                    .filter(p -> p.getFileName().toString().endsWith(".phylospec"))
                     .collect(Collectors.toList());
         }
     }

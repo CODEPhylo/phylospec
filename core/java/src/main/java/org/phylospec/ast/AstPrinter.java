@@ -1,8 +1,19 @@
 package org.phylospec.ast;
 
+/**
+ * This class allows to print out a human-readable (sort-of) version
+ * of a given AST statement. It uses the visitor pattern on the AST
+ * statement.
+ * <br>
+ * Usage:
+ * ```
+ * Stmt statement = <...>;
+ * AstPrinter printer = new AstPrinter();
+ * statement.accept(printer);
+ * ```
+ */
 public class AstPrinter implements AstVisitor<String> {
-    @Override
-    public String visitDecoratedStmt(Stmt.Decorated stmt) {
+    @Override public String visitDecoratedStmt(Stmt.Decorated stmt) {
         return "(@ " + stmt.decorator.accept(this) + " " + stmt.statememt.accept(this) + ")";
     }
 
