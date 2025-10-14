@@ -33,6 +33,7 @@ public class Parser {
 
     private final List<Token> tokens;
     private int current = 0;
+    private boolean skipNewLines = false;
 
     /**
      * Creates a new Parser.
@@ -68,11 +69,21 @@ public class Parser {
 
         if (match(TokenType.EQUAL)) {
             Expr expression = expression();
+
+            if (!isAtEnd()) {
+                consume(TokenType.EOL, "Assignment has to be terminated by a line break.");
+            }
+
             return new Stmt.Assignment(type, name.lexeme, expression);
         }
 
         if (match(TokenType.TILDE)) {
             Expr expression = expression();
+
+            if (!isAtEnd()) {
+                consume(TokenType.EOL, "Draw has to be terminated by a line break.");
+            }
+
             return new Stmt.Draw(type, name.lexeme, expression);
         }
 
@@ -165,7 +176,15 @@ public class Parser {
         Expr expr = array();
 
         while (match(TokenType.LEFT_PAREN)) {
+            // we are in a bracket, let's ignore EOL statements
+            boolean oldSkipNewLines = skipNewLines;
+            skipNewLines = true;
+
             expr = finishCall(expr);
+
+            consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
+
+            skipNewLines = oldSkipNewLines;
         }
 
         return expr;
@@ -175,6 +194,11 @@ public class Parser {
         List<Expr.Argument> arguments = new ArrayList<>();
         if (!check(TokenType.RIGHT_PAREN)) {
             do {
+                if (check(TokenType.RIGHT_PAREN)) {
+                    // the last comma has been a trailing one
+                    break;
+                }
+
                 arguments.add(argument());
 
                 if (arguments.get(0).name == null && check(TokenType.COMMA)) {
@@ -182,8 +206,6 @@ public class Parser {
                 }
             } while (match(TokenType.COMMA));
         }
-
-        consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
 
         return new Expr.Call(callee, arguments.toArray(Expr.Argument[]::new));
     }
@@ -245,8 +267,15 @@ public class Parser {
         }
 
         if (match(TokenType.LEFT_PAREN)) {
+            // we are in a bracket, let's ignore EOL statements
+            boolean oldIgnoreNewLines = skipNewLines;
+            skipNewLines = true;
+
             Expr expr = expression();
             consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
+
+            skipNewLines = oldIgnoreNewLines;
+
             return new Expr.Grouping(expr);
         }
 
@@ -261,7 +290,16 @@ public class Parser {
 
     /** Returns the current token and advances the cursor afterward. */
     private Token advance() {
-        if (!isAtEnd()) current++;
+        if (isAtEnd()) return previous();
+
+        if (skipNewLines) {
+            while (tokens.get(current).type == TokenType.EOL) {
+                current++;
+            }
+        }
+
+        current++;
+
         return previous();
     }
 
@@ -287,11 +325,27 @@ public class Parser {
 
     /** Returns the current character without advancing the cursor. */
     private Token peek() {
+        if (skipNewLines) {
+            int currentToPeek = current;
+            while (tokens.get(currentToPeek).type == TokenType.EOL) {
+                currentToPeek++;
+            }
+            return tokens.get(currentToPeek);
+        }
+
         return tokens.get(current);
     }
 
     /** Returns the last character without changing the cursor. */
     private Token previous() {
+        if (skipNewLines) {
+            int currentToPeek = current - 1;
+            while (tokens.get(currentToPeek).type == TokenType.EOL) {
+                currentToPeek--;
+            }
+            return tokens.get(currentToPeek);
+        }
+
         return tokens.get(current - 1);
     }
 

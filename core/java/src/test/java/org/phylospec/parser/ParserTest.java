@@ -8,7 +8,6 @@ import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.lexer.TokenType;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,7 +16,7 @@ public class ParserTest {
 
     @Test
     public void testMathematicalStatement() {
-        testStatement(
+        testStatements(
                 "Object var = 10 + (-25.2 - 100 / (2 + 4))",
                 new Stmt.Assignment(
                         new Type.Atomic("Object"), "var",
@@ -51,7 +50,7 @@ public class ParserTest {
 
     @Test
     public void testLogicalStatement() {
-        testStatement(
+        testStatements(
                 "Object var = true == !(10 >= 11)",
                 new Stmt.Assignment(
                         new Type.Atomic("Object"), "var",
@@ -75,7 +74,7 @@ public class ParserTest {
 
     @Test
     public void testTypes() {
-        testStatement(
+        testStatements(
                 "PositiveReal value = 10.4",
                 new Stmt.Assignment(
                         new Type.Atomic("PositiveReal"),
@@ -84,7 +83,7 @@ public class ParserTest {
                 )
         );
 
-        testStatement(
+        testStatements(
                 "PositiveReal value ~ 10.4",
                 new Stmt.Draw(
                         new Type.Atomic("PositiveReal"),
@@ -93,7 +92,7 @@ public class ParserTest {
                 )
         );
 
-        testStatement(
+        testStatements(
                 "PositiveReal<T> value = 10.4",
                 new Stmt.Assignment(
                         new Type.Generic("PositiveReal", new Type.Atomic("T")),
@@ -102,7 +101,7 @@ public class ParserTest {
                 )
         );
 
-        testStatement(
+        testStatements(
                 "PositiveReal<T<M>> value ~ 10.4",
                 new Stmt.Draw(
                         new Type.Generic("PositiveReal", new Type.Generic("T", new Type.Atomic("M"))),
@@ -111,7 +110,7 @@ public class ParserTest {
                 )
         );
 
-        testStatement(
+        testStatements(
                 "PositiveReal<T<M>, B<B,D>> value ~ 10.4",
                 new Stmt.Draw(
                         new Type.Generic("PositiveReal",
@@ -126,7 +125,7 @@ public class ParserTest {
 
     @Test
     public void testFunctionCalls() {
-        testStatement(
+        testStatements(
                 "PositiveReal value ~ LogNormal(10 + 20)",
                 new Stmt.Draw(
                         new Type.Atomic("PositiveReal"),
@@ -142,7 +141,7 @@ public class ParserTest {
                 )
         );
 
-        testStatement(
+        testStatements(
                 "PositiveReal value ~ LogNormal()",
                 new Stmt.Draw(
                         new Type.Atomic("PositiveReal"),
@@ -153,7 +152,7 @@ public class ParserTest {
                 )
         );
 
-        testStatement(
+        testStatements(
                 "PositiveReal value ~ IID(LogNormal)()",
                 new Stmt.Draw(
                         new Type.Atomic("PositiveReal"),
@@ -167,8 +166,21 @@ public class ParserTest {
                 )
         );
 
-        testStatement(
+        testStatements(
                 "PositiveReal value ~ LogNormal(meanLog = 10.5, sdLog)",
+                new Stmt.Draw(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Call(
+                                new Expr.Variable("LogNormal"),
+                                new Expr.Argument("meanLog", new Expr.Literal(10.5)),
+                                new Expr.Argument("sdLog", new Expr.Variable("sdLog"))
+                        )
+                )
+        );
+
+        testStatements(
+                "PositiveReal value ~ LogNormal(meanLog = 10.5, sdLog,)",
                 new Stmt.Draw(
                         new Type.Atomic("PositiveReal"),
                         "value",
@@ -183,7 +195,7 @@ public class ParserTest {
 
     @Test
     public void testArrays() {
-        testStatement(
+        testStatements(
                 "PositiveReal value = []",
                 new Stmt.Assignment(
                         new Type.Atomic("PositiveReal"),
@@ -192,7 +204,7 @@ public class ParserTest {
                 )
         );
 
-        testStatement(
+        testStatements(
                 "PositiveReal value = [10, 5, 200]",
                 new Stmt.Assignment(
                         new Type.Atomic("PositiveReal"),
@@ -205,7 +217,7 @@ public class ParserTest {
                 )
         );
 
-        testStatement(
+        testStatements(
                 "PositiveReal value = [10, 5, 200,]",
                 new Stmt.Assignment(
                         new Type.Atomic("PositiveReal"),
@@ -218,7 +230,7 @@ public class ParserTest {
                 )
         );
 
-        testStatement(
+        testStatements(
                 "PositiveReal value = [abs(5), square(2),]",
                 new Stmt.Assignment(
                         new Type.Atomic("PositiveReal"),
@@ -231,14 +243,71 @@ public class ParserTest {
         );
     }
 
-    void testStatement(String source, Stmt expectedStatement) {
+    @Test
+    public void testMultipleLines() {
+        testStatements(
+                "PositiveReal value = 10.4\n"
+                        + "PositiveReal value = 2.0",
+                new Stmt.Assignment(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Literal(10.4)
+                ),
+                new Stmt.Assignment(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Literal(2.0)
+                )
+        );
+
+        testStatements(
+                "PositiveReal value = (10.4\n"
+                        + "+ 5.0)",
+                new Stmt.Assignment(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Grouping(
+                                new Expr.Binary(
+                                        new Expr.Literal(10.4),
+                                        new Token(TokenType.PLUS, "+", null, 2),
+                                        new Expr.Literal(5.0)
+                                )
+                        )
+                )
+        );
+
+        testStatements(
+                "PositiveReal value = func(\n"
+                        + "a=10.4,\n"
+                        + "b=5.0,\n"
+                        + ")",
+                new Stmt.Assignment(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Call(
+                                new Expr.Variable("func"),
+                                new Expr.Argument(
+                                        "a", new Expr.Literal(10.4)
+                                ),
+                                new Expr.Argument(
+                                        "b", new Expr.Literal(5.0)
+                                )
+                        )
+                )
+        );
+    }
+
+    void testStatements(String source, Stmt... expectedStatements) {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
 
         Parser parser = new Parser(tokens);
         List<Stmt> actualStatements = parser.parse();
 
-        assertEquals(1, actualStatements.size());
-        assertEquals(expectedStatement, actualStatements.get(0));
+        assertEquals(expectedStatements.length, actualStatements.size());
+
+        for (int i = 0; i < expectedStatements.length; i++) {
+            assertEquals(expectedStatements[i], actualStatements.get(i));
+        }
     }
 }
