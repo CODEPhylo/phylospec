@@ -1,0 +1,6 @@
+PositiveReal rate1 ~ Exp(10);
+PositiveReal rate2 ~ LogNormal(meanLog=10.0, sdLog=5.0);
+
+// EXPECT
+// (DR PositiveReal rate1 (CA Exp (AA null 10)))
+// (DR PositiveReal rate2 (CA LogNormal (AA meanLog 10.0) (AA sdLog 5.0)))

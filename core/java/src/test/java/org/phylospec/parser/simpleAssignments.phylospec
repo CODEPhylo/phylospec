@@ -1,0 +1,9 @@
+PositiveReal rate1 = 2.0;
+String rate2 = "Hallo";
+
+PositiveReal rate3 = rate1;
+
+// EXPECT
+// (AS PositiveReal rate1 2.0)
+// (AS String rate2 "Hallo")
+// (AS PositiveReal rate3 rate1)

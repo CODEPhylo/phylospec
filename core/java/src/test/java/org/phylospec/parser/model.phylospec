@@ -1,0 +1,27 @@
+Alignment observedAlignment = readNexus(
+	file="alignment.nexus", ageDirection="forward", ageRegex="s(\d+)$"
+)
+Integer L = observedAlignment.numCharacters()
+
+QMatrix Q = hky(
+	kappa ~ LogNormal(sdLog=0.5, meanLog=1.0),
+	freq ~ Dirichlet(concentration=[2.0, 2.0, 2.0, 2.0]),
+)
+PositiveReal mu ~ LogNormal(meanLog=-5.0, sdLog=1.25)
+Tree tree ~ Coalescent(
+	taxa,
+	theta ~ LogNormal(meanLog=3.0, sdLog=2.0),
+)
+
+@observedAs(observedAlignment)
+Alignment alignment = PhyloCTMC(
+	L, Q, mu, tree
+)
+
+// EXPECT
+// (AS Alignment observedAlignment (CA readNexus (AA file "alignment.nexus") (AA ageDirection "forward") (AA ageRegex "s(\d+)$")))
+// (AS Integer L (CA (GET observedAlignment numCharacters) ))
+// (AS QMatrix Q (CA hky (DA kappa (CA LogNormal (AA sdLog 0.5) (AA meanLog 1.0))) (DA freq (CA Dirichlet (AA concentration (AR 2.0 2.0 2.0 2.0))))))
+// (DR PositiveReal mu (CA LogNormal (AA meanLog (- 5.0)) (AA sdLog 1.25)))
+// (DR Tree tree (CA Coalescent (AA taxa taxa) (DA theta (CA LogNormal (AA meanLog 3.0) (AA sdLog 2.0)))))
+// (@ (CA observedAs (AA observedAlignment observedAlignment)) (AS Alignment alignment (CA PhyloCTMC (AA L L) (AA Q Q) (AA mu mu) (AA tree tree))))
