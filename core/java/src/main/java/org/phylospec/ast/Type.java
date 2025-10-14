@@ -1,17 +1,18 @@
 package org.phylospec.ast;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 public abstract class Type {
+
+    abstract public <T> T accept(AstVisitor<T> visitor);
 
     public static class Atomic extends Type {
 		public Atomic(String name) {
 			this.name = name;
 		}
 
-		final String name;
+		public final String name;
 
         @Override
         public boolean equals(Object o) {
@@ -24,6 +25,11 @@ public abstract class Type {
         public int hashCode() {
             return Objects.hashCode(name);
         }
+
+        @Override
+        public <T> T accept(AstVisitor<T> visitor) {
+            return visitor.visitAtomicType(this);
+        }
     }
 
     public static class Generic extends Type {
@@ -32,8 +38,8 @@ public abstract class Type {
             this.typeParameters = typeParameters;
         }
 
-        final String name;
-        final Type[] typeParameters;
+        public final String name;
+        public final Type[] typeParameters;
 
         @Override
         public boolean equals(Object o) {
@@ -45,6 +51,11 @@ public abstract class Type {
         @Override
         public int hashCode() {
             return Objects.hash(name, Arrays.hashCode(typeParameters));
+        }
+
+        @Override
+        public <T> T accept(AstVisitor<T> visitor) {
+            return visitor.visitGenericType(this);
         }
     }
 

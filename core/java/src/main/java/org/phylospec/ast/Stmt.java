@@ -1,10 +1,10 @@
 package org.phylospec.ast;
 
-import org.phylospec.lexer.Token;
-
 import java.util.Objects;
 
 public abstract class Stmt {
+
+    abstract public <T> T accept(AstVisitor<T> visitor);
 
     public static class Assignment extends Stmt {
         public Assignment(Type type, String name, Expr expression) {
@@ -27,6 +27,10 @@ public abstract class Stmt {
         @Override
         public int hashCode() {
             return Objects.hash(type, name, expression);
+        }
+
+        public <T> T accept(AstVisitor<T> visitor) {
+            return visitor.visitAssignment(this);
         }
     }
 
@@ -52,6 +56,10 @@ public abstract class Stmt {
         public int hashCode() {
             return Objects.hash(type, name, expression);
         }
+
+        public <T> T accept(AstVisitor<T> visitor) {
+            return visitor.visitDraw(this);
+        }
     }
 
     public static class Decorated extends Stmt {
@@ -73,6 +81,10 @@ public abstract class Stmt {
         @Override
         public int hashCode() {
             return Objects.hash(decorator, statememt);
+        }
+
+        public <T> T accept(AstVisitor<T> visitor) {
+            return visitor.visitDecoratedStmt(this);
         }
     }
 

@@ -1,5 +1,6 @@
 package org.phylospec;
 
+import org.phylospec.ast.AstPrinter;
 import org.phylospec.ast.Stmt;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
@@ -55,6 +56,11 @@ public class PhyloSpec {
 
         // Stop if there was a syntax error.
         if (hadError) return;
+
+        AstPrinter printer = new AstPrinter();
+        for (Stmt statement : statements) {
+            System.out.println(statement.accept(printer));
+        }
     }
 
     public static void error(int line, String message) {

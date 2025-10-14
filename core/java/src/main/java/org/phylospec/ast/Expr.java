@@ -8,6 +8,8 @@ import java.util.Objects;
 
 public abstract class Expr {
 
+    abstract public <T> T accept(AstVisitor<T> visitor);
+
     public static class Grouping extends Expr {
 		public Grouping(Expr expression) {
 			this.expression = expression;
@@ -25,6 +27,11 @@ public abstract class Expr {
         @Override
         public int hashCode() {
             return Objects.hashCode(expression);
+        }
+
+        @Override
+        public <T> T accept(AstVisitor<T> visitor) {
+            return visitor.visitGrouping(this);
         }
     }
 
@@ -46,6 +53,11 @@ public abstract class Expr {
         public int hashCode() {
             return Objects.hashCode(variable);
         }
+
+        @Override
+        public <T> T accept(AstVisitor<T> visitor) {
+            return visitor.visitVariable(this);
+        }
     }
 
 	public static class Literal extends Expr {
@@ -65,6 +77,11 @@ public abstract class Expr {
         @Override
         public int hashCode() {
             return Objects.hashCode(value);
+        }
+
+        @Override
+        public <T> T accept(AstVisitor<T> visitor) {
+            return visitor.visitLiteral(this);
         }
     }
 
@@ -87,6 +104,11 @@ public abstract class Expr {
         @Override
         public int hashCode() {
             return Objects.hash(operator, right);
+        }
+
+        @Override
+        public <T> T accept(AstVisitor<T> visitor) {
+            return visitor.visitUnary(this);
         }
     }
 
@@ -112,6 +134,11 @@ public abstract class Expr {
         public int hashCode() {
             return Objects.hash(left, operator, right);
         }
+
+        @Override
+        public <T> T accept(AstVisitor<T> visitor) {
+            return visitor.visitBinary(this);
+        }
     }
 
     public static class Call extends Expr {
@@ -133,6 +160,11 @@ public abstract class Expr {
         @Override
         public int hashCode() {
             return Objects.hash(function, Arrays.hashCode(arguments));
+        }
+
+        @Override
+        public <T> T accept(AstVisitor<T> visitor) {
+            return visitor.visitCall(this);
         }
     }
 
@@ -163,12 +195,22 @@ public abstract class Expr {
             this.name = name;
             this.expression = expression;
         }
+
+        @Override
+        public <T> T accept(AstVisitor<T> visitor) {
+            return visitor.visitAssignedArgument(this);
+        }
     }
 
     public static class DrawnArgument extends Argument {
         public DrawnArgument(String name, Expr expression) {
             this.name = name;
             this.expression = expression;
+        }
+
+        @Override
+        public <T> T accept(AstVisitor<T> visitor) {
+            return visitor.visitDrawnArgument(this);
         }
     }
 
@@ -189,6 +231,11 @@ public abstract class Expr {
         @Override
         public int hashCode() {
             return Objects.hashCode(elements);
+        }
+
+        @Override
+        public <T> T accept(AstVisitor<T> visitor) {
+            return visitor.visitArray(this);
         }
     }
 
@@ -211,6 +258,11 @@ public abstract class Expr {
         @Override
         public int hashCode() {
             return Objects.hash(object, propery);
+        }
+
+        @Override
+        public <T> T accept(AstVisitor<T> visitor) {
+            return visitor.visitGet(this);
         }
     }
 
