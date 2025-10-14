@@ -24,7 +24,7 @@ public class Parser {
      * term           → factor ( ( "-" | "+" ) factor )* ;
      * factor         → unary ( ( "/" | "*" ) unary )* ;
      * unary          → ( "!" | "-" ) unary | call ;
-     * call           → array ( "(" arguments? ")" )* ;
+     * call           → array ( "(" arguments? ")" | "." IDENTIFIER )* ;
      * arguments      → argument ( "," argument )* | expression ;
      * argument       → IDENTIFIER "=" expression | IDENTIFIER ;
      * array          → "[" "]" | "[" expression ( "," expression )* ","? "]"  | primary;
@@ -175,16 +175,23 @@ public class Parser {
     private Expr call() {
         Expr expr = array();
 
-        while (match(TokenType.LEFT_PAREN)) {
-            // we are in a bracket, let's ignore EOL statements
-            boolean oldSkipNewLines = skipNewLines;
-            skipNewLines = true;
+        while (true) {
+            if (match(TokenType.LEFT_PAREN)) {
+                // we are in a bracket, let's ignore EOL statements
+                boolean oldSkipNewLines = skipNewLines;
+                skipNewLines = true;
 
-            expr = finishCall(expr);
+                expr = finishCall(expr);
 
-            consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
+                consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
 
-            skipNewLines = oldSkipNewLines;
+                skipNewLines = oldSkipNewLines;
+            } else if (match(TokenType.DOT)) {
+                Token name = consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+                expr = new Expr.Get(expr, name.lexeme);
+            } else {
+                break;
+            }
         }
 
         return expr;

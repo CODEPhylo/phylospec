@@ -261,7 +261,22 @@ public class ParserTest {
         );
 
         testStatements(
-                "PositiveReal value = (10.4\n"
+                "PositiveReal value = 10.4\n\n"
+                        + "PositiveReal value = 2.0",
+                new Stmt.Assignment(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Literal(10.4)
+                ),
+                new Stmt.Assignment(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Literal(2.0)
+                )
+        );
+
+        testStatements(
+                "PositiveReal value = (10.4\n\n"
                         + "+ 5.0)",
                 new Stmt.Assignment(
                         new Type.Atomic("PositiveReal"),
@@ -292,6 +307,73 @@ public class ParserTest {
                                 new Expr.Argument(
                                         "b", new Expr.Literal(5.0)
                                 )
+                        )
+                )
+        );
+    }
+
+    @Test
+    public void testPropertyAccess() {
+        testStatements(
+                "PositiveReal value ~ constants.pi",
+                new Stmt.Draw(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Get(
+                                new Expr.Variable("constants"),
+                                "pi"
+                        )
+                )
+        );
+
+        testStatements(
+                "PositiveReal value ~ constants.pi.binary",
+                new Stmt.Draw(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Get(
+                                new Expr.Get(
+                                        new Expr.Variable("constants"),
+                                        "pi"
+                                ),
+                                "binary"
+                        )
+                )
+        );
+    }
+
+    @Test
+    public void testMethodCalls() {
+        testStatements(
+                "PositiveReal value ~ constants.pi()",
+                new Stmt.Draw(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Call(
+                            new Expr.Get(
+                                    new Expr.Variable("constants"),
+                                    "pi"
+                            )
+                        )
+                )
+        );
+
+        testStatements(
+                "PositiveReal value ~ constants.pi().binary.toReal()",
+                new Stmt.Draw(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Call(
+                            new Expr.Get(
+                                new Expr.Get(
+                                    new Expr.Call(
+                                            new Expr.Get(
+                                                    new Expr.Variable("constants"),
+                                                    "pi"
+                                            )
+                                    ), "binary"
+                                ), "toReal"
+                            )
                         )
                 )
         );

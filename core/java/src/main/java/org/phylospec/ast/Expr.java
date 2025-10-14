@@ -183,4 +183,26 @@ public abstract class Expr {
         }
     }
 
+    public static class Get extends Expr {
+        public Get(Expr object, String propery) {
+            this.object = object;
+            this.propery = propery;
+        }
+
+        final Expr object;
+        final String propery;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Get get = (Get) o;
+            return Objects.equals(object, get.object) && Objects.equals(propery, get.propery);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(object, propery);
+        }
+    }
+
 }

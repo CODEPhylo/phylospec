@@ -1,6 +1,5 @@
 package org.phylospec;
 
-import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
