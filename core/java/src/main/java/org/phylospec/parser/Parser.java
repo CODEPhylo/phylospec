@@ -16,17 +16,18 @@ import java.util.List;
 public class Parser {
     /**
      * Parses the following grammar:
-     * statement      → type IDENTIFIER ( "=" | "~" ) expression;
-     * type           → IDENTIFIER ("<" type ("," type)* ">" );
+     * statement      → type IDENTIFIER ( "=" | "~" ) expression ;
+     * type           → IDENTIFIER ("<" type ("," type)* ">" ) ;
      * expression     → equality ;
      * equality       → comparison ( ( "!=" | "==" ) comparison )* ;
      * comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
      * term           → factor ( ( "-" | "+" ) factor )* ;
      * factor         → unary ( ( "/" | "*" ) unary )* ;
      * unary          → ( "!" | "-" ) unary | call ;
-     * call           → primary ( "(" arguments? ")" )* ;
-     * arguments      → argument ( "," argument )* | expression;
-     * argument       → IDENTIFIER "=" expression | IDENTIFIER;
+     * call           → array ( "(" arguments? ")" )* ;
+     * arguments      → argument ( "," argument )* | expression ;
+     * argument       → IDENTIFIER "=" expression | IDENTIFIER ;
+     * array          → "[" "]" | "[" expression ( "," expression )* ","? "]"  | primary;
      * primary        → INT | FLOAT | STRING | "true" | "false" | IDENTIFIER | "(" expression ")" ;
      */
 
@@ -161,7 +162,7 @@ public class Parser {
     }
 
     private Expr call() {
-        Expr expr = primary();
+        Expr expr = array();
 
         while (match(TokenType.LEFT_PAREN)) {
             expr = finishCall(expr);
@@ -194,7 +195,7 @@ public class Parser {
             return new Expr.Argument(expression);
         }
 
-        Token argumentName = ((Expr.Variable) expression).variable;
+        String argumentName = ((Expr.Variable) expression).variable;
 
         if (match(TokenType.EQUAL)) {
             expression = expression();
@@ -202,7 +203,37 @@ public class Parser {
             expression = new Expr.Variable(argumentName);
         }
 
-        return new Expr.Argument(argumentName.lexeme, expression);
+        return new Expr.Argument(argumentName, expression);
+    }
+
+    private Expr array() {
+        if (match(TokenType.LEFT_SQUARE_BRACKET)) {
+            List<Expr> elements = new ArrayList<>();
+
+            if (match(TokenType.RIGHT_SQUARE_BRACKET)) {
+                // we have an empty list
+                return new Expr.Array(elements);
+            }
+
+            Expr element = expression();
+            elements.add(element);
+
+            while (match(TokenType.COMMA)) {
+                if (match(TokenType.RIGHT_SQUARE_BRACKET)) {
+                    // the last comma has been a trailing one
+                    return new Expr.Array(elements);
+                }
+
+                element = expression();
+                elements.add(element);
+            }
+
+            match(TokenType.RIGHT_SQUARE_BRACKET);
+
+            return new Expr.Array(elements);
+        }
+
+        return primary();
     }
 
     private Expr primary() {
@@ -220,7 +251,7 @@ public class Parser {
         }
 
         if (match(TokenType.IDENTIFIER)) {
-            return new Expr.Variable(previous());
+            return new Expr.Variable(previous().lexeme);
         }
 
         throw error(peek(), "Expect expression.");

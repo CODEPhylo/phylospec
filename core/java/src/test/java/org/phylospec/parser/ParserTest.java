@@ -8,6 +8,7 @@ import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.lexer.TokenType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -131,7 +132,7 @@ public class ParserTest {
                         new Type.Atomic("PositiveReal"),
                         "value",
                         new Expr.Call(
-                                new Expr.Variable(new Token(TokenType.IDENTIFIER, "LogNormal", null, 1)),
+                                new Expr.Variable("LogNormal"),
                                 new Expr.Argument(new Expr.Binary(
                                         new Expr.Literal(10),
                                         new Token(TokenType.PLUS, "+", null, 1),
@@ -147,7 +148,7 @@ public class ParserTest {
                         new Type.Atomic("PositiveReal"),
                         "value",
                         new Expr.Call(
-                                new Expr.Variable(new Token(TokenType.IDENTIFIER, "LogNormal", null, 1))
+                                new Expr.Variable("LogNormal")
                         )
                 )
         );
@@ -159,8 +160,8 @@ public class ParserTest {
                         "value",
                         new Expr.Call(
                                 new Expr.Call(
-                                        new Expr.Variable(new Token(TokenType.IDENTIFIER, "IID", null, 1)),
-                                        new Expr.Argument("LogNormal", new Expr.Variable(new Token(TokenType.IDENTIFIER, "LogNormal", null, 1)))
+                                        new Expr.Variable("IID"),
+                                        new Expr.Argument("LogNormal", new Expr.Variable("LogNormal"))
                                 )
                         )
                 )
@@ -172,10 +173,60 @@ public class ParserTest {
                         new Type.Atomic("PositiveReal"),
                         "value",
                         new Expr.Call(
-                                new Expr.Variable(new Token(TokenType.IDENTIFIER, "LogNormal", null, 1)),
+                                new Expr.Variable("LogNormal"),
                                 new Expr.Argument("meanLog", new Expr.Literal(10.5)),
-                                new Expr.Argument("sdLog", new Expr.Variable(new Token(TokenType.IDENTIFIER, "sdLog", null, 1)))
+                                new Expr.Argument("sdLog", new Expr.Variable("sdLog"))
                         )
+                )
+        );
+    }
+
+    @Test
+    public void testArrays() {
+        testStatement(
+                "PositiveReal value = []",
+                new Stmt.Assignment(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Array(List.of())
+                )
+        );
+
+        testStatement(
+                "PositiveReal value = [10, 5, 200]",
+                new Stmt.Assignment(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Array(List.of(
+                                new Expr.Literal(10),
+                                new Expr.Literal(5),
+                                new Expr.Literal(200)
+                        ))
+                )
+        );
+
+        testStatement(
+                "PositiveReal value = [10, 5, 200,]",
+                new Stmt.Assignment(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Array(List.of(
+                                new Expr.Literal(10),
+                                new Expr.Literal(5),
+                                new Expr.Literal(200)
+                        ))
+                )
+        );
+
+        testStatement(
+                "PositiveReal value = [abs(5), square(2),]",
+                new Stmt.Assignment(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Array(List.of(
+                                new Expr.Call(new Expr.Variable("abs"), new Expr.Argument(new Expr.Literal(5))),
+                                new Expr.Call(new Expr.Variable("square"), new Expr.Argument(new Expr.Literal(2)))
+                        ))
                 )
         );
     }

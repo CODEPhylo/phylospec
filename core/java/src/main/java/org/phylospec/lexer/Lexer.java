@@ -87,6 +87,12 @@ public class Lexer {
             case '@':
                 addToken(TokenType.AT);
                 break;
+            case '[':
+                addToken(TokenType.LEFT_SQUARE_BRACKET);
+                break;
+            case ']':
+                addToken(TokenType.RIGHT_SQUARE_BRACKET);
+                break;
 
             // one or two character tokens
             case '!':
@@ -239,25 +245,33 @@ public class Lexer {
 
     /* helper methods to inspect the source code */
 
-    /** Returns the current character and advances the cursor afterward. */
+    /**
+     * Returns the current character and advances the cursor afterward.
+     */
     private char advance() {
         return source.charAt(current++);
     }
 
-    /** Returns the current character without advancing the cursor. */
+    /**
+     * Returns the current character without advancing the cursor.
+     */
     private char peek() {
         if (isAtEnd()) return '\0';
         return source.charAt(current);
     }
 
-    /** Returns the next current character without advancing the cursor. */
+    /**
+     * Returns the next current character without advancing the cursor.
+     */
     private char peekNext() {
         if (source.length() < current + 1) return '\0';
         return source.charAt(current + 1);
     }
 
-    /** Checks if the current character matches the expected one and
-     * advances the cursor if that is the case. */
+    /**
+     * Checks if the current character matches the expected one and
+     * advances the cursor if that is the case.
+     */
     private boolean match(Character expected) {
         if (isAtEnd()) return false;
         if (source.charAt(current) != expected) return false;
@@ -266,19 +280,25 @@ public class Lexer {
         return true;
     }
 
-    /** Checks if the current cursor points to the end of the file. */
+    /**
+     * Checks if the current cursor points to the end of the file.
+     */
     private boolean isAtEnd() {
         return current >= source.length();
     }
 
     /* methods to add the found tokens */
 
-    /** Adds a new token with no corresponding literal. */
+    /**
+     * Adds a new token with no corresponding literal.
+     */
     private void addToken(TokenType type) {
         addToken(type, null);
     }
 
-    /** Adds a new token with a corresponding literal. */
+    /**
+     * Adds a new token with a corresponding literal.
+     */
     private void addToken(TokenType type, Object literal) {
         String text = source.substring(start, current);
         tokens.add(new Token(type, text, literal, line));

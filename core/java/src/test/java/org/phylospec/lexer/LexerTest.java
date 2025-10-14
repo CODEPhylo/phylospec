@@ -9,7 +9,7 @@ public class LexerTest {
 
     @Test
     public void testSingleCharacterTokens() {
-        String source = "(),.-+/*=!~@==!=<>>=<=";
+        String source = "(),.-+/*=!~@==!=<>>=<=[]";
 
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
@@ -32,9 +32,11 @@ public class LexerTest {
         assertEquals(new Token(TokenType.GREATER, ">", null, 1), tokens.get(15));
         assertEquals(new Token(TokenType.GREATER_EQUAL, ">=", null, 1), tokens.get(16));
         assertEquals(new Token(TokenType.LESS_EQUAL, "<=", null, 1), tokens.get(17));
-        assertEquals(new Token(TokenType.EOF, "", null, 1), tokens.get(18));
+        assertEquals(new Token(TokenType.LEFT_SQUARE_BRACKET, "[", null, 1), tokens.get(18));
+        assertEquals(new Token(TokenType.RIGHT_SQUARE_BRACKET, "]", null, 1), tokens.get(19));
+        assertEquals(new Token(TokenType.EOF, "", null, 1), tokens.get(20));
 
-        assertEquals(tokens.size(), 19);
+        assertEquals(tokens.size(), 21);
     }
 
     @Test

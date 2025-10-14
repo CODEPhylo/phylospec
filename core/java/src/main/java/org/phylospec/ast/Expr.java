@@ -3,6 +3,7 @@ package org.phylospec.ast;
 import org.phylospec.lexer.Token;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 public abstract class Expr {
@@ -28,11 +29,11 @@ public abstract class Expr {
     }
 
     public static class Variable extends Expr {
-        public Variable(Token variable) {
+        public Variable(String variable) {
             this.variable = variable;
         }
 
-        public final Token variable;
+        public final String variable;
 
         @Override
         public boolean equals(Object o) {
@@ -159,6 +160,26 @@ public abstract class Expr {
         @Override
         public int hashCode() {
             return Objects.hash(name, expression);
+        }
+    }
+
+    public static class Array extends Expr {
+        public Array(List<Expr> elements) {
+            this.elements = elements;
+        }
+
+        final List<Expr> elements;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Array array = (Array) o;
+            return Objects.equals(elements, array.elements);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(elements);
         }
     }
 
