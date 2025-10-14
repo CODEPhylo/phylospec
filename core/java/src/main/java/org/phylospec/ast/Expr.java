@@ -136,30 +136,39 @@ public abstract class Expr {
         }
     }
 
-    public static class Argument extends Expr {
-        public Argument(Expr expression) {
-            this.name = null;
-            this.expression = expression;
-        }
-
-        public Argument(String name, Expr expression) {
-            this.name = name;
-            this.expression = expression;
-        }
-
-        public final String name;
-        public final Expr expression;
+    public static abstract class Argument extends Expr {
+        public String name;
+        public Expr expression;
 
         @Override
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
-            Argument argument = (Argument) o;
-            return Objects.equals(name, argument.name) && Objects.equals(expression, argument.expression);
+            Argument that = (Argument) o;
+            return Objects.equals(name, that.name) && Objects.equals(expression, that.expression);
         }
 
         @Override
         public int hashCode() {
             return Objects.hash(name, expression);
+        }
+    }
+
+    public static class AssignedArgument extends Argument {
+        public AssignedArgument(Expr expression) {
+            this.name = null;
+            this.expression = expression;
+        }
+
+        public AssignedArgument(String name, Expr expression) {
+            this.name = name;
+            this.expression = expression;
+        }
+    }
+
+    public static class DrawnArgument extends Argument {
+        public DrawnArgument(String name, Expr expression) {
+            this.name = name;
+            this.expression = expression;
         }
     }
 

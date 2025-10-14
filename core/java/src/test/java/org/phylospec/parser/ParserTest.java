@@ -126,28 +126,28 @@ public class ParserTest {
     @Test
     public void testFunctionCalls() {
         testStatements(
-                "PositiveReal value ~ LogNormal(10 + 20)",
-                new Stmt.Draw(
-                        new Type.Atomic("PositiveReal"),
-                        "value",
-                        new Expr.Call(
-                                new Expr.Variable("LogNormal"),
-                                new Expr.Argument(new Expr.Binary(
-                                        new Expr.Literal(10),
-                                        new Token(TokenType.PLUS, "+", null, 1),
-                                        new Expr.Literal(20)
-                                ))
-                        )
-                )
-        );
-
-        testStatements(
                 "PositiveReal value ~ LogNormal()",
                 new Stmt.Draw(
                         new Type.Atomic("PositiveReal"),
                         "value",
                         new Expr.Call(
                                 new Expr.Variable("LogNormal")
+                        )
+                )
+        );
+
+        testStatements(
+                "PositiveReal value ~ LogNormal(10 + 20)",
+                new Stmt.Draw(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Call(
+                                new Expr.Variable("LogNormal"),
+                                new Expr.AssignedArgument(new Expr.Binary(
+                                        new Expr.Literal(10),
+                                        new Token(TokenType.PLUS, "+", null, 1),
+                                        new Expr.Literal(20)
+                                ))
                         )
                 )
         );
@@ -160,7 +160,7 @@ public class ParserTest {
                         new Expr.Call(
                                 new Expr.Call(
                                         new Expr.Variable("IID"),
-                                        new Expr.Argument("LogNormal", new Expr.Variable("LogNormal"))
+                                        new Expr.AssignedArgument("LogNormal", new Expr.Variable("LogNormal"))
                                 )
                         )
                 )
@@ -173,8 +173,8 @@ public class ParserTest {
                         "value",
                         new Expr.Call(
                                 new Expr.Variable("LogNormal"),
-                                new Expr.Argument("meanLog", new Expr.Literal(10.5)),
-                                new Expr.Argument("sdLog", new Expr.Variable("sdLog"))
+                                new Expr.AssignedArgument("meanLog", new Expr.Literal(10.5)),
+                                new Expr.AssignedArgument("sdLog", new Expr.Variable("sdLog"))
                         )
                 )
         );
@@ -186,8 +186,21 @@ public class ParserTest {
                         "value",
                         new Expr.Call(
                                 new Expr.Variable("LogNormal"),
-                                new Expr.Argument("meanLog", new Expr.Literal(10.5)),
-                                new Expr.Argument("sdLog", new Expr.Variable("sdLog"))
+                                new Expr.AssignedArgument("meanLog", new Expr.Literal(10.5)),
+                                new Expr.AssignedArgument("sdLog", new Expr.Variable("sdLog"))
+                        )
+                )
+        );
+
+        testStatements(
+                "PositiveReal value ~ LogNormal(meanLog ~ Exp(), sdLog ~ Normal())",
+                new Stmt.Draw(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Call(
+                                new Expr.Variable("LogNormal"),
+                                new Expr.DrawnArgument("meanLog", new Expr.Call(new Expr.Variable("Exp"))),
+                                new Expr.DrawnArgument("sdLog", new Expr.Call(new Expr.Variable(("Normal"))))
                         )
                 )
         );
@@ -236,8 +249,8 @@ public class ParserTest {
                         new Type.Atomic("PositiveReal"),
                         "value",
                         new Expr.Array(List.of(
-                                new Expr.Call(new Expr.Variable("abs"), new Expr.Argument(new Expr.Literal(5))),
-                                new Expr.Call(new Expr.Variable("square"), new Expr.Argument(new Expr.Literal(2)))
+                                new Expr.Call(new Expr.Variable("abs"), new Expr.AssignedArgument(new Expr.Literal(5))),
+                                new Expr.Call(new Expr.Variable("square"), new Expr.AssignedArgument(new Expr.Literal(2)))
                         ))
                 )
         );
@@ -284,7 +297,7 @@ public class ParserTest {
                         new Expr.Grouping(
                                 new Expr.Binary(
                                         new Expr.Literal(10.4),
-                                        new Token(TokenType.PLUS, "+", null, 2),
+                                        new Token(TokenType.PLUS, "+", null, 3),
                                         new Expr.Literal(5.0)
                                 )
                         )
@@ -301,10 +314,10 @@ public class ParserTest {
                         "value",
                         new Expr.Call(
                                 new Expr.Variable("func"),
-                                new Expr.Argument(
+                                new Expr.AssignedArgument(
                                         "a", new Expr.Literal(10.4)
                                 ),
-                                new Expr.Argument(
+                                new Expr.AssignedArgument(
                                         "b", new Expr.Literal(5.0)
                                 )
                         )
@@ -350,10 +363,10 @@ public class ParserTest {
                         new Type.Atomic("PositiveReal"),
                         "value",
                         new Expr.Call(
-                            new Expr.Get(
-                                    new Expr.Variable("constants"),
-                                    "pi"
-                            )
+                                new Expr.Get(
+                                        new Expr.Variable("constants"),
+                                        "pi"
+                                )
                         )
                 )
         );
@@ -364,20 +377,51 @@ public class ParserTest {
                         new Type.Atomic("PositiveReal"),
                         "value",
                         new Expr.Call(
-                            new Expr.Get(
                                 new Expr.Get(
-                                    new Expr.Call(
-                                            new Expr.Get(
-                                                    new Expr.Variable("constants"),
-                                                    "pi"
-                                            )
-                                    ), "binary"
-                                ), "toReal"
-                            )
+                                        new Expr.Get(
+                                                new Expr.Call(
+                                                        new Expr.Get(
+                                                                new Expr.Variable("constants"),
+                                                                "pi"
+                                                        )
+                                                ), "binary"
+                                        ), "toReal"
+                                )
                         )
                 )
         );
     }
+
+    @Test
+    public void testDecorators() {
+        testStatements(
+                "@Decorator() PositiveReal value ~ 10",
+                new Stmt.Decorated(
+                        new Expr.Call(new Expr.Variable("Decorator")),
+                        new Stmt.Draw(
+                            new Type.Atomic("PositiveReal"),
+                            "value",
+                            new  Expr.Literal(10)
+                        )
+                )
+        );
+
+        testStatements(
+                "@Decorator1()\n@Decorator2()\nPositiveReal value ~ 10",
+                new Stmt.Decorated(
+                        new Expr.Call(new Expr.Variable("Decorator1")),
+                        new Stmt.Decorated(
+                                new Expr.Call(new Expr.Variable("Decorator2")),
+                                new Stmt.Draw(
+                                        new Type.Atomic("PositiveReal"),
+                                        "value",
+                                        new  Expr.Literal(10)
+                                )
+                        )
+                )
+        );
+    }
+
 
     void testStatements(String source, Stmt... expectedStatements) {
         Lexer lexer = new Lexer(source);

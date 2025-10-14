@@ -16,6 +16,7 @@ import java.util.List;
 public class Parser {
     /**
      * Parses the following grammar:
+     * decorated      → ( "@" call )*  statement ;
      * statement      → type IDENTIFIER ( "=" | "~" ) expression ;
      * type           → IDENTIFIER ("<" type ("," type)* ">" ) ;
      * expression     → equality ;
@@ -54,13 +55,38 @@ public class Parser {
         List<Stmt> statements = new ArrayList<>();
 
         while (!isAtEnd()) {
-            statements.add(statement());
+            statements.add(decorated());
+
+            if (!isAtEnd()) {
+                consume(TokenType.EOL, "Assignment has to be terminated by a line break.");
+
+                // skip all EOL until the next statement
+                while (match(TokenType.EOL)) {}
+            }
         }
 
         return statements;
     }
 
     /* parser methods */
+
+    private Stmt decorated() {
+        if (match(TokenType.AT)) {
+            Expr decorator = call();
+
+            if (!(decorator instanceof Expr.Call)) {
+                throw error(previous(), "Decorators can only be function calls.");
+            }
+
+            // skip all EOL until the next statement
+            while (match(TokenType.EOL)) {}
+
+            Stmt statement = decorated();
+            return new Stmt.Decorated((Expr.Call) decorator, statement);
+        }
+
+        return statement();
+    }
 
     private Stmt statement() {
         Type type = type();
@@ -69,21 +95,11 @@ public class Parser {
 
         if (match(TokenType.EQUAL)) {
             Expr expression = expression();
-
-            if (!isAtEnd()) {
-                consume(TokenType.EOL, "Assignment has to be terminated by a line break.");
-            }
-
             return new Stmt.Assignment(type, name.lexeme, expression);
         }
 
         if (match(TokenType.TILDE)) {
             Expr expression = expression();
-
-            if (!isAtEnd()) {
-                consume(TokenType.EOL, "Draw has to be terminated by a line break.");
-            }
-
             return new Stmt.Draw(type, name.lexeme, expression);
         }
 
@@ -221,10 +237,15 @@ public class Parser {
         Expr expression = expression();
 
         if (!(expression instanceof Expr.Variable)) {
-            return new Expr.Argument(expression);
+            return new Expr.AssignedArgument(expression);
         }
 
         String argumentName = ((Expr.Variable) expression).variable;
+
+        if (match(TokenType.TILDE)) {
+            expression = expression();
+            return new Expr.DrawnArgument(argumentName, expression);
+        }
 
         if (match(TokenType.EQUAL)) {
             expression = expression();
@@ -232,7 +253,7 @@ public class Parser {
             expression = new Expr.Variable(argumentName);
         }
 
-        return new Expr.Argument(argumentName, expression);
+        return new Expr.AssignedArgument(argumentName, expression);
     }
 
     private Expr array() {

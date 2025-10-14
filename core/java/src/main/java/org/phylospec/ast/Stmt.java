@@ -54,4 +54,26 @@ public abstract class Stmt {
         }
     }
 
+    public static class Decorated extends Stmt {
+        public Decorated(Expr.Call decorator, Stmt statememt) {
+            this.decorator = decorator;
+            this.statememt = statememt;
+        }
+
+        final Expr.Call decorator;
+        final Stmt statememt;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Decorated decorated = (Decorated) o;
+            return Objects.equals(decorator, decorated.decorator) && Objects.equals(statememt, decorated.statememt);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(decorator, statememt);
+        }
+    }
+
 }
