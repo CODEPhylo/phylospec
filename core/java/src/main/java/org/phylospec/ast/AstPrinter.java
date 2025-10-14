@@ -70,7 +70,7 @@ public class AstPrinter implements AstVisitor<String> {
 
     @Override
     public String visitArray(Expr.Array expr) {
-        String result = "(ARR ";
+        String result = "(AR ";
 
         for (int i = 0; i < expr.elements.size(); i++) {
             result += expr.elements.get(i).accept(this);

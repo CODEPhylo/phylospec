@@ -54,6 +54,9 @@ public class Parser {
     public List<Stmt> parse() {
         List<Stmt> statements = new ArrayList<>();
 
+        // skip all EOL until the first statement
+        while (match(TokenType.EOL)) {}
+
         while (!isAtEnd()) {
             statements.add(decorated());
 
@@ -258,10 +261,15 @@ public class Parser {
 
     private Expr array() {
         if (match(TokenType.LEFT_SQUARE_BRACKET)) {
+            // we are in a bracket, let's ignore EOL statements
+            boolean oldSkipNewLines = skipNewLines;
+            skipNewLines = true;
+
             List<Expr> elements = new ArrayList<>();
 
             if (match(TokenType.RIGHT_SQUARE_BRACKET)) {
                 // we have an empty list
+                skipNewLines = oldSkipNewLines;
                 return new Expr.Array(elements);
             }
 
@@ -271,6 +279,7 @@ public class Parser {
             while (match(TokenType.COMMA)) {
                 if (match(TokenType.RIGHT_SQUARE_BRACKET)) {
                     // the last comma has been a trailing one
+                    skipNewLines = oldSkipNewLines;
                     return new Expr.Array(elements);
                 }
 
@@ -279,6 +288,8 @@ public class Parser {
             }
 
             match(TokenType.RIGHT_SQUARE_BRACKET);
+
+            skipNewLines = oldSkipNewLines;
 
             return new Expr.Array(elements);
         }

@@ -1,0 +1,22 @@
+Vector<Real> vector = [
+    10.0,
+    2.0,
+    -5.0
+]
+
+Vector<String> vector = [
+
+    "10"
+
+]
+
+Vector<Distribution> components = [
+    Normal(mean=0.0, sd=1.0),
+    Normal(mean=5.0, sd=2.0),
+    Normal(mean=10.0, sd=1.5)
+];
+
+// EXPECT
+// (AS Vector<Real> vector (AR 10.0 2.0 (- 5.0)))
+// (AS Vector<String> vector (AR "10"))
+// (AS Vector<Distribution> components (AR (CA Normal (AA mean 0.0) (AA sd 1.0)) (CA Normal (AA mean 5.0) (AA sd 2.0)) (CA Normal (AA mean 10.0) (AA sd 1.5))))

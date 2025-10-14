@@ -15,6 +15,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ParserTest {
 
     @Test
+    public void testEmptyStatement() {
+        testStatements("// this is a comment\n\n// another one");
+    }
+
+    @Test
     public void testMathematicalStatement() {
         testStatements(
                 "Object var = 10 + (-25.2 - 100 / (2 + 4))",
@@ -321,6 +326,19 @@ public class ParserTest {
                                         "b", new Expr.Literal(5.0)
                                 )
                         )
+                )
+        );
+
+        testStatements(
+                "PositiveReal value = [10, \n5, \n200]",
+                new Stmt.Assignment(
+                        new Type.Atomic("PositiveReal"),
+                        "value",
+                        new Expr.Array(List.of(
+                                new Expr.Literal(10),
+                                new Expr.Literal(5),
+                                new Expr.Literal(200)
+                        ))
                 )
         );
     }
