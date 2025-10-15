@@ -29,6 +29,9 @@ public class ComponentResolver {
 
     /**
      * Registers a component library from a file path.
+     * Note that this does not make the types and generators resolvable. For
+     * this, the appropriate namespace has to be imported first using either
+     * `importEntireNamespace` or `importNamespace`.
      */
     public void registerLibraryFromFile(String fileName) throws IOException {
         try (InputStream fileStream = new FileInputStream(fileName)) {
@@ -39,28 +42,40 @@ public class ComponentResolver {
     }
 
     /**
-     * Registers a component library from a file path.
+     * Registers a component library.
+     * Note that this does not make the types and generators resolvable. For
+     * this, the appropriate namespace has to be imported first using either
+     * `importEntireNamespace` or `importNamespace`.
      */
     public void registerComponentLibrary(ComponentLibrary library) {
         componentLibraries.add(library);
     }
 
-    public boolean canResolveGenerator(String variableName) {
-        return generators.containsKey(variableName);
+    /**
+     * Imports a namespace. This makes all registered components and types
+     * in that namespace resolvable.
+     */
+    public void importNamespace(List<String> namespace) {
+        String namespaceString = String.join(".", namespace);
+
+        for (ComponentLibrary library : componentLibraries) {
+            for (Generator generator : library.getGenerators()) {
+                if (generator.getNamespace().equals(namespaceString)) {
+                    this.generators.put(generator.getName(), generator);
+                }
+            }
+            for (Type type : library.getTypes()) {
+                if (type.getNamespace().equals(namespaceString)) {
+                    this.types.put(type.getName(), type);
+                }
+            }
+        }
     }
 
-    public Generator resolveGenerator(String variableName) {
-        return generators.get(variableName);
-    }
-
-    public boolean canResolveType(String typeName) {
-        return types.containsKey(typeName);
-    }
-
-    public Type resolveType(String variableName) {
-        return types.get(variableName);
-    }
-
+    /**
+     * Imports a namespace and its sub-namespaces. This makes all registered components
+     * and types in that namespace resolvable.
+     */
     public void importEntireNamespace(List<String> namespace) {
         String namespaceString = String.join(".", namespace);
         String namespaceStringWithDot = String.join(".", namespace) + ".";
@@ -85,20 +100,23 @@ public class ComponentResolver {
         }
     }
 
-    public void importNamespace(List<String> namespace) {
-        String namespaceString = String.join(".", namespace);
+    /** Returns whether a given generatorName can be resolved. */
+    public boolean canResolveGenerator(String generatorName) {
+        return generators.containsKey(generatorName);
+    }
 
-        for (ComponentLibrary library : componentLibraries) {
-            for (Generator generator : library.getGenerators()) {
-                if (generator.getNamespace().equals(namespaceString)) {
-                    this.generators.put(generator.getName(), generator);
-                }
-            }
-            for (Type type : library.getTypes()) {
-                if (type.getNamespace().equals(namespaceString)) {
-                    this.types.put(type.getName(), type);
-                }
-            }
-        }
+    /** Returns the {@link Generator} corresponding to the given name. */
+    public Generator resolveGenerator(String generatorName) {
+        return generators.get(generatorName);
+    }
+
+    /** Returns whether a given typeName can be resolved. */
+    public boolean canResolveType(String typeName) {
+        return types.containsKey(typeName);
+    }
+
+    /** Returns the {@link Type} corresponding to the given name. */
+    public Type resolveType(String variableName) {
+        return types.get(variableName);
     }
 }
