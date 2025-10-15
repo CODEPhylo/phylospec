@@ -10,6 +10,8 @@ import java.util.Objects;
  */
 public abstract class Type {
 
+    public String name;
+
     abstract public <S, E, T> T accept(AstVisitor<S, E, T> visitor);
 
     /** Represents a non-generic type like `Real` */
@@ -17,8 +19,6 @@ public abstract class Type {
 		public Atomic(String name) {
 			this.name = name;
 		}
-
-		public final String name;
 
         @Override
         public boolean equals(Object o) {
@@ -45,7 +45,6 @@ public abstract class Type {
             this.typeParameters = typeParameters;
         }
 
-        public final String name;
         public final Type[] typeParameters;
 
         @Override

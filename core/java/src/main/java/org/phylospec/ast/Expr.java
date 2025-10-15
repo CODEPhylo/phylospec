@@ -51,7 +51,7 @@ public abstract class Expr {
 		}
 
         // TODO: make this type generic
-		final Object value;
+        public final Object value;
 
         @Override
         public boolean equals(Object o) {
@@ -78,8 +78,8 @@ public abstract class Expr {
 			this.right = right;
 		}
 
-		final Token operator;
-		final Expr right;
+		public final Token operator;
+        public final Expr right;
 
         @Override
         public boolean equals(Object o) {
@@ -107,9 +107,9 @@ public abstract class Expr {
 			this.right = right;
 		}
 
-		final Expr left;
-		final Token operator;
-		final Expr right;
+		public final Expr left;
+		public final Token operator;
+		public final Expr right;
 
         @Override
         public boolean equals(Object o) {
@@ -135,7 +135,7 @@ public abstract class Expr {
             this.expression = expression;
         }
 
-        final Expr expression;
+        public final Expr expression;
 
         @Override
         public boolean equals(Object o) {
@@ -170,8 +170,8 @@ public abstract class Expr {
             this.arguments = arguments;
         }
 
-        final Expr function;
-        final Argument[] arguments;
+        public final Expr function;
+        public final Argument[] arguments;
 
         @Override
         public boolean equals(Object o) {
@@ -248,7 +248,7 @@ public abstract class Expr {
             this.elements = elements;
         }
 
-        final List<Expr> elements;
+        public final List<Expr> elements;
 
         @Override
         public boolean equals(Object o) {
@@ -279,8 +279,8 @@ public abstract class Expr {
             this.propery = propery;
         }
 
-        final Expr object;
-        final String propery;
+        public final Expr object;
+        public final String propery;
 
         @Override
         public boolean equals(Object o) {

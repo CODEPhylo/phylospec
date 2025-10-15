@@ -19,9 +19,9 @@ public abstract class Stmt {
             this.expression = expression;
         }
 
-        final Type type;
-        final String name;
-        final Expr expression;
+        public final Type type;
+        public final String name;
+        public final Expr expression;
 
         @Override
         public boolean equals(Object o) {
@@ -48,9 +48,9 @@ public abstract class Stmt {
             this.expression = expression;
         }
 
-        final Type type;
-        final String name;
-        final Expr expression;
+        public final Type type;
+        public final String name;
+        public final Expr expression;
 
         @Override
         public boolean equals(Object o) {
@@ -78,8 +78,8 @@ public abstract class Stmt {
             this.statememt = statememt;
         }
 
-        final Expr.Call decorator;
-        final Stmt statememt;
+        public final Expr.Call decorator;
+        public final Stmt statememt;
 
         @Override
         public boolean equals(Object o) {

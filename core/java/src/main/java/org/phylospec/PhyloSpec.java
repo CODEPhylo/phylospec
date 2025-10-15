@@ -1,14 +1,14 @@
 package org.phylospec;
 
 import org.phylospec.ast.AstPrinter;
+import org.phylospec.components.ComponentResolver;
 import org.phylospec.ast.Stmt;
+import org.phylospec.ast.AstResolver;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -40,24 +40,26 @@ public class PhyloSpec {
 
     private static void runFile(String path) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
-        run(new String(bytes, Charset.defaultCharset()));
+        AstResolver resolver = loadAstResolver();
+        run(new String(bytes, Charset.defaultCharset()), resolver);
         if (hadError) System.exit(65);
     }
 
     private static void runPrompt() throws IOException {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
+        AstResolver resolver = loadAstResolver();
 
         for (;;) {
             System.out.print("> ");
             String line = reader.readLine();
             if (line == null) break;
-            run(line);
+            run(line, resolver);
             hadError = false;
         }
     }
 
-    private static void run(String source) {
+    private static void run(String source, AstResolver resolver) {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
 
@@ -70,7 +72,14 @@ public class PhyloSpec {
         AstPrinter printer = new AstPrinter();
         for (Stmt statement : statements) {
             System.out.println(statement.accept(printer));
+            statement.accept(resolver);
         }
+    }
+
+    private static AstResolver loadAstResolver() throws IOException {
+        ComponentResolver componentResolver = new ComponentResolver();
+        componentResolver.registerLibraryFromFile("schema/phylospec-core-component-library.json");
+        return new AstResolver(componentResolver);
     }
 
     /** Report an error on a specific line but not directly connected
