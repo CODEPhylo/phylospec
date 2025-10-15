@@ -25,7 +25,8 @@ public class ScriptFilesResolverTest {
 
     /**
      * Goes through every .phylospec file in the test folder, parses it, and tests if
-     * the variables and types can be resolved.
+     * the variables and types can be resolved or if the resolution errors match the ones
+     * in the .phylospec file comments.
      */
     @TestFactory
     public Iterable<DynamicTest> testResolveAllPsScripts() throws IOException {
