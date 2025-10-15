@@ -1,0 +1,10 @@
+import beast2
+import revbayes.distributions
+
+@beast2Ignore()
+import revbayes.distributions
+
+// EXPECT
+// (IM beast2)
+// (IM revbayes distributions)
+// (@ (CA beast2Ignore ) (IM revbayes distributions))

@@ -17,7 +17,7 @@ public class Parser {
     /**
      * Parses the following grammar:
      * decorated      → ( "@" call )*  statement ;
-     * statement      → type IDENTIFIER ( "=" | "~" ) expression ;
+     * statement      → "import" IDENTIFIER ( "." IDENTIFIER )* | type IDENTIFIER ( "=" | "~" ) expression ;
      * type           → IDENTIFIER ("<" type ("," type)* ">" ) ;
      * expression     → equality ;
      * equality       → comparison ( ( "!=" | "==" ) comparison )* ;
@@ -92,6 +92,21 @@ public class Parser {
     }
 
     private Stmt statement() {
+        if (match(TokenType.IMPORT)) {
+            List<String> importPath = new ArrayList<>();
+            importPath.add(
+                    consume(TokenType.IDENTIFIER, "Import path must be provided.").lexeme
+            );
+
+            while (match(TokenType.DOT)) {
+                importPath.add(
+                        consume(TokenType.IDENTIFIER, "Invalid import path.").lexeme
+                );
+            }
+
+            return new Stmt.Import(importPath);
+        }
+
         Type type = type();
 
         Token name = consume(TokenType.IDENTIFIER, "Invalid variable name.");

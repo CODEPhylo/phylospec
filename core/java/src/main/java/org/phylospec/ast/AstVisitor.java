@@ -9,6 +9,7 @@ public interface AstVisitor<S, E, T> {
     public S visitDecoratedStmt(Stmt.Decorated stmt);
     public S visitAssignment(Stmt.Assignment stmt);
     public S visitDraw(Stmt.Draw stmt);
+    public S visitImport(Stmt.Import stmt);
 
     public E visitLiteral(Expr.Literal expr);
     public E visitVariable(Expr.Variable expr);

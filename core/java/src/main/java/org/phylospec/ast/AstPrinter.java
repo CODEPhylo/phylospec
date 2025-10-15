@@ -26,6 +26,21 @@ public class AstPrinter implements AstVisitor<String, String, String> {
     }
 
     @Override
+    public String visitImport(Stmt.Import stmt) {
+        String result = "(IM ";
+
+        for (int i = 0; i < stmt.importPath.size(); i++) {
+            result += stmt.importPath.get(i);
+            if (i < stmt.importPath.size() - 1) {
+                result += " ";
+            }
+        }
+
+        result += ")";
+        return result;
+    }
+
+    @Override
     public String visitLiteral(Expr.Literal expr) {
         if (expr.value instanceof String) {
             return "\"" + expr.value.toString() + "\"";

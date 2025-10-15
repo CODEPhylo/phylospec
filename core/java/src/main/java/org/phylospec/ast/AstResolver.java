@@ -98,6 +98,12 @@ public class AstResolver implements AstVisitor<Void, Void, Void> {
         return null;
     }
 
+    @Override
+    public Void visitImport(Stmt.Import stmt) {
+        componentResolver.importNamespace(stmt.importPath);
+        return null;
+    }
+
     /** Boilerplate Visitors (these don't change the variableMapping but simply
      *  recursively accept the subtree) */
 

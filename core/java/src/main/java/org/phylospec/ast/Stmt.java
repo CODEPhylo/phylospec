@@ -1,5 +1,6 @@
 package org.phylospec.ast;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -95,6 +96,31 @@ public abstract class Stmt {
 
         public <S, E, T> S accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitDecoratedStmt(this);
+        }
+    }
+
+    /** Represents an import statement like `import revbayes.core`. */
+    public static class Import extends Stmt {
+        public Import(List<String> importPath) {
+            this.importPath = importPath;
+        }
+
+        public final List<String> importPath;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Import anImport = (Import) o;
+            return Objects.equals(importPath, anImport.importPath);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(importPath);
+        }
+
+        public <S, E, T> S accept(AstVisitor<S, E, T> visitor) {
+            return visitor.visitImport(this);
         }
     }
 
