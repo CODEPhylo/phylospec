@@ -1,0 +1,11 @@
+Real tree = 20
+Real b = CCD0(tree)
+
+// EXPECT AST
+// (AS Real tree 20)
+// (AS Real b (CA CCD0 (AA tree tree)))
+// EXPECT AST
+
+// EXPECT RESOLUTION
+// Variable CCD0 is not known
+// EXPECT RESOLUTION

@@ -1,0 +1,11 @@
+Real a = 20
+Double b = 100 * a
+
+// EXPECT AST
+// (AS Real a 20)
+// (AS Double b (* 100 a))
+// EXPECT AST
+
+// EXPECT RESOLUTION
+// Type Double is not known
+// EXPECT RESOLUTION

@@ -1,0 +1,11 @@
+Real a = 20
+Real b = 100 * c
+
+// EXPECT AST
+// (AS Real a 20)
+// (AS Real b (* 100 c))
+// EXPECT AST
+
+// EXPECT RESOLUTION
+// Variable c is not known
+// EXPECT RESOLUTION
