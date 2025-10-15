@@ -1,1749 +1,251 @@
 {
-  "modelLibrary": {
-    "name": "PhyloSpec Core",
-    "version": "1.3.0",
-    "engine": "PhyloSpec",
-    "engineVersion": "1.0.0",
-    "description": "Canonical phylogenetic modeling components from PhyloSpec with dimension expressions and taxa handling - Updated to match Java type system",
-    "types": [
-      {
-        "name": "Distribution",
-        "description": "Abstract type representing a probability distribution",
-        "isAbstract": true,
-        "package": "phylospec.types",
-        "properties": {
-          "generatedType": {
-            "type": "String",
-            "description": "The type of value this distribution generates"
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://phylospec.org/schemas/component-library-schema-v3.json",
+  "title": "Component Library Schema v3",
+  "description": "Schema for validating component libraries with enhanced metadata, UI hints, and examples",
+  "type": "object",
+  "required": [
+    "componentLibrary"
+  ],
+  "properties": {
+    "componentLibrary": {
+      "type": "object",
+      "required": [
+        "name",
+        "version",
+        "engine",
+        "engineVersion",
+        "description",
+        "types",
+        "generators"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "engine": {
+          "type": "string"
+        },
+        "engineVersion": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "authors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of authors or maintainers of the schema"
+        },
+        "license": {
+          "type": "string",
+          "description": "License identifier, e.g., MIT"
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/type"
           }
-        }
-      },
-      {
-        "name": "Normal",
-        "description": "Normal distribution",
-        "extends": "Distribution<Real>",
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "LogNormal",
-        "description": "Log-normal distribution",
-        "extends": "Distribution<PositiveReal>",
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "Gamma",
-        "description": "Gamma distribution",
-        "extends": "Distribution<PositiveReal>",
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "Beta",
-        "description": "Beta distribution",
-        "extends": "Distribution<Probability>",
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "Exponential",
-        "description": "Exponential distribution",
-        "extends": "Distribution<PositiveReal>",
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "Uniform",
-        "description": "Uniform distribution",
-        "extends": "Distribution<Real>",
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "Dirichlet",
-        "description": "Dirichlet distribution",
-        "extends": "Distribution<Simplex>",
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "MultivariateNormal",
-        "description": "Multivariate normal distribution",
-        "extends": "Distribution<Vector<Real>>",
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "Yule",
-        "description": "Yule tree distribution",
-        "extends": "Distribution<Tree>",
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "BirthDeath",
-        "description": "Birth-death tree distribution",
-        "extends": "Distribution<Tree>",
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "Coalescent",
-        "description": "Coalescent tree distribution",
-        "extends": "Distribution<Tree>",
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "FossilBirthDeath",
-        "description": "Birth-death distribution with fossil sampling",
-        "extends": "Distribution<TimeTree>",
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "PhyloCTMC",
-        "description": "Phylogenetic continuous-time Markov chain distribution",
-        "extends": "Distribution<Alignment>",
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "PhyloBM",
-        "description": "Phylogenetic Brownian motion distribution",
-        "extends": "Distribution<Vector<Real>>",
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "PhyloOU",
-        "description": "Phylogenetic Ornstein-Uhlenbeck distribution",
-        "extends": "Distribution<Vector<Real>>",
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "IID",
-        "description": "IID distribution",
-        "extends": "Distribution<Vector<T>>",
-        "typeParameters": ["T"],
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "Mixture",
-        "description": "Mixture distribution",
-        "extends": "Distribution<T>",
-        "typeParameters": ["T"],
-        "package": "phylospec.distributions"
-      },
-      {
-        "name": "Real",
-        "description": "Real-valued number",
-        "package": "phylospec.types",
-        "primitiveAssignable": true,
-        "acceptedPrimitives": ["Double", "Float", "Integer", "Long"]
-      },
-      {
-        "name": "Integer",
-        "description": "Integer-valued number",
-        "package": "phylospec.types",
-        "primitiveAssignable": true,
-        "acceptedPrimitives": ["Integer", "Long"]
-      },
-      {
-        "name": "Boolean",
-        "description": "Logical value",
-        "package": "phylospec.types",
-        "primitiveAssignable": true,
-        "acceptedPrimitives": ["Boolean"]
-      },
-      {
-        "name": "String",
-        "description": "Text value",
-        "package": "phylospec.types",
-        "primitiveAssignable": true,
-        "acceptedPrimitives": ["String"]
-      },
-      {
-        "name": "PositiveReal",
-        "description": "Positive real number (> 0)",
-        "extends": "Real",
-        "package": "phylospec.types",
-        "primitiveAssignable": true,
-        "acceptedPrimitives": ["Double", "Float"],
-        "constraint": "positive"
-      },
-      {
-        "name": "NonNegativeReal",
-        "description": "Non-negative real number (>= 0)",
-        "extends": "Real",
-        "package": "phylospec.types",
-        "primitiveAssignable": true,
-        "acceptedPrimitives": ["Double", "Float", "Integer", "Long"],
-        "constraint": "non-negative"
-      },
-      {
-        "name": "Probability",
-        "description": "Probability value [0,1]",
-        "extends": "Real",
-        "package": "phylospec.types",
-        "primitiveAssignable": true,
-        "acceptedPrimitives": ["Double", "Float"],
-        "constraint": "probability"
-      },
-      {
-        "name": "PositiveInteger",
-        "description": "Positive integer (> 0)",
-        "extends": "Integer",
-        "package": "phylospec.types",
-        "primitiveAssignable": true,
-        "acceptedPrimitives": ["Integer", "Long"],
-        "constraint": "positive"
-      },
-      {
-        "name": "Vector",
-        "description": "Generic ordered collection of elements",
-        "package": "phylospec.types",
-        "typeParameters": ["T"],
-        "collectionType": {
-          "elementType": "T",
-          "kind": "array"
-        }
-      },
-      {
-        "name": "Matrix",
-        "description": "Generic two-dimensional grid of values",
-        "package": "phylospec.types",
-        "typeParameters": ["T"],
-        "collectionType": {
-          "elementType": "T",
-          "kind": "matrix"
-        }
-      },
-      {
-        "name": "SquareMatrix",
-        "description": "Square matrix with equal number of rows and columns",
-        "extends": "Matrix",
-        "package": "phylospec.types",
-        "typeParameters": ["T"]
-      },
-      {
-        "name": "Simplex",
-        "description": "Probability vector with elements that sum to 1.0",
-        "extends": "Vector<Probability>",
-        "package": "phylospec.types",
-        "constraint": "simplex"
-      },
-      {
-        "name": "QMatrix",
-        "description": "Rate matrix for substitution models",
-        "extends": "SquareMatrix<Real>",
-        "isAbstract": false,
-        "package": "phylospec.types"
-      },
-      {
-        "name": "StochasticMatrix",
-        "description": "Stochastic matrix - probability transition matrix",
-        "extends": "Matrix<Probability>",
-        "package": "phylospec.types"
-      },
-      {
-        "name": "List",
-        "description": "Ordered collection of elements",
-        "package": "phylospec.types",
-        "typeParameters": ["T"],
-        "collectionType": {
-          "elementType": "T",
-          "kind": "list"
-        }
-      },
-      {
-        "name": "Map",
-        "description": "Mappings from keys to values",
-        "package": "phylospec.types",
-        "typeParameters": ["K", "V"],
-        "collectionType": {
-          "keyType": "K",
-          "valueType": "V",
-          "kind": "map"
-        }
-      },
-      {
-        "name": "Set",
-        "description": "Unordered collection with unique elements",
-        "package": "phylospec.types",
-        "typeParameters": ["T"],
-        "collectionType": {
-          "elementType": "T",
-          "kind": "set"
-        }
-      },
-      {
-        "name": "Nucleotide",
-        "description": "DNA/RNA nucleotide alphabet",
-        "package": "phylospec.types",
-        "alphabetType": {
-          "states": ["A", "C", "G", "T"],
-          "ambiguous": ["R", "Y", "S", "W", "K", "M", "B", "D", "H", "V", "N", "-", "?"]
-        }
-      },
-      {
-        "name": "AminoAcid",
-        "description": "Standard amino acid alphabet",
-        "package": "phylospec.types",
-        "alphabetType": {
-          "states": ["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V"],
-          "ambiguous": ["B", "Z", "X", "*", "-", "?"]
-        }
-      },
-      {
-        "name": "Sequence",
-        "description": "Biological sequence with elements from alphabet A",
-        "package": "phylospec.types",
-        "typeParameters": ["A"],
-        "properties": {
-          "length": {
-            "type": "Integer",
-            "description": "Length of the sequence"
-          },
-          "alphabet": {
-            "type": "String",
-            "description": "Alphabet type (e.g., 'Nucleotide', 'AminoAcid')"
-          }
-        }
-      },
-      {
-        "name": "DNASequence",
-        "description": "DNA sequence (alias for Sequence<Nucleotide>)",
-        "extends": "Sequence",
-        "package": "phylospec.types",
-        "typeAlias": {
-          "baseType": "Sequence",
-          "typeArguments": ["Nucleotide"]
-        }
-      },
-      {
-        "name": "ProteinSequence",
-        "description": "Protein sequence (alias for Sequence<AminoAcid>)",
-        "extends": "Sequence",
-        "package": "phylospec.types",
-        "typeAlias": {
-          "baseType": "Sequence",
-          "typeArguments": ["AminoAcid"]
-        }
-      },
-      {
-        "name": "Tree",
-        "description": "Phylogenetic tree structure",
-        "package": "phylospec.types",
-        "properties": {
-          "ntax": {
-            "type": "Integer",
-            "description": "Number of taxa/tips"
-          },
-          "nBranches": {
-            "type": "Integer", 
-            "description": "Number of branches (2n-2 for rooted tree)"
-          },
-          "nInternalNodes": {
-            "type": "Integer",
-            "description": "Number of internal nodes (n-1 for rooted tree)"
-          },
-          "taxa": {
-            "type": "TaxonSet",
-            "description": "Taxa in the tree",
-            "accessor": true
-          }
-        }
-      },
-      {
-        "name": "TimeTree",
-        "description": "Time-calibrated tree",
-        "extends": "Tree",
-        "package": "phylospec.types"
-      },
-      {
-        "name": "TreeNode",
-        "description": "Node in a phylogenetic tree",
-        "package": "phylospec.types"
-      },
-      {
-        "name": "Taxon",
-        "description": "Taxonomic unit",
-        "package": "phylospec.types",
-        "properties": {
-          "name": {
-            "type": "String",
-            "description": "Taxon name"
-          },
-          "age": {
-            "type": "Real",
-            "description": "Age/date of taxon (for tip-dated analyses)",
-            "required": false
-          }
-        }
-      },
-      {
-        "name": "TaxonSet",
-        "description": "Collection of taxa",
-        "package": "phylospec.types",
-        "properties": {
-          "ntax": {
-            "type": "Integer",
-            "description": "Number of taxa in the set"
-          },
-          "names": {
-            "type": "Vector<String>",
-            "description": "Names of taxa",
-            "accessor": true
-          }
-        }
-      },
-      {
-        "name": "Alignment",
-        "description": "Multiple sequence alignment with extractable properties",
-        "package": "phylospec.types",
-        "properties": {
-          "ntax": {
-            "type": "Integer",
-            "description": "Number of sequences"
-          },
-          "nchar": {
-            "type": "Integer",
-            "description": "Number of characters/sites"
-          },
-          "dataType": {
-            "type": "String",
-            "description": "Type of data (nucleotide, amino acid, etc.)"
-          },
-          "taxa": {
-            "type": "TaxonSet",
-            "description": "Taxa in the alignment",
-            "accessor": true
+        },
+        "generators": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/generator"
           }
         }
       }
-    ],
-    "generators": [
-      {
-        "name": "IID",
-        "generatorType": "distribution",
-        "generatedType": "Vector<T>",
-        "package": "phylospec.distributions",
-        "description": "Vector of independent and identically distributed random variables",
-        "typeParameters": ["T"],
-        "primaryArgument": {
-          "name": "x",
-          "type": "Vector<T>",
-          "description": "Vector of IID random variables"
+    }
+  },
+  "definitions": {
+    "type": {
+      "type": "object",
+      "required": [
+        "name",
+        "description"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
         },
-        "arguments": [
-          {
-            "name": "base",
-            "type": "Distribution<T>",
-            "description": "Base distribution for each component",
-            "required": true
-          },
-          {
-            "name": "n",
-            "type": "PositiveInteger",
-            "description": "Number of independent draws",
-            "required": true
-          }
-        ]
-      },
-      {
-        "name": "Mixture",
-        "generatorType": "distribution",
-        "generatedType": "T",
-        "package": "phylospec.distributions.mixture",
-        "description": "Mixture of distributions with the same return type",
-        "typeParameters": ["T"],
-        "arguments": [
-          {
-            "name": "components",
-            "type": "List<Distribution<T>>",
-            "description": "Component distributions that all generate type T",
-            "required": true
-          },
-          {
-            "name": "weights",
-            "type": "Simplex",
-            "description": "Mixture weights for each component",
-            "required": true,
-            "dimension": "components.length"
-          }
-        ]
-      },
-      {
-        "name": "Normal",
-        "generatorType": "distribution",
-        "generatedType": "Real",
-        "package": "phylospec.distributions",
-        "description": "Normal (Gaussian) distribution",
-        "arguments": [
-          {
-            "name": "mean",
-            "type": "Real",
-            "description": "Mean of the distribution",
-            "required": true,
-            "default": 0.0
-          },
-          {
-            "name": "sd",
-            "type": "PositiveReal",
-            "description": "Standard deviation",
-            "required": true,
-            "default": 1.0
-          }
-        ]
-      },
-      {
-        "name": "LogNormal",
-        "generatorType": "distribution",
-        "generatedType": "PositiveReal",
-        "package": "phylospec.distributions",
-        "description": "Log-normal distribution for positive real values",
-        "arguments": [
-          {
-            "name": "meanlog",
-            "type": "Real",
-            "description": "Mean of the distribution in log space",
-            "required": true,
-            "default": 0.0
-          },
-          {
-            "name": "sdlog",
-            "type": "PositiveReal",
-            "description": "Standard deviation in log space",
-            "required": true,
-            "default": 1.0
-          }
-        ]
-      },
-      {
-        "name": "Gamma",
-        "generatorType": "distribution",
-        "generatedType": "PositiveReal",
-        "package": "phylospec.distributions",
-        "description": "Gamma distribution for positive real values",
-        "arguments": [
-          {
-            "name": "shape",
-            "type": "PositiveReal",
-            "description": "Shape parameter",
-            "required": true,
-            "default": 1.0
-          },
-          {
-            "name": "rate",
-            "type": "PositiveReal",
-            "description": "Rate parameter",
-            "required": true,
-            "default": 1.0
-          }
-        ]
-      },
-      {
-        "name": "Beta",
-        "generatorType": "distribution",
-        "generatedType": "Probability",
-        "package": "phylospec.distributions",
-        "description": "Beta distribution for values in (0,1)",
-        "arguments": [
-          {
-            "name": "alpha",
-            "type": "PositiveReal",
-            "description": "Alpha parameter",
-            "required": true,
-            "default": 1.0
-          },
-          {
-            "name": "beta",
-            "type": "PositiveReal",
-            "description": "Beta parameter",
-            "required": true,
-            "default": 1.0
-          }
-        ]
-      },
-      {
-        "name": "Exponential",
-        "generatorType": "distribution",
-        "generatedType": "PositiveReal",
-        "package": "phylospec.distributions",
-        "description": "Exponential distribution for rate parameters",
-        "arguments": [
-          {
-            "name": "rate",
-            "type": "PositiveReal",
-            "description": "Rate parameter",
-            "required": true,
-            "default": 1.0
-          }
-        ]
-      },
-      {
-        "name": "Uniform",
-        "generatorType": "distribution",
-        "generatedType": "Real",
-        "package": "phylospec.distributions",
-        "description": "Uniform distribution for bounded values",
-        "arguments": [
-          {
-            "name": "lower",
-            "type": "Real",
-            "description": "Lower bound",
-            "required": true
-          },
-          {
-            "name": "upper",
-            "type": "Real",
-            "description": "Upper bound",
-            "required": true
-          }
-        ]
-      },
-      {
-        "name": "Dirichlet",
-        "generatorType": "distribution",
-        "generatedType": "Simplex",
-        "package": "phylospec.distributions",
-        "description": "Dirichlet distribution for probability vectors",
-        "arguments": [
-          {
-            "name": "alpha",
-            "type": "Vector<Real>",
-            "description": "Concentration parameters",
-            "required": true,
-            "default": [1.0, 1.0, 1.0, 1.0],
-            "constraint": "positive",
-            "dimension": "target.dimension"
-          }
-        ]
-      },
-      {
-        "name": "MultivariateNormal",
-        "generatorType": "distribution",
-        "generatedType": "Vector<Real>",
-        "package": "phylospec.distributions",
-        "description": "Multivariate normal for correlated values",
-        "arguments": [
-          {
-            "name": "mean",
-            "type": "Vector<Real>",
-            "description": "Mean vector",
-            "required": true,
-            "dimension": "target.dimension"
-          },
-          {
-            "name": "covariance",
-            "type": "Matrix<Real>",
-            "description": "Covariance matrix",
-            "required": true,
-            "dimension": "target.dimension"
-          }
-        ]
-      },
-      {
-        "name": "Yule",
-        "generatorType": "distribution",
-        "generatedType": "Tree",
-        "package": "phylospec.distributions.tree",
-        "description": "Yule pure-birth process for trees",
-        "arguments": [
-          {
-            "name": "birthRate",
-            "type": "PositiveReal",
-            "description": "Birth rate parameter",
-            "required": true,
-            "default": 1.0
-          },
-          {
-            "name": "taxa",
-            "type": "TaxonSet",
-            "description": "Taxa for the tree",
-            "required": false
-          }
-        ]
-      },
-      {
-        "name": "FossilBirthDeath",
-        "generatorType": "distribution",
-        "generatedType": "TimeTree",
-        "package": "phylospec.distributions.tree",
-        "description": "Birth-death process with fossil sampling",
-        "arguments": [
-          {
-            "name": "birthRate",
-            "type": "PositiveReal",
-            "description": "Birth (speciation) rate",
-            "required": true
-          },
-          {
-            "name": "deathRate",
-            "type": "NonNegativeReal",
-            "description": "Death (extinction) rate",
-            "required": true
-          },
-          {
-            "name": "samplingRate",
-            "type": "NonNegativeReal",
-            "description": "Rate of fossil sampling",
-            "required": true
-          },
-          {
-            "name": "rho",
-            "type": "Probability",
-            "description": "Probability of sampling at present",
-            "required": false,
-            "default": 1.0
-          },
-          {
-            "name": "origin",
-            "type": "PositiveReal",
-            "description": "Time of origin",
-            "required": false
-          },
-          {
-            "name": "taxa",
-            "type": "TaxonSet",
-            "description": "Taxa for the tree (including fossils)",
-            "required": false
-          }
-        ]
-      },
-      {
-        "name": "BirthDeath",
-        "generatorType": "distribution",
-        "generatedType": "Tree",
-        "package": "phylospec.distributions.tree",
-        "description": "Birth-death process for trees",
-        "arguments": [
-          {
-            "name": "birthRate",
-            "type": "PositiveReal",
-            "description": "Birth rate parameter",
-            "required": true
-          },
-          {
-            "name": "deathRate",
-            "type": "PositiveReal",
-            "description": "Death rate parameter",
-            "required": true
-          },
-          {
-            "name": "rootHeight",
-            "type": "PositiveReal",
-            "description": "Height of the tree root",
-            "required": false
-          },
-          {
-            "name": "taxa",
-            "type": "TaxonSet",
-            "description": "Taxa for the tree",
-            "required": false
-          }
-        ]
-      },
-      {
-        "name": "Coalescent",
-        "generatorType": "distribution",
-        "generatedType": "Tree",
-        "package": "phylospec.distributions.tree",
-        "description": "Coalescent process for population genetics",
-        "arguments": [
-          {
-            "name": "populationSize",
-            "type": "PositiveReal",
-            "description": "Effective population size",
-            "required": true,
-            "default": 1.0
-          },
-          {
-            "name": "taxa",
-            "type": "TaxonSet",
-            "description": "Taxa for the tree",
-            "required": false
-          }
-        ]
-      },
-      {
-        "name": "PhyloBM",
-        "generatorType": "distribution",
-        "generatedType": "Vector<Real>",
-        "package": "phylospec.distributions.continuous",
-        "description": "Phylogenetic Brownian motion for the continuous evolution of a single trait",
-        "arguments": [
-          {
-            "name": "tree",
-            "type": "Tree",
-            "description": "Phylogenetic tree",
-            "required": true
-          },
-          {
-            "name": "sigma",
-            "type": "PositiveReal",
-            "description": "Rate of evolution",
-            "required": true,
-            "default": 1.0
-          },
-          {
-            "name": "rootValue",
-            "type": "Real",
-            "description": "Trait value at the root",
-            "required": true,
-            "default": 0.0
-          }
-        ]
-      },
-      {
-        "name": "PhyloOU",
-        "generatorType": "distribution",
-        "generatedType": "Vector<Real>",
-        "package": "phylospec.distributions.continuous",
-        "description": "Phylogenetic Ornstein-Uhlenbeck process for a univariate trait with selection",
-        "arguments": [
-          {
-            "name": "tree",
-            "type": "Tree",
-            "description": "Phylogenetic tree",
-            "required": true
-          },
-          {
-            "name": "sigma",
-            "type": "PositiveReal",
-            "description": "Rate of random evolution",
-            "required": true,
-            "default": 1.0
-          },
-          {
-            "name": "alpha",
-            "type": "PositiveReal",
-            "description": "Selection strength",
-            "required": true,
-            "default": 1.0
-          },
-          {
-            "name": "optimum",
-            "type": "Real",
-            "description": "Optimal trait value",
-            "required": true,
-            "default": 0.0
-          }
-        ]
-      },
-      {
-        "name": "PhyloCTMC",
-        "generatorType": "distribution",
-        "generatedType": "Alignment",
-        "package": "phylospec.distributions.sequence",
-        "description": "Phylogenetic continuous-time Markov chain",
-        "arguments": [
-          {
-            "name": "tree",
-            "type": "Tree",
-            "description": "Phylogenetic tree",
-            "required": true
-          },
-          {
-            "name": "Q",
-            "type": "QMatrix",
-            "description": "Rate matrix",
-            "required": true
-          },
-          {
-            "name": "siteRates",
-            "type": "Vector<Real>",
-            "description": "Rate heterogeneity across sites",
-            "required": false,
-            "constraint": "positive",
-            "dimension": "target.nchar"
-          },
-          {
-            "name": "branchRates",
-            "type": "Vector<Real>",
-            "description": "Rate heterogeneity across branches",
-            "required": false,
-            "constraint": "positive",
-            "dimension": "2 * target.ntax - 2"
-          }
-        ]
-      },
-      {
-        "name": "Normal",
-        "generatorType": "function",
-        "generatedType": "Normal",
-        "package": "phylospec.distributions",
-        "description": "Construct a Normal distribution object",
-        "arguments": [
-          {
-            "name": "mean",
-            "type": "Real",
-            "description": "Mean of the distribution",
-            "required": true,
-            "default": 0.0
-          },
-          {
-            "name": "sd",
-            "type": "PositiveReal",
-            "description": "Standard deviation",
-            "required": true,
-            "default": 1.0
-          }
-        ]
-      },
-      {
-        "name": "LogNormal",
-        "generatorType": "function",
-        "generatedType": "LogNormal",
-        "package": "phylospec.distributions",
-        "description": "Construct a LogNormal distribution object",
-        "arguments": [
-          {
-            "name": "meanlog",
-            "type": "Real",
-            "description": "Mean of the distribution in log space",
-            "required": true,
-            "default": 0.0
-          },
-          {
-            "name": "sdlog",
-            "type": "PositiveReal",
-            "description": "Standard deviation in log space",
-            "required": true,
-            "default": 1.0
-          }
-        ]
-      },
-      {
-        "name": "Gamma",
-        "generatorType": "function",
-        "generatedType": "Gamma",
-        "package": "phylospec.distributions",
-        "description": "Construct a Gamma distribution object",
-        "arguments": [
-          {
-            "name": "shape",
-            "type": "PositiveReal",
-            "description": "Shape parameter",
-            "required": true,
-            "default": 1.0
-          },
-          {
-            "name": "rate",
-            "type": "PositiveReal",
-            "description": "Rate parameter",
-            "required": true,
-            "default": 1.0
-          }
-        ]
-      },
-      {
-        "name": "Beta",
-        "generatorType": "function",
-        "generatedType": "Beta",
-        "package": "phylospec.distributions",
-        "description": "Construct a Beta distribution object",
-        "arguments": [
-          {
-            "name": "alpha",
-            "type": "PositiveReal",
-            "description": "Alpha parameter",
-            "required": true,
-            "default": 1.0
-          },
-          {
-            "name": "beta",
-            "type": "PositiveReal",
-            "description": "Beta parameter",
-            "required": true,
-            "default": 1.0
-          }
-        ]
-      },
-      {
-        "name": "Exponential",
-        "generatorType": "function",
-        "generatedType": "Exponential",
-        "package": "phylospec.distributions",
-        "description": "Construct an Exponential distribution object",
-        "arguments": [
-          {
-            "name": "rate",
-            "type": "PositiveReal",
-            "description": "Rate parameter",
-            "required": true,
-            "default": 1.0
-          }
-        ]
-      },
-      {
-        "name": "Uniform",
-        "generatorType": "function",
-        "generatedType": "Uniform",
-        "package": "phylospec.distributions",
-        "description": "Construct a Uniform distribution object",
-        "arguments": [
-          {
-            "name": "lower",
-            "type": "Real",
-            "description": "Lower bound",
-            "required": true
-          },
-          {
-            "name": "upper",
-            "type": "Real",
-            "description": "Upper bound",
-            "required": true
-          }
-        ]
-      },
-      {
-        "name": "Dirichlet",
-        "generatorType": "function",
-        "generatedType": "Dirichlet",
-        "package": "phylospec.distributions",
-        "description": "Construct a Dirichlet distribution object",
-        "arguments": [
-          {
-            "name": "alpha",
-            "type": "Vector<Real>",
-            "description": "Concentration parameters",
-            "required": true,
-            "default": [1.0, 1.0, 1.0, 1.0],
-            "constraint": "positive",
-            "dimension": "target.dimension"
-          }
-        ]
-      },
-      {
-        "name": "MultivariateNormal",
-        "generatorType": "function",
-        "generatedType": "MultivariateNormal",
-        "package": "phylospec.distributions",
-        "description": "Construct a MultivariateNormal distribution object",
-        "arguments": [
-          {
-            "name": "mean",
-            "type": "Vector<Real>",
-            "description": "Mean vector",
-            "required": true,
-            "dimension": "target.dimension"
-          },
-          {
-            "name": "covariance",
-            "type": "Matrix<Real>",
-            "description": "Covariance matrix",
-            "required": true,
-            "dimension": "target.dimension"
-          }
-        ]
-      },
-      {
-        "name": "Yule",
-        "generatorType": "function",
-        "generatedType": "Yule",
-        "package": "phylospec.distributions.tree",
-        "description": "Construct a Yule distribution object",
-        "arguments": [
-          {
-            "name": "birthRate",
-            "type": "PositiveReal",
-            "description": "Birth rate parameter",
-            "required": true,
-            "default": 1.0
-          },
-          {
-            "name": "taxa",
-            "type": "TaxonSet",
-            "description": "Taxa for the tree",
-            "required": false
-          }
-        ]
-      },
-      {
-        "name": "BirthDeath",
-        "generatorType": "function",
-        "generatedType": "BirthDeath",
-        "package": "phylospec.distributions.tree",
-        "description": "Construct a BirthDeath distribution object",
-        "arguments": [
-          {
-            "name": "birthRate",
-            "type": "PositiveReal",
-            "description": "Birth rate parameter",
-            "required": true
-          },
-          {
-            "name": "deathRate",
-            "type": "PositiveReal",
-            "description": "Death rate parameter",
-            "required": true
-          },
-          {
-            "name": "rootHeight",
-            "type": "PositiveReal",
-            "description": "Height of the tree root",
-            "required": false
-          },
-          {
-            "name": "taxa",
-            "type": "TaxonSet",
-            "description": "Taxa for the tree",
-            "required": false
-          }
-        ]
-      },
-      {
-        "name": "Coalescent",
-        "generatorType": "function",
-        "generatedType": "Coalescent",
-        "package": "phylospec.distributions.tree",
-        "description": "Construct a Coalescent distribution object",
-        "arguments": [
-          {
-            "name": "populationSize",
-            "type": "PositiveReal",
-            "description": "Effective population size",
-            "required": true,
-            "default": 1.0
-          },
-          {
-            "name": "taxa",
-            "type": "TaxonSet",
-            "description": "Taxa for the tree",
-            "required": false
-          }
-        ]
-      },
-      {
-        "name": "FossilBirthDeath",
-        "generatorType": "function",
-        "generatedType": "FossilBirthDeath",
-        "package": "phylospec.distributions.tree",
-        "description": "Construct a FossilBirthDeath distribution object",
-        "arguments": [
-          {
-            "name": "birthRate",
-            "type": "PositiveReal",
-            "description": "Birth (speciation) rate",
-            "required": true
-          },
-          {
-            "name": "deathRate",
-            "type": "NonNegativeReal",
-            "description": "Death (extinction) rate",
-            "required": true
-          },
-          {
-            "name": "samplingRate",
-            "type": "NonNegativeReal",
-            "description": "Rate of fossil sampling",
-            "required": true
-          },
-          {
-            "name": "rho",
-            "type": "Probability",
-            "description": "Probability of sampling at present",
-            "required": false,
-            "default": 1.0
-          },
-          {
-            "name": "origin",
-            "type": "PositiveReal",
-            "description": "Time of origin",
-            "required": false
-          },
-          {
-            "name": "taxa",
-            "type": "TaxonSet",
-            "description": "Taxa for the tree (including fossils)",
-            "required": false
-          }
-        ]
-      },
-      {
-        "name": "PhyloCTMC",
-        "generatorType": "function",
-        "generatedType": "PhyloCTMC",
-        "package": "phylospec.distributions.sequence",
-        "description": "Construct a PhyloCTMC distribution object",
-        "arguments": [
-          {
-            "name": "tree",
-            "type": "Tree",
-            "description": "Phylogenetic tree",
-            "required": true
-          },
-          {
-            "name": "Q",
-            "type": "QMatrix",
-            "description": "Rate matrix",
-            "required": true
-          },
-          {
-            "name": "siteRates",
-            "type": "Vector<Real>",
-            "description": "Rate heterogeneity across sites",
-            "required": false,
-            "constraint": "positive",
-            "dimension": "target.nchar"
-          },
-          {
-            "name": "branchRates",
-            "type": "Vector<Real>",
-            "description": "Rate heterogeneity across branches",
-            "required": false,
-            "constraint": "positive",
-            "dimension": "2 * target.ntax - 2"
-          }
-        ]
-      },
-      {
-        "name": "PhyloBM",
-        "generatorType": "function",
-        "generatedType": "PhyloBM",
-        "package": "phylospec.distributions.continuous",
-        "description": "Construct a PhyloBM distribution object",
-        "arguments": [
-          {
-            "name": "tree",
-            "type": "Tree",
-            "description": "Phylogenetic tree",
-            "required": true
-          },
-          {
-            "name": "sigma",
-            "type": "PositiveReal",
-            "description": "Rate of evolution",
-            "required": true,
-            "default": 1.0
-          },
-          {
-            "name": "rootValue",
-            "type": "Real",
-            "description": "Trait value at the root",
-            "required": true,
-            "default": 0.0
-          }
-        ]
-      },
-      {
-        "name": "PhyloOU",
-        "generatorType": "function",
-        "generatedType": "PhyloOU",
-        "package": "phylospec.distributions.continuous",
-        "description": "Construct a PhyloOU distribution object",
-        "arguments": [
-          {
-            "name": "tree",
-            "type": "Tree",
-            "description": "Phylogenetic tree",
-            "required": true
-          },
-          {
-            "name": "sigma",
-            "type": "PositiveReal",
-            "description": "Rate of random evolution",
-            "required": true,
-            "default": 1.0
-          },
-          {
-            "name": "alpha",
-            "type": "PositiveReal",
-            "description": "Selection strength",
-            "required": true,
-            "default": 1.0
-          },
-          {
-            "name": "optimum",
-            "type": "Real",
-            "description": "Optimal trait value",
-            "required": true,
-            "default": 0.0
-          }
-        ]
-      },
-      {
-        "name": "IID",
-        "generatorType": "function",
-        "generatedType": "IID",
-        "package": "phylospec.distributions",
-        "description": "Construct an IID distribution object",
-        "typeParameters": ["T"],
-        "arguments": [
-          {
-            "name": "base",
-            "type": "Distribution<T>",
-            "description": "Base distribution for each component",
-            "required": true
-          },
-          {
-            "name": "n",
-            "type": "PositiveInteger",
-            "description": "Number of independent draws",
-            "required": true
-          }
-        ]
-      },
-      {
-        "name": "Mixture",
-        "generatorType": "function",
-        "generatedType": "Mixture",
-        "package": "phylospec.distributions.mixture",
-        "description": "Construct a Mixture distribution object",
-        "typeParameters": ["T"],
-        "arguments": [
-          {
-            "name": "components",
-            "type": "Vector<Distribution<T>>",
-            "description": "Component distributions that all generate type T",
-            "required": true
-          },
-          {
-            "name": "weights",
-            "type": "Simplex",
-            "description": "Mixture weights for each component",
-            "required": true,
-            "dimension": "components.length"
-          }
-        ]
-      },
-      {
-        "name": "JC69",
-        "generatorType": "function",
-        "generatedType": "QMatrix",
-        "package": "phylospec.functions.substitution",
-        "description": "Jukes-Cantor model (equal rates)",
-        "arguments": []
-      },
-      {
-        "name": "K80",
-        "generatorType": "function",
-        "generatedType": "QMatrix",
-        "package": "phylospec.functions.substitution",
-        "description": "Kimura 2-parameter model",
-        "arguments": [
-          {
-            "name": "kappa",
-            "type": "PositiveReal",
-            "description": "Transition/transversion ratio",
-            "required": true,
-            "default": 2.0
-          }
-        ]
-      },
-      {
-        "name": "F81",
-        "generatorType": "function",
-        "generatedType": "QMatrix",
-        "package": "phylospec.functions.substitution",
-        "description": "Felsenstein 81 model",
-        "arguments": [
-          {
-            "name": "baseFrequencies",
-            "type": "Simplex",
-            "description": "Nucleotide frequencies",
-            "required": true,
-            "default": [0.25, 0.25, 0.25, 0.25],
-            "dimension": 4
-          }
-        ]
-      },
-      {
-        "name": "HKY",
-        "generatorType": "function",
-        "generatedType": "QMatrix",
-        "package": "phylospec.functions.substitution",
-        "description": "Hasegawa-Kishino-Yano model",
-        "arguments": [
-          {
-            "name": "kappa",
-            "type": "PositiveReal",
-            "description": "Transition/transversion ratio",
-            "required": true,
-            "default": 2.0
-          },
-          {
-            "name": "baseFrequencies",
-            "type": "Simplex",
-            "description": "Nucleotide frequencies",
-            "required": true,
-            "default": [0.25, 0.25, 0.25, 0.25],
-            "dimension": 4
-          }
-        ]
-      },
-      {
-        "name": "GTR",
-        "generatorType": "function",
-        "generatedType": "QMatrix",
-        "package": "phylospec.functions.substitution",
-        "description": "General Time-Reversible model",
-        "arguments": [
-          {
-            "name": "rateMatrix",
-            "type": "Vector<Real>",
-            "description": "Relative rate parameters",
-            "required": true,
-            "default": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-            "dimension": 6,
-            "constraint": "positive"
-          },
-          {
-            "name": "baseFrequencies",
-            "type": "Simplex",
-            "description": "Nucleotide frequencies",
-            "required": true,
-            "default": [0.25, 0.25, 0.25, 0.25],
-            "dimension": 4
-          }
-        ]
-      },
-      {
-        "name": "WAG",
-        "generatorType": "function",
-        "generatedType": "QMatrix",
-        "package": "phylospec.functions.substitution",
-        "description": "Whelan And Goldman model",
-        "arguments": [
-          {
-            "name": "baseFrequencies",
-            "type": "Simplex",
-            "description": "Amino acid frequencies",
-            "required": false,
-            "dimension": 20
-          }
-        ]
-      },
-      {
-        "name": "JTT",
-        "generatorType": "function",
-        "generatedType": "QMatrix",
-        "package": "phylospec.functions.substitution",
-        "description": "Jones-Taylor-Thornton model",
-        "arguments": [
-          {
-            "name": "baseFrequencies",
-            "type": "Simplex",
-            "description": "Amino acid frequencies",
-            "required": false,
-            "dimension": 20
-          }
-        ]
-      },
-      {
-        "name": "LG",
-        "generatorType": "function",
-        "generatedType": "QMatrix",
-        "package": "phylospec.functions.substitution",
-        "description": "Le-Gascuel model",
-        "arguments": [
-          {
-            "name": "baseFrequencies",
-            "type": "Simplex",
-            "description": "Amino acid frequencies",
-            "required": false,
-            "dimension": 20
-          }
-        ]
-      },
-      {
-        "name": "DiscreteGamma",
-        "generatorType": "function",
-        "generatedType": "Vector<Real>",
-        "package": "phylospec.functions.rateheterogeneity",
-        "description": "Discrete gamma-distributed rates across sites",
-        "arguments": [
-          {
-            "name": "shape",
-            "type": "PositiveReal",
-            "description": "Shape parameter",
-            "required": true,
-            "default": 1.0
-          },
-          {
-            "name": "categories",
-            "type": "PositiveInteger",
-            "description": "Number of discrete categories",
-            "required": true,
-            "default": 4
-          }
-        ]
-      },
-      {
-        "name": "StrictClock",
-        "generatorType": "function",
-        "generatedType": "Vector<Real>",
-        "package": "phylospec.functions.clock",
-        "description": "Strict molecular clock for branches",
-        "arguments": [
-          {
-            "name": "rate",
-            "type": "PositiveReal",
-            "description": "Clock rate",
-            "required": true,
-            "default": 1.0
-          },
-          {
-            "name": "tree",
-            "type": "Tree",
-            "description": "Tree to apply clock to",
-            "required": false
-          }
-        ]
-      },
-      {
-        "name": "UncorrelatedLognormal",
-        "generatorType": "function",
-        "generatedType": "Vector<Real>",
-        "package": "phylospec.functions.clock",
-        "description": "UCLN clock model for branch rates",
-        "arguments": [
-          {
-            "name": "mean",
-            "type": "Real",
-            "description": "Mean in log space",
-            "required": true,
-            "default": 0.0
-          },
-          {
-            "name": "stdev",
-            "type": "PositiveReal",
-            "description": "Standard deviation",
-            "required": true,
-            "default": 0.5
-          },
-          {
-            "name": "tree",
-            "type": "Tree",
-            "description": "Tree to apply clock to",
-            "required": false
-          }
-        ]
-      },
-      {
-        "name": "nexus",
-        "generatorType": "function",
-        "generatedType": "Alignment",
-        "package": "phylospec.functions.io",
-        "description": "Load alignment from Nexus file",
-        "ioHints": {
-          "role": "dataInput",
-          "extensions": [".nex", ".nexus", ".nxs"],
-          "fileArgument": "file"
+        "description": {
+          "type": "string"
         },
-        "arguments": [
-          {
-            "name": "file",
-            "type": "String",
-            "description": "Path to Nexus file",
-            "required": true
-          },
-          {
-            "name": "id",
-            "type": "String",
-            "description": "Identifier for the alignment",
-            "required": false
-          }
-        ]
-      },
-      {
-        "name": "fasta",
-        "generatorType": "function",
-        "generatedType": "Alignment",
-        "package": "phylospec.functions.io",
-        "description": "Load alignment from FASTA file",
-        "ioHints": {
-          "role": "dataInput",
-          "extensions": [".fasta", ".fas", ".fa"],
-          "fileArgument": "file"
+        "extends": {
+          "type": "string"
         },
-        "arguments": [
-          {
-            "name": "file",
-            "type": "String",
-            "description": "Path to FASTA file",
-            "required": true
-          }
-        ]
-      },
-      {
-        "name": "phylip",
-        "generatorType": "function",
-        "generatedType": "Alignment",
-        "package": "phylospec.functions.io",
-        "description": "Load alignment from PHYLIP file",
-        "ioHints": {
-          "role": "dataInput",
-          "extensions": [".phy", ".phylip"],
-          "fileArgument": "file"
+        "typeParameters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Type parameters for generic types (e.g., ['T'] for Vector<T>)"
         },
-        "arguments": [
-          {
-            "name": "file",
-            "type": "String",
-            "description": "Path to PHYLIP file",
-            "required": true
-          },
-          {
-            "name": "interleaved",
-            "type": "Boolean",
-            "description": "Whether the file is in interleaved format",
-            "required": false,
-            "default": false
+        "properties": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/property"
           }
-        ]
-      },
-      {
-        "name": "taxa",
-        "generatorType": "function",
-        "generatedType": "TaxonSet",
-        "package": "phylospec.functions.alignment",
-        "description": "Extract taxa from an alignment",
-        "arguments": [
-          {
-            "name": "alignment",
-            "type": "Alignment",
-            "description": "Alignment to extract taxa from",
-            "required": true
-          }
-        ]
-      },
-      {
-        "name": "ntaxa",
-        "generatorType": "function",
-        "generatedType": "Integer",
-        "package": "phylospec.functions.alignment",
-        "description": "Get number of taxa in an alignment",
-        "arguments": [
-          {
-            "name": "alignment",
-            "type": "Alignment",
-            "description": "Alignment to count taxa from",
-            "required": true
-          }
-        ]
-      },
-      {
-        "name": "nchar",
-        "generatorType": "function",
-        "generatedType": "Integer",
-        "package": "phylospec.functions.alignment",
-        "description": "Get number of characters/sites in an alignment",
-        "arguments": [
-          {
-            "name": "alignment",
-            "type": "Alignment",
-            "description": "Alignment to count characters from",
-            "required": true
-          }
-        ]
-      },
-      {
-        "name": "dataType",
-        "generatorType": "function",
-        "generatedType": "String",
-        "package": "phylospec.functions.alignment",
-        "description": "Get the data type of an alignment",
-        "arguments": [
-          {
-            "name": "alignment",
-            "type": "Alignment",
-            "description": "Alignment to query",
-            "required": true
-          }
-        ]
-      },
-      {
-        "name": "subset",
-        "generatorType": "function",
-        "generatedType": "Alignment",
-        "package": "phylospec.functions.alignment",
-        "description": "Extract a subset of sites from an alignment",
-        "arguments": [
-          {
-            "name": "alignment",
-            "type": "Alignment",
-            "description": "Original alignment",
-            "required": true
-          },
-          {
-            "name": "sites",
-            "type": "Vector<Integer>",
-            "description": "Site indices to extract",
-            "required": true
-          }
-        ]
-      },
-      {
-        "name": "taxonset",
-        "generatorType": "function",
-        "generatedType": "TaxonSet",
-        "package": "phylospec.functions.taxa",
-        "description": "Create a taxon set from taxon names",
-        "arguments": [
-          {
-            "name": "names",
-            "type": "Vector<String>",
-            "description": "Array of taxon names",
-            "required": true
-          }
-        ]
-      },
-      {
-        "name": "mrca",
-        "generatorType": "function",
-        "generatedType": "TreeNode",
-        "package": "phylospec.functions.tree",
-        "description": "Find most recent common ancestor of taxa",
-        "arguments": [
-          {
-            "name": "tree",
-            "type": "Tree",
-            "description": "Phylogenetic tree",
-            "required": true
-          },
-          {
-            "name": "taxa",
-            "type": "TaxonSet",
-            "description": "Set of taxa",
-            "required": true
-          }
-        ]
-      },
-      {
-        "name": "treeHeight",
-        "generatorType": "function",
-        "generatedType": "Real",
-        "package": "phylospec.functions.tree",
-        "description": "Get height/depth of a tree",
-        "arguments": [
-          {
-            "name": "tree",
-            "type": "Tree",
-            "description": "Phylogenetic tree",
-            "required": true
-          }
-        ]
-      },
-      {
-        "name": "log",
-        "generatorType": "function",
-        "generatedType": "Real",
-        "package": "phylospec.functions.math",
-        "description": "Natural logarithm",
-        "arguments": [
-          {
-            "name": "x",
-            "type": "PositiveReal",
-            "description": "Input value",
-            "required": true
-          }
-        ]
-      },
-      {
-        "name": "exp",
-        "generatorType": "function",
-        "generatedType": "PositiveReal",
-        "package": "phylospec.functions.math",
-        "description": "Exponential function",
-        "arguments": [
-          {
-            "name": "x",
-            "type": "Real",
-            "description": "Input value",
-            "required": true
-          }
-        ]
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace for this type"
+        }
       }
-    ]
+    },
+    "generator": {
+      "type": "object",
+      "required": [
+        "name",
+        "generatorType",
+        "generatedType",
+        "arguments"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "generatorType": {
+          "type": "string",
+          "enum": [
+            "distribution",
+            "function"
+          ]
+        },
+        "generatedType": {
+          "type": "string"
+        },
+        "typeParameters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Type parameters for generic generators (e.g., ['T'] for Mixture<T>)"
+        },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/argument"
+          }
+        },
+        "ioHints": {
+          "type": "object",
+          "description": "File I/O metadata for data-loading or exporting functions",
+          "properties": {
+            "role": {
+              "type": "string",
+              "enum": [
+                "dataInput",
+                "dataOutput"
+              ]
+            },
+            "extensions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Supported file extensions (e.g. [\".nex\", \".fasta\"])"
+            },
+            "fileArgument": {
+              "type": "string",
+              "description": "Name of the argument that accepts the file path"
+            }
+          }
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Example usage snippets for this generator"
+        }
+      }
+    },
+    "argument": {
+      "type": "object",
+      "required": [
+        "name",
+        "type"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "recommended": {
+          "type": "boolean",
+          "description": "Indicates that this argument is recommended but not required"
+        },
+        "default": {
+          "description": "Default value for this argument if not specified"
+        },
+        "dimension": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Fixed dimension as a positive integer"
+            },
+            {
+              "type": "string",
+              "description": "Dimension expression using dot notation (e.g., 'parent.target.dimension', 'tree.nBranches', 'data.ntax')"
+            }
+          ],
+          "description": "Expected dimension of the argument. Can be a fixed integer or an expression that references other parts of the model"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of the argument"
+        },
+        "uiHints": {
+          "type": "object",
+          "description": "UI hints for rendering this argument",
+          "properties": {
+            "widget": {
+              "type": "string",
+              "description": "Suggested widget type (e.g., 'slider', 'checkbox', 'file-picker')"
+            },
+            "order": {
+              "type": "integer",
+              "description": "Display order relative to other arguments"
+            },
+            "group": {
+              "type": "string",
+              "description": "Group name for organizing related arguments"
+            }
+          }
+        }
+      }
+    },
+    "property": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "default": {
+          "description": "Default value if not specified"
+        }
+      }
+    }
   }
 }
