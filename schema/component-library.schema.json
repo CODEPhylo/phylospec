@@ -185,6 +185,9 @@
         "type": {
           "type": "string"
         },
+        "required": {
+          "type": "boolean"
+        },
         "recommended": {
           "type": "boolean",
           "description": "Indicates that this argument is recommended but not required"

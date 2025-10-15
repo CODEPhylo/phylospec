@@ -9,8 +9,7 @@
       {
         "name": "Distribution",
         "description": "Abstract type representing a probability distribution",
-        "isAbstract": true,
-        "package": "phylospec.types",
+        "namespace": "phylospec.types",
         "properties": {
           "generatedType": {
             "type": "String",
@@ -22,252 +21,209 @@
         "name": "Normal",
         "description": "Normal distribution",
         "extends": "Distribution<Real>",
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "LogNormal",
         "description": "Log-normal distribution",
         "extends": "Distribution<PositiveReal>",
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "Gamma",
         "description": "Gamma distribution",
         "extends": "Distribution<PositiveReal>",
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "Beta",
         "description": "Beta distribution",
         "extends": "Distribution<Probability>",
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "Exponential",
         "description": "Exponential distribution",
         "extends": "Distribution<PositiveReal>",
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "Uniform",
         "description": "Uniform distribution",
         "extends": "Distribution<Real>",
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "Dirichlet",
         "description": "Dirichlet distribution",
         "extends": "Distribution<Simplex>",
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "MultivariateNormal",
         "description": "Multivariate normal distribution",
         "extends": "Distribution<Vector<Real>>",
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "Yule",
         "description": "Yule tree distribution",
         "extends": "Distribution<Tree>",
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "BirthDeath",
         "description": "Birth-death tree distribution",
         "extends": "Distribution<Tree>",
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "Coalescent",
         "description": "Coalescent tree distribution",
         "extends": "Distribution<Tree>",
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "FossilBirthDeath",
         "description": "Birth-death distribution with fossil sampling",
         "extends": "Distribution<TimeTree>",
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "PhyloCTMC",
         "description": "Phylogenetic continuous-time Markov chain distribution",
         "extends": "Distribution<Alignment>",
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "PhyloBM",
         "description": "Phylogenetic Brownian motion distribution",
         "extends": "Distribution<Vector<Real>>",
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "PhyloOU",
         "description": "Phylogenetic Ornstein-Uhlenbeck distribution",
         "extends": "Distribution<Vector<Real>>",
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "IID",
         "description": "IID distribution",
         "extends": "Distribution<Vector<T>>",
         "typeParameters": ["T"],
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "Mixture",
         "description": "Mixture distribution",
         "extends": "Distribution<T>",
         "typeParameters": ["T"],
-        "package": "phylospec.distributions"
+        "namespace": "phylospec.distributions"
       },
       {
         "name": "Real",
         "description": "Real-valued number",
-        "package": "phylospec.types",
-        "primitiveAssignable": true,
-        "acceptedPrimitives": ["Double", "Float", "Integer", "Long"]
+        "namespace": "phylospec.types"
       },
       {
         "name": "Integer",
         "description": "Integer-valued number",
-        "package": "phylospec.types",
-        "primitiveAssignable": true,
-        "acceptedPrimitives": ["Integer", "Long"]
+        "namespace": "phylospec.types"
       },
       {
         "name": "Boolean",
         "description": "Logical value",
-        "package": "phylospec.types",
-        "primitiveAssignable": true,
-        "acceptedPrimitives": ["Boolean"]
+        "namespace": "phylospec.types"
       },
       {
         "name": "String",
         "description": "Text value",
-        "package": "phylospec.types",
-        "primitiveAssignable": true,
-        "acceptedPrimitives": ["String"]
+        "namespace": "phylospec.types"
       },
       {
         "name": "PositiveReal",
         "description": "Positive real number (> 0)",
         "extends": "Real",
-        "package": "phylospec.types",
-        "primitiveAssignable": true,
-        "acceptedPrimitives": ["Double", "Float"],
-        "constraint": "positive"
+        "namespace": "phylospec.types"
       },
       {
         "name": "NonNegativeReal",
         "description": "Non-negative real number (>= 0)",
         "extends": "Real",
-        "package": "phylospec.types",
-        "primitiveAssignable": true,
-        "acceptedPrimitives": ["Double", "Float", "Integer", "Long"],
-        "constraint": "non-negative"
+        "namespace": "phylospec.types"
       },
       {
         "name": "Probability",
         "description": "Probability value [0,1]",
         "extends": "Real",
-        "package": "phylospec.types",
-        "primitiveAssignable": true,
-        "acceptedPrimitives": ["Double", "Float"],
-        "constraint": "probability"
+        "namespace": "phylospec.types"
       },
       {
         "name": "PositiveInteger",
         "description": "Positive integer (> 0)",
         "extends": "Integer",
-        "package": "phylospec.types",
-        "primitiveAssignable": true,
-        "acceptedPrimitives": ["Integer", "Long"],
-        "constraint": "positive"
+        "namespace": "phylospec.types"
       },
       {
         "name": "Vector",
         "description": "Generic ordered collection of elements",
-        "package": "phylospec.types",
-        "typeParameters": ["T"],
-        "collectionType": {
-          "elementType": "T",
-          "kind": "array"
-        }
+        "namespace": "phylospec.types",
+        "typeParameters": ["T"]
       },
       {
         "name": "Matrix",
         "description": "Generic two-dimensional grid of values",
-        "package": "phylospec.types",
-        "typeParameters": ["T"],
-        "collectionType": {
-          "elementType": "T",
-          "kind": "matrix"
-        }
+        "namespace": "phylospec.types",
+        "typeParameters": ["T"]
       },
       {
         "name": "SquareMatrix",
         "description": "Square matrix with equal number of rows and columns",
         "extends": "Matrix",
-        "package": "phylospec.types",
+        "namespace": "phylospec.types",
         "typeParameters": ["T"]
       },
       {
         "name": "Simplex",
         "description": "Probability vector with elements that sum to 1.0",
         "extends": "Vector<Probability>",
-        "package": "phylospec.types",
-        "constraint": "simplex"
+        "namespace": "phylospec.types"
       },
       {
         "name": "QMatrix",
         "description": "Rate matrix for substitution models",
         "extends": "SquareMatrix<Real>",
-        "isAbstract": false,
-        "package": "phylospec.types"
+        "namespace": "phylospec.types"
       },
       {
         "name": "StochasticMatrix",
         "description": "Stochastic matrix - probability transition matrix",
         "extends": "Matrix<Probability>",
-        "package": "phylospec.types"
+        "namespace": "phylospec.types"
       },
       {
         "name": "List",
         "description": "Ordered collection of elements",
-        "package": "phylospec.types",
-        "typeParameters": ["T"],
-        "collectionType": {
-          "elementType": "T",
-          "kind": "list"
-        }
+        "namespace": "phylospec.types",
+        "typeParameters": ["T"]
       },
       {
         "name": "Map",
         "description": "Mappings from keys to values",
-        "package": "phylospec.types",
-        "typeParameters": ["K", "V"],
-        "collectionType": {
-          "keyType": "K",
-          "valueType": "V",
-          "kind": "map"
-        }
+        "namespace": "phylospec.types",
+        "typeParameters": ["K", "V"]
       },
       {
         "name": "Set",
         "description": "Unordered collection with unique elements",
-        "package": "phylospec.types",
-        "typeParameters": ["T"],
-        "collectionType": {
-          "elementType": "T",
-          "kind": "set"
-        }
+        "namespace": "phylospec.types",
+        "typeParameters": ["T"]
       },
       {
         "name": "Nucleotide",
         "description": "DNA/RNA nucleotide alphabet",
-        "package": "phylospec.types",
+        "namespace": "phylospec.types",
         "alphabetType": {
           "states": ["A", "C", "G", "T"],
           "ambiguous": ["R", "Y", "S", "W", "K", "M", "B", "D", "H", "V", "N", "-", "?"]
@@ -276,7 +232,7 @@
       {
         "name": "AminoAcid",
         "description": "Standard amino acid alphabet",
-        "package": "phylospec.types",
+        "namespace": "phylospec.types",
         "alphabetType": {
           "states": ["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V"],
           "ambiguous": ["B", "Z", "X", "*", "-", "?"]
@@ -285,7 +241,7 @@
       {
         "name": "Sequence",
         "description": "Biological sequence with elements from alphabet A",
-        "package": "phylospec.types",
+        "namespace": "phylospec.types",
         "typeParameters": ["A"],
         "properties": {
           "length": {
@@ -302,7 +258,7 @@
         "name": "DNASequence",
         "description": "DNA sequence (alias for Sequence<Nucleotide>)",
         "extends": "Sequence",
-        "package": "phylospec.types",
+        "namespace": "phylospec.types",
         "typeAlias": {
           "baseType": "Sequence",
           "typeArguments": ["Nucleotide"]
@@ -312,7 +268,7 @@
         "name": "ProteinSequence",
         "description": "Protein sequence (alias for Sequence<AminoAcid>)",
         "extends": "Sequence",
-        "package": "phylospec.types",
+        "namespace": "phylospec.types",
         "typeAlias": {
           "baseType": "Sequence",
           "typeArguments": ["AminoAcid"]
@@ -321,7 +277,7 @@
       {
         "name": "Tree",
         "description": "Phylogenetic tree structure",
-        "package": "phylospec.types",
+        "namespace": "phylospec.types",
         "properties": {
           "ntax": {
             "type": "Integer",
@@ -337,8 +293,7 @@
           },
           "taxa": {
             "type": "TaxonSet",
-            "description": "Taxa in the tree",
-            "accessor": true
+            "description": "Taxa in the tree"
           }
         }
       },
@@ -346,17 +301,17 @@
         "name": "TimeTree",
         "description": "Time-calibrated tree",
         "extends": "Tree",
-        "package": "phylospec.types"
+        "namespace": "phylospec.types"
       },
       {
         "name": "TreeNode",
         "description": "Node in a phylogenetic tree",
-        "package": "phylospec.types"
+        "namespace": "phylospec.types"
       },
       {
         "name": "Taxon",
         "description": "Taxonomic unit",
-        "package": "phylospec.types",
+        "namespace": "phylospec.types",
         "properties": {
           "name": {
             "type": "String",
@@ -364,15 +319,14 @@
           },
           "age": {
             "type": "Real",
-            "description": "Age/date of taxon (for tip-dated analyses)",
-            "required": false
+            "description": "Age/date of taxon (for tip-dated analyses)"
           }
         }
       },
       {
         "name": "TaxonSet",
         "description": "Collection of taxa",
-        "package": "phylospec.types",
+        "namespace": "phylospec.types",
         "properties": {
           "ntax": {
             "type": "Integer",
@@ -380,15 +334,14 @@
           },
           "names": {
             "type": "Vector<String>",
-            "description": "Names of taxa",
-            "accessor": true
+            "description": "Names of taxa"
           }
         }
       },
       {
         "name": "Alignment",
         "description": "Multiple sequence alignment with extractable properties",
-        "package": "phylospec.types",
+        "namespace": "phylospec.types",
         "properties": {
           "ntax": {
             "type": "Integer",
@@ -404,8 +357,7 @@
           },
           "taxa": {
             "type": "TaxonSet",
-            "description": "Taxa in the alignment",
-            "accessor": true
+            "description": "Taxa in the alignment"
           }
         }
       }
@@ -415,7 +367,7 @@
         "name": "IID",
         "generatorType": "distribution",
         "generatedType": "Vector<T>",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Vector of independent and identically distributed random variables",
         "typeParameters": ["T"],
         "arguments": [
@@ -437,7 +389,7 @@
         "name": "Mixture",
         "generatorType": "distribution",
         "generatedType": "T",
-        "package": "phylospec.distributions.mixture",
+        "namespace": "phylospec.distributions.mixture",
         "description": "Mixture of distributions with the same return type",
         "typeParameters": ["T"],
         "arguments": [
@@ -460,7 +412,7 @@
         "name": "Normal",
         "generatorType": "distribution",
         "generatedType": "Real",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Normal (Gaussian) distribution",
         "arguments": [
           {
@@ -483,7 +435,7 @@
         "name": "LogNormal",
         "generatorType": "distribution",
         "generatedType": "PositiveReal",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Log-normal distribution for positive real values",
         "arguments": [
           {
@@ -506,7 +458,7 @@
         "name": "Gamma",
         "generatorType": "distribution",
         "generatedType": "PositiveReal",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Gamma distribution for positive real values",
         "arguments": [
           {
@@ -529,7 +481,7 @@
         "name": "Beta",
         "generatorType": "distribution",
         "generatedType": "Probability",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Beta distribution for values in (0,1)",
         "arguments": [
           {
@@ -552,7 +504,7 @@
         "name": "Exponential",
         "generatorType": "distribution",
         "generatedType": "PositiveReal",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Exponential distribution for rate parameters",
         "arguments": [
           {
@@ -568,7 +520,7 @@
         "name": "Uniform",
         "generatorType": "distribution",
         "generatedType": "Real",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Uniform distribution for bounded values",
         "arguments": [
           {
@@ -589,7 +541,7 @@
         "name": "Dirichlet",
         "generatorType": "distribution",
         "generatedType": "Simplex",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Dirichlet distribution for probability vectors",
         "arguments": [
           {
@@ -598,7 +550,6 @@
             "description": "Concentration parameters",
             "required": true,
             "default": [1.0, 1.0, 1.0, 1.0],
-            "constraint": "positive",
             "dimension": "target.dimension"
           }
         ]
@@ -607,7 +558,7 @@
         "name": "MultivariateNormal",
         "generatorType": "distribution",
         "generatedType": "Vector<Real>",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Multivariate normal for correlated values",
         "arguments": [
           {
@@ -630,7 +581,7 @@
         "name": "Yule",
         "generatorType": "distribution",
         "generatedType": "Tree",
-        "package": "phylospec.distributions.tree",
+        "namespace": "phylospec.distributions.tree",
         "description": "Yule pure-birth process for trees",
         "arguments": [
           {
@@ -652,7 +603,7 @@
         "name": "FossilBirthDeath",
         "generatorType": "distribution",
         "generatedType": "TimeTree",
-        "package": "phylospec.distributions.tree",
+        "namespace": "phylospec.distributions.tree",
         "description": "Birth-death process with fossil sampling",
         "arguments": [
           {
@@ -698,7 +649,7 @@
         "name": "BirthDeath",
         "generatorType": "distribution",
         "generatedType": "Tree",
-        "package": "phylospec.distributions.tree",
+        "namespace": "phylospec.distributions.tree",
         "description": "Birth-death process for trees",
         "arguments": [
           {
@@ -731,7 +682,7 @@
         "name": "Coalescent",
         "generatorType": "distribution",
         "generatedType": "Tree",
-        "package": "phylospec.distributions.tree",
+        "namespace": "phylospec.distributions.tree",
         "description": "Coalescent process for population genetics",
         "arguments": [
           {
@@ -753,7 +704,7 @@
         "name": "PhyloBM",
         "generatorType": "distribution",
         "generatedType": "Vector<Real>",
-        "package": "phylospec.distributions.continuous",
+        "namespace": "phylospec.distributions.continuous",
         "description": "Phylogenetic Brownian motion for the continuous evolution of a single trait",
         "arguments": [
           {
@@ -782,7 +733,7 @@
         "name": "PhyloOU",
         "generatorType": "distribution",
         "generatedType": "Vector<Real>",
-        "package": "phylospec.distributions.continuous",
+        "namespace": "phylospec.distributions.continuous",
         "description": "Phylogenetic Ornstein-Uhlenbeck process for a univariate trait with selection",
         "arguments": [
           {
@@ -818,7 +769,7 @@
         "name": "PhyloCTMC",
         "generatorType": "distribution",
         "generatedType": "Alignment",
-        "package": "phylospec.distributions.sequence",
+        "namespace": "phylospec.distributions.sequence",
         "description": "Phylogenetic continuous-time Markov chain",
         "arguments": [
           {
@@ -838,7 +789,6 @@
             "type": "Vector<Real>",
             "description": "Rate heterogeneity across sites",
             "required": false,
-            "constraint": "positive",
             "dimension": "target.nchar"
           },
           {
@@ -846,7 +796,6 @@
             "type": "Vector<Real>",
             "description": "Rate heterogeneity across branches",
             "required": false,
-            "constraint": "positive",
             "dimension": "2 * target.ntax - 2"
           }
         ]
@@ -855,7 +804,7 @@
         "name": "Normal",
         "generatorType": "function",
         "generatedType": "Normal",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Construct a Normal distribution object",
         "arguments": [
           {
@@ -878,7 +827,7 @@
         "name": "LogNormal",
         "generatorType": "function",
         "generatedType": "LogNormal",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Construct a LogNormal distribution object",
         "arguments": [
           {
@@ -901,7 +850,7 @@
         "name": "Gamma",
         "generatorType": "function",
         "generatedType": "Gamma",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Construct a Gamma distribution object",
         "arguments": [
           {
@@ -924,7 +873,7 @@
         "name": "Beta",
         "generatorType": "function",
         "generatedType": "Beta",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Construct a Beta distribution object",
         "arguments": [
           {
@@ -947,7 +896,7 @@
         "name": "Exponential",
         "generatorType": "function",
         "generatedType": "Exponential",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Construct an Exponential distribution object",
         "arguments": [
           {
@@ -963,7 +912,7 @@
         "name": "Uniform",
         "generatorType": "function",
         "generatedType": "Uniform",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Construct a Uniform distribution object",
         "arguments": [
           {
@@ -984,7 +933,7 @@
         "name": "Dirichlet",
         "generatorType": "function",
         "generatedType": "Dirichlet",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Construct a Dirichlet distribution object",
         "arguments": [
           {
@@ -993,7 +942,6 @@
             "description": "Concentration parameters",
             "required": true,
             "default": [1.0, 1.0, 1.0, 1.0],
-            "constraint": "positive",
             "dimension": "target.dimension"
           }
         ]
@@ -1002,7 +950,7 @@
         "name": "MultivariateNormal",
         "generatorType": "function",
         "generatedType": "MultivariateNormal",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Construct a MultivariateNormal distribution object",
         "arguments": [
           {
@@ -1025,7 +973,7 @@
         "name": "Yule",
         "generatorType": "function",
         "generatedType": "Yule",
-        "package": "phylospec.distributions.tree",
+        "namespace": "phylospec.distributions.tree",
         "description": "Construct a Yule distribution object",
         "arguments": [
           {
@@ -1047,7 +995,7 @@
         "name": "BirthDeath",
         "generatorType": "function",
         "generatedType": "BirthDeath",
-        "package": "phylospec.distributions.tree",
+        "namespace": "phylospec.distributions.tree",
         "description": "Construct a BirthDeath distribution object",
         "arguments": [
           {
@@ -1080,7 +1028,7 @@
         "name": "Coalescent",
         "generatorType": "function",
         "generatedType": "Coalescent",
-        "package": "phylospec.distributions.tree",
+        "namespace": "phylospec.distributions.tree",
         "description": "Construct a Coalescent distribution object",
         "arguments": [
           {
@@ -1102,7 +1050,7 @@
         "name": "FossilBirthDeath",
         "generatorType": "function",
         "generatedType": "FossilBirthDeath",
-        "package": "phylospec.distributions.tree",
+        "namespace": "phylospec.distributions.tree",
         "description": "Construct a FossilBirthDeath distribution object",
         "arguments": [
           {
@@ -1148,7 +1096,7 @@
         "name": "PhyloCTMC",
         "generatorType": "function",
         "generatedType": "PhyloCTMC",
-        "package": "phylospec.distributions.sequence",
+        "namespace": "phylospec.distributions.sequence",
         "description": "Construct a PhyloCTMC distribution object",
         "arguments": [
           {
@@ -1168,7 +1116,6 @@
             "type": "Vector<Real>",
             "description": "Rate heterogeneity across sites",
             "required": false,
-            "constraint": "positive",
             "dimension": "target.nchar"
           },
           {
@@ -1176,7 +1123,6 @@
             "type": "Vector<Real>",
             "description": "Rate heterogeneity across branches",
             "required": false,
-            "constraint": "positive",
             "dimension": "2 * target.ntax - 2"
           }
         ]
@@ -1185,7 +1131,7 @@
         "name": "PhyloBM",
         "generatorType": "function",
         "generatedType": "PhyloBM",
-        "package": "phylospec.distributions.continuous",
+        "namespace": "phylospec.distributions.continuous",
         "description": "Construct a PhyloBM distribution object",
         "arguments": [
           {
@@ -1214,7 +1160,7 @@
         "name": "PhyloOU",
         "generatorType": "function",
         "generatedType": "PhyloOU",
-        "package": "phylospec.distributions.continuous",
+        "namespace": "phylospec.distributions.continuous",
         "description": "Construct a PhyloOU distribution object",
         "arguments": [
           {
@@ -1250,7 +1196,7 @@
         "name": "IID",
         "generatorType": "function",
         "generatedType": "IID",
-        "package": "phylospec.distributions",
+        "namespace": "phylospec.distributions",
         "description": "Construct an IID distribution object",
         "typeParameters": ["T"],
         "arguments": [
@@ -1272,7 +1218,7 @@
         "name": "Mixture",
         "generatorType": "function",
         "generatedType": "Mixture",
-        "package": "phylospec.distributions.mixture",
+        "namespace": "phylospec.distributions.mixture",
         "description": "Construct a Mixture distribution object",
         "typeParameters": ["T"],
         "arguments": [
@@ -1295,7 +1241,7 @@
         "name": "JC69",
         "generatorType": "function",
         "generatedType": "QMatrix",
-        "package": "phylospec.functions.substitution",
+        "namespace": "phylospec.functions.substitution",
         "description": "Jukes-Cantor model (equal rates)",
         "arguments": []
       },
@@ -1303,7 +1249,7 @@
         "name": "K80",
         "generatorType": "function",
         "generatedType": "QMatrix",
-        "package": "phylospec.functions.substitution",
+        "namespace": "phylospec.functions.substitution",
         "description": "Kimura 2-parameter model",
         "arguments": [
           {
@@ -1319,7 +1265,7 @@
         "name": "F81",
         "generatorType": "function",
         "generatedType": "QMatrix",
-        "package": "phylospec.functions.substitution",
+        "namespace": "phylospec.functions.substitution",
         "description": "Felsenstein 81 model",
         "arguments": [
           {
@@ -1336,7 +1282,7 @@
         "name": "HKY",
         "generatorType": "function",
         "generatedType": "QMatrix",
-        "package": "phylospec.functions.substitution",
+        "namespace": "phylospec.functions.substitution",
         "description": "Hasegawa-Kishino-Yano model",
         "arguments": [
           {
@@ -1360,7 +1306,7 @@
         "name": "GTR",
         "generatorType": "function",
         "generatedType": "QMatrix",
-        "package": "phylospec.functions.substitution",
+        "namespace": "phylospec.functions.substitution",
         "description": "General Time-Reversible model",
         "arguments": [
           {
@@ -1369,8 +1315,7 @@
             "description": "Relative rate parameters",
             "required": true,
             "default": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-            "dimension": 6,
-            "constraint": "positive"
+            "dimension": 6
           },
           {
             "name": "baseFrequencies",
@@ -1386,7 +1331,7 @@
         "name": "WAG",
         "generatorType": "function",
         "generatedType": "QMatrix",
-        "package": "phylospec.functions.substitution",
+        "namespace": "phylospec.functions.substitution",
         "description": "Whelan And Goldman model",
         "arguments": [
           {
@@ -1402,7 +1347,7 @@
         "name": "JTT",
         "generatorType": "function",
         "generatedType": "QMatrix",
-        "package": "phylospec.functions.substitution",
+        "namespace": "phylospec.functions.substitution",
         "description": "Jones-Taylor-Thornton model",
         "arguments": [
           {
@@ -1418,7 +1363,7 @@
         "name": "LG",
         "generatorType": "function",
         "generatedType": "QMatrix",
-        "package": "phylospec.functions.substitution",
+        "namespace": "phylospec.functions.substitution",
         "description": "Le-Gascuel model",
         "arguments": [
           {
@@ -1434,7 +1379,7 @@
         "name": "DiscreteGamma",
         "generatorType": "function",
         "generatedType": "Vector<Real>",
-        "package": "phylospec.functions.rateheterogeneity",
+        "namespace": "phylospec.functions.rateheterogeneity",
         "description": "Discrete gamma-distributed rates across sites",
         "arguments": [
           {
@@ -1457,7 +1402,7 @@
         "name": "StrictClock",
         "generatorType": "function",
         "generatedType": "Vector<Real>",
-        "package": "phylospec.functions.clock",
+        "namespace": "phylospec.functions.clock",
         "description": "Strict molecular clock for branches",
         "arguments": [
           {
@@ -1479,7 +1424,7 @@
         "name": "UncorrelatedLognormal",
         "generatorType": "function",
         "generatedType": "Vector<Real>",
-        "package": "phylospec.functions.clock",
+        "namespace": "phylospec.functions.clock",
         "description": "UCLN clock model for branch rates",
         "arguments": [
           {
@@ -1508,7 +1453,7 @@
         "name": "nexus",
         "generatorType": "function",
         "generatedType": "Alignment",
-        "package": "phylospec.functions.io",
+        "namespace": "phylospec.functions.io",
         "description": "Load alignment from Nexus file",
         "ioHints": {
           "role": "dataInput",
@@ -1534,7 +1479,7 @@
         "name": "fasta",
         "generatorType": "function",
         "generatedType": "Alignment",
-        "package": "phylospec.functions.io",
+        "namespace": "phylospec.functions.io",
         "description": "Load alignment from FASTA file",
         "ioHints": {
           "role": "dataInput",
@@ -1554,7 +1499,7 @@
         "name": "phylip",
         "generatorType": "function",
         "generatedType": "Alignment",
-        "package": "phylospec.functions.io",
+        "namespace": "phylospec.functions.io",
         "description": "Load alignment from PHYLIP file",
         "ioHints": {
           "role": "dataInput",
@@ -1581,7 +1526,7 @@
         "name": "taxa",
         "generatorType": "function",
         "generatedType": "TaxonSet",
-        "package": "phylospec.functions.alignment",
+        "namespace": "phylospec.functions.alignment",
         "description": "Extract taxa from an alignment",
         "arguments": [
           {
@@ -1596,7 +1541,7 @@
         "name": "ntaxa",
         "generatorType": "function",
         "generatedType": "Integer",
-        "package": "phylospec.functions.alignment",
+        "namespace": "phylospec.functions.alignment",
         "description": "Get number of taxa in an alignment",
         "arguments": [
           {
@@ -1611,7 +1556,7 @@
         "name": "nchar",
         "generatorType": "function",
         "generatedType": "Integer",
-        "package": "phylospec.functions.alignment",
+        "namespace": "phylospec.functions.alignment",
         "description": "Get number of characters/sites in an alignment",
         "arguments": [
           {
@@ -1626,7 +1571,7 @@
         "name": "dataType",
         "generatorType": "function",
         "generatedType": "String",
-        "package": "phylospec.functions.alignment",
+        "namespace": "phylospec.functions.alignment",
         "description": "Get the data type of an alignment",
         "arguments": [
           {
@@ -1641,7 +1586,7 @@
         "name": "subset",
         "generatorType": "function",
         "generatedType": "Alignment",
-        "package": "phylospec.functions.alignment",
+        "namespace": "phylospec.functions.alignment",
         "description": "Extract a subset of sites from an alignment",
         "arguments": [
           {
@@ -1662,7 +1607,7 @@
         "name": "taxonset",
         "generatorType": "function",
         "generatedType": "TaxonSet",
-        "package": "phylospec.functions.taxa",
+        "namespace": "phylospec.functions.taxa",
         "description": "Create a taxon set from taxon names",
         "arguments": [
           {
@@ -1677,7 +1622,7 @@
         "name": "mrca",
         "generatorType": "function",
         "generatedType": "TreeNode",
-        "package": "phylospec.functions.tree",
+        "namespace": "phylospec.functions.tree",
         "description": "Find most recent common ancestor of taxa",
         "arguments": [
           {
@@ -1698,7 +1643,7 @@
         "name": "treeHeight",
         "generatorType": "function",
         "generatedType": "Real",
-        "package": "phylospec.functions.tree",
+        "namespace": "phylospec.functions.tree",
         "description": "Get height/depth of a tree",
         "arguments": [
           {
@@ -1713,7 +1658,7 @@
         "name": "log",
         "generatorType": "function",
         "generatedType": "Real",
-        "package": "phylospec.functions.math",
+        "namespace": "phylospec.functions.math",
         "description": "Natural logarithm",
         "arguments": [
           {
@@ -1728,7 +1673,7 @@
         "name": "exp",
         "generatorType": "function",
         "generatedType": "PositiveReal",
-        "package": "phylospec.functions.math",
+        "namespace": "phylospec.functions.math",
         "description": "Exponential function",
         "arguments": [
           {
