@@ -1,9 +1,9 @@
 Vector<Real> vector = [
-    someFunc
+    nchar
     (
         a = 10,
         b =
-            someOtherFunc(
+            ntaxa(
                 20
             ),
 
@@ -13,6 +13,7 @@ Vector<Real> vector = [
 Vector<Real> vector = [                     ]
 
 
-// EXPECT
-// (AS Vector<Real> vector (AR (CA someFunc (AA a 10) (AA b (CA someOtherFunc (AA null 20))))))
+// EXPECT AST
+// (AS Vector<Real> vector (AR (CA abs (AA a 10) (AA b (CA min (AA null 20))))))
 // (AS Vector<Real> vector (AR ))
+// EXPECT AST

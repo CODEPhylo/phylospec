@@ -4,7 +4,8 @@ import revbayes.distributions
 @beast2Ignore()
 import revbayes.distributions
 
-// EXPECT
+// EXPECT AST
 // (IM beast2)
 // (IM revbayes distributions)
 // (@ (CA beast2Ignore ) (IM revbayes distributions))
+// EXPECT AST

@@ -220,7 +220,7 @@ public class AstResolver implements AstVisitor<Void, Void, Void> {
         }
     }
 
-    private class ResolutionError extends RuntimeException {
+    public class ResolutionError extends RuntimeException {
         public ResolutionError(String s) {
             super(s);
         }

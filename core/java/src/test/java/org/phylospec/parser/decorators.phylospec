@@ -5,6 +5,7 @@ Real x = 100;
 @beast2(verbosity = "debug")
 Real x = 100;
 
-// EXPECT
+// EXPECT AST
 // (@ (CA observed (AA null 50)) (AS Real x 100))
 // (@ (CA observed (AA null 50)) (@ (CA beast2 (AA verbosity "debug")) (AS Real x 100)))
+// EXPECT AST

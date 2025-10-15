@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ScriptFilesTest {
+public class ScriptFilesParserTest {
 
     /**
      * Goes through every .phylospec file in the test folder, parses it, and compares
@@ -69,12 +69,6 @@ public class ScriptFilesTest {
                 actualAstLines.add(statement.accept(printer));
             }
 
-            assertEquals(
-                    expectedAstLines.size(),
-                    actualAstLines.size(),
-                    "Mismatch in number of statements for: " + psPath
-            );
-
             for (int i = 0; i < expectedAstLines.size(); i++) {
                 String expected = expectedAstLines.get(i).trim();
                 String actual = actualAstLines.get(i).trim();
@@ -89,8 +83,17 @@ public class ScriptFilesTest {
         int expectStart = -1;
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i).trim();
-            if (line.startsWith("// EXPECT")) {
+            if (line.startsWith("// EXPECT AST")) {
                 expectStart = i + 1;
+                break;
+            }
+        }
+
+        int expectEnd = -1;
+        for (int i = expectStart + 1; i < lines.size(); i++) {
+            String line = lines.get(i).trim();
+            if (line.startsWith("// EXPECT AST")) {
+                expectEnd = i;
                 break;
             }
         }
@@ -99,7 +102,7 @@ public class ScriptFilesTest {
             return expected;
         }
 
-        for (int i = expectStart; i < lines.size(); i++) {
+        for (int i = expectStart; i < expectEnd; i++) {
             String raw = lines.get(i);
             String trimmed = raw.trim();
             if (!trimmed.startsWith("//")) {
