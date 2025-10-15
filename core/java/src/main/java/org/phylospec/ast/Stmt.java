@@ -101,22 +101,22 @@ public abstract class Stmt {
 
     /** Represents an import statement like `import revbayes.core`. */
     public static class Import extends Stmt {
-        public Import(List<String> importPath) {
-            this.importPath = importPath;
+        public Import(List<String> namespace) {
+            this.namespace = namespace;
         }
 
-        public final List<String> importPath;
+        public final List<String> namespace;
 
         @Override
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Import anImport = (Import) o;
-            return Objects.equals(importPath, anImport.importPath);
+            return Objects.equals(namespace, anImport.namespace);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(importPath);
+            return Objects.hashCode(namespace);
         }
 
         public <S, E, T> S accept(AstVisitor<S, E, T> visitor) {

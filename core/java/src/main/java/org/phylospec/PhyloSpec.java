@@ -14,16 +14,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-/**
- * This class can be used to run the PhyloSpec parser.
- * <br>
- * You can either pass the path to a PhyloSpec script, or
- * you can pass no argument and use the REPL to interact
- * with the language.
- * <br>
- * Note that there is no interpreter so far, only a parser.
- * The output of this script is the printed AST tree.
- */
+/// This class can be used to run the PhyloSpec parser.
+///
+/// You can either pass the path to a PhyloSpec script, or
+/// you can pass no argument and use the REPL to interact
+/// with the language.
+///
+/// Note that there is no interpreter so far, only a parser.
+/// The output of this script is the printed AST tree.
 public class PhyloSpec {
     private static boolean hadError;
 
@@ -79,6 +77,7 @@ public class PhyloSpec {
     private static AstResolver loadAstResolver() throws IOException {
         ComponentResolver componentResolver = new ComponentResolver();
         componentResolver.registerLibraryFromFile("schema/phylospec-core-component-library.json");
+        componentResolver.importEntireNamespace(List.of("phylospec"));
         return new AstResolver(componentResolver);
     }
 

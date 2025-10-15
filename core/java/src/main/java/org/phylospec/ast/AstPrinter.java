@@ -29,9 +29,9 @@ public class AstPrinter implements AstVisitor<String, String, String> {
     public String visitImport(Stmt.Import stmt) {
         String result = "(IM ";
 
-        for (int i = 0; i < stmt.importPath.size(); i++) {
-            result += stmt.importPath.get(i);
-            if (i < stmt.importPath.size() - 1) {
+        for (int i = 0; i < stmt.namespace.size(); i++) {
+            result += stmt.namespace.get(i);
+            if (i < stmt.namespace.size() - 1) {
                 result += " ";
             }
         }

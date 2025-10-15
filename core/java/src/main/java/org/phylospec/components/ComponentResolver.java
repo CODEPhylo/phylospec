@@ -2,9 +2,11 @@ package org.phylospec.components;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.awt.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,17 +19,19 @@ public class ComponentResolver {
 
     final Map<String, Generator> generators;
     final Map<String, Type> types;
+    final List<ComponentLibrary> componentLibraries;
 
     public ComponentResolver() {
         generators = new HashMap<>();
         types = new HashMap<>();
+        componentLibraries = new ArrayList<>();
     }
 
     /**
      * Registers a component library from a file path.
      */
     public void registerLibraryFromFile(String fileName) throws IOException {
-        try(InputStream fileStream = new FileInputStream(fileName)) {
+        try (InputStream fileStream = new FileInputStream(fileName)) {
             ObjectMapper mapper = new ObjectMapper();
             ComponentLibrarySchema componentLibrary = mapper.readValue(fileStream, ComponentLibrarySchema.class);
             registerComponentLibrary(componentLibrary.getComponentLibrary());
@@ -38,12 +42,7 @@ public class ComponentResolver {
      * Registers a component library from a file path.
      */
     public void registerComponentLibrary(ComponentLibrary library) {
-        for (Generator generator : library.getGenerators()) {
-            generators.put(generator.getName(), generator);
-        }
-        for (Type type : library.getTypes()) {
-            types.put(type.getName(), type);
-        }
+        componentLibraries.add(library);
     }
 
     public boolean canResolveGenerator(String variableName) {
@@ -62,6 +61,44 @@ public class ComponentResolver {
         return types.get(variableName);
     }
 
-    public void importNamespace(List<String> importPath) {
+    public void importEntireNamespace(List<String> namespace) {
+        String namespaceString = String.join(".", namespace);
+        String namespaceStringWithDot = String.join(".", namespace) + ".";
+
+        for (ComponentLibrary library : componentLibraries) {
+            for (Generator generator : library.getGenerators()) {
+                if (
+                        generator.getNamespace().equals(namespaceString)
+                                || generator.getNamespace().startsWith(namespaceStringWithDot)
+                ) {
+                    this.generators.put(generator.getName(), generator);
+                }
+            }
+            for (Type type : library.getTypes()) {
+                if (
+                        type.getNamespace().equals(namespaceString)
+                                || type.getNamespace().startsWith(namespaceStringWithDot)
+                ) {
+                    this.types.put(type.getName(), type);
+                }
+            }
+        }
+    }
+
+    public void importNamespace(List<String> namespace) {
+        String namespaceString = String.join(".", namespace);
+
+        for (ComponentLibrary library : componentLibraries) {
+            for (Generator generator : library.getGenerators()) {
+                if (generator.getNamespace().equals(namespaceString)) {
+                    this.generators.put(generator.getName(), generator);
+                }
+            }
+            for (Type type : library.getTypes()) {
+                if (type.getNamespace().equals(namespaceString)) {
+                    this.types.put(type.getName(), type);
+                }
+            }
+        }
     }
 }

@@ -93,18 +93,18 @@ public class Parser {
 
     private Stmt statement() {
         if (match(TokenType.IMPORT)) {
-            List<String> importPath = new ArrayList<>();
-            importPath.add(
+            List<String> namespace = new ArrayList<>();
+            namespace.add(
                     consume(TokenType.IDENTIFIER, "Import path must be provided.").lexeme
             );
 
             while (match(TokenType.DOT)) {
-                importPath.add(
+                namespace.add(
                         consume(TokenType.IDENTIFIER, "Invalid import path.").lexeme
                 );
             }
 
-            return new Stmt.Import(importPath);
+            return new Stmt.Import(namespace);
         }
 
         Type type = type();

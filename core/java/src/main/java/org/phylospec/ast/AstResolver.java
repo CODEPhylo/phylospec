@@ -100,7 +100,7 @@ public class AstResolver implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitImport(Stmt.Import stmt) {
-        componentResolver.importNamespace(stmt.importPath);
+        componentResolver.importNamespace(stmt.namespace);
         return null;
     }
 
