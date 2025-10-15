@@ -1,5 +1,6 @@
 package org.phylospec.ast;
 
+import com.fasterxml.jackson.core.type.ResolvedType;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
 
@@ -21,9 +22,13 @@ import java.util.Map;
 /// ```
 /// Stmt statement1 = <...>;
 /// Stmt statement2 = <...>;
+///
 /// AstResolver resolver = new AstResolver(...);
 /// statement1.accept(resolver);
 /// statement2.accept(resolver);
+///
+/// ResolvedVariable var = resolver.resolveVariable("myVariableName");
+/// Type var = resolver.resolveType("myTypeName");
 /// ```
 public class AstResolver implements AstVisitor<Void, Void, Void> {
 
@@ -36,6 +41,17 @@ public class AstResolver implements AstVisitor<Void, Void, Void> {
         this.componentResolver = componentResolver;
         this.variableMapping = new HashMap<>();
         this.typeMapping = new HashMap<>();
+    }
+
+    /** Resolves a given variable name to either a {@link ResolvedLocalVariable} or
+     * {@link ResolvedGenerator}. */
+    public ResolvedVariable resolveVariable(String variableName) {
+        return variableMapping.get(variableName);
+    }
+
+    /** Resolves a given type name to a {@link org.phylospec.components.Type}. */
+    public org.phylospec.components.Type resolveType(String typeName) {
+        return typeMapping.get(typeName);
     }
 
     @Override
