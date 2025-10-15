@@ -14,7 +14,7 @@ import java.util.Objects;
  */
 public abstract class Expr {
 
-    abstract public <T> T accept(AstVisitor<T> visitor);
+    abstract public <S, E, T> E accept(AstVisitor<S, E, T> visitor);
 
     /** Represents a variable. Function and distribution names are also treated
      * as variables. */
@@ -38,7 +38,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitVariable(this);
         }
     }
@@ -66,7 +66,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitLiteral(this);
         }
     }
@@ -94,7 +94,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitUnary(this);
         }
     }
@@ -124,7 +124,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitBinary(this);
         }
     }
@@ -150,7 +150,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitGrouping(this);
         }
     }
@@ -186,7 +186,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitCall(this);
         }
     }
@@ -223,7 +223,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitAssignedArgument(this);
         }
     }
@@ -237,7 +237,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitDrawnArgument(this);
         }
     }
@@ -263,7 +263,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitArray(this);
         }
     }
@@ -295,7 +295,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitGet(this);
         }
     }

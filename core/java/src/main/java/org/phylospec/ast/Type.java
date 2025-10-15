@@ -10,7 +10,7 @@ import java.util.Objects;
  */
 public abstract class Type {
 
-    abstract public <T> T accept(AstVisitor<T> visitor);
+    abstract public <S, E, T> T accept(AstVisitor<S, E, T> visitor);
 
     /** Represents a non-generic type like `Real` */
     public static class Atomic extends Type {
@@ -33,7 +33,7 @@ public abstract class Type {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> T accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitAtomicType(this);
         }
     }
@@ -61,7 +61,7 @@ public abstract class Type {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> T accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitGenericType(this);
         }
     }

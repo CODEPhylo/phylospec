@@ -12,7 +12,7 @@ package org.phylospec.ast;
  * statement.accept(printer);
  * ```
  */
-public class AstPrinter implements AstVisitor<String> {
+public class AstPrinter implements AstVisitor<String, String, String> {
     @Override public String visitDecoratedStmt(Stmt.Decorated stmt) {
         return "(@ " + stmt.decorator.accept(this) + " " + stmt.statememt.accept(this) + ")";
     }

@@ -9,7 +9,7 @@ import java.util.Objects;
  */
 public abstract class Stmt {
 
-    abstract public <T> T accept(AstVisitor<T> visitor);
+    abstract public <S, E, T> S accept(AstVisitor<S, E, T> visitor);
 
     /** Represents an assignment like `Real value = 10`. */
     public static class Assignment extends Stmt {
@@ -35,7 +35,7 @@ public abstract class Stmt {
             return Objects.hash(type, name, expression);
         }
 
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> S accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitAssignment(this);
         }
     }
@@ -64,7 +64,7 @@ public abstract class Stmt {
             return Objects.hash(type, name, expression);
         }
 
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> S accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitDraw(this);
         }
     }
@@ -93,7 +93,7 @@ public abstract class Stmt {
             return Objects.hash(decorator, statememt);
         }
 
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> S accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitDecoratedStmt(this);
         }
     }
