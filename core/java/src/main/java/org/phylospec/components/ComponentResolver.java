@@ -1,15 +1,12 @@
 package org.phylospec.components;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.phylospec.ast.AstResolver;
 
-import java.awt.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This class allows to register multiple component libraries and access
@@ -17,14 +14,17 @@ import java.util.Map;
  */
 public class ComponentResolver {
 
-    final Map<String, Generator> generators;
-    final Map<String, Type> types;
     final List<ComponentLibrary> componentLibraries;
+    final Set<String> knownNamespaces;
+
+    final Map<String, Generator> importedGenerators;
+    final Map<String, Type> importedTypes;
 
     public ComponentResolver() {
-        generators = new HashMap<>();
-        types = new HashMap<>();
         componentLibraries = new ArrayList<>();
+        knownNamespaces = new HashSet<>();
+        importedGenerators = new HashMap<>();
+        importedTypes = new HashMap<>();
     }
 
     /**
@@ -43,30 +43,52 @@ public class ComponentResolver {
 
     /**
      * Registers a component library.
-     * Note that this does not make the types and generators resolvable. For
-     * this, the appropriate namespace has to be imported first using either
+     * Note that this does not make the types and generators resolvable ("import" them).
+     * For this, the appropriate namespace has to be imported first using either
      * `importEntireNamespace` or `importNamespace`.
      */
     public void registerComponentLibrary(ComponentLibrary library) {
         componentLibraries.add(library);
+
+        for (Generator generator : library.getGenerators()) {
+            String namespace = generator.getNamespace();
+            for (int i = 0; i < namespace.length(); i++) {
+                if (namespace.charAt(i) == '.')
+                    knownNamespaces.add(namespace.substring(0, i));
+            }
+            knownNamespaces.add(namespace);
+        }
+        for (Type type : library.getTypes()) {
+            String namespace = type.getNamespace();
+            for (int i = 0; i < namespace.length(); i++) {
+                if (namespace.charAt(i) == '.')
+                    knownNamespaces.add(namespace.substring(0, i));
+            }
+            knownNamespaces.add(namespace);
+        }
     }
 
     /**
      * Imports a namespace. This makes all registered components and types
-     * in that namespace resolvable.
+     * in that namespace resolvable. Throws a {@link org.phylospec.ast.AstResolver.ResolutionError}
+     * if the namespace is not known.
      */
     public void importNamespace(List<String> namespace) {
         String namespaceString = String.join(".", namespace);
 
+        if (!knownNamespaces.contains(namespaceString)) {
+            throw new AstResolver.ResolutionError("Import " + namespaceString + " is not known");
+        }
+
         for (ComponentLibrary library : componentLibraries) {
             for (Generator generator : library.getGenerators()) {
                 if (generator.getNamespace().equals(namespaceString)) {
-                    this.generators.put(generator.getName(), generator);
+                    this.importedGenerators.put(generator.getName(), generator);
                 }
             }
             for (Type type : library.getTypes()) {
                 if (type.getNamespace().equals(namespaceString)) {
-                    this.types.put(type.getName(), type);
+                    this.importedTypes.put(type.getName(), type);
                 }
             }
         }
@@ -74,11 +96,16 @@ public class ComponentResolver {
 
     /**
      * Imports a namespace and its sub-namespaces. This makes all registered components
-     * and types in that namespace resolvable.
+     * and types in that namespace resolvable. Throws a {@link org.phylospec.ast.AstResolver.ResolutionError}
+     * if the namespace is not known.
      */
     public void importEntireNamespace(List<String> namespace) {
         String namespaceString = String.join(".", namespace);
         String namespaceStringWithDot = String.join(".", namespace) + ".";
+
+        if (!knownNamespaces.contains(namespaceString)) {
+            throw new AstResolver.ResolutionError("Namespace " + namespaceString + " is not known");
+        }
 
         for (ComponentLibrary library : componentLibraries) {
             for (Generator generator : library.getGenerators()) {
@@ -86,7 +113,7 @@ public class ComponentResolver {
                         generator.getNamespace().equals(namespaceString)
                                 || generator.getNamespace().startsWith(namespaceStringWithDot)
                 ) {
-                    this.generators.put(generator.getName(), generator);
+                    this.importedGenerators.put(generator.getName(), generator);
                 }
             }
             for (Type type : library.getTypes()) {
@@ -94,7 +121,7 @@ public class ComponentResolver {
                         type.getNamespace().equals(namespaceString)
                                 || type.getNamespace().startsWith(namespaceStringWithDot)
                 ) {
-                    this.types.put(type.getName(), type);
+                    this.importedTypes.put(type.getName(), type);
                 }
             }
         }
@@ -102,21 +129,21 @@ public class ComponentResolver {
 
     /** Returns whether a given generatorName can be resolved. */
     public boolean canResolveGenerator(String generatorName) {
-        return generators.containsKey(generatorName);
+        return importedGenerators.containsKey(generatorName);
     }
 
     /** Returns the {@link Generator} corresponding to the given name. */
     public Generator resolveGenerator(String generatorName) {
-        return generators.get(generatorName);
+        return importedGenerators.get(generatorName);
     }
 
     /** Returns whether a given typeName can be resolved. */
     public boolean canResolveType(String typeName) {
-        return types.containsKey(typeName);
+        return importedTypes.containsKey(typeName);
     }
 
     /** Returns the {@link Type} corresponding to the given name. */
     public Type resolveType(String variableName) {
-        return types.get(variableName);
+        return importedTypes.get(variableName);
     }
 }
