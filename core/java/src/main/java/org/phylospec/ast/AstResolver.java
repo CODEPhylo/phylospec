@@ -1,6 +1,5 @@
 package org.phylospec.ast;
 
-import com.fasterxml.jackson.core.type.ResolvedType;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
 
@@ -56,7 +55,7 @@ public class AstResolver implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitVariable(Expr.Variable expr) {
-        String variableName = expr.variable;
+        String variableName = expr.variableName;
 
         // we first check if the name matches a variable we've seen before
         if (variableMapping.containsKey(variableName)) {
@@ -191,13 +190,13 @@ public class AstResolver implements AstVisitor<Void, Void, Void> {
     }
 
     @Override
-    public Void visitAtomicType(Type.Atomic expr) {
+    public Void visitAtomicType(AstType.Atomic expr) {
         return null;
     }
 
     @Override
-    public Void visitGenericType(Type.Generic expr) {
-        for (Type type : expr.typeParameters) {
+    public Void visitGenericType(AstType.Generic expr) {
+        for (AstType type : expr.typeParameters) {
             type.accept(this);
         }
         return null;

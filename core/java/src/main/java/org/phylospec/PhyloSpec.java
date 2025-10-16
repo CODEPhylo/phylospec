@@ -1,9 +1,10 @@
 package org.phylospec;
 
 import org.phylospec.ast.AstPrinter;
+import org.phylospec.ast.TypeError;
+import org.phylospec.ast.TypeResolver;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.ast.Stmt;
-import org.phylospec.ast.AstResolver;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
@@ -38,7 +39,7 @@ public class PhyloSpec {
 
     private static void runFile(String path) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
-        AstResolver resolver = loadAstResolver();
+        TypeResolver resolver = loadAstResolver();
         run(new String(bytes, Charset.defaultCharset()), resolver);
         if (hadError) System.exit(65);
     }
@@ -46,7 +47,7 @@ public class PhyloSpec {
     private static void runPrompt() throws IOException {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
-        AstResolver resolver = loadAstResolver();
+        TypeResolver resolver = loadAstResolver();
 
         for (;;) {
             System.out.print("> ");
@@ -57,7 +58,7 @@ public class PhyloSpec {
         }
     }
 
-    private static void run(String source, AstResolver resolver) {
+    private static void run(String source, TypeResolver resolver) {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
 
@@ -70,15 +71,20 @@ public class PhyloSpec {
         AstPrinter printer = new AstPrinter();
         for (Stmt statement : statements) {
             System.out.println(statement.accept(printer));
-            statement.accept(resolver);
+
+            try {
+                statement.accept(resolver);
+            } catch(TypeError error) {
+                System.out.println(error.getMessage());
+            }
         }
     }
 
-    private static AstResolver loadAstResolver() throws IOException {
+    private static TypeResolver loadAstResolver() throws IOException {
         ComponentResolver componentResolver = new ComponentResolver();
         componentResolver.registerLibraryFromFile("schema/phylospec-core-component-library.json");
         componentResolver.importEntireNamespace(List.of("phylospec"));
-        return new AstResolver(componentResolver);
+        return new TypeResolver(componentResolver);
     }
 
     /** Report an error on a specific line but not directly connected

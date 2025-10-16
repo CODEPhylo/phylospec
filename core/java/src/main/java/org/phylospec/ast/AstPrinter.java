@@ -50,7 +50,7 @@ public class AstPrinter implements AstVisitor<String, String, String> {
 
     @Override
     public String visitVariable(Expr.Variable expr) {
-        return expr.variable;
+        return expr.variableName;
     }
 
     @Override
@@ -113,12 +113,12 @@ public class AstPrinter implements AstVisitor<String, String, String> {
     }
 
     @Override
-    public String visitAtomicType(Type.Atomic expr) {
+    public String visitAtomicType(AstType.Atomic expr) {
         return expr.name;
     }
 
     @Override
-    public String visitGenericType(Type.Generic expr) {
+    public String visitGenericType(AstType.Generic expr) {
         String result = expr.name + "<";
 
         for (int i = 0; i < expr.typeParameters.length; i++) {

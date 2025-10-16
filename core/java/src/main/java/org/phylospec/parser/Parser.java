@@ -2,7 +2,7 @@ package org.phylospec.parser;
 import org.phylospec.PhyloSpec;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
-import org.phylospec.ast.Type;
+import org.phylospec.ast.AstType;
 import org.phylospec.lexer.Token;
 import org.phylospec.lexer.TokenType;
 
@@ -107,7 +107,7 @@ public class Parser {
             return new Stmt.Import(namespace);
         }
 
-        Type type = type();
+        AstType type = type();
 
         Token name = consume(TokenType.IDENTIFIER, "Invalid variable name.");
 
@@ -124,11 +124,11 @@ public class Parser {
         throw error(peek(), "Except assignment or draw.");
     }
 
-    private Type type() {
+    private AstType type() {
         Token typeName = consume(TokenType.IDENTIFIER, "Invalid variable type.");
 
         if (match(TokenType.LESS)) {
-            List<Type> innerTypes = new ArrayList<>();
+            List<AstType> innerTypes = new ArrayList<>();
             innerTypes.add(type());
 
             while (match(TokenType.COMMA)) {
@@ -138,10 +138,10 @@ public class Parser {
             // parse closing brackets
             consume(TokenType.GREATER, "Generic type must be closed with a '>'.");
 
-            return new Type.Generic(typeName.lexeme, innerTypes.toArray(Type[]::new));
+            return new AstType.Generic(typeName.lexeme, innerTypes.toArray(AstType[]::new));
         }
 
-        return new Type.Atomic(typeName.lexeme);
+        return new AstType.Atomic(typeName.lexeme);
     }
 
     private Expr expression() {
@@ -258,7 +258,7 @@ public class Parser {
             return new Expr.AssignedArgument(expression);
         }
 
-        String argumentName = ((Expr.Variable) expression).variable;
+        String argumentName = ((Expr.Variable) expression).variableName;
 
         if (match(TokenType.TILDE)) {
             expression = expression();

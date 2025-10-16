@@ -143,7 +143,7 @@ public class ComponentResolver {
     }
 
     /** Returns the {@link Type} corresponding to the given name. */
-    public Type resolveType(String variableName) {
-        return importedTypes.get(variableName);
+    public Type resolveType(String typeName) {
+        return importedTypes.get(typeName);
     }
 }

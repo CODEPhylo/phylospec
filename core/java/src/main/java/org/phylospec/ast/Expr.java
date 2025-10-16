@@ -19,22 +19,22 @@ public abstract class Expr {
     /** Represents a variable. Function and distribution names are also treated
      * as variables. */
     public static class Variable extends Expr {
-        public Variable(String variable) {
-            this.variable = variable;
+        public Variable(String variableName) {
+            this.variableName = variableName;
         }
 
-        public final String variable;
+        public final String variableName;
 
         @Override
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Variable variable1 = (Variable) o;
-            return Objects.equals(variable, variable1.variable);
+            return Objects.equals(variableName, variable1.variableName);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(variable);
+            return Objects.hashCode(variableName);
         }
 
         @Override

@@ -22,6 +22,6 @@ public interface AstVisitor<S, E, T> {
     public E visitArray(Expr.Array expr);
     public E visitGet(Expr.Get expr);
 
-    public T visitAtomicType(Type.Atomic expr);
-    public T visitGenericType(Type.Generic expr);
+    public T visitAtomicType(AstType.Atomic expr);
+    public T visitGenericType(AstType.Generic expr);
 }
