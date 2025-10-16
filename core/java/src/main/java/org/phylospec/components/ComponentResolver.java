@@ -18,7 +18,7 @@ public class ComponentResolver {
     final List<ComponentLibrary> componentLibraries;
     final Set<String> knownNamespaces;
 
-    final Map<String, Generator> importedGenerators;
+    final Map<String, List<Generator>> importedGenerators;  // there might be multiple generators with the same name
     final Map<String, Type> importedTypes;
 
     public ComponentResolver() {
@@ -84,7 +84,7 @@ public class ComponentResolver {
         for (ComponentLibrary library : componentLibraries) {
             for (Generator generator : library.getGenerators()) {
                 if (generator.getNamespace().equals(namespaceString)) {
-                    this.importedGenerators.put(generator.getName(), generator);
+                    this.importedGenerators.computeIfAbsent(generator.getName(), k -> new ArrayList<>()).add(generator);
                 }
             }
             for (Type type : library.getTypes()) {
@@ -114,7 +114,7 @@ public class ComponentResolver {
                         generator.getNamespace().equals(namespaceString)
                                 || generator.getNamespace().startsWith(namespaceStringWithDot)
                 ) {
-                    this.importedGenerators.put(generator.getName(), generator);
+                    this.importedGenerators.computeIfAbsent(generator.getName(), k -> new ArrayList<>()).add(generator);
                 }
             }
             for (Type type : library.getTypes()) {
@@ -134,7 +134,7 @@ public class ComponentResolver {
     }
 
     /** Returns the {@link Generator} corresponding to the given name. */
-    public Generator resolveGenerator(String generatorName) {
+    public List<Generator> resolveGenerator(String generatorName) {
         return importedGenerators.get(generatorName);
     }
 

@@ -2,7 +2,7 @@ package org.phylospec;
 
 import org.phylospec.ast.AstPrinter;
 import org.phylospec.ast.TypeError;
-import org.phylospec.ast.TypeResolver;
+import org.phylospec.ast.TypeChecker;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.ast.Stmt;
 import org.phylospec.lexer.Lexer;
@@ -39,7 +39,7 @@ public class PhyloSpec {
 
     private static void runFile(String path) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
-        TypeResolver resolver = loadAstResolver();
+        TypeChecker resolver = loadAstResolver();
         run(new String(bytes, Charset.defaultCharset()), resolver);
         if (hadError) System.exit(65);
     }
@@ -47,7 +47,7 @@ public class PhyloSpec {
     private static void runPrompt() throws IOException {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
-        TypeResolver resolver = loadAstResolver();
+        TypeChecker resolver = loadAstResolver();
 
         for (;;) {
             System.out.print("> ");
@@ -58,7 +58,7 @@ public class PhyloSpec {
         }
     }
 
-    private static void run(String source, TypeResolver resolver) {
+    private static void run(String source, TypeChecker resolver) {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
 
@@ -80,11 +80,11 @@ public class PhyloSpec {
         }
     }
 
-    private static TypeResolver loadAstResolver() throws IOException {
+    private static TypeChecker loadAstResolver() throws IOException {
         ComponentResolver componentResolver = new ComponentResolver();
         componentResolver.registerLibraryFromFile("schema/phylospec-core-component-library.json");
         componentResolver.importEntireNamespace(List.of("phylospec"));
-        return new TypeResolver(componentResolver);
+        return new TypeChecker(componentResolver);
     }
 
     /** Report an error on a specific line but not directly connected

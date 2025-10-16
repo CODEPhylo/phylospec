@@ -64,9 +64,9 @@ public class AstResolver implements AstVisitor<Void, Void, Void> {
 
         // otherwise, we check if it matches a known component
         if (componentResolver.canResolveGenerator(variableName)) {
-            Generator generator = componentResolver.resolveGenerator(variableName);
-            ResolvedGenerator resolvedGenerator = new  ResolvedGenerator(generator);
-            variableMapping.put(variableName, resolvedGenerator);
+//            Generator generator = componentResolver.resolveGenerator(variableName);
+//            ResolvedGenerator resolvedGenerator = new  ResolvedGenerator(generator);
+//            variableMapping.put(variableName, resolvedGenerator);
             return null;
         }
 

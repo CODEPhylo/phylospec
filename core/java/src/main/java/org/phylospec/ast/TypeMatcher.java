@@ -2,9 +2,9 @@ package org.phylospec.ast;
 
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Type;
+import org.phylospec.lexer.TokenType;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * This class helps to determine the type of the result of an operation on one or more operands.
@@ -21,22 +21,22 @@ public class TypeMatcher {
     /// Determines the result type of an operation on one or more operands.
     ///
     /// Two arguments are required:
-    /// -   The typeMap is a list containing different input combinations and
+    /// -   The rules is a list containing different input combinations and
     ///     the resulting type:
     ///     [["PositiveReal", "PositiveReal", "Real"], ["Real", "Real", "Real"]]
     ///     Here, both input combinations produce a Real.
     /// -   The query specifies the given input:
     ///     ["Real", "PositiveReal"]
     ///     In that case, there is no exact match. However, PositiveReal can be widened
-    ///     to a Real and get a match in the typeMap.
+    ///     to a Real and get a match in the rules.
     ///
     /// Input types are widened automatically using the "extends" field in the component
     /// definitions.
     ///
     /// Returns null if no match is found.
-    public String findMatch(List<List<Object>> typeMap, List<Object> query) {
-        String exactMatch = findExactMatch(typeMap, query);
-        if (exactMatch != null) {
+    public Set<Type> findMatch(List<Rule> rules, Query query) {
+        Set<Type> exactMatch = findExactMatch(rules, query);
+        if (!exactMatch.isEmpty()) {
             return exactMatch;
         }
 
@@ -44,51 +44,73 @@ public class TypeMatcher {
         // let's try to go up the type hierarchy of the query to see if there is
         // a match for widened types
         while (true) {
-            boolean reachedMostGeneralType = true;
-
-            for (int i = 0; i < query.size(); i++) {
-                if (!componentResolver.canResolveType(query.get(i).toString())) continue;
-
-                Type type = componentResolver.resolveType(query.get(i).toString());
-                if (type.getExtends() != null) {
-                    // we replace this type with its direct parent
-                    query = new ArrayList<>(query);
-                    query.set(i, type.getExtends());
-
-                    String match = findExactMatch(typeMap, query);
-                    if (match != null) {
-                        return match;
+            for (int i = 0; i < query.inputTypes.length; i++) {
+                Set<Type> widenedInputType = new HashSet<>();
+                for (Type type : query.inputTypes[i]) {
+                    if (type.getExtends() != null) {
+                        // we replace this type with its direct parent
+                        Type widenedType = componentResolver.resolveType(type.getExtends());
+                        if (widenedType != null) widenedInputType.add(widenedType);
                     }
-
-                    reachedMostGeneralType = false;
                 }
-            }
 
-            if (reachedMostGeneralType) {
-                return null;
+                if (widenedInputType.isEmpty()) return Set.of();
+
+                Set<Type> match = findExactMatch(rules, query);
+                if (!match.isEmpty()) return match;
             }
         }
     }
 
-    /** Checks if there is an exact match in the typeMap for the given query and returns it.
+    /** Checks if there is a perfectly matching rule the given query and returns it.
      * Returns null if not match is found. */
-    private String findExactMatch(List<List<Object>> typeMap, List<Object> query) {
-        for (List<Object> candidate : typeMap) {
-            assert candidate.size() == query.size() + 1; // the last query element it the resulting type
+    private Set<Type> findExactMatch(List<Rule> rules, Query query) {
+        for (Rule rule : rules) {
+            if (rule.operation != query.operation) continue;
+            if (!(componentResolver.canResolveType(rule.resultType))) continue;
 
             boolean matches = true;
-            for (int i = 0; i < query.size(); i++) {
-                if (candidate.get(i) != ANY && !(candidate.get(i).equals(query.get(i)))) {
+            for (int i = 0; i < query.inputTypes.length; i++) {
+                if (rule.inputTypes[i].equals(ANY)) continue;
+
+                // we have to check if there is an overlap
+                final int j = i;
+                if (query.inputTypes[i].stream().noneMatch(x -> x.getName().equals(rule.inputTypes[j]))) {
                     matches =  false;
                     break;
                 }
             }
+
             if (matches) {
-                return candidate.getLast().toString();
+                return Set.of(
+                        componentResolver.resolveType(rule.resultType)
+                );
             }
         }
 
-        return null;
+        return Set.of();
+    }
+
+    static class Rule {
+        public Rule(TokenType operation, String... types) {
+            this.operation = operation;
+            this.inputTypes = Arrays.stream(types).limit(types.length - 1).toArray(String[]::new);
+            this.resultType = types[types.length - 1];
+        }
+
+        TokenType operation;
+        String[] inputTypes;
+        String resultType;
+    }
+
+    static class Query {
+        public Query(TokenType operation, Set<Type>... inputTypes) {
+            this.operation = operation;
+            this.inputTypes = inputTypes;
+        }
+
+        TokenType operation;
+        Set<Type>[] inputTypes;
     }
 
 }
