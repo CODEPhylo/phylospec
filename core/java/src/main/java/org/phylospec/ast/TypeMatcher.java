@@ -34,8 +34,8 @@ public class TypeMatcher {
     /// definitions.
     ///
     /// Returns null if no match is found.
-    public Set<Type> findMatch(List<Rule> rules, Query query) {
-        Set<Type> exactMatch = findExactMatch(rules, query);
+    public Set<ResolvedType> findMatch(List<Rule> rules, Query query) {
+        Set<ResolvedType> exactMatch = findExactMatch(rules, query);
         if (!exactMatch.isEmpty()) {
             return exactMatch;
         }
@@ -46,7 +46,7 @@ public class TypeMatcher {
         while (true) {
             for (int i = 0; i < query.inputTypes.length; i++) {
                 Set<Type> widenedInputType = new HashSet<>();
-                for (Type type : query.inputTypes[i]) {
+                for (ResolvedType type : query.inputTypes[i]) {
                     if (type.getExtends() != null) {
                         // we replace this type with its direct parent
                         Type widenedType = componentResolver.resolveType(type.getExtends());
@@ -56,7 +56,7 @@ public class TypeMatcher {
 
                 if (widenedInputType.isEmpty()) return Set.of();
 
-                Set<Type> match = findExactMatch(rules, query);
+                Set<ResolvedType> match = findExactMatch(rules, query);
                 if (!match.isEmpty()) return match;
             }
         }
@@ -64,7 +64,7 @@ public class TypeMatcher {
 
     /** Checks if there is a perfectly matching rule the given query and returns it.
      * Returns null if not match is found. */
-    private Set<Type> findExactMatch(List<Rule> rules, Query query) {
+    private Set<ResolvedType> findExactMatch(List<Rule> rules, Query query) {
         for (Rule rule : rules) {
             if (rule.operation != query.operation) continue;
             if (!(componentResolver.canResolveType(rule.resultType))) continue;
@@ -83,7 +83,7 @@ public class TypeMatcher {
 
             if (matches) {
                 return Set.of(
-                        componentResolver.resolveType(rule.resultType)
+                        ResolvedType.fromString(rule.resultType, componentResolver)
                 );
             }
         }
@@ -104,13 +104,13 @@ public class TypeMatcher {
     }
 
     static class Query {
-        public Query(TokenType operation, Set<Type>... inputTypes) {
+        public Query(TokenType operation, Set<ResolvedType>... inputTypes) {
             this.operation = operation;
             this.inputTypes = inputTypes;
         }
 
         TokenType operation;
-        Set<Type>[] inputTypes;
+        Set<ResolvedType>[] inputTypes;
     }
 
 }

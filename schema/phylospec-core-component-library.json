@@ -10,6 +10,7 @@
         "name": "Distribution",
         "description": "Abstract type representing a probability distribution",
         "namespace": "phylospec.types",
+        "typeParameters": ["T"],
         "properties": {
           "generatedType": {
             "type": "String",
