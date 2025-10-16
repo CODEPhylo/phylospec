@@ -2,6 +2,7 @@ package org.phylospec.components;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.phylospec.ast.AstResolver;
+import org.phylospec.ast.TypeError;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -70,14 +71,14 @@ public class ComponentResolver {
 
     /**
      * Imports a namespace. This makes all registered components and types
-     * in that namespace resolvable. Throws a {@link org.phylospec.ast.AstResolver.ResolutionError}
+     * in that namespace resolvable. Throws a {@link TypeError}
      * if the namespace is not known.
      */
     public void importNamespace(List<String> namespace) {
         String namespaceString = String.join(".", namespace);
 
         if (!knownNamespaces.contains(namespaceString)) {
-            throw new AstResolver.ResolutionError("Import " + namespaceString + " is not known");
+            throw new TypeError("Import " + namespaceString + " is not known");
         }
 
         for (ComponentLibrary library : componentLibraries) {
@@ -96,7 +97,7 @@ public class ComponentResolver {
 
     /**
      * Imports a namespace and its sub-namespaces. This makes all registered components
-     * and types in that namespace resolvable. Throws a {@link org.phylospec.ast.AstResolver.ResolutionError}
+     * and types in that namespace resolvable. Throws a {@link TypeError}
      * if the namespace is not known.
      */
     public void importEntireNamespace(List<String> namespace) {
@@ -104,7 +105,7 @@ public class ComponentResolver {
         String namespaceStringWithDot = String.join(".", namespace) + ".";
 
         if (!knownNamespaces.contains(namespaceString)) {
-            throw new AstResolver.ResolutionError("Namespace " + namespaceString + " is not known");
+            throw new TypeError("Import " + namespaceString + " is not known");
         }
 
         for (ComponentLibrary library : componentLibraries) {

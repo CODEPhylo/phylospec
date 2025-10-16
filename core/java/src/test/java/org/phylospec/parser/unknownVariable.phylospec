@@ -1,11 +1,11 @@
-Real a = 20
-Real b = 100 * c
+Real a = 20.0
+Real b = 100.0 * c
 
 // EXPECT AST
-// (AS Real a 20)
-// (AS Real b (* 100 c))
+// (AS Real a 20.0)
+// (AS Real b (* 100.0 c))
 // EXPECT AST
 
 // EXPECT RESOLUTION
-// Variable c is not known
+// Unknown variable: c
 // EXPECT RESOLUTION

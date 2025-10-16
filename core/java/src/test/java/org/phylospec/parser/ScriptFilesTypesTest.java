@@ -4,6 +4,8 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.phylospec.ast.AstResolver;
 import org.phylospec.ast.Stmt;
+import org.phylospec.ast.TypeError;
+import org.phylospec.ast.TypeResolver;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
@@ -21,12 +23,12 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ScriptFilesResolverTest {
+public class ScriptFilesTypesTest {
 
     /**
      * Goes through every .phylospec file in the test folder, parses it, and tests if
-     * the variables and types can be resolved or if the resolution errors match the ones
-     * in the .phylospec file comments.
+     * the variables and types can be resolved and pass the type checker, or if the
+     * type errors match the ones in the .phylospec file comments.
      */
     @TestFactory
     public Iterable<DynamicTest> testResolveAllPsScripts() throws IOException {
@@ -67,13 +69,13 @@ public class ScriptFilesResolverTest {
             ComponentResolver componentResolver = new ComponentResolver();
             componentResolver.registerLibraryFromFile("../../schema/phylospec-core-component-library.json");
             componentResolver.importEntireNamespace(List.of("phylospec"));
-            AstResolver resolver = new AstResolver(componentResolver);
+            TypeResolver resolver = new TypeResolver(componentResolver);
 
             List<String> actualResolutionErrors = new ArrayList<>();
             for (Stmt statement : statements) {
                 try {
                     statement.accept(resolver);
-                }  catch (AstResolver.ResolutionError e) {
+                }  catch (TypeError e) {
                     actualResolutionErrors.add(e.getMessage());
                 }
             }

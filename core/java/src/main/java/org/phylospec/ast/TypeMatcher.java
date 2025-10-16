@@ -32,6 +32,8 @@ public class TypeMatcher {
     ///
     /// Input types are widened automatically using the "extends" field in the component
     /// definitions.
+    ///
+    /// Returns null if no match is found.
     public String findMatch(List<List<Object>> typeMap, List<Object> query) {
         String exactMatch = findExactMatch(typeMap, query);
         if (exactMatch != null) {
@@ -44,7 +46,7 @@ public class TypeMatcher {
         while (true) {
             boolean reachedMostGeneralType = true;
 
-            for (int i = 0; i < query.size() - 1; i++) {  // the last entry contains the result
+            for (int i = 0; i < query.size(); i++) {
                 if (!componentResolver.canResolveType(query.get(i).toString())) continue;
 
                 Type type = componentResolver.resolveType(query.get(i).toString());

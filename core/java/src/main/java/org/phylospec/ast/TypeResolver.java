@@ -81,6 +81,7 @@ public class TypeResolver implements AstVisitor<Void, Type, Type> {
 
     @Override
     public Void visitImport(Stmt.Import stmt) {
+        componentResolver.importNamespace(stmt.namespace);
         return null;
     }
 
@@ -132,6 +133,10 @@ public class TypeResolver implements AstVisitor<Void, Type, Type> {
                 typeMap, List.of(expr.operator.type, rightType.getName())
         );
         Type resultType = componentResolver.resolveType(resultTypeName);
+
+        if (resultType == null) {
+            throw new TypeError("Operation " + expr.operator.lexeme + " is not supported for type " + rightType.getName());
+        }
 
         return remember(expr, resultType);
     }
@@ -188,6 +193,10 @@ public class TypeResolver implements AstVisitor<Void, Type, Type> {
                 typeMap, List.of(expr.operator.type, leftType.getName(), rightType.getName())
         );
         Type resultType = componentResolver.resolveType(resultTypeName);
+
+        if (resultType == null) {
+            throw new TypeError("Operation " + expr.operator.lexeme + " is not supported for types " + leftType.getName() + " and " + rightType.getName());
+        }
 
         return remember(expr, resultType);
     }
@@ -310,7 +319,13 @@ public class TypeResolver implements AstVisitor<Void, Type, Type> {
     @Override
     public Type visitAtomicType(AstType.Atomic expr) {
         // TODO: support generics
-        return componentResolver.resolveType(expr.name);
+        Type resolvedType = componentResolver.resolveType(expr.name);
+
+        if (resolvedType == null) {
+            throw new TypeError("Unknown type: " + expr.name);
+        }
+
+        return resolvedType;
     }
 
     @Override
@@ -318,7 +333,11 @@ public class TypeResolver implements AstVisitor<Void, Type, Type> {
         throw new TypeError("Generics are not yet supported");
     }
 
+    /** Asserts that the given type or any of its widened types matches
+     * the required type. */
     private void assertCompatibility(Type requiredType, Type givenType) {
+        assert (requiredType != null);
+
         if (givenType == null) {
             throw new IllegalArgumentException("Type does not match required " + requiredType.getName());
         }
@@ -340,7 +359,11 @@ public class TypeResolver implements AstVisitor<Void, Type, Type> {
 
     private Type remember(String variableName, Type resolvedType) {
         variableTypes.put(variableName, resolvedType);
-        System.out.println("Remember " + variableName + " with " + resolvedType.getName());
+        if (resolvedType != null) {
+            System.out.println("Remember " + variableName + " with " + resolvedType.getName());
+        } else {
+            System.out.println("Remember " + variableName + " with unknown type");
+        }
         return resolvedType;
     }
 }
