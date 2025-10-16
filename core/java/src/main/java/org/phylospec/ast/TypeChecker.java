@@ -59,7 +59,7 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         Set<ResolvedType> resolvedExpressionType = stmt.expression.accept(this);
         ResolvedType resolvedVariableType = stmt.type.accept(this);
 
-        if (!checkCompatibility(resolvedVariableType, resolvedExpressionType)) {
+        if (!TypeUtils.checkCompatibility(resolvedVariableType, resolvedExpressionType, componentResolver)) {
             throw new TypeError("Expression of type " + printType(resolvedExpressionType) + " cannot be assigned to variable " + stmt.name + " of type " + resolvedVariableType.getName());
         };
 
@@ -72,7 +72,7 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         Set<ResolvedType> resolvedExpressionType = stmt.expression.accept(this);
         ResolvedType resolvedVariableType = stmt.type.accept(this);
 
-        if (!checkCompatibility(resolvedVariableType, resolvedExpressionType)) {
+        if (!TypeUtils.checkCompatibility(resolvedVariableType, resolvedExpressionType, componentResolver)) {
             throw new TypeError("Expression of type " + printType(resolvedExpressionType) + " cannot be assigned to variable " + stmt.name + " of type " + resolvedVariableType.getName());
         };
 
@@ -237,7 +237,7 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         List<String> errorMessages = new ArrayList<>();
         for (Generator generator : generators) {
             try {
-                possibleReturnTypes.addAll(ResolvedGenerator.fromGenerator(
+                possibleReturnTypes.addAll(TypeUtils.resolveGeneratedType(
                         generator, resolvedArguments, componentResolver
                 ));
             }  catch (TypeError e) {
@@ -283,9 +283,7 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
 
     @Override
     public ResolvedType visitAtomicType(AstType.Atomic expr) {
-        // TODO: support generics
         ResolvedType resolvedType = ResolvedType.fromString(expr.name, componentResolver);
-
         return resolvedType;
     }
 
@@ -300,38 +298,6 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         }
 
         return resolvedType;
-    }
-
-    /** Checks that the given type or any of its widened types matches
-     * the required type. */
-    private boolean checkCompatibility(ResolvedType requiredType, Set<ResolvedType> givenType) {
-        assert (requiredType != null);
-
-        if (givenType.isEmpty()) {
-            return false;
-        }
-
-        for (ResolvedType type : givenType) {
-            boolean compatibleTypeFound = true;
-
-            while (!type.getName().equals(requiredType.getName())) {
-                String looserTypeName = type.getExtends();
-                if (looserTypeName == null) {
-                    compatibleTypeFound = false;
-                    break;
-                }
-                type = ResolvedType.fromString(looserTypeName, componentResolver);
-
-                if (type == null) {
-                    compatibleTypeFound = false;
-                    break;
-                }
-            }
-
-            if (compatibleTypeFound) return true;
-        }
-
-        return false;
     }
 
     private Set<ResolvedType> remember(Expr expr, Set<ResolvedType> resolvedType) {
@@ -355,8 +321,9 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
             return "unknown";
         }
         if (type.size() == 1) {
-            return type.iterator().next().getName();
+            ResolvedType onlyType = type.iterator().next();
+            return onlyType.getName() +  "<" + String.join(",", onlyType.getResolvedTypeParameters().stream().map(y -> printType(y)).toList()) + ">";
         }
-        return "[" + String.join(",", type.stream().map(ResolvedType::getName).toList()) + "]";
+        return "[" + String.join(",", type.stream().map(x -> x.getName() + "<" + String.join(",", x.getResolvedTypeParameters().stream().map(y -> printType(y)).toList()) + ">").toList()) + "]";
     }
 }

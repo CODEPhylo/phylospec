@@ -48,9 +48,6 @@ class ResolvedType {
     }
 
 
-    // Vector<Distribution<T>>
-    //
-
     public static ResolvedType fromString(String typeString, Map<String, Set<ResolvedType>> typeParameters, ComponentResolver componentResolver) {
         String atomicTypeString;
         String[] typeParametersNames;

@@ -7,8 +7,40 @@ import org.phylospec.components.Generator;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ResolvedGenerator {
-    public static Set<ResolvedType> fromGenerator(
+public class TypeUtils {
+    /** Checks that the given type or any of its widened types matches
+     * the required type. */
+    public boolean checkCompatibility(ResolvedType requiredType, Set<ResolvedType> givenType, ComponentResolver componentResolver) {
+        assert (requiredType != null);
+
+        if (givenType.isEmpty()) {
+            return false;
+        }
+
+        for (ResolvedType type : givenType) {
+            boolean compatibleTypeFound = true;
+
+            while (!type.getName().equals(requiredType.getName())) {
+                String looserTypeName = type.getExtends();
+                if (looserTypeName == null) {
+                    compatibleTypeFound = false;
+                    break;
+                }
+                type = ResolvedType.fromString(looserTypeName, componentResolver);
+
+                if (type == null) {
+                    compatibleTypeFound = false;
+                    break;
+                }
+            }
+
+            if (compatibleTypeFound) return true;
+        }
+
+        return false;
+    }
+
+    public static Set<ResolvedType> resolveGeneratedType(
             Generator generator,
             Map<String, Set<ResolvedType>> resolvedArguments,
             ComponentResolver componentResolver
@@ -36,8 +68,7 @@ public class ResolvedGenerator {
                 continue;
             }
 
-            if (!canMatchType(
-                    parameterName,
+            if (!TypeUtils.canMatchType(
                     parameter.getType(),
                     resolvedArguments.get(parameterName),
                     generator.getTypeParameters(),
@@ -61,9 +92,8 @@ public class ResolvedGenerator {
         }
     }
 
-    private static boolean canMatchType(
-            String parameterName,       // distributions=
-            String requiredTypeName,    // Vector<Distribution<Real>>
+    public static boolean canMatchType(
+            String requiredTypeName,
             Set<ResolvedType> resolvedType,
             List<String> typeParameters,
             Map<String, Set<ResolvedType>> resolvedTypeParameters,
@@ -94,10 +124,12 @@ public class ResolvedGenerator {
             for (int i = 0; i < genericTypeNames.length; i++) {
                 if (typeParameters.contains(genericTypeNames[i])) {
                     // we map the type to the type parameter
+
+                    // TODO: add proper type narrowing
                     localResolvedTypeParameters.computeIfAbsent(genericTypeNames[i], k -> new HashSet<>()).add(possibleType);
                 } else {
                     if (!canMatchType(
-                            parameterName, genericTypeNames[i], possibleType.getResolvedTypeParameters().get(i),
+                            genericTypeNames[i], possibleType.getResolvedTypeParameters().get(i),
                             typeParameters, localResolvedTypeParameters, componentResolver
                     )) {
                         continue possibleType;
@@ -116,9 +148,9 @@ public class ResolvedGenerator {
         return true;
     }
 
-    private static Set<ResolvedType> filterCompatible(String requiredAtomicTypeName, Set<ResolvedType> resolvedType, ComponentResolver componentResolver) {
+    private static Set<ResolvedType> filterCompatible(String requiredAtomicTypeName, Set<ResolvedType> possibleTypes, ComponentResolver componentResolver) {
         Set<ResolvedType> filteredTypes = new HashSet<>();
-        Set<ResolvedType> typesToTest = new HashSet<>(resolvedType);
+        Set<ResolvedType> typesToTest = new HashSet<>(possibleTypes);
 
         while (!typesToTest.isEmpty()) {
             ResolvedType current = typesToTest.iterator().next();
@@ -140,5 +172,4 @@ public class ResolvedGenerator {
 
         return  filteredTypes;
     }
-
 }
