@@ -10,6 +10,36 @@ import java.util.stream.Collectors;
 
 public class TypeUtils {
 
+    public static Set<ResolvedType> findIntersection(Set<ResolvedType> typeSet1, Set<ResolvedType> typeSet2, ComponentResolver componentResolver) {
+        Set<ResolvedType> intersection = new HashSet<>();
+
+        for (ResolvedType type1 : typeSet1) {
+            for (ResolvedType type2 : typeSet2) {
+                intersection.addAll(findIntersection(type1, type2, componentResolver));
+            }
+        }
+
+        return intersection;
+    }
+
+    private static Set<ResolvedType> findIntersection(ResolvedType type1, ResolvedType type2, ComponentResolver componentResolver) {
+        Set<ResolvedType> allType1Types = new HashSet<>();
+        visitContainedTypes(type1, x -> {
+            allType1Types.add(x);
+        }, componentResolver);
+
+        Set<ResolvedType> allType2Types = new HashSet<>();
+        allType2Types.add(type2);
+        visitContainedTypes(type2, x -> {
+            allType2Types.add(x);
+        }, componentResolver);
+
+        Set<ResolvedType> intersection = allType1Types;
+        allType2Types.retainAll(allType2Types);
+
+        return intersection;
+    }
+
     public static Set<ResolvedType> findUnion(Set<ResolvedType> typeSet1, Set<ResolvedType> typeSet2, ComponentResolver componentResolver) {
         Set<ResolvedType> union = new HashSet<>();
         union.addAll(typeSet1);
@@ -32,31 +62,70 @@ public class TypeUtils {
         return union;
     }
 
-    public static boolean partiallyCoversTypeSet(ResolvedType query, Set<ResolvedType> refTypeSet, ComponentResolver componentResolver) {
+    public static boolean isCoveredByTypeSet(ResolvedType query, Set<ResolvedType> refTypeSet, ComponentResolver componentResolver) {
         for (ResolvedType ref : refTypeSet) {
-            if (partiallyCoversTypeSet(query, ref, componentResolver)) {
+            if (!isCoveredByType(query, ref, componentResolver)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isCoveredByType(ResolvedType query, ResolvedType ref, ComponentResolver componentResolver) {
+        if (!query.equals(ref)) return false;
+
+        final boolean[] coversRevType = { true }; // use a mutable wrapper that we can change it in the lambda
+        visitExtendedTypes(query, x -> {
+            if (!isCoveredByExactType(x, ref, componentResolver)) coversRevType[0] = false;
+        }, componentResolver);
+        return coversRevType[0];
+    }
+
+    private static boolean isCoveredByExactType(ResolvedType query, ResolvedType ref, ComponentResolver componentResolver) {
+        if (!query.getTypeComponent().equals(ref.getTypeComponent())) return false;
+        if (query.getResolvedTypeParameters().size() != ref.getResolvedTypeParameters().size()) return false;
+
+        for (int i = 0; i < query.getResolvedTypeParameters().size(); i++) {
+            boolean isPartiallyCovered = true;
+            for (ResolvedType queryTypeParam : query.getResolvedTypeParameters().get(i)) {
+                if (!isCoveredByTypeSet(queryTypeParam, ref.getResolvedTypeParameters().get(i), componentResolver)) {
+                    isPartiallyCovered = false;
+                    break;
+                }
+            }
+
+            if (!isPartiallyCovered) return false;
+        }
+
+        return true;
+    }
+
+    public static boolean partiallyCoversType(ResolvedType query, Set<ResolvedType> refTypeSet, ComponentResolver componentResolver) {
+        for (ResolvedType ref : refTypeSet) {
+            if (partiallyCoversType(query, ref, componentResolver)) {
                 return true;
             }
         }
         return false;
     }
 
-    public static boolean partiallyCoversTypeSet(ResolvedType query, ResolvedType ref, ComponentResolver componentResolver) {
+    public static boolean partiallyCoversType(ResolvedType query, ResolvedType ref, ComponentResolver componentResolver) {
         if (query.equals(ref)) return true;
 
         final boolean[] coversRevType = { false }; // use a mutable wrapper that we can change it in the lambda
         visitExtendedTypes(ref, x -> {
-            if (partiallyCoversType(query, x, componentResolver)) coversRevType[0] = true;
+            if (partiallyExactlyCoversType(query, x, componentResolver)) coversRevType[0] = true;
         }, componentResolver);
         return coversRevType[0];
     }
 
-    private static boolean partiallyCoversType(ResolvedType query, ResolvedType ref, ComponentResolver componentResolver) {
+    public static boolean partiallyExactlyCoversType(ResolvedType query, ResolvedType ref, ComponentResolver componentResolver) {
         if (!query.getTypeComponent().equals(ref.getTypeComponent())) return false;
         if (query.getResolvedTypeParameters().size() != ref.getResolvedTypeParameters().size()) return false;
+
         for (int i = 0; i < query.getResolvedTypeParameters().size(); i++) {
             assert query.getResolvedTypeParameters().get(i).size() == 1;
-            if (!partiallyCoversTypeSet(
+            if (!partiallyCoversType(
                     query.getResolvedTypeParameters().get(i).iterator().next(),
                     ref.getResolvedTypeParameters().get(i),
                     componentResolver
@@ -83,6 +152,42 @@ public class TypeUtils {
             if (query.equals(x)) coversRevType[0] = true;
         }, componentResolver);
         return coversRevType[0];
+    }
+
+    private static void visitContainedTypes(Set<ResolvedType> typeSet, Consumer<ResolvedType> visitor, ComponentResolver componentResolver) {
+        for (ResolvedType type : typeSet) {
+            visitContainedTypes(type, visitor, componentResolver);
+        }
+    }
+
+    private static void visitContainedTypes(ResolvedType type, Consumer<ResolvedType> visitor, ComponentResolver componentResolver) {
+        if (type.getResolvedTypeParameters().size() == 0) visitor.accept(type);
+
+        boolean fullyResolved = false;
+        for (int i = 0; i < type.getResolvedTypeParameters().size(); i++) {
+            Set<ResolvedType> parameterTypeSet = type.getResolvedTypeParameters().get(i);
+
+            if (parameterTypeSet.size() == 1) continue;
+
+            for (ResolvedType parameterType : parameterTypeSet) {
+                Set<ResolvedType> clonedParameterTypeSet = new HashSet<>();
+                clonedParameterTypeSet.add(parameterType);
+
+                List<Set<ResolvedType>> clonedTypeParams = new ArrayList<>(
+                        type.getResolvedTypeParameters()
+                );
+                clonedTypeParams.set(i, clonedParameterTypeSet);
+
+                ResolvedType clonedType = new ResolvedType(type.getTypeComponent(), clonedTypeParams);
+                visitor.accept(clonedType);
+
+                visitContainedTypes(clonedType, visitor, componentResolver);
+            }
+
+            fullyResolved = false;
+        }
+
+        if (fullyResolved) visitor.accept(type);
     }
 
     private static void visitExtendedTypes(ResolvedType type, Consumer<ResolvedType> visitor, ComponentResolver componentResolver) {

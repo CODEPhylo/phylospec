@@ -146,4 +146,5 @@ public class ComponentResolver {
     public Type resolveType(String typeName) {
         return importedTypes.get(typeName);
     }
+
 }

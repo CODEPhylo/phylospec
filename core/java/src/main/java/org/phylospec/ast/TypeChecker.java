@@ -59,7 +59,7 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
         ResolvedType resolvedVariableType = stmt.type.accept(this);
 
-        if (!TypeUtils.partiallyCoversTypeSet(resolvedVariableType, resolvedExpressionTypeSet, componentResolver)) {
+        if (!TypeUtils.partiallyCoversType(resolvedVariableType, resolvedExpressionTypeSet, componentResolver)) {
             throw new TypeError("Expression of type " + printType(resolvedExpressionTypeSet) + " cannot be assigned to variable " + stmt.name + " of type " + printType(Set.of(resolvedVariableType)));
         };
 
@@ -72,7 +72,7 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
         ResolvedType resolvedVariableType = stmt.type.accept(this);
 
-        if (!TypeUtils.partiallyCoversTypeSet(resolvedVariableType, resolvedExpressionTypeSet, componentResolver)) {
+        if (!TypeUtils.partiallyCoversType(resolvedVariableType, resolvedExpressionTypeSet, componentResolver)) {
             throw new TypeError("Expression of type " + printType(resolvedExpressionTypeSet) + " cannot be assigned to variable " + stmt.name + " of type " + printType(Set.of(resolvedVariableType)));
         };
 
