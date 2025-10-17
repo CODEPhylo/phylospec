@@ -1,7 +1,6 @@
 package org.phylospec.components;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.phylospec.ast.AstResolver;
 import org.phylospec.ast.TypeError;
 
 import java.io.FileInputStream;

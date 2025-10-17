@@ -10,7 +10,7 @@ Vector<String> vector = [
 
 ]
 
-Vector<Distribution> components = [
+Vector<Distribution<Real>> components = [
     Normal(mean=0.0, sd=1.0),
     Normal(mean=5.0, sd=2.0),
     Normal(mean=10.0, sd=1.5)

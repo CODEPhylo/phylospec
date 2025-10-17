@@ -56,11 +56,11 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
 
     @Override
     public Void visitAssignment(Stmt.Assignment stmt) {
-        Set<ResolvedType> resolvedExpressionType = stmt.expression.accept(this);
+        Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
         ResolvedType resolvedVariableType = stmt.type.accept(this);
 
-        if (!TypeUtils.checkCompatibility(resolvedVariableType, resolvedExpressionType, componentResolver)) {
-            throw new TypeError("Expression of type " + printType(resolvedExpressionType) + " cannot be assigned to variable " + stmt.name + " of type " + resolvedVariableType.getName());
+        if (!TypeUtils.partiallyCoversTypeSet(resolvedVariableType, resolvedExpressionTypeSet, componentResolver)) {
+            throw new TypeError("Expression of type " + printType(resolvedExpressionTypeSet) + " cannot be assigned to variable " + stmt.name + " of type " + printType(Set.of(resolvedVariableType)));
         };
 
         remember(stmt.name, resolvedVariableType);
@@ -69,11 +69,11 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
 
     @Override
     public Void visitDraw(Stmt.Draw stmt) {
-        Set<ResolvedType> resolvedExpressionType = stmt.expression.accept(this);
+        Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
         ResolvedType resolvedVariableType = stmt.type.accept(this);
 
-        if (!TypeUtils.checkCompatibility(resolvedVariableType, resolvedExpressionType, componentResolver)) {
-            throw new TypeError("Expression of type " + printType(resolvedExpressionType) + " cannot be assigned to variable " + stmt.name + " of type " + resolvedVariableType.getName());
+        if (!TypeUtils.partiallyCoversTypeSet(resolvedVariableType, resolvedExpressionTypeSet, componentResolver)) {
+            throw new TypeError("Expression of type " + printType(resolvedExpressionTypeSet) + " cannot be assigned to variable " + stmt.name + " of type " + printType(Set.of(resolvedVariableType)));
         };
 
         remember(stmt.name, resolvedVariableType);
@@ -273,7 +273,17 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
 
     @Override
     public Set<ResolvedType> visitArray(Expr.Array expr) {
-        throw new TypeError("Arrays are not yet supported");
+        Set<ResolvedType> typeUnion = Set.of();
+
+        for (Expr element : expr.elements) {
+            Set<ResolvedType> elementType = element.accept(this);
+            typeUnion = TypeUtils.findUnion(typeUnion, elementType, componentResolver);
+        }
+
+        ResolvedType vectorType = ResolvedType.fromString("Vector", componentResolver);
+        vectorType.getResolvedTypeParameters().add(typeUnion);
+
+        return Set.of(vectorType);
     }
 
     @Override
@@ -309,7 +319,7 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
     private ResolvedType remember(String variableName, ResolvedType resolvedType) {
         variableTypes.put(variableName, resolvedType);
         if (resolvedType != null) {
-            System.out.println("Remember " + variableName + " with " + resolvedType.getName());
+            System.out.println("Remember " + variableName + " with " + printType(Set.of(resolvedType)));
         } else {
             System.out.println("Remember " + variableName + " with unknown type");
         }

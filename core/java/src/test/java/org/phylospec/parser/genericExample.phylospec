@@ -1,1 +1,1 @@
-Vector<Real> a = IID(base ~ Exponential(rate = 10.0), n = 5)
+Vector<Real> a = IID(base ~ Normal(mean = 10.0, sd = 5.0), n = 5)

@@ -3,10 +3,7 @@ package org.phylospec.ast;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Type;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 class ResolvedType {
     ResolvedType(Type type, List<Set<ResolvedType>> inferredTypeParameters) {
@@ -16,6 +13,10 @@ class ResolvedType {
 
     private final List<Set<ResolvedType>> inferredTypeParameters;
     private final Type type;
+
+    public Type getTypeComponent() {
+        return type;
+    }
 
     public String getName() {
         return type.getName();
@@ -38,13 +39,7 @@ class ResolvedType {
     }
 
     public static ResolvedType fromString(String typeString, ComponentResolver componentResolver) {
-        Type typeComponent = componentResolver.resolveType(typeString);
-
-        if (typeComponent == null) {
-            throw new TypeError("Unknown type: " + typeString);
-        }
-
-        return new ResolvedType(typeComponent, new ArrayList<>());
+        return ResolvedType.fromString(typeString, new HashMap<>(), componentResolver);
     }
 
 
@@ -79,5 +74,17 @@ class ResolvedType {
         }
 
         return new ResolvedType(typeComponent, inferredTypeParameters);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        ResolvedType that = (ResolvedType) o;
+        return Objects.equals(inferredTypeParameters, that.inferredTypeParameters) && Objects.equals(type, that.type);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(inferredTypeParameters, type);
     }
 }
