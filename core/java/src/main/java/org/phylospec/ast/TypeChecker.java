@@ -59,7 +59,7 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
         ResolvedType resolvedVariableType = stmt.type.accept(this);
 
-        if (!TypeUtils.partiallyCoversType(resolvedVariableType, resolvedExpressionTypeSet, componentResolver)) {
+        if (!TypeUtils.canBeAssignedTo(resolvedExpressionTypeSet, resolvedVariableType, componentResolver)) {
             throw new TypeError("Expression of type " + printType(resolvedExpressionTypeSet) + " cannot be assigned to variable " + stmt.name + " of type " + printType(Set.of(resolvedVariableType)));
         };
 
@@ -72,7 +72,7 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
         ResolvedType resolvedVariableType = stmt.type.accept(this);
 
-        if (!TypeUtils.partiallyCoversType(resolvedVariableType, resolvedExpressionTypeSet, componentResolver)) {
+        if (!TypeUtils.canBeAssignedTo(resolvedExpressionTypeSet, resolvedVariableType, componentResolver)) {
             throw new TypeError("Expression of type " + printType(resolvedExpressionTypeSet) + " cannot be assigned to variable " + stmt.name + " of type " + printType(Set.of(resolvedVariableType)));
         };
 
@@ -110,9 +110,9 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
             }
             default -> Set.of();
         };
-        Set<ResolvedType> resolvedType = new HashSet<>(
-                typeName.stream().map(x -> ResolvedType.fromString(x, componentResolver)).toList()
-        );
+        Set<ResolvedType> resolvedType = typeName.stream()
+                .map(x -> ResolvedType.fromString(x, componentResolver))
+                .collect(Collectors.toSet());
 
         return remember(expr, resolvedType);
     }
@@ -273,17 +273,13 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
 
     @Override
     public Set<ResolvedType> visitArray(Expr.Array expr) {
-        Set<ResolvedType> typeUnion = Set.of();
+        List<Set<ResolvedType>> elementTypeSets = expr.elements.stream()
+                .map(x -> x.accept(this))
+                .collect(Collectors.toList());
 
-        for (Expr element : expr.elements) {
-            Set<ResolvedType> elementType = element.accept(this);
-            typeUnion = TypeUtils.findUnion(typeUnion, elementType, componentResolver);
-        }
+        Set<ResolvedType> arrayType = TypeUtils.inferArrayType(elementTypeSets, componentResolver);
 
-        ResolvedType vectorType = ResolvedType.fromString("Vector", componentResolver);
-        vectorType.getResolvedTypeParameters().add(typeUnion);
-
-        return Set.of(vectorType);
+        return remember(expr, arrayType);
     }
 
     @Override
@@ -302,8 +298,8 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         ResolvedType resolvedType = ResolvedType.fromString(expr.name, componentResolver);
 
         for (AstType typeParam : expr.typeParameters) {
-            resolvedType.getResolvedTypeParameters().add(
-                    Set.of(typeParam.accept(this))
+            resolvedType.getParameterTypes().add(
+                    typeParam.accept(this)
             );
         }
 
@@ -332,8 +328,8 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         }
         if (type.size() == 1) {
             ResolvedType onlyType = type.iterator().next();
-            return onlyType.getName() +  "<" + String.join(",", onlyType.getResolvedTypeParameters().stream().map(y -> printType(y)).toList()) + ">";
+            return onlyType.getName() +  "<" + String.join(",", onlyType.getParameterTypes().stream().map(ResolvedType::getName).toList()) + ">";
         }
-        return "[" + String.join(",", type.stream().map(x -> x.getName() + "<" + String.join(",", x.getResolvedTypeParameters().stream().map(y -> printType(y)).toList()) + ">").toList()) + "]";
+        return "[" + String.join(",", type.stream().map(x -> x.getName() + "<" + String.join(",", x.getParameterTypes().stream().map(ResolvedType::getName).toList()) + ">").toList()) + "]";
     }
 }

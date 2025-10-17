@@ -5,13 +5,15 @@ import org.phylospec.components.Type;
 
 import java.util.*;
 
+import static org.phylospec.Utils.visitCombinations;
+
 class ResolvedType {
-    ResolvedType(Type type, List<Set<ResolvedType>> inferredTypeParameters) {
+    ResolvedType(Type type, List<ResolvedType> parameterTypes) {
         this.type = type;
-        this.inferredTypeParameters = inferredTypeParameters;
+        this.parameterTypes = parameterTypes;
     }
 
-    private final List<Set<ResolvedType>> inferredTypeParameters;
+    private final List<ResolvedType> parameterTypes;
     private final Type type;
 
     public Type getTypeComponent() {
@@ -26,24 +28,19 @@ class ResolvedType {
         return type.getExtends();
     }
 
-    public List<Set<ResolvedType>> getResolvedTypeParameters() {
-        return inferredTypeParameters;
+    public List<ResolvedType> getParameterTypes() {
+        return parameterTypes;
     }
 
-    public List<String> getTypeParameters() {
+    public List<String> getParametersNames() {
         return type.getTypeParameters();
     }
 
-    public String getNamespace() {
-        return type.getNamespace();
-    }
-
     public static ResolvedType fromString(String typeString, ComponentResolver componentResolver) {
-        return ResolvedType.fromString(typeString, new HashMap<>(), componentResolver);
+        return ResolvedType.fromString(typeString, new HashMap<>(), componentResolver).iterator().next();
     }
 
-
-    public static ResolvedType fromString(String typeString, Map<String, Set<ResolvedType>> typeParameters, ComponentResolver componentResolver) {
+    public static Set<ResolvedType> fromString(String typeString, Map<String, Set<ResolvedType>> typeParameters, ComponentResolver componentResolver) {
         String atomicTypeString;
         String[] typeParametersNames;
 
@@ -69,22 +66,28 @@ class ResolvedType {
             if (typeParameters.containsKey(typeParameterName)) {
                 inferredTypeParameters.add(typeParameters.get(typeParameterName));
             } else {
-                inferredTypeParameters.add(Set.of(ResolvedType.fromString(typeParameterName, typeParameters, componentResolver)));
+                inferredTypeParameters.add(ResolvedType.fromString(typeParameterName, typeParameters, componentResolver));
             }
         }
 
-        return new ResolvedType(typeComponent, inferredTypeParameters);
+        Set<ResolvedType> resultingTypeSet = new HashSet<>();
+        visitCombinations(
+                x -> resultingTypeSet.add(new ResolvedType(typeComponent, x)),
+                inferredTypeParameters
+        );
+
+        return resultingTypeSet;
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         ResolvedType that = (ResolvedType) o;
-        return Objects.equals(inferredTypeParameters, that.inferredTypeParameters) && Objects.equals(type, that.type);
+        return Objects.equals(parameterTypes, that.parameterTypes) && Objects.equals(type, that.type);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(inferredTypeParameters, type);
+        return Objects.hash(parameterTypes, type);
     }
 }

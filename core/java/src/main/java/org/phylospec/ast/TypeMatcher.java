@@ -82,9 +82,7 @@ public class TypeMatcher {
             }
 
             if (matches) {
-                return Set.of(
-                        ResolvedType.fromString(rule.resultType, componentResolver)
-                );
+                return Set.of(ResolvedType.fromString(rule.resultType, componentResolver));
             }
         }
 
