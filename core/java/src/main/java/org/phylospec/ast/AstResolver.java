@@ -148,8 +148,6 @@ public class AstResolver implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitCall(Expr.Call expr) {
-        expr.function.accept(this);
-
         for (Expr.Argument argument : expr.arguments) {
             argument.accept(this);
         }

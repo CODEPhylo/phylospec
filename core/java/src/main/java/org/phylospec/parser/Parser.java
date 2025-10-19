@@ -25,7 +25,7 @@ public class Parser {
      * term           → factor ( ( "-" | "+" ) factor )* ;
      * factor         → unary ( ( "/" | "*" ) unary )* ;
      * unary          → ( "!" | "-" ) unary | call ;
-     * call           → array ( "(" arguments? ")" | "." IDENTIFIER )* ;
+     * call           → array ( "." IDENTIFIER )* | IDENTIFIER ( "(" arguments? ")" ) ;
      * arguments      → argument ( "," argument )* | expression ;
      * argument       → IDENTIFIER "=" expression | IDENTIFIER ;
      * array          → "[" "]" | "[" expression ( "," expression )* ","? "]"  | primary;
@@ -209,29 +209,30 @@ public class Parser {
     private Expr call() {
         Expr expr = array();
 
-        while (true) {
-            if (match(TokenType.LEFT_PAREN)) {
-                // we are in a bracket, let's ignore EOL statements
-                boolean oldSkipNewLines = skipNewLines;
-                skipNewLines = true;
+        if (expr instanceof Expr.Variable && match(TokenType.LEFT_PAREN)) {
+            // this is a function call
+            String functionName = ((Expr.Variable) expr).variableName;
 
-                expr = finishCall(expr);
+            // we are in a bracket, let's ignore EOL statements
+            boolean oldSkipNewLines = skipNewLines;
+            skipNewLines = true;
 
-                consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
+            expr = finishCall(functionName);
 
-                skipNewLines = oldSkipNewLines;
-            } else if (match(TokenType.DOT)) {
-                Token name = consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
-                expr = new Expr.Get(expr, name.lexeme);
-            } else {
-                break;
-            }
+            consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
+
+            skipNewLines = oldSkipNewLines;
+        }
+
+        while (match(TokenType.DOT)) {
+            Token name = consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+            expr = new Expr.Get(expr, name.lexeme);
         }
 
         return expr;
     }
 
-    private Expr finishCall(Expr callee) {
+    private Expr finishCall(String calleeName) {
         List<Expr.Argument> arguments = new ArrayList<>();
         if (!check(TokenType.RIGHT_PAREN)) {
             do {
@@ -248,7 +249,7 @@ public class Parser {
             } while (match(TokenType.COMMA));
         }
 
-        return new Expr.Call(callee, arguments.toArray(Expr.Argument[]::new));
+        return new Expr.Call(calleeName, arguments.toArray(Expr.Argument[]::new));
     }
 
     private Expr.Argument argument() {

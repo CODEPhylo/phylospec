@@ -65,7 +65,7 @@ public class AstPrinter implements AstVisitor<String, String, String> {
 
     @Override
     public String visitCall(Expr.Call expr) {
-        String result = "(CA " + expr.function.accept(this) + " ";
+        String result = "(CA " + expr.functionName + " ";
 
         for (int i = 0; i < expr.arguments.length; i++) {
             result += expr.arguments[i].accept(this);

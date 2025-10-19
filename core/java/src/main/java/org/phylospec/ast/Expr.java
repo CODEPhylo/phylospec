@@ -157,32 +157,32 @@ public abstract class Expr {
 
     /** Represents a function or distribution call.
      * <br>
-     * The function itself can be represented by any expression.
-     * This means that for `readData().getValue()`, `function`
-     * corresponds to `readData().getValue`.
+     * The function itself is represented by its name.
+     * This means that methods like `readData().getValue()` are not
+     * supported.
      * <br>
      * Arguments are either of type {@link Expr.AssignedArgument}
      * (for `exp(mean = someValue)`) or {@link Expr.DrawnArgument}
      * (for `exp(mean ~ someDist)`).*/
     public static class Call extends Expr {
-        public Call(Expr function, Argument... arguments) {
-            this.function = function;
+        public Call(String functionName, Argument... arguments) {
+            this.functionName = functionName;
             this.arguments = arguments;
         }
 
-        public final Expr function;
+        public final String functionName;
         public final Argument[] arguments;
 
         @Override
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Call call = (Call) o;
-            return Objects.equals(function, call.function) && Objects.deepEquals(arguments, call.arguments);
+            return Objects.equals(functionName, call.functionName) && Objects.deepEquals(arguments, call.arguments);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(function, Arrays.hashCode(arguments));
+            return Objects.hash(functionName, Arrays.hashCode(arguments));
         }
 
         @Override

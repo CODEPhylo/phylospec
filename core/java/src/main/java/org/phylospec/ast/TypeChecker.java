@@ -215,21 +215,16 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
 
     @Override
     public Set<ResolvedType> visitCall(Expr.Call expr) {
-        Set<ResolvedType> functionType = expr.function.accept(this);
-
          // resolve arguments
         Map<String, Set<ResolvedType>> resolvedArguments = Arrays.stream(expr.arguments).collect(
                 Collectors.toMap(x -> x.name, x -> x.expression.accept(this))
         );
 
         // fetch all compatible generators
-        List<Generator> generators = new ArrayList<>();
-        for (ResolvedType type : functionType) {
-            // TODO: right now, methods are not supported (they won't be known generators)
-            generators.addAll(componentResolver.resolveGenerator(type.getName()));
-        }
+        // TODO: right now, methods are not supported (they won't be known generators)
+        List<Generator> generators = componentResolver.resolveGenerator(expr.functionName);
         if (generators.isEmpty()) {
-            throw new TypeError("Unknown function: " + expr.function.accept(printer));
+            throw new TypeError("Unknown function: " + expr.functionName);
         }
 
         // check if generators are compatible with arguments
@@ -246,7 +241,7 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         }
 
         if (possibleReturnTypes.isEmpty() && errorMessages.isEmpty()) {
-            throw new TypeError("Function with the given arguments is not known: " + expr.function.accept(printer));
+            throw new TypeError("Function with the given arguments is not known: " + expr.functionName);
         } else if (possibleReturnTypes.isEmpty()) {
             String errorMessage = "Function with the given arguments is not known: ";
             errorMessage += String.join("\n", errorMessages);
