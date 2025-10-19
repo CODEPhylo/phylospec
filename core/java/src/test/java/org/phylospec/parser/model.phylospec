@@ -1,28 +1,24 @@
 Alignment observedAlignment = nexus(
 	file="alignment.nexus"
 )
-Integer L = observedAlignment.nchar
 
 QMatrix Q = HKY(
 	kappa ~ LogNormal(sdlog=0.5, meanlog=1.0),
-	freq ~ Dirichlet(alpha=[2.0, 2.0, 2.0, 2.0]),
+	baseFrequencies ~ Dirichlet(alpha=[2.0, 2.0, 2.0, 2.0]),
 )
-PositiveReal mu ~ LogNormal(meanlog=-5.0, sdlog=1.25)
 Tree tree ~ Coalescent(
-	taxa,
-	theta ~ LogNormal(meanlog=3.0, sdlog=2.0),
+	taxa = observedAlignment.taxa,
+	populationSize ~ LogNormal(meanlog=3.0, sdlog=2.0),
 )
 
 @observedAs(observedAlignment)
 Alignment alignment = PhyloCTMC(
-	L, Q, mu, tree
+	Q, tree
 )
 
 // EXPECT AST
 // (AS Alignment observedAlignment (CA nexus (AA file "alignment.nexus")))
-// (AS Integer L (GET observedAlignment nchar))
-// (AS QMatrix Q (CA HKY (DA kappa (CA LogNormal (AA sdlog 0.5) (AA meanlog 1.0))) (DA freq (CA Dirichlet (AA alpha (AR 2.0 2.0 2.0 2.0))))))
-// (DR PositiveReal mu (CA LogNormal (AA meanlog (- 5.0)) (AA sdlog 1.25)))
-// (DR Tree tree (CA Coalescent (AA taxa taxa) (DA theta (CA LogNormal (AA meanlog 3.0) (AA sdlog 2.0)))))
-// (@ (CA observedAs (AA observedAlignment observedAlignment)) (AS Alignment alignment (CA PhyloCTMC (AA L L) (AA Q Q) (AA mu mu) (AA tree tree))))
+// (AS QMatrix Q (CA HKY (DA kappa (CA LogNormal (AA sdlog 0.5) (AA meanlog 1.0))) (DA baseFrequencies (CA Dirichlet (AA alpha (AR 2.0 2.0 2.0 2.0))))))
+// (DR Tree tree (CA Coalescent (AA taxa (GET observedAlignment taxa)) (DA populationSize (CA LogNormal (AA meanlog 3.0) (AA sdlog 2.0)))))
+// (@ (CA observedAs (AA observedAlignment observedAlignment)) (AS Alignment alignment (CA PhyloCTMC (AA Q Q) (AA tree tree))))
 // EXPECT AST

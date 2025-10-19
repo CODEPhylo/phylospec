@@ -110,18 +110,18 @@ public class TypeUtils {
 
         // check passed types and resolve type parameters
 
-        Map<String, Set<ResolvedType>> resolvedTypeParameters = new HashMap<>();
+        Map<String, List<ResolvedType>> possibleParameterTypeSets = new HashMap<>();
         for (Argument parameter : parameters) {
             String parameterName = parameter.getName();
 
-            Set<ResolvedType> resolvedArgument = null;
-            if (resolvedArguments.get(null) == null) {
-                resolvedArgument = resolvedArguments.get(parameterName);
-            } else if (parameter.getRequired()) {
-                resolvedArgument = resolvedArguments.get(null);
+            Set<ResolvedType> resolvedArgumentTypeSet = resolvedArguments.get(parameterName);
+
+            if (resolvedArgumentTypeSet == null && parameter.getRequired()) {
+                // there might be an unnamed argument
+                resolvedArgumentTypeSet = resolvedArguments.get(null);
             }
 
-            if (resolvedArgument == null) {
+            if (resolvedArgumentTypeSet == null) {
                 if (parameter.getRequired()) {
                     throw new TypeError("Missing required argument for function " + generator.getName() + ": " + parameterName);
                 }
@@ -129,128 +129,153 @@ public class TypeUtils {
                 continue;
             }
 
-            if (!TypeUtils.checkAssignabilityAndBindTypeParameters(
-                    parameter.getType(),
-                    resolvedArgument,
-                    generator.getTypeParameters(),
-                    resolvedTypeParameters,
-                    componentResolver
-            )) {
+            boolean foundMatch = false;
+            for (ResolvedType possibleArgumentType : resolvedArgumentTypeSet) {
+                if (TypeUtils.checkAssignabilityAndResolveTypeParameters(
+                        parameter.getType(),
+                        possibleArgumentType,
+                        generator.getTypeParameters(),
+                        possibleParameterTypeSets,
+                        componentResolver
+                )) {
+                    foundMatch = true;
+                }
+            }
+
+            if (!foundMatch) {
                 throw new TypeError("Wrong argument type for function " + generator.getName() + " and argument " + parameterName);
             }
 
         }
 
+        // find the lowest cover for every type parameter
+
+        Map<String, Set<ResolvedType>> parameterTypeSets = new HashMap<>();
+        for (String typeParameter : possibleParameterTypeSets.keySet()) {
+            parameterTypeSets.put(
+                    typeParameter,
+                    Set.of(TypeUtils.getLowestCover(
+                            possibleParameterTypeSets.get(typeParameter), componentResolver
+                    ))
+            );
+        }
+
+
         // construct return type
 
         String returnTypeName = generator.getGeneratedType();
-        return ResolvedType.fromString(returnTypeName, resolvedTypeParameters, componentResolver);
+        return ResolvedType.fromString(returnTypeName, parameterTypeSets, componentResolver);
     }
 
-    public static boolean checkAssignabilityAndBindTypeParameters(
-            String requiredTypeName,
-            Set<ResolvedType> resolvedTypeSet,
-            List<String> typeParameters,
-            Map<String, Set<ResolvedType>> resolvedParameterTypeSets,
+    public static boolean checkAssignabilityAndResolveTypeParameters(
+            String requiredTypeName,        // Distribution<K, V>
+            ResolvedType resolvedType,      // RT Vector<Real, Real>
+            List<String> typeParameterNames,    // T
+            Map<String, List<ResolvedType>> resolvedTypeParameterTypes,
             ComponentResolver componentResolver
     ) {
-        String requiredAtomicTypeName = requiredTypeName;
-        final String[] genericTypeNames;
-
-        // parse type name
-
-        if (requiredTypeName.contains("<")) {
-            // this is a generic type
-            requiredAtomicTypeName = requiredTypeName.substring(0, requiredTypeName.indexOf("<"));
-            String requiredTypeGenerics = requiredTypeName.substring(requiredTypeName.indexOf("<") + 1, requiredTypeName.length() - 1);
-            genericTypeNames = requiredTypeGenerics.split(",");
-        } else {
-            genericTypeNames = new String[]{};
+        if (typeParameterNames.contains(requiredTypeName)) {
+            resolvedTypeParameterTypes
+                    .computeIfAbsent(requiredTypeName, x -> new ArrayList<>())
+                    .add(resolvedType);
+            return true;
         }
 
-        resolvedTypeSet = filterCompatible(requiredAtomicTypeName, resolvedTypeSet, componentResolver);
-        resolvedTypeSet.removeIf(x -> x.getParametersNames().size() != genericTypeNames.length);
+        if (!isGeneric(requiredTypeName)) {
+            return covers(
+                    ResolvedType.fromString(requiredTypeName, componentResolver),
+                    resolvedType,
+                    componentResolver);
+        }
 
-        boolean hasMatch = false;
-        Map<String, Set<ResolvedType>> localResolvedTypeParameters = new HashMap<>();
+        String strippedRequiredTypeName = stripGenerics(requiredTypeName); // Vector
+        List<String> requiredParameterTypeNames = parseParameterTypeNames(requiredTypeName);
 
-        possibleType:
-        for (ResolvedType possibleType : resolvedTypeSet) {
-            if (possibleType.getParametersNames().size() != genericTypeNames.length) continue;
-
-            for (int i = 0; i < genericTypeNames.length; i++) {
-                if (typeParameters.contains(genericTypeNames[i])) {
-                    // we map the type to the type parameter
-
-                    // TODO: add proper type narrowing
-                    localResolvedTypeParameters.computeIfAbsent(genericTypeNames[i], k -> new HashSet<>()).add(
-                            possibleType.getParameterTypes().get(i)
-                    );
-                } else {
-                    if (!checkAssignabilityAndBindTypeParameters(
-                            genericTypeNames[i], Set.of(possibleType.getParameterTypes().get(i)),
-                            typeParameters, localResolvedTypeParameters, componentResolver
-                    )) {
-                        continue possibleType;
+        Map<String, List<ResolvedType>> localResolvedTypeParameterTypes = new HashMap<>();
+        boolean[] foundMatch = new boolean[] { false };
+        visitParents(
+                resolvedType,
+                type -> {
+                    if (!Objects.equals(type.getName(), strippedRequiredTypeName)) {
+                        return true;
                     }
-                }
-            }
+                    if (requiredParameterTypeNames.size() != type.getParametersNames().size()) {
+                        return true;
+                    }
 
-            hasMatch = true;
-        }
+                    boolean foundMatchForAll = true;
+                    for (int i = 0; i < requiredParameterTypeNames.size(); i++) {
+                        if (!checkAssignabilityAndResolveTypeParameters(
+                                requiredParameterTypeNames.get(i),
+                                type.getParameterTypes().get(type.getParametersNames().get(i)),
+                                typeParameterNames,
+                                localResolvedTypeParameterTypes,
+                                componentResolver
+                        )) {
+                            foundMatchForAll = false;
+                        }
+                    }
 
-        if (resolvedTypeSet.isEmpty() || !hasMatch) {
+                    if (foundMatchForAll) {
+                        foundMatch[0] = true;
+                        return false;
+                    } else {
+                        return true;
+                    }
+                },
+                componentResolver
+        );
+
+        if (!foundMatch[0]) {
             return false;
         }
 
-        resolvedParameterTypeSets.putAll(localResolvedTypeParameters);
+        for (String name : localResolvedTypeParameterTypes.keySet()) {
+            resolvedTypeParameterTypes.computeIfAbsent(name, x -> new ArrayList<>()).addAll(
+                    localResolvedTypeParameterTypes.get(name)
+            );
+        }
+
         return true;
     }
 
-    private static Set<ResolvedType> filterCompatible(String
-                                                              requiredAtomicTypeName, Set<ResolvedType> possibleTypes, ComponentResolver componentResolver) {
-        Set<ResolvedType> filteredTypes = new HashSet<>();
-        Set<ResolvedType> typesToTest = new HashSet<>(possibleTypes);
-
-        while (!typesToTest.isEmpty()) {
-            ResolvedType current = typesToTest.iterator().next();
-            typesToTest.remove(current);
-            if (current.getName().equals(requiredAtomicTypeName) || current.getName().startsWith(requiredAtomicTypeName + "<")) {
-                filteredTypes.add(current);
-            } else if (current.getExtends() != null) {
-                ResolvedType extended = ResolvedType.fromString(current.getExtends(), componentResolver);
-                typesToTest.add(extended);
-            }
-        }
-
-        return filteredTypes;
+    private static List<String> parseParameterTypeNames(String typeString) {
+        return Arrays.stream(typeString.substring(typeString.indexOf("<") + 1, typeString.length() - 1).split(",")).toList();
     }
 
-    public static Set<ResolvedType> inferArrayType(List<Set<ResolvedType>> elementTypeSets, ComponentResolver componentResolver) {
-        if (elementTypeSets.size() == 0) return Set.of();
+    private static String stripGenerics(String typeString) {
+        if (isGeneric(typeString)) {
+            return typeString.substring(0, typeString.indexOf("<"));
+        } else {
+            return typeString;
+        }
+    }
+
+    private static boolean isGeneric(String typeString) {
+        return typeString.contains("<");
+    }
+
+    public static Set<ResolvedType> getLowestCoverTypeSet(List<Set<ResolvedType>> elementTypeSets, ComponentResolver componentResolver) {
+        if (elementTypeSets.isEmpty()) return Set.of();
 
         Set<List<ResolvedType>> possibleElementTypeCombinations = new HashSet<>();
         Utils.visitCombinations(possibleElementTypeCombinations::add, elementTypeSets);
 
-        Set<ResolvedType> elementTypeSet = new HashSet<>();
+        Set<ResolvedType> lcTypeSet = new HashSet<>();
         for (List<ResolvedType> combination : possibleElementTypeCombinations) {
             ResolvedType lowestCover = getLowestCover(combination, componentResolver);
-            if (lowestCover != null) elementTypeSet.add(lowestCover);
+            if (lowestCover != null) lcTypeSet.add(lowestCover);
         }
 
-        Type vectorComponent = componentResolver.resolveType("Vector");
-        Set<ResolvedType> arrayTypeSet = elementTypeSet.stream().map(
-                x -> new ResolvedType(vectorComponent, Map.of("T", x))
-        ).collect(Collectors.toSet());
-        return arrayTypeSet;
+        return lcTypeSet;
     }
 
-    private static ResolvedType getLowestCover(List<ResolvedType> combination, ComponentResolver componentResolver) {
-        if (combination.size() == 1) return combination.get(0);
+    private static ResolvedType getLowestCover(List<ResolvedType> typeSet, ComponentResolver componentResolver) {
+        if (typeSet.size() == 1) return typeSet.get(0);
 
-        ResolvedType lowestCover = combination.get(0);
-        for (int i = 1; i < combination.size(); i++) {
-            lowestCover = getLowestCover(lowestCover, combination.get(i), componentResolver);
+        ResolvedType lowestCover = typeSet.get(0);
+        for (int i = 1; i < typeSet.size(); i++) {
+            lowestCover = getLowestCover(lowestCover, typeSet.get(i), componentResolver);
             if (lowestCover == null) return null;
         }
 

@@ -3,6 +3,7 @@ package org.phylospec.ast;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
 import org.phylospec.components.Property;
+import org.phylospec.components.Type;
 import org.phylospec.lexer.TokenType;
 
 import java.util.*;
@@ -285,9 +286,14 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
                 .map(x -> x.accept(this))
                 .collect(Collectors.toList());
 
-        Set<ResolvedType> arrayType = TypeUtils.inferArrayType(elementTypeSets, componentResolver);
+        Set<ResolvedType> lcTypeSet = TypeUtils.getLowestCoverTypeSet(elementTypeSets, componentResolver);
 
-        return remember(expr, arrayType);
+        Type vectorComponent = componentResolver.resolveType("Vector");
+        Set<ResolvedType> arrayTypeSet = lcTypeSet.stream().map(
+                x -> new ResolvedType(vectorComponent, Map.of("T", x))
+        ).collect(Collectors.toSet());
+
+        return remember(expr, arrayTypeSet);
     }
 
     @Override
