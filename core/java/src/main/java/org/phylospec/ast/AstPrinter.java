@@ -109,7 +109,7 @@ public class AstPrinter implements AstVisitor<String, String, String> {
 
     @Override
     public String visitGet(Expr.Get expr) {
-        return "(GET " + expr.object.accept(this) + " " + expr.propery + ")";
+        return "(GET " + expr.object.accept(this) + " " + expr.properyName + ")";
     }
 
     @Override

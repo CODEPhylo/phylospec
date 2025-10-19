@@ -274,24 +274,24 @@ public abstract class Expr {
      * (`nchars`) is always a string.
      * Look at {@link Expr.Call} to see how method calls are parsed. */
     public static class Get extends Expr {
-        public Get(Expr object, String propery) {
+        public Get(Expr object, String properyName) {
             this.object = object;
-            this.propery = propery;
+            this.properyName = properyName;
         }
 
         public final Expr object;
-        public final String propery;
+        public final String properyName;
 
         @Override
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Get get = (Get) o;
-            return Objects.equals(object, get.object) && Objects.equals(propery, get.propery);
+            return Objects.equals(object, get.object) && Objects.equals(properyName, get.properyName);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(object, propery);
+            return Objects.hash(object, properyName);
         }
 
         @Override

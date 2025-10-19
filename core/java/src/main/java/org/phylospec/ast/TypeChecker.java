@@ -2,6 +2,7 @@ package org.phylospec.ast;
 
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
+import org.phylospec.components.Property;
 import org.phylospec.lexer.TokenType;
 
 import java.util.*;
@@ -275,7 +276,27 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
 
     @Override
     public Set<ResolvedType> visitGet(Expr.Get expr) {
-        throw new TypeError("Getters are not yet supported");
+        Set<ResolvedType> objectTypeSet = expr.object.accept(this);
+
+        Set<ResolvedType> returnTypeSet = new HashSet<>();
+        boolean foundMatchingProperty = false;
+
+        for (ResolvedType objectType : objectTypeSet) {
+            Map<String, Property> propertyMap = objectType.getTypeComponent().getProperties().getAdditionalProperties();
+            for (Map.Entry<String, Property> propertyEntry : propertyMap.entrySet()) {
+                if (propertyEntry.getKey().equals(expr.properyName)) {
+                    foundMatchingProperty = true;
+                    returnTypeSet.add(ResolvedType.fromString(propertyEntry.getValue().getType(), componentResolver));
+                    break;
+                }
+            }
+        }
+
+        if (!foundMatchingProperty) {
+            throw  new TypeError("Unknown property: " + expr.properyName);
+        }
+
+        return returnTypeSet;
     }
 
     @Override
