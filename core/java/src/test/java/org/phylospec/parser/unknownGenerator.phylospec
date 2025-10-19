@@ -7,5 +7,5 @@ Real b = CCD0(tree)
 // EXPECT AST
 
 // EXPECT RESOLUTION
-// Unknown variable: CCD0
+// Unknown function: CCD0
 // EXPECT RESOLUTION

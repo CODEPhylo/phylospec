@@ -8,12 +8,12 @@ import java.util.*;
 import static org.phylospec.Utils.visitCombinations;
 
 class ResolvedType {
-    ResolvedType(Type type, List<ResolvedType> parameterTypes) {
+    ResolvedType(Type type, Map<String, ResolvedType> parameterTypes) {
         this.type = type;
         this.parameterTypes = parameterTypes;
     }
 
-    private final List<ResolvedType> parameterTypes;
+    private final Map<String, ResolvedType> parameterTypes;
     private final Type type;
 
     public Type getTypeComponent() {
@@ -28,7 +28,7 @@ class ResolvedType {
         return type.getExtends();
     }
 
-    public List<ResolvedType> getParameterTypes() {
+    public Map<String, ResolvedType> getParameterTypes() {
         return parameterTypes;
     }
 
@@ -72,7 +72,17 @@ class ResolvedType {
 
         Set<ResolvedType> resultingTypeSet = new HashSet<>();
         visitCombinations(
-                x -> resultingTypeSet.add(new ResolvedType(typeComponent, x)),
+                typeParamList -> {
+                    Map<String, ResolvedType> typeParamSet = new HashMap<>();
+                    for (int i = 0; i < typeParamList.size(); i++) {
+                        typeParamSet.put(
+                                typeComponent.getTypeParameters().get(i),
+                                typeParamList.get(i)
+                        );
+                    }
+
+                    resultingTypeSet.add(new ResolvedType(typeComponent, typeParamSet));
+                },
                 inferredTypeParameters
         );
 

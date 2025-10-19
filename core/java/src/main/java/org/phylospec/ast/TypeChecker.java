@@ -220,7 +220,7 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         // fetch all compatible generators
         // TODO: right now, methods are not supported (they won't be known generators)
         List<Generator> generators = componentResolver.resolveGenerator(expr.functionName);
-        if (generators.isEmpty()) {
+        if (generators == null) {
             throw new TypeError("Unknown function: " + expr.functionName);
         }
 
@@ -286,7 +286,16 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
             for (Map.Entry<String, Property> propertyEntry : propertyMap.entrySet()) {
                 if (propertyEntry.getKey().equals(expr.properyName)) {
                     foundMatchingProperty = true;
-                    returnTypeSet.add(ResolvedType.fromString(propertyEntry.getValue().getType(), componentResolver));
+
+                    Map<String, Set<ResolvedType>> map = new HashMap<>();
+                    for (Map.Entry<String, ResolvedType> entry : objectType.getParameterTypes().entrySet()) {
+                        map.put(entry.getKey(), Set.of(entry.getValue()));
+                    }
+                    Set<ResolvedType> propertyTypeSet = ResolvedType.fromString(
+                            propertyEntry.getValue().getType(), map, componentResolver
+                    );
+                    returnTypeSet.addAll(propertyTypeSet);
+
                     break;
                 }
             }
@@ -309,9 +318,14 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
     public ResolvedType visitGenericType(AstType.Generic expr) {
         ResolvedType resolvedType = ResolvedType.fromString(expr.name, componentResolver);
 
-        for (AstType typeParam : expr.typeParameters) {
-            resolvedType.getParameterTypes().add(
-                    typeParam.accept(this)
+        if (resolvedType.getParametersNames().size() != expr.typeParameters.length) {
+            throw new TypeError("Wrong number of type parameters.");
+        }
+
+        for (int i = 0; i < resolvedType.getParametersNames().size(); i++) {
+            resolvedType.getParameterTypes().put(
+                    resolvedType.getParametersNames().get(i),
+                    expr.typeParameters[i].accept(this)
             );
         }
 
@@ -334,14 +348,14 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         return resolvedType;
     }
 
-    private String printType(Set<ResolvedType> type) {
+    private static String printType(Set<ResolvedType> type) {
         if (type.isEmpty()) {
             return "unknown";
         }
         if (type.size() == 1) {
             ResolvedType onlyType = type.iterator().next();
-            return onlyType.getName() +  "<" + String.join(",", onlyType.getParameterTypes().stream().map(ResolvedType::getName).toList()) + ">";
+            return onlyType.getName() +  "<" + String.join(",", onlyType.getParameterTypes().values().stream().map(ResolvedType::getName).toList()) + ">";
         }
-        return "[" + String.join(",", type.stream().map(x -> x.getName() + "<" + String.join(",", x.getParameterTypes().stream().map(ResolvedType::getName).toList()) + ">").toList()) + "]";
+        return "[" + String.join(",", type.stream().map(x -> x.getName() + "<" + String.join(",", x.getParameterTypes().values().stream().map(ResolvedType::getName).toList()) + ">").toList()) + "]";
     }
 }

@@ -37,7 +37,7 @@ public class TypeUtils {
 
     public static boolean hasParents(ResolvedType type) {
         if (type.getTypeComponent().getExtends() != null) return true;
-        for (ResolvedType parameterType : type.getParameterTypes()) {
+        for (ResolvedType parameterType : type.getParameterTypes().values()) {
             if (parameterType.getExtends() != null) return true;
         }
         return false;
@@ -54,19 +54,18 @@ public class TypeUtils {
             visitParents(directlyExtendedType, visitor, componentResolver);
         }
 
-        for (int i = 0; i < type.getParameterTypes().size(); i++) {
-            final int j = i;
-            ResolvedType parameterType = type.getParameterTypes().get(i);
+        for (final String parameterName : type.getParameterTypes().keySet()) {
+            ResolvedType parameterType = type.getParameterTypes().get(parameterName);
             visitParents(
                     parameterType,
                     x -> {
                         // we replace this type param with its extended form and visit it again
                         // note that this is correct but not efficient, as we might visit
                         // the same type multiple times
-                        List<ResolvedType> clonedTypeParams = new ArrayList<>(
+                        Map<String, ResolvedType> clonedTypeParams = new HashMap<>(
                                 type.getParameterTypes()
                         );
-                        clonedTypeParams.set(j, x);
+                        clonedTypeParams.put(parameterName, x);
 
                         ResolvedType clonedType = new ResolvedType(type.getTypeComponent(), clonedTypeParams);
                         if (!visitor.apply(clonedType)) return false;
@@ -221,7 +220,7 @@ public class TypeUtils {
 
         Type vectorComponent = componentResolver.resolveType("Vector");
         Set<ResolvedType> arrayTypeSet = elementTypeSet.stream().map(
-                x -> new ResolvedType(vectorComponent, List.of(x))
+                x -> new ResolvedType(vectorComponent, Map.of("T", x))
         ).collect(Collectors.toSet());
         return arrayTypeSet;
     }

@@ -14,6 +14,6 @@ Vector<Real> vector = [                     ]
 
 
 // EXPECT AST
-// (AS Vector<Real> vector (AR (CA nchar (AA a 10) (AA b (CA ntaxa (AA null 20))))))
+// (AS Vector<Real> vector (AR (CA log (AA x (CA log (AA null 5.0))) (AA base 10))))
 // (AS Vector<Real> vector (AR ))
 // EXPECT AST
