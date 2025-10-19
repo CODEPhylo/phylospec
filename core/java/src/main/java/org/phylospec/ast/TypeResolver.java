@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 /// ResolvedVariable var = resolver.resolveVariable("myVariableName");
 /// Type var = resolver.resolveType("myTypeName");
 ///```
-public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, ResolvedType> {
+public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, ResolvedType> {
 
     private final ComponentResolver componentResolver;
     private final TypeMatcher typeMatcher;
@@ -42,7 +42,7 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
 
     AstPrinter printer;
 
-    public TypeChecker(ComponentResolver componentResolver) {
+    public TypeResolver(ComponentResolver componentResolver) {
         this.componentResolver = componentResolver;
         this.typeMatcher = new TypeMatcher(componentResolver);
         this.resolvedTypes = new HashMap<>();
@@ -400,7 +400,7 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         if (type.size() == 1) {
             return printType(type.iterator().next());
         }
-        return "[" + String.join(",", type.stream().map(TypeChecker::printType).toList()) + "]";
+        return "[" + String.join(",", type.stream().map(TypeResolver::printType).toList()) + "]";
     }
 
     private static String printType(ResolvedType type) {

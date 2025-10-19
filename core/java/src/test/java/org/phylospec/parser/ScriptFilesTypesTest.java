@@ -4,7 +4,7 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.TypeError;
-import org.phylospec.ast.TypeChecker;
+import org.phylospec.ast.TypeResolver;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
@@ -69,7 +69,7 @@ public class ScriptFilesTypesTest {
             ComponentResolver componentResolver = new ComponentResolver();
             componentResolver.registerLibraryFromFile("../../schema/phylospec-core-component-library.json");
             componentResolver.importEntireNamespace(List.of("phylospec"));
-            TypeChecker resolver = new TypeChecker(componentResolver);
+            TypeResolver resolver = new TypeResolver(componentResolver);
 
             List<String> actualResolutionErrors = new ArrayList<>();
             for (Stmt statement : statements) {
