@@ -29,3 +29,6 @@ Vector<Distribution<Real>> components = [
 // (AS Vector<String> vector (AR "10"))
 // (AS Vector<Distribution<Real>> components (AR (CA Normal (AA mean 0.0) (AA sd 1.0)) (CA Normal (AA mean 5.0) (AA sd 2.0)) (CA Normal (AA mean 10.0) (AA sd 1.5))))
 // EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS

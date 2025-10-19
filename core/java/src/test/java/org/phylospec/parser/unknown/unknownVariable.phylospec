@@ -6,6 +6,6 @@ Real b = 100.0 * c
 // (AS Real b (* 100.0 c))
 // EXPECT AST
 
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS
 // Unknown variable: c
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS

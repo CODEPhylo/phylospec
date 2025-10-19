@@ -15,8 +15,8 @@ Mixture<PositiveReal> mixture = Mixture(components = components, weights = weigh
 // (AS Mixture<PositiveReal> mixture (CA Mixture (AA components components) (AA weights weights)))
 // EXPECT AST
 
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS
 // Expression of type [Distribution<Vector<Real>>,IID] cannot be assigned to variable iidDist of type Distribution<Vector<PositiveReal>>
 // Expression of type Mixture<Real> cannot be assigned to variable mixture of type Mixture<PositiveReal>
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS
 

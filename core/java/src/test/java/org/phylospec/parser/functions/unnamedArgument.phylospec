@@ -6,6 +6,6 @@ QMatrix b = HKY(10)
 // (AS QMatrix b (CA HKY (AA null 10)))
 // EXPECT AST
 
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS
 // Missing required argument for function HKY
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS

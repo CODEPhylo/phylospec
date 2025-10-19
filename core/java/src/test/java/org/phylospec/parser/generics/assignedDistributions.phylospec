@@ -5,3 +5,6 @@ Normal y = Normal(mean=log(100), sd=2.0)
 // (AS Distribution<Real> y (CA Normal (AA mean (CA log (AA null 100))) (AA sd 2.0)))
 // (AS Normal y (CA Normal (AA mean (CA log (AA null 100))) (AA sd 2.0)))
 // EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS

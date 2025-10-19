@@ -6,7 +6,7 @@ import revbayes.distributions
 // (IM revbayes distributions)
 // EXPECT AST
 
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS
 // Import beastx is not known
 // Import revbayes.distributions is not known
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS

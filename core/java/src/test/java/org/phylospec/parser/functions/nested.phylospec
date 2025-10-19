@@ -7,3 +7,6 @@ PositiveReal z ~ LogNormal(
 // (DR Real y (CA Normal (AA mean (CA log (AA null 100))) (AA sd 2.0)))
 // (DR PositiveReal z (CA LogNormal (AA meanlog (CA exp (AA null (CA log (AA null 100))))) (AA sdlog (CA exp (AA x y)))))
 // EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS

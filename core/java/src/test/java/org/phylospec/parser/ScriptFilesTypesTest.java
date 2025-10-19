@@ -100,7 +100,7 @@ public class ScriptFilesTypesTest {
         int expectStart = -1;
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i).trim();
-            if (line.startsWith("// EXPECT TYPES")) {
+            if (line.startsWith("// EXPECT TYPE_ERRORS")) {
                 expectStart = i + 1;
                 break;
             }
@@ -109,7 +109,7 @@ public class ScriptFilesTypesTest {
         int expectEnd = -1;
         for (int i = expectStart + 1; i < lines.size(); i++) {
             String line = lines.get(i).trim();
-            if (line.startsWith("// EXPECT TYPES")) {
+            if (line.startsWith("// EXPECT TYPE_ERRORS")) {
                 expectEnd = i;
                 break;
             }

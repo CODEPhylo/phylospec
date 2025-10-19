@@ -17,3 +17,5 @@ Mixture<Real> mixture = Mixture(components = components, weights = weights)
 // (AS Mixture<Real> mixture (CA Mixture (AA components components) (AA weights weights)))
 // EXPECT AST
 
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS

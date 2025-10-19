@@ -6,6 +6,6 @@ Double b = 100.0 * a
 // (AS Double b (* 100.0 a))
 // EXPECT AST
 
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS
 // Unknown type: Double
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS

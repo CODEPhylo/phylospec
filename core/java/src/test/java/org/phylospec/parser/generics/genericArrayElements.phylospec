@@ -13,6 +13,6 @@ Vector<Distribution<PositiveReal>> arr = [
 // (AS Vector<Distribution<PositiveReal>> arr (AR (CA Exponential (AA rate 5.0)) (CA Normal (AA mean (CA log (AA null 100))) (AA sd 2.0))))
 // EXPECT AST
 
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS
 // Expression of type Vector<Distribution<Real>> cannot be assigned to variable arr of type Vector<Distribution<PositiveReal>>
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS

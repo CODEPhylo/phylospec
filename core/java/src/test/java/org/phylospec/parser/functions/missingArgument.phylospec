@@ -4,8 +4,8 @@ Real a ~ Beta(alpha = 10)
 // (DR Real a (CA Beta (AA alpha 10)))
 // EXPECT AST
 
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS
 // Function with the given arguments is not known:
 //  Missing required argument for function Beta: beta
 //  Missing required argument for function Beta: beta
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS

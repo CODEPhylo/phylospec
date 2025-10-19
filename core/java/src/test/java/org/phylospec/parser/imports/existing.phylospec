@@ -6,5 +6,5 @@ import phylospec.distributions
 // (IM phylospec distributions)
 // EXPECT AST
 
-// EXPECT TYPES
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS

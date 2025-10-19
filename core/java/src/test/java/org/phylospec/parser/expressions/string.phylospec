@@ -8,6 +8,6 @@ String c = a + -5.0
 // (AS String c (+ a (- 5.0)))
 // EXPECT AST
 
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS
 // Operation + is not supported for types String and Real
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS

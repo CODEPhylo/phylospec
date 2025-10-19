@@ -6,6 +6,6 @@ PositiveInteger a = 100 * 50 + 15 + -1
 // (AS PositiveInteger a (+ (+ (* 100 50) 15) (- 1)))
 // EXPECT AST
 
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS
 // Expression of type [Integer,Real] cannot be assigned to variable a of type PositiveInteger
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS

@@ -6,6 +6,6 @@ Real b = CCD0(tree)
 // (AS Real b (CA CCD0 (AA tree tree)))
 // EXPECT AST
 
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS
 // Unknown function: CCD0
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS

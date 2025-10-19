@@ -8,5 +8,5 @@ Vector<String> taxonNames = alignment.taxa.names
 // (AS Vector<String> taxonNames (GET (GET alignment taxa) names))
 // EXPECT AST
 
-// EXPECT TYPES
-// EXPECT TYPES
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS
