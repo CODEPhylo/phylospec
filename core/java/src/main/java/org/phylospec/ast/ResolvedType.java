@@ -7,25 +7,29 @@ import java.util.*;
 
 import static org.phylospec.Utils.visitCombinations;
 
+/// This class represents a fully resolved type.
+///
+/// Each resolved type has a reference to the corresponding type component
+/// and a map binding the generic type parameters to other resolved types.
 public class ResolvedType {
-    ResolvedType(Type type, Map<String, ResolvedType> parameterTypes) {
-        this.type = type;
+    ResolvedType(Type typeComponent, Map<String, ResolvedType> parameterTypes) {
+        this.typeComponent = typeComponent;
         this.parameterTypes = parameterTypes;
     }
 
     private final Map<String, ResolvedType> parameterTypes;
-    private final Type type;
+    private final Type typeComponent;
 
     public Type getTypeComponent() {
-        return type;
+        return typeComponent;
     }
 
     public String getName() {
-        return type.getName();
+        return typeComponent.getName();
     }
 
     public String getExtends() {
-        return type.getExtends();
+        return typeComponent.getExtends();
     }
 
     public Map<String, ResolvedType> getParameterTypes() {
@@ -33,42 +37,60 @@ public class ResolvedType {
     }
 
     public List<String> getParametersNames() {
-        return type.getTypeParameters();
+        return typeComponent.getTypeParameters();
     }
 
+    /** Creates a {@link ResolvedType} object based on the type name. Note that the given type must not
+     * be a generic type, and it must have been imported in the given {@link ComponentResolver}. */
     public static ResolvedType fromString(String typeString, ComponentResolver componentResolver) {
         return ResolvedType.fromString(typeString, new HashMap<>(), componentResolver).iterator().next();
     }
 
+    /// Returns all [ResolvedType] objects that can be created based on the type name and the
+    /// type parameter map. Note that the type must have been imported in the given [ComponentResolver].
+    ///
+    /// This method returns a set of [ResolvedType] objects because you can pass type sets for
+    /// the type parameters. As an example, {@code Vector<T>} with {@code T = [Real, Integer]} will
+    /// return {@code [Vector<Real>, Vector<Integer>]}.
     public static Set<ResolvedType> fromString(String typeString, Map<String, Set<ResolvedType>> typeParameters, ComponentResolver componentResolver) {
-        String atomicTypeString;
-        String[] typeParametersNames;
-
-        if (!typeString.contains("<")) {
+        if (!TypeUtils.isGeneric(typeString)) {
             // return type is not a generic
-            atomicTypeString = typeString;
-            typeParametersNames = new String[]{};
-        } else {
-            // return type is a generic
-            atomicTypeString = typeString.substring(0, typeString.indexOf("<"));
-
-            String requiredTypeGenerics = typeString.substring(typeString.indexOf("<") + 1, typeString.length() - 1);
-            typeParametersNames = requiredTypeGenerics.split(",");
+            Type typeComponent = componentResolver.resolveType(typeString);
+            if (typeComponent == null) {
+                throw new TypeError("Unknown type: " + typeString);
+            }
+            return Set.of(new ResolvedType(typeComponent, new HashMap<>()));
         }
 
+        // type is a generic
+
+        String atomicTypeString = TypeUtils.stripGenerics(typeString);
         Type typeComponent = componentResolver.resolveType(atomicTypeString);
         if (typeComponent == null) {
             throw new TypeError("Unknown type: " + typeString);
         }
 
+        // resolve the possible type parameters
+
+        List<String> typeParameterNames = TypeUtils.parseParameterTypeNames(typeString);
         List<Set<ResolvedType>> inferredTypeParameters = new ArrayList<>();
-        for (String typeParameterName : typeParametersNames) {
-            if (typeComponent.getTypeParameters().contains(typeParameterName) && typeParameters.containsKey(typeParameterName)) {
+        for (String typeParameterName : typeParameterNames) {
+            if (
+                    typeComponent.getTypeParameters().contains(typeParameterName)
+                            && typeParameters.containsKey(typeParameterName)
+            ) {
+                // parameter type is a Generic (like T) and we know its value
                 inferredTypeParameters.add(typeParameters.get(typeParameterName));
             } else if (!typeComponent.getTypeParameters().contains(typeParameterName)) {
-                inferredTypeParameters.add(ResolvedType.fromString(typeParameterName, typeParameters, componentResolver));
+                // parameter type is another type (like Real) and we resolve it recursively
+                inferredTypeParameters.add(
+                        ResolvedType.fromString(typeParameterName, typeParameters, componentResolver)
+                );
             }
         }
+
+        // given all the possible types for every type parameter, we look at all possible
+        // combinations to get the set of all fully resolved types
 
         Set<ResolvedType> resultingTypeSet = new HashSet<>();
         visitCombinations(
@@ -93,11 +115,11 @@ public class ResolvedType {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         ResolvedType that = (ResolvedType) o;
-        return Objects.equals(parameterTypes, that.parameterTypes) && Objects.equals(type, that.type);
+        return Objects.equals(parameterTypes, that.parameterTypes) && Objects.equals(typeComponent, that.typeComponent);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(parameterTypes, type);
+        return Objects.hash(parameterTypes, typeComponent);
     }
 }

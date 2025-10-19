@@ -9,11 +9,11 @@ import org.phylospec.lexer.TokenType;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/// This class traverses an AST statement and resolves each variable and type.
+/// This class traverses an AST statement and resolves the types for each
+/// AST node and each variable.
 ///
-/// Each variable gets mapped to either its declaration statement (for
-/// local variables), or to its generator from a component library.
-/// Each type gets mapped to a type from a component library.
+/// When resolving the types, static type validation is performed. A {@link TypeError}
+/// is thrown if a type violation is detected.
 ///
 /// This class uses the visitor pattern to traverse the statement. It
 /// has internal state, such that multiple consecutive statements can
@@ -25,12 +25,12 @@ import java.util.stream.Collectors;
 /// Stmt statement1 = <...>;
 /// Stmt statement2 = <...>;
 ///
-/// AstResolver resolver = new AstResolver(...);
+/// TypeResolver resolver = new TypeResolver(...);
 /// statement1.accept(resolver);
 /// statement2.accept(resolver);
 ///
-/// ResolvedVariable var = resolver.resolveVariable("myVariableName");
-/// Type var = resolver.resolveType("myTypeName");
+/// Set<ResolvedType> exprType = resolver.resolveType(<some AST expression>);
+/// ResolvedType varType = resolver.resolveVariable(<some var name>);
 ///```
 public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, ResolvedType> {
 
@@ -49,6 +49,18 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         this.variableTypes = new HashMap<>();
         this.printer = new AstPrinter();
     }
+
+    /** Returns the type associated with the given AST expression. */
+    public Set<ResolvedType> resolveType(Expr expression) {
+        return this.resolvedTypes.get(expression);
+    }
+
+    /** Returns the type associated with the given variable name. */
+    public ResolvedType resolveVariable(String variableName) {
+        return this.variableTypes.get(variableName);
+    }
+
+    /** visitor functions */
 
     @Override
     public Void visitDecoratedStmt(Stmt.Decorated stmt) {
@@ -74,15 +86,17 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
         ResolvedType resolvedVariableType = stmt.type.accept(this);
 
-        Set<ResolvedType> generatedTypeSet = new HashSet<>();
+        // we are only interested in the expression types which are distributions,
+        // because we want to draw a value
 
+        Set<ResolvedType> generatedTypeSet = new HashSet<>();
         for (ResolvedType expressionType : resolvedExpressionTypeSet) {
             TypeUtils.visitTypeAndParents(
                     expressionType, x -> {
                         if (x.getName().equals("Distribution")) {
                             generatedTypeSet.add(x.getParameterTypes().get("T"));
                         }
-                        return true; // we still continue
+                        return TypeUtils.Visitor.CONTINUE;
                     }, componentResolver
             );
         }
@@ -107,10 +121,13 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
 
     @Override
     public Set<ResolvedType> visitLiteral(Expr.Literal expr) {
+        // TODO: only specify the most specific type. this does not work atm due to a bug in TypeMatcher
         Set<String> typeName = switch (expr.value) {
             case String ignored -> Set.of("String");
             case Integer value -> {
-                if (0 < value) yield Set.of("PositiveInteger", "Integer", "Real", "PositiveReal", "NonNegativeReal");
+                if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Real", "Probability");
+                if (1 == value) yield Set.of("Integer", "NonNegativeReal", "Real", "Probability");
+                if (0 < value) yield Set.of("PositiveInteger", "Integer", "NonNegativeReal", "PositiveReal", "Real");
                 yield Set.of("Integer", "Real");
             }
             case Long value -> {
@@ -248,9 +265,10 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         List<String> errorMessages = new ArrayList<>();
         for (Generator generator : generators) {
             try {
-                possibleReturnTypes.addAll(TypeUtils.resolveGeneratedType(
+                Set<ResolvedType> possibleGeneratorReturnTypes = TypeUtils.resolveGeneratedType(
                         generator, resolvedArguments, componentResolver
-                ));
+                );
+                possibleReturnTypes.addAll(possibleGeneratorReturnTypes);
             }  catch (TypeError e) {
                 errorMessages.add(e.getMessage());
             }
@@ -278,15 +296,16 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
     public Set<ResolvedType> visitDrawnArgument(Expr.DrawnArgument expr) {
         Set<ResolvedType> resolvedTypeSet = expr.expression.accept(this);
 
-        Set<ResolvedType> generatedTypeSet = new HashSet<>();
+        // we only consider Distribution types, because we want to draw the argument value
 
+        Set<ResolvedType> generatedTypeSet = new HashSet<>();
         for (ResolvedType expressionType : resolvedTypeSet) {
             TypeUtils.visitTypeAndParents(
                     expressionType, x -> {
                         if (x.getName().equals("Distribution")) {
                             generatedTypeSet.add(x.getParameterTypes().get("T"));
                         }
-                        return true; // we still continue
+                        return TypeUtils.Visitor.CONTINUE;
                     }, componentResolver
             );
         }
@@ -305,11 +324,20 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
 
     @Override
     public Set<ResolvedType> visitArray(Expr.Array expr) {
+        // resolve the element types
+
         List<Set<ResolvedType>> elementTypeSets = expr.elements.stream()
                 .map(x -> x.accept(this))
                 .collect(Collectors.toList());
 
+        // get the most specific type compatible with the element types
+        // this is done by looking at the product of the typesets for every
+        // single element. for each possible type combination, the lowest
+        // cover is determined (the most specific supertype)
+
         Set<ResolvedType> lcTypeSet = TypeUtils.getLowestCoverTypeSet(elementTypeSets, componentResolver);
+
+        // build the Vector result type
 
         Type vectorComponent = componentResolver.resolveType("Vector");
         Set<ResolvedType> arrayTypeSet = lcTypeSet.stream().map(
@@ -323,6 +351,9 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
     public Set<ResolvedType> visitGet(Expr.Get expr) {
         Set<ResolvedType> objectTypeSet = expr.object.accept(this);
 
+        // we have to look at all object types, check if they have the
+        // correct method, and collect the corresponding return types
+
         Set<ResolvedType> returnTypeSet = new HashSet<>();
         boolean foundMatchingProperty = false;
 
@@ -332,12 +363,15 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
                 if (propertyEntry.getKey().equals(expr.properyName)) {
                     foundMatchingProperty = true;
 
-                    Map<String, Set<ResolvedType>> map = new HashMap<>();
+                    // we fetch the return type of this parameter while taking into account
+                    // the generic type parameters
+                    // TODO: this is very hacky rn, look if we can improve this
+                    Map<String, Set<ResolvedType>> typeParameterTypeSets = new HashMap<>();
                     for (Map.Entry<String, ResolvedType> entry : objectType.getParameterTypes().entrySet()) {
-                        map.put(entry.getKey(), Set.of(entry.getValue()));
+                        typeParameterTypeSets.put(entry.getKey(), Set.of(entry.getValue()));
                     }
                     Set<ResolvedType> propertyTypeSet = ResolvedType.fromString(
-                            propertyEntry.getValue().getType(), map, componentResolver
+                            propertyEntry.getValue().getType(), typeParameterTypeSets, componentResolver
                     );
                     returnTypeSet.addAll(propertyTypeSet);
 
@@ -377,6 +411,8 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         return resolvedType;
     }
 
+    /** helper functions to store the resolved types */
+
     private Set<ResolvedType> remember(Expr expr, Set<ResolvedType> resolvedType) {
         resolvedTypes.put(expr, resolvedType);
         System.out.println("Remember " + expr.accept(printer) + " with " + printType(resolvedType));
@@ -392,6 +428,8 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         }
         return resolvedType;
     }
+
+    /** helper functions to pretty-print types */
 
     private static String printType(Set<ResolvedType> type) {
         if (type.isEmpty()) {
@@ -415,4 +453,5 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         result += ">";
         return result;
     }
+
 }

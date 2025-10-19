@@ -1,7 +1,6 @@
 package org.phylospec.ast;
 
 import org.phylospec.components.ComponentResolver;
-import org.phylospec.components.Type;
 import org.phylospec.lexer.TokenType;
 
 import java.util.*;
@@ -9,32 +8,24 @@ import java.util.*;
 /**
  * This class helps to determine the type of the result of an operation on one or more operands.
  */
-public class TypeMatcher {
-    private ComponentResolver componentResolver;
+class TypeMatcher {
+    private final ComponentResolver componentResolver;
 
-    public TypeMatcher(ComponentResolver componentResolver) {
+    TypeMatcher(ComponentResolver componentResolver) {
         this.componentResolver = componentResolver;
     }
 
-    public static final String ANY = "ANY";
+    static final String ANY = "ANY";
 
-    /// Determines the result type of an operation on one or more operands.
-    ///
-    /// Two arguments are required:
-    /// -   The rules is a list containing different input combinations and
-    ///     the resulting type:
-    ///     [["PositiveReal", "PositiveReal", "Real"], ["Real", "Real", "Real"]]
-    ///     Here, both input combinations produce a Real.
-    /// -   The query specifies the given input:
-    ///     ["Real", "PositiveReal"]
-    ///     In that case, there is no exact match. However, PositiveReal can be widened
-    ///     to a Real and get a match in the rules.
-    ///
-    /// Input types are widened automatically using the "extends" field in the component
-    /// definitions.
-    ///
-    /// Returns null if no match is found.
-    public Set<ResolvedType> findMatch(List<Rule> rules, Query query) {
+    /**
+     * Determines the result type of an operation on one or more operands. Input types are widened
+     * automatically if no exact match is found. Note that this currently does not work with generic
+     * types.
+     * @param rules the rules that define how operand types are connected to the result type.
+     * @param query the query that is matched against the rules.
+     * @return the resulting type or null if no match is found.
+     */
+    Set<ResolvedType> findMatch(List<Rule> rules, Query query) {
         Set<ResolvedType> exactMatch = findExactMatch(rules, query);
         if (!exactMatch.isEmpty()) {
             return exactMatch;
@@ -44,6 +35,7 @@ public class TypeMatcher {
         // let's try to go up the type hierarchy of the query to see if there is
         // a match for widened types
         while (true) {
+            // TODO: make more flexible to support generics and be more elegant (also, the widening is wrong atm)
             for (int i = 0; i < query.inputTypes.length; i++) {
                 Set<ResolvedType> widenedInputType = new HashSet<>();
                 for (ResolvedType type : query.inputTypes[i]) {

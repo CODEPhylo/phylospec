@@ -39,7 +39,7 @@ public class PhyloSpec {
 
     private static void runFile(String path) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
-        TypeResolver resolver = loadAstResolver();
+        TypeResolver resolver = loadTypeResolver();
         run(new String(bytes, Charset.defaultCharset()), resolver);
         if (hadError) System.exit(65);
     }
@@ -47,7 +47,7 @@ public class PhyloSpec {
     private static void runPrompt() throws IOException {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
-        TypeResolver resolver = loadAstResolver();
+        TypeResolver resolver = loadTypeResolver();
 
         for (;;) {
             System.out.print("> ");
@@ -80,7 +80,7 @@ public class PhyloSpec {
         }
     }
 
-    private static TypeResolver loadAstResolver() throws IOException {
+    private static TypeResolver loadTypeResolver() throws IOException {
         ComponentResolver componentResolver = new ComponentResolver();
         componentResolver.registerLibraryFromFile("schema/phylospec-core-component-library.json");
         componentResolver.importEntireNamespace(List.of("phylospec"));

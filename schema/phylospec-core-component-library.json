@@ -145,7 +145,7 @@
       {
         "name": "PositiveReal",
         "description": "Positive real number (> 0)",
-        "extends": "Real",
+        "extends": "NonNegativeReal",
         "namespace": "phylospec.types"
       },
       {

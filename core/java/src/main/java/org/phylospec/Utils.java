@@ -8,11 +8,17 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class Utils {
-    public static <T> void visitCombinations(Consumer<List<T>> visitor, List<Set<T>> combinations) {
+
+    /// Calls the given visitor function for every combination of the given variants.
+    ///
+    /// A combination is a list of the same size as {@code variants}.
+    /// The i-th element of a combination is one of the items in the i-th {@code Set<T>}
+    /// in {@code variants}.
+    public static <T> void visitCombinations(Consumer<List<T>> visitor, List<Set<T>> variants) {
         boolean fullyResolved = true;
 
-        for (int i = 0; i < combinations.size(); i++) {
-            Set<T> parameterTypeSet = combinations.get(i);
+        for (int i = 0; i < variants.size(); i++) {
+            Set<T> parameterTypeSet = variants.get(i);
 
             if (parameterTypeSet.size() == 1) continue;
 
@@ -20,7 +26,7 @@ public class Utils {
                 Set<T> clonedParameterTypeSet = new HashSet<>();
                 clonedParameterTypeSet.add(parameterType);
 
-                List<Set<T>> clonedTypeParams = new ArrayList<>(combinations);
+                List<Set<T>> clonedTypeParams = new ArrayList<>(variants);
                 clonedTypeParams.set(i, clonedParameterTypeSet);
 
                 visitCombinations(visitor, clonedTypeParams);
@@ -30,7 +36,7 @@ public class Utils {
         }
 
         if (fullyResolved) visitor.accept(
-                combinations.stream().map(x -> x.iterator().next()).collect(Collectors.toList())
+                variants.stream().map(x -> x.iterator().next()).collect(Collectors.toList())
         );
     }
 }
