@@ -1667,6 +1667,12 @@
             "type": "PositiveReal",
             "description": "Input value",
             "required": true
+          },
+          {
+            "name": "base",
+            "type": "Integer",
+            "description": "Base value",
+            "required": false
           }
         ]
       },

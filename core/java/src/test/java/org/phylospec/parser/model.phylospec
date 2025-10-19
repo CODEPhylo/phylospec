@@ -1,5 +1,5 @@
 Alignment observedAlignment = nexus(
-	file="alignment.nexus", ageDirection="forward", ageRegex="s(\d+)$"
+	file="alignment.nexus"
 )
 Integer L = observedAlignment.numCharacters
 

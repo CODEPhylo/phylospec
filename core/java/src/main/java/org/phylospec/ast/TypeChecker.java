@@ -121,14 +121,10 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
     public Set<ResolvedType> visitVariable(Expr.Variable expr) {
         String variableName = expr.variableName;
 
-        // we first check if the variable corresponds to a known local variable
-        // this would shadow an imported variable
         ResolvedType resolvedType = variableTypes.get(variableName);
 
         if (resolvedType == null) {
-            // if not, we check if the variable was imported
-            resolvedType = ResolvedType.fromString(variableName, componentResolver);
-            // throw new TypeError("Unknown variable: " + variableName);
+            throw new TypeError("Unknown variable: " + variableName);
         }
 
         return remember(expr, Set.of(resolvedType));

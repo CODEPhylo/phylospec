@@ -1,11 +1,11 @@
 Vector<Real> vector = [
-    nchar
+    log
     (
-        a = 10,
-        b =
-            ntaxa(
-                20
+        x = log(
+                        5.0
             ),
+       base =
+            10
 
 
     )
