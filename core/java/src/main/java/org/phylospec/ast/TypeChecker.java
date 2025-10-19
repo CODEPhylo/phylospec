@@ -73,7 +73,24 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
         ResolvedType resolvedVariableType = stmt.type.accept(this);
 
-        if (!TypeUtils.canBeAssignedTo(resolvedExpressionTypeSet, resolvedVariableType, componentResolver)) {
+        Set<ResolvedType> generatedTypeSet = new HashSet<>();
+
+        for (ResolvedType expressionType : resolvedExpressionTypeSet) {
+            TypeUtils.visitParents(
+                    expressionType, x -> {
+                        if (x.getName().equals("Distribution")) {
+                            generatedTypeSet.add(x.getParameterTypes().get("T"));
+                        }
+                        return false; // we still continue
+                    }, componentResolver
+            );
+        }
+
+        if (generatedTypeSet.isEmpty()) {
+            throw new TypeError("Expression of type " + printType(resolvedExpressionTypeSet) + " is not a distribution");
+        }
+
+        if (!TypeUtils.canBeAssignedTo(generatedTypeSet, resolvedVariableType, componentResolver)) {
             throw new TypeError("Expression of type " + printType(resolvedExpressionTypeSet) + " cannot be assigned to variable " + stmt.name + " of type " + printType(Set.of(resolvedVariableType)));
         };
 

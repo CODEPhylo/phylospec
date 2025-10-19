@@ -43,7 +43,7 @@ public class TypeUtils {
         return false;
     }
 
-    private static void visitParents(
+    public static void visitParents(
             ResolvedType type,
             Function<ResolvedType, Boolean> visitor,
             ComponentResolver componentResolver
