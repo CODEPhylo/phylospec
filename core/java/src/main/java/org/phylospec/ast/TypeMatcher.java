@@ -45,18 +45,20 @@ public class TypeMatcher {
         // a match for widened types
         while (true) {
             for (int i = 0; i < query.inputTypes.length; i++) {
-                Set<Type> widenedInputType = new HashSet<>();
+                Set<ResolvedType> widenedInputType = new HashSet<>();
                 for (ResolvedType type : query.inputTypes[i]) {
                     if (type.getExtends() != null) {
                         // we replace this type with its direct parent
-                        Type widenedType = componentResolver.resolveType(type.getExtends());
+                        ResolvedType widenedType = ResolvedType.fromString(type.getExtends(), componentResolver);
                         if (widenedType != null) widenedInputType.add(widenedType);
                     }
                 }
 
                 if (widenedInputType.isEmpty()) return Set.of();
 
-                Set<ResolvedType> match = findExactMatch(rules, query);
+                Query widenedQuery = new Query(query.operation, widenedInputType);
+
+                Set<ResolvedType> match = findExactMatch(rules, widenedQuery);
                 if (!match.isEmpty()) return match;
             }
         }

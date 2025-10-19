@@ -33,8 +33,8 @@ import java.util.stream.Collectors;
 ///```
 public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, ResolvedType> {
 
-    private ComponentResolver componentResolver;
-    private TypeMatcher typeMatcher;
+    private final ComponentResolver componentResolver;
+    private final TypeMatcher typeMatcher;
 
     Map<Expr, Set<ResolvedType>> resolvedTypes;
     Map<String, ResolvedType> variableTypes;
@@ -109,11 +109,11 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         Set<String> typeName = switch (expr.value) {
             case String ignored -> Set.of("String");
             case Integer value -> {
-                if (0 < value) yield Set.of("PositiveInteger", "Integer", "Real");
+                if (0 < value) yield Set.of("PositiveInteger", "Integer", "Real", "PositiveReal", "NonNegativeReal");
                 yield Set.of("Integer", "Real");
             }
             case Long value -> {
-                if (0 < value) yield Set.of("PositiveInteger", "Integer", "Real");
+                if (0 < value) yield Set.of("PositiveInteger", "Integer", "Real", "PositiveReal", "NonNegativeReal");
                 yield Set.of("Integer", "Real");
             }
             case Float value -> {
@@ -235,7 +235,6 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         );
 
         // fetch all compatible generators
-        // TODO: right now, methods are not supported (they won't be known generators)
         List<Generator> generators = componentResolver.resolveGenerator(expr.functionName);
         if (generators == null) {
             throw new TypeError("Unknown function: " + expr.functionName);

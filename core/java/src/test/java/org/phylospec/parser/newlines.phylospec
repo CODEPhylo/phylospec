@@ -1,7 +1,7 @@
 Vector<Real> vector = [
     log
     (
-        x = log(
+        x = exp(
                         5.0
             ),
        base =
@@ -10,10 +10,10 @@ Vector<Real> vector = [
 
     )
 ]
-Vector<Real> vector = [                     ]
+Vector<Real> vector = [          10           ]
 
 
 // EXPECT AST
-// (AS Vector<Real> vector (AR (CA log (AA x (CA log (AA null 5.0))) (AA base 10))))
-// (AS Vector<Real> vector (AR ))
+// (AS Vector<Real> vector (AR (CA log (AA x (CA exp (AA null 5.0))) (AA base 10))))
+// (AS Vector<Real> vector (AR 10))
 // EXPECT AST

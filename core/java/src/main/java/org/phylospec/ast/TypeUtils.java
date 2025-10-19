@@ -86,22 +86,42 @@ public class TypeUtils {
             Map<String, Set<ResolvedType>> resolvedArguments,
             ComponentResolver componentResolver
     ) {
+        List<Argument> parameters = generator.getArguments();
+
+        // handle edge case when a single unnamed parameter is passed
+
+        if (resolvedArguments.size() == 1 && resolvedArguments.get(null) != null) {
+            // make sure there is exactly one required parameter
+            if (parameters.stream().filter(Argument::getRequired).count() != 1) {
+                throw new TypeError("Missing required argument for function " + generator.getName());
+            }
+        }
+
         // make sure we don't pass any unknown arguments
 
-        Set<String> parameterNames = generator.getArguments().stream().map(x -> x.getName()).collect(Collectors.toSet());
+        Set<String> parameterNames = parameters.stream()
+                .map(Argument::getName)
+                .collect(Collectors.toSet());
         for (String argument : resolvedArguments.keySet()) {
-            if (!parameterNames.contains(argument)) {
+            if (!parameterNames.contains(argument) && argument != null) {
                 throw new TypeError("Unknown argument for function " + generator.getName() + ": " + argument);
             }
         }
 
-        // check passed types and assign type parameters
+        // check passed types and resolve type parameters
 
         Map<String, Set<ResolvedType>> resolvedTypeParameters = new HashMap<>();
-        for (Argument parameter : generator.getArguments()) {
+        for (Argument parameter : parameters) {
             String parameterName = parameter.getName();
 
-            if (!resolvedArguments.containsKey(parameterName)) {
+            Set<ResolvedType> resolvedArgument = null;
+            if (resolvedArguments.get(null) == null) {
+                resolvedArgument = resolvedArguments.get(parameterName);
+            } else if (parameter.getRequired()) {
+                resolvedArgument = resolvedArguments.get(null);
+            }
+
+            if (resolvedArgument == null) {
                 if (parameter.getRequired()) {
                     throw new TypeError("Missing required argument for function " + generator.getName() + ": " + parameterName);
                 }
@@ -111,7 +131,7 @@ public class TypeUtils {
 
             if (!TypeUtils.checkAssignabilityAndBindTypeParameters(
                     parameter.getType(),
-                    resolvedArguments.get(parameterName),
+                    resolvedArgument,
                     generator.getTypeParameters(),
                     resolvedTypeParameters,
                     componentResolver

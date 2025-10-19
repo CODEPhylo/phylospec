@@ -7,7 +7,7 @@ import java.util.*;
 
 import static org.phylospec.Utils.visitCombinations;
 
-class ResolvedType {
+public class ResolvedType {
     ResolvedType(Type type, Map<String, ResolvedType> parameterTypes) {
         this.type = type;
         this.parameterTypes = parameterTypes;
