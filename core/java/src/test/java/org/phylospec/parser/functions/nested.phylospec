@@ -1,5 +1,7 @@
-Real y ~ Normal(mean=log(100), sd=2.0);
-PositiveReal z ~ LogNormal(meanlog=exp(log(100)), sdlog=exp(x=y));
+Real y ~ Normal(mean=log(100), sd=2.0)
+PositiveReal z ~ LogNormal(
+    meanlog=exp(log(100)), sdlog=exp(x=y)
+)
 
 // EXPECT AST
 // (DR Real y (CA Normal (AA mean (CA log (AA null 100))) (AA sd 2.0)))

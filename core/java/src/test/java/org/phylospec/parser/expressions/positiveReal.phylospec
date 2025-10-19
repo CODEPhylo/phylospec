@@ -1,0 +1,13 @@
+PositiveReal a = 100 * 50 / 2 + 10.0 + (20.0 + 2) / 3
+NonNegativeReal a = 100 * 50 / 2 + 10.0 + (20.0 + 2) / 3
+PositiveReal a = 0 * 50 / 2 + 10.0 + (20.0 + 2) / 3
+
+// EXPECT AST
+// (AS PositiveReal a (+ (+ (/ (* 100 50) 2) 10.0) (/ (GR (+ 20.0 2)) 3)))
+// (AS NonNegativeReal a (+ (+ (/ (* 100 50) 2) 10.0) (/ (GR (+ 20.0 2)) 3)))
+// (AS PositiveReal a (+ (+ (/ (* 0 50) 2) 10.0) (/ (GR (+ 20.0 2)) 3)))
+// EXPECT AST
+
+// EXPECT TYPES
+// Expression of type Real cannot be assigned to variable a of type PositiveReal
+// EXPECT TYPES

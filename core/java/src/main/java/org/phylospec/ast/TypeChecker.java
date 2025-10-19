@@ -118,12 +118,14 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
                 yield Set.of("Integer", "Real");
             }
             case Float value -> {
-                if (value == 0) yield Set.of("NonNegativeReal", "Real");
+                if (value == 0) yield Set.of("NonNegativeReal", "Real", "Probability");
+                if (0 <= value && value <= 1) yield Set.of("Probability", "PositiveReal", "NonNegativeReal", "Real");
                 if (0 < value) yield Set.of("PositiveReal", "NonNegativeReal", "Real");
                 yield Set.of("Real");
             }
             case Double value -> {
-                if (value == 0) yield Set.of("NonNegativeReal", "Real");
+                if (value == 0) yield Set.of("NonNegativeReal", "Real", "Probability");
+                if (0 <= value && value <= 1) yield Set.of("Probability", "PositiveReal", "NonNegativeReal", "Real");
                 if (0 < value) yield Set.of("PositiveReal", "NonNegativeReal", "Real");
                 yield Set.of("Real");
             }
@@ -256,9 +258,11 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
 
         if (possibleReturnTypes.isEmpty() && errorMessages.isEmpty()) {
             throw new TypeError("Function with the given arguments is not known: " + expr.functionName);
+        } else if (possibleReturnTypes.isEmpty() && errorMessages.size() == 1) {
+            throw new TypeError(errorMessages.getFirst());
         } else if (possibleReturnTypes.isEmpty()) {
-            String errorMessage = "Function with the given arguments is not known: ";
-            errorMessage += String.join("\n", errorMessages);
+            String errorMessage = "Function with the given arguments is not known: \n\t";
+            errorMessage += String.join("\t\n", errorMessages);
             throw new TypeError(errorMessage);
         }
 

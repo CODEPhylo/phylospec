@@ -1,0 +1,12 @@
+import beastx
+import revbayes.distributions
+
+// EXPECT AST
+// (IM beastx)
+// (IM revbayes distributions)
+// EXPECT AST
+
+// EXPECT TYPES
+// Import beastx is not known
+// Import revbayes.distributions is not known
+// EXPECT TYPES

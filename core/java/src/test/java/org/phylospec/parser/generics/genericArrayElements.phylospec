@@ -1,0 +1,18 @@
+Vector<Distribution<Real>> arr = [
+    Exponential(rate=5.0),
+    Normal(mean=log(100), sd=2.0)
+]
+
+Vector<Distribution<PositiveReal>> arr = [
+    Exponential(rate=5.0),
+    Normal(mean=log(100), sd=2.0)
+]
+
+// EXPECT AST
+// (AS Vector<Distribution<Real>> arr (AR (CA Exponential (AA rate 5.0)) (CA Normal (AA mean (CA log (AA null 100))) (AA sd 2.0))))
+// (AS Vector<Distribution<PositiveReal>> arr (AR (CA Exponential (AA rate 5.0)) (CA Normal (AA mean (CA log (AA null 100))) (AA sd 2.0))))
+// EXPECT AST
+
+// EXPECT TYPES
+// Expression of type Vector<Distribution<Real>> cannot be assigned to variable arr of type Vector<Distribution<PositiveReal>>
+// EXPECT TYPES

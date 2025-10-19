@@ -1,0 +1,11 @@
+Real a = log(10)
+QMatrix b = HKY(10)
+
+// EXPECT AST
+// (AS Real a (CA log (AA null 10)))
+// (AS QMatrix b (CA HKY (AA null 10)))
+// EXPECT AST
+
+// EXPECT TYPES
+// Missing required argument for function HKY
+// EXPECT TYPES

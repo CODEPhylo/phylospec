@@ -1,0 +1,10 @@
+import phylospec
+import phylospec.distributions
+
+// EXPECT AST
+// (IM phylospec)
+// (IM phylospec distributions)
+// EXPECT AST
+
+// EXPECT TYPES
+// EXPECT TYPES

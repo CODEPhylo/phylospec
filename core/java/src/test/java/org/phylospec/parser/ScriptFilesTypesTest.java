@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -75,7 +76,7 @@ public class ScriptFilesTypesTest {
                 try {
                     statement.accept(resolver);
                 }  catch (TypeError e) {
-                    actualResolutionErrors.add(e.getMessage());
+                    actualResolutionErrors.addAll(Arrays.stream(e.getMessage().split("\n")).toList());
                 }
             }
 
@@ -99,7 +100,7 @@ public class ScriptFilesTypesTest {
         int expectStart = -1;
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i).trim();
-            if (line.startsWith("// EXPECT RESOLUTION")) {
+            if (line.startsWith("// EXPECT TYPES")) {
                 expectStart = i + 1;
                 break;
             }
@@ -108,7 +109,7 @@ public class ScriptFilesTypesTest {
         int expectEnd = -1;
         for (int i = expectStart + 1; i < lines.size(); i++) {
             String line = lines.get(i).trim();
-            if (line.startsWith("// EXPECT RESOLUTION")) {
+            if (line.startsWith("// EXPECT TYPES")) {
                 expectEnd = i;
                 break;
             }

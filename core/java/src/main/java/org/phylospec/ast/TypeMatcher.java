@@ -67,6 +67,8 @@ public class TypeMatcher {
     /** Checks if there is a perfectly matching rule the given query and returns it.
      * Returns null if not match is found. */
     private Set<ResolvedType> findExactMatch(List<Rule> rules, Query query) {
+        Set<ResolvedType> resultTypesOfMatches = new HashSet<>();
+
         for (Rule rule : rules) {
             if (rule.operation != query.operation) continue;
             if (!(componentResolver.canResolveType(rule.resultType))) continue;
@@ -84,11 +86,11 @@ public class TypeMatcher {
             }
 
             if (matches) {
-                return Set.of(ResolvedType.fromString(rule.resultType, componentResolver));
+                resultTypesOfMatches.add(ResolvedType.fromString(rule.resultType, componentResolver));
             }
         }
 
-        return Set.of();
+        return resultTypesOfMatches;
     }
 
     static class Rule {

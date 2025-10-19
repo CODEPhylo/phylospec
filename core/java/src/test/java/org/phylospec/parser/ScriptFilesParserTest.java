@@ -69,6 +69,8 @@ public class ScriptFilesParserTest {
                 actualAstLines.add(statement.accept(printer));
             }
 
+            assertEquals(expectedAstLines.size(), actualAstLines.size(), "Wrong number of AST lines for: " + psPath);
+
             for (int i = 0; i < expectedAstLines.size(); i++) {
                 String expected = expectedAstLines.get(i).trim();
                 String actual = actualAstLines.get(i).trim();

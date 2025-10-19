@@ -1,0 +1,11 @@
+Integer a = 100 * 50 + 15
+PositiveInteger a = 100 * 50 + 15 + -1
+
+// EXPECT AST
+// (AS Integer a (+ (* 100 50) 15))
+// (AS PositiveInteger a (+ (+ (* 100 50) 15) (- 1)))
+// EXPECT AST
+
+// EXPECT TYPES
+// Expression of type [Integer,Real] cannot be assigned to variable a of type PositiveInteger
+// EXPECT TYPES

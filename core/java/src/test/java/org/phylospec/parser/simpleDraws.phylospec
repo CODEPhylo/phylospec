@@ -1,7 +1,0 @@
-PositiveReal rate1 ~ Exponential(rate=10.0);
-PositiveReal rate2 ~ LogNormal(meanlog=10.0, sdlog=5.0);
-
-// EXPECT AST
-// (DR PositiveReal rate1 (CA Exponential (AA rate 10.0)))
-// (DR PositiveReal rate2 (CA LogNormal (AA meanlog 10.0) (AA sdlog 5.0)))
-// EXPECT AST

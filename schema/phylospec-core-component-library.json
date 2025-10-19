@@ -1218,7 +1218,7 @@
       {
         "name": "Mixture",
         "generatorType": "function",
-        "generatedType": "Mixture",
+        "generatedType": "Mixture<T>",
         "namespace": "phylospec.distributions.mixture",
         "description": "Construct a Mixture distribution object",
         "typeParameters": ["T"],

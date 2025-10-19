@@ -1,0 +1,12 @@
+Alignment alignment = nexus("hallo.nexus")
+TaxonSet taxa = alignment.taxa
+Vector<String> taxonNames = alignment.taxa.names
+
+// EXPECT AST
+// (AS Alignment alignment (CA nexus (AA null "hallo.nexus")))
+// (AS TaxonSet taxa (GET alignment taxa))
+// (AS Vector<String> taxonNames (GET (GET alignment taxa) names))
+// EXPECT AST
+
+// EXPECT TYPES
+// EXPECT TYPES
