@@ -12,7 +12,7 @@ Tree tree ~ Coalescent(
 )
 
 @observedAs(observedAlignment)
-Alignment alignment = PhyloCTMC(
+Alignment alignment ~ PhyloCTMC(
 	Q, tree
 )
 
@@ -20,5 +20,5 @@ Alignment alignment = PhyloCTMC(
 // (AS Alignment observedAlignment (CA nexus (AA file "alignment.nexus")))
 // (AS QMatrix Q (CA HKY (DA kappa (CA LogNormal (AA sdlog 0.5) (AA meanlog 1.0))) (DA baseFrequencies (CA Dirichlet (AA alpha (AR 2.0 2.0 2.0 2.0))))))
 // (DR Tree tree (CA Coalescent (AA taxa (GET observedAlignment taxa)) (DA populationSize (CA LogNormal (AA meanlog 3.0) (AA sdlog 2.0)))))
-// (@ (CA observedAs (AA observedAlignment observedAlignment)) (AS Alignment alignment (CA PhyloCTMC (AA Q Q) (AA tree tree))))
+// (@ (CA observedAs (AA observedAlignment observedAlignment)) (DR Alignment alignment (CA PhyloCTMC (AA Q Q) (AA tree tree))))
 // EXPECT AST

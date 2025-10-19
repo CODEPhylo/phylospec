@@ -43,6 +43,15 @@ public class TypeUtils {
         return false;
     }
 
+    public static void visitTypeAndParents(
+            ResolvedType type,
+            Function<ResolvedType, Boolean> visitor,
+            ComponentResolver componentResolver
+    ) {
+        if (!visitor.apply(type)) return;
+        visitParents(type, visitor, componentResolver);
+    }
+
     public static void visitParents(
             ResolvedType type,
             Function<ResolvedType, Boolean> visitor,
@@ -193,7 +202,7 @@ public class TypeUtils {
 
         Map<String, List<ResolvedType>> localResolvedTypeParameterTypes = new HashMap<>();
         boolean[] foundMatch = new boolean[] { false };
-        visitParents(
+        visitTypeAndParents(
                 resolvedType,
                 type -> {
                     if (!Objects.equals(type.getName(), strippedRequiredTypeName)) {

@@ -367,7 +367,7 @@
       {
         "name": "IID",
         "generatorType": "distribution",
-        "generatedType": "Vector<T>",
+        "generatedType": "Distribution<Vector<T>>",
         "namespace": "phylospec.distributions",
         "description": "Vector of independent and identically distributed random variables",
         "typeParameters": ["T"],
@@ -389,7 +389,7 @@
       {
         "name": "Mixture",
         "generatorType": "distribution",
-        "generatedType": "T",
+        "generatedType": "Distribution<T>",
         "namespace": "phylospec.distributions.mixture",
         "description": "Mixture of distributions with the same return type",
         "typeParameters": ["T"],
@@ -412,7 +412,7 @@
       {
         "name": "Normal",
         "generatorType": "distribution",
-        "generatedType": "Real",
+        "generatedType": "Distribution<Real>",
         "namespace": "phylospec.distributions",
         "description": "Normal (Gaussian) distribution",
         "arguments": [
@@ -435,7 +435,7 @@
       {
         "name": "LogNormal",
         "generatorType": "distribution",
-        "generatedType": "PositiveReal",
+        "generatedType": "Distribution<PositiveReal>",
         "namespace": "phylospec.distributions",
         "description": "Log-normal distribution for positive real values",
         "arguments": [
@@ -458,7 +458,7 @@
       {
         "name": "Gamma",
         "generatorType": "distribution",
-        "generatedType": "PositiveReal",
+        "generatedType": "Distribution<PositiveReal>",
         "namespace": "phylospec.distributions",
         "description": "Gamma distribution for positive real values",
         "arguments": [
@@ -481,7 +481,7 @@
       {
         "name": "Beta",
         "generatorType": "distribution",
-        "generatedType": "Probability",
+        "generatedType": "Distribution<Probability>",
         "namespace": "phylospec.distributions",
         "description": "Beta distribution for values in (0,1)",
         "arguments": [
@@ -504,7 +504,7 @@
       {
         "name": "Exponential",
         "generatorType": "distribution",
-        "generatedType": "PositiveReal",
+        "generatedType": "Distribution<PositiveReal>",
         "namespace": "phylospec.distributions",
         "description": "Exponential distribution for rate parameters",
         "arguments": [
@@ -520,7 +520,7 @@
       {
         "name": "Uniform",
         "generatorType": "distribution",
-        "generatedType": "Real",
+        "generatedType": "Distribution<Real>",
         "namespace": "phylospec.distributions",
         "description": "Uniform distribution for bounded values",
         "arguments": [
@@ -541,7 +541,7 @@
       {
         "name": "Dirichlet",
         "generatorType": "distribution",
-        "generatedType": "Simplex",
+        "generatedType": "Distribution<Simplex>",
         "namespace": "phylospec.distributions",
         "description": "Dirichlet distribution for probability vectors",
         "arguments": [
@@ -558,7 +558,7 @@
       {
         "name": "MultivariateNormal",
         "generatorType": "distribution",
-        "generatedType": "Vector<Real>",
+        "generatedType": "Distribution<Vector<Real>>",
         "namespace": "phylospec.distributions",
         "description": "Multivariate normal for correlated values",
         "arguments": [
@@ -581,7 +581,7 @@
       {
         "name": "Yule",
         "generatorType": "distribution",
-        "generatedType": "Tree",
+        "generatedType": "Distribution<Tree>",
         "namespace": "phylospec.distributions.tree",
         "description": "Yule pure-birth process for trees",
         "arguments": [
@@ -603,7 +603,7 @@
       {
         "name": "FossilBirthDeath",
         "generatorType": "distribution",
-        "generatedType": "TimeTree",
+        "generatedType": "Distribution<TimeTree>",
         "namespace": "phylospec.distributions.tree",
         "description": "Birth-death process with fossil sampling",
         "arguments": [
@@ -649,7 +649,7 @@
       {
         "name": "BirthDeath",
         "generatorType": "distribution",
-        "generatedType": "Tree",
+        "generatedType": "Distribution<Tree>",
         "namespace": "phylospec.distributions.tree",
         "description": "Birth-death process for trees",
         "arguments": [
@@ -682,7 +682,7 @@
       {
         "name": "Coalescent",
         "generatorType": "distribution",
-        "generatedType": "Tree",
+        "generatedType": "Distribution<Tree>",
         "namespace": "phylospec.distributions.tree",
         "description": "Coalescent process for population genetics",
         "arguments": [
@@ -704,7 +704,7 @@
       {
         "name": "PhyloBM",
         "generatorType": "distribution",
-        "generatedType": "Vector<Real>",
+        "generatedType": "Distribution<Vector<Real>>",
         "namespace": "phylospec.distributions.continuous",
         "description": "Phylogenetic Brownian motion for the continuous evolution of a single trait",
         "arguments": [
@@ -733,7 +733,7 @@
       {
         "name": "PhyloOU",
         "generatorType": "distribution",
-        "generatedType": "Vector<Real>",
+        "generatedType": "Distribution<Vector<Real>>",
         "namespace": "phylospec.distributions.continuous",
         "description": "Phylogenetic Ornstein-Uhlenbeck process for a univariate trait with selection",
         "arguments": [
@@ -769,7 +769,7 @@
       {
         "name": "PhyloCTMC",
         "generatorType": "distribution",
-        "generatedType": "Alignment",
+        "generatedType": "Distribution<Alignment>",
         "namespace": "phylospec.distributions.sequence",
         "description": "Phylogenetic continuous-time Markov chain",
         "arguments": [

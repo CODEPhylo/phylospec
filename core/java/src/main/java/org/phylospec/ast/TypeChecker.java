@@ -77,12 +77,12 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         Set<ResolvedType> generatedTypeSet = new HashSet<>();
 
         for (ResolvedType expressionType : resolvedExpressionTypeSet) {
-            TypeUtils.visitParents(
+            TypeUtils.visitTypeAndParents(
                     expressionType, x -> {
                         if (x.getName().equals("Distribution")) {
                             generatedTypeSet.add(x.getParameterTypes().get("T"));
                         }
-                        return false; // we still continue
+                        return true; // we still continue
                     }, componentResolver
             );
         }
@@ -92,7 +92,7 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
         }
 
         if (!TypeUtils.canBeAssignedTo(generatedTypeSet, resolvedVariableType, componentResolver)) {
-            throw new TypeError("Expression of type " + printType(resolvedExpressionTypeSet) + " cannot be assigned to variable " + stmt.name + " of type " + printType(Set.of(resolvedVariableType)));
+            throw new TypeError("Expression of type " + printType(generatedTypeSet) + " cannot be assigned to variable " + stmt.name + " of type " + printType(Set.of(resolvedVariableType)));
         };
 
         remember(stmt.name, resolvedVariableType);
@@ -232,7 +232,7 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
     public Set<ResolvedType> visitCall(Expr.Call expr) {
          // resolve arguments
         Map<String, Set<ResolvedType>> resolvedArguments = Arrays.stream(expr.arguments).collect(
-                Collectors.toMap(x -> x.name, x -> x.expression.accept(this))
+                Collectors.toMap(x -> x.name, x -> x.accept(this))
         );
 
         // fetch all compatible generators
@@ -272,7 +272,26 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
 
     @Override
     public Set<ResolvedType> visitDrawnArgument(Expr.DrawnArgument expr) {
-        return remember(expr, expr.expression.accept(this));
+        Set<ResolvedType> resolvedTypeSet = expr.expression.accept(this);
+
+        Set<ResolvedType> generatedTypeSet = new HashSet<>();
+
+        for (ResolvedType expressionType : resolvedTypeSet) {
+            TypeUtils.visitTypeAndParents(
+                    expressionType, x -> {
+                        if (x.getName().equals("Distribution")) {
+                            generatedTypeSet.add(x.getParameterTypes().get("T"));
+                        }
+                        return true; // we still continue
+                    }, componentResolver
+            );
+        }
+
+        if (generatedTypeSet.isEmpty()) {
+            throw new TypeError("Expression of type " + printType(resolvedTypeSet) + " is not a distribution");
+        }
+
+        return remember(expr, generatedTypeSet);
     }
 
     @Override
@@ -375,9 +394,21 @@ public class TypeChecker implements AstVisitor<Void, Set<ResolvedType>, Resolved
             return "unknown";
         }
         if (type.size() == 1) {
-            ResolvedType onlyType = type.iterator().next();
-            return onlyType.getName() +  "<" + String.join(",", onlyType.getParameterTypes().values().stream().map(ResolvedType::getName).toList()) + ">";
+            return printType(type.iterator().next());
         }
-        return "[" + String.join(",", type.stream().map(x -> x.getName() + "<" + String.join(",", x.getParameterTypes().values().stream().map(ResolvedType::getName).toList()) + ">").toList()) + "]";
+        return "[" + String.join(",", type.stream().map(TypeChecker::printType).toList()) + "]";
+    }
+
+    private static String printType(ResolvedType type) {
+        String result = type.getName();
+
+        if (type.getParameterTypes().isEmpty()) return result;
+
+        result += "<";
+
+        result += String.join(",", type.getParametersNames().stream().map(x -> printType(type.getParameterTypes().get(x))).toList());
+
+        result += ">";
+        return result;
     }
 }

@@ -24,10 +24,21 @@ Vector<Distribution<Real>> components = [
     Normal(mean=10.0, sd=1.5)
 ];
 
+Vector<Distribution<PositiveReal>> components = [
+    LogNormal(meanlog=0.0, sdlog=1.0),
+    Normal(mean=5.0, sd=2.0),
+    Normal(mean=10.0, sd=1.5)
+];
+
 // EXPECT AST
 // (AS Vector<Real> vector (AR 10.0 2.0 (- 5.0)))
 // (AS Vector<Real> vector (AR 10.0))
 // (AS Vector<PositiveReal> vector (AR 10.0))
 // (AS Vector<String> vector (AR "10"))
 // (AS Vector<Distribution<Real>> components (AR (CA Normal (AA mean 0.0) (AA sd 1.0)) (CA Normal (AA mean 5.0) (AA sd 2.0)) (CA Normal (AA mean 10.0) (AA sd 1.5))))
+// (AS Vector<Distribution<PositiveReal>> components (AR (CA LogNormal (AA meanlog 0.0) (AA sdlog 1.0)) (CA Normal (AA mean 5.0) (AA sd 2.0)) (CA Normal (AA mean 10.0) (AA sd 1.5))))
 // EXPECT AST
+
+// EXPECT RESOLUTION
+// Expression of type Vector<Distribution<Real>> cannot be assigned to variable components of type Vector<Distribution<PositiveReal>>
+// EXPECT RESOLUTION

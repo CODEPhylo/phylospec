@@ -63,9 +63,9 @@ public class ResolvedType {
 
         List<Set<ResolvedType>> inferredTypeParameters = new ArrayList<>();
         for (String typeParameterName : typeParametersNames) {
-            if (typeParameters.containsKey(typeParameterName)) {
+            if (typeComponent.getTypeParameters().contains(typeParameterName) && typeParameters.containsKey(typeParameterName)) {
                 inferredTypeParameters.add(typeParameters.get(typeParameterName));
-            } else {
+            } else if (!typeComponent.getTypeParameters().contains(typeParameterName)) {
                 inferredTypeParameters.add(ResolvedType.fromString(typeParameterName, typeParameters, componentResolver));
             }
         }
