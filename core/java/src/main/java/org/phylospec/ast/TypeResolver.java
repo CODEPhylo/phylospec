@@ -126,12 +126,14 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
             case String ignored -> Set.of("String");
             case Integer value -> {
                 if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Real", "Probability");
-                if (1 == value) yield Set.of("Integer", "NonNegativeReal", "Real", "Probability");
+                if (1 == value) yield Set.of("PositiveInteger", "Integer", "NonNegativeReal", "PositiveReal", "Real", "Probability");
                 if (0 < value) yield Set.of("PositiveInteger", "Integer", "NonNegativeReal", "PositiveReal", "Real");
                 yield Set.of("Integer", "Real");
             }
             case Long value -> {
-                if (0 < value) yield Set.of("PositiveInteger", "Integer", "Real", "PositiveReal", "NonNegativeReal");
+                if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Real", "Probability");
+                if (1 == value) yield Set.of("PositiveInteger", "Integer", "NonNegativeReal", "PositiveReal", "Real", "Probability");
+                if (0 < value) yield Set.of("PositiveInteger", "Integer", "NonNegativeReal", "PositiveReal", "Real");
                 yield Set.of("Integer", "Real");
             }
             case Float value -> {
@@ -158,7 +160,6 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
     @Override
     public Set<ResolvedType> visitVariable(Expr.Variable expr) {
         String variableName = expr.variableName;
-
         ResolvedType resolvedType = variableTypes.get(variableName);
 
         if (resolvedType == null) {
@@ -274,6 +275,7 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
             }
         }
 
+        // throw errors if needed
         if (possibleReturnTypes.isEmpty() && errorMessages.isEmpty()) {
             throw new TypeError("Function with the given arguments is not known: " + expr.functionName);
         } else if (possibleReturnTypes.isEmpty() && errorMessages.size() == 1) {
@@ -351,7 +353,7 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
     public Set<ResolvedType> visitGet(Expr.Get expr) {
         Set<ResolvedType> objectTypeSet = expr.object.accept(this);
 
-        // we have to look at all object types, check if they have the
+        // we have to look at all possible object types, check if they have the
         // correct method, and collect the corresponding return types
 
         Set<ResolvedType> returnTypeSet = new HashSet<>();
@@ -360,23 +362,26 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         for (ResolvedType objectType : objectTypeSet) {
             Map<String, Property> propertyMap = objectType.getTypeComponent().getProperties().getAdditionalProperties();
             for (Map.Entry<String, Property> propertyEntry : propertyMap.entrySet()) {
-                if (propertyEntry.getKey().equals(expr.properyName)) {
-                    foundMatchingProperty = true;
+                if (!propertyEntry.getKey().equals(expr.properyName)) continue;
+                foundMatchingProperty = true;
 
-                    // we fetch the return type of this parameter while taking into account
-                    // the generic type parameters
-                    // TODO: this is very hacky rn, look if we can improve this
-                    Map<String, Set<ResolvedType>> typeParameterTypeSets = new HashMap<>();
-                    for (Map.Entry<String, ResolvedType> entry : objectType.getParameterTypes().entrySet()) {
-                        typeParameterTypeSets.put(entry.getKey(), Set.of(entry.getValue()));
-                    }
-                    Set<ResolvedType> propertyTypeSet = ResolvedType.fromString(
-                            propertyEntry.getValue().getType(), typeParameterTypeSets, componentResolver
-                    );
-                    returnTypeSet.addAll(propertyTypeSet);
+                // we fetch the return type of this parameter while taking into account
+                // the generic type parameters
 
-                    break;
+                // some hacky conversion from Map<String, ResolvedType> to Map<String, Set<ResolvedType>>
+                // to adhere to types
+                // TODO: this is very hacky rn, look if we can improve this
+                Map<String, Set<ResolvedType>> typeParameterTypeSets = new HashMap<>();
+                for (Map.Entry<String, ResolvedType> entry : objectType.getParameterTypes().entrySet()) {
+                    typeParameterTypeSets.put(entry.getKey(), Set.of(entry.getValue()));
                 }
+
+                Set<ResolvedType> propertyTypeSet = ResolvedType.fromString(
+                        propertyEntry.getValue().getType(), typeParameterTypeSets, componentResolver
+                );
+                returnTypeSet.addAll(propertyTypeSet);
+
+                break;
             }
         }
 
@@ -389,8 +394,7 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
 
     @Override
     public ResolvedType visitAtomicType(AstType.Atomic expr) {
-        ResolvedType resolvedType = ResolvedType.fromString(expr.name, componentResolver);
-        return resolvedType;
+        return ResolvedType.fromString(expr.name, componentResolver);
     }
 
     @Override
@@ -401,6 +405,7 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
             throw new TypeError("Wrong number of type parameters.");
         }
 
+        // resolve the type parameters
         for (int i = 0; i < resolvedType.getParametersNames().size(); i++) {
             resolvedType.getParameterTypes().put(
                     resolvedType.getParametersNames().get(i),

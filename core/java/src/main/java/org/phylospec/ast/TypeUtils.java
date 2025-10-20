@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 class TypeUtils {
 
     /**
-     * Checks if any of the types in {@code assignedTypeSet} can be assigned to {@link assigneeType}.
+     * Checks if any of the types in {@code assignedTypeSet} can be assigned to {@code assigneeType}.
      * A type A can be assigned to type B if B covers A.
      */
     static boolean canBeAssignedTo(Set<ResolvedType> assignedTypeSet, ResolvedType assigneeType, ComponentResolver componentResolver) {
@@ -20,71 +20,6 @@ class TypeUtils {
             if (covers(assigneeType, assignedType, componentResolver)) return true;
         }
         return false;
-    }
-
-    /** Checks if {@code query} covers {@code reference}. Type A covers type B if A = B or if A extends B. */
-    static boolean covers(ResolvedType query, ResolvedType reference, ComponentResolver componentResolver) {
-        if (query.equals(reference)) return true;
-
-        boolean[] covers = {false};
-        visitParents(
-                reference, x -> {
-                    if (x.equals(query)) {
-                        covers[0] = true;
-                        return Visitor.STOP;
-                    }
-                    return Visitor.CONTINUE;
-                }, componentResolver
-        );
-        return covers[0];
-    }
-
-    /** Calls the visitor function on the type and every parent type. */
-    static void visitTypeAndParents(
-            ResolvedType type,
-            Function<ResolvedType, Visitor> visitor,
-            ComponentResolver componentResolver
-    ) {
-        if (visitor.apply(type) == Visitor.STOP) return;
-        visitParents(type, visitor, componentResolver);
-    }
-
-    /** Calls the visitor function on the type and every parent type. */
-    static void visitParents(
-            ResolvedType type,
-            Function<ResolvedType, Visitor> visitor,
-            ComponentResolver componentResolver
-    ) {
-        if (type.getExtends() != null) {
-            ResolvedType directlyExtendedType = ResolvedType.fromString(type.getExtends(), componentResolver);
-            visitTypeAndParents(directlyExtendedType, visitor, componentResolver);
-        }
-
-        for (final String parameterName : type.getParameterTypes().keySet()) {
-            ResolvedType parameterType = type.getParameterTypes().get(parameterName);
-            visitParents(
-                    parameterType,
-                    x -> {
-                        // we replace this type param with its extended form and visit it again
-                        // note that this is correct but not efficient, as we might visit
-                        // the same type multiple times
-                        Map<String, ResolvedType> clonedTypeParams = new HashMap<>(
-                                type.getParameterTypes()
-                        );
-                        clonedTypeParams.put(parameterName, x);
-
-                        ResolvedType clonedType = new ResolvedType(type.getTypeComponent(), clonedTypeParams);
-                        if (visitor.apply(clonedType) == Visitor.STOP) return Visitor.STOP;
-
-                        visitParents(
-                                clonedType, visitor, componentResolver
-                        );
-
-                        return Visitor.CONTINUE;
-                    },
-                    componentResolver
-            );
-        }
     }
 
     /** This function returns the typeset containing all possible return
@@ -140,6 +75,10 @@ class TypeUtils {
                 continue;
             }
 
+            // check for every possible argument type if they can be assigned to
+            // the required parameter type. if yes, possibleParameterTypeSets is
+            // updated with the corresponding types for type parameters
+
             boolean foundMatch = false;
             for (ResolvedType possibleArgumentType : resolvedArgumentTypeSet) {
                 if (TypeUtils.checkAssignabilityAndResolveTypeParameters(
@@ -178,6 +117,154 @@ class TypeUtils {
 
         String returnTypeName = generator.getGeneratedType();
         return ResolvedType.fromString(returnTypeName, parameterTypeSets, componentResolver);
+    }
+
+    /** Checks whether the given type String (e.g. {@code "Vector<Real>"}) is a generic. */
+    static boolean isGeneric(String typeString) {
+        return typeString.contains("<");
+    }
+
+    /** Strips the generic part of the type name (e.g. {@code "Vector<Real>"} to {@code "Vector"}). */
+    static String stripGenerics(String typeString) {
+        if (isGeneric(typeString)) {
+            return typeString.substring(0, typeString.indexOf("<"));
+        } else {
+            return typeString;
+        }
+    }
+
+    /** Returns a list containing the type strings of the generic type parameters. */
+    static List<String> parseParameterTypeNames(String typeString) {
+        if (isGeneric(typeString))
+            return Arrays.stream(typeString.substring(typeString.indexOf("<") + 1, typeString.length() - 1).split(",")).toList();
+        else
+            return List.of();
+    }
+
+    /** Checks if {@code query} covers {@code reference}. Type A covers type B if A = B or if A extends B. */
+    static boolean covers(ResolvedType query, ResolvedType reference, ComponentResolver componentResolver) {
+        if (query.equals(reference)) return true;
+
+        boolean[] covers = {false};
+        visitParents(
+                reference, x -> {
+                    if (x.equals(query)) {
+                        covers[0] = true;
+                        return Visitor.STOP;
+                    }
+                    return Visitor.CONTINUE;
+                }, componentResolver
+        );
+        return covers[0];
+    }
+
+    /** Returns a set containing the lowest cover for every possible combinations
+     * of types in {@code typeSets}.
+     * This function build every combination by taking one type out of every set in
+     * {@code typeSets}. Then, for every such combination, the lowest cover type is
+     * determined. Then the set of all lowest covers is returned. */
+    static Set<ResolvedType> getLowestCoverTypeSet(List<Set<ResolvedType>> typeSets, ComponentResolver componentResolver) {
+        if (typeSets.isEmpty()) return Set.of();
+
+        Set<List<ResolvedType>> possibleElementTypeCombinations = new HashSet<>();
+        Utils.visitCombinations(possibleElementTypeCombinations::add, typeSets);
+
+        Set<ResolvedType> lcTypeSet = new HashSet<>();
+        for (List<ResolvedType> combination : possibleElementTypeCombinations) {
+            ResolvedType lowestCover = getLowestCover(combination, componentResolver);
+            if (lowestCover != null) lcTypeSet.add(lowestCover);
+        }
+
+        return lcTypeSet;
+    }
+
+    /** Returns the lowest cover of all types in the {@code typeSet}. Returns null
+     * if no such cover exists.
+     * A type C is the lowest cover of a typeset T if it covers all types in T,
+     * and if all other covers of T cover C. */
+    static ResolvedType getLowestCover(List<ResolvedType> typeSet, ComponentResolver componentResolver) {
+        if (typeSet.size() == 1) return typeSet.get(0);
+
+        ResolvedType lowestCover = typeSet.get(0);
+        for (int i = 1; i < typeSet.size(); i++) {
+            lowestCover = getLowestCover(lowestCover, typeSet.get(i), componentResolver);
+            if (lowestCover == null) return null;
+        }
+
+        return lowestCover;
+    }
+
+    /** Returns the lowest cover of {@code type1} and {@code type2}. Returns null
+     * if no such cover exists.
+     * A type C is the lowest cover of type A and type B if it covers both A and B,
+     * and if all other covers of A and B cover C. */
+    static ResolvedType getLowestCover(ResolvedType type1, ResolvedType type2, ComponentResolver componentResolver) {
+        if (type1.equals(type2)) return type1;
+
+        Set<ResolvedType> parents1 = new HashSet<>();
+        visitParents(type1, x -> {
+            parents1.add(x);
+            return Visitor.CONTINUE;
+        }, componentResolver);
+
+        ResolvedType[] lowestCover = {null};
+        visitParents(type2, x -> {
+            if (parents1.contains(x)) {
+                lowestCover[0] = x;
+                return Visitor.STOP;
+            }
+            return Visitor.CONTINUE;
+        }, componentResolver);
+
+        return lowestCover[0];
+    }
+
+    /** Calls the visitor function on the type and every parent type. */
+    static void visitTypeAndParents(
+            ResolvedType type,
+            Function<ResolvedType, Visitor> visitor,
+            ComponentResolver componentResolver
+    ) {
+        if (visitor.apply(type) == Visitor.STOP) return;
+        visitParents(type, visitor, componentResolver);
+    }
+
+    /** Calls the visitor function on the type and every parent type. */
+    static void visitParents(
+            ResolvedType type,
+            Function<ResolvedType, Visitor> visitor,
+            ComponentResolver componentResolver
+    ) {
+        if (type.getExtends() != null) {
+            ResolvedType directlyExtendedType = ResolvedType.fromString(type.getExtends(), componentResolver);
+            visitTypeAndParents(directlyExtendedType, visitor, componentResolver);
+        }
+
+        for (final String parameterName : type.getParameterTypes().keySet()) {
+            ResolvedType parameterType = type.getParameterTypes().get(parameterName);
+            visitParents(
+                    parameterType,
+                    x -> {
+                        // we replace this type param with its extended form and visit it again
+                        // note that this is correct but not efficient, as we might visit
+                        // the same type multiple times
+                        Map<String, ResolvedType> clonedTypeParams = new HashMap<>(
+                                type.getParameterTypes()
+                        );
+                        clonedTypeParams.put(parameterName, x);
+
+                        ResolvedType clonedType = new ResolvedType(type.getTypeComponent(), clonedTypeParams);
+                        if (visitor.apply(clonedType) == Visitor.STOP) return Visitor.STOP;
+
+                        visitParents(
+                                clonedType, visitor, componentResolver
+                        );
+
+                        return Visitor.CONTINUE;
+                    },
+                    componentResolver
+            );
+        }
     }
 
     private static boolean checkAssignabilityAndResolveTypeParameters(
@@ -260,89 +347,6 @@ class TypeUtils {
         }
 
         return true;
-    }
-
-    /** Checks whether the given type String (e.g. {@code "Vector<Real>"}) is a generic. */
-    static boolean isGeneric(String typeString) {
-        return typeString.contains("<");
-    }
-
-    /** Strips the generic part of the type name (e.g. {@code "Vector<Real>"} to {@code "Vector"}). */
-    static String stripGenerics(String typeString) {
-        if (isGeneric(typeString)) {
-            return typeString.substring(0, typeString.indexOf("<"));
-        } else {
-            return typeString;
-        }
-    }
-
-    /** Returns a list containing the type strings of the generic type parameters. */
-    static List<String> parseParameterTypeNames(String typeString) {
-        if (isGeneric(typeString))
-            return Arrays.stream(typeString.substring(typeString.indexOf("<") + 1, typeString.length() - 1).split(",")).toList();
-        else
-            return List.of();
-    }
-
-    /** Returns a set containing the lowest cover for every possible combinations
-     * of types in {@code typeSets}.
-     * This function build every combination by taking one type out of every set in
-     * {@code typeSets}. Then, for every such combination, the lowest cover type is
-     * determined. Then the set of all lowest covers is returned. */
-    static Set<ResolvedType> getLowestCoverTypeSet(List<Set<ResolvedType>> typeSets, ComponentResolver componentResolver) {
-        if (typeSets.isEmpty()) return Set.of();
-
-        Set<List<ResolvedType>> possibleElementTypeCombinations = new HashSet<>();
-        Utils.visitCombinations(possibleElementTypeCombinations::add, typeSets);
-
-        Set<ResolvedType> lcTypeSet = new HashSet<>();
-        for (List<ResolvedType> combination : possibleElementTypeCombinations) {
-            ResolvedType lowestCover = getLowestCover(combination, componentResolver);
-            if (lowestCover != null) lcTypeSet.add(lowestCover);
-        }
-
-        return lcTypeSet;
-    }
-
-    /** Returns the lowest cover of all types in the {@code typeSet}. Returns null
-     * if no such cover exists.
-     * A type C is the lowest cover of a typeset T if it covers all types in T,
-     * and if all other covers of T cover C. */
-    static ResolvedType getLowestCover(List<ResolvedType> typeSet, ComponentResolver componentResolver) {
-        if (typeSet.size() == 1) return typeSet.get(0);
-
-        ResolvedType lowestCover = typeSet.get(0);
-        for (int i = 1; i < typeSet.size(); i++) {
-            lowestCover = getLowestCover(lowestCover, typeSet.get(i), componentResolver);
-            if (lowestCover == null) return null;
-        }
-
-        return lowestCover;
-    }
-
-    /** Returns the lowest cover of {@code type1} and {@code type2}. Returns null
-     * if no such cover exists.
-     * A type C is the lowest cover of type A and type B if it covers both A and B,
-     * and if all other covers of A and B cover C. */
-    static ResolvedType getLowestCover(ResolvedType type1, ResolvedType type2, ComponentResolver componentResolver) {
-        if (type1.equals(type2)) return type1;
-
-        Set<ResolvedType> parents1 = new HashSet<>();
-        visitParents(type1, x -> {
-            parents1.add(x);
-            return Visitor.CONTINUE;
-        }, componentResolver);
-
-        ResolvedType[] lowestCover = {null};
-        visitParents(type2, x -> {
-            if (parents1.contains(x)) {
-                lowestCover[0] = x;
-                return Visitor.STOP;
-            }
-            return Visitor.CONTINUE;
-        }, componentResolver);
-
-        return lowestCover[0];
     }
 
     enum Visitor {
