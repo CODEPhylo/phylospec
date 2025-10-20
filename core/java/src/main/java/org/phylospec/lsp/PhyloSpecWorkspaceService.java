@@ -1,6 +1,7 @@
 package org.phylospec.lsp;
 
 import org.eclipse.lsp4j.*;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.WorkspaceService;
 
 import java.util.List;
@@ -24,7 +25,7 @@ public class PhyloSpecWorkspaceService implements WorkspaceService {
     }
 
     @Override
-    public CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params) {
+    public CompletableFuture<Either<List<? extends SymbolInformation>, List<? extends WorkspaceSymbol>>> symbol(WorkspaceSymbolParams params) {
         return CompletableFuture.completedFuture(null);
     }
 
@@ -34,38 +35,8 @@ public class PhyloSpecWorkspaceService implements WorkspaceService {
     }
 
     @Override
-    public CompletableFuture<List<? extends WorkspaceFolder>> workspaceFolders() {
-        return CompletableFuture.completedFuture(null);
-    }
-
-    @Override
-    public CompletableFuture<Object> didChangeWorkspaceFolders(DidChangeWorkspaceFoldersParams params) {
+    public void didChangeWorkspaceFolders(DidChangeWorkspaceFoldersParams params) {
         System.out.println("Workspace folders changed");
-        return CompletableFuture.completedFuture(null);
     }
 
-    @Override
-    public CompletableFuture<List<? extends ConfigurationItem>> configuration(ConfigurationParams params) {
-        return CompletableFuture.completedFuture(null);
-    }
-
-    @Override
-    public CompletableFuture<List<? extends SemanticTokensWorkspaceCapabilities>> semanticTokensRefresh() {
-        return CompletableFuture.completedFuture(null);
-    }
-
-    @Override
-    public CompletableFuture<Object> diagnosticRefresh() {
-        return CompletableFuture.completedFuture(null);
-    }
-
-    @Override
-    public CompletableFuture<List<? extends InlayHint>> inlayHintRefresh() {
-        return CompletableFuture.completedFuture(null);
-    }
-
-    @Override
-    public CompletableFuture<List<? extends InlineValue>> inlineValueRefresh() {
-        return CompletableFuture.completedFuture(null);
-    }
 }

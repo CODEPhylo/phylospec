@@ -4,9 +4,7 @@ import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutionException;
@@ -27,6 +25,7 @@ public class LSPSetup {
         Launcher<LanguageClient> l = LSPLauncher.createServerLauncher(
                 server, socket.getInputStream(), socket.getOutputStream()
         );
+        server.setRemoteProxy(l.getRemoteProxy());
         l.startListening();
     }
 }

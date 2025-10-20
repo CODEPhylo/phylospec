@@ -1,0 +1,47 @@
+{
+  "name": "PhyloSpec LSP",
+  "description": "REPLACE_ME",
+  "author": "REPLACE_ME",
+  "license": "MIT",
+  "version": "1.0.0",
+  "publisher": "REPLACE_ME",
+  "categories": [],
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "activationEvents": [
+    "onLanguage"
+  ],
+  "main": "./client/out/extension",
+  "contributes": {
+    "languages": [
+      {
+        "id": "phylospec",
+        "aliases": [
+          "PhyloSpec",
+          "phylospec"
+        ],
+        "extensions": [
+          ".phylospec"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "phylospec",
+        "scopeName": "source.phylospec",
+        "path": "./syntaxes/phylospec.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -b",
+    "watch": "tsc -b -w"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.7",
+    "typescript": "^5.2.2"
+  }
+}

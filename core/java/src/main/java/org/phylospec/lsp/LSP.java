@@ -10,14 +10,13 @@ import java.util.concurrent.CompletableFuture;
 
 public class LSP implements org.eclipse.lsp4j.services.LanguageServer {
 
-    private TextDocumentService textService;
-    private WorkspaceService workspaceService;
+    private final TextDocumentService textService;
+    private final WorkspaceService workspaceService;
     LanguageClient client;
 
     public LSP() {
         this.textService = new PhyloSpecTextDocumentService();
         this.workspaceService = new PhyloSpecWorkspaceService();
-        System.out.println("PhyloSpec LSP Server initialized with file change detection");
     }
 
     public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
@@ -32,11 +31,7 @@ public class LSP implements org.eclipse.lsp4j.services.LanguageServer {
         
         // Enable file watching to detect file changes
         res.getCapabilities().setWorkspace(new WorkspaceServerCapabilities());
-        res.getCapabilities().getWorkspace().setFileOperations(new WorkspaceFileOperationsServerCapabilities());
-        res.getCapabilities().getWorkspace().setDidChangeWatchedFiles(new DidChangeWatchedFilesRegistrationOptions());
-        res.getCapabilities().getWorkspace().getDidChangeWatchedFiles().setDynamicRegistration(Boolean.TRUE);
 
-        System.out.println("LSP Server capabilities initialized with file watching enabled");
         return CompletableFuture.supplyAsync(() -> res);
     }
 
@@ -44,8 +39,7 @@ public class LSP implements org.eclipse.lsp4j.services.LanguageServer {
         return CompletableFuture.supplyAsync(() -> Boolean.TRUE);
     }
 
-    public void exit() {
-    }
+    public void exit() {}
 
     public TextDocumentService getTextDocumentService() {
         return this.textService;

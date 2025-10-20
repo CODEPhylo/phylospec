@@ -1,6 +1,7 @@
 package org.phylospec.lsp;
 
 import org.eclipse.lsp4j.*;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
         TextDocumentIdentifier document = params.getTextDocument();
         List<TextDocumentContentChangeEvent> changes = params.getContentChanges();
         
-        System.out.println("File content changed: " + document.getUri() + " (version: " + document.getVersion() + ")");
+        System.out.println("File content changed: " + document.getUri());
         System.out.println("Number of changes: " + changes.size());
         
         for (int i = 0; i < changes.size(); i++) {
@@ -57,7 +58,7 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
     }
 
     @Override
-    public CompletableFuture<List<? extends Location>> definition(DefinitionParams params) {
+    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(DefinitionParams params) {
         return CompletableFuture.completedFuture(null);
     }
 
@@ -72,7 +73,7 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
     }
 
     @Override
-    public CompletableFuture<List<? extends DocumentSymbol>> documentSymbol(DocumentSymbolParams params) {
+    public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(DocumentSymbolParams params) {
         return CompletableFuture.completedFuture(null);
     }
 
@@ -92,7 +93,7 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
     }
 
     @Override
-    public CompletableFuture<List<? extends CompletionItem>> completion(CompletionParams params) {
+    public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams params) {
         return CompletableFuture.completedFuture(null);
     }
 
@@ -102,7 +103,7 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
     }
 
     @Override
-    public CompletableFuture<List<? extends CodeAction>> codeAction(CodeActionParams params) {
+    public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
         return CompletableFuture.completedFuture(null);
     }
 
@@ -117,32 +118,27 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
     }
 
     @Override
-    public CompletableFuture<List<? extends DocumentLink>> documentLink(DocumentLinkParams params) {
+    public CompletableFuture<List<DocumentLink>> documentLink(DocumentLinkParams params) {
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public CompletableFuture<DocumentLink> resolveDocumentLink(DocumentLink unresolved) {
+    public CompletableFuture<List<ColorInformation>> documentColor(DocumentColorParams params) {
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public CompletableFuture<List<? extends ColorInformation>> documentColor(DocumentColorParams params) {
+    public CompletableFuture<List<ColorPresentation>> colorPresentation(ColorPresentationParams params) {
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public CompletableFuture<List<? extends ColorPresentation>> colorPresentation(ColorPresentationParams params) {
+    public CompletableFuture<List<FoldingRange>> foldingRange(FoldingRangeRequestParams params) {
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public CompletableFuture<List<? extends FoldingRange>> foldingRange(FoldingRangeRequestParams params) {
-        return CompletableFuture.completedFuture(null);
-    }
-
-    @Override
-    public CompletableFuture<List<? extends SelectionRange>> selectionRange(SelectionRangeParams params) {
+    public CompletableFuture<List<SelectionRange>> selectionRange(SelectionRangeParams params) {
         return CompletableFuture.completedFuture(null);
     }
 
@@ -157,12 +153,7 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
     }
 
     @Override
-    public CompletableFuture<SemanticTokens> semanticTokensFullDelta(SemanticTokensDeltaParams params) {
-        return CompletableFuture.completedFuture(null);
-    }
-
-    @Override
-    public CompletableFuture<SemanticTokens> semanticTokensRangeDelta(SemanticTokensDeltaParams params) {
+    public CompletableFuture<Either<SemanticTokens, SemanticTokensDelta>> semanticTokensFullDelta(SemanticTokensDeltaParams params) {
         return CompletableFuture.completedFuture(null);
     }
 
@@ -172,7 +163,7 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
     }
 
     @Override
-    public CompletableFuture<List<? extends InlayHint>> inlayHint(InlayHintParams params) {
+    public CompletableFuture<List<InlayHint>> inlayHint(InlayHintParams params) {
         return CompletableFuture.completedFuture(null);
     }
 
@@ -182,17 +173,12 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
     }
 
     @Override
-    public CompletableFuture<List<? extends InlineValue>> inlineValue(InlineValueParams params) {
+    public CompletableFuture<List<InlineValue>> inlineValue(InlineValueParams params) {
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public CompletableFuture<List<? extends Diagnostic>> diagnostic(DocumentDiagnosticParams params) {
-        return CompletableFuture.completedFuture(null);
-    }
-
-    @Override
-    public CompletableFuture<WorkspaceDiagnosticReport> diagnosticWorkspace(WorkspaceDiagnosticParams params) {
+    public CompletableFuture<DocumentDiagnosticReport> diagnostic(DocumentDiagnosticParams params) {
         return CompletableFuture.completedFuture(null);
     }
 }
