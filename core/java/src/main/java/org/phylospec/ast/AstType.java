@@ -1,5 +1,7 @@
 package org.phylospec.ast;
 
+import org.phylospec.lexer.TokenRange;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -11,6 +13,7 @@ import java.util.Objects;
 public abstract class AstType {
 
     public String name;
+    public TokenRange tokenRange = null;
 
     abstract public <S, E, T> T accept(AstVisitor<S, E, T> visitor);
 
@@ -19,6 +22,10 @@ public abstract class AstType {
 		public Atomic(String name) {
 			this.name = name;
 		}
+        public Atomic(String name, TokenRange tokenRange) {
+            this.name = name;
+            this.tokenRange = tokenRange;
+        }
 
         @Override
         public boolean equals(Object o) {
@@ -43,6 +50,11 @@ public abstract class AstType {
         public Generic(String name, AstType... typeParameters) {
             this.name = name;
             this.typeParameters = typeParameters;
+        }
+        public Generic(String name, TokenRange tokenRange, AstType... typeParameters) {
+            this.name = name;
+            this.typeParameters = typeParameters;
+            this.tokenRange = tokenRange;
         }
 
         public final AstType[] typeParameters;

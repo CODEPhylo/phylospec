@@ -6,6 +6,7 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class PhyloSpecTextDocumentService implements TextDocumentService {
 
@@ -34,15 +35,27 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
 
     @Override
     public void didSave(DidSaveTextDocumentParams params) {
-        String uri = params.getTextDocument().getUri();
-        String content = params.getText();
-        documents.computeIfAbsent(uri,x -> new LspDocument(uri, content, client))
-                .updateContent(content);
     }
 
     @Override
     public void didClose(DidCloseTextDocumentParams params) {
         documents.remove(params.getTextDocument().getUri());
+    }
+
+    @Override
+    public CompletableFuture<DocumentDiagnosticReport> diagnostic(DocumentDiagnosticParams params) {
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public CompletableFuture<Hover> hover(HoverParams params) {
+        LspDocument lspDocument = this.documents.get(params.getTextDocument().getUri());
+        MarkupContent markupContent = lspDocument.getHoverInfo(params.getPosition());
+
+        if (markupContent != null)
+            return CompletableFuture.completedFuture(new Hover(markupContent));
+        else
+            return CompletableFuture.completedFuture(null);
     }
 
     public void setRemoteProxy(LanguageClient remoteProxy) {

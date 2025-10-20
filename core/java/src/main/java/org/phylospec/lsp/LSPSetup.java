@@ -14,7 +14,7 @@ public class LSPSetup {
         startServer(System.in, System.out);
     }
 
-    public static void startServer(InputStream in, OutputStream out) throws InterruptedException, ExecutionException, IOException {
+    public static void startServer(InputStream in, OutputStream out) throws IOException {
         int port = 5007;
         ServerSocket serverSocket = new ServerSocket(port);
         System.out.println("Listening on port " + port);
@@ -22,10 +22,10 @@ public class LSPSetup {
 
         LSP server = new LSP();
 
-        Launcher<LanguageClient> l = LSPLauncher.createServerLauncher(
+        Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(
                 server, socket.getInputStream(), socket.getOutputStream()
         );
-        server.setRemoteProxy(l.getRemoteProxy());
-        l.startListening();
+        server.setRemoteProxy(launcher.getRemoteProxy());
+        launcher.startListening();
     }
 }

@@ -1,6 +1,6 @@
 package org.phylospec.ast;
 
-import org.phylospec.lexer.Token;
+import org.phylospec.lexer.TokenRange;
 import org.phylospec.lexer.TokenType;
 
 import java.util.Arrays;
@@ -17,11 +17,17 @@ public abstract class Expr {
 
     abstract public <S, E, T> E accept(AstVisitor<S, E, T> visitor);
 
+    public TokenRange tokenRange = null;
+
     /** Represents a variable. Function and distribution names are also treated
      * as variables. */
     public static class Variable extends Expr {
         public Variable(String variableName) {
             this.variableName = variableName;
+        }
+        public Variable(String variableName, TokenRange tokenRange) {
+            this.variableName = variableName;
+            this.tokenRange = tokenRange;
         }
 
         public final String variableName;
@@ -50,6 +56,10 @@ public abstract class Expr {
 		public Literal(Object value) {
 			this.value = value;
 		}
+        public Literal(Object value, TokenRange tokenRange) {
+            this.value = value;
+            this.tokenRange = tokenRange;
+        }
 
         // TODO: make this type generic
         public final Object value;
@@ -78,6 +88,11 @@ public abstract class Expr {
 			this.operator = operator;
 			this.right = right;
 		}
+        public Unary(TokenType operator, Expr right, TokenRange tokenRange) {
+            this.operator = operator;
+            this.right = right;
+            this.tokenRange = tokenRange;
+        }
 
 		public final TokenType operator;
         public final Expr right;
@@ -106,6 +121,12 @@ public abstract class Expr {
 			this.left = left;
 			this.operator = operator;
 			this.right = right;
+		}
+        public Binary(Expr left, TokenType operator, Expr right, TokenRange tokenRange) {
+			this.left = left;
+			this.operator = operator;
+			this.right = right;
+            this.tokenRange = tokenRange;
 		}
 
 		public final Expr left;
@@ -169,6 +190,11 @@ public abstract class Expr {
         public Call(String functionName, Argument... arguments) {
             this.functionName = functionName;
             this.arguments = arguments;
+        }
+        public Call(String functionName, TokenRange tokenRange, Argument... arguments) {
+            this.functionName = functionName;
+            this.arguments = arguments;
+            this.tokenRange = tokenRange;
         }
 
         public final String functionName;
@@ -278,6 +304,11 @@ public abstract class Expr {
         public Get(Expr object, String properyName) {
             this.object = object;
             this.properyName = properyName;
+        }
+        public Get(Expr object, String properyName, TokenRange tokenRange) {
+            this.object = object;
+            this.properyName = properyName;
+            this.tokenRange = tokenRange;
         }
 
         public final Expr object;

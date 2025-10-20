@@ -19,15 +19,14 @@ public class LSP implements org.eclipse.lsp4j.services.LanguageServer {
     @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
         final InitializeResult res = new InitializeResult(new ServerCapabilities());
-        res.getCapabilities().setCodeActionProvider(Boolean.TRUE);
-        res.getCapabilities().setCompletionProvider(new CompletionOptions());
-        res.getCapabilities().setDefinitionProvider(Boolean.TRUE);
+//        res.getCapabilities().setCompletionProvider(new CompletionOptions());
+//        res.getCapabilities().setDefinitionProvider(Boolean.TRUE);
         res.getCapabilities().setHoverProvider(Boolean.TRUE);
-        res.getCapabilities().setReferencesProvider(Boolean.TRUE);
+//        res.getCapabilities().setReferencesProvider(Boolean.TRUE);
         res.getCapabilities().setTextDocumentSync(TextDocumentSyncKind.Full);
-        res.getCapabilities().setDocumentSymbolProvider(Boolean.TRUE);
+        // res.getCapabilities().setDocumentSymbolProvider(Boolean.TRUE);
         res.getCapabilities().setDiagnosticProvider(
-                new DiagnosticRegistrationOptions(true, false)
+                new DiagnosticRegistrationOptions(false, false)
         );
 
         return CompletableFuture.supplyAsync(() -> res);

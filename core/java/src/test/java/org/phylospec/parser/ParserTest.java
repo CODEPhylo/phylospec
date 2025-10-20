@@ -6,6 +6,7 @@ import org.phylospec.ast.Stmt;
 import org.phylospec.ast.AstType;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
+import org.phylospec.lexer.TokenRange;
 import org.phylospec.lexer.TokenType;
 
 import java.util.List;
@@ -48,7 +49,8 @@ public class ParserTest {
                                                 )
                                         )
                                 )
-                        )
+                        ),
+                        new TokenRange(0, 0, 0)
                 )
         );
     }
@@ -72,7 +74,8 @@ public class ParserTest {
                                                 )
                                         )
                                 )
-                        )
+                        ),
+                        new TokenRange(0, 0, 0)
                 )
         );
     }
@@ -84,7 +87,8 @@ public class ParserTest {
                 new Stmt.Assignment(
                         new AstType.Atomic("PositiveReal"),
                         "value",
-                        new Expr.Literal(10.4)
+                        new Expr.Literal(10.4),
+                        new TokenRange(0, 0, 0)
                 )
         );
 
@@ -93,7 +97,8 @@ public class ParserTest {
                 new Stmt.Draw(
                         new AstType.Atomic("PositiveReal"),
                         "value",
-                        new Expr.Literal(10.4)
+                        new Expr.Literal(10.4),
+                        new TokenRange(0, 0, 0)
                 )
         );
 
@@ -102,7 +107,8 @@ public class ParserTest {
                 new Stmt.Assignment(
                         new AstType.Generic("PositiveReal", new AstType.Atomic("T")),
                         "value",
-                        new Expr.Literal(10.4)
+                        new Expr.Literal(10.4),
+                        new TokenRange(0, 0, 0)
                 )
         );
 
@@ -111,7 +117,8 @@ public class ParserTest {
                 new Stmt.Draw(
                         new AstType.Generic("PositiveReal", new AstType.Generic("T", new AstType.Atomic("M"))),
                         "value",
-                        new Expr.Literal(10.4)
+                        new Expr.Literal(10.4),
+                        new TokenRange(0, 0, 0)
                 )
         );
 
@@ -123,7 +130,8 @@ public class ParserTest {
                                 new AstType.Generic("B", new AstType.Atomic("B"), new AstType.Atomic("D"))
                         ),
                         "value",
-                        new Expr.Literal(10.4)
+                        new Expr.Literal(10.4),
+                        new TokenRange(0, 0, 0)
                 )
         );
     }
@@ -136,8 +144,9 @@ public class ParserTest {
                         new AstType.Atomic("PositiveReal"),
                         "value",
                         new Expr.Call(
-                            "LogNormal"
-                        )
+                                "LogNormal"
+                        ),
+                        new TokenRange(0, 0, 0)
                 )
         );
 
@@ -153,7 +162,8 @@ public class ParserTest {
                                         TokenType.PLUS,
                                         new Expr.Literal(20)
                                 ))
-                        )
+                        ),
+                        new TokenRange(0, 0, 0)
                 )
         );
 
@@ -166,7 +176,8 @@ public class ParserTest {
                                 "LogNormal",
                                 new Expr.AssignedArgument("meanLog", new Expr.Literal(10.5)),
                                 new Expr.AssignedArgument("sdLog", new Expr.Variable("sdLog"))
-                        )
+                        ),
+                        new TokenRange(0, 0, 0)
                 )
         );
 
@@ -179,7 +190,8 @@ public class ParserTest {
                                 "LogNormal",
                                 new Expr.AssignedArgument("meanLog", new Expr.Literal(10.5)),
                                 new Expr.AssignedArgument("sdLog", new Expr.Variable("sdLog"))
-                        )
+                        ),
+                        new TokenRange(0, 0, 0)
                 )
         );
 
@@ -192,7 +204,8 @@ public class ParserTest {
                                 "LogNormal",
                                 new Expr.DrawnArgument("meanLog", new Expr.Call("Exp")),
                                 new Expr.DrawnArgument("sdLog", new Expr.Call("Normal"))
-                        )
+                        ),
+                        new TokenRange(0, 0, 0)
                 )
         );
     }
@@ -204,7 +217,8 @@ public class ParserTest {
                 new Stmt.Assignment(
                         new AstType.Atomic("PositiveReal"),
                         "value",
-                        new Expr.Array(List.of())
+                        new Expr.Array(List.of()),
+                        new TokenRange(0, 0, 0)
                 )
         );
 
@@ -217,7 +231,8 @@ public class ParserTest {
                                 new Expr.Literal(10),
                                 new Expr.Literal(5),
                                 new Expr.Literal(200)
-                        ))
+                        )),
+                        new TokenRange(0, 0, 0)
                 )
         );
 
@@ -230,7 +245,8 @@ public class ParserTest {
                                 new Expr.Literal(10),
                                 new Expr.Literal(5),
                                 new Expr.Literal(200)
-                        ))
+                        )),
+                        new TokenRange(0, 0, 0)
                 )
         );
 
@@ -242,7 +258,8 @@ public class ParserTest {
                         new Expr.Array(List.of(
                                 new Expr.Call("abs", new Expr.AssignedArgument(new Expr.Literal(5))),
                                 new Expr.Call("square", new Expr.AssignedArgument(new Expr.Literal(2)))
-                        ))
+                        )),
+                        new TokenRange(0, 0, 0)
                 )
         );
     }
@@ -255,12 +272,14 @@ public class ParserTest {
                 new Stmt.Assignment(
                         new AstType.Atomic("PositiveReal"),
                         "value",
-                        new Expr.Literal(10.4)
+                        new Expr.Literal(10.4),
+                        new TokenRange(0, 0, 0)
                 ),
                 new Stmt.Assignment(
                         new AstType.Atomic("PositiveReal"),
                         "value",
-                        new Expr.Literal(2.0)
+                        new Expr.Literal(2.0),
+                        new TokenRange(0, 0, 0)
                 )
         );
 
@@ -270,12 +289,14 @@ public class ParserTest {
                 new Stmt.Assignment(
                         new AstType.Atomic("PositiveReal"),
                         "value",
-                        new Expr.Literal(10.4)
+                        new Expr.Literal(10.4),
+                        new TokenRange(0, 0, 0)
                 ),
                 new Stmt.Assignment(
                         new AstType.Atomic("PositiveReal"),
                         "value",
-                        new Expr.Literal(2.0)
+                        new Expr.Literal(2.0),
+                        new TokenRange(0, 0, 0)
                 )
         );
 
@@ -291,7 +312,8 @@ public class ParserTest {
                                         TokenType.PLUS,
                                         new Expr.Literal(5.0)
                                 )
-                        )
+                        ),
+                        new TokenRange(0, 0, 0)
                 )
         );
 
@@ -311,7 +333,8 @@ public class ParserTest {
                                 new Expr.AssignedArgument(
                                         "b", new Expr.Literal(5.0)
                                 )
-                        )
+                        ),
+                        new TokenRange(0, 0, 0)
                 )
         );
 
@@ -324,7 +347,8 @@ public class ParserTest {
                                 new Expr.Literal(10),
                                 new Expr.Literal(5),
                                 new Expr.Literal(200)
-                        ))
+                        )),
+                        new TokenRange(0, 0, 0)
                 )
         );
     }
@@ -339,7 +363,8 @@ public class ParserTest {
                         new Expr.Get(
                                 new Expr.Variable("constants"),
                                 "pi"
-                        )
+                        ),
+                        new TokenRange(0, 0, 0)
                 )
         );
 
@@ -354,7 +379,8 @@ public class ParserTest {
                                         "pi"
                                 ),
                                 "binary"
-                        )
+                        ),
+                        new TokenRange(0, 0, 0)
                 )
         );
     }
@@ -366,9 +392,10 @@ public class ParserTest {
                 new Stmt.Decorated(
                         new Expr.Call("Decorator"),
                         new Stmt.Draw(
-                            new AstType.Atomic("PositiveReal"),
-                            "value",
-                            new  Expr.Literal(10)
+                                new AstType.Atomic("PositiveReal"),
+                                "value",
+                                new Expr.Literal(10),
+                                new TokenRange(0, 0, 0)
                         )
                 )
         );
@@ -382,7 +409,8 @@ public class ParserTest {
                                 new Stmt.Draw(
                                         new AstType.Atomic("PositiveReal"),
                                         "value",
-                                        new  Expr.Literal(10)
+                                        new Expr.Literal(10),
+                                        new TokenRange(0, 0, 0)
                                 )
                         )
                 )

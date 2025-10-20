@@ -122,4 +122,21 @@ public class ResolvedType {
     public int hashCode() {
         return Objects.hash(parameterTypes, typeComponent);
     }
+
+    @Override
+    public String toString() {
+        if (getParametersNames().isEmpty())
+            return typeComponent.getName();
+
+        StringBuilder string = new StringBuilder();
+        string.append(typeComponent.getName());
+
+        string.append("<");
+        for (String typeParameter : getParametersNames()) {
+            string.append(getParameterTypes().get(typeParameter).toString());
+        }
+        string.append(">");
+
+        return string.toString();
+    }
 }

@@ -1,5 +1,4 @@
 package org.phylospec.parser;
-import org.phylospec.PhyloSpec;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.AstType;
@@ -97,7 +96,7 @@ public class Parser {
             skipEOLs();
 
             Stmt statement = decorated();
-            return new Stmt.Decorated((Expr.Call) decorator, statement);
+            return new Stmt.Decorated((Expr.Call) decorator, statement, statement.tokenRange);
         }
 
         return statement();
@@ -121,23 +120,23 @@ public class Parser {
 
         AstType type = type();
 
-        Token name = consume(TokenType.IDENTIFIER, "Invalid variable name.");
+        Token nameToken = consume(TokenType.IDENTIFIER, "Invalid variable name.");
 
         if (match(TokenType.EQUAL)) {
             Expr expression = expression();
-            return new Stmt.Assignment(type, name.lexeme, expression);
+            return new Stmt.Assignment(type, nameToken.lexeme, expression, nameToken.range);
         }
 
         if (match(TokenType.TILDE)) {
             Expr expression = expression();
-            return new Stmt.Draw(type, name.lexeme, expression);
+            return new Stmt.Draw(type, nameToken.lexeme, expression, nameToken.range);
         }
 
         throw new ParseError(peek(), "Except assignment or draw.");
     }
 
     private AstType type() {
-        Token typeName = consume(TokenType.IDENTIFIER, "Invalid variable type.");
+        Token typeNameToken = consume(TokenType.IDENTIFIER, "Invalid variable type.");
 
         if (match(TokenType.LESS)) {
             List<AstType> innerTypes = new ArrayList<>();
@@ -150,10 +149,10 @@ public class Parser {
             // parse closing brackets
             consume(TokenType.GREATER, "Generic type must be closed with a '>'.");
 
-            return new AstType.Generic(typeName.lexeme, innerTypes.toArray(AstType[]::new));
+            return new AstType.Generic(typeNameToken.lexeme, typeNameToken.range, innerTypes.toArray(AstType[]::new));
         }
 
-        return new AstType.Atomic(typeName.lexeme);
+        return new AstType.Atomic(typeNameToken.lexeme, typeNameToken.range);
     }
 
     private Expr expression() {
@@ -164,9 +163,9 @@ public class Parser {
         Expr expr = comparison();
 
         while (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
-            Token operator = previous();
+            Token operatorToken = previous();
             Expr rightExpr = comparison();
-            expr = new Expr.Binary(expr, operator.type, rightExpr);
+            expr = new Expr.Binary(expr, operatorToken.type, rightExpr, operatorToken.range);
         }
 
         return expr;
@@ -176,9 +175,9 @@ public class Parser {
         Expr expr = term();
 
         while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
-            Token operator = previous();
+            Token operatorToken = previous();
             Expr rightExpr = term();
-            expr = new Expr.Binary(expr, operator.type, rightExpr);
+            expr = new Expr.Binary(expr, operatorToken.type, rightExpr, operatorToken.range);
         }
 
         return expr;
@@ -188,9 +187,9 @@ public class Parser {
         Expr expr = factor();
 
         while (match(TokenType.PLUS, TokenType.MINUS)) {
-            Token operator = previous();
+            Token operatorToken = previous();
             Expr rightExpr = factor();
-            expr = new Expr.Binary(expr, operator.type, rightExpr);
+            expr = new Expr.Binary(expr, operatorToken.type, rightExpr, operatorToken.range);
         }
 
         return expr;
@@ -200,9 +199,9 @@ public class Parser {
         Expr expr = unary();
 
         while (match(TokenType.STAR, TokenType.SLASH)) {
-            Token operator = previous();
+            Token operatorToken = previous();
             Expr rightExpr = unary();
-            expr = new Expr.Binary(expr, operator.type, rightExpr);
+            expr = new Expr.Binary(expr, operatorToken.type, rightExpr, operatorToken.range);
         }
 
         return expr;
@@ -210,9 +209,9 @@ public class Parser {
 
     private Expr unary() {
         if (match(TokenType.BANG, TokenType.MINUS)) {
-            Token operator = previous();
+            Token operatorToken = previous();
             Expr rightExpr = unary();
-            return new Expr.Unary(operator.type, rightExpr);
+            return new Expr.Unary(operatorToken.type, rightExpr, operatorToken.range);
         } else {
             return call();
         }
@@ -223,7 +222,7 @@ public class Parser {
 
         if (expr instanceof Expr.Variable && match(TokenType.LEFT_PAREN)) {
             // this is a function call
-            String functionName = ((Expr.Variable) expr).variableName;
+            Expr.Variable functionName = (Expr.Variable) expr;
 
             // we are in a bracket, let's ignore EOL statements
             boolean oldSkipNewLines = skipNewLines;
@@ -244,7 +243,7 @@ public class Parser {
         return expr;
     }
 
-    private Expr finishCall(String calleeName) {
+    private Expr finishCall(Expr.Variable callee) {
         List<Expr.Argument> arguments = new ArrayList<>();
         if (!check(TokenType.RIGHT_PAREN)) {
             do {
@@ -261,7 +260,7 @@ public class Parser {
             } while (match(TokenType.COMMA));
         }
 
-        return new Expr.Call(calleeName, arguments.toArray(Expr.Argument[]::new));
+        return new Expr.Call(callee.variableName, callee.tokenRange, arguments.toArray(Expr.Argument[]::new));
     }
 
     private Expr.Argument argument() {
@@ -326,11 +325,11 @@ public class Parser {
     }
 
     private Expr primary() {
-        if (match(TokenType.FALSE)) return new Expr.Literal(false);
-        if (match(TokenType.TRUE)) return new Expr.Literal(true);
+        if (match(TokenType.FALSE)) return new Expr.Literal(false, previous().range);
+        if (match(TokenType.TRUE)) return new Expr.Literal(true, previous().range);
 
         if (match(TokenType.INT, TokenType.FLOAT, TokenType.STRING)) {
-            return new Expr.Literal(previous().literal);
+            return new Expr.Literal(previous().literal, previous().range);
         }
 
         if (match(TokenType.LEFT_PAREN)) {
@@ -347,7 +346,7 @@ public class Parser {
         }
 
         if (match(TokenType.IDENTIFIER)) {
-            return new Expr.Variable(previous().lexeme);
+            return new Expr.Variable(previous().lexeme, previous().range);
         }
 
         throw new ParseError(peek(), "Expect expression.");

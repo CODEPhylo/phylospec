@@ -50,24 +50,30 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         this.printer = new AstPrinter();
     }
 
-    /** Returns the types associated with the given AST expression.
+    /**
+     * Returns the types associated with the given AST expression.
      * An AST expression can be associated with multiple types (a typeset). Every
      * type corresponds to an interpretation of the AST expression.
      * For instance, the literal `5` can be interpreted as PositiveReal
      * or PositiveInteger. Another example are generators overloaded in
-     * their return type.*/
+     * their return type.
+     */
     public Set<ResolvedType> resolveType(Expr expression) {
         return this.resolvedTypes.get(expression);
     }
 
-    /** Returns the type associated with the given variable name. The type of the
+    /**
+     * Returns the type associated with the given variable name. The type of the
      * variable is determined by the type specified at assignment (e.g. Real a = ...).
-     * Thus, every variable is only associated with a single type. */
+     * Thus, every variable is only associated with a single type.
+     */
     public ResolvedType resolveVariable(String variableName) {
         return this.variableTypes.get(variableName);
     }
 
-    /** visitor functions */
+    /**
+     * visitor functions
+     */
 
     @Override
     public Void visitDecoratedStmt(Stmt.Decorated stmt) {
@@ -77,21 +83,24 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
 
     @Override
     public Void visitAssignment(Stmt.Assignment stmt) {
-        Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
         ResolvedType resolvedVariableType = stmt.type.accept(this);
+        remember(stmt.name, resolvedVariableType);
+
+        Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
 
         if (!TypeUtils.canBeAssignedTo(resolvedExpressionTypeSet, resolvedVariableType, componentResolver)) {
-            throw new TypeError("Expression of type " + printType(resolvedExpressionTypeSet) + " cannot be assigned to variable " + stmt.name + " of type " + printType(Set.of(resolvedVariableType)));
-        };
+            throw new TypeError(stmt.tokenRange, "Expression of type " + printType(resolvedExpressionTypeSet) + " cannot be assigned to variable " + stmt.name + " of type " + printType(Set.of(resolvedVariableType)));
+        }
 
-        remember(stmt.name, resolvedVariableType);
         return null;
     }
 
     @Override
     public Void visitDraw(Stmt.Draw stmt) {
-        Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
         ResolvedType resolvedVariableType = stmt.type.accept(this);
+        remember(stmt.name, resolvedVariableType);
+
+        Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
 
         // we are only interested in the expression types which are distributions,
         // because we want to draw a value
@@ -109,14 +118,13 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         }
 
         if (generatedTypeSet.isEmpty()) {
-            throw new TypeError("Expression of type " + printType(resolvedExpressionTypeSet) + " is not a distribution");
+            throw new TypeError(stmt.tokenRange, "Expression of type " + printType(resolvedExpressionTypeSet) + " is not a distribution");
         }
 
         if (!TypeUtils.canBeAssignedTo(generatedTypeSet, resolvedVariableType, componentResolver)) {
-            throw new TypeError("Expression of type " + printType(generatedTypeSet) + " cannot be assigned to variable " + stmt.name + " of type " + printType(Set.of(resolvedVariableType)));
-        };
+            throw new TypeError(stmt.tokenRange, "Expression of type " + printType(generatedTypeSet) + " cannot be assigned to variable " + stmt.name + " of type " + printType(Set.of(resolvedVariableType)));
+        }
 
-        remember(stmt.name, resolvedVariableType);
         return null;
     }
 
@@ -133,13 +141,15 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
             case String ignored -> Set.of("String");
             case Integer value -> {
                 if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Real", "Probability");
-                if (1 == value) yield Set.of("PositiveInteger", "Integer", "NonNegativeReal", "PositiveReal", "Real", "Probability");
+                if (1 == value)
+                    yield Set.of("PositiveInteger", "Integer", "NonNegativeReal", "PositiveReal", "Real", "Probability");
                 if (0 < value) yield Set.of("PositiveInteger", "Integer", "NonNegativeReal", "PositiveReal", "Real");
                 yield Set.of("Integer", "Real");
             }
             case Long value -> {
                 if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Real", "Probability");
-                if (1 == value) yield Set.of("PositiveInteger", "Integer", "NonNegativeReal", "PositiveReal", "Real", "Probability");
+                if (1 == value)
+                    yield Set.of("PositiveInteger", "Integer", "NonNegativeReal", "PositiveReal", "Real", "Probability");
                 if (0 < value) yield Set.of("PositiveInteger", "Integer", "NonNegativeReal", "PositiveReal", "Real");
                 yield Set.of("Integer", "Real");
             }
@@ -170,7 +180,7 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         ResolvedType resolvedType = variableTypes.get(variableName);
 
         if (resolvedType == null) {
-            throw new TypeError("Unknown variable: " + variableName);
+            throw new TypeError(expr.tokenRange, "Unknown variable: " + variableName);
         }
 
         return remember(expr, Set.of(resolvedType));
@@ -190,7 +200,7 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         );
 
         if (resultType.isEmpty()) {
-            throw new TypeError("Operation " + TokenType.getLexeme(expr.operator) + " is not supported for type " + rightType);
+            throw new TypeError(expr.tokenRange, "Operation " + TokenType.getLexeme(expr.operator) + " is not supported for type " + rightType);
         }
 
         return remember(expr, resultType);
@@ -249,7 +259,7 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         );
 
         if (resultType.isEmpty()) {
-            throw new TypeError("Operation " + TokenType.getLexeme(expr.operator) + " is not supported for types " + printType(leftType) + " and " + printType(rightType));
+            throw new TypeError(expr.tokenRange, "Operation " + TokenType.getLexeme(expr.operator) + " is not supported for types " + printType(leftType) + " and " + printType(rightType));
         }
 
         return remember(expr, resultType);
@@ -257,7 +267,7 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
 
     @Override
     public Set<ResolvedType> visitCall(Expr.Call expr) {
-         // resolve arguments
+        // resolve arguments
         Map<String, Set<ResolvedType>> resolvedArguments = Arrays.stream(expr.arguments).collect(
                 Collectors.toMap(x -> x.name, x -> x.accept(this))
         );
@@ -265,7 +275,7 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         // fetch all compatible generators
         List<Generator> generators = componentResolver.resolveGenerator(expr.functionName);
         if (generators == null) {
-            throw new TypeError("Unknown function: " + expr.functionName);
+            throw new TypeError(expr.tokenRange, "Unknown function: " + expr.functionName);
         }
 
         // check if generators are compatible with arguments
@@ -277,20 +287,20 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
                         generator, resolvedArguments, componentResolver
                 );
                 possibleReturnTypes.addAll(possibleGeneratorReturnTypes);
-            }  catch (TypeError e) {
+            } catch (TypeError e) {
                 errorMessages.add(e.getMessage());
             }
         }
 
         // throw errors if needed
         if (possibleReturnTypes.isEmpty() && errorMessages.isEmpty()) {
-            throw new TypeError("Function with the given arguments is not known: " + expr.functionName);
+            throw new TypeError(expr.tokenRange, "Function with the given arguments is not known: " + expr.functionName);
         } else if (possibleReturnTypes.isEmpty() && errorMessages.size() == 1) {
-            throw new TypeError(errorMessages.getFirst());
+            throw new TypeError(expr.tokenRange, errorMessages.getFirst());
         } else if (possibleReturnTypes.isEmpty()) {
             String errorMessage = "Function with the given arguments is not known: \n\t";
-            errorMessage += String.join("\t\n", errorMessages);
-            throw new TypeError(errorMessage);
+            errorMessage += String.join("\n\t", errorMessages);
+            throw new TypeError(expr.tokenRange, errorMessage);
         }
 
         return remember(expr, possibleReturnTypes);
@@ -320,7 +330,7 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         }
 
         if (generatedTypeSet.isEmpty()) {
-            throw new TypeError("Expression of type " + printType(resolvedTypeSet) + " is not a distribution");
+            throw new TypeError(expr.tokenRange, "Expression of type " + printType(resolvedTypeSet) + " is not a distribution");
         }
 
         return remember(expr, generatedTypeSet);
@@ -393,7 +403,7 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         }
 
         if (!foundMatchingProperty) {
-            throw  new TypeError("Unknown property: " + expr.properyName);
+            throw new TypeError("Unknown property: " + expr.properyName);
         }
 
         return returnTypeSet;
@@ -401,7 +411,11 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
 
     @Override
     public ResolvedType visitAtomicType(AstType.Atomic expr) {
-        return ResolvedType.fromString(expr.name, componentResolver);
+        try {
+            return ResolvedType.fromString(expr.name, componentResolver);
+        } catch (TypeError error) {
+            throw new TypeError(expr.tokenRange, error.getMessage());
+        }
     }
 
     @Override
@@ -409,7 +423,7 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         ResolvedType resolvedType = ResolvedType.fromString(expr.name, componentResolver);
 
         if (resolvedType.getParametersNames().size() != expr.typeParameters.length) {
-            throw new TypeError("Wrong number of type parameters.");
+            throw new TypeError(expr.tokenRange, "Wrong number of type parameters.");
         }
 
         // resolve the type parameters
@@ -423,7 +437,9 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         return resolvedType;
     }
 
-    /** helper functions to store the resolved types */
+    /**
+     * helper functions to store the resolved types
+     */
 
     private Set<ResolvedType> remember(Expr expr, Set<ResolvedType> resolvedType) {
         resolvedTypes.put(expr, resolvedType);
@@ -441,7 +457,9 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         return resolvedType;
     }
 
-    /** helper functions to pretty-print types */
+    /**
+     * helper functions to pretty-print types
+     */
 
     private static String printType(Set<ResolvedType> type) {
         if (type.isEmpty()) {
