@@ -62,7 +62,7 @@ public class Parser {
         List<Stmt> statements = new ArrayList<>();
 
         // skip all EOL until the first statement
-        while (match(TokenType.EOL)) {}
+        skipEOLs();
 
         while (!isAtEnd()) {
             try {
@@ -72,10 +72,11 @@ public class Parser {
                     consume(TokenType.EOL, "Assignment has to be terminated by a line break.");
 
                     // skip all EOL until the next statement
-                    while (match(TokenType.EOL)) {}
+                    skipEOLs();
                 }
             } catch (ParseError error) {
-                recover(error);
+                logError(error);
+                recover();
             }
         }
 
@@ -93,7 +94,7 @@ public class Parser {
             }
 
             // skip all EOL until the next statement
-            while (match(TokenType.EOL)) {}
+            skipEOLs();
 
             Stmt statement = decorated();
             return new Stmt.Decorated((Expr.Call) decorator, statement);
@@ -254,7 +255,7 @@ public class Parser {
 
                 arguments.add(argument());
 
-                if (arguments.get(0).name == null && check(TokenType.COMMA)) {
+                if (arguments.getFirst().name == null && check(TokenType.COMMA)) {
                     throw new ParseError(peek(), "Arguments can only be omitted when there is only one argument.");
                 }
             } while (match(TokenType.COMMA));
@@ -430,17 +431,23 @@ public class Parser {
 
     /* error handling */
 
-    private void recover(ParseError error) {
+    private void logError(ParseError error) {
         for (ParseEventListener listener : eventListeners) {
             listener.parseErrorDetected(error.token, error.message);
         }
+    }
 
+    /** Finds the next location in the source string with a valid statement */
+    private void recover() {
         while (!isAtEnd()) {
+            // the next statement has to be preceded by an EOL. let's find it
             while (peek().type != TokenType.EOL && !isAtEnd()) {
                 advance();
             }
 
-            while (match(TokenType.EOL)) {}
+            skipEOLs();
+
+            // we could now be at the beginning of a new statement, let's check that
 
             int oldCurrent = current;
             try {
@@ -451,14 +458,18 @@ public class Parser {
                 return;
             } catch (ParseError ignored) {
                 // we couldn't parse a proper statement, let's search for longer
-                while (match(TokenType.EOL)) {}
+                skipEOLs();
             }
         }
     }
 
+    private void skipEOLs() {
+        while (match(TokenType.EOL)) {}
+    }
+
     private static class ParseError extends RuntimeException {
-        private Token token;
-        private String message;
+        private final Token token;
+        private final String message;
 
         public ParseError(Token token, String message) {
             this.token = token;

@@ -10,14 +10,13 @@ import java.util.concurrent.CompletableFuture;
 public class LSP implements org.eclipse.lsp4j.services.LanguageServer {
 
     private final PhyloSpecTextDocumentService textService;
-    private final WorkspaceService workspaceService;
-    LanguageClient client;
+    private LanguageClient client;
 
     public LSP() {
         this.textService = new PhyloSpecTextDocumentService();
-        this.workspaceService = new PhyloSpecWorkspaceService();
     }
 
+    @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
         final InitializeResult res = new InitializeResult(new ServerCapabilities());
         res.getCapabilities().setCodeActionProvider(Boolean.TRUE);
@@ -31,24 +30,25 @@ public class LSP implements org.eclipse.lsp4j.services.LanguageServer {
                 new DiagnosticRegistrationOptions(true, false)
         );
 
-        // Enable file watching to detect file changes
-        res.getCapabilities().setWorkspace(new WorkspaceServerCapabilities());
-
         return CompletableFuture.supplyAsync(() -> res);
     }
 
+    @Override
     public CompletableFuture<Object> shutdown() {
         return CompletableFuture.supplyAsync(() -> Boolean.TRUE);
     }
 
+    @Override
     public void exit() {}
 
+    @Override
     public TextDocumentService getTextDocumentService() {
         return this.textService;
     }
 
+    @Override
     public WorkspaceService getWorkspaceService() {
-        return this.workspaceService;
+        return null;
     }
 
     public void setRemoteProxy(LanguageClient remoteProxy) {
