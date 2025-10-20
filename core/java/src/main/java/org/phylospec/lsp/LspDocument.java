@@ -149,7 +149,12 @@ class LspDocument implements ParseEventListener {
 
                 for (int i = 0; i < generator.getArguments().size(); i++) {
                     Argument argument = generator.getArguments().get(i);
-                    hoverText.append(argument.getType()).append(" ").append(argument.getName());
+
+                    if (argument.getRequired()) {
+                        hoverText.append(argument.getType()).append(" ").append(argument.getName());
+                    } else {
+                        hoverText.append("[").append(argument.getType()).append(" ").append(argument.getName()).append("]");
+                    }
 
                     if (i != generator.getArguments().size() - 1) {
                         hoverText.append(", ");
