@@ -17,8 +17,8 @@ public class ComponentResolver {
     final List<ComponentLibrary> componentLibraries;
     final Set<String> knownNamespaces;
 
-    final Map<String, List<Generator>> importedGenerators;  // there might be multiple generators with the same name
-    final Map<String, Type> importedTypes;
+    public final Map<String, List<Generator>> importedGenerators;  // there might be multiple generators with the same name
+    public final Map<String, Type> importedTypes;
 
     public ComponentResolver() {
         componentLibraries = new ArrayList<>();

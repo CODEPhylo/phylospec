@@ -1,10 +1,12 @@
 package org.phylospec.lsp;
 
 import org.eclipse.lsp4j.*;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -56,6 +58,16 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
             return CompletableFuture.completedFuture(new Hover(markupContent));
         else
             return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams position) {
+        LspDocument lspDocument = this.documents.get(position.getTextDocument().getUri());
+        List<CompletionItem> completionItems = lspDocument.getCompletionItems();
+
+        return CompletableFuture.completedFuture(
+                Either.forRight(new CompletionList(completionItems))
+        );
     }
 
     public void setRemoteProxy(LanguageClient remoteProxy) {

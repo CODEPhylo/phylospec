@@ -19,7 +19,7 @@ public class LSP implements org.eclipse.lsp4j.services.LanguageServer {
     @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
         final InitializeResult res = new InitializeResult(new ServerCapabilities());
-//        res.getCapabilities().setCompletionProvider(new CompletionOptions());
+        res.getCapabilities().setCompletionProvider(new CompletionOptions());
 //        res.getCapabilities().setDefinitionProvider(Boolean.TRUE);
         res.getCapabilities().setHoverProvider(Boolean.TRUE);
 //        res.getCapabilities().setReferencesProvider(Boolean.TRUE);

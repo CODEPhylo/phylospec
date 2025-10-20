@@ -177,6 +177,30 @@ class LspDocument implements ParseEventListener {
                     hoverText.toString()
         );
     }
+    public List<CompletionItem> getCompletionItems() {
+        List<CompletionItem> completionItems = new ArrayList<>();
+
+        for (String variableName : typeResolver.variableTypes.keySet()) {
+            CompletionItem item = new CompletionItem(variableName);
+            item.setKind(CompletionItemKind.Variable);
+            item.setDetail(typeResolver.variableTypes.get(variableName).toString());
+            completionItems.add(item);
+        }
+
+        for (String generatorName : componentResolver.importedGenerators.keySet()) {
+            CompletionItem item = new CompletionItem(generatorName);
+            item.setKind(CompletionItemKind.Function);
+            completionItems.add(item);
+        }
+
+        for (String typeName : componentResolver.importedTypes.keySet()) {
+            CompletionItem item = new CompletionItem(typeName);
+            item.setKind(CompletionItemKind.TypeParameter);
+            completionItems.add(item);
+        }
+
+        return completionItems;
+    }
 
     private Token getTokenAtPosition(Position position) {
         for (Token token : tokens) {

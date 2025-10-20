@@ -37,8 +37,8 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
     private final ComponentResolver componentResolver;
     private final TypeMatcher typeMatcher;
 
-    Map<Expr, Set<ResolvedType>> resolvedTypes;
-    Map<String, ResolvedType> variableTypes;
+    public Map<Expr, Set<ResolvedType>> resolvedTypes;
+    public Map<String, ResolvedType> variableTypes;
 
     AstPrinter printer;
 
