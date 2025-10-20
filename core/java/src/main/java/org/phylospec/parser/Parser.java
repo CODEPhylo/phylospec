@@ -36,6 +36,8 @@ public class Parser {
     private int current = 0;
     private boolean skipNewLines = false;
 
+    private final List<ParseEventListener> eventListeners;
+
     /**
      * Creates a new Parser.
      *
@@ -43,6 +45,11 @@ public class Parser {
      */
     public Parser(List<Token> tokens) {
         this.tokens = tokens;
+        this.eventListeners = new ArrayList<>();
+    }
+
+    public void registerEventListener (ParseEventListener listener) {
+        this.eventListeners.add(listener);
     }
 
     /**
@@ -58,13 +65,17 @@ public class Parser {
         while (match(TokenType.EOL)) {}
 
         while (!isAtEnd()) {
-            statements.add(decorated());
+            try {
+                statements.add(decorated());
 
-            if (!isAtEnd()) {
-                consume(TokenType.EOL, "Assignment has to be terminated by a line break.");
+                if (!isAtEnd()) {
+                    consume(TokenType.EOL, "Assignment has to be terminated by a line break.");
 
-                // skip all EOL until the next statement
-                while (match(TokenType.EOL)) {}
+                    // skip all EOL until the next statement
+                    while (match(TokenType.EOL)) {}
+                }
+            } catch (ParseError error) {
+                recover(error);
             }
         }
 
@@ -78,7 +89,7 @@ public class Parser {
             Expr decorator = call();
 
             if (!(decorator instanceof Expr.Call)) {
-                throw error(previous(), "Decorators can only be function calls.");
+                throw new ParseError(previous(), "Decorators can only be function calls.");
             }
 
             // skip all EOL until the next statement
@@ -121,7 +132,7 @@ public class Parser {
             return new Stmt.Draw(type, name.lexeme, expression);
         }
 
-        throw error(peek(), "Except assignment or draw.");
+        throw new ParseError(peek(), "Except assignment or draw.");
     }
 
     private AstType type() {
@@ -154,7 +165,7 @@ public class Parser {
         while (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
             Token operator = previous();
             Expr rightExpr = comparison();
-            expr = new Expr.Binary(expr, operator, rightExpr);
+            expr = new Expr.Binary(expr, operator.type, rightExpr);
         }
 
         return expr;
@@ -166,7 +177,7 @@ public class Parser {
         while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
             Token operator = previous();
             Expr rightExpr = term();
-            expr = new Expr.Binary(expr, operator, rightExpr);
+            expr = new Expr.Binary(expr, operator.type, rightExpr);
         }
 
         return expr;
@@ -178,7 +189,7 @@ public class Parser {
         while (match(TokenType.PLUS, TokenType.MINUS)) {
             Token operator = previous();
             Expr rightExpr = factor();
-            expr = new Expr.Binary(expr, operator, rightExpr);
+            expr = new Expr.Binary(expr, operator.type, rightExpr);
         }
 
         return expr;
@@ -190,7 +201,7 @@ public class Parser {
         while (match(TokenType.STAR, TokenType.SLASH)) {
             Token operator = previous();
             Expr rightExpr = unary();
-            expr = new Expr.Binary(expr, operator, rightExpr);
+            expr = new Expr.Binary(expr, operator.type, rightExpr);
         }
 
         return expr;
@@ -200,7 +211,7 @@ public class Parser {
         if (match(TokenType.BANG, TokenType.MINUS)) {
             Token operator = previous();
             Expr rightExpr = unary();
-            return new Expr.Unary(operator, rightExpr);
+            return new Expr.Unary(operator.type, rightExpr);
         } else {
             return call();
         }
@@ -244,7 +255,7 @@ public class Parser {
                 arguments.add(argument());
 
                 if (arguments.get(0).name == null && check(TokenType.COMMA)) {
-                    error(peek(), "Arguments can only be omitted when there is only one argument.");
+                    throw new ParseError(peek(), "Arguments can only be omitted when there is only one argument.");
                 }
             } while (match(TokenType.COMMA));
         }
@@ -338,7 +349,7 @@ public class Parser {
             return new Expr.Variable(previous().lexeme);
         }
 
-        throw error(peek(), "Expect expression.");
+        throw new ParseError(peek(), "Expect expression.");
     }
 
     /* helper methods to inspect the tokens */
@@ -409,7 +420,7 @@ public class Parser {
     private Token consume(TokenType tokenType, String message) {
         if (check(tokenType)) return advance();
 
-        throw error(peek(), message);
+        throw new ParseError(peek(), message);
     }
 
     /** Checks if the current cursor points to the end of the file. */
@@ -419,10 +430,44 @@ public class Parser {
 
     /* error handling */
 
-    private ParseError error(Token token, String message) {
-        PhyloSpec.error(token, message);
-        return new ParseError();
+    private void recover(ParseError error) {
+        for (ParseEventListener listener : eventListeners) {
+            listener.parseErrorDetected(error.token, error.message);
+        }
+
+        while (!isAtEnd()) {
+            while (peek().type != TokenType.EOL && !isAtEnd()) {
+                advance();
+            }
+
+            while (match(TokenType.EOL)) {}
+
+            int oldCurrent = current;
+            try {
+                decorated();
+                // we successfully parsed a statement
+                // let's reset cursor and return to the normal parsing loop
+                current = oldCurrent;
+                return;
+            } catch (ParseError ignored) {
+                // we couldn't parse a proper statement, let's search for longer
+                while (match(TokenType.EOL)) {}
+            }
+        }
     }
 
-    private static class ParseError extends RuntimeException {}
+    private static class ParseError extends RuntimeException {
+        private Token token;
+        private String message;
+
+        public ParseError(Token token, String message) {
+            this.token = token;
+            this.message = message;
+        }
+
+        @Override
+        public String getMessage() {
+            return message;
+        }
+    }
 }

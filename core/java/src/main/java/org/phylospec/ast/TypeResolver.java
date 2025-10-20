@@ -186,11 +186,11 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
 
         Set<ResolvedType> rightType = expr.right.accept(this);
         Set<ResolvedType> resultType = typeMatcher.findMatch(
-                typeMap, new TypeMatcher.Query(expr.operator.type, rightType)
+                typeMap, new TypeMatcher.Query(expr.operator, rightType)
         );
 
         if (resultType.isEmpty()) {
-            throw new TypeError("Operation " + expr.operator.lexeme + " is not supported for type " + rightType);
+            throw new TypeError("Operation " + TokenType.getLexeme(expr.operator) + " is not supported for type " + rightType);
         }
 
         return remember(expr, resultType);
@@ -245,11 +245,11 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         Set<ResolvedType> leftType = expr.left.accept(this);
         Set<ResolvedType> rightType = expr.right.accept(this);
         Set<ResolvedType> resultType = typeMatcher.findMatch(
-                typeMap, new TypeMatcher.Query(expr.operator.type, leftType, rightType)
+                typeMap, new TypeMatcher.Query(expr.operator, leftType, rightType)
         );
 
         if (resultType.isEmpty()) {
-            throw new TypeError("Operation " + expr.operator.lexeme + " is not supported for types " + printType(leftType) + " and " + printType(rightType));
+            throw new TypeError("Operation " + TokenType.getLexeme(expr.operator) + " is not supported for types " + printType(leftType) + " and " + printType(rightType));
         }
 
         return remember(expr, resultType);

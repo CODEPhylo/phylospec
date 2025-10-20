@@ -2,59 +2,47 @@ package org.phylospec.lsp;
 
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public class PhyloSpecTextDocumentService implements TextDocumentService {
-    
+
+    private final Map<String, LspDocument> documents = new HashMap<>();
+    private LanguageClient client;
+
     @Override
     public void didOpen(DidOpenTextDocumentParams params) {
         TextDocumentItem document = params.getTextDocument();
-        System.out.println("File opened: " + document.getUri() + " (version: " + document.getVersion() + ")");
-        System.out.println("Content length: " + document.getText().length() + " characters");
+
+        System.out.println("Opened " + document.getUri());
+
+        LspDocument lspDocument = new LspDocument(document.getUri(), document.getText(), client);
+        documents.put(document.getUri(), lspDocument);
     }
 
     @Override
     public void didChange(DidChangeTextDocumentParams params) {
         TextDocumentIdentifier document = params.getTextDocument();
-        List<TextDocumentContentChangeEvent> changes = params.getContentChanges();
-        
-        System.out.println("File content changed: " + document.getUri());
-        System.out.println("Number of changes: " + changes.size());
-        
-        for (int i = 0; i < changes.size(); i++) {
-            TextDocumentContentChangeEvent change = changes.get(i);
-            System.out.println("  Change " + (i + 1) + ":");
-            if (change.getRange() != null) {
-                System.out.println("    Range: " + change.getRange().getStart().getLine() + ":" + 
-                                 change.getRange().getStart().getCharacter() + " to " +
-                                 change.getRange().getEnd().getLine() + ":" + 
-                                 change.getRange().getEnd().getCharacter());
-            }
-            System.out.println("    Text length: " + change.getText().length() + " characters");
-            if (change.getText().length() <= 100) {
-                System.out.println("    Text: \"" + change.getText().replace("\n", "\\n") + "\"");
-            } else {
-                System.out.println("    Text: \"" + change.getText().substring(0, 100).replace("\n", "\\n") + "...\"");
-            }
-        }
+        String uri = document.getUri();
+
+        System.out.println("Changed " + uri);
+
+        documents.get(uri).registerChanges(params.getContentChanges());
     }
 
     @Override
     public void didClose(DidCloseTextDocumentParams params) {
-        TextDocumentIdentifier document = params.getTextDocument();
-        System.out.println("File closed: " + document.getUri());
+        documents.remove(params.getTextDocument().getUri());
     }
 
     @Override
     public void didSave(DidSaveTextDocumentParams params) {
         TextDocumentIdentifier document = params.getTextDocument();
-        System.out.println("File saved: " + document.getUri());
-        if (params.getText() != null) {
-            System.out.println("Content length: " + params.getText().length() + " characters");
-        }
     }
 
     @Override
@@ -179,6 +167,14 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
 
     @Override
     public CompletableFuture<DocumentDiagnosticReport> diagnostic(DocumentDiagnosticParams params) {
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.completedFuture(null   );
+    }
+
+    public void setRemoteProxy(LanguageClient remoteProxy) {
+        this.client = remoteProxy;
+
+        for (LspDocument document : documents.values()) {
+            document.setRemoteProxy(remoteProxy);
+        }
     }
 }

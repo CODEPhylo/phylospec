@@ -27,21 +27,21 @@ public class ParserTest {
                         new AstType.Atomic("Object"), "var",
                         new Expr.Binary(
                                 new Expr.Literal(10),
-                                new Token(TokenType.PLUS, "+", null, 1),
+                                TokenType.PLUS,
                                 new Expr.Grouping(
                                         new Expr.Binary(
                                                 new Expr.Unary(
-                                                        new Token(TokenType.MINUS, "-", null, 1),
+                                                        TokenType.MINUS,
                                                         new Expr.Literal(25.2)
                                                 ),
-                                                new Token(TokenType.MINUS, "-", null, 1),
+                                                TokenType.MINUS,
                                                 new Expr.Binary(
                                                         new Expr.Literal(100),
-                                                        new Token(TokenType.SLASH, "/", null, 1),
+                                                        TokenType.SLASH,
                                                         new Expr.Grouping(
                                                                 new Expr.Binary(
                                                                         new Expr.Literal(2),
-                                                                        new Token(TokenType.PLUS, "+", null, 1),
+                                                                        TokenType.PLUS,
                                                                         new Expr.Literal(4)
                                                                 )
                                                         )
@@ -61,13 +61,13 @@ public class ParserTest {
                         new AstType.Atomic("Object"), "var",
                         new Expr.Binary(
                                 new Expr.Literal(true),
-                                new Token(TokenType.EQUAL_EQUAL, "==", null, 1),
+                                TokenType.EQUAL_EQUAL,
                                 new Expr.Unary(
-                                        new Token(TokenType.BANG, "!", null, 1),
+                                        TokenType.BANG,
                                         new Expr.Grouping(
                                                 new Expr.Binary(
                                                         new Expr.Literal(10),
-                                                        new Token(TokenType.GREATER_EQUAL, ">=", null, 1),
+                                                        TokenType.GREATER_EQUAL,
                                                         new Expr.Literal(11)
                                                 )
                                         )
@@ -150,7 +150,7 @@ public class ParserTest {
                                 "LogNormal",
                                 new Expr.AssignedArgument(new Expr.Binary(
                                         new Expr.Literal(10),
-                                        new Token(TokenType.PLUS, "+", null, 1),
+                                        TokenType.PLUS,
                                         new Expr.Literal(20)
                                 ))
                         )
@@ -288,7 +288,7 @@ public class ParserTest {
                         new Expr.Grouping(
                                 new Expr.Binary(
                                         new Expr.Literal(10.4),
-                                        new Token(TokenType.PLUS, "+", null, 3),
+                                        TokenType.PLUS,
                                         new Expr.Literal(5.0)
                                 )
                         )

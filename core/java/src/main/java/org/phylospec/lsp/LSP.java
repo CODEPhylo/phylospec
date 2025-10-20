@@ -1,7 +1,6 @@
 package org.phylospec.lsp;
 
 import org.eclipse.lsp4j.*;
-import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
@@ -10,7 +9,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class LSP implements org.eclipse.lsp4j.services.LanguageServer {
 
-    private final TextDocumentService textService;
+    private final PhyloSpecTextDocumentService textService;
     private final WorkspaceService workspaceService;
     LanguageClient client;
 
@@ -28,7 +27,10 @@ public class LSP implements org.eclipse.lsp4j.services.LanguageServer {
         res.getCapabilities().setReferencesProvider(Boolean.TRUE);
         res.getCapabilities().setTextDocumentSync(TextDocumentSyncKind.Full);
         res.getCapabilities().setDocumentSymbolProvider(Boolean.TRUE);
-        
+        res.getCapabilities().setDiagnosticProvider(
+                new DiagnosticRegistrationOptions(true, false)
+        );
+
         // Enable file watching to detect file changes
         res.getCapabilities().setWorkspace(new WorkspaceServerCapabilities());
 
@@ -51,5 +53,6 @@ public class LSP implements org.eclipse.lsp4j.services.LanguageServer {
 
     public void setRemoteProxy(LanguageClient remoteProxy) {
         this.client = remoteProxy;
+        this.textService.setRemoteProxy(remoteProxy);
     }
 }
