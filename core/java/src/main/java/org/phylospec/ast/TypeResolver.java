@@ -50,12 +50,19 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
         this.printer = new AstPrinter();
     }
 
-    /** Returns the type associated with the given AST expression. */
+    /** Returns the types associated with the given AST expression.
+     * An AST expression can be associated with multiple types (a typeset). Every
+     * type corresponds to an interpretation of the AST expression.
+     * For instance, the literal `5` can be interpreted as PositiveReal
+     * or PositiveInteger. Another example are generators overloaded in
+     * their return type.*/
     public Set<ResolvedType> resolveType(Expr expression) {
         return this.resolvedTypes.get(expression);
     }
 
-    /** Returns the type associated with the given variable name. */
+    /** Returns the type associated with the given variable name. The type of the
+     * variable is determined by the type specified at assignment (e.g. Real a = ...).
+     * Thus, every variable is only associated with a single type. */
     public ResolvedType resolveVariable(String variableName) {
         return this.variableTypes.get(variableName);
     }

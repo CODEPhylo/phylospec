@@ -1,5 +1,5 @@
 // IID
-Distribution<PositiveReal> base = Exponential(rate = 10)
+Exponential base = Exponential(rate = 10)
 Distribution<Vector<Real>> iidDist = IID(base = base, n = 2)
 Vector<Real> iid ~ iidDist
 
@@ -9,7 +9,7 @@ Simplex weights ~ Dirichlet(alpha = [1, 1])
 Mixture<Real> mixture = Mixture(components = components, weights = weights)
 
 // EXPECT AST
-// (AS Distribution<PositiveReal> base (CA Exponential (AA rate 10)))
+// (AS Exponential base (CA Exponential (AA rate 10)))
 // (AS Distribution<Vector<Real>> iidDist (CA IID (AA base base) (AA n 2)))
 // (DR Vector<Real> iid iidDist)
 // (AS Vector<Distribution<Real>> components (AR (CA Exponential (AA rate 10)) (CA Normal (AA mean 1) (AA sd 2))))
