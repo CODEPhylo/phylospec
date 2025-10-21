@@ -131,6 +131,7 @@ class LspDocument implements ParseEventListener {
         switch (node) {
             case AstType typeNode -> {
                 ResolvedType resolvedType = typeResolver.resolveType(typeNode);
+                if (resolvedType == null) return null;
 
                 hoverText.append("```phylospec\n");
                 hoverText.append(resolvedType);
@@ -138,6 +139,7 @@ class LspDocument implements ParseEventListener {
             }
             case Stmt.Assignment stmt -> {
                 ResolvedType resolvedType = typeResolver.resolveType(stmt);
+                if (resolvedType == null) return null;
 
                 hoverText.append("```phylospec\n");
                 hoverText.append(resolvedType).append(" ").append(stmt.name);
@@ -145,6 +147,7 @@ class LspDocument implements ParseEventListener {
             }
             case Stmt.Draw stmt -> {
                 ResolvedType resolvedType = typeResolver.resolveType(stmt);
+                if (resolvedType == null) return null;
 
                 hoverText.append("```phylospec\n");
                 hoverText.append(resolvedType).append(" ").append(stmt.name);
@@ -152,6 +155,7 @@ class LspDocument implements ParseEventListener {
             }
             case Expr.Variable variable -> {
                 ResolvedType resolvedType = typeResolver.resolveVariable(variable.variableName);
+                if (resolvedType == null) return null;
 
                 hoverText.append("```phylospec\n");
                 hoverText.append(resolvedType).append(" ").append(variable.variableName);
@@ -193,18 +197,20 @@ class LspDocument implements ParseEventListener {
         List<CompletionItem> completionItems = new ArrayList<>();
 
         for (String variableName : typeResolver.variableTypes.keySet()) {
-            ResolvedType variableType = typeResolver.variableTypes.get(variableName);
-
             CompletionItem item = new CompletionItem(variableName);
             item.setKind(CompletionItemKind.Variable);
-            item.setDetail(variableType.toString());
-            item.setDocumentation(variableType.getTypeComponent().getDescription());
+
+            ResolvedType variableType = typeResolver.resolveVariable(variableName);
+            if (variableType != null) {
+                item.setDetail(variableType.toString());
+                item.setDocumentation(variableType.getTypeComponent().getDescription());
+            }
 
             completionItems.add(item);
         }
 
         for (String generatorName : componentResolver.importedGenerators.keySet()) {
-            List<Generator> generators = componentResolver.importedGenerators.get(generatorName);
+            List<Generator> generators = componentResolver.resolveGenerator(generatorName);
 
             for (Generator generator : generators) {
                 CompletionItem item = new CompletionItem(generator.getName());
@@ -217,11 +223,16 @@ class LspDocument implements ParseEventListener {
         }
 
         for (String typeName : componentResolver.importedTypes.keySet()) {
-            Type type = componentResolver.importedTypes.get(typeName);
+            Type type = componentResolver.resolveType(typeName);
 
-            CompletionItem item = new CompletionItem(type.getName());
-            item.setKind(CompletionItemKind.TypeParameter);
-            item.setDocumentation(type.getDescription());
+            CompletionItem item;
+            if (type != null) {
+                item = new CompletionItem(type.getName());
+                item.setKind(CompletionItemKind.TypeParameter);
+                item.setDocumentation(type.getDescription());
+            } else {
+                item = new CompletionItem(typeName);
+            }
 
             completionItems.add(item);
         }

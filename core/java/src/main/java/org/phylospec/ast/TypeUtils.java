@@ -39,7 +39,7 @@ class TypeUtils {
         if (resolvedArguments.size() == 1 && resolvedArguments.get(null) != null) {
             // make sure there is exactly one required parameter
             if (parameters.stream().filter(Argument::getRequired).count() != 1) {
-                throw new TypeError("Missing required argument for function " + generator.getName());
+                throw new TypeError("Missing required argument for function `" + generator.getName() + "`");
             }
         }
 
@@ -50,7 +50,7 @@ class TypeUtils {
                 .collect(Collectors.toSet());
         for (String argument : resolvedArguments.keySet()) {
             if (!parameterNames.contains(argument) && argument != null) {
-                throw new TypeError("Unknown argument for function " + generator.getName() + ": " + argument);
+                throw new TypeError("Function `" + generator.getName() + "` takes no argument named `" + argument + "`");
             }
         }
 
@@ -69,7 +69,7 @@ class TypeUtils {
 
             if (resolvedArgumentTypeSet == null) {
                 if (parameter.getRequired()) {
-                    throw new TypeError("Missing required argument for function " + generator.getName() + ": " + parameterName);
+                    throw new TypeError("Function `" + generator.getName() + "` takes the required argument `" + parameterName + "`");
                 }
 
                 continue;
@@ -93,7 +93,7 @@ class TypeUtils {
             }
 
             if (!foundMatch) {
-                throw new TypeError("Wrong argument type for function " + generator.getName() + " and argument " + parameterName);
+                throw new TypeError("Wrong argument type for function `" + generator.getName() + "` and argument `" + parameterName + "`");
             }
 
         }

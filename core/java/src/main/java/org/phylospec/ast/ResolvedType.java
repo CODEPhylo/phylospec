@@ -133,7 +133,11 @@ public class ResolvedType {
 
         string.append("<");
         for (String typeParameter : getParametersNames()) {
-            string.append(getParameterTypes().get(typeParameter).toString());
+            if (getParameterTypes().containsKey(typeParameter)) {
+                string.append(getParameterTypes().get(typeParameter).toString());
+            } else {
+                string.append(typeParameter);
+            }
         }
         string.append(">");
 
