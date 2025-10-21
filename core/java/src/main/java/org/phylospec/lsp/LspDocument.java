@@ -12,6 +12,9 @@ import org.phylospec.lexer.Token;
 import org.phylospec.lexer.TokenRange;
 import org.phylospec.parser.ParseEventListener;
 import org.phylospec.parser.Parser;
+import org.phylospec.typeresolver.ResolvedType;
+import org.phylospec.typeresolver.TypeError;
+import org.phylospec.typeresolver.TypeResolver;
 
 import java.io.IOException;
 import java.util.ArrayList;

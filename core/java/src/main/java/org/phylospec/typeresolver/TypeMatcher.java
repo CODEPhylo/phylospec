@@ -1,4 +1,4 @@
-package org.phylospec.ast;
+package org.phylospec.typeresolver;
 
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.TokenType;

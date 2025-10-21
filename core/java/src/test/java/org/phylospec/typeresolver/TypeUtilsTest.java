@@ -1,11 +1,10 @@
-package org.phylospec.ast;
+package org.phylospec.typeresolver;
 
 import org.junit.jupiter.api.Test;
 import org.phylospec.components.ComponentResolver;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

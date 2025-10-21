@@ -1,6 +1,6 @@
-package org.phylospec.ast;
+package org.phylospec.typeresolver;
 
-import org.phylospec.lexer.TokenRange;
+import org.phylospec.ast.AstNode;
 
 public class TypeError extends RuntimeException {
     AstNode astNode = null;

@@ -1,5 +1,6 @@
-package org.phylospec.ast;
+package org.phylospec.typeresolver;
 
+import org.phylospec.ast.*;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
 import org.phylospec.components.Property;

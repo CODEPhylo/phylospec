@@ -1,4 +1,4 @@
-package org.phylospec.ast;
+package org.phylospec.typeresolver;
 
 import org.phylospec.Utils;
 import org.phylospec.components.Argument;
