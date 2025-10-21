@@ -52,7 +52,8 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
     }
 
     /**
-     * Returns the types associated with the given AST expression.
+     * Returns the types associated with the given AST expression. Returns an empty
+     * set if no type is known.
      * An AST expression can be associated with multiple types (a typeset). Every
      * type corresponds to an interpretation of the AST expression.
      * For instance, the literal `5` can be interpreted as PositiveReal
@@ -64,14 +65,16 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
     }
 
     /**
-     * Returns the types associated with the given AST type node.
+     * Returns the types associated with the given AST type node. Returns null if no
+     * type is known.
      */
     public ResolvedType resolveType(AstType astTypeNode) {
         return this.resolvedTypes.containsKey(astTypeNode) ? this.resolvedTypes.get(astTypeNode).iterator().next() : null;
     }
 
     /**
-     * Returns the types associated with the given AST statement node.
+     * Returns the types associated with the given AST statement node. Returns null if
+     * no type is known.
      */
     public ResolvedType resolveType(Stmt astTypeNode) {
         return this.resolvedTypes.containsKey(astTypeNode) ? this.resolvedTypes.get(astTypeNode).iterator().next() : null;
@@ -81,6 +84,8 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
      * Returns the type associated with the given variable name. The type of the
      * variable is determined by the type specified at assignment (e.g. Real a = ...).
      * Thus, every variable is only associated with a single type.
+     * Returns null if
+     * no type is known.
      */
     public ResolvedType resolveVariable(String variableName) {
         return this.variableTypes.get(variableName);

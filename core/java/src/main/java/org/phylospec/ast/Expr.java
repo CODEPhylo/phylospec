@@ -1,6 +1,5 @@
 package org.phylospec.ast;
 
-import org.phylospec.lexer.TokenRange;
 import org.phylospec.lexer.TokenType;
 
 import java.util.Arrays;

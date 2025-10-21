@@ -7,13 +7,13 @@ public class Token {
     public final String lexeme;
     public final Object literal;
 
-    public final TokenRange range;
+    public final Range range;
 
     public Token(TokenType type, String lexeme, Object literal, int line, int start, int end) {
         this.type = type;
         this.lexeme = lexeme;
         this.literal = literal;
-        this.range = new TokenRange(line, start, end);
+        this.range = new Range(line, start, end);
     }
 
     public String toString() {

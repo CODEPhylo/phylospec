@@ -29,10 +29,7 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
 
     @Override
     public void didChange(DidChangeTextDocumentParams params) {
-        TextDocumentIdentifier document = params.getTextDocument();
-        String uri = document.getUri();
-
-        documents.get(uri).applyContentChanges(params.getContentChanges());
+        documents.get(params.getTextDocument().getUri()).applyContentChanges(params.getContentChanges());
     }
 
     @Override

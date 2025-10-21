@@ -4,7 +4,7 @@ import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.AstType;
 import org.phylospec.lexer.Token;
-import org.phylospec.lexer.TokenRange;
+import org.phylospec.lexer.Range;
 import org.phylospec.lexer.TokenType;
 
 import java.util.*;
@@ -37,7 +37,7 @@ public class Parser {
     private boolean skipNewLines = false;
 
     private final Map<Token, AstNode> tokenAstNodeMap;
-    private final Map<AstNode, TokenRange> astNodeRanges;
+    private final Map<AstNode, Range> astNodeRanges;
     private final LinkedList<Integer> astNodeStartPositions;
 
     private final List<ParseEventListener> eventListeners;
@@ -136,12 +136,12 @@ public class Parser {
 
         if (match(TokenType.EQUAL)) {
             Expr expression = expression();
-            return remember(new Stmt.Assignment(type, nameToken.lexeme, expression), nameToken);
+            return remember(new Stmt.Assignment(type, nameToken.lexeme, expression));
         }
 
         if (match(TokenType.TILDE)) {
             Expr expression = expression();
-            return remember(new Stmt.Draw(type, nameToken.lexeme, expression), nameToken);
+            return remember(new Stmt.Draw(type, nameToken.lexeme, expression));
         }
 
         throw new ParseError(peek(), "Except assignment or draw.");
@@ -469,34 +469,34 @@ public class Parser {
         return peek().type == TokenType.EOF;
     }
 
-    /** Marks the beginning of a new parsed AstNode. */
+    /** Marks the beginning of an AstNode. */
     private void startAstNode() {
         astNodeStartPositions.push(current);
     }
 
-    /** Remembers the tokens of the new AstNode. */
+    /** Associated the tokens since the last {@code startAstNode()} call with the
+     * given parsed {@link AstNode}. */
     private <T extends AstNode> T remember(T newAstNode) {
-        return remember(newAstNode, null);
-    }
-
-    /** Remembers the tokens of the new AstNode. */
-    private <T extends AstNode> T remember(T newAstNode, Token representativeToken) {
         int lastPosition = astNodeStartPositions.pop();
 
-        TokenRange startRange = tokens.get(lastPosition).range;
+        Range startRange = tokens.get(lastPosition).range;
 
         for (int i = lastPosition; i < current; i++) {
             Token token = tokens.get(i);
             tokenAstNodeMap.putIfAbsent(token, newAstNode);
         }
 
-        TokenRange endRange = tokens.get(current - 1).range;
-        TokenRange astNodeRange = TokenRange.combine(startRange, endRange);
+        Range endRange = tokens.get(current - 1).range;
+        Range astNodeRange = Range.combine(startRange, endRange);
         astNodeRanges.put(newAstNode, astNodeRange);
 
         return newAstNode;
     }
 
+    /** Remove the previously made entries in the token-to-ast-node map
+     * since the last {@code startAstNode()} call. This is useful if
+     * the last parsed AstNode is dropped and replaced by a more general
+     * one. */
     private void forgetLast() {
         int lastPosition = astNodeStartPositions.peek();
 
@@ -506,11 +506,16 @@ public class Parser {
         }
     }
 
+    /** Returns the {@link AstNode} associated with the given {@link Token}.
+     * Returns null if no node was associated.
+     */
     public AstNode getAstNodeForToken(Token token) {
         return this.tokenAstNodeMap.get(token);
     }
 
-    public TokenRange getRangeForAstNode(AstNode node) {
+    /** Returns the range associated with the given {@link AstNode}. Returns null
+     * if no range was associated. */
+    public Range getRangeForAstNode(AstNode node) {
         return this.astNodeRanges.get(node);
     }
 
@@ -522,7 +527,8 @@ public class Parser {
         }
     }
 
-    /** Finds the next location in the source string with a valid statement */
+    /** Finds the next location in the source string with a valid statement and advances
+     * to that point. */
     private void recover() {
         while (!isAtEnd()) {
             // the next statement has to be preceded by an EOL. let's find it

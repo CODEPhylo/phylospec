@@ -26,6 +26,7 @@ public enum TokenType {
             case MINUS -> "-";
             case STAR -> "*";
             case SLASH -> "/";
+            case BANG -> "!";
             default -> "";
         };
     }

@@ -6,7 +6,6 @@ import org.phylospec.ast.Stmt;
 import org.phylospec.ast.AstType;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
-import org.phylospec.lexer.TokenRange;
 import org.phylospec.lexer.TokenType;
 
 import java.util.List;

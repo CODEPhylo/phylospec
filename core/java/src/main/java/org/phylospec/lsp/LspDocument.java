@@ -9,7 +9,7 @@ import org.phylospec.components.Generator;
 import org.phylospec.components.Type;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
-import org.phylospec.lexer.TokenRange;
+import org.phylospec.lexer.Range;
 import org.phylospec.parser.ParseEventListener;
 import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.ResolvedType;
@@ -75,17 +75,14 @@ class LspDocument implements ParseEventListener {
         foundDiagnostics.clear();
         statements = parser.parse();
 
-        // run type resolver
+        // run type resolver and publish diagnostics
 
         typeResolver = new TypeResolver(componentResolver);
-
-        // publish diagnostics
-
         for (Stmt statement : statements) {
             try {
                 statement.accept(typeResolver);
             } catch (TypeError error) {
-                TokenRange range = parser.getRangeForAstNode(error.getAstNode());
+                Range range = parser.getRangeForAstNode(error.getAstNode());
                 if (range == null) {
                     range = parser.getRangeForAstNode(statement);
                 }
@@ -93,8 +90,8 @@ class LspDocument implements ParseEventListener {
                 String message = error.getMessage();
 
                 foundDiagnostics.add(new Diagnostic(
-                        new Range(
-                                new Position(range.startLine - 1, range.start),
+                        new org.eclipse.lsp4j.Range(
+                                new Position(range.startLine - 1, range.start), // we use 1-based line indexing
                                 new Position(range.endLine - 1, range.end)
                         ), message
                 ));
@@ -111,7 +108,7 @@ class LspDocument implements ParseEventListener {
     @Override
     public void parseErrorDetected(Token token, String message) {
         foundDiagnostics.add(new Diagnostic(
-                new Range(
+                new org.eclipse.lsp4j.Range(
                         new Position(token.range.startLine - 1, token.range.start),
                         new Position(token.range.endLine - 1, token.range.end)
                 ), message
@@ -125,7 +122,7 @@ class LspDocument implements ParseEventListener {
 
         // make sure we only get full changes (we configured the server to do so)
         for (TextDocumentContentChangeEvent change : contentChanges) {
-            Range range = change.getRange();
+            org.eclipse.lsp4j.Range range = change.getRange();
             assert (range == null);
         }
 
@@ -147,7 +144,8 @@ class LspDocument implements ParseEventListener {
 
                 hoverText.append("```phylospec\n");
                 hoverText.append(resolvedType);
-                hoverText.append("\n```");
+                hoverText.append("\n```\n\n");
+                hoverText.append(resolvedType.getTypeComponent().getDescription());
             }
             case Stmt.Assignment stmt -> {
                 ResolvedType resolvedType = typeResolver.resolveType(stmt);
@@ -229,7 +227,7 @@ class LspDocument implements ParseEventListener {
             completionItems.add(item);
         }
 
-        for (String generatorName : componentResolver.importedGenerators.keySet()) {
+        for (String generatorName : componentResolver.getImportedGenerators().keySet()) {
             List<Generator> generators = componentResolver.resolveGenerator(generatorName);
 
             for (Generator generator : generators) {
@@ -242,7 +240,7 @@ class LspDocument implements ParseEventListener {
             }
         }
 
-        for (String typeName : componentResolver.importedTypes.keySet()) {
+        for (String typeName : componentResolver.getImportedTypes().keySet()) {
             Type type = componentResolver.resolveType(typeName);
 
             CompletionItem item;

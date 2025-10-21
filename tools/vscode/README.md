@@ -13,6 +13,6 @@ To run a developer version of this extension in VS Code (or any of its forks):
 2. Run `npm install` from this directory..
 3. Run `npm run compile` from this directory.
 4. Start the Java LSP (`org.phylospec.lsp.RunLsp`).
-5. Open the `src/extension.ts` file and press `F5`.
+5. Open the `src/extension.ts` file, press `F5`, and select `Extension Development Host`.
 
 A new window should pop up. Create a new `.phylospec` file and try out the extension.
