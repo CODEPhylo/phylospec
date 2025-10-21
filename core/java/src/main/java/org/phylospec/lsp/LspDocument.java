@@ -21,6 +21,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * This class implements the actual LSP responses for a given document.
+ * It supports parsing and type error diagnostics, hover information,
+ * and basic auto-completion.
+ */
 class LspDocument implements ParseEventListener {
     final private String uri;
     private LanguageClient client;
@@ -55,6 +60,7 @@ class LspDocument implements ParseEventListener {
         return componentResolver;
     }
 
+    /** Updates the document content and re-runs the static analysis. */
     void updateContent(String newContent) {
         // run lexer
 
@@ -112,7 +118,9 @@ class LspDocument implements ParseEventListener {
         ));
     }
 
-    public void registerChanges(List<TextDocumentContentChangeEvent> contentChanges) {
+    /** Applied changes to the content. Assumes that the LSP is configured to
+     * always receive full changes. */
+    public void applyContentChanges(List<TextDocumentContentChangeEvent> contentChanges) {
         if (contentChanges.isEmpty()) return;
 
         // make sure we only get full changes (we configured the server to do so)
@@ -124,6 +132,7 @@ class LspDocument implements ParseEventListener {
         updateContent(contentChanges.getLast().getText());
     }
 
+    /** Returns the hover information for the given cursor position. */
     public MarkupContent getHoverInfo(Position position) {
         Token token = getTokenAtPosition(position);
         AstNode node = parser.getAstNodeForToken(token);
@@ -165,7 +174,14 @@ class LspDocument implements ParseEventListener {
                 hoverText.append("\n```");
             }
             case Expr.Call call -> {
-                printCall(hoverText, call);
+                List<Generator> generators = componentResolver.resolveGenerator(call.functionName);
+
+                for (Generator generator : generators) {
+                    hoverText.append("```phylospec\n");
+                    printGeneratorInfo(hoverText, generator);
+                    hoverText.append("\n```\n\n");
+                    hoverText.append(generator.getDescription()).append("\n\n");
+                }
             }
             case Expr.Argument argument -> {
                 Set<ResolvedType> resolvedTypeSet = typeResolver.resolveType(argument);
@@ -196,7 +212,8 @@ class LspDocument implements ParseEventListener {
         );
     }
 
-    public List<CompletionItem> getCompletionItems() {
+    /** Returns the completion items for the given cursor position. */
+    public List<CompletionItem> getCompletionItems(CompletionParams position) {
         List<CompletionItem> completionItems = new ArrayList<>();
 
         for (String variableName : typeResolver.variableTypes.keySet()) {
@@ -218,7 +235,7 @@ class LspDocument implements ParseEventListener {
             for (Generator generator : generators) {
                 CompletionItem item = new CompletionItem(generator.getName());
                 item.setKind(CompletionItemKind.Function);
-                item.setDetail(printGenerator(new StringBuilder(), generator).toString());
+                item.setDetail(printGeneratorInfo(new StringBuilder(), generator).toString());
                 item.setDocumentation(generator.getDescription());
 
                 completionItems.add(item);
@@ -243,18 +260,8 @@ class LspDocument implements ParseEventListener {
         return completionItems;
     }
 
-    private void printCall(StringBuilder hoverText, Expr.Call call) {
-        List<Generator> generators = componentResolver.resolveGenerator(call.functionName);
-
-        for (Generator generator : generators) {
-            hoverText.append("```phylospec\n");
-            printGenerator(hoverText, generator);
-            hoverText.append("\n```\n\n");
-            hoverText.append(generator.getDescription()).append("\n\n");
-        }
-    }
-
-    private StringBuilder printGenerator(StringBuilder stringBuilder, Generator generator) {
+    /** Helper method to print the info for a generator. */
+    private StringBuilder printGeneratorInfo(StringBuilder stringBuilder, Generator generator) {
         stringBuilder.append(generator.getGeneratedType()).append(" ");
         stringBuilder.append(generator.getName()).append("(");
 
@@ -276,6 +283,7 @@ class LspDocument implements ParseEventListener {
         return stringBuilder;
     }
 
+    /** Helper method to get the token at the cursor position. */
     private Token getTokenAtPosition(Position position) {
         for (Token token : tokens) {
             if (token.range.startLine != position.getLine() + 1) continue;

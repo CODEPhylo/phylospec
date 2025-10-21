@@ -10,6 +10,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Implements the LSP Text Document Service. This is mainly a wrapper for {@link LspDocument},
+ * an instance of which exists for every open document.
+ */
 public class PhyloSpecTextDocumentService implements TextDocumentService {
 
     private final Map<String, LspDocument> documents = new HashMap<>();
@@ -18,8 +22,6 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
     @Override
     public void didOpen(DidOpenTextDocumentParams params) {
         TextDocumentItem document = params.getTextDocument();
-
-        System.out.println("Opened " + document.getUri());
 
         LspDocument lspDocument = new LspDocument(document.getUri(), document.getText(), client);
         documents.put(document.getUri(), lspDocument);
@@ -30,9 +32,7 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
         TextDocumentIdentifier document = params.getTextDocument();
         String uri = document.getUri();
 
-        System.out.println("Changed " + uri);
-
-        documents.get(uri).registerChanges(params.getContentChanges());
+        documents.get(uri).applyContentChanges(params.getContentChanges());
     }
 
     @Override
@@ -63,7 +63,7 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
     @Override
     public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams position) {
         LspDocument lspDocument = this.documents.get(position.getTextDocument().getUri());
-        List<CompletionItem> completionItems = lspDocument.getCompletionItems();
+        List<CompletionItem> completionItems = lspDocument.getCompletionItems(position);
 
         return CompletableFuture.completedFuture(
                 Either.forRight(new CompletionList(completionItems))
