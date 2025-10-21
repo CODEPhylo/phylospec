@@ -247,6 +247,10 @@ public class Parser {
 
         if (expr instanceof Expr.Variable && match(TokenType.LEFT_PAREN)) {
             // this is a function call
+
+            // remove the assignment of the variable token, because we will remember it as a call
+            forgetLast();
+
             Expr.Variable functionName = (Expr.Variable) expr;
 
             // we are in a bracket, let's ignore EOL statements
@@ -296,6 +300,9 @@ public class Parser {
         if (!(expression instanceof Expr.Variable)) {
             return remember(new Expr.AssignedArgument(expression));
         }
+
+        // remove the assignment of the variable token, because we will remember it as an argument
+        forgetLast();
 
         String argumentName = ((Expr.Variable) expression).variableName;
 
@@ -474,6 +481,15 @@ public class Parser {
         }
 
         return newAstNode;
+    }
+
+    private void forgetLast() {
+        int lastPosition = astNodeStartPositions.peek();
+
+        for (int i = lastPosition; i < current; i++) {
+            Token token = tokens.get(i);
+            tokenAstNodeMap.remove(token);
+        }
     }
 
     public AstNode getAstNodeForToken(Token token) {

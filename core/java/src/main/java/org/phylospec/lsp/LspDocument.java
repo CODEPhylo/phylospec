@@ -2,10 +2,7 @@ package org.phylospec.lsp;
 
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.LanguageClient;
-import org.phylospec.ast.ResolvedType;
-import org.phylospec.ast.Stmt;
-import org.phylospec.ast.TypeError;
-import org.phylospec.ast.TypeResolver;
+import org.phylospec.ast.*;
 import org.phylospec.components.Argument;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
@@ -19,6 +16,7 @@ import org.phylospec.parser.Parser;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 class LspDocument implements ParseEventListener {
     final private String uri;
@@ -28,6 +26,7 @@ class LspDocument implements ParseEventListener {
 
     private String content;
     private List<Token> tokens;
+    private Parser parser;
     private List<Stmt> statements;
     TypeResolver typeResolver;
     private final List<Diagnostic> foundDiagnostics = new ArrayList<>();
@@ -61,7 +60,7 @@ class LspDocument implements ParseEventListener {
 
         // run parser
 
-        Parser parser = new Parser(tokens);
+        parser = new Parser(tokens);
         parser.registerEventListener(this);
 
         foundDiagnostics.clear();
@@ -81,7 +80,7 @@ class LspDocument implements ParseEventListener {
                 String message = error.getMessage();
 
                 if (range == null) {
-                   range = statement.tokenRange;
+                    range = statement.tokenRange;
                 }
 
                 foundDiagnostics.add(new Diagnostic(
@@ -124,87 +123,143 @@ class LspDocument implements ParseEventListener {
 
     public MarkupContent getHoverInfo(Position position) {
         Token token = getTokenAtPosition(position);
-        if (token == null) return null;
-
-        String lexeme = token.lexeme;
+        AstNode node = parser.getAstNodeForToken(token);
+        if (node == null) return null;
 
         StringBuilder hoverText = new StringBuilder();
 
-        ResolvedType type = typeResolver.resolveVariable(lexeme);
-        Type typeComponent = componentResolver.resolveType(lexeme);
-        List<Generator> generatorComponents = componentResolver.resolveGenerator(lexeme);
+        switch (node) {
+            case AstType typeNode -> {
+                ResolvedType resolvedType = typeResolver.resolveType(typeNode);
 
-        if (type != null) {
-            hoverText.append("```phylospec\n")
-                    .append(type)
-                    .append(" ")
-                    .append(lexeme)
-                    .append("\n```");
-
-        } else if (generatorComponents != null && !generatorComponents.isEmpty()) {
-            for (Generator generator : generatorComponents) {
                 hoverText.append("```phylospec\n");
-                hoverText.append(generator.getGeneratedType()).append(" ");
-                hoverText.append(generator.getName()).append("(");
+                hoverText.append(resolvedType);
+                hoverText.append("\n```");
+            }
+            case Stmt.Assignment stmt -> {
+                ResolvedType resolvedType = typeResolver.resolveType(stmt);
 
-                for (int i = 0; i < generator.getArguments().size(); i++) {
-                    Argument argument = generator.getArguments().get(i);
+                hoverText.append("```phylospec\n");
+                hoverText.append(resolvedType).append(" ").append(stmt.name);
+                hoverText.append("\n```");
+            }
+            case Stmt.Draw stmt -> {
+                ResolvedType resolvedType = typeResolver.resolveType(stmt);
 
-                    if (argument.getRequired()) {
-                        hoverText.append(argument.getType()).append(" ").append(argument.getName());
-                    } else {
-                        hoverText.append("[").append(argument.getType()).append(" ").append(argument.getName()).append("]");
-                    }
+                hoverText.append("```phylospec\n");
+                hoverText.append(resolvedType).append(" ").append(stmt.name);
+                hoverText.append("\n```");
+            }
+            case Expr.Variable variable -> {
+                ResolvedType resolvedType = typeResolver.resolveVariable(variable.variableName);
 
-                    if (i != generator.getArguments().size() - 1) {
-                        hoverText.append(", ");
-                    }
+                hoverText.append("```phylospec\n");
+                hoverText.append(resolvedType).append(" ").append(variable.variableName);
+                hoverText.append("\n```");
+            }
+            case Expr.Call call -> {
+                printCall(hoverText, call);
+            }
+            case Expr.Argument argument -> {
+                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveType(argument);
+
+                for (ResolvedType resolvedType : resolvedTypeSet) {
+                    hoverText.append("```phylospec\n");
+                    hoverText.append(resolvedType).append(" ").append(argument.name);
+                    hoverText.append("\n```\n\n");
                 }
-
-                hoverText.append(")").append("\n```\n\n");
-                hoverText.append(generator.getDescription()).append("\n\n");
             }
-        } else if (typeComponent != null) {
-            hoverText.append("```phylospec\n").append(typeComponent.getName());
+            case Expr.Get get -> {
+                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveType(get);
 
-            if (!typeComponent.getTypeParameters().isEmpty()) {
-                hoverText.append("<").append(String.join(",", typeComponent.getTypeParameters())).append(">");
+                for (ResolvedType resolvedType : resolvedTypeSet) {
+                    hoverText.append("```phylospec\n");
+                    hoverText.append(resolvedType).append(" ").append(get.properyName);
+                    hoverText.append("\n```\n\n");
+                }
             }
-
-            hoverText.append("\n```\n\n");
-            hoverText.append(typeComponent.getDescription());
+            default -> {
+                return null;
+            }
         }
 
-        if (hoverText.isEmpty()) return null;
-
         return new MarkupContent(
-                    "markdown",
-                    hoverText.toString()
+                "markdown",
+                hoverText.toString()
         );
     }
+
     public List<CompletionItem> getCompletionItems() {
         List<CompletionItem> completionItems = new ArrayList<>();
 
         for (String variableName : typeResolver.variableTypes.keySet()) {
+            ResolvedType variableType = typeResolver.variableTypes.get(variableName);
+
             CompletionItem item = new CompletionItem(variableName);
             item.setKind(CompletionItemKind.Variable);
-            item.setDetail(typeResolver.variableTypes.get(variableName).toString());
+            item.setDetail(variableType.toString());
+            item.setDocumentation(variableType.getTypeComponent().getDescription());
+
             completionItems.add(item);
         }
 
         for (String generatorName : componentResolver.importedGenerators.keySet()) {
-            CompletionItem item = new CompletionItem(generatorName);
-            item.setKind(CompletionItemKind.Function);
-            completionItems.add(item);
+            List<Generator> generators = componentResolver.importedGenerators.get(generatorName);
+
+            for (Generator generator : generators) {
+                CompletionItem item = new CompletionItem(generator.getName());
+                item.setKind(CompletionItemKind.Function);
+                item.setDetail(printGenerator(new StringBuilder(), generator).toString());
+                item.setDocumentation(generator.getDescription());
+
+                completionItems.add(item);
+            }
         }
 
         for (String typeName : componentResolver.importedTypes.keySet()) {
-            CompletionItem item = new CompletionItem(typeName);
+            Type type = componentResolver.importedTypes.get(typeName);
+
+            CompletionItem item = new CompletionItem(type.getName());
             item.setKind(CompletionItemKind.TypeParameter);
+            item.setDocumentation(type.getDescription());
+
             completionItems.add(item);
         }
 
         return completionItems;
+    }
+
+    private void printCall(StringBuilder hoverText, Expr.Call call) {
+        List<Generator> generators = componentResolver.resolveGenerator(call.functionName);
+
+        for (Generator generator : generators) {
+            hoverText.append("```phylospec\n");
+            printGenerator(hoverText, generator);
+            hoverText.append("\n```\n\n");
+            hoverText.append(generator.getDescription()).append("\n\n");
+        }
+    }
+
+    private StringBuilder printGenerator(StringBuilder stringBuilder, Generator generator) {
+        stringBuilder.append(generator.getGeneratedType()).append(" ");
+        stringBuilder.append(generator.getName()).append("(");
+
+        for (int i = 0; i < generator.getArguments().size(); i++) {
+            Argument argument = generator.getArguments().get(i);
+
+            if (argument.getRequired()) {
+                stringBuilder.append(argument.getType()).append(" ").append(argument.getName());
+            } else {
+                stringBuilder.append("[").append(argument.getType()).append(" ").append(argument.getName()).append("]");
+            }
+
+            if (i != generator.getArguments().size() - 1) {
+                stringBuilder.append(", ");
+            }
+        }
+
+        stringBuilder.append(")");
+        return stringBuilder;
     }
 
     private Token getTokenAtPosition(Position position) {

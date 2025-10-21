@@ -32,12 +32,12 @@ import java.util.stream.Collectors;
 /// Set<ResolvedType> exprType = resolver.resolveType(<some AST expression>);
 /// ResolvedType varType = resolver.resolveVariable(<some var name>);
 ///```
-public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, ResolvedType> {
+public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>, ResolvedType> {
 
     private final ComponentResolver componentResolver;
     private final TypeMatcher typeMatcher;
 
-    public Map<Expr, Set<ResolvedType>> resolvedTypes;
+    public Map<AstNode, Set<ResolvedType>> resolvedTypes;
     public Map<String, ResolvedType> variableTypes;
 
     AstPrinter printer;
@@ -58,8 +58,22 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
      * or PositiveInteger. Another example are generators overloaded in
      * their return type.
      */
-    public Set<ResolvedType> resolveType(Expr expression) {
+    public Set<ResolvedType> resolveType(AstNode expression) {
         return this.resolvedTypes.get(expression);
+    }
+
+    /**
+     * Returns the types associated with the given AST type node.
+     */
+    public ResolvedType resolveType(AstType astTypeNode) {
+        return this.resolvedTypes.containsKey(astTypeNode) ? this.resolvedTypes.get(astTypeNode).iterator().next() : null;
+    }
+
+    /**
+     * Returns the types associated with the given AST statement node.
+     */
+    public ResolvedType resolveType(Stmt astTypeNode) {
+        return this.resolvedTypes.containsKey(astTypeNode) ? this.resolvedTypes.get(astTypeNode).iterator().next() : null;
     }
 
     /**
@@ -76,13 +90,12 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
      */
 
     @Override
-    public Void visitDecoratedStmt(Stmt.Decorated stmt) {
-        stmt.statememt.accept(this);
-        return null;
+    public ResolvedType visitDecoratedStmt(Stmt.Decorated stmt) {
+        return remember(stmt, stmt.statememt.accept(this));
     }
 
     @Override
-    public Void visitAssignment(Stmt.Assignment stmt) {
+    public ResolvedType visitAssignment(Stmt.Assignment stmt) {
         ResolvedType resolvedVariableType = stmt.type.accept(this);
         remember(stmt.name, resolvedVariableType);
 
@@ -92,11 +105,11 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
             throw new TypeError(stmt.tokenRange, "Expression of type " + printType(resolvedExpressionTypeSet) + " cannot be assigned to variable " + stmt.name + " of type " + printType(Set.of(resolvedVariableType)));
         }
 
-        return null;
+        return remember(stmt, resolvedVariableType);
     }
 
     @Override
-    public Void visitDraw(Stmt.Draw stmt) {
+    public ResolvedType visitDraw(Stmt.Draw stmt) {
         ResolvedType resolvedVariableType = stmt.type.accept(this);
         remember(stmt.name, resolvedVariableType);
 
@@ -125,11 +138,11 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
             throw new TypeError(stmt.tokenRange, "Expression of type " + printType(generatedTypeSet) + " cannot be assigned to variable " + stmt.name + " of type " + printType(Set.of(resolvedVariableType)));
         }
 
-        return null;
+        return remember(stmt, resolvedVariableType);
     }
 
     @Override
-    public Void visitImport(Stmt.Import stmt) {
+    public ResolvedType visitImport(Stmt.Import stmt) {
         componentResolver.importNamespace(stmt.namespace);
         return null;
     }
@@ -406,13 +419,13 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
             throw new TypeError("Unknown property: " + expr.properyName);
         }
 
-        return returnTypeSet;
+        return remember(expr, returnTypeSet);
     }
 
     @Override
     public ResolvedType visitAtomicType(AstType.Atomic expr) {
         try {
-            return ResolvedType.fromString(expr.name, componentResolver);
+            return remember(expr, ResolvedType.fromString(expr.name, componentResolver));
         } catch (TypeError error) {
             throw new TypeError(expr.tokenRange, error.getMessage());
         }
@@ -434,16 +447,26 @@ public class TypeResolver implements AstVisitor<Void, Set<ResolvedType>, Resolve
             );
         }
 
-        return resolvedType;
+        return remember(expr, resolvedType);
     }
 
     /**
      * helper functions to store the resolved types
      */
 
+    private ResolvedType remember(Stmt expr, ResolvedType resolvedType) {
+        resolvedTypes.put(expr, Set.of(resolvedType));
+        return resolvedType;
+    }
+
     private Set<ResolvedType> remember(Expr expr, Set<ResolvedType> resolvedType) {
         resolvedTypes.put(expr, resolvedType);
         System.out.println("Remember " + expr.accept(printer) + " with " + printType(resolvedType));
+        return resolvedType;
+    }
+
+    private ResolvedType remember(AstType expr, ResolvedType resolvedType) {
+        resolvedTypes.put(expr, Set.of(resolvedType));
         return resolvedType;
     }
 

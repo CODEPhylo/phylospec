@@ -134,7 +134,7 @@ public class ComponentResolver {
 
     /** Returns the {@link Generator} corresponding to the given name. */
     public List<Generator> resolveGenerator(String generatorName) {
-        return importedGenerators.get(generatorName);
+        return importedGenerators.getOrDefault(generatorName, List.of());
     }
 
     /** Returns whether a given typeName can be resolved. */
