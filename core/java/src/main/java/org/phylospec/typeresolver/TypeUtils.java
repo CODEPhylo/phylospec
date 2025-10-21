@@ -202,13 +202,13 @@ class TypeUtils {
         if (type1.equals(type2)) return type1;
 
         Set<ResolvedType> parents1 = new HashSet<>();
-        visitParents(type1, x -> {
+        visitTypeAndParents(type1, x -> {
             parents1.add(x);
             return Visitor.CONTINUE;
         }, componentResolver);
 
         ResolvedType[] lowestCover = {null};
-        visitParents(type2, x -> {
+        visitTypeAndParents(type2, x -> {
             if (parents1.contains(x)) {
                 lowestCover[0] = x;
                 return Visitor.STOP;

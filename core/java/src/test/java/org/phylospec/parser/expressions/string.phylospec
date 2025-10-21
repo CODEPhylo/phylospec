@@ -12,5 +12,5 @@ String d = 10.0 + "hallo"
 
 // EXPECT TYPE_ERRORS
 // Operation `+` is not supported for types `String` and `Real`
-// Operation `+` is not supported for types `[NonNegativeReal,PositiveReal,Real]` and `String`
+// Operation `+` is not supported for types `PositiveReal` and `String`
 // EXPECT TYPE_ERRORS

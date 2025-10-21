@@ -157,7 +157,7 @@
       {
         "name": "Probability",
         "description": "Probability value [0,1]",
-        "extends": "Real",
+        "extends": "NonNegativeReal",
         "namespace": "phylospec.types"
       },
       {

@@ -1,11 +1,19 @@
 Real a = 100 * 50 / 2 + 10.0 - (20.0 + 2) / 3
 Integer a = 100 * 50 / 2 + -10.0 - (20.0 + 2) / 3
 
+Probability p = 0.5
+Vector<NonNegativeReal> v1 = [p, 0.2]
+Vector<PositiveReal> v2 = [p, 0.2]
+
 // EXPECT AST
 // (AS Real a (- (+ (/ (* 100 50) 2) 10.0) (/ (GR (+ 20.0 2)) 3)))
 // (AS Integer a (- (+ (/ (* 100 50) 2) (- 10.0)) (/ (GR (+ 20.0 2)) 3)))
+// (AS Probability p 0.5)
+// (AS Vector<NonNegativeReal> v1 (AR p 0.2))
+// (AS Vector<PositiveReal> v2 (AR p 0.2))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
 // Expression of type `Real` cannot be assigned to variable `a` of type `Integer`
+// Expression of type `[Vector<Probability>,Vector<NonNegativeReal>]` cannot be assigned to variable `v2` of type `Vector<PositiveReal>`
 // EXPECT TYPE_ERRORS

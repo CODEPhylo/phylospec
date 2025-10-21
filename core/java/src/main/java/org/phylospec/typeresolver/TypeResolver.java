@@ -154,32 +154,32 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
         Set<String> typeName = switch (expr.value) {
             case String ignored -> Set.of("String");
             case Integer value -> {
-                if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Real", "Probability");
+                if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Probability");
                 if (1 == value)
-                    yield Set.of("PositiveInteger", "Integer", "NonNegativeReal", "PositiveReal", "Real", "Probability");
-                if (0 < value) yield Set.of("PositiveInteger", "Integer", "NonNegativeReal", "PositiveReal", "Real");
+                    yield Set.of("PositiveReal", "PositiveInteger", "Probability");
+                if (0 < value) yield Set.of("PositiveInteger", "PositiveReal");
                 yield Set.of("Integer", "Real");
             }
             case Long value -> {
-                if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Real", "Probability");
+                if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Probability");
                 if (1 == value)
-                    yield Set.of("PositiveInteger", "Integer", "NonNegativeReal", "PositiveReal", "Real", "Probability");
-                if (0 < value) yield Set.of("PositiveInteger", "Integer", "NonNegativeReal", "PositiveReal", "Real");
+                    yield Set.of("PositiveReal", "PositiveInteger", "Probability");
+                if (0 < value) yield Set.of("PositiveInteger", "PositiveReal");
                 yield Set.of("Integer", "Real");
             }
             case Float value -> {
-                if (value == 0) yield Set.of("NonNegativeReal", "Real", "Probability");
-                if (0 <= value && value <= 1) yield Set.of("Probability", "PositiveReal", "NonNegativeReal", "Real");
-                if (0 < value) yield Set.of("PositiveReal", "NonNegativeReal", "Real");
+                if (value == 0) yield Set.of("NonNegativeReal", "Probability");
+                if (0 < value && value <= 1) yield Set.of("Probability", "PositiveReal");
+                if (1 < value) yield Set.of("PositiveReal");
                 yield Set.of("Real");
             }
             case Double value -> {
-                if (value == 0) yield Set.of("NonNegativeReal", "Real", "Probability");
-                if (0 <= value && value <= 1) yield Set.of("Probability", "PositiveReal", "NonNegativeReal", "Real");
-                if (0 < value) yield Set.of("PositiveReal", "NonNegativeReal", "Real");
+                if (value == 0) yield Set.of("NonNegativeReal", "Probability");
+                if (0 < value && value <= 1) yield Set.of("Probability", "PositiveReal");
+                if (1 < value) yield Set.of("PositiveReal");
                 yield Set.of("Real");
             }
-            case Boolean value -> Set.of("Boolean");
+            case Boolean ignored -> Set.of("Boolean");
             default -> Set.of();
         };
         Set<ResolvedType> resolvedType = typeName.stream()
