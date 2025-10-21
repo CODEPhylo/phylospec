@@ -14,15 +14,12 @@ public abstract class Stmt extends AstNode {
 
     abstract public <S, E, T> S accept(AstVisitor<S, E, T> visitor);
 
-    public TokenRange tokenRange = null;
-
     /** Represents an assignment like `Real value = 10`. */
     public static class Assignment extends Stmt {
-        public Assignment(AstType type, String name, Expr expression, TokenRange tokenRange) {
+        public Assignment(AstType type, String name, Expr expression) {
             this.type = type;
             this.name = name;
             this.expression = expression;
-            this.tokenRange = tokenRange;
         }
 
         public final AstType type;
@@ -48,11 +45,10 @@ public abstract class Stmt extends AstNode {
 
     /** Represents a draw like `Real value ~ Normal(mean=1, sd=1)`. */
     public static class Draw extends Stmt {
-        public Draw(AstType type, String name, Expr expression, TokenRange tokenRange) {
+        public Draw(AstType type, String name, Expr expression) {
             this.type = type;
             this.name = name;
             this.expression = expression;
-            this.tokenRange = tokenRange;
         }
 
         public final AstType type;
@@ -83,11 +79,6 @@ public abstract class Stmt extends AstNode {
         public Decorated(Expr.Call decorator, Stmt statement) {
             this.decorator = decorator;
             this.statememt = statement;
-        }
-        public Decorated(Expr.Call decorator, Stmt statement, TokenRange tokenRange) {
-            this.decorator = decorator;
-            this.statememt = statement;
-            this.tokenRange = tokenRange;
         }
 
         public final Expr.Call decorator;

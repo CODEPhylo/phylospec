@@ -4,6 +4,7 @@ import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.AstType;
 import org.phylospec.lexer.Token;
+import org.phylospec.lexer.TokenRange;
 import org.phylospec.lexer.TokenType;
 
 import java.util.*;
@@ -36,6 +37,7 @@ public class Parser {
     private boolean skipNewLines = false;
 
     private final Map<Token, AstNode> tokenAstNodeMap;
+    private final Map<AstNode, TokenRange> astNodeRanges;
     private final LinkedList<Integer> astNodeStartPositions;
 
     private final List<ParseEventListener> eventListeners;
@@ -49,6 +51,7 @@ public class Parser {
         this.tokens = tokens;
         this.eventListeners = new ArrayList<>();
         this.tokenAstNodeMap = new HashMap<>();
+        this.astNodeRanges = new HashMap<>();
         this.astNodeStartPositions = new LinkedList<>();
     }
 
@@ -103,7 +106,7 @@ public class Parser {
             skipEOLs();
 
             Stmt statement = decorated();
-            return remember(new Stmt.Decorated((Expr.Call) decorator, statement, statement.tokenRange));
+            return remember(new Stmt.Decorated((Expr.Call) decorator, statement));
         }
 
         return remember(statement());
@@ -133,12 +136,12 @@ public class Parser {
 
         if (match(TokenType.EQUAL)) {
             Expr expression = expression();
-            return remember(new Stmt.Assignment(type, nameToken.lexeme, expression, nameToken.range));
+            return remember(new Stmt.Assignment(type, nameToken.lexeme, expression), nameToken);
         }
 
         if (match(TokenType.TILDE)) {
             Expr expression = expression();
-            return remember(new Stmt.Draw(type, nameToken.lexeme, expression, nameToken.range));
+            return remember(new Stmt.Draw(type, nameToken.lexeme, expression), nameToken);
         }
 
         throw new ParseError(peek(), "Except assignment or draw.");
@@ -161,11 +164,11 @@ public class Parser {
             consume(TokenType.GREATER, "Generic type must be closed with a '>'.");
 
             return remember(
-                    new AstType.Generic(typeNameToken.lexeme, typeNameToken.range, innerTypes.toArray(AstType[]::new))
+                    new AstType.Generic(typeNameToken.lexeme, innerTypes.toArray(AstType[]::new))
             );
         }
 
-        return remember(new AstType.Atomic(typeNameToken.lexeme, typeNameToken.range));
+        return remember(new AstType.Atomic(typeNameToken.lexeme));
     }
 
     private Expr expression() {
@@ -180,7 +183,7 @@ public class Parser {
         while (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
             Token operatorToken = previous();
             Expr rightExpr = comparison();
-            expr = new Expr.Binary(expr, operatorToken.type, rightExpr, operatorToken.range);
+            expr = new Expr.Binary(expr, operatorToken.type, rightExpr);
         }
 
         return remember(expr);
@@ -194,7 +197,7 @@ public class Parser {
         while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
             Token operatorToken = previous();
             Expr rightExpr = term();
-            expr = new Expr.Binary(expr, operatorToken.type, rightExpr, operatorToken.range);
+            expr = new Expr.Binary(expr, operatorToken.type, rightExpr);
         }
 
         return remember(expr);
@@ -208,7 +211,7 @@ public class Parser {
         while (match(TokenType.PLUS, TokenType.MINUS)) {
             Token operatorToken = previous();
             Expr rightExpr = factor();
-            expr = new Expr.Binary(expr, operatorToken.type, rightExpr, operatorToken.range);
+            expr = new Expr.Binary(expr, operatorToken.type, rightExpr);
         }
 
         return remember(expr);
@@ -222,7 +225,7 @@ public class Parser {
         while (match(TokenType.STAR, TokenType.SLASH)) {
             Token operatorToken = previous();
             Expr rightExpr = unary();
-            expr = new Expr.Binary(expr, operatorToken.type, rightExpr, operatorToken.range);
+            expr = new Expr.Binary(expr, operatorToken.type, rightExpr);
         }
 
         return remember(expr);
@@ -234,7 +237,7 @@ public class Parser {
         if (match(TokenType.BANG, TokenType.MINUS)) {
             Token operatorToken = previous();
             Expr rightExpr = unary();
-            return remember(new Expr.Unary(operatorToken.type, rightExpr, operatorToken.range));
+            return remember(new Expr.Unary(operatorToken.type, rightExpr));
         } else {
             return remember(call());
         }
@@ -289,7 +292,7 @@ public class Parser {
             } while (match(TokenType.COMMA));
         }
 
-        return new Expr.Call(callee.variableName, callee.tokenRange, arguments.toArray(Expr.Argument[]::new));
+        return new Expr.Call(callee.variableName, arguments.toArray(Expr.Argument[]::new));
     }
 
     private Expr.Argument argument() {
@@ -363,11 +366,11 @@ public class Parser {
     private Expr primary() {
         startAstNode();
 
-        if (match(TokenType.FALSE)) return remember(new Expr.Literal(false, previous().range));
-        if (match(TokenType.TRUE)) return remember(new Expr.Literal(true, previous().range));
+        if (match(TokenType.FALSE)) return remember(new Expr.Literal(false));
+        if (match(TokenType.TRUE)) return remember(new Expr.Literal(true));
 
         if (match(TokenType.INT, TokenType.FLOAT, TokenType.STRING)) {
-            return remember(new Expr.Literal(previous().literal, previous().range));
+            return remember(new Expr.Literal(previous().literal));
         }
 
         if (match(TokenType.LEFT_PAREN)) {
@@ -384,7 +387,7 @@ public class Parser {
         }
 
         if (match(TokenType.IDENTIFIER)) {
-            return remember(new Expr.Variable(previous().lexeme, previous().range));
+            return remember(new Expr.Variable(previous().lexeme));
         }
 
         throw new ParseError(peek(), "Expect expression.");
@@ -473,12 +476,23 @@ public class Parser {
 
     /** Remembers the tokens of the new AstNode. */
     private <T extends AstNode> T remember(T newAstNode) {
+        return remember(newAstNode, null);
+    }
+
+    /** Remembers the tokens of the new AstNode. */
+    private <T extends AstNode> T remember(T newAstNode, Token representativeToken) {
         int lastPosition = astNodeStartPositions.pop();
+
+        TokenRange startRange = tokens.get(lastPosition).range;
 
         for (int i = lastPosition; i < current; i++) {
             Token token = tokens.get(i);
             tokenAstNodeMap.putIfAbsent(token, newAstNode);
         }
+
+        TokenRange endRange = tokens.get(current - 1).range;
+        TokenRange astNodeRange = TokenRange.combine(startRange, endRange);
+        astNodeRanges.put(newAstNode, astNodeRange);
 
         return newAstNode;
     }
@@ -494,6 +508,10 @@ public class Parser {
 
     public AstNode getAstNodeForToken(Token token) {
         return this.tokenAstNodeMap.get(token);
+    }
+
+    public TokenRange getRangeForAstNode(AstNode node) {
+        return this.astNodeRanges.get(node);
     }
 
     /* error handling */

@@ -76,17 +76,17 @@ class LspDocument implements ParseEventListener {
             try {
                 statement.accept(typeResolver);
             } catch (TypeError error) {
-                TokenRange range = error.getTokenRange();
-                String message = error.getMessage();
-
+                TokenRange range = parser.getRangeForAstNode(error.getAstNode());
                 if (range == null) {
-                    range = statement.tokenRange;
+                    range = parser.getRangeForAstNode(statement);
                 }
+
+                String message = error.getMessage();
 
                 foundDiagnostics.add(new Diagnostic(
                         new Range(
-                                new Position(range.line - 1, range.start),
-                                new Position(range.line - 1, range.end)
+                                new Position(range.startLine - 1, range.start),
+                                new Position(range.endLine - 1, range.end)
                         ), message
                 ));
             }
@@ -103,8 +103,8 @@ class LspDocument implements ParseEventListener {
     public void parseErrorDetected(Token token, String message) {
         foundDiagnostics.add(new Diagnostic(
                 new Range(
-                        new Position(token.range.line - 1, token.range.start),
-                        new Position(token.range.line - 1, token.range.end)
+                        new Position(token.range.startLine - 1, token.range.start),
+                        new Position(token.range.endLine - 1, token.range.end)
                 ), message
         ));
     }
@@ -275,7 +275,7 @@ class LspDocument implements ParseEventListener {
 
     private Token getTokenAtPosition(Position position) {
         for (Token token : tokens) {
-            if (token.range.line != position.getLine() + 1) continue;
+            if (token.range.startLine != position.getLine() + 1) continue;
             if (position.getCharacter() < token.range.start) continue;
             if (token.range.end < position.getCharacter()) continue;
             return token;

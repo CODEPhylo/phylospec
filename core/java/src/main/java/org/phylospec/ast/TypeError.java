@@ -3,17 +3,17 @@ package org.phylospec.ast;
 import org.phylospec.lexer.TokenRange;
 
 public class TypeError extends RuntimeException {
-    TokenRange tokenRange = null;
+    AstNode astNode = null;
 
     public TypeError(String message) {
         super(message);
     }
-    public TypeError(TokenRange tokenRange, String message) {
+    public TypeError(AstNode astNode, String message) {
         super(message);
-        this.tokenRange = tokenRange;
+        this.astNode = astNode;
     }
 
-    public TokenRange getTokenRange() {
-        return tokenRange;
+    public AstNode getAstNode() {
+        return astNode;
     }
 }

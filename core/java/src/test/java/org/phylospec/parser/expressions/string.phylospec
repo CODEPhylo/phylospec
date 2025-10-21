@@ -9,5 +9,5 @@ String c = a + -5.0
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Operation + is not supported for types String and Real
+// Operation `+` is not supported for types `String` and `Real`
 // EXPECT TYPE_ERRORS

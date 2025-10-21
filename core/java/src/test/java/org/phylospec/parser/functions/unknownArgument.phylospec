@@ -5,5 +5,5 @@ Real a = log(a = 10)
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Unknown argument for function log: a
+// Function `log` takes no argument named `a`
 // EXPECT TYPE_ERRORS

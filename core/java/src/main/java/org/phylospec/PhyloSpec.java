@@ -95,7 +95,7 @@ public class PhyloSpec {
 
     /** Report an error related to specific token. */
     public static void error(Token token, String message) {
-        report(token.range.line, "", message);
+        report(token.range.startLine, "", message);
     }
 
     private static void report(int line, String where, String message) {

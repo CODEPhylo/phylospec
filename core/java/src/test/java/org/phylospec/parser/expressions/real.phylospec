@@ -7,5 +7,5 @@ Integer a = 100 * 50 / 2 + -10.0 - (20.0 + 2) / 3
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Expression of type Real cannot be assigned to variable a of type Integer
+// Expression of type `Real` cannot be assigned to variable `a` of type `Integer`
 // EXPECT TYPE_ERRORS

@@ -7,5 +7,5 @@ Real b = 100.0 * c
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Unknown variable: c
+// Variable `c` is not known
 // EXPECT TYPE_ERRORS

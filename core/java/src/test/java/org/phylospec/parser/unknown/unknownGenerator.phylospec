@@ -7,5 +7,5 @@ Real b = CCD0(tree)
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Unknown function: CCD0
+// Function `CCD0` is not known
 // EXPECT TYPE_ERRORS

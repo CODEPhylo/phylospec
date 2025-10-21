@@ -49,8 +49,7 @@ public class ParserTokenMappingTest {
                                                 )
                                         )
                                 )
-                        ),
-                        new TokenRange(0, 0, 0)
+                        )
                 )
         );
     }
