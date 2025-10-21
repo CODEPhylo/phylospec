@@ -4,7 +4,9 @@ import java.io.*;
 import java.util.concurrent.ExecutionException;
 
 public class RunLsp {
-    public static void main(String[] args) throws ExecutionException, InterruptedException, IOException {
-        Lsp.startServer(System.in, System.out);
+    static final int PORT = 5007;
+
+    public static void main(String[] args) throws IOException {
+        Lsp.startServer(System.in, System.out, PORT);
     }
 }

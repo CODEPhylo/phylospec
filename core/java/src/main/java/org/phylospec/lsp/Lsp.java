@@ -15,15 +15,14 @@ import java.net.Socket;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * This is an LSP for PhyloSpec. It can be started on port 5007 by calling {@code LSP.startServer(...)}.
+ * This is an LSP for PhyloSpec. It can be started on a port by calling {@code LSP.startServer(...)}.
  * The LSP supports diagnosing parsing and type errors, hover information, and basic auto-completion.
  */
 public class Lsp implements org.eclipse.lsp4j.services.LanguageServer {
 
     private final PhyloSpecTextDocumentService textService;
 
-    public static void startServer(InputStream in, OutputStream out) throws IOException {
-        int port = 5007;
+    public static void startServer(InputStream in, OutputStream out, int port) throws IOException {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Listening on port " + port);
             Socket socket = serverSocket.accept();
