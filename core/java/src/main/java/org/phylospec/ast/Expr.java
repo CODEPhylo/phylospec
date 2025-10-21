@@ -13,7 +13,7 @@ import java.util.Objects;
  * {@link Expr.Call}.
  * Expressions are always part of a {@link Stmt}.
  */
-public abstract class Expr {
+public abstract class Expr extends AstNode {
 
     abstract public <S, E, T> E accept(AstVisitor<S, E, T> visitor);
 

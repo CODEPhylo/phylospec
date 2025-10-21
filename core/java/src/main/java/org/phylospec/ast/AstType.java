@@ -10,7 +10,7 @@ import java.util.Objects;
  * This class has a number of subclasses for different types of types.
  * (Yes, I used the word "type" five times in two lines.)
  */
-public abstract class AstType {
+public abstract class AstType extends AstNode {
 
     public String name;
     public TokenRange tokenRange = null;

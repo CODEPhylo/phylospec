@@ -10,7 +10,7 @@ import java.util.Objects;
  * statements. This class has a number of subclasses for different types of expressions
  * like {@link Stmt.Assignment} or {@link Stmt.Draw}.
  */
-public abstract class Stmt {
+public abstract class Stmt extends AstNode {
 
     abstract public <S, E, T> S accept(AstVisitor<S, E, T> visitor);
 
