@@ -1,5 +1,6 @@
 package org.phylospec.typeresolver;
 
+import org.phylospec.Utils;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.TokenType;
 
@@ -21,64 +22,41 @@ class TypeMatcher {
      * Determines the result type of an operation on one or more operands. Input types are widened
      * automatically if no exact match is found. Note that this currently does not work with generic
      * types.
+     *
      * @param rules the rules that define how operand types are connected to the result type.
      * @param query the query that is matched against the rules.
      * @return the resulting type or null if no match is found.
      */
     Set<ResolvedType> findMatch(List<Rule> rules, Query query) {
-        Set<ResolvedType> exactMatch = findExactMatch(rules, query);
-        if (!exactMatch.isEmpty()) {
-            return exactMatch;
-        }
+        // we first enumerate all possible input type combinations
+        Set<List<ResolvedType>> inputCombinations = new HashSet<>();
+        Utils.visitCombinations(
+                Arrays.stream(query.inputTypes).toList(),
+                inputCombinations::add
+        );
 
-        // we couldn't find a direct match
-        // let's try to go up the type hierarchy of the query to see if there is
-        // a match for widened types
-        while (true) {
-            // TODO: make more flexible to support generics and be more elegant (also, the widening is wrong atm)
-            for (int i = 0; i < query.inputTypes.length; i++) {
-                Set<ResolvedType> widenedInputType = new HashSet<>();
-                for (ResolvedType type : query.inputTypes[i]) {
-                    if (type.getExtends() != null) {
-                        // we replace this type with its direct parent
-                        ResolvedType widenedType = ResolvedType.fromString(type.getExtends(), componentResolver);
-                        if (widenedType != null) widenedInputType.add(widenedType);
+        // we now find all rules where the rule input types cover the actual input types
+        Set<ResolvedType> resultTypesOfMatches = new HashSet<>();
+        for (List<ResolvedType> inputCombination : inputCombinations) {
+            for (Rule rule : rules) {
+                if (rule.operation != query.operation) continue;
+                if (rule.inputTypes.length != inputCombination.size()) continue;
+
+                boolean allInputsMatch = true;
+                for (int i = 0; i < inputCombination.size(); i++) {
+                    if (!TypeUtils.covers(
+                            ResolvedType.fromString(rule.inputTypes[i], componentResolver),
+                            inputCombination.get(i),
+                            componentResolver
+                    )) {
+                        allInputsMatch = false;
+                        break;
                     }
                 }
 
-                if (widenedInputType.isEmpty()) return Set.of();
-
-                Query widenedQuery = new Query(query.operation, widenedInputType);
-
-                Set<ResolvedType> match = findExactMatch(rules, widenedQuery);
-                if (!match.isEmpty()) return match;
-            }
-        }
-    }
-
-    /** Checks if there is a perfectly matching rule the given query and returns it.
-     * Returns null if not match is found. */
-    private Set<ResolvedType> findExactMatch(List<Rule> rules, Query query) {
-        Set<ResolvedType> resultTypesOfMatches = new HashSet<>();
-
-        for (Rule rule : rules) {
-            if (rule.operation != query.operation) continue;
-            if (!(componentResolver.canResolveType(rule.resultType))) continue;
-
-            boolean matches = true;
-            for (int i = 0; i < query.inputTypes.length; i++) {
-                if (rule.inputTypes[i].equals(ANY)) continue;
-
-                // we have to check if there is an overlap
-                final int j = i;
-                if (query.inputTypes[i].stream().noneMatch(x -> x.getName().equals(rule.inputTypes[j]))) {
-                    matches =  false;
-                    break;
-                }
-            }
-
-            if (matches) {
-                resultTypesOfMatches.add(ResolvedType.fromString(rule.resultType, componentResolver));
+                if (allInputsMatch) resultTypesOfMatches.add(
+                        ResolvedType.fromString(rule.resultType, componentResolver)
+                );
             }
         }
 

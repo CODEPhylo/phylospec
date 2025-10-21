@@ -167,7 +167,7 @@ class TypeUtils {
         if (typeSets.isEmpty()) return Set.of();
 
         Set<List<ResolvedType>> possibleElementTypeCombinations = new HashSet<>();
-        Utils.visitCombinations(possibleElementTypeCombinations::add, typeSets);
+        Utils.visitCombinations(typeSets, possibleElementTypeCombinations::add);
 
         Set<ResolvedType> lcTypeSet = new HashSet<>();
         for (List<ResolvedType> combination : possibleElementTypeCombinations) {

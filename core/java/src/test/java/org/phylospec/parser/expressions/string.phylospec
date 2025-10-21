@@ -1,13 +1,16 @@
 String a = "Hallo"
 String b = a + a + "Nooooo"
 String c = a + -5.0
+String d = 10.0 + "hallo"
 
 // EXPECT AST
 // (AS String a "Hallo")
 // (AS String b (+ (+ a a) "Nooooo"))
 // (AS String c (+ a (- 5.0)))
+// (AS String d (+ 10.0 "hallo"))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
 // Operation `+` is not supported for types `String` and `Real`
+// Operation `+` is not supported for types `[NonNegativeReal,PositiveReal,Real]` and `String`
 // EXPECT TYPE_ERRORS

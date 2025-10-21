@@ -14,7 +14,7 @@ public class Utils {
     /// A combination is a list of the same size as {@code variants}.
     /// The i-th element of a combination is one of the items in the i-th {@code Set<T>}
     /// in {@code variants}.
-    public static <T> void visitCombinations(Consumer<List<T>> visitor, List<Set<T>> variants) {
+    public static <T> void visitCombinations(List<Set<T>> variants, Consumer<List<T>> visitor) {
         boolean fullyResolved = true;
 
         for (int i = 0; i < variants.size(); i++) {
@@ -29,7 +29,7 @@ public class Utils {
                 List<Set<T>> clonedTypeParams = new ArrayList<>(variants);
                 clonedTypeParams.set(i, clonedParameterTypeSet);
 
-                visitCombinations(visitor, clonedTypeParams);
+                visitCombinations(clonedTypeParams, visitor);
             }
 
             fullyResolved = false;

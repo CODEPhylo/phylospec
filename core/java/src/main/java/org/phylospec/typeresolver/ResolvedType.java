@@ -94,6 +94,7 @@ public class ResolvedType {
 
         Set<ResolvedType> resultingTypeSet = new HashSet<>();
         visitCombinations(
+                inferredTypeParameters,
                 typeParamList -> {
                     Map<String, ResolvedType> typeParamSet = new HashMap<>();
                     for (int i = 0; i < typeParamList.size(); i++) {
@@ -104,8 +105,7 @@ public class ResolvedType {
                     }
 
                     resultingTypeSet.add(new ResolvedType(typeComponent, typeParamSet));
-                },
-                inferredTypeParameters
+                }
         );
 
         return resultingTypeSet;
