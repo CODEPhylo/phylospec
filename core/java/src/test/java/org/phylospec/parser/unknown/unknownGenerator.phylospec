@@ -1,0 +1,11 @@
+Integer tree = 20
+Real b = CCD0(tree)
+
+// EXPECT AST
+// (AS Integer tree 20)
+// (AS Real b (CA CCD0 (AA tree tree)))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Unknown function: CCD0
+// EXPECT TYPE_ERRORS

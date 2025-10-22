@@ -1,5 +1,6 @@
 package org.phylospec.ast;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -9,19 +10,19 @@ import java.util.Objects;
  */
 public abstract class Stmt {
 
-    abstract public <T> T accept(AstVisitor<T> visitor);
+    abstract public <S, E, T> S accept(AstVisitor<S, E, T> visitor);
 
     /** Represents an assignment like `Real value = 10`. */
     public static class Assignment extends Stmt {
-        public Assignment(Type type, String name, Expr expression) {
+        public Assignment(AstType type, String name, Expr expression) {
             this.type = type;
             this.name = name;
             this.expression = expression;
         }
 
-        final Type type;
-        final String name;
-        final Expr expression;
+        public final AstType type;
+        public final String name;
+        public final Expr expression;
 
         @Override
         public boolean equals(Object o) {
@@ -35,22 +36,22 @@ public abstract class Stmt {
             return Objects.hash(type, name, expression);
         }
 
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> S accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitAssignment(this);
         }
     }
 
     /** Represents a draw like `Real value ~ Normal(mean=1, sd=1)`. */
     public static class Draw extends Stmt {
-        public Draw(Type type, String name, Expr expression) {
+        public Draw(AstType type, String name, Expr expression) {
             this.type = type;
             this.name = name;
             this.expression = expression;
         }
 
-        final Type type;
-        final String name;
-        final Expr expression;
+        public final AstType type;
+        public final String name;
+        public final Expr expression;
 
         @Override
         public boolean equals(Object o) {
@@ -64,7 +65,7 @@ public abstract class Stmt {
             return Objects.hash(type, name, expression);
         }
 
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> S accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitDraw(this);
         }
     }
@@ -78,8 +79,8 @@ public abstract class Stmt {
             this.statememt = statememt;
         }
 
-        final Expr.Call decorator;
-        final Stmt statememt;
+        public final Expr.Call decorator;
+        public final Stmt statememt;
 
         @Override
         public boolean equals(Object o) {
@@ -93,8 +94,33 @@ public abstract class Stmt {
             return Objects.hash(decorator, statememt);
         }
 
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> S accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitDecoratedStmt(this);
+        }
+    }
+
+    /** Represents an import statement like `import revbayes.core`. */
+    public static class Import extends Stmt {
+        public Import(List<String> namespace) {
+            this.namespace = namespace;
+        }
+
+        public final List<String> namespace;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Import anImport = (Import) o;
+            return Objects.equals(namespace, anImport.namespace);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(namespace);
+        }
+
+        public <S, E, T> S accept(AstVisitor<S, E, T> visitor) {
+            return visitor.visitImport(this);
         }
     }
 

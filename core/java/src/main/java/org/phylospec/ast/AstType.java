@@ -8,17 +8,17 @@ import java.util.Objects;
  * This class has a number of subclasses for different types of types.
  * (Yes, I used the word "type" five times in two lines.)
  */
-public abstract class Type {
+public abstract class AstType {
 
-    abstract public <T> T accept(AstVisitor<T> visitor);
+    public String name;
+
+    abstract public <S, E, T> T accept(AstVisitor<S, E, T> visitor);
 
     /** Represents a non-generic type like `Real` */
-    public static class Atomic extends Type {
+    public static class Atomic extends AstType {
 		public Atomic(String name) {
 			this.name = name;
 		}
-
-		public final String name;
 
         @Override
         public boolean equals(Object o) {
@@ -33,20 +33,19 @@ public abstract class Type {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> T accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitAtomicType(this);
         }
     }
 
     /** Represents a generic type like `Real<T>`. */
-    public static class Generic extends Type {
-        public Generic(String name, Type... typeParameters) {
+    public static class Generic extends AstType {
+        public Generic(String name, AstType... typeParameters) {
             this.name = name;
             this.typeParameters = typeParameters;
         }
 
-        public final String name;
-        public final Type[] typeParameters;
+        public final AstType[] typeParameters;
 
         @Override
         public boolean equals(Object o) {
@@ -61,7 +60,7 @@ public abstract class Type {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> T accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitGenericType(this);
         }
     }

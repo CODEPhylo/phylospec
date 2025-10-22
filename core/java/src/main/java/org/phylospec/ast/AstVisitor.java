@@ -5,22 +5,23 @@ package org.phylospec.ast;
  * on the AST tree (e.g. pretty-printing or syntax checking). It follows
  * the visitor pattern.
  */
-public interface AstVisitor<T> {
-    public T visitDecoratedStmt(Stmt.Decorated stmt);
-    public T visitAssignment(Stmt.Assignment stmt);
-    public T visitDraw(Stmt.Draw stmt);
+public interface AstVisitor<S, E, T> {
+    public S visitDecoratedStmt(Stmt.Decorated stmt);
+    public S visitAssignment(Stmt.Assignment stmt);
+    public S visitDraw(Stmt.Draw stmt);
+    public S visitImport(Stmt.Import stmt);
 
-    public T visitLiteral(Expr.Literal expr);
-    public T visitVariable(Expr.Variable expr);
-    public T visitUnary(Expr.Unary expr);
-    public T visitBinary(Expr.Binary expr);
-    public T visitCall(Expr.Call expr);
-    public T visitAssignedArgument(Expr.AssignedArgument expr);
-    public T visitDrawnArgument(Expr.DrawnArgument expr);
-    public T visitGrouping(Expr.Grouping expr);
-    public T visitArray(Expr.Array expr);
-    public T visitGet(Expr.Get expr);
+    public E visitLiteral(Expr.Literal expr);
+    public E visitVariable(Expr.Variable expr);
+    public E visitUnary(Expr.Unary expr);
+    public E visitBinary(Expr.Binary expr);
+    public E visitCall(Expr.Call expr);
+    public E visitAssignedArgument(Expr.AssignedArgument expr);
+    public E visitDrawnArgument(Expr.DrawnArgument expr);
+    public E visitGrouping(Expr.Grouping expr);
+    public E visitArray(Expr.Array expr);
+    public E visitGet(Expr.Get expr);
 
-    public T visitAtomicType(Type.Atomic expr);
-    public T visitGenericType(Type.Generic expr);
+    public T visitAtomicType(AstType.Atomic expr);
+    public T visitGenericType(AstType.Generic expr);
 }

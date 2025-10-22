@@ -15,7 +15,7 @@ public enum TokenType {
     IDENTIFIER, STRING, INT, FLOAT,
 
     // keywords
-    TRUE, FALSE, PRINT,
+    TRUE, FALSE, IMPORT,
 
     // terminators
     EOL, EOF

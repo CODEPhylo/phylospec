@@ -2,7 +2,7 @@ package org.phylospec.parser;
 import org.phylospec.PhyloSpec;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
-import org.phylospec.ast.Type;
+import org.phylospec.ast.AstType;
 import org.phylospec.lexer.Token;
 import org.phylospec.lexer.TokenType;
 
@@ -17,7 +17,7 @@ public class Parser {
     /**
      * Parses the following grammar:
      * decorated      → ( "@" call )*  statement ;
-     * statement      → type IDENTIFIER ( "=" | "~" ) expression ;
+     * statement      → "import" IDENTIFIER ( "." IDENTIFIER )* | type IDENTIFIER ( "=" | "~" ) expression ;
      * type           → IDENTIFIER ("<" type ("," type)* ">" ) ;
      * expression     → equality ;
      * equality       → comparison ( ( "!=" | "==" ) comparison )* ;
@@ -25,7 +25,7 @@ public class Parser {
      * term           → factor ( ( "-" | "+" ) factor )* ;
      * factor         → unary ( ( "/" | "*" ) unary )* ;
      * unary          → ( "!" | "-" ) unary | call ;
-     * call           → array ( "(" arguments? ")" | "." IDENTIFIER )* ;
+     * call           → array ( "." IDENTIFIER )* | IDENTIFIER ( "(" arguments? ")" ) ;
      * arguments      → argument ( "," argument )* | expression ;
      * argument       → IDENTIFIER "=" expression | IDENTIFIER ;
      * array          → "[" "]" | "[" expression ( "," expression )* ","? "]"  | primary;
@@ -92,7 +92,22 @@ public class Parser {
     }
 
     private Stmt statement() {
-        Type type = type();
+        if (match(TokenType.IMPORT)) {
+            List<String> namespace = new ArrayList<>();
+            namespace.add(
+                    consume(TokenType.IDENTIFIER, "Import path must be provided.").lexeme
+            );
+
+            while (match(TokenType.DOT)) {
+                namespace.add(
+                        consume(TokenType.IDENTIFIER, "Invalid import path.").lexeme
+                );
+            }
+
+            return new Stmt.Import(namespace);
+        }
+
+        AstType type = type();
 
         Token name = consume(TokenType.IDENTIFIER, "Invalid variable name.");
 
@@ -109,11 +124,11 @@ public class Parser {
         throw error(peek(), "Except assignment or draw.");
     }
 
-    private Type type() {
+    private AstType type() {
         Token typeName = consume(TokenType.IDENTIFIER, "Invalid variable type.");
 
         if (match(TokenType.LESS)) {
-            List<Type> innerTypes = new ArrayList<>();
+            List<AstType> innerTypes = new ArrayList<>();
             innerTypes.add(type());
 
             while (match(TokenType.COMMA)) {
@@ -123,10 +138,10 @@ public class Parser {
             // parse closing brackets
             consume(TokenType.GREATER, "Generic type must be closed with a '>'.");
 
-            return new Type.Generic(typeName.lexeme, innerTypes.toArray(Type[]::new));
+            return new AstType.Generic(typeName.lexeme, innerTypes.toArray(AstType[]::new));
         }
 
-        return new Type.Atomic(typeName.lexeme);
+        return new AstType.Atomic(typeName.lexeme);
     }
 
     private Expr expression() {
@@ -194,29 +209,30 @@ public class Parser {
     private Expr call() {
         Expr expr = array();
 
-        while (true) {
-            if (match(TokenType.LEFT_PAREN)) {
-                // we are in a bracket, let's ignore EOL statements
-                boolean oldSkipNewLines = skipNewLines;
-                skipNewLines = true;
+        if (expr instanceof Expr.Variable && match(TokenType.LEFT_PAREN)) {
+            // this is a function call
+            String functionName = ((Expr.Variable) expr).variableName;
 
-                expr = finishCall(expr);
+            // we are in a bracket, let's ignore EOL statements
+            boolean oldSkipNewLines = skipNewLines;
+            skipNewLines = true;
 
-                consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
+            expr = finishCall(functionName);
 
-                skipNewLines = oldSkipNewLines;
-            } else if (match(TokenType.DOT)) {
-                Token name = consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
-                expr = new Expr.Get(expr, name.lexeme);
-            } else {
-                break;
-            }
+            consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
+
+            skipNewLines = oldSkipNewLines;
+        }
+
+        while (match(TokenType.DOT)) {
+            Token name = consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+            expr = new Expr.Get(expr, name.lexeme);
         }
 
         return expr;
     }
 
-    private Expr finishCall(Expr callee) {
+    private Expr finishCall(String calleeName) {
         List<Expr.Argument> arguments = new ArrayList<>();
         if (!check(TokenType.RIGHT_PAREN)) {
             do {
@@ -233,7 +249,7 @@ public class Parser {
             } while (match(TokenType.COMMA));
         }
 
-        return new Expr.Call(callee, arguments.toArray(Expr.Argument[]::new));
+        return new Expr.Call(calleeName, arguments.toArray(Expr.Argument[]::new));
     }
 
     private Expr.Argument argument() {
@@ -243,7 +259,7 @@ public class Parser {
             return new Expr.AssignedArgument(expression);
         }
 
-        String argumentName = ((Expr.Variable) expression).variable;
+        String argumentName = ((Expr.Variable) expression).variableName;
 
         if (match(TokenType.TILDE)) {
             expression = expression();

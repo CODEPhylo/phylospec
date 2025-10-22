@@ -14,31 +14,31 @@ import java.util.Objects;
  */
 public abstract class Expr {
 
-    abstract public <T> T accept(AstVisitor<T> visitor);
+    abstract public <S, E, T> E accept(AstVisitor<S, E, T> visitor);
 
     /** Represents a variable. Function and distribution names are also treated
      * as variables. */
     public static class Variable extends Expr {
-        public Variable(String variable) {
-            this.variable = variable;
+        public Variable(String variableName) {
+            this.variableName = variableName;
         }
 
-        public final String variable;
+        public final String variableName;
 
         @Override
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Variable variable1 = (Variable) o;
-            return Objects.equals(variable, variable1.variable);
+            return Objects.equals(variableName, variable1.variableName);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(variable);
+            return Objects.hashCode(variableName);
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitVariable(this);
         }
     }
@@ -51,7 +51,7 @@ public abstract class Expr {
 		}
 
         // TODO: make this type generic
-		final Object value;
+        public final Object value;
 
         @Override
         public boolean equals(Object o) {
@@ -66,7 +66,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitLiteral(this);
         }
     }
@@ -78,8 +78,8 @@ public abstract class Expr {
 			this.right = right;
 		}
 
-		final Token operator;
-		final Expr right;
+		public final Token operator;
+        public final Expr right;
 
         @Override
         public boolean equals(Object o) {
@@ -94,7 +94,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitUnary(this);
         }
     }
@@ -107,9 +107,9 @@ public abstract class Expr {
 			this.right = right;
 		}
 
-		final Expr left;
-		final Token operator;
-		final Expr right;
+		public final Expr left;
+		public final Token operator;
+		public final Expr right;
 
         @Override
         public boolean equals(Object o) {
@@ -124,7 +124,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitBinary(this);
         }
     }
@@ -135,7 +135,7 @@ public abstract class Expr {
             this.expression = expression;
         }
 
-        final Expr expression;
+        public final Expr expression;
 
         @Override
         public boolean equals(Object o) {
@@ -150,43 +150,43 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitGrouping(this);
         }
     }
 
     /** Represents a function or distribution call.
      * <br>
-     * The function itself can be represented by any expression.
-     * This means that for `readData().getValue()`, `function`
-     * corresponds to `readData().getValue`.
+     * The function itself is represented by its name.
+     * This means that methods like `readData().getValue()` are not
+     * supported.
      * <br>
      * Arguments are either of type {@link Expr.AssignedArgument}
      * (for `exp(mean = someValue)`) or {@link Expr.DrawnArgument}
      * (for `exp(mean ~ someDist)`).*/
     public static class Call extends Expr {
-        public Call(Expr function, Argument... arguments) {
-            this.function = function;
+        public Call(String functionName, Argument... arguments) {
+            this.functionName = functionName;
             this.arguments = arguments;
         }
 
-        final Expr function;
-        final Argument[] arguments;
+        public final String functionName;
+        public final Argument[] arguments;
 
         @Override
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Call call = (Call) o;
-            return Objects.equals(function, call.function) && Objects.deepEquals(arguments, call.arguments);
+            return Objects.equals(functionName, call.functionName) && Objects.deepEquals(arguments, call.arguments);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(function, Arrays.hashCode(arguments));
+            return Objects.hash(functionName, Arrays.hashCode(arguments));
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitCall(this);
         }
     }
@@ -223,7 +223,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitAssignedArgument(this);
         }
     }
@@ -237,7 +237,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitDrawnArgument(this);
         }
     }
@@ -248,7 +248,7 @@ public abstract class Expr {
             this.elements = elements;
         }
 
-        final List<Expr> elements;
+        public final List<Expr> elements;
 
         @Override
         public boolean equals(Object o) {
@@ -263,7 +263,7 @@ public abstract class Expr {
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitArray(this);
         }
     }
@@ -274,28 +274,28 @@ public abstract class Expr {
      * (`nchars`) is always a string.
      * Look at {@link Expr.Call} to see how method calls are parsed. */
     public static class Get extends Expr {
-        public Get(Expr object, String propery) {
+        public Get(Expr object, String properyName) {
             this.object = object;
-            this.propery = propery;
+            this.properyName = properyName;
         }
 
-        final Expr object;
-        final String propery;
+        public final Expr object;
+        public final String properyName;
 
         @Override
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Get get = (Get) o;
-            return Objects.equals(object, get.object) && Objects.equals(propery, get.propery);
+            return Objects.equals(object, get.object) && Objects.equals(properyName, get.properyName);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(object, propery);
+            return Objects.hash(object, properyName);
         }
 
         @Override
-        public <T> T accept(AstVisitor<T> visitor) {
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitGet(this);
         }
     }

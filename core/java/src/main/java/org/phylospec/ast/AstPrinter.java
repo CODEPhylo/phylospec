@@ -1,18 +1,16 @@
 package org.phylospec.ast;
 
-/**
- * This class allows to print out a human-readable (sort-of) version
- * of a given AST statement. It uses the visitor pattern on the AST
- * statement.
- * <br>
- * Usage:
- * ```
- * Stmt statement = <...>;
- * AstPrinter printer = new AstPrinter();
- * statement.accept(printer);
- * ```
- */
-public class AstPrinter implements AstVisitor<String> {
+/// This class allows to print out a human-readable (sort-of) version
+/// of a given AST statement. It uses the visitor pattern on the AST
+/// statement.
+///
+/// Usage:
+/// ```
+/// Stmt statement = <...>;
+/// AstPrinter printer = new AstPrinter();
+/// statement.accept(printer);
+/// ```
+public class AstPrinter implements AstVisitor<String, String, String> {
     @Override public String visitDecoratedStmt(Stmt.Decorated stmt) {
         return "(@ " + stmt.decorator.accept(this) + " " + stmt.statememt.accept(this) + ")";
     }
@@ -28,6 +26,21 @@ public class AstPrinter implements AstVisitor<String> {
     }
 
     @Override
+    public String visitImport(Stmt.Import stmt) {
+        String result = "(IM ";
+
+        for (int i = 0; i < stmt.namespace.size(); i++) {
+            result += stmt.namespace.get(i);
+            if (i < stmt.namespace.size() - 1) {
+                result += " ";
+            }
+        }
+
+        result += ")";
+        return result;
+    }
+
+    @Override
     public String visitLiteral(Expr.Literal expr) {
         if (expr.value instanceof String) {
             return "\"" + expr.value.toString() + "\"";
@@ -37,7 +50,7 @@ public class AstPrinter implements AstVisitor<String> {
 
     @Override
     public String visitVariable(Expr.Variable expr) {
-        return expr.variable;
+        return expr.variableName;
     }
 
     @Override
@@ -52,7 +65,7 @@ public class AstPrinter implements AstVisitor<String> {
 
     @Override
     public String visitCall(Expr.Call expr) {
-        String result = "(CA " + expr.function.accept(this) + " ";
+        String result = "(CA " + expr.functionName + " ";
 
         for (int i = 0; i < expr.arguments.length; i++) {
             result += expr.arguments[i].accept(this);
@@ -96,16 +109,16 @@ public class AstPrinter implements AstVisitor<String> {
 
     @Override
     public String visitGet(Expr.Get expr) {
-        return "(GET " + expr.object.accept(this) + " " + expr.propery + ")";
+        return "(GET " + expr.object.accept(this) + " " + expr.properyName + ")";
     }
 
     @Override
-    public String visitAtomicType(Type.Atomic expr) {
+    public String visitAtomicType(AstType.Atomic expr) {
         return expr.name;
     }
 
     @Override
-    public String visitGenericType(Type.Generic expr) {
+    public String visitGenericType(AstType.Generic expr) {
         String result = expr.name + "<";
 
         for (int i = 0; i < expr.typeParameters.length; i++) {

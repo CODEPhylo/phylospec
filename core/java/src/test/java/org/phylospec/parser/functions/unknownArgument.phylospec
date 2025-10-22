@@ -1,0 +1,9 @@
+Real a = log(a = 10)
+
+// EXPECT AST
+// (AS Real a (CA log (AA a 10)))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Unknown argument for function log: a
+// EXPECT TYPE_ERRORS

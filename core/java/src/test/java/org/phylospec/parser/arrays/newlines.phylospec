@@ -1,0 +1,22 @@
+Vector<Real> vector = [
+    log
+    (
+        x = exp(
+                        5.0
+            ),
+       base =
+            10
+
+
+    )
+]
+Vector<Real> vector = [          10           ]
+
+
+// EXPECT AST
+// (AS Vector<Real> vector (AR (CA log (AA x (CA exp (AA null 5.0))) (AA base 10))))
+// (AS Vector<Real> vector (AR 10))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS

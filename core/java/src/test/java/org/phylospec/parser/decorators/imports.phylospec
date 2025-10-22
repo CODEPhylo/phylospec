@@ -1,0 +1,14 @@
+@beast2(ignore = true)
+import beastx
+@beast2(ignore = true)
+import revbayes.distributions
+
+// EXPECT AST
+// (@ (CA beast2 (AA ignore true)) (IM beastx))
+// (@ (CA beast2 (AA ignore true)) (IM revbayes distributions))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Import beastx is not known
+// Import revbayes.distributions is not known
+// EXPECT TYPE_ERRORS

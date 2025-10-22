@@ -18,7 +18,7 @@ public class Lexer {
         keywords = new HashMap<>();
         keywords.put("true", TokenType.TRUE);
         keywords.put("false", TokenType.FALSE);
-        keywords.put("print", TokenType.PRINT);
+        keywords.put("import", TokenType.IMPORT);
     }
 
     private final String source;

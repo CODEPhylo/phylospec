@@ -1,0 +1,11 @@
+Real a = 20.0
+Real b = 100.0 * c
+
+// EXPECT AST
+// (AS Real a 20.0)
+// (AS Real b (* 100.0 c))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Unknown variable: c
+// EXPECT TYPE_ERRORS
