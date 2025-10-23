@@ -20,7 +20,17 @@ This document defines the type system that forms the foundation of PhyloSpec. Al
 | `PositiveReal`     | `Real`     | Positive real number (> 0)        | Value > 0                          | phylospec.types |
 | `NonNegativeReal`  | `Real`     | Non-negative real number (>= 0)  | Value ≥ 0                          | phylospec.types |
 | `Probability`      | `Real`     | Probability value [0,1]           | 0.0 ≤ Value ≤ 1.0                  | phylospec.types |
-| `PositiveInteger`  | `Integer`  | Positive integer (> 0)            | Value > 0                          | phylospec.types |
+| `NonNegativeInteger`  | `Integer`  | Non-negative integer (>= 0)            | Value >= 0                          | phylospec.types |
+| `PositiveInteger`  | `NonNegativeInteger`  | Positive integer (> 0)            | Value > 0                          | phylospec.types |
+
+### 1.3 Alias Types
+
+| Type        | Alias for            |
+|-------------|----------------------|
+| `Rate`      | `NonNegativeReal`    |
+| `Count`     | `NonNegativeInteger` |
+| `Path`      | `String`             |
+| `TaxonName` | `String`             |
 
 ## 2. Collection Types
 
@@ -40,6 +50,7 @@ This document defines the type system that forms the foundation of PhyloSpec. Al
 |-----------------------|-------------------------------|-----------------------------------------|-------------------------------------|----------|
 | `SquareMatrix<T>`     | `Matrix<T>`                   | Square matrix with equal number of rows and columns | Number of rows equals columns | phylospec.types |
 | `Simplex`             | `Vector<Probability>`         | Probability vector with elements that sum to 1.0 | Elements sum to 1.0 (within ε=1e-10) | phylospec.types |
+| `Frequencies`         | `Vector<Probability>`         | Alias for `Simplex` | Elements sum to 1.0 (within ε=1e-10) | phylospec.types |
 | `QMatrix`             | `SquareMatrix<Real>`          | Rate matrix for substitution models     | Rows sum to 0, off-diagonals ≥ 0    | phylospec.types |
 | `StochasticMatrix`    | `Matrix<Probability>`         | Stochastic matrix - probability transition matrix | Each row sums to 1.0 | phylospec.types |
 
@@ -123,19 +134,25 @@ All concrete distribution types extend the base `Distribution` type with a speci
 Object (base for all types)
 │
 ├── Real
-│   ├── PositiveReal
 │   ├── NonNegativeReal
-│   └── Probability
+│   │   ├── PositiveReal
+│   │   └── Probability
+│   └── Rate (alias for NonNegativeReal) 
 │
 ├── Integer
-│   └── PositiveInteger
+│   ├── NonNegativeInteger
+│   │   └── PositiveInteger
+│   └── Count (alias for NonNegativeInteger)
 │
 ├── Boolean
 │
 ├── String
+├── Path (alias for String)
+├── TaxonName (alias for String)
 │
 ├── Vector<T>
-│   └── Simplex (extends Vector<Probability>)
+│   ├── Simplex (extends Vector<Probability>)
+│   └── Frequencies (alias for Simplex)
 │
 ├── Matrix<T>
 │   ├── SquareMatrix<T>
@@ -205,6 +222,7 @@ All types must validate their constraints at construction time. Invalid values s
 | `NonNegativeReal`  | Must be ≥ 0 and finite                               |
 | `Probability`      | Must be in [0, 1] and finite                         |
 | `PositiveInteger`  | Must be > 0                                          |
+| `NonNegativeInteger`| Must be >= 0                                          |
 | `Vector<T>`        | All elements must be valid instances of T            |
 | `Matrix<T>`        | Must be rectangular; all elements valid              |
 | `SquareMatrix<T>`  | Must have equal rows and columns                     |

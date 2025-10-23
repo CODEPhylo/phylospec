@@ -44,7 +44,7 @@ TaxonSet taxa = alignment.taxa
 So far, we only have determinstic variables. Let's change that!
 
 ```phylospec
-Distribution<Real> normalDistribution = Normal(mean = 0.0, sd = 1.0)
+Distribution<Real> normalDistribution = Normal(mean=0.0, sd=1.0)
 Real drawnValue ~ normalDistribution
 ```
 
@@ -56,24 +56,24 @@ Some examples of valid and invalid statements:
 
 ```phylospec
 // ✅ Exponential is a function which returns a Distribution<PositiveReal>
-PositiveReal a ~ Exponential(rate = 1.0)
+PositiveReal a ~ Exponential(rate=1.0)
 
 // ✅
-Real b = log(a)
+Real b=log(a)
 
 // 🚫 b is not a distribution
 Real c ~ b                          
 
 // 🚫 can't add a number to a distribution object
-Real d ~ Normal(mean = 0.0, sd = 1.0) + 10
+Real d ~ Normal(mean=0.0, sd=1.0) + 10
 
 // 🚫 can't apply log to a distribution object    
-Real e ~ log(Normal(mean = 0.0, sd = 1.0))
+Real e ~ log(Normal(mean=0.0, sd=1.0))
 
 // ✅ the function IID takes a distribution object and creates a new distribution object
 Vector<Real> f ~ IID(
-    base = Normal(mean = 0.0, sd = 1.0), 
-    n = 5
+    base=Normal(mean=0.0, sd=1.0), 
+    n=5
 )
 ```
 
@@ -84,7 +84,6 @@ We now look at more details, but we've already covered the main things to know.
 > [!TIP]
 > Check out the [types.md](types.md), [distributions.md](distributions.md), and [functions.md](functions.md) documents for a list of all types, distributions, and functions.
 
-
 ### 2.2. Naming Conventions
 
 - Types and functions returning distributions should use PascalCase (e.g., `PositiveReal`). Only alphanumeric characters are allowed, they must start with a letter.
@@ -93,11 +92,72 @@ We now look at more details, but we've already covered the main things to know.
 - Function argument names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
 - Attribute names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
 
+### 2.4. Types
+
+Every object has [one of many types](./types.md).
+
+#### Literals are associated with one or more types
+
+A `"string"` is always of type `String`, `true` and `false` are always of type `Boolean`.
+
+What about numbers? `10` could refer to a `PositiveInteger`, a `NonNegativeInteger`, a `Integer`, a `PositiveReal`, a `NonNegativeReal`, a `Real`, a `Rate`. `0.5` could also refer to a `Probability` among others. In these cases, the exact type is determined by its usage:
+
+```
+Real a = 10     // here, 10 is a real
+Real b = log(5) // log takes a PositiveReal, so 5 is a PositiveReal
+```
+
+#### Types can be aliased
+
+One reason why PhyloSpec uses types is to make scripts more readable. One part of this is the use of aliases:
+
+```
+Rate birtRate ~ LogNormal(logMean=1, logSd=2)
+Tree tree ~ Yule(birtRate)
+```
+
+If type `A` is an alias of type `B`, the two of them can be used interchangeably.
+
+> [!NOTE]
+> Open questions:
+>
+> How far do we go with aliases? Do we use things like `Count` (for `NonNegativeInteger`), `Frequencies` (for `Simplex`), or `Path` and `TaxonName` (for `String`?).
+
+#### Types can be parameterized
+
+Every type can have one or more type parameters. Examples of parameterized types are `Vector<T>`, `Map<K,V>`, and `Sequence<T>`. The type of an object attribute can dependent on the type parameters:
+
+```
+Vector<Real> numbers = [0.5, 0.1]
+Real last = numbers.first         // for Vector<T>, .first has type T
+```
+
+From the perspective of the object, its type parameter is *fixed upon generation*.
+
+One might add *bounds* to a type parameter. However, we only ever interact with objects through generators. Hence, it is sufficient (and more flexible) to specify type parameter bounds there.
+
+#### Types can extend from another type.
+
+We have the luxury that we can define our type hierarchy from a purely conceptual perspective—we don't have to care (too much) about implementation details. A type A extends from a type B if *an object of type B is also an object of type A*. A `PositiveReal` is also a `Real`, a `TimeTree` is also a `Tree`.
+
+An object can always be used in places where a supertype is required:
+
+```
+PositiveReal a = 10
+Real b = a  // this still works, as PositiveReal extends Real
+```
+
+> [!NOTE]
+> Open questions:
+>
+> Subtyping combined with generics raises the question of [covariance](https://web.archive.org/web/20150905085310/http://blogs.msdn.com/b/ericlippert/archive/2009/11/30/what-s-the-difference-between-covariance-and-assignment-compatibility.aspx): if `A` extends `B`, does `T<A>` extend `T<B>`?
+
 ### 2.3. Function Calls
 
 ```
 PositiveReal mean ~ Exponential(1.0);
 Real y ~ Normal(mean=mean, sd=2.0);
+Real y ~ Normal(mean=mean, sd=2.0, offset=1.0);
 ```
 
 - If there is only one argument, it can be passed directly (e.g., `Exponential(1.0)`).
