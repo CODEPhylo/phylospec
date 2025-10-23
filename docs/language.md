@@ -17,13 +17,13 @@ This document describes the philosophy and features of the PhyloSpec language.
 
 PhyloSpec models describe a graphical model. Every statement corresponds to one variable in the graph.
 
-The simplest statements are constant assignments:
+The simplest statement is a constant assignment:
 
 ```phylospec
 Rate birthRate = 2.5
 ```
 
-This line defines a new variable called `birtRate` of type `Rate` with a constant value of `2.5`. Every variable has a type. Whenever possible, PhyloSpec uses types that tell you what a variable actually represents. This is why `birthRate` has type `Rate` and not just `PositiveReal`.
+This defines a new variable called `birthRate` of type `Rate` with a constant value of `2.5`. Every variable has a type. Whenever possible, PhyloSpec uses types that tell you what a variable actually represents. This is why `birthRate` has type `Rate` and not just `PositiveReal`.
 
 We can apply functions and the usual numerical expressions:
 
@@ -55,8 +55,8 @@ Use the `=` operator for assignments of constant values or for determinstic tran
 Some examples of valid and invalid statements:
 
 ```phylospec
-// ✅
-Real a ~ Exponential(rate = 1.0)
+// ✅ Exponential is a function which returns a Distribution<PositiveReal>
+PositiveReal a ~ Exponential(rate = 1.0)
 
 // ✅
 Real b = log(a)
@@ -65,37 +65,35 @@ Real b = log(a)
 Real c ~ b                          
 
 // 🚫 can't add a number to a distribution object
-Real d ~ Normal(mean=0.0, sd=1.0) + 10
+Real d ~ Normal(mean = 0.0, sd = 1.0) + 10
 
 // 🚫 can't apply log to a distribution object    
-Real e ~ log(Normal(mean=0.0, sd=1.0))
+Real e ~ log(Normal(mean = 0.0, sd = 1.0))
 
 // ✅ the function IID takes a distribution object and creates a new distribution object
-//    hence we can draw from it
 Vector<Real> f ~ IID(
-    base = Normal(mean=0.0, sd=1.0), 
-    n=5
+    base = Normal(mean = 0.0, sd = 1.0), 
+    n = 5
 )
 ```
+
+By convention, functions returning a distribution always start with an uppercase letter, whereas all others start with a lowercase letter.
+
+We now look at more details, but we've already covered the main things to know.
 
 > [!TIP]
 > Check out the [types.md](types.md), [distributions.md](distributions.md), and [functions.md](functions.md) documents for a list of all types, distributions, and functions.
 
-> [!NOTE]
-> Open questions:
->
-> - Do we use `;` or newlines to separate statements?
-> - Do we allow numerical operations like addition and multiplication?
 
 ### 2.2. Naming Conventions
 
-- Types and distributions names should use PascalCase (e.g., `PositiveReal`). Only alphanumeric characters are allowed, they must start with a letter.
-- Variable names should use camelCase (e.g., `rate`) and can contain Unicode characters. They must start with a letter.
-- Function names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
-- Function and distribution argument names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
-- Redundant prefixes like `dn` or suffixes like `Distribution` are discouraged.
+- Types and functions returning distributions should use PascalCase (e.g., `PositiveReal`). Only alphanumeric characters are allowed, they must start with a letter.
+- Variable names should use camelCase (e.g., `rate`) and can contain Unicode characters. They must start with a letter (a greek letter like `α` also works).
+- Function not returning distributions should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
+- Function argument names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
+- Attribute names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
 
-### 2.3. Function, Method and Distribution Calls
+### 2.3. Function Calls
 
 ```
 PositiveReal mean ~ Exponential(1.0);
@@ -104,20 +102,20 @@ Real y ~ Normal(mean=mean, sd=2.0);
 
 - If there is only one argument, it can be passed directly (e.g., `Exponential(1.0)`).
 - If there are multiple arguments, they must be named explicitly (e.g., `Normal(mean=1.0, sd=2.0)`).
+- There might be optional arguments.
+- There might be multiple functions with the same name but different argument types. Functions with the same name cannot only differ in their return type.
 
 > [!NOTE]
 > Open questions:
 >
-> - Do we allow optional arguments and default values?
-> - Do we use JSON schemas for more fine-grained definition of valid arguments, or do we use overloading?
-> - Do we allow JS-style syntax when passing a variable with the same name as the argument (e.g., `Normal(mean, sd)` instead of `Normal(mean=mean, sd=sd)`)?
+> - Do we allow default values?
 
 ### 2.4. Nested Expressions
 
-Nested expressions are allowed and are equivalent to `=` assignments:
+Nested expressions are allowed:
 
 ```
-PositiveReal y ~ Normal(mean=log(100), sd=2.0);
+Real y ~ Normal(mean=log(100), sd=2.0);
 ```
 
 is equivalent to:
@@ -127,12 +125,21 @@ Real mean = log(100);
 Real y = Normal(mean=mean, sd=2.0);
 ```
 
-> [!NOTE]
-> Open questions:
->
-> - Do we allow inline draws (e.g., `Real y = Normal(mean~Exponential(1.0), sd=log(~Exponential(1.0)))`)?
+Whereas
+
+```
+Real y ~ Normal(mean~Exponential(1.0), sd=2.0);
+```
+
+is equivalent to:
+
+```
+Real mean ~ Exponential(1.0);
+Real y = Normal(mean=mean, sd=2.0);
+```
 
 ### 2.5. Vectorization
+
 Instead of overly flexible loops, vectorization is used. There are multiple proposed syntaxes for vectorization:
 ```
 // LPhy-style implicit vectorization
@@ -164,6 +171,7 @@ This syntax aligns well with mathematical set-builder notation and provides more
 > - What version of vectorization should we use?
 
 ### 2.6. Distributions as Arguments
+
 Distributions can be assigned to variables and passed as arguments (distributions as first-class citizens):
 ```
 // Create a vector of distribution objects
@@ -186,24 +194,12 @@ Real x ~ mixture;
 
 ### 2.7. Clamping
 
-Clamping is used to assign an observation to a random variable. There are multiple proposed syntaxes for clamping:
+We use the decorator `@observedAs` to assign an observation to a random variable:
 
 ```
-// Rev-style function clamping
-Real x ~ Normal(mean=0.0, sd=1.0);
-x.clamp(50);
-
-// BEASTLang-style decorator clamping
-@observed(50)
+@observedAs(50)
 Real x ~ Normal(mean=0.0, sd=1.0);
 ```
-
-The decorator approach is more declarative - it describes _what_ x is (an observed value) rather than _how_ to make it observed (through a method call). This aligns better with the language philosophy.
-
-> [!NOTE]
-> Open questions:
->
-> - What version of clamping should we use?
 
 ### 2.8. Blocks
 
@@ -302,6 +298,8 @@ import revbayes.RlAtlas;
 RlAtlas atlas = readAtlas("atlas.csv");
 ```
 
+Extensions are defined in *component libraries*. A component library is a JSON file describing every additional types and functions. Check out the [JSON schema](../schema/component-library.schema.json) and the [core component library](../schema/phylospec-core-component-library.json) to see how this looks like.
+
 #### 3.2. Engine Blocks
 
 There can be engine-specific blocks that are not part of the language and can be used to configure the engine. _These blocks must not change the model specified and will be ignored by any other engine._
@@ -320,15 +318,10 @@ revbayes {
 
 #### 3.3. Engine Decorators
 
-- Function and distribution calls can be decorated with engine-specific information. _These decorators must not change the model specified and will be ignored by any other engine._
+- Statements can be decorated with engine-specific information. _These decorators must not change the model specified and will be ignored by any other engine._
 - The syntax for the decorator arguments is identical to function call arguments.
 
 ```
 @revbayes(someInternalArgument=true)
 Real x ~ Normal(mean=0.0, sd=1.0);
 ```
-
-> [!NOTE]
-> Open questions:
->
-> - How do these decorators handle multiple function calls on one line?
