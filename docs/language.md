@@ -5,7 +5,7 @@ This document describes the philosophy and features of the PhyloSpec language.
 ## 1. Language Philosophy
 
 - PhyloSpec is a language for describing phylogenetic models. It is _not_ a programming language.
-- PhyloSpec aims to be expressive enough to describe complex models, even if they cannot be efficiently inferred in current engines. However, its scope is explicitly restricted to _phylogenetic models_. Information like proposal distributions or the specific inference algorithm are not part of the core specification (see 3.2 for ways to specify these).
+- PhyloSpec aims to be expressive enough to describe complex models, even if they cannot be efficiently inferred in current engines. However, its scope is explicitly restricted to _phylogenetic models_. Things like proposal distributions or the specific inference algorithm are not part of the language (see 3.2 for ways to specify these).
 - PhyloSpec is designed to be _human-readable_. It should be concise and easy to understand.
 - PhyloSpec is designed to be _declarative_. Models should describe _what_ the relationships are, not _how_ to compute them. This promotes clarity, prevents side effects, and aligns with mathematical notation.
 - PhyloSpec is designed to prevent _invalid models_. Types and other language features are used to detect invalid models before inference.
@@ -15,27 +15,68 @@ This document describes the philosophy and features of the PhyloSpec language.
 
 ### 2.1. General Syntax
 
-```
-// this is a comment
+PhyloSpec models describe a graphical model. Every statement corresponds to one variable in the graph.
 
-PositiveReal rate = 2.0;
-PositiveReal draw ~ Exponential(rate);
-Real logDraw = log(draw);
+The simplest statements are constant assignments:
 
-Alignment alignment = readNexus(file="file.nex");
-PositiveInteger numTaxa = alignment.numTaxa()
+```phylospec
+Rate birthRate = 2.5
 ```
 
-- Every statement describes an assignment of an expression to a variable (`=`) or assignment of a distribution to a random variable (`~`).
-- Every (random) variable is assigned a type.
-- There are five types of expressions:
-  - Literals (e.g., `2.0`, `"Hallo"`, or `[1.0, 2.0, 3.0]`)
-  - Variable references (e.g., `rate`)
-  - Distributions (e.g., `Exponential(rate)`)
-  - Function calls (e.g., `log(draw)`)
-  - Method calls (e.g., `alignment.numTaxa()`)
-- All five types of expressions can be used in variable assignments using `=`, while only distributions can be used in random variable assignments using `~`.
-- Comments start with `//` and continue until the end of the line.
+This line defines a new variable called `birtRate` of type `Rate` with a constant value of `2.5`. Every variable has a type. Whenever possible, PhyloSpec uses types that tell you what a variable actually represents. This is why `birthRate` has type `Rate` and not just `PositiveReal`.
+
+We can apply functions and the usual numerical expressions:
+
+```phylospec
+Rate deathRate = 0.5 * birthRate
+Rate diversificationRate = birthRate - deathRate
+Real logDiversificationRate = log(diversificationRate)
+```
+
+Besides numbers, strings (`"text"`), and vectors (`[1, 2]`), functions can create more sophisticated types:
+
+```phylospec
+Alignment alignment = nexus(file="sequences.nex")
+Count numTaxa = alignment.numTaxa
+TaxonSet taxa = alignment.taxa
+```
+
+So far, we only have determinstic variables. Let's change that!
+
+```phylospec
+Distribution<Real> normalDistribution = Normal(mean = 0.0, sd = 1.0)
+Real drawnValue ~ normalDistribution
+```
+
+Here, `Normal` is a function which returns a `Distribution<Real>` object (a distribution on real numbers). This distribution is then assigned to the *random variable* `drawnValue` using the `~` operator. This is where the randomness in our model comes from!
+
+Use the `=` operator for assignments of constant values or for determinstic transformations of random variables. `~` assigns a distribution to a random variable, hence it always has to be preceded by a `Distribution` object.
+
+Some examples of valid and invalid statements:
+
+```phylospec
+// ✅
+Real a ~ Exponential(rate = 1.0)
+
+// ✅
+Real b = log(a)
+
+// 🚫 b is not a distribution
+Real c ~ b                          
+
+// 🚫 can't add a number to a distribution object
+Real d ~ Normal(mean=0.0, sd=1.0) + 10
+
+// 🚫 can't apply log to a distribution object    
+Real e ~ log(Normal(mean=0.0, sd=1.0))
+
+// ✅ the function IID takes a distribution object and creates a new distribution object
+//    hence we can draw from it
+Vector<Real> f ~ IID(
+    base = Normal(mean=0.0, sd=1.0), 
+    n=5
+)
+```
 
 > [!TIP]
 > Check out the [types.md](types.md), [distributions.md](distributions.md), and [functions.md](functions.md) documents for a list of all types, distributions, and functions.
