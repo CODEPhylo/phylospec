@@ -214,21 +214,21 @@ Distribution<Tree>  // Distribution generating trees
 
 All types must validate their constraints at construction time. Invalid values should result in an error or exception.
 
-| Type               | Validation Rule                                        |
-|--------------------|-------------------------------------------------------|
-| `Real`             | Must be finite (not NaN or Infinity)                  |
-| `String`           | Must not be null                                      |
-| `PositiveReal`     | Must be > 0 and finite                               |
-| `NonNegativeReal`  | Must be ≥ 0 and finite                               |
-| `Probability`      | Must be in [0, 1] and finite                         |
-| `PositiveInteger`  | Must be > 0                                          |
-| `NonNegativeInteger`| Must be >= 0                                          |
-| `Vector<T>`        | All elements must be valid instances of T            |
-| `Matrix<T>`        | Must be rectangular; all elements valid              |
-| `SquareMatrix<T>`  | Must have equal rows and columns                     |
-| `Simplex`          | Elements must sum to 1.0 (within ε=1e-10)           |
-| `StochasticMatrix` | Each row must sum to 1.0 (within ε=1e-10)          |
-| `QMatrix`          | Rows sum to 0; off-diagonals ≥ 0; diagonal ≤ 0      |
+| Type                | Validation Rule                                    |
+|---------------------|----------------------------------------------------|
+| `Real`              | Must be finite (not NaN or Infinity)               |
+| `String`            | Must not be null                                   |
+| `PositiveReal`      | Must be > 0 and finite                             |
+| `NonNegativeReal`   | Must be ≥ 0 and finite                             |
+| `Probability`       | Must be in [0, 1] and finite                       |
+| `PositiveInteger`   | Must be > 0                                        |
+| `NonNegativeInteger`| Must be >= 0                                       |
+| `Vector<T>`         | All elements must be valid instances of T          |
+| `Matrix<T>`         | Must be rectangular; all elements valid            |
+| `SquareMatrix<T>`   | Must have equal rows and columns                   |
+| `Simplex`           | Elements must sum to 1.0 (within ε=1e-10)          |
+| `StochasticMatrix`  | Each row must sum to 1.0 (within ε=1e-10)          |
+| `QMatrix`           | Rows sum to 0; off-diagonals ≥ 0; diagonal ≤ 0     |
 
 ### 8.2 Numerical Tolerance
 

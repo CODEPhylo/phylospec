@@ -103,7 +103,7 @@ A `"string"` is always of type `String`, `true` and `false` are always of type `
 What about numbers? `10` could refer to a `PositiveInteger`, a `NonNegativeInteger`, a `Integer`, a `PositiveReal`, a `NonNegativeReal`, a `Real`, a `Rate`. `0.5` could also refer to a `Probability` among others. In these cases, the exact type is determined by its usage:
 
 ```
-Real a = 10     // here, 10 is a real
+Real a = 10     // here, 10 is a Real
 Real b = log(5) // log takes a PositiveReal, so 5 is a PositiveReal
 ```
 
@@ -132,15 +132,15 @@ Vector<Real> numbers = [0.5, 0.1]
 Real last = numbers.first         // for Vector<T>, .first has type T
 ```
 
-From the perspective of the object, its type parameter is *fixed upon generation*.
+From the perspective of an object, its type parameter is *fixed upon generation*.
 
 One might add *bounds* to a type parameter. However, we only ever interact with objects through generators. Hence, it is sufficient (and more flexible) to specify type parameter bounds there.
 
 #### Types can extend from another type.
 
-We have the luxury that we can define our type hierarchy from a purely conceptual perspective—we don't have to care (too much) about implementation details. A type A extends from a type B if *an object of type B is also an object of type A*. A `PositiveReal` is also a `Real`, a `TimeTree` is also a `Tree`.
+We have the luxury that we can define our type hierarchy from a purely conceptual perspective—we don't have to care (too much) about implementation details. A type `A` extends from a type `B` if *an object of type `B` is also an object of type `A`*. A `PositiveReal` is also a `Real`, a `TimeTree` is also a `Tree`.
 
-An object can always be used in places where a supertype is required:
+An object of a subtype can always be used in places where a supertype is required:
 
 ```
 PositiveReal a = 10
@@ -150,7 +150,7 @@ Real b = a  // this still works, as PositiveReal extends Real
 > [!NOTE]
 > Open questions:
 >
-> Subtyping combined with generics raises the question of [covariance](https://web.archive.org/web/20150905085310/http://blogs.msdn.com/b/ericlippert/archive/2009/11/30/what-s-the-difference-between-covariance-and-assignment-compatibility.aspx): if `A` extends `B`, does `T<A>` extend `T<B>`?
+> - Subtyping combined with generics raises the question of [covariance](https://web.archive.org/web/20150905085310/http://blogs.msdn.com/b/ericlippert/archive/2009/11/30/what-s-the-difference-between-covariance-and-assignment-compatibility.aspx): if `A` extends `B`, does `T<A>` extend `T<B>`? I think yes, but a more careful argument will follow.
 
 ### 2.3. Function Calls
 
@@ -232,11 +232,11 @@ This syntax aligns well with mathematical set-builder notation and provides more
 
 ### 2.6. Distributions as Arguments
 
-Distributions can be assigned to variables and passed as arguments (distributions as first-class citizens):
+Distribution are normal objects produced by normal functions and can be assigned to variables and passed as arguments (distributions as first-class citizens):
 ```
 // Create a vector of distribution objects
-Vector<Distribution> components = [
-    Normal(mean=0.0, sd=1.0),
+Vector<Distribution<Real>> components = [
+    Normal(mean=0.0, sd=1.0),       // Normal is simply a function returning Distribution<Real>
     Normal(mean=5.0, sd=2.0),
     Normal(mean=10.0, sd=1.5)
 ];
@@ -244,7 +244,7 @@ Vector<Real> weights = [0.3, 0.5, 0.2];
 Mixture mixture = Mixture(components=components, weights=weights);
 
 // Or using list comprehension for programmatic creation
-Vector<Distribution> components = [Normal(mean=i*2.0, sd=1.0) for i in 1:10];
+Vector<Distribution<Real>> components = [Normal(mean=i*2.0, sd=1.0) for i in 1:10];
 Vector<Real> weights = repeat(x=0.1, rep=10);
 Mixture mixture = Mixture(components=components, weights=weights);
 
