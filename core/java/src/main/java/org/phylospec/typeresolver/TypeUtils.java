@@ -1,4 +1,4 @@
-package org.phylospec.ast;
+package org.phylospec.typeresolver;
 
 import org.phylospec.Utils;
 import org.phylospec.components.Argument;
@@ -39,7 +39,7 @@ class TypeUtils {
         if (resolvedArguments.size() == 1 && resolvedArguments.get(null) != null) {
             // make sure there is exactly one required parameter
             if (parameters.stream().filter(Argument::getRequired).count() != 1) {
-                throw new TypeError("Missing required argument for function " + generator.getName());
+                throw new TypeError("Missing required argument for function `" + generator.getName() + "`");
             }
         }
 
@@ -50,7 +50,7 @@ class TypeUtils {
                 .collect(Collectors.toSet());
         for (String argument : resolvedArguments.keySet()) {
             if (!parameterNames.contains(argument) && argument != null) {
-                throw new TypeError("Unknown argument for function " + generator.getName() + ": " + argument);
+                throw new TypeError("Function `" + generator.getName() + "` takes no argument named `" + argument + "`");
             }
         }
 
@@ -69,7 +69,7 @@ class TypeUtils {
 
             if (resolvedArgumentTypeSet == null) {
                 if (parameter.getRequired()) {
-                    throw new TypeError("Missing required argument for function " + generator.getName() + ": " + parameterName);
+                    throw new TypeError("Function `" + generator.getName() + "` takes the required argument `" + parameterName + "`");
                 }
 
                 continue;
@@ -93,7 +93,7 @@ class TypeUtils {
             }
 
             if (!foundMatch) {
-                throw new TypeError("Wrong argument type for function " + generator.getName() + " and argument " + parameterName);
+                throw new TypeError("Wrong argument type for function `" + generator.getName() + "` and argument `" + parameterName + "`");
             }
 
         }
@@ -167,7 +167,7 @@ class TypeUtils {
         if (typeSets.isEmpty()) return Set.of();
 
         Set<List<ResolvedType>> possibleElementTypeCombinations = new HashSet<>();
-        Utils.visitCombinations(possibleElementTypeCombinations::add, typeSets);
+        Utils.visitCombinations(typeSets, possibleElementTypeCombinations::add);
 
         Set<ResolvedType> lcTypeSet = new HashSet<>();
         for (List<ResolvedType> combination : possibleElementTypeCombinations) {
@@ -202,13 +202,13 @@ class TypeUtils {
         if (type1.equals(type2)) return type1;
 
         Set<ResolvedType> parents1 = new HashSet<>();
-        visitParents(type1, x -> {
+        visitTypeAndParents(type1, x -> {
             parents1.add(x);
             return Visitor.CONTINUE;
         }, componentResolver);
 
         ResolvedType[] lowestCover = {null};
-        visitParents(type2, x -> {
+        visitTypeAndParents(type2, x -> {
             if (parents1.contains(x)) {
                 lowestCover[0] = x;
                 return Visitor.STOP;

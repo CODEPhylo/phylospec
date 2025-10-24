@@ -1,6 +1,6 @@
 package org.phylospec.ast;
 
-import org.phylospec.lexer.Token;
+import org.phylospec.lexer.TokenType;
 
 import java.util.Arrays;
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.Objects;
  * {@link Expr.Call}.
  * Expressions are always part of a {@link Stmt}.
  */
-public abstract class Expr {
+public abstract class Expr extends AstNode {
 
     abstract public <S, E, T> E accept(AstVisitor<S, E, T> visitor);
 
@@ -73,12 +73,12 @@ public abstract class Expr {
 
     /** Represents a unary operation, e.g. a negation. */
 	public static class Unary extends Expr {
-		public Unary(Token operator, Expr right) {
+		public Unary(TokenType operator, Expr right) {
 			this.operator = operator;
 			this.right = right;
 		}
 
-		public final Token operator;
+		public final TokenType operator;
         public final Expr right;
 
         @Override
@@ -101,14 +101,14 @@ public abstract class Expr {
 
     /** Represents a binary operation, e.g. addition. */
 	public static class Binary extends Expr {
-		public Binary(Expr left, Token operator, Expr right) {
+		public Binary(Expr left, TokenType operator, Expr right) {
 			this.left = left;
 			this.operator = operator;
 			this.right = right;
 		}
 
 		public final Expr left;
-		public final Token operator;
+		public final TokenType operator;
 		public final Expr right;
 
         @Override

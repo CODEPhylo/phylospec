@@ -1,8 +1,8 @@
 package org.phylospec;
 
 import org.phylospec.ast.AstPrinter;
-import org.phylospec.ast.TypeError;
-import org.phylospec.ast.TypeResolver;
+import org.phylospec.typeresolver.TypeError;
+import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.ast.Stmt;
 import org.phylospec.lexer.Lexer;
@@ -95,7 +95,7 @@ public class PhyloSpec {
 
     /** Report an error related to specific token. */
     public static void error(Token token, String message) {
-        report(token.line, "", message);
+        report(token.range.startLine, "", message);
     }
 
     private static void report(int line, String where, String message) {

@@ -27,7 +27,8 @@ public class Lexer {
 
     private int start = 0;
     private int current = 0;
-    private int line = 1;
+    private int currentLine = 1;
+    private int currentLineStart = 0;
 
     /**
      * Creates a new Lexer capable of reading a PhyloSpec script and
@@ -51,7 +52,8 @@ public class Lexer {
             scanToken();
         }
 
-        tokens.add(new Token(TokenType.EOF, "", null, line));
+        start = current;
+        addToken(TokenType.EOF);
         return tokens;
     }
 
@@ -140,13 +142,15 @@ public class Lexer {
             // EOL tokens
             case '\n':
                 addToken(TokenType.EOL);
-                line++;
+                currentLine++;
+                currentLineStart = current;
                 break;
             case '\r':
                 // we also consider "\r\n" as one new line, as it is done on Windows
                 match('\n');
                 addToken(TokenType.EOL);
-                line++;
+                currentLine++;
+                currentLineStart = current;
                 break;
 
             // whitespace
@@ -174,19 +178,19 @@ public class Lexer {
     private void string() {
         while (peek() != '"' && !isAtEnd()) {
             if (peek() == '\n')
-                line++;
+                currentLine++;
             if (peek() == '\r') {
                 // we also consider "\r\n" as one new line, as it is done on Windows
                 if (peekNext() == '\n') {
                     advance();
                 }
-                line++;
+                currentLine++;
             }
             advance();
         }
 
         if (isAtEnd()) {
-            PhyloSpec.error(line, "Unterminated string.");
+            PhyloSpec.error(currentLine, "Unterminated string.");
             return;
         }
 
@@ -301,6 +305,6 @@ public class Lexer {
      */
     private void addToken(TokenType type, Object literal) {
         String text = source.substring(start, current);
-        tokens.add(new Token(type, text, literal, line));
+        tokens.add(new Token(type, text, literal, currentLine, start - currentLineStart, current - currentLineStart));
     }
 }

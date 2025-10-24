@@ -18,5 +18,16 @@ public enum TokenType {
     TRUE, FALSE, IMPORT,
 
     // terminators
-    EOL, EOF
+    EOL, EOF;
+
+    public static String getLexeme(TokenType token) {
+        return switch (token) {
+            case PLUS -> "+";
+            case MINUS -> "-";
+            case STAR -> "*";
+            case SLASH -> "/";
+            case BANG -> "!";
+            default -> "";
+        };
+    }
 }

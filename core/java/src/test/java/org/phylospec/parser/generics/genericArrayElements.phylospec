@@ -14,5 +14,5 @@ Vector<Distribution<PositiveReal>> arr = [
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Expression of type Vector<Distribution<Real>> cannot be assigned to variable arr of type Vector<Distribution<PositiveReal>>
+// Expression of type `Vector<Distribution<Real>>` cannot be assigned to variable `arr` of type `Vector<Distribution<PositiveReal>>`
 // EXPECT TYPE_ERRORS

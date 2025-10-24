@@ -9,5 +9,5 @@ PositiveReal a = 0 * 50 / 2 + 10.0 + (20.0 + 2) / 3
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Expression of type [NonNegativeReal,Real] cannot be assigned to variable a of type PositiveReal
+// Expression of type `[NonNegativeReal,Real]` cannot be assigned to variable `a` of type `PositiveReal`
 // EXPECT TYPE_ERRORS

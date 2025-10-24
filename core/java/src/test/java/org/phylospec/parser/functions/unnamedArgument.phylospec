@@ -7,5 +7,5 @@ QMatrix b = HKY(10)
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Missing required argument for function HKY
+// Missing required argument for function `HKY`
 // EXPECT TYPE_ERRORS

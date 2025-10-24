@@ -1,13 +1,13 @@
 package org.phylospec.parser;
-import org.phylospec.PhyloSpec;
+import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.AstType;
 import org.phylospec.lexer.Token;
+import org.phylospec.lexer.Range;
 import org.phylospec.lexer.TokenType;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * This class takes a list of tokens (usually obtained using the Lexer)
@@ -36,6 +36,12 @@ public class Parser {
     private int current = 0;
     private boolean skipNewLines = false;
 
+    private final Map<Token, AstNode> tokenAstNodeMap;
+    private final Map<AstNode, Range> astNodeRanges;
+    private final LinkedList<Integer> astNodeStartPositions;
+
+    private final List<ParseEventListener> eventListeners;
+
     /**
      * Creates a new Parser.
      *
@@ -43,6 +49,14 @@ public class Parser {
      */
     public Parser(List<Token> tokens) {
         this.tokens = tokens;
+        this.eventListeners = new ArrayList<>();
+        this.tokenAstNodeMap = new HashMap<>();
+        this.astNodeRanges = new HashMap<>();
+        this.astNodeStartPositions = new LinkedList<>();
+    }
+
+    public void registerEventListener (ParseEventListener listener) {
+        this.eventListeners.add(listener);
     }
 
     /**
@@ -55,16 +69,21 @@ public class Parser {
         List<Stmt> statements = new ArrayList<>();
 
         // skip all EOL until the first statement
-        while (match(TokenType.EOL)) {}
+        skipEOLs();
 
         while (!isAtEnd()) {
-            statements.add(decorated());
+            try {
+                statements.add(decorated());
 
-            if (!isAtEnd()) {
-                consume(TokenType.EOL, "Assignment has to be terminated by a line break.");
+                if (!isAtEnd()) {
+                    consume(TokenType.EOL, "Assignment has to be terminated by a line break.");
 
-                // skip all EOL until the next statement
-                while (match(TokenType.EOL)) {}
+                    // skip all EOL until the next statement
+                    skipEOLs();
+                }
+            } catch (ParseError error) {
+                logError(error);
+                recover();
             }
         }
 
@@ -74,24 +93,28 @@ public class Parser {
     /* parser methods */
 
     private Stmt decorated() {
+        startAstNode();
+
         if (match(TokenType.AT)) {
             Expr decorator = call();
 
             if (!(decorator instanceof Expr.Call)) {
-                throw error(previous(), "Decorators can only be function calls.");
+                throw new ParseError(previous(), "Decorators can only be function calls.");
             }
 
             // skip all EOL until the next statement
-            while (match(TokenType.EOL)) {}
+            skipEOLs();
 
             Stmt statement = decorated();
-            return new Stmt.Decorated((Expr.Call) decorator, statement);
+            return remember(new Stmt.Decorated((Expr.Call) decorator, statement));
         }
 
-        return statement();
+        return remember(statement());
     }
 
     private Stmt statement() {
+        startAstNode();
+
         if (match(TokenType.IMPORT)) {
             List<String> namespace = new ArrayList<>();
             namespace.add(
@@ -104,28 +127,30 @@ public class Parser {
                 );
             }
 
-            return new Stmt.Import(namespace);
+            return remember(new Stmt.Import(namespace));
         }
 
         AstType type = type();
 
-        Token name = consume(TokenType.IDENTIFIER, "Invalid variable name.");
+        Token nameToken = consume(TokenType.IDENTIFIER, "Invalid variable name.");
 
         if (match(TokenType.EQUAL)) {
             Expr expression = expression();
-            return new Stmt.Assignment(type, name.lexeme, expression);
+            return remember(new Stmt.Assignment(type, nameToken.lexeme, expression));
         }
 
         if (match(TokenType.TILDE)) {
             Expr expression = expression();
-            return new Stmt.Draw(type, name.lexeme, expression);
+            return remember(new Stmt.Draw(type, nameToken.lexeme, expression));
         }
 
-        throw error(peek(), "Except assignment or draw.");
+        throw new ParseError(peek(), "Except assignment or draw.");
     }
 
     private AstType type() {
-        Token typeName = consume(TokenType.IDENTIFIER, "Invalid variable type.");
+        startAstNode();
+
+        Token typeNameToken = consume(TokenType.IDENTIFIER, "Invalid variable type.");
 
         if (match(TokenType.LESS)) {
             List<AstType> innerTypes = new ArrayList<>();
@@ -138,10 +163,12 @@ public class Parser {
             // parse closing brackets
             consume(TokenType.GREATER, "Generic type must be closed with a '>'.");
 
-            return new AstType.Generic(typeName.lexeme, innerTypes.toArray(AstType[]::new));
+            return remember(
+                    new AstType.Generic(typeNameToken.lexeme, innerTypes.toArray(AstType[]::new))
+            );
         }
 
-        return new AstType.Atomic(typeName.lexeme);
+        return remember(new AstType.Atomic(typeNameToken.lexeme));
     }
 
     private Expr expression() {
@@ -149,69 +176,85 @@ public class Parser {
     }
 
     private Expr equality() {
+        startAstNode();
+
         Expr expr = comparison();
 
         while (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
-            Token operator = previous();
+            Token operatorToken = previous();
             Expr rightExpr = comparison();
-            expr = new Expr.Binary(expr, operator, rightExpr);
+            expr = new Expr.Binary(expr, operatorToken.type, rightExpr);
         }
 
-        return expr;
+        return remember(expr);
     }
 
     private Expr comparison() {
+        startAstNode();
+
         Expr expr = term();
 
         while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
-            Token operator = previous();
+            Token operatorToken = previous();
             Expr rightExpr = term();
-            expr = new Expr.Binary(expr, operator, rightExpr);
+            expr = new Expr.Binary(expr, operatorToken.type, rightExpr);
         }
 
-        return expr;
+        return remember(expr);
     }
 
     private Expr term() {
+        startAstNode();
+
         Expr expr = factor();
 
         while (match(TokenType.PLUS, TokenType.MINUS)) {
-            Token operator = previous();
+            Token operatorToken = previous();
             Expr rightExpr = factor();
-            expr = new Expr.Binary(expr, operator, rightExpr);
+            expr = new Expr.Binary(expr, operatorToken.type, rightExpr);
         }
 
-        return expr;
+        return remember(expr);
     }
 
     private Expr factor() {
+        startAstNode();
+
         Expr expr = unary();
 
         while (match(TokenType.STAR, TokenType.SLASH)) {
-            Token operator = previous();
+            Token operatorToken = previous();
             Expr rightExpr = unary();
-            expr = new Expr.Binary(expr, operator, rightExpr);
+            expr = new Expr.Binary(expr, operatorToken.type, rightExpr);
         }
 
-        return expr;
+        return remember(expr);
     }
 
     private Expr unary() {
+        startAstNode();
+
         if (match(TokenType.BANG, TokenType.MINUS)) {
-            Token operator = previous();
+            Token operatorToken = previous();
             Expr rightExpr = unary();
-            return new Expr.Unary(operator, rightExpr);
+            return remember(new Expr.Unary(operatorToken.type, rightExpr));
         } else {
-            return call();
+            return remember(call());
         }
     }
 
     private Expr call() {
+        startAstNode();
+
         Expr expr = array();
 
         if (expr instanceof Expr.Variable && match(TokenType.LEFT_PAREN)) {
             // this is a function call
-            String functionName = ((Expr.Variable) expr).variableName;
+
+            // remove the assignment of the variable token, because we will remember it as a call
+            forgetLast();
+
+            Expr.Variable functionName = (Expr.Variable) expr;
 
             // we are in a bracket, let's ignore EOL statements
             boolean oldSkipNewLines = skipNewLines;
@@ -229,10 +272,10 @@ public class Parser {
             expr = new Expr.Get(expr, name.lexeme);
         }
 
-        return expr;
+        return remember(expr);
     }
 
-    private Expr finishCall(String calleeName) {
+    private Expr finishCall(Expr.Variable callee) {
         List<Expr.Argument> arguments = new ArrayList<>();
         if (!check(TokenType.RIGHT_PAREN)) {
             do {
@@ -243,27 +286,32 @@ public class Parser {
 
                 arguments.add(argument());
 
-                if (arguments.get(0).name == null && check(TokenType.COMMA)) {
-                    error(peek(), "Arguments can only be omitted when there is only one argument.");
+                if (arguments.getFirst().name == null && check(TokenType.COMMA)) {
+                    throw new ParseError(peek(), "Arguments can only be omitted when there is only one argument.");
                 }
             } while (match(TokenType.COMMA));
         }
 
-        return new Expr.Call(calleeName, arguments.toArray(Expr.Argument[]::new));
+        return new Expr.Call(callee.variableName, arguments.toArray(Expr.Argument[]::new));
     }
 
     private Expr.Argument argument() {
+        startAstNode();
+
         Expr expression = expression();
 
         if (!(expression instanceof Expr.Variable)) {
-            return new Expr.AssignedArgument(expression);
+            return remember(new Expr.AssignedArgument(expression));
         }
+
+        // remove the assignment of the variable token, because we will remember it as an argument
+        forgetLast();
 
         String argumentName = ((Expr.Variable) expression).variableName;
 
         if (match(TokenType.TILDE)) {
             expression = expression();
-            return new Expr.DrawnArgument(argumentName, expression);
+            return remember(new Expr.DrawnArgument(argumentName, expression));
         }
 
         if (match(TokenType.EQUAL)) {
@@ -272,10 +320,12 @@ public class Parser {
             expression = new Expr.Variable(argumentName);
         }
 
-        return new Expr.AssignedArgument(argumentName, expression);
+        return remember(new Expr.AssignedArgument(argumentName, expression));
     }
 
     private Expr array() {
+        startAstNode();
+
         if (match(TokenType.LEFT_SQUARE_BRACKET)) {
             // we are in a bracket, let's ignore EOL statements
             boolean oldSkipNewLines = skipNewLines;
@@ -286,7 +336,7 @@ public class Parser {
             if (match(TokenType.RIGHT_SQUARE_BRACKET)) {
                 // we have an empty list
                 skipNewLines = oldSkipNewLines;
-                return new Expr.Array(elements);
+                return remember(new Expr.Array(elements));
             }
 
             Expr element = expression();
@@ -296,7 +346,7 @@ public class Parser {
                 if (match(TokenType.RIGHT_SQUARE_BRACKET)) {
                     // the last comma has been a trailing one
                     skipNewLines = oldSkipNewLines;
-                    return new Expr.Array(elements);
+                    return remember(new Expr.Array(elements));
                 }
 
                 element = expression();
@@ -307,18 +357,20 @@ public class Parser {
 
             skipNewLines = oldSkipNewLines;
 
-            return new Expr.Array(elements);
+            return remember(new Expr.Array(elements));
         }
 
-        return primary();
+        return remember(primary());
     }
 
     private Expr primary() {
-        if (match(TokenType.FALSE)) return new Expr.Literal(false);
-        if (match(TokenType.TRUE)) return new Expr.Literal(true);
+        startAstNode();
+
+        if (match(TokenType.FALSE)) return remember(new Expr.Literal(false));
+        if (match(TokenType.TRUE)) return remember(new Expr.Literal(true));
 
         if (match(TokenType.INT, TokenType.FLOAT, TokenType.STRING)) {
-            return new Expr.Literal(previous().literal);
+            return remember(new Expr.Literal(previous().literal));
         }
 
         if (match(TokenType.LEFT_PAREN)) {
@@ -331,14 +383,14 @@ public class Parser {
 
             skipNewLines = oldIgnoreNewLines;
 
-            return new Expr.Grouping(expr);
+            return remember(new Expr.Grouping(expr));
         }
 
         if (match(TokenType.IDENTIFIER)) {
-            return new Expr.Variable(previous().lexeme);
+            return remember(new Expr.Variable(previous().lexeme));
         }
 
-        throw error(peek(), "Expect expression.");
+        throw new ParseError(peek(), "Expect expression.");
     }
 
     /* helper methods to inspect the tokens */
@@ -409,7 +461,7 @@ public class Parser {
     private Token consume(TokenType tokenType, String message) {
         if (check(tokenType)) return advance();
 
-        throw error(peek(), message);
+        throw new ParseError(peek(), message);
     }
 
     /** Checks if the current cursor points to the end of the file. */
@@ -417,12 +469,107 @@ public class Parser {
         return peek().type == TokenType.EOF;
     }
 
-    /* error handling */
-
-    private ParseError error(Token token, String message) {
-        PhyloSpec.error(token, message);
-        return new ParseError();
+    /** Marks the beginning of an AstNode. */
+    private void startAstNode() {
+        astNodeStartPositions.push(current);
     }
 
-    private static class ParseError extends RuntimeException {}
+    /** Associated the tokens since the last {@code startAstNode()} call with the
+     * given parsed {@link AstNode}. */
+    private <T extends AstNode> T remember(T newAstNode) {
+        int lastPosition = astNodeStartPositions.pop();
+
+        Range startRange = tokens.get(lastPosition).range;
+
+        for (int i = lastPosition; i < current; i++) {
+            Token token = tokens.get(i);
+            tokenAstNodeMap.putIfAbsent(token, newAstNode);
+        }
+
+        Range endRange = tokens.get(current - 1).range;
+        Range astNodeRange = Range.combine(startRange, endRange);
+        astNodeRanges.put(newAstNode, astNodeRange);
+
+        return newAstNode;
+    }
+
+    /** Remove the previously made entries in the token-to-ast-node map
+     * since the last {@code startAstNode()} call. This is useful if
+     * the last parsed AstNode is dropped and replaced by a more general
+     * one. */
+    private void forgetLast() {
+        int lastPosition = astNodeStartPositions.peek();
+
+        for (int i = lastPosition; i < current; i++) {
+            Token token = tokens.get(i);
+            tokenAstNodeMap.remove(token);
+        }
+    }
+
+    /** Returns the {@link AstNode} associated with the given {@link Token}.
+     * Returns null if no node was associated.
+     */
+    public AstNode getAstNodeForToken(Token token) {
+        return this.tokenAstNodeMap.get(token);
+    }
+
+    /** Returns the range associated with the given {@link AstNode}. Returns null
+     * if no range was associated. */
+    public Range getRangeForAstNode(AstNode node) {
+        return this.astNodeRanges.get(node);
+    }
+
+    /* error handling */
+
+    private void logError(ParseError error) {
+        for (ParseEventListener listener : eventListeners) {
+            listener.parseErrorDetected(error.token, error.message);
+        }
+    }
+
+    /** Finds the next location in the source string with a valid statement and advances
+     * to that point. */
+    private void recover() {
+        while (!isAtEnd()) {
+            // the next statement has to be preceded by an EOL. let's find it
+            while (peek().type != TokenType.EOL && !isAtEnd()) {
+                advance();
+            }
+
+            skipEOLs();
+
+            // we could now be at the beginning of a new statement, let's check that
+
+            int oldCurrent = current;
+            try {
+                decorated();
+                // we successfully parsed a statement
+                // let's reset cursor and return to the normal parsing loop
+                current = oldCurrent;
+                return;
+            } catch (ParseError ignored) {
+                // we couldn't parse a proper statement, let's search for longer
+                skipEOLs();
+            }
+        }
+    }
+
+    private void skipEOLs() {
+        while (match(TokenType.EOL)) {}
+    }
+
+    private static class ParseError extends RuntimeException {
+        private final Token token;
+        private final String message;
+
+        public ParseError(Token token, String message) {
+            this.token = token;
+            this.message = message;
+        }
+
+        @Override
+        public String getMessage() {
+            return message;
+        }
+    }
 }

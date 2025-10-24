@@ -1,5 +1,7 @@
 package org.phylospec.ast;
 
+import org.phylospec.lexer.TokenType;
+
 /// This class allows to print out a human-readable (sort-of) version
 /// of a given AST statement. It uses the visitor pattern on the AST
 /// statement.
@@ -55,12 +57,12 @@ public class AstPrinter implements AstVisitor<String, String, String> {
 
     @Override
     public String visitUnary(Expr.Unary expr) {
-        return "(" + expr.operator.lexeme + " " + expr.right.accept(this) + ")";
+        return "(" + TokenType.getLexeme(expr.operator) + " " + expr.right.accept(this) + ")";
     }
 
     @Override
     public String visitBinary(Expr.Binary expr) {
-        return "(" + expr.operator.lexeme + " " + expr.left.accept(this) + " " + expr.right.accept(this) + ")";
+        return "(" + TokenType.getLexeme(expr.operator) + " " + expr.left.accept(this) + " " + expr.right.accept(this) + ")";
     }
 
     @Override
@@ -131,4 +133,5 @@ public class AstPrinter implements AstVisitor<String, String, String> {
         result += ">";
         return result;
     }
+
 }

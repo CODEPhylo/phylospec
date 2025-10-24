@@ -8,7 +8,7 @@ import java.util.Objects;
  * statements. This class has a number of subclasses for different types of expressions
  * like {@link Stmt.Assignment} or {@link Stmt.Draw}.
  */
-public abstract class Stmt {
+public abstract class Stmt extends AstNode {
 
     abstract public <S, E, T> S accept(AstVisitor<S, E, T> visitor);
 
@@ -74,9 +74,9 @@ public abstract class Stmt {
      * The decorator itself is always a function call, whereas the decorated statement
      * can be any statement (even another decorated one).*/
     public static class Decorated extends Stmt {
-        public Decorated(Expr.Call decorator, Stmt statememt) {
+        public Decorated(Expr.Call decorator, Stmt statement) {
             this.decorator = decorator;
-            this.statememt = statememt;
+            this.statememt = statement;
         }
 
         public final Expr.Call decorator;

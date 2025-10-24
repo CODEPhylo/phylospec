@@ -1,0 +1,47 @@
+{
+  "name": "PhyloSpec",
+  "description": "This is a VS Code extension providing syntax highlighting and an LSP for the PhyloSpec language.",
+  "author": "CODEPhylo steering group",
+  "license": "MIT",
+  "version": "1.0.0",
+  "categories": [],
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "main": "./out/extension",
+  "contributes": {
+    "languages": [
+      {
+        "id": "phylospec",
+        "aliases": [
+          "PhyloSpec",
+          "phylospec"
+        ],
+        "extensions": [
+          ".phylospec"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "phylospec",
+        "scopeName": "source.phylospec",
+        "path": "./syntaxes/phylospec.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -b",
+    "watch": "tsc -b -w"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^8.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.7",
+    "@types/vscode": "^1.81.0",
+    "typescript": "^5.2.2"
+  }
+}

@@ -1,7 +1,7 @@
 package org.phylospec.components;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.phylospec.ast.TypeError;
+import org.phylospec.typeresolver.TypeError;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -134,7 +134,7 @@ public class ComponentResolver {
 
     /** Returns the {@link Generator} corresponding to the given name. */
     public List<Generator> resolveGenerator(String generatorName) {
-        return importedGenerators.get(generatorName);
+        return importedGenerators.getOrDefault(generatorName, List.of());
     }
 
     /** Returns whether a given typeName can be resolved. */
@@ -147,4 +147,13 @@ public class ComponentResolver {
         return importedTypes.get(typeName);
     }
 
+    /** Returns all imported generators. */
+    public Map<String, List<Generator>> getImportedGenerators() {
+        return importedGenerators;
+    }
+
+    /** Returns all imported types. */
+    public Map<String, Type> getImportedTypes() {
+        return importedTypes;
+    }
 }

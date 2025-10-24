@@ -1,15 +1,12 @@
-package org.phylospec.ast;
+package org.phylospec.typeresolver;
 
 import org.junit.jupiter.api.Test;
 import org.phylospec.components.ComponentResolver;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TypeUtilsTest {
     @Test
@@ -29,6 +26,12 @@ public class TypeUtilsTest {
         ));
 
         assertTrue(TypeUtils.covers(
+                ResolvedType.fromString("Real", componentResolver),
+                ResolvedType.fromString("NonNegativeReal", componentResolver),
+                componentResolver
+        ));
+
+        assertTrue(TypeUtils.covers(
                 ResolvedType.fromString("Vector<Real>", componentResolver),
                 ResolvedType.fromString("Vector<PositiveReal>", componentResolver),
                 componentResolver
@@ -45,6 +48,20 @@ public class TypeUtilsTest {
                 ResolvedType.fromString("Vector<Real>", componentResolver),
                 componentResolver
         ));
+    }
+
+    @Test
+    public void testGetLowestCover() throws IOException {
+        ComponentResolver componentResolver = buildComponentResolver();
+
+        assertEquals(
+                ResolvedType.fromString("Real", componentResolver),
+                TypeUtils.getLowestCover(
+                    ResolvedType.fromString("Real", componentResolver),
+                    ResolvedType.fromString("NonNegativeReal", componentResolver),
+                    componentResolver
+            )
+        );
     }
 
     private static ComponentResolver buildComponentResolver() throws IOException {

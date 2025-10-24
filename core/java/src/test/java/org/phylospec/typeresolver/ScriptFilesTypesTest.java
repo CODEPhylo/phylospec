@@ -1,10 +1,9 @@
-package org.phylospec.parser;
+package org.phylospec.typeresolver;
 
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.phylospec.ast.Stmt;
-import org.phylospec.ast.TypeError;
-import org.phylospec.ast.TypeResolver;
+import org.phylospec.parser.Parser;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;

@@ -1,4 +1,4 @@
-package org.phylospec.ast;
+package org.phylospec.typeresolver;
 
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Type;
@@ -94,6 +94,7 @@ public class ResolvedType {
 
         Set<ResolvedType> resultingTypeSet = new HashSet<>();
         visitCombinations(
+                inferredTypeParameters,
                 typeParamList -> {
                     Map<String, ResolvedType> typeParamSet = new HashMap<>();
                     for (int i = 0; i < typeParamList.size(); i++) {
@@ -104,8 +105,7 @@ public class ResolvedType {
                     }
 
                     resultingTypeSet.add(new ResolvedType(typeComponent, typeParamSet));
-                },
-                inferredTypeParameters
+                }
         );
 
         return resultingTypeSet;
@@ -121,5 +121,26 @@ public class ResolvedType {
     @Override
     public int hashCode() {
         return Objects.hash(parameterTypes, typeComponent);
+    }
+
+    @Override
+    public String toString() {
+        if (getParametersNames().isEmpty())
+            return typeComponent.getName();
+
+        StringBuilder string = new StringBuilder();
+        string.append(typeComponent.getName());
+
+        string.append("<");
+        for (String typeParameter : getParametersNames()) {
+            if (getParameterTypes().containsKey(typeParameter)) {
+                string.append(getParameterTypes().get(typeParameter).toString());
+            } else {
+                string.append(typeParameter);
+            }
+        }
+        string.append(">");
+
+        return string.toString();
     }
 }
