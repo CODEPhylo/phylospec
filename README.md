@@ -6,7 +6,27 @@ A specification for phylogenetic modeling components and their interfaces.
 
 PhyloSpec provides a standardized way to describe phylogenetic modeling components (distributions, functions, and types) that can be shared across different phylogenetic inference engines. Core of PhyloSpec is a modeling language designed to describe phylogenetic models.
 
-This enables a more transparent ecosystem, where users can choose the right tool for their job and engines can play to their respective strengths. Furtermore, it allows shared tooling like the [Bayesian Model Builder](https://github.com/alexeid/bayesian-model-builder) web application to construct models that are compatible with multiple engines while maintaining type safety and proper constraints. Having a unified way to specify models also opens up possibilitites like cross-engine model validation and benchmarks.
+This enables a more transparent ecosystem, where users can choose the right tool for the job and engines can play to their respective strengths. Having a unified way to specify models opens up possibilitites like cross-engine model validation and benchmarks. Furtermore, it allows shared tooling like the [Bayesian Model Builder](https://github.com/alexeid/bayesian-model-builder) web application to construct models that are compatible with multiple engines.
+
+A simple PhyloSpec model might look like as follows:
+
+```
+Alignment observedAlignment = nexus(
+  file="alignment.nexus"
+)
+
+QMatrix Q = HKY(
+	kappa ~ LogNormal(sdlog=0.5, meanlog=1.0),
+	baseFrequencies ~ Dirichlet(alpha=[2.0, 2.0, 2.0, 2.0]),
+)
+Tree tree ~ Coalescent(
+	taxa = observedAlignment.taxa,
+	populationSize ~ LogNormal(meanlog=3.0, sdlog=2.0),
+)
+
+@observedAs(observedAlignment)
+Alignment alignment ~ PhyloCTMC(Q, tree)
+```
 
 The specification consists of:
 
