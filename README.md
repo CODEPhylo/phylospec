@@ -4,7 +4,9 @@ A specification for phylogenetic modeling components and their interfaces.
 
 ## Overview
 
-PhyloSpec provides a standardized way to describe phylogenetic modeling components (distributions, functions, and types) that can be shared across different phylogenetic inference engines. It enables front-ends like the [Bayesian Model Builder](https://github.com/alexeid/bayesian-model-builder) web application to construct models that are compatible with multiple engines while maintaining type safety and proper constraints.
+PhyloSpec provides a standardized way to describe phylogenetic modeling components (distributions, functions, and types) that can be shared across different phylogenetic inference engines. Core of PhyloSpec is a modeling language designed to describe phylogenetic models.
+
+This enables a more transparent ecosystem, where users can choose the right tool for their job and engines can play to their respective strengths. Furtermore, it allows shared tooling like the [Bayesian Model Builder](https://github.com/alexeid/bayesian-model-builder) web application to construct models that are compatible with multiple engines while maintaining type safety and proper constraints. Having a unified way to specify models also opens up possibilitites like cross-engine model validation and benchmarks.
 
 The specification consists of:
 
@@ -12,8 +14,7 @@ The specification consists of:
 2. **ANTLR Grammar** - Machine-readable grammar for the language
 3. **JSON Component Library Format and Core Component Library** - Machine-readable specifications for types, distributions, and functions
 4. **Engine Integration Format** - Standardized way for engines to describe their capabilities
-5. **Java Reference Implementation** - Core type system with annotations
-6. **Documentation** - Comprehensive guides for types, distributions, functions, and constraints
+5. **Documentation** - Comprehensive guides for types, distributions, functions, and constraints
 
 ## Key Features
 
@@ -22,6 +23,12 @@ The specification consists of:
 - **Extensible** - Engines can add custom components while maintaining compatibility
 - **Dimension-Aware** - Dynamic sizing based on model structure
 - **Machine-Readable** - JSON format enables automated tooling
+
+## First Steps
+
+- Check out the [introduction to the PhyloSpec language](docs/language.md).
+- Check out the [other documentation](docs).
+- Install and try out the [VS Code extension](tools/vscode/README.md) featuring syntax highlighting, type checking, auto-completion, and information-on-hover.
 
 ## Repository Structure
 
@@ -32,10 +39,18 @@ The specification consists of:
 │       ├── src/main/java/         # Type system and annotations
 │       │   └── org/phylospec/
 │       │       ├── annotations/   # PhyloSpec annotations
+│       │       ├── ast/           # Nodes of syntax tree
+│       │       ├── components/    # Classes corresponding to components in component libraries
+│       │       ├── domain/        # Counded primitive types (PositiveReal, Probability, etc.)
 │       │       ├── factory/       # Type factory utilities
-│       │       ├── primitives/    # Primitive types (Real, Int, etc.)
+│       │       ├── lexer/         # Lexer
+│       │       ├── lsp/           # LSP Server
+│       │       ├── parser/        # Parser
+│       │       ├── typeresolver/  # Type resolver and static type checker
 │       │       └── types/         # Complex types (Matrix, Vector, etc.)
-│       └── src/test/              # Unit tests
+│       └── src/test/              # Unit and integration tests
+├── tools/                         # Related tools
+│   └── vscode/                    # VS Code Extension
 ├── docs/                          # Documentation
 │   ├── language.md                # Written language specification
 │   ├── types.md                   # Type system specification
@@ -159,6 +174,7 @@ To make a GUI for PhyloSpec:
 - ✅ Core PhyloSpec component library (`schema/component-library.schema.json`)
 - ✅ Java type system implementation (`core/java`)
 - ✅ Integration with Bayesian Model Builder
+- ✅ Parser, Type Checker, and LSP
 - 📋 Engine Integration Format (planned)
 - 📋 ANTLR grammar (planned)
 - 📋 Additional validation tools (planned)
