@@ -41,7 +41,7 @@ Count numTaxa = alignment.numTaxa
 TaxonSet taxa = alignment.taxa
 ```
 
-So far, we only have determinstic variables. Let's change that!
+So far, we only have deterministic variables. Let's change that!
 
 ```phylospec
 Distribution<Real> normalDistribution = Normal(mean=0.0, sd=1.0)
@@ -50,7 +50,7 @@ Real drawnValue ~ normalDistribution
 
 Here, `Normal` is a function which returns a `Distribution<Real>` object (a distribution on real numbers). This distribution is then assigned to the *random variable* `drawnValue` using the `~` operator. This is where the randomness in our model comes from!
 
-Use the `=` operator for assignments of constant values or for determinstic transformations of random variables. `~` assigns a distribution to a random variable, hence it always has to be preceded by a `Distribution` object.
+Use the `=` operator for assignments of constant values or for deterministic transformations of random variables. `~` assigns a distribution to a random variable, hence it always has to be preceded by a `Distribution` object.
 
 Some examples of valid and invalid statements:
 
@@ -112,8 +112,8 @@ Real b = log(5) // log takes a PositiveReal, so 5 is a PositiveReal
 One reason why PhyloSpec uses types is to make scripts more readable. One part of this is the use of aliases:
 
 ```
-Rate birtRate ~ LogNormal(logMean=1, logSd=2)
-Tree tree ~ Yule(birtRate)
+Rate birthRate ~ LogNormal(logMean=1, logSd=2)
+Tree tree ~ Yule(birthRate)
 ```
 
 If type `A` is an alias of type `B`, the two of them can be used interchangeably.

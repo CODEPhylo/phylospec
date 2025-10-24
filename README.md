@@ -6,9 +6,9 @@ A specification for phylogenetic modeling components and their interfaces.
 
 PhyloSpec provides a standardized way to describe phylogenetic modeling components (distributions, functions, and types) that can be shared across different phylogenetic inference engines. Core of PhyloSpec is a modeling language designed to describe phylogenetic models.
 
-This enables a more transparent ecosystem, where users can choose the right tool for the job and engines can play to their respective strengths. Having a unified way to specify models opens up possibilitites like cross-engine model validation and benchmarks. Furtermore, it allows shared tooling like the [Bayesian Model Builder](https://github.com/alexeid/bayesian-model-builder) web application to construct models that are compatible with multiple engines.
+This enables a more transparent ecosystem, where users can choose the right tool for the job and engines can play to their respective strengths. Having a unified way to specify models opens up possibilities like cross-engine model validation and benchmarks. Furthermore, it allows shared tooling like the [Bayesian Model Builder](https://github.com/alexeid/bayesian-model-builder) web application to construct models that are compatible with multiple engines.
 
-A simple PhyloSpec model might look like as follows:
+A (very) simple PhyloSpec model might look like as follows:
 
 ```
 Alignment observedAlignment = nexus(
@@ -61,7 +61,7 @@ The specification consists of:
 │       │       ├── annotations/   # PhyloSpec annotations
 │       │       ├── ast/           # Nodes of syntax tree
 │       │       ├── components/    # Classes corresponding to components in component libraries
-│       │       ├── domain/        # Counded primitive types (PositiveReal, Probability, etc.)
+│       │       ├── domain/        # Bounded primitive types (PositiveReal, Probability, etc.)
 │       │       ├── factory/       # Type factory utilities
 │       │       ├── lexer/         # Lexer
 │       │       ├── lsp/           # LSP Server
@@ -84,7 +84,7 @@ The specification consists of:
 
 ## JSON Component Library Format
 
-PhyloSpec uses a standadized JSON format to describe available components. It's used to define the [**core component library**](schema/phylospec-core-component-library.json) and allows engine and package developers to define **additional external component libraries**. A simplified example looks as follows:
+PhyloSpec uses a standardized JSON format to describe available components. It's used to define the [**core component library**](schema/phylospec-core-component-library.json) and allows engine and package developers to define **additional external component libraries**. A simplified example looks as follows:
 
 ```json
 {
@@ -120,7 +120,7 @@ PhyloSpec uses a standadized JSON format to describe available components. It's 
 
 ## JSON Engine Integration Format
 
-The **engine integration format** allows engines to document engine-specific limitations in a standadized and machine-readable way. The limitations include unsupported core components, arguments which cannot be random variables, and more.
+The **engine integration format** allows engines to document engine-specific limitations in a standardized and machine-readable way. The limitations include unsupported core components, arguments which cannot be random variables, and more.
 
 ## Java Reference Implementation
 
@@ -191,7 +191,7 @@ To make a GUI for PhyloSpec:
 ## Current Status
 
 - ✅ JSON schema for core component library (`schema/component-library.schema.json`)
-- ✅ Core PhyloSpec component library (`schema/component-library.schema.json`)
+- ✅ Core PhyloSpec component library (`schema/phylospec-core-component-library.json`)
 - ✅ Java type system implementation (`core/java`)
 - ✅ Integration with Bayesian Model Builder
 - ✅ Parser, Type Checker, and LSP
