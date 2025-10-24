@@ -288,17 +288,7 @@ Exponential function.
 |-----------|--------|-------------|---------|----------|
 | `x`       | `Real` | Input value | None    | Yes      |
 
-## 8. Constructor Functions
-
-PhyloSpec also includes constructor functions for creating distribution objects. These have the same names and parameters as their corresponding distributions but return distribution objects rather than sampled values. For example:
-
-- `Normal(mean: Real, sd: PositiveReal) -> Normal` - Creates a Normal distribution object
-- `Gamma(shape: PositiveReal, rate: PositiveReal) -> Gamma` - Creates a Gamma distribution object
-- `Coalescent(populationSize: PositiveReal, taxa?: TaxonSet) -> Coalescent` - Creates a Coalescent distribution object
-
-For a complete list of distribution constructors and their parameters, see the [distributions documentation](distributions.md).
-
-## 9. Implementation Requirements
+## 8. Implementation Requirements
 
 Language implementations must:
 
@@ -312,15 +302,15 @@ Language implementations must:
 8. Implement proper I/O handling for file-based functions
 9. Maintain package/namespace organization
 
-### 9.1 Parameter Order
+### 8.1 Parameter Order
 
 When a language uses positional parameters, they should follow the order listed in each signature.
 
-### 9.2 Optional Parameters
+### 8.2 Optional Parameters
 
 Parameters with a `?` in their type or that have default values are optional. Implementations must handle their absence appropriately.
 
-### 9.3 File I/O
+### 8.3 File I/O
 
 Functions with `ioHints` are designed to load data from files. Implementations should:
 - Validate file existence and readability

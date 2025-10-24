@@ -4,7 +4,29 @@ A specification for phylogenetic modeling components and their interfaces.
 
 ## Overview
 
-PhyloSpec provides a standardized way to describe phylogenetic modeling components (distributions, functions, and types) that can be shared across different phylogenetic inference engines. It enables front-ends like the [Bayesian Model Builder](https://github.com/alexeid/bayesian-model-builder) web application to construct models that are compatible with multiple engines while maintaining type safety and proper constraints.
+PhyloSpec provides a standardized way to describe phylogenetic modeling components (distributions, functions, and types) that can be shared across different phylogenetic inference engines. Core of PhyloSpec is a modeling language designed to describe phylogenetic models.
+
+This enables a more transparent ecosystem, where users can choose the right tool for the job and engines can play to their respective strengths. Having a unified way to specify models opens up possibilities like cross-engine model validation and benchmarks. Furthermore, it allows shared tooling like the [Bayesian Model Builder](https://github.com/alexeid/bayesian-model-builder) web application to construct models that are compatible with multiple engines.
+
+A (very) simple PhyloSpec model might look like as follows:
+
+```
+Alignment observedAlignment = nexus(
+  file="alignment.nexus"
+)
+
+QMatrix Q = HKY(
+	kappa ~ LogNormal(sdlog=0.5, meanlog=1.0),
+	baseFrequencies ~ Dirichlet(alpha=[2.0, 2.0, 2.0, 2.0]),
+)
+Tree tree ~ Coalescent(
+	taxa = observedAlignment.taxa,
+	populationSize ~ LogNormal(meanlog=3.0, sdlog=2.0),
+)
+
+@observedAs(observedAlignment)
+Alignment alignment ~ PhyloCTMC(Q, tree)
+```
 
 The specification consists of:
 
@@ -12,8 +34,7 @@ The specification consists of:
 2. **ANTLR Grammar** - Machine-readable grammar for the language
 3. **JSON Component Library Format and Core Component Library** - Machine-readable specifications for types, distributions, and functions
 4. **Engine Integration Format** - Standardized way for engines to describe their capabilities
-5. **Java Reference Implementation** - Core type system with annotations
-6. **Documentation** - Comprehensive guides for types, distributions, functions, and constraints
+5. **Documentation** - Comprehensive guides for types, distributions, functions, and constraints
 
 ## Key Features
 
@@ -22,6 +43,12 @@ The specification consists of:
 - **Extensible** - Engines can add custom components while maintaining compatibility
 - **Dimension-Aware** - Dynamic sizing based on model structure
 - **Machine-Readable** - JSON format enables automated tooling
+
+## First Steps
+
+- Check out the [introduction to the PhyloSpec language](docs/language.md).
+- Check out the [other documentation](docs).
+- Install and try out the [VS Code extension](tools/vscode/README.md) featuring syntax highlighting, type checking, auto-completion, and information-on-hover.
 
 ## Repository Structure
 
@@ -32,10 +59,18 @@ The specification consists of:
 │       ├── src/main/java/         # Type system and annotations
 │       │   └── org/phylospec/
 │       │       ├── annotations/   # PhyloSpec annotations
+│       │       ├── ast/           # Nodes of syntax tree
+│       │       ├── components/    # Classes corresponding to components in component libraries
+│       │       ├── domain/        # Bounded primitive types (PositiveReal, Probability, etc.)
 │       │       ├── factory/       # Type factory utilities
-│       │       ├── primitives/    # Primitive types (Real, Int, etc.)
+│       │       ├── lexer/         # Lexer
+│       │       ├── lsp/           # LSP Server
+│       │       ├── parser/        # Parser
+│       │       ├── typeresolver/  # Type resolver and static type checker
 │       │       └── types/         # Complex types (Matrix, Vector, etc.)
-│       └── src/test/              # Unit tests
+│       └── src/test/              # Unit and integration tests
+├── tools/                         # Related tools
+│   └── vscode/                    # VS Code Extension
 ├── docs/                          # Documentation
 │   ├── language.md                # Written language specification
 │   ├── types.md                   # Type system specification
@@ -49,7 +84,7 @@ The specification consists of:
 
 ## JSON Component Library Format
 
-PhyloSpec uses a standadized JSON format to describe available components. It's used to define the [**core component library**](schema/phylospec-core-component-library.json) and allows engine and package developers to define **additional external component libraries**. A simplified example looks as follows:
+PhyloSpec uses a standardized JSON format to describe available components. It's used to define the [**core component library**](schema/phylospec-core-component-library.json) and allows engine and package developers to define **additional external component libraries**. A simplified example looks as follows:
 
 ```json
 {
@@ -85,7 +120,7 @@ PhyloSpec uses a standadized JSON format to describe available components. It's 
 
 ## JSON Engine Integration Format
 
-The **engine integration format** allows engines to document engine-specific limitations in a standadized and machine-readable way. The limitations include unsupported core components, arguments which cannot be random variables, and more.
+The **engine integration format** allows engines to document engine-specific limitations in a standardized and machine-readable way. The limitations include unsupported core components, arguments which cannot be random variables, and more.
 
 ## Java Reference Implementation
 
@@ -156,9 +191,10 @@ To make a GUI for PhyloSpec:
 ## Current Status
 
 - ✅ JSON schema for core component library (`schema/component-library.schema.json`)
-- ✅ Core PhyloSpec component library (`schema/component-library.schema.json`)
+- ✅ Core PhyloSpec component library (`schema/phylospec-core-component-library.json`)
 - ✅ Java type system implementation (`core/java`)
 - ✅ Integration with Bayesian Model Builder
+- ✅ Parser, Type Checker, and LSP
 - 📋 Engine Integration Format (planned)
 - 📋 ANTLR grammar (planned)
 - 📋 Additional validation tools (planned)
