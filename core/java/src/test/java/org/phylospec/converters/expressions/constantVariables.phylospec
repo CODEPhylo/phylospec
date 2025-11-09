@@ -3,3 +3,4 @@ Integer b = 100
 String c = "Hallo"
 Boolean d = true
 Vector<Real> f = [1.0, 2.0]
+Integer e = -100;

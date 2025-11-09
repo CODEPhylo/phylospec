@@ -1,6 +1,7 @@
 package org.phylospec.converters;
 
 import org.phylospec.ast.*;
+import org.phylospec.lexer.TokenType;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 
@@ -98,12 +99,28 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
 
     @Override
     public StringBuilder visitUnary(Expr.Unary expr) {
-        return null;
+        if (expr.operator == TokenType.MINUS) {
+            return new StringBuilder().append("-").append(expr.right.accept(this));
+        }
+        throw new LPhyConversionError("Unary operation " + TokenType.getLexeme(expr.operator) + " is not supported in LPhy.");
     }
 
     @Override
     public StringBuilder visitBinary(Expr.Binary expr) {
-        return null;
+        StringBuilder left = expr.left.accept(this);
+        StringBuilder right = expr.right.accept(this);
+
+        if (expr.operator == TokenType.MINUS) {
+            return new StringBuilder().append(left).append(" - ").append(right);
+        } else if (expr.operator == TokenType.PLUS) {
+            return new StringBuilder().append(left).append(" + ").append(right);
+        } else if (expr.operator == TokenType.STAR) {
+            return new StringBuilder().append(left).append(" * ").append(right);
+        } else if (expr.operator == TokenType.SLASH) {
+            return new StringBuilder().append(left).append(" / ").append(right);
+        }
+
+        throw new LPhyConversionError("Binary operation " + TokenType.getLexeme(expr.operator) + " is not supported in LPhy.");
     }
 
     @Override
@@ -123,7 +140,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
 
     @Override
     public StringBuilder visitGrouping(Expr.Grouping expr) {
-        return null;
+        return new StringBuilder().append("(").append(expr.expression.accept(this)).append(")");
     }
 
     @Override
@@ -168,5 +185,11 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         }
 
         return builder;
+    }
+
+    private class LPhyConversionError extends RuntimeException {
+        public LPhyConversionError(String s) {
+            super(s);
+        }
     }
 }
