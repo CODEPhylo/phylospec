@@ -1,0 +1,9 @@
+model {
+    a ~ Exp(mean=1/(100));
+    b ~ Normal(mean=100, sd=10);
+    c ~ LogNormal(meanlog=100, sdlog=10);
+    d ~ Gamma(shape=100, scale=1/(10));
+    e ~ Beta(alpha=100, beta=20);
+    f ~ Uniform(lower=0.0, upper=1.0);
+    g ~ Dirichlet(conc=[1.0, 2.0]);
+}

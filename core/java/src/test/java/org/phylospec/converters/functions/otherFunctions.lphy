@@ -1,0 +1,3 @@
+data {
+    a = DiscretizeGamma(shape=2.0, ncat=4);
+}

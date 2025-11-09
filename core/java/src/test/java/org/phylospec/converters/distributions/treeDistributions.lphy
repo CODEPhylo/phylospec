@@ -1,0 +1,6 @@
+model {
+    a ~ Yule(lambda=10.0);
+    b ~ FossilBirthDeathTree(lambda=10.0, mu=5.0, rho=1.0);
+    c ~ BirthDeath(lambda=10.0, mu=5.0, rootAge=20.0);
+    d ~ Coalescent(theta=200);
+}

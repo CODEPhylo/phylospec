@@ -5,8 +5,7 @@ import org.phylospec.lexer.TokenType;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, Void> {
 
@@ -74,7 +73,9 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
 
     @Override
     public StringBuilder visitDraw(Stmt.Draw stmt) {
-        return null;
+        StringBuilder builder = new StringBuilder();
+        builder.append(stmt.name).append(" ~ ").append(stmt.expression.accept(this)).append(";");
+        return remember(stmt, builder);
     }
 
     @Override
@@ -125,12 +126,16 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
 
     @Override
     public StringBuilder visitCall(Expr.Call expr) {
-        return null;
+        Map<String, String> arguments = new HashMap<>();
+        for (Expr.Argument arg : expr.arguments) {
+            arguments.put(arg.name, arg.accept(this).toString());
+        }
+        return LPhyGeneratorMapping.map(expr.functionName, arguments);
     }
 
     @Override
     public StringBuilder visitAssignedArgument(Expr.AssignedArgument expr) {
-        return null;
+        return expr.expression.accept(this);
     }
 
     @Override
@@ -187,7 +192,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         return builder;
     }
 
-    private class LPhyConversionError extends RuntimeException {
+    static class LPhyConversionError extends RuntimeException {
         public LPhyConversionError(String s) {
             super(s);
         }

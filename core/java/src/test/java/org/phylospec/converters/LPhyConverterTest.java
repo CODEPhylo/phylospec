@@ -3,9 +3,11 @@ package org.phylospec.converters;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.phylospec.ast.Stmt;
+import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
+import org.phylospec.typeresolver.TypeResolver;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -76,6 +78,15 @@ public class LPhyConverterTest {
             List<Token> tokens = lexer.scanTokens();
             Parser parser = new Parser(tokens);
             List<Stmt> statements = parser.parse();
+
+            // Resolve all types
+            ComponentResolver componentResolver = new ComponentResolver();
+            componentResolver.registerLibraryFromFile("../../schema/phylospec-core-component-library.json");
+            componentResolver.importEntireNamespace(List.of("phylospec"));
+            TypeResolver resolver = new TypeResolver(componentResolver);
+            for (Stmt statement : statements) {
+                statement.accept(resolver);
+            }
 
             // Convert AST to LPhy using LPhyConverter
             String actualLPhyString = LPhyConverter.convertToLphy(statements).replace("\t", "    ");

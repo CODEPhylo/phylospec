@@ -1,0 +1,4 @@
+data {
+    a = readNexus(file="hallo.nex");
+    b = readFasta(file="hallo.nex");
+}

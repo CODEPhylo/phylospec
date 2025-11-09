@@ -1,0 +1,4 @@
+Tree a ~ Yule(birthRate=10.0)
+Tree b ~ FossilBirthDeath(birthRate=10.0, deathRate=5.0, samplingRate=1.0)
+Tree c ~ BirthDeath(birthRate=10.0, deathRate=5.0, rootHeight=20.0)
+Tree d ~ Coalescent(populationSize=200)

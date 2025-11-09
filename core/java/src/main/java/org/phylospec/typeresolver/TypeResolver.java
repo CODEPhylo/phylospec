@@ -383,6 +383,26 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
                 x -> new ResolvedType(vectorComponent, Map.of("T", x))
         ).collect(Collectors.toSet());
 
+        // we check the edge case where we have an array of number literals adding up to 1
+        boolean onlyNumberLiterals = true;
+        double summedUpLiterals = 0.0;
+        for (Expr element : expr.elements) {
+            if (!(element instanceof Expr.Literal)) {
+                onlyNumberLiterals = false;
+                break;
+            }
+            if (!(((Expr.Literal) element).value instanceof Double) && !(((Expr.Literal) element).value instanceof Float)) {
+                onlyNumberLiterals = false;
+                break;
+            }
+
+            summedUpLiterals += (Double) ((Expr.Literal) element).value;
+        }
+        if (Math.abs(summedUpLiterals - 1.0) < 1e-10) {
+            // this is a simplex
+            arrayTypeSet.add(ResolvedType.fromString("Simplex", componentResolver));
+        }
+
         return remember(expr, arrayTypeSet);
     }
 
@@ -468,7 +488,6 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
 
     private Set<ResolvedType> remember(Expr expr, Set<ResolvedType> resolvedType) {
         resolvedTypes.put(expr, resolvedType);
-        System.out.println("Remember " + expr.accept(printer) + " with " + printType(resolvedType));
         return resolvedType;
     }
 
@@ -479,11 +498,6 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
 
     private ResolvedType remember(String variableName, ResolvedType resolvedType) {
         variableTypes.put(variableName, resolvedType);
-        if (resolvedType != null) {
-            System.out.println("Remember " + variableName + " with " + printType(Set.of(resolvedType)));
-        } else {
-            System.out.println("Remember " + variableName + " with unknown type");
-        }
         return resolvedType;
     }
 
