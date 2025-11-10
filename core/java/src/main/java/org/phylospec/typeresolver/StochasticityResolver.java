@@ -20,6 +20,7 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
         this.variableStochasticityMap = new HashMap<>();
     }
 
+    /** Returns the stochasticity of the expression corresponding to the given AST node. */
     public Stochasticity getStochasticity(AstNode node) {
         return stochasticityMap.get(node);
     }

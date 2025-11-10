@@ -10,6 +10,14 @@ import org.phylospec.typeresolver.TypeResolver;
 
 import java.util.*;
 
+/// This class converts parsed PhyloSpec statements into an LPhy script.
+///
+/// Usage:
+/// ```
+/// List<Stmt> statements = parser.parse();
+/// String lphyString = LPhyConverter.convertToLPhy(statements, componentResolver);
+///```
+///
 public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, Void> {
 
     private final List<String> dataStatements;
@@ -18,6 +26,9 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     private final TypeResolver typeResolver;
     private final Set<String> variableNames;
 
+    /**
+     * Private constructor. Use {@code LPhyConverter.convertToLPhy}.
+     */
     private LPhyConverter(List<Stmt> statements, ComponentResolver componentResolver) {
         dataStatements = new ArrayList<>();
         modelStatements = new ArrayList<>();
@@ -33,21 +44,28 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         variableNames = new HashSet<>(typeResolver.variableTypes.keySet());
     }
 
+    /**
+     * Converts the given statements into an LPhy script.
+     */
     public static String convertToLPhy(List<Stmt> statements, ComponentResolver componentResolver) {
         LPhyConverter converter = new LPhyConverter(statements, componentResolver);
 
+        // traverse the syntax tree to collect the LPhy statements
         for (Stmt statement : statements) {
             statement.accept(converter);
         }
 
         StringBuilder result = new StringBuilder();
 
+
+        // write the data block
         result.append("data {\n");
         for (String dataStatement : converter.dataStatements) {
             result.append("\t").append(dataStatement).append("\n");
         }
         result.append("}\n");
 
+        // write the model block
         result.append("model {\n");
         for (String modelStatement : converter.modelStatements) {
             result.append("\t").append(modelStatement).append("\n");
@@ -59,30 +77,37 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
 
     @Override
     public StringBuilder visitDecoratedStmt(Stmt.Decorated stmt) {
+        // make sure we have a @observedAs decorator with one argument
         if (!stmt.decorator.functionName.equals("observedAs")) {
             throw new LPhyConversionError("Decorator " + stmt.decorator.functionName + " is not supported in LPhy.");
         }
-
         if (stmt.decorator.arguments.length != 1) {
             throw new LPhyConversionError("Decorator " + stmt.decorator.functionName + " requires exactly one argument.");
         }
 
-        String observedVariable = stmt.decorator.arguments[0].accept(this).toString();
-
         stmt.statement.accept(this);
 
-        String randomVariable;
+        // this is an @observedAs decorator of the form
+        // @observedAs(<observedVariableName>)
+        // Type <randomVariableName> ~ ...
+
+        String observedVariableName = stmt.decorator.arguments[0].accept(this).toString();
+
+        String randomVariableName;
         if (stmt.statement instanceof Stmt.Draw) {
-            randomVariable = ((Stmt.Draw) stmt.statement).name;
+            randomVariableName = ((Stmt.Draw) stmt.statement).name;
         } else if (stmt.statement instanceof Stmt.Assignment) {
-            randomVariable = ((Stmt.Draw) stmt.statement).name;
+            randomVariableName = ((Stmt.Draw) stmt.statement).name;
         } else {
             throw new LPhyConversionError("LPhy does not support nested decorators.");
         }
 
-        return remember(
+        // we add an additional LPhy statement
+        // `observedVariableName = randomVariableName;`
+        // to signal the clamping
+        return addStatement(
                 stmt,
-                new StringBuilder(observedVariable).append(" = ").append(randomVariable).append(";")
+                new StringBuilder(observedVariableName).append(" = ").append(randomVariableName).append(";")
         );
     }
 
@@ -90,14 +115,14 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     public StringBuilder visitAssignment(Stmt.Assignment stmt) {
         StringBuilder builder = new StringBuilder();
         builder.append(sanitizeVariableName(stmt.name)).append(" = ").append(stmt.expression.accept(this)).append(";");
-        return remember(stmt, builder);
+        return addStatement(stmt, builder);
     }
 
     @Override
     public StringBuilder visitDraw(Stmt.Draw stmt) {
         StringBuilder builder = new StringBuilder();
         builder.append(sanitizeVariableName(stmt.name)).append(" ~ ").append(stmt.expression.accept(this)).append(";");
-        return remember(stmt, builder);
+        return addStatement(stmt, builder);
     }
 
     @Override
@@ -169,9 +194,9 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         String variableName = getAvailableVariableName(expr.name);
         StringBuilder variableDeclaration = new StringBuilder(variableName)
                 .append(" ~ ").append(expr.expression.accept(this)).append(";");
-        remember(expr, variableDeclaration);
+        addStatement(expr, variableDeclaration);
 
-        // we now pass the variable to the function
+        // we now pass the new variable to the function
         return new StringBuilder(variableName);
     }
 
@@ -224,6 +249,10 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         return null;
     }
 
+    /**
+     * Makes sure that the variable name does not equal to "model" or "code", as these are reserved in
+     * LPhy. Returns the sanitized variable name.
+     */
     private String sanitizeVariableName(String variableName) {
         if (variableName.equals("data") || variableName.equals("model")) {
            while (variableNames.contains(variableName)) {
@@ -234,6 +263,12 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         return variableName;
     }
 
+    /**
+     * Returns {@code proposedName} if no other variable like it exists. Otherwise, adds a suffix {@code proposedName}
+     * and returns the available name.
+     * Note that this currently breaks if there is a `data` variable sanitized to `data_` by {@code sanitizeVariableName}
+     * and a function taking a drawn argument `data_` *not* changed by {@code getAvailableVariableName}.
+     */
     private String getAvailableVariableName(String proposedName) {
         if (!variableNames.contains(proposedName)) return proposedName;
 
@@ -248,7 +283,11 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         return adjustedProposedName;
     }
 
-    private StringBuilder remember(AstNode node, StringBuilder builder) {
+    /**
+     * Adds a new LPhy statement. Depending on the stochastictity of {@code node}, it is added to the data or model
+     * block.
+     */
+    private StringBuilder addStatement(AstNode node, StringBuilder builder) {
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
 
         if (stochasticity == Stochasticity.DETERMINISTIC) {

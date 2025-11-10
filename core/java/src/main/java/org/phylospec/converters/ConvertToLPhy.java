@@ -13,6 +13,12 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class ConvertToLPhy {
+
+    /**
+     * This program takes the path to a .phylospec file as a CLI argument. It parses the file,
+     * run the type checker, and converts it to an LPhy script. The resulting LPhy script
+     * is printed to stout.
+     */
     public static void main(String[] args) throws IOException {
         if (args.length != 1) {
             throw new RuntimeException("Provide a .phylospec file name to be converted into an LPhy script.");

@@ -3,6 +3,10 @@ package org.phylospec.converters;
 import java.util.Map;
 
 public class LPhyGeneratorMapping {
+    /**
+     * Takes a PhyloSpec generator name and an arguments map and returns the corresponding LPhy expression. Returns
+     * null if the generator cannot be mapped to valid LPhy code.
+     */
     static StringBuilder map(String phylospecGenerator, Map<String, String> arguments) {
         return switch (phylospecGenerator) {
             case "Exponential" -> build(
@@ -139,9 +143,15 @@ public class LPhyGeneratorMapping {
         };
     }
 
+    /** Returns the argument {@code name}. Raises an {@code LPhyConversionError} if the argument was not
+     * provided. */
     private static String arg(String name, Map<String, String> arguments) {
         return arg(name, arguments, false);
     }
+    /** Returns the argument {@code name}.
+     * If the argument was not provided and {@code optional} is set to {@code false}, raises an
+     * {@code LPhyConversionError}.
+     * If the argument was not provided and {@code optional} is set to {@code true}, returns null.*/
     private static String arg(String name, Map<String, String> arguments, boolean optional) {
         if (arguments.size() == 1 && arguments.containsKey(null)) return arguments.get(null);
 
@@ -152,9 +162,13 @@ public class LPhyGeneratorMapping {
         }
     }
 
-    private static StringBuilder build(String generatorName, String... arguments) {
+    /**
+     * Builds an LPhy function call with the LPhy function name and the arguments. The arguments are given as a list
+     * [argumentName1, argumentValue1, argumentName2, argumentValue2, ...].
+     */
+    private static StringBuilder build(String lphyFunctionName, String... arguments) {
         StringBuilder builder = new StringBuilder();
-        builder.append(generatorName).append("(");
+        builder.append(lphyFunctionName).append("(");
 
         for (int i = 0; i < arguments.length / 2; i++) {
             String argumentName = arguments[2*i];
