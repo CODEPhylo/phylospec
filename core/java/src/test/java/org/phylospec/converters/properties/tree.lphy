@@ -1,0 +1,9 @@
+data {
+}
+model {
+    a ~ Coalescent(theta=200);
+    b = a.leafCount();
+    c = a.branchCount();
+    d = a.nodeCount() - a.leafCount();
+    e = a.taxa();
+}
