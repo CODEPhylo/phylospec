@@ -119,6 +119,22 @@ public class LPhyGeneratorMapping {
                     "branchRates", arg("branchRates", arguments, true),
                     "L", arg("numSequences", arguments, true)
             );
+            case "IID" -> {
+                // we have smth like IID(base=Normal(...), n=5)
+                // we turn this into Normal(..., replicates=5)
+                String distribution = arg("base", arguments);
+                String replicates = arg("n", arguments);
+
+                if (!distribution.endsWith(")")) {
+                    throw new LPhyConverter.LPhyConversionError("IID is only supported when the base distribution is directly passed to the function.");
+                }
+
+                StringBuilder builder = new StringBuilder();
+                builder.append(distribution.substring(0, distribution.length() - 1));
+                builder.append(", replicates=").append(replicates).append(")");
+
+                yield builder;
+            }
             default -> throw new LPhyConverter.LPhyConversionError("Generator " + phylospecGenerator + " is not supported.");
         };
     }
