@@ -1,3 +1,5 @@
+data {
+}
 model {
     a ~ Exp(mean=1/(100));
     b ~ Normal(mean=100, sd=10);

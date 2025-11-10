@@ -9,9 +9,9 @@ import java.util.*;
 
 public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, Void> {
 
-    private List<String> dataStatements;
-    private List<String> modelStatements;
-    private StochasticityResolver stochasticityResolver;
+    private final List<String> dataStatements;
+    private final List<String> modelStatements;
+    private final StochasticityResolver stochasticityResolver;
 
     private LPhyConverter(List<Stmt> statements) {
         dataStatements = new ArrayList<>();
@@ -32,29 +32,17 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
 
         StringBuilder result = new StringBuilder();
 
-        if (!converter.dataStatements.isEmpty()) {
-            result.append("data {\n");
-
-            for (String dataStatement : converter.dataStatements) {
-                result.append("\t").append(dataStatement).append("\n");
-            }
-
-            result.append("}");
+        result.append("data {\n");
+        for (String dataStatement : converter.dataStatements) {
+            result.append("\t").append(dataStatement).append("\n");
         }
+        result.append("}\n");
 
-        if (!converter.dataStatements.isEmpty() && !converter.modelStatements.isEmpty()) {
-            result.append("\n");
+        result.append("model {\n");
+        for (String modelStatement : converter.modelStatements) {
+            result.append("\t").append(modelStatement).append("\n");
         }
-
-        if (!converter.modelStatements.isEmpty()) {
-            result.append("model {\n");
-
-            for (String modelStatement : converter.modelStatements) {
-                result.append("\t").append(modelStatement).append("\n");
-            }
-
-            result.append("}");
-        }
+        result.append("}");
 
         return result.toString();
     }

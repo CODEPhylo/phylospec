@@ -1,3 +1,5 @@
+data {
+}
 model {
     a ~ Yule(lambda=10.0);
     b ~ FossilBirthDeathTree(lambda=10.0, mu=5.0, rho=1.0);
