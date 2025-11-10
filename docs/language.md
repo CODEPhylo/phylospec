@@ -13,6 +13,28 @@ This document describes the philosophy and features of the PhyloSpec language.
 
 ## 2. Language Features
 
+This is an example showing the features of the language:
+
+```
+// Basic HKY model with Yule tree prior
+// This example specifies an HKY substitution model with a Yule tree prior
+
+Alignment observedSequences = nexus("alignment.nex")
+
+QMatrix substModel = HKY(
+    kappa~LogNormal(meanlog=1.0, sdlog=0.5),
+    baseFrequencies~Dirichlet(alpha=[1.0, 1.0, 1.0, 1.0])
+)
+
+Tree phylogeny ~ Yule(
+    birthRate~Exponential(10.0),
+    taxa=observedSequences.taxa
+)
+
+@observedAs(observedSequences)
+Alignment sequences ~ PhyloCTMC(tree=phylogeny, Q=substModel, numSequences=observedSequences.ntax)
+```
+
 ### 2.1. General Syntax
 
 PhyloSpec models describe a graphical model. Every statement corresponds to one variable in the graph.
@@ -25,6 +47,14 @@ Rate birthRate = 2.5
 
 This defines a new variable called `birthRate` of type `Rate` with a constant value of `2.5`. Every variable has a type. Whenever possible, PhyloSpec uses types that tell you what a variable actually represents. This is why `birthRate` has type `Rate` and not just `PositiveReal`.
 
+There are other basic types:
+
+```phylospec
+String taxonName = "Chimpanzee"
+Integer number = 100
+Vector<String> taxonNames = ["Chimpanzee", "Human"]
+```
+
 We can apply functions and the usual numerical expressions:
 
 ```phylospec
@@ -33,7 +63,7 @@ Rate diversificationRate = birthRate - deathRate
 Real logDiversificationRate = log(diversificationRate)
 ```
 
-Besides numbers, strings (`"text"`), and vectors (`[1, 2]`), functions can create more sophisticated types:
+Functions can create more sophisticated types:
 
 ```phylospec
 Alignment alignment = nexus(file="sequences.nex")
@@ -50,7 +80,7 @@ Real drawnValue ~ normalDistribution
 
 Here, `Normal` is a function which returns a `Distribution<Real>` object (a distribution on real numbers). This distribution is then assigned to the *random variable* `drawnValue` using the `~` operator. This is where the randomness in our model comes from!
 
-Use the `=` operator for assignments of constant values or for deterministic transformations of random variables. `~` assigns a distribution to a random variable, hence it always has to be preceded by a `Distribution` object.
+`~` assigns a distribution to a random variable, hence it always has to be preceded by a `Distribution` object. Use the `=` operator for assignments of constant values or for deterministic transformations of random variables.
 
 Some examples of valid and invalid statements:
 
@@ -92,7 +122,7 @@ We now look at more details, but we've already covered the main things to know.
 - Function argument names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
 - Attribute names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
 
-### 2.4. Types
+### 2.3. Types
 
 Every object has [one of many types](./types.md).
 
@@ -152,7 +182,7 @@ Real b = a  // this still works, as PositiveReal extends Real
 >
 > - Subtyping combined with generics raises the question of [covariance](https://web.archive.org/web/20150905085310/http://blogs.msdn.com/b/ericlippert/archive/2009/11/30/what-s-the-difference-between-covariance-and-assignment-compatibility.aspx): if `A` extends `B`, does `T<A>` extend `T<B>`? I think yes, but a more careful argument will follow.
 
-### 2.3. Function Calls
+### 2.4. Function Calls
 
 ```
 PositiveReal mean ~ Exponential(1.0);
@@ -170,7 +200,7 @@ Real y ~ Normal(mean=mean, sd=2.0, offset=1.0);
 >
 > - Do we allow default values?
 
-### 2.4. Nested Expressions
+### 2.5. Nested Expressions
 
 Nested expressions are allowed:
 
@@ -198,7 +228,7 @@ Real mean ~ Exponential(1.0);
 Real y = Normal(mean=mean, sd=2.0);
 ```
 
-### 2.5. Vectorization
+### 2.6. Vectorization
 
 Instead of overly flexible loops, vectorization is used. There are multiple proposed syntaxes for vectorization:
 ```
@@ -230,7 +260,7 @@ This syntax aligns well with mathematical set-builder notation and provides more
 >
 > - What version of vectorization should we use?
 
-### 2.6. Distributions as Arguments
+### 2.7. Distributions as Arguments
 
 Distribution are normal objects produced by normal functions and can be assigned to variables and passed as arguments (distributions as first-class citizens):
 ```
@@ -252,7 +282,7 @@ Mixture mixture = Mixture(components=components, weights=weights);
 Real x ~ mixture;
 ```
 
-### 2.7. Clamping
+### 2.8. Clamping
 
 We use the decorator `@observedAs` to assign an observation to a random variable:
 
@@ -261,7 +291,7 @@ We use the decorator `@observedAs` to assign an observation to a random variable
 Real x ~ Normal(mean=0.0, sd=1.0);
 ```
 
-### 2.8. Blocks
+### 2.9. Blocks
 
 Blocks could be used to group statements:
 
@@ -280,7 +310,7 @@ model {
 >
 > - Should blocks be used?
 
-### 2.9. Numerical Expressions
+### 2.10. Numerical Expressions
 
 PhyloSpec supports standard numerical operations to enable mathematical transformations of variables. These operations are particularly useful when canonical distributions provide convenient priors, but transformed values are needed for downstream model components.
 
