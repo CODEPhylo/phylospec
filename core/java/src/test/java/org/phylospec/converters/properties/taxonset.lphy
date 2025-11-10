@@ -1,0 +1,8 @@
+data {
+}
+model {
+    a ~ Coalescent(theta=200);
+    taxa = a.taxa();
+    b = taxa.length();
+    c = taxa.taxaNames();
+}

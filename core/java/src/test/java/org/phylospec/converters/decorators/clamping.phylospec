@@ -1,0 +1,7 @@
+Alignment observed = nexus("hallo.nex")
+
+Tree tree ~ Coalescent(populationSize=1.0*observed.ntax)
+QMatrix q = JC69()
+
+@observedAs(observed)
+Alignment alignment ~ PhyloCTMC(tree=tree, Q=q)

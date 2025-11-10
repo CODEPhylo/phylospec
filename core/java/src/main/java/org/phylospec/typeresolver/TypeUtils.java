@@ -267,6 +267,18 @@ class TypeUtils {
         }
     }
 
+    /**
+     * This function checks if an object of {@code requiredTypeName} (e.g. {@code "Vector<T>"})
+     * can be assigned to an argument of type {@code resolvedType} (e.g. {@code "Vector<Real>"}).
+     * If this is the case, the passed {@code resolvedTypeParameterTypes} will be updated with the
+     * matching type parameter (e.g. T -> Real).
+     * @param requiredTypeName the type name of the argument
+     * @param resolvedType the resolved type of the object to be assigned to the argument
+     * @param typeParameterNames the names of the type parameters of the generator
+     * @param resolvedTypeParameterTypes the dict with type parameter types, will be updated if the argument matches
+     * @param componentResolver the component resolver
+     * @return true if the object can be assigned to the argument
+     */
     private static boolean checkAssignabilityAndResolveTypeParameters(
             String requiredTypeName,
             ResolvedType resolvedType,
@@ -276,6 +288,7 @@ class TypeUtils {
     ) {
         if (typeParameterNames.contains(requiredTypeName)) {
             // requiredTypeName is simply a type parameter (e.g. "T")
+            // we add the resolved type to the possible resolved types of the type parameter
             resolvedTypeParameterTypes
                     .computeIfAbsent(requiredTypeName, x -> new ArrayList<>())
                     .add(resolvedType);
@@ -283,6 +296,7 @@ class TypeUtils {
         }
 
         if (!isGeneric(requiredTypeName)) {
+            //
             return covers(
                     ResolvedType.fromString(requiredTypeName, componentResolver),
                     resolvedType,

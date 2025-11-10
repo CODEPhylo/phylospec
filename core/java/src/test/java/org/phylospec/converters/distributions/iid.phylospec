@@ -1,0 +1,4 @@
+Vector<Real> a ~ IID(
+    base=Normal(mean=100, sd=10),
+    n=5
+)

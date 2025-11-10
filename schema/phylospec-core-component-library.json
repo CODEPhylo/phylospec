@@ -281,15 +281,15 @@
         "namespace": "phylospec.types",
         "properties": {
           "ntax": {
-            "type": "Integer",
+            "type": "PositiveInteger",
             "description": "Number of taxa/tips"
           },
           "nBranches": {
-            "type": "Integer", 
+            "type": "PositiveInteger",
             "description": "Number of branches (2n-2 for rooted tree)"
           },
           "nInternalNodes": {
-            "type": "Integer",
+            "type": "PositiveInteger",
             "description": "Number of internal nodes (n-1 for rooted tree)"
           },
           "taxa": {
@@ -330,7 +330,7 @@
         "namespace": "phylospec.types",
         "properties": {
           "ntax": {
-            "type": "Integer",
+            "type": "PositiveInteger",
             "description": "Number of taxa in the set"
           },
           "names": {
@@ -345,11 +345,11 @@
         "namespace": "phylospec.types",
         "properties": {
           "ntax": {
-            "type": "Integer",
+            "type": "PositiveInteger",
             "description": "Number of sequences"
           },
           "nchar": {
-            "type": "Integer",
+            "type": "PositiveInteger",
             "description": "Number of characters/sites"
           },
           "dataType": {
@@ -763,6 +763,13 @@
             "description": "Optimal trait value",
             "required": true,
             "default": 0.0
+          },
+          {
+            "name": "rootValue",
+            "type": "Real",
+            "description": "Trait value at the root",
+            "required": true,
+            "default": 0.0
           }
         ]
       },
@@ -1125,6 +1132,12 @@
             "description": "Rate heterogeneity across branches",
             "required": false,
             "dimension": "2 * target.ntax - 2"
+          },
+          {
+            "name": "numSequences",
+            "type": "PositiveInteger",
+            "description": "Number of sequences",
+            "required": false
           }
         ]
       },

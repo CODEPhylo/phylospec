@@ -1,0 +1,8 @@
+PositiveReal data = 10.0
+PositiveReal model = 5.0
+PositiveReal data__ = 1.0
+PositiveReal model_ = 2.0
+Real a ~ Normal(mean=data, sd=model)
+
+@observedAs(data)
+Real b ~ Normal(mean=data__, sd=model_)

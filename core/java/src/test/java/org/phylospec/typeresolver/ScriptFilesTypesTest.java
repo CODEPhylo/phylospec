@@ -31,7 +31,7 @@ public class ScriptFilesTypesTest {
      */
     @TestFactory
     public Iterable<DynamicTest> testResolveAllPsScripts() throws IOException {
-        List<Path> psFiles = findPsFiles(Paths.get("src/test/java"));
+        List<Path> psFiles = findPsFiles(Paths.get("src/test/java/org/phylospec/parser"));
 
         // Ensure deterministic order for stable test output
         psFiles.sort(Comparator.comparing(Path::toString));

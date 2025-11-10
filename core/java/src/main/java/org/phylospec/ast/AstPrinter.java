@@ -14,7 +14,7 @@ import org.phylospec.lexer.TokenType;
 /// ```
 public class AstPrinter implements AstVisitor<String, String, String> {
     @Override public String visitDecoratedStmt(Stmt.Decorated stmt) {
-        return "(@ " + stmt.decorator.accept(this) + " " + stmt.statememt.accept(this) + ")";
+        return "(@ " + stmt.decorator.accept(this) + " " + stmt.statement.accept(this) + ")";
     }
 
     @Override

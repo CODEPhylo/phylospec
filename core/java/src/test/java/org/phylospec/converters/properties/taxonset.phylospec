@@ -1,0 +1,4 @@
+Tree a ~ Coalescent(populationSize=200)
+TaxonSet taxa = a.taxa
+Integer b = taxa.ntax
+Vector<String> c = taxa.names

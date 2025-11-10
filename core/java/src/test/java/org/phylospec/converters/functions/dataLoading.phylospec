@@ -1,0 +1,2 @@
+Alignment a = nexus(file="hallo.nex")
+Alignment b = fasta(file="hallo.nex")

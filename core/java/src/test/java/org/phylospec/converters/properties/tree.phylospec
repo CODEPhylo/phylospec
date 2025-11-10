@@ -1,0 +1,5 @@
+Tree a ~ Coalescent(populationSize=200)
+Integer b = a.ntax
+Integer c = a.nBranches
+Integer d = a.nInternalNodes
+TaxonSet e = a.taxa

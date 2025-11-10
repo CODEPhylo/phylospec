@@ -1,0 +1,10 @@
+data {
+}
+model {
+    meanlog ~ Exp(mean=1/(1));
+    meanlog2 ~ Exp(mean=1/(10));
+    a ~ LogNormal(meanlog=meanlog2, sdlog=2);
+    rate ~ Exp(mean=1/(1.0));
+    meanlog3 ~ Exp(mean=1/(rate));
+    b ~ LogNormal(meanlog=meanlog3, sdlog=2);
+}
