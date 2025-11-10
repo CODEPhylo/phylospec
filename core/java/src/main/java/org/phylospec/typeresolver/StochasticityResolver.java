@@ -26,7 +26,7 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
 
     @Override
     public Stochasticity visitDecoratedStmt(Stmt.Decorated stmt) {
-        return remember(stmt, stmt.statememt.accept(this));
+        return remember(stmt, stmt.statement.accept(this));
     }
 
     @Override

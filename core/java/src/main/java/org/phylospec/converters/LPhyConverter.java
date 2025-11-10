@@ -59,7 +59,34 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
 
     @Override
     public StringBuilder visitDecoratedStmt(Stmt.Decorated stmt) {
-        return null;
+        if (!stmt.decorator.functionName.equals("observedAs")) {
+            throw new LPhyConversionError("Decorator " + stmt.decorator.functionName + " is not supported in LPhy.");
+        }
+
+        if (stmt.decorator.arguments.length != 1) {
+            throw new LPhyConversionError("Decorator " + stmt.decorator.functionName + " requires exactly one argument.");
+        }
+
+        String observedVariable = stmt.decorator.arguments[0].accept(this).toString();
+        if (!variableNames.contains(observedVariable)) {
+            throw new LPhyConversionError("Observed variable " + observedVariable + " is never defined.");
+        }
+
+        stmt.statement.accept(this);
+
+        String randomVariable;
+        if (stmt.statement instanceof Stmt.Draw) {
+            randomVariable = ((Stmt.Draw) stmt.statement).name;
+        } else if (stmt.statement instanceof Stmt.Assignment) {
+            randomVariable = ((Stmt.Draw) stmt.statement).name;
+        } else {
+            throw new LPhyConversionError("LPhy does not support nested decorators.");
+        }
+
+        return remember(
+                stmt,
+                new StringBuilder(observedVariable).append(" = ").append(randomVariable).append(";")
+        );
     }
 
     @Override

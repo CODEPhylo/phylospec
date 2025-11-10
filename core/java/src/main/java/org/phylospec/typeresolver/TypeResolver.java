@@ -97,7 +97,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
 
     @Override
     public ResolvedType visitDecoratedStmt(Stmt.Decorated stmt) {
-        return remember(stmt, stmt.statememt.accept(this));
+        return remember(stmt, stmt.statement.accept(this));
     }
 
     @Override
@@ -248,6 +248,9 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
                 new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Integer", "Real", "Boolean"),
                 new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Real", "Integer", "Boolean"),
                 new TypeMatcher.Rule(TokenType.PLUS, "PositiveReal", "PositiveReal", "PositiveReal"),
+                new TypeMatcher.Rule(TokenType.PLUS, "PositiveInteger", "PositiveInteger", "PositiveInteger"),
+                new TypeMatcher.Rule(TokenType.PLUS, "PositiveInteger", "PositiveReal", "PositiveReal"),
+                new TypeMatcher.Rule(TokenType.PLUS, "PositiveReal", "PositiveInteger", "PositiveReal"),
                 new TypeMatcher.Rule(TokenType.PLUS, "NonNegativeReal", "NonNegativeReal", "NonNegativeReal"),
                 new TypeMatcher.Rule(TokenType.PLUS, "Real", "Real", "Real"),
                 new TypeMatcher.Rule(TokenType.PLUS, "Integer", "Integer", "Integer"),
@@ -259,6 +262,9 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
                 new TypeMatcher.Rule(TokenType.MINUS, "Integer", "Real", "Real"),
                 new TypeMatcher.Rule(TokenType.MINUS, "Real", "Integer", "Real"),
                 new TypeMatcher.Rule(TokenType.STAR, "PositiveReal", "PositiveReal", "PositiveReal"),
+                new TypeMatcher.Rule(TokenType.STAR, "PositiveInteger", "PositiveInteger", "PositiveInteger"),
+                new TypeMatcher.Rule(TokenType.STAR, "PositiveInteger", "PositiveReal", "PositiveReal"),
+                new TypeMatcher.Rule(TokenType.STAR, "PositiveReal", "PositiveInteger", "PositiveReal"),
                 new TypeMatcher.Rule(TokenType.STAR, "NonNegativeReal", "NonNegativeReal", "NonNegativeReal"),
                 new TypeMatcher.Rule(TokenType.STAR, "Real", "Real", "Real"),
                 new TypeMatcher.Rule(TokenType.STAR, "Integer", "Integer", "Integer"),

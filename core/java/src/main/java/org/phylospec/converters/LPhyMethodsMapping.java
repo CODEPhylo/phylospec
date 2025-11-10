@@ -15,6 +15,13 @@ public class LPhyMethodsMapping {
                 case "names" -> objectBuilder.append(".taxaNames()");
                 default -> null;
             };
+            case "Alignment" -> switch (properyName) {
+                case "ntax" -> objectBuilder.append(".length()");
+                case "nchar" -> objectBuilder.append(".nchar()");
+                case "dataType" -> objectBuilder.append(".dataType()");
+                case "taxa" -> objectBuilder.append(".taxa()");
+                default -> null;
+            };
             default -> null;
         };
     }
