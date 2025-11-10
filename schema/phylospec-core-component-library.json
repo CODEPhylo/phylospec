@@ -1131,7 +1131,7 @@
             "type": "Vector<Real>",
             "description": "Rate heterogeneity across branches",
             "required": false,
-            "dimension": "2 * target.tax - 2"
+            "dimension": "2 * target.ntax - 2"
           },
           {
             "name": "numSequences",

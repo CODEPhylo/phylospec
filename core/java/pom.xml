@@ -227,7 +227,7 @@
                 </executions>
             </plugin>
 
-            <!-- Plugin to copy resources -->
+            <!-- Plugin to copy the phylospec-core-component-library.json into the resources of a built package -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
@@ -254,7 +254,8 @@
                 </executions>
             </plugin>
 
-            <!-- Plugin to generate artifacts -->
+            <!-- Plugin to generate a fat JAR with the ConvertToLPhy class. This is used by phylorun to convert
+             .phylospec to .lphy files. -->
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>

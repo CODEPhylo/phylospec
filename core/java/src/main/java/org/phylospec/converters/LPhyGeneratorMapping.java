@@ -88,11 +88,6 @@ public class LPhyGeneratorMapping {
                     "rates",  arg("rateMatrix", arguments),
                     "freq",  arg("baseFrequencies", arguments)
             );
-            case "DiscreteGamma" -> build(
-                    "DiscretizeGamma",
-                    "shape",  arg("shape", arguments),
-                    "ncat",  arg("categories", arguments)
-            );
             case "nexus" -> build(
                     "readNexus",
                     "file",  arg("file", arguments)
