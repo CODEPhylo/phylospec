@@ -38,6 +38,7 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
 
     @Override
     public Stochasticity visitDraw(Stmt.Draw stmt) {
+        stmt.expression.accept(this);
         remember(stmt.name, Stochasticity.STOCHASTIC);
         return remember(stmt, Stochasticity.STOCHASTIC);
     }
@@ -81,11 +82,13 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
 
     @Override
     public Stochasticity visitAssignedArgument(Expr.AssignedArgument expr) {
+        expr.expression.accept(this);
         return remember(expr, expr.expression.accept(this));
     }
 
     @Override
     public Stochasticity visitDrawnArgument(Expr.DrawnArgument expr) {
+        expr.expression.accept(this);
         return remember(expr, Stochasticity.STOCHASTIC);
     }
 

@@ -7,7 +7,6 @@ import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
-import org.phylospec.typeresolver.TypeResolver;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -79,17 +78,12 @@ public class LPhyConverterTest {
             Parser parser = new Parser(tokens);
             List<Stmt> statements = parser.parse();
 
-            // Resolve all types
             ComponentResolver componentResolver = new ComponentResolver();
             componentResolver.registerLibraryFromFile("../../schema/phylospec-core-component-library.json");
             componentResolver.importEntireNamespace(List.of("phylospec"));
-            TypeResolver resolver = new TypeResolver(componentResolver);
-            for (Stmt statement : statements) {
-                statement.accept(resolver);
-            }
 
             // Convert AST to LPhy using LPhyConverter
-            String actualLPhyString = LPhyConverter.convertToLphy(statements).replace("\t", "    ");
+            String actualLPhyString = LPhyConverter.convertToLPhy(statements, componentResolver).replace("\t", "    ");
             String expectedLPhyString = expectedLPhy.trim();
 
             assertEquals(

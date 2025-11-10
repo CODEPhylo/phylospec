@@ -1,9 +1,11 @@
 package org.phylospec.converters;
 
 import org.phylospec.ast.*;
+import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.TokenType;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
+import org.phylospec.typeresolver.TypeResolver;
 
 import java.util.*;
 
@@ -12,19 +14,26 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     private final List<String> dataStatements;
     private final List<String> modelStatements;
     private final StochasticityResolver stochasticityResolver;
+    private final TypeResolver typeResolver;
+    private final Set<String> variableNames;
 
-    private LPhyConverter(List<Stmt> statements) {
+    private LPhyConverter(List<Stmt> statements, ComponentResolver componentResolver) {
         dataStatements = new ArrayList<>();
         modelStatements = new ArrayList<>();
 
         stochasticityResolver = new StochasticityResolver();
+        typeResolver = new TypeResolver(componentResolver);
+
         for (Stmt stmt : statements) {
             stmt.accept(stochasticityResolver);
+            stmt.accept(typeResolver);
         }
+
+        variableNames = new HashSet<>(typeResolver.variableTypes.keySet());
     }
 
-    public static String convertToLphy(List<Stmt> statements) {
-        LPhyConverter converter = new LPhyConverter(statements);
+    public static String convertToLPhy(List<Stmt> statements, ComponentResolver componentResolver) {
+        LPhyConverter converter = new LPhyConverter(statements, componentResolver);
 
         for (Stmt statement : statements) {
             statement.accept(converter);
@@ -75,9 +84,12 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     public StringBuilder visitLiteral(Expr.Literal expr) {
         return switch (expr.value) {
             case Integer value -> new StringBuilder(value.toString());
+            case Long value -> new StringBuilder(value.toString());
             case Float value -> new StringBuilder(value.toString());
+            case Double value -> new StringBuilder(value.toString());
             case String value -> new StringBuilder("\"").append(value).append("\"");
-            default -> new StringBuilder(expr.value.toString());
+            case Boolean value -> new StringBuilder(value.toString());
+            default -> throw new LPhyConversionError("Literal " + expr.value + " is not supported in LPhy.");
         };
     }
 
@@ -128,7 +140,14 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
 
     @Override
     public StringBuilder visitDrawnArgument(Expr.DrawnArgument expr) {
-        return null;
+        // we add a separate variable with the result of the draw
+        String variableName = getAvailableVariableName(expr.name);
+        StringBuilder variableDeclaration = new StringBuilder(variableName)
+                .append(" ~ ").append(expr.expression.accept(this)).append(";");
+        remember(expr, variableDeclaration);
+
+        // we now pass the variable to the function
+        return new StringBuilder(variableName);
     }
 
     @Override
@@ -166,6 +185,20 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     @Override
     public Void visitGenericType(AstType.Generic expr) {
         return null;
+    }
+
+    private String getAvailableVariableName(String proposedName) {
+        if (!variableNames.contains(proposedName)) return proposedName;
+
+        int suffix = 2;
+        String adjustedProposedName = proposedName + suffix;
+        while (this.variableNames.contains(adjustedProposedName)) {
+            adjustedProposedName = proposedName + ++suffix;
+        }
+
+        variableNames.add(adjustedProposedName);
+
+        return adjustedProposedName;
     }
 
     private StringBuilder remember(AstNode node, StringBuilder builder) {
