@@ -40,23 +40,28 @@ public class LPhyGeneratorMapping {
             );
             case "Yule" -> build(
                     "Yule",
-                    "lambda", arg("birthRate", arguments)
+                    "lambda", arg("birthRate", arguments),
+                    "taxa", arg("taxa", arguments, true)
             );
             case "FossilBirthDeath" -> build(
                     "FossilBirthDeathTree",
                     "lambda", arg("birthRate", arguments),
                     "mu", arg("deathRate", arguments),
-                    "rho", arg("samplingRate", arguments)
+                    "rho", arg("rho", arguments),
+                    "psi", arg("samplingRate", arguments),
+                    "taxa", arg("taxa", arguments, true)
             );
             case "BirthDeath" -> build(
                     "BirthDeath",
                     "lambda", arg("birthRate", arguments),
                     "mu", arg("deathRate", arguments),
-                    "rootAge", arg("rootHeight", arguments)
+                    "rootAge", arg("rootHeight", arguments),
+                    "taxa", arg("taxa", arguments, true)
             );
             case "Coalescent" -> build(
                     "Coalescent",
-                    "theta", arg("populationSize", arguments)
+                    "theta", arg("populationSize", arguments),
+                    "taxa", arg("taxa", arguments, true)
             );
             case "JC69" -> build(
                     "jukesCantor"
@@ -92,14 +97,38 @@ public class LPhyGeneratorMapping {
                     "readFasta",
                     "file",  arg("file", arguments)
             );
+            case "PhyloBM" -> build(
+                    "PhyloBrownian",
+                    "tree", arg("tree", arguments),
+                    "diffRate", arg("sigma", arguments),
+                    "y0", arg("rootValue", arguments)
+            );
+            case "PhyloOU" -> build(
+                    "PhyloOU",
+                    "tree", arg("tree", arguments),
+                    "diffRate", arg("sigma", arguments),
+                    "theta", arg("optimum", arguments),
+                    "alpha", arg("alpha", arguments),
+                    "y0", arg("rootValue", arguments)
+            );
+            case "PhyloCTMC" -> build(
+                    "PhyloCTMC",
+                    "tree", arg("tree", arguments),
+                    "Q", arg("Q", arguments),
+                    "siteRates", arg("siteRates", arguments, true),
+                    "branchRates", arg("branchRates", arguments, true)
+            );
             default -> throw new LPhyConverter.LPhyConversionError("Generator " + phylospecGenerator + " is not supported.");
         };
     }
 
     private static String arg(String name, Map<String, String> arguments) {
+        return arg(name, arguments, false);
+    }
+    private static String arg(String name, Map<String, String> arguments, boolean optional) {
         if (arguments.size() == 1 && arguments.containsKey(null)) return arguments.get(null);
 
-        if (arguments.containsKey(name)) {
+        if (optional || arguments.containsKey(name)) {
             return arguments.get(name);
         } else {
             throw new LPhyConverter.LPhyConversionError("Missing argument " + name + ". This should be caught by the type resolver.");
@@ -113,11 +142,18 @@ public class LPhyGeneratorMapping {
         for (int i = 0; i < arguments.length / 2; i++) {
             String argumentName = arguments[2*i];
             String argument = arguments[2*i + 1];
-            builder.append(argumentName).append("=").append(argument);
 
-            if (i < arguments.length / 2 - 1) {
-                builder.append(", ");
+            if (argument == null) {
+                // this is not provided, we skip it
+                continue;
             }
+
+            builder.append(argumentName).append("=").append(argument);
+            builder.append(", ");
+        }
+        // remove trailing ", " if necessary
+        if (builder.substring(builder.length() - 2).equals(", ")) {
+            builder.setLength(builder.length() - 2);
         }
 
         builder.append(")");
