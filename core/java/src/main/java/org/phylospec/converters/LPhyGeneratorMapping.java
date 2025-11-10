@@ -116,7 +116,8 @@ public class LPhyGeneratorMapping {
                     "tree", arg("tree", arguments),
                     "Q", arg("Q", arguments),
                     "siteRates", arg("siteRates", arguments, true),
-                    "branchRates", arg("branchRates", arguments, true)
+                    "branchRates", arg("branchRates", arguments, true),
+                    "L", arg("numSequences", arguments, true)
             );
             default -> throw new LPhyConverter.LPhyConversionError("Generator " + phylospecGenerator + " is not supported.");
         };

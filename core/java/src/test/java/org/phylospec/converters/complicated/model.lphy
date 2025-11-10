@@ -1,0 +1,12 @@
+data {
+    observedAlignment = readNexus(file="alignment.nex");
+}
+model {
+    kappa ~ LogNormal(meanlog=1.0, sdlog=0.5);
+    baseFrequencies ~ Dirichlet(conc=[2.0, 2.0, 2.0, 2.0]);
+    Q = hky(kappa=kappa, freq=baseFrequencies);
+    populationSize ~ LogNormal(meanlog=3.0, sdlog=2.0);
+    tree ~ Coalescent(theta=populationSize, taxa=observedAlignment.taxa());
+    alignment ~ PhyloCTMC(tree=tree, Q=Q, L=observedAlignment.length());
+    observedAlignment = alignment;
+}
