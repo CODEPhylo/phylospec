@@ -1,0 +1,11 @@
+data {
+    data_ = 10.0;
+    model__ = 5.0;
+    data__ = 1.0;
+    model_ = 2.0;
+}
+model {
+    a ~ Normal(mean=data_, sd=model__);
+    b ~ Normal(mean=data__, sd=model_);
+    data_ = b;
+}

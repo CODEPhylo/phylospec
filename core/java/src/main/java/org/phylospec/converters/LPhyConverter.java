@@ -68,9 +68,6 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         }
 
         String observedVariable = stmt.decorator.arguments[0].accept(this).toString();
-        if (!variableNames.contains(observedVariable)) {
-            throw new LPhyConversionError("Observed variable " + observedVariable + " is never defined.");
-        }
 
         stmt.statement.accept(this);
 
@@ -92,14 +89,14 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     @Override
     public StringBuilder visitAssignment(Stmt.Assignment stmt) {
         StringBuilder builder = new StringBuilder();
-        builder.append(stmt.name).append(" = ").append(stmt.expression.accept(this)).append(";");
+        builder.append(sanitizeVariableName(stmt.name)).append(" = ").append(stmt.expression.accept(this)).append(";");
         return remember(stmt, builder);
     }
 
     @Override
     public StringBuilder visitDraw(Stmt.Draw stmt) {
         StringBuilder builder = new StringBuilder();
-        builder.append(stmt.name).append(" ~ ").append(stmt.expression.accept(this)).append(";");
+        builder.append(sanitizeVariableName(stmt.name)).append(" ~ ").append(stmt.expression.accept(this)).append(";");
         return remember(stmt, builder);
     }
 
@@ -123,7 +120,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
 
     @Override
     public StringBuilder visitVariable(Expr.Variable expr) {
-        return new StringBuilder(expr.variableName);
+        return new StringBuilder(sanitizeVariableName(expr.variableName));
     }
 
     @Override
@@ -225,6 +222,16 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     @Override
     public Void visitGenericType(AstType.Generic expr) {
         return null;
+    }
+
+    private String sanitizeVariableName(String variableName) {
+        if (variableName.equals("data") || variableName.equals("model")) {
+           while (variableNames.contains(variableName)) {
+               variableName = variableName + "_";
+           }
+           return variableName;
+        }
+        return variableName;
     }
 
     private String getAvailableVariableName(String proposedName) {
