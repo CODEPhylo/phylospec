@@ -51,7 +51,7 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
 
     @Override
     public Stochasticity visitLiteral(Expr.Literal expr) {
-        return remember(expr, Stochasticity.DETERMINISTIC);
+        return remember(expr, Stochasticity.CONSTANT);
     }
 
     @Override
@@ -68,15 +68,19 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
     public Stochasticity visitBinary(Expr.Binary expr) {
         Stochasticity leftStochasticity = expr.left.accept(this);
         Stochasticity rightStochasticity = expr.right.accept(this);
-        return remember(expr, Stochasticity.merge(leftStochasticity, rightStochasticity));
+        return remember(expr, Stochasticity.nonConstant(
+                Stochasticity.merge(leftStochasticity, rightStochasticity)
+        ));
     }
 
     @Override
     public Stochasticity visitCall(Expr.Call expr) {
         return remember(
                 expr,
-                Stochasticity.merge(
-                        Arrays.stream(expr.arguments).map(x -> x.accept(this)).toList()
+                Stochasticity.nonConstant(
+                        Stochasticity.merge(
+                                Arrays.stream(expr.arguments).map(x -> x.accept(this)).toList()
+                        )
                 )
         );
     }

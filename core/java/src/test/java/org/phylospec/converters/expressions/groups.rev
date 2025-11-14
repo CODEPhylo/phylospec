@@ -1,0 +1,7 @@
+moves = VectorMoves()
+monitors = VectorMonitors()
+
+a := (10 * 2000 - 10.0)
+b := (a + 2) / a + 2
+
+q()

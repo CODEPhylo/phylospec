@@ -1,0 +1,18 @@
+moves = VectorMoves()
+monitors = VectorMonitors()
+
+a <- 10.0
+b ~ dnLognormal( mean=a, sd=2 * a )
+moves.append( mvSlideBactrian( b ) )
+c ~ dnDirichlet( alpha=v( b, b, b ) )
+moves.append( mvDirichletSimplex( c ) )
+
+monitors.append( mnModel( filename = "mixedVariables.log", printgen = 10 ) )
+monitors.append( mnFile( filename = "mixedVariables.trees", printgen = 10 ) )
+monitors.append( mnScreen( printgen = 10 ) )
+
+mymodel = model( b, c )
+mymcmc = mcmc( mymodel, monitors, moves )
+mymcmc.run( generations=20000, tuningInterval=200 )
+
+q()

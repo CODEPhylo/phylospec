@@ -1,0 +1,9 @@
+moves = VectorMoves()
+monitors = VectorMonitors()
+
+a <- 10.0
+b <- 100
+c := 10.0 + 100 + a / b * 2 + a
+d := c + c
+
+q()

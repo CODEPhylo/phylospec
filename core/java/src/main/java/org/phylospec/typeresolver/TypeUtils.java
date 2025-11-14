@@ -9,13 +9,13 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-class TypeUtils {
+public class TypeUtils {
 
     /**
      * Checks if any of the types in {@code assignedTypeSet} can be assigned to {@code assigneeType}.
      * A type A can be assigned to type B if B covers A.
      */
-    static boolean canBeAssignedTo(Set<ResolvedType> assignedTypeSet, ResolvedType assigneeType, ComponentResolver componentResolver) {
+    public static boolean canBeAssignedTo(Set<ResolvedType> assignedTypeSet, ResolvedType assigneeType, ComponentResolver componentResolver) {
         for (ResolvedType assignedType : assignedTypeSet) {
             if (covers(assigneeType, assignedType, componentResolver)) return true;
         }
@@ -165,7 +165,7 @@ class TypeUtils {
     }
 
     /** Checks if {@code query} covers {@code reference}. Type A covers type B if A = B or if A extends B. */
-    static boolean covers(ResolvedType query, ResolvedType reference, ComponentResolver componentResolver) {
+    public static boolean covers(ResolvedType query, ResolvedType reference, ComponentResolver componentResolver) {
         if (query.equals(reference)) return true;
 
         boolean[] covers = {false};

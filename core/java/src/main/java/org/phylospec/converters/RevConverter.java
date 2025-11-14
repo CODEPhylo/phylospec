@@ -10,29 +10,30 @@ import org.phylospec.typeresolver.TypeResolver;
 
 import java.util.*;
 
-/// This class converts parsed PhyloSpec statements into an LPhy script.
+/// This class converts parsed PhyloSpec statements into an Rev script.
 ///
 /// Usage:
 /// ```
 /// List<Stmt> statements = parser.parse();
-/// String lphyString = LPhyConverter.convertToLPhy(statements, componentResolver);
+/// String lphyString = RevConverter.convertToRev(statements, componentResolver);
 ///```
-///
-public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, Void> {
+public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
-    private final List<String> dataStatements;
-    private final List<String> modelStatements;
+    ComponentResolver componentResolver;
     private final StochasticityResolver stochasticityResolver;
     private final TypeResolver typeResolver;
     private final Set<String> variableNames;
 
-    /**
-     * Private constructor. Use {@code LPhyConverter.convertToLPhy}.
-     */
-    private LPhyConverter(List<Stmt> statements, ComponentResolver componentResolver) {
-        dataStatements = new ArrayList<>();
-        modelStatements = new ArrayList<>();
+    private List<String> revStatements;
+    private List<String> modelVariableNames;
 
+    /**
+     * Private constructor. Use {@code RevConverter.convertToRev}.
+     */
+    private RevConverter(List<Stmt> statements, ComponentResolver componentResolver) {
+        revStatements = new ArrayList<>();
+
+        this.componentResolver = componentResolver;
         stochasticityResolver = new StochasticityResolver();
         typeResolver = new TypeResolver(componentResolver);
 
@@ -41,47 +42,71 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
             stmt.accept(typeResolver);
         }
 
-        variableNames = typeResolver.getVariableNames();
+        variableNames = new HashSet<>(typeResolver.variableTypes.keySet());
+        modelVariableNames = new ArrayList<>();
     }
 
     /**
-     * Converts the given statements into an LPhy script.
+     * Converts the given statements into a Rev script.
      */
-    public static String convertToLPhy(List<Stmt> statements, ComponentResolver componentResolver) {
-        LPhyConverter converter = new LPhyConverter(statements, componentResolver);
+    public static String convertToRev(String phylospecFileName, List<Stmt> statements, ComponentResolver componentResolver) {
+        RevConverter converter = new RevConverter(statements, componentResolver);
+        String modelName = phylospecFileName.endsWith(".phylospec")
+                ? phylospecFileName.substring(0, phylospecFileName.length() - ".phylospec".length())
+                : phylospecFileName;
 
-        // traverse the syntax tree to collect the LPhy statements
+        // traverse the syntax tree to collect the Rev statements
+
         for (Stmt statement : statements) {
             statement.accept(converter);
         }
 
-        StringBuilder result = new StringBuilder();
+        StringBuilder builder = new StringBuilder();
 
-        // write the data block
-        result.append("data {\n");
-        for (String dataStatement : converter.dataStatements) {
-            result.append("\t").append(dataStatement).append("\n");
+        // add empty moves and monitors array
+
+        builder.append("moves = VectorMoves()\n");
+        builder.append("monitors = VectorMonitors()\n\n");
+
+        // add statements
+
+        for (String statement : converter.revStatements) {
+            builder.append(statement).append("\n");
         }
-        result.append("}\n");
 
-        // write the model block
-        result.append("model {\n");
-        for (String modelStatement : converter.modelStatements) {
-            result.append("\t").append(modelStatement).append("\n");
+        if (!converter.modelVariableNames.isEmpty()) {
+
+            // add monitors
+
+            builder.append("\nmonitors.append( mnModel( filename = \"").append(modelName).append(".log\", printgen = 10 ) )\n");
+            builder.append("monitors.append( mnFile( filename = \"").append(modelName).append(".trees\", printgen = 10 ) )\n");
+            builder.append("monitors.append( mnScreen( printgen = 10 ) )\n\n");
+
+            // build mcmc
+
+            builder.append("mymodel = model( ");
+            builder.append(String.join(", ", converter.modelVariableNames));
+            builder.append(" )\n");
+            builder.append("mymcmc = mcmc( mymodel, monitors, moves )\n");
+            builder.append("mymcmc.run( generations=20000, tuningInterval=200 )\n");
+
         }
-        result.append("}");
 
-        return result.toString();
+        // exit script
+
+        builder.append("\nq()");
+
+        return builder.toString();
     }
 
     @Override
-    public StringBuilder visitDecoratedStmt(Stmt.Decorated stmt) {
+    public Void visitDecoratedStmt(Stmt.Decorated stmt) {
         // make sure we have a @observedAs decorator with one argument
         if (!stmt.decorator.functionName.equals("observedAs")) {
-            throw new LPhyConversionError("Decorator " + stmt.decorator.functionName + " is not supported in LPhy.");
+            throw new RevConversionError("Decorator " + stmt.decorator.functionName + " is not supported in Rev.");
         }
         if (stmt.decorator.arguments.length != 1) {
-            throw new LPhyConversionError("Decorator " + stmt.decorator.functionName + " requires exactly one argument.");
+            throw new RevConversionError("Decorator " + stmt.decorator.functionName + " requires exactly one argument.");
         }
 
         stmt.statement.accept(this);
@@ -98,35 +123,51 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         } else if (stmt.statement instanceof Stmt.Assignment) {
             randomVariableName = ((Stmt.Draw) stmt.statement).name;
         } else {
-            throw new LPhyConversionError("LPhy does not support nested decorators.");
+            throw new RevConversionError("Rev does not support nested decorators.");
         }
 
-        // we add an additional LPhy statement
+        // we add an additional Rev statement
         // `observedVariableName = randomVariableName;`
         // to signal the clamping
-        return addStatement(
-                stmt,
-                new StringBuilder(observedVariableName).append(" = ").append(randomVariableName).append(";")
+        return null;
+    }
+
+    @Override
+    public Void visitAssignment(Stmt.Assignment stmt) {
+        StringBuilder builder = new StringBuilder();
+
+        Stochasticity stochasticity = stochasticityResolver.getStochasticity(stmt);
+        if (stochasticity == Stochasticity.CONSTANT) {
+            builder.append(sanitizeVariableName(stmt.name)).append(" <- ").append(stmt.expression.accept(this));
+        } else {
+            builder.append(sanitizeVariableName(stmt.name)).append(" := ").append(stmt.expression.accept(this));
+        }
+
+        revStatements.add(builder.toString());
+
+        return null;
+    }
+
+    @Override
+    public Void visitDraw(Stmt.Draw stmt) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(sanitizeVariableName(stmt.name)).append(" ~ ").append(stmt.expression.accept(this));
+        revStatements.add(builder.toString());
+        modelVariableNames.add(sanitizeVariableName(stmt.name));
+
+        StringBuilder move = RevMoves.getMoveStatement(
+                sanitizeVariableName(stmt.name), typeResolver.resolveType(stmt), componentResolver
         );
+        if (move != null) {
+            revStatements.add(move.toString());
+        }
+
+        return null;
     }
 
     @Override
-    public StringBuilder visitAssignment(Stmt.Assignment stmt) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(sanitizeVariableName(stmt.name)).append(" = ").append(stmt.expression.accept(this)).append(";");
-        return addStatement(stmt, builder);
-    }
-
-    @Override
-    public StringBuilder visitDraw(Stmt.Draw stmt) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(sanitizeVariableName(stmt.name)).append(" ~ ").append(stmt.expression.accept(this)).append(";");
-        return addStatement(stmt, builder);
-    }
-
-    @Override
-    public StringBuilder visitImport(Stmt.Import stmt) {
-        return new StringBuilder();
+    public Void visitImport(Stmt.Import stmt) {
+        return null;
     }
 
     @Override
@@ -138,7 +179,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
             case Double value -> new StringBuilder(value.toString());
             case String value -> new StringBuilder("\"").append(value).append("\"");
             case Boolean value -> new StringBuilder(value.toString());
-            default -> throw new LPhyConversionError("Literal " + expr.value + " is not supported in LPhy.");
+            default -> throw new RevConversionError("Literal " + expr.value + " is not supported in Rev.");
         };
     }
 
@@ -152,7 +193,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         if (expr.operator == TokenType.MINUS) {
             return new StringBuilder().append("-").append(expr.right.accept(this));
         }
-        throw new LPhyConversionError("Unary operation " + TokenType.getLexeme(expr.operator) + " is not supported in LPhy.");
+        throw new RevConversionError("Unary operation " + TokenType.getLexeme(expr.operator) + " is not supported in Rev.");
     }
 
     @Override
@@ -170,7 +211,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
             return new StringBuilder().append(left).append(" / ").append(right);
         }
 
-        throw new LPhyConversionError("Binary operation " + TokenType.getLexeme(expr.operator) + " is not supported in LPhy.");
+        throw new RevConversionError("Binary operation " + TokenType.getLexeme(expr.operator) + " is not supported in Rev.");
     }
 
     @Override
@@ -179,7 +220,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         for (Expr.Argument arg : expr.arguments) {
             arguments.put(arg.name, arg.accept(this).toString());
         }
-        return LPhyGeneratorMapping.map(expr.functionName, arguments);
+        return RevGeneratorMapping.map(expr.functionName, arguments);
     }
 
     @Override
@@ -192,8 +233,15 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         // we add a separate variable with the result of the draw
         String variableName = getAvailableVariableName(expr.name);
         StringBuilder variableDeclaration = new StringBuilder(variableName)
-                .append(" ~ ").append(expr.expression.accept(this)).append(";");
-        addStatement(expr, variableDeclaration);
+                .append(" ~ ").append(expr.expression.accept(this));
+        revStatements.add(variableDeclaration.toString());
+        modelVariableNames.add(variableName);
+        StringBuilder move = RevMoves.getMoveStatement(
+                variableName, typeResolver.resolveType(expr).iterator().next(), componentResolver
+        );
+        if (move != null) {
+            revStatements.add(move.toString());
+        }
 
         // we now pass the new variable to the function
         return new StringBuilder(variableName);
@@ -207,7 +255,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     @Override
     public StringBuilder visitArray(Expr.Array expr) {
         StringBuilder builder = new StringBuilder();
-        builder.append("[");
+        builder.append("v( ");
 
         for (int i = 0; i < expr.elements.size(); i++) {
             builder.append(expr.elements.get(i).accept(this));
@@ -217,13 +265,8 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
             }
         }
 
-        builder.append("]");
+        builder.append(" )");
         return builder;
-    }
-
-    @Override
-    public StringBuilder visitListComprehension(Expr.ListComprehension expr) {
-        return null;
     }
 
     @Override
@@ -240,7 +283,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
             }
         }
 
-        throw new LPhyConversionError("Property " + expr.properyName + " is not supported in LPhy.");
+        throw new RevConversionError("Property " + expr.properyName + " is not supported in Rev.");
     }
 
     @Override
@@ -255,7 +298,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
 
     /**
      * Makes sure that the variable name does not equal to "model" or "code", as these are reserved in
-     * LPhy. Returns the sanitized variable name.
+     * Rev. Returns the sanitized variable name.
      */
     private String sanitizeVariableName(String variableName) {
         if (variableName.equals("data") || variableName.equals("model")) {
@@ -288,23 +331,21 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     }
 
     /**
-     * Adds a new LPhy statement. Depending on the stochasticity of {@code node}, it is added to the data or model
+     * Adds a new Rev statement. Depending on the stochastictity of {@code node}, it is added to the data or model
      * block.
      */
-    private StringBuilder addStatement(AstNode node, StringBuilder builder) {
+    private void addStatement(AstNode node, String variableName, StringBuilder expressionBuilder) {
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
 
-        if (stochasticity == Stochasticity.STOCHASTIC) {
-            modelStatements.add(builder.toString());
-        } else  {
-            dataStatements.add(builder.toString());
+        switch (stochasticity) {
+            case CONSTANT -> revStatements.add(expressionBuilder.insert(0, variableName + " -> ").toString());
+            case DETERMINISTIC -> revStatements.add(expressionBuilder.insert(0, variableName + " := ").toString());
+            case STOCHASTIC -> revStatements.add(expressionBuilder.insert(0, variableName + "  ").toString());
         }
-
-        return builder;
     }
 
-    static class LPhyConversionError extends RuntimeException {
-        public LPhyConversionError(String s) {
+    static class RevConversionError extends RuntimeException {
+        public RevConversionError(String s) {
             super(s);
         }
     }

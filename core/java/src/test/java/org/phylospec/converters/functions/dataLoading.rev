@@ -1,0 +1,7 @@
+moves = VectorMoves()
+monitors = VectorMonitors()
+
+a := readDiscreteCharacterData( file="hallo.nex" )
+b := readDiscreteCharacterData( file="hallo.nex" )
+
+q()

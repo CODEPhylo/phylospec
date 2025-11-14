@@ -1,0 +1,10 @@
+moves = VectorMoves()
+monitors = VectorMonitors()
+
+a := fnJC( num_states=4 )
+b := fnK80( kappa=2.0 )
+c := fnF81( baseFrequencies=v( 0.25, 0.25, 0.25, 0.25 ) )
+d := fnHKY( kappa=1.0, baseFrequencies=v( 0.25, 0.25, 0.25, 0.25 ) )
+e := fnGTR( exchangeRates=v( 0.2, 0.2, 0.2, 0.2, 0.2 ), baseFrequencies=v( 0.25, 0.25, 0.25, 0.25 ) )
+
+q()
