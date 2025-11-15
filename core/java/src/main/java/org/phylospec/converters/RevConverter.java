@@ -9,6 +9,7 @@ import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeResolver;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 /// This class converts parsed PhyloSpec statements into an Rev script.
 ///
@@ -19,13 +20,11 @@ import java.util.*;
 ///```
 public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
-    ComponentResolver componentResolver;
+    private final ComponentResolver componentResolver;
     private final StochasticityResolver stochasticityResolver;
     private final TypeResolver typeResolver;
-    private final Set<String> variableNames;
 
-    private List<String> revStatements;
-    private List<String> modelVariableNames;
+    private final List<RevStmt> revStatements;
 
     /**
      * Private constructor. Use {@code RevConverter.convertToRev}.
@@ -41,9 +40,6 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
             stmt.accept(stochasticityResolver);
             stmt.accept(typeResolver);
         }
-
-        variableNames = new HashSet<>(typeResolver.variableTypes.keySet());
-        modelVariableNames = new ArrayList<>();
     }
 
     /**
@@ -70,12 +66,18 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
         // add statements
 
-        for (String statement : converter.revStatements) {
-            builder.append(statement).append("\n");
+        for (RevStmt statement : converter.revStatements) {
+            builder.append(statement.build());
         }
 
-        if (!converter.modelVariableNames.isEmpty()) {
+        List<String> modelVariableNames = converter.revStatements.stream()
+                .filter(s -> s instanceof RevStmt.Assignment)
+                .map(s -> (RevStmt.Assignment) s)
+                .filter(s -> s.stochasticity == Stochasticity.STOCHASTIC)
+                .map(s -> s.variableName)
+                .toList();
 
+        if (!modelVariableNames.isEmpty()) {
             // add monitors
 
             builder.append("\nmonitors.append( mnModel( filename = \"").append(modelName).append(".log\", printgen = 10 ) )\n");
@@ -85,11 +87,10 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
             // build mcmc
 
             builder.append("mymodel = model( ");
-            builder.append(String.join(", ", converter.modelVariableNames));
+            builder.append(String.join(", ", modelVariableNames));
             builder.append(" )\n");
             builder.append("mymcmc = mcmc( mymodel, monitors, moves )\n");
             builder.append("mymcmc.run( generations=20000, tuningInterval=200 )\n");
-
         }
 
         // exit script
@@ -126,41 +127,33 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
             throw new RevConversionError("Rev does not support nested decorators.");
         }
 
-        // we add an additional Rev statement
-        // `observedVariableName = randomVariableName;`
+        // we add a Rev statement
+        // randomVariableName.clamp(observedVariableName)
         // to signal the clamping
+        revStatements.add(new RevStmt(
+            new StringBuilder(randomVariableName).append(".clamp( ").append(observedVariableName).append(" )\n")
+        ));
         return null;
     }
 
     @Override
     public Void visitAssignment(Stmt.Assignment stmt) {
-        StringBuilder builder = new StringBuilder();
-
+        StringBuilder expression = stmt.expression.accept(this);
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(stmt);
-        if (stochasticity == Stochasticity.CONSTANT) {
-            builder.append(sanitizeVariableName(stmt.name)).append(" <- ").append(stmt.expression.accept(this));
-        } else {
-            builder.append(sanitizeVariableName(stmt.name)).append(" := ").append(stmt.expression.accept(this));
-        }
+        ResolvedType type = typeResolver.resolveType(stmt);
 
-        revStatements.add(builder.toString());
+        addStatement(stmt.name, stochasticity, type, expression);
 
         return null;
     }
 
     @Override
     public Void visitDraw(Stmt.Draw stmt) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(sanitizeVariableName(stmt.name)).append(" ~ ").append(stmt.expression.accept(this));
-        revStatements.add(builder.toString());
-        modelVariableNames.add(sanitizeVariableName(stmt.name));
+        StringBuilder expression = stmt.expression.accept(this);
+        Stochasticity stochasticity = stochasticityResolver.getStochasticity(stmt);
+        ResolvedType type = typeResolver.resolveType(stmt);
 
-        StringBuilder move = RevMoves.getMoveStatement(
-                sanitizeVariableName(stmt.name), typeResolver.resolveType(stmt), componentResolver
-        );
-        if (move != null) {
-            revStatements.add(move.toString());
-        }
+        addStatement(stmt.name, stochasticity, type, expression);
 
         return null;
     }
@@ -185,7 +178,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
     @Override
     public StringBuilder visitVariable(Expr.Variable expr) {
-        return new StringBuilder(sanitizeVariableName(expr.variableName));
+        return new StringBuilder(expr.variableName);
     }
 
     @Override
@@ -231,20 +224,13 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     @Override
     public StringBuilder visitDrawnArgument(Expr.DrawnArgument expr) {
         // we add a separate variable with the result of the draw
-        String variableName = getAvailableVariableName(expr.name);
-        StringBuilder variableDeclaration = new StringBuilder(variableName)
-                .append(" ~ ").append(expr.expression.accept(this));
-        revStatements.add(variableDeclaration.toString());
-        modelVariableNames.add(variableName);
-        StringBuilder move = RevMoves.getMoveStatement(
-                variableName, typeResolver.resolveType(expr).iterator().next(), componentResolver
-        );
-        if (move != null) {
-            revStatements.add(move.toString());
-        }
+        String variableName = expr.name;
+        ResolvedType type = typeResolver.resolveType(expr).iterator().next();
+        StringBuilder variableDeclaration = expr.expression.accept(this);
+        RevStmt.Assignment stmt = addStatement(variableName, Stochasticity.STOCHASTIC, type, variableDeclaration);
 
         // we now pass the new variable to the function
-        return new StringBuilder(variableName);
+        return new StringBuilder(stmt.variableName);
     }
 
     @Override
@@ -296,52 +282,24 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         return null;
     }
 
-    /**
-     * Makes sure that the variable name does not equal to "model" or "code", as these are reserved in
-     * Rev. Returns the sanitized variable name.
-     */
-    private String sanitizeVariableName(String variableName) {
-        if (variableName.equals("data") || variableName.equals("model")) {
-           while (variableNames.contains(variableName)) {
-               variableName = variableName + "_";
-           }
-           return variableName;
-        }
-        return variableName;
-    }
+    private RevStmt.Assignment addStatement(String variableName, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
+        List<String> takenVariableNames = revStatements.stream()
+                .filter(s -> s instanceof RevStmt.Assignment)
+                .map(s -> ((RevStmt.Assignment) s).variableName)
+                .toList();
 
-    /**
-     * Returns {@code proposedName} if no other variable like it exists. Otherwise, adds a suffix {@code proposedName}
-     * and returns the available name.
-     * Note that this currently breaks if there is a `data` variable sanitized to `data_` by {@code sanitizeVariableName}
-     * and a function taking a drawn argument `data_` *not* changed by {@code getAvailableVariableName}.
-     */
-    private String getAvailableVariableName(String proposedName) {
-        if (!variableNames.contains(proposedName)) return proposedName;
-
+        String nextAvailableName = variableName;
         int suffix = 2;
-        String adjustedProposedName = proposedName + suffix;
-        while (this.variableNames.contains(adjustedProposedName)) {
-            adjustedProposedName = proposedName + ++suffix;
+        while (takenVariableNames.contains(nextAvailableName)) {
+            nextAvailableName = variableName + suffix++;
         }
 
-        variableNames.add(adjustedProposedName);
+        RevStmt.Assignment stmt = new RevStmt.Assignment(
+                nextAvailableName, stochasticity, type, expression, componentResolver
+        );
+        revStatements.add(stmt);
 
-        return adjustedProposedName;
-    }
-
-    /**
-     * Adds a new Rev statement. Depending on the stochastictity of {@code node}, it is added to the data or model
-     * block.
-     */
-    private void addStatement(AstNode node, String variableName, StringBuilder expressionBuilder) {
-        Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
-
-        switch (stochasticity) {
-            case CONSTANT -> revStatements.add(expressionBuilder.insert(0, variableName + " -> ").toString());
-            case DETERMINISTIC -> revStatements.add(expressionBuilder.insert(0, variableName + " := ").toString());
-            case STOCHASTIC -> revStatements.add(expressionBuilder.insert(0, variableName + "  ").toString());
-        }
+        return stmt;
     }
 
     static class RevConversionError extends RuntimeException {

@@ -119,22 +119,11 @@ public class RevGeneratorMapping {
                     "branchRates", arg("branchRates", arguments, true),
                     "L", arg("numSequences", arguments, true)
             );
-            case "IID" -> {
-                // we have smth like IID(base=Normal(...), n=5)
-                // we turn this into Normal(..., replicates=5)
-                String distribution = arg("base", arguments);
-                String replicates = arg("n", arguments);
-
-                if (!distribution.endsWith(")")) {
-                    throw new RevConverter.RevConversionError("IID is only supported when the base distribution is directly passed to the function.");
-                }
-
-                StringBuilder builder = new StringBuilder();
-                builder.append(distribution.substring(0, distribution.length() - 1));
-                builder.append(", replicates=").append(replicates).append(")");
-
-                yield builder;
-            }
+            case "IID" -> build(
+                    "dnIID",
+                    "numValues", arg("n", arguments),
+                    "valueDistribution", arg("base", arguments)
+            );
             default -> throw new RevConverter.RevConversionError("Generator " + phylospecGenerator + " is not supported.");
         };
     }

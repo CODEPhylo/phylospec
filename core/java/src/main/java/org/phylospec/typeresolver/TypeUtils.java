@@ -243,7 +243,7 @@ public class TypeUtils {
     }
 
     /** Calls the visitor function on the type and every parent type. */
-    static void visitTypeAndParents(
+    public static void visitTypeAndParents(
             ResolvedType type,
             Function<ResolvedType, Visitor> visitor,
             ComponentResolver componentResolver
@@ -253,7 +253,7 @@ public class TypeUtils {
     }
 
     /** Calls the visitor function on the type and every parent type. */
-    static void visitParents(
+    public static void visitParents(
             ResolvedType type,
             Function<ResolvedType, Visitor> visitor,
             ComponentResolver componentResolver
@@ -386,7 +386,7 @@ public class TypeUtils {
         return true;
     }
 
-    enum Visitor {
+    public enum Visitor {
         STOP,
         CONTINUE
     }

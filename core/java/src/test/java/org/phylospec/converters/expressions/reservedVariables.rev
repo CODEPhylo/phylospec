@@ -1,0 +1,22 @@
+moves = VectorMoves()
+monitors = VectorMonitors()
+
+data <- 10.0
+model <- 5.0
+data__ <- 1.0
+model_ <- 2.0
+a ~ dnNormal( mean=data, sd=model )
+moves.append( mvSlideBactrian( a ) )
+b ~ dnNormal( mean=data__, sd=model_ )
+moves.append( mvSlideBactrian( b ) )
+b.clamp( data )
+
+monitors.append( mnModel( filename = "reservedVariables.log", printgen = 10 ) )
+monitors.append( mnFile( filename = "reservedVariables.trees", printgen = 10 ) )
+monitors.append( mnScreen( printgen = 10 ) )
+
+mymodel = model( a, b )
+mymcmc = mcmc( mymodel, monitors, moves )
+mymcmc.run( generations=20000, tuningInterval=200 )
+
+q()
