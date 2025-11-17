@@ -20,10 +20,12 @@ import java.util.stream.Stream;
 ///```
 public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
-    private final ComponentResolver componentResolver;
+    final ComponentResolver componentResolver;
     private final StochasticityResolver stochasticityResolver;
     private final TypeResolver typeResolver;
 
+    private final Map<Expr, Set<ResolvedType>> overwrittenResolvedTypes;
+    private final Map<AstNode, Stochasticity> overwrittenStochasticities;
     private final List<RevStmt> revStatements;
 
     /**
@@ -31,6 +33,8 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
      */
     private RevConverter(List<Stmt> statements, ComponentResolver componentResolver) {
         revStatements = new ArrayList<>();
+        overwrittenResolvedTypes = new HashMap<>();
+        overwrittenStochasticities = new HashMap<>();
 
         this.componentResolver = componentResolver;
         stochasticityResolver = new StochasticityResolver();
@@ -67,7 +71,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         // add statements
 
         for (RevStmt statement : converter.revStatements) {
-            builder.append(statement.build());
+            builder.append(statement.build()).append("\n");
         }
 
         List<String> modelVariableNames = converter.revStatements.stream()
@@ -131,7 +135,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         // randomVariableName.clamp(observedVariableName)
         // to signal the clamping
         revStatements.add(new RevStmt(
-            new StringBuilder(randomVariableName).append(".clamp( ").append(observedVariableName).append(" )\n")
+            new StringBuilder(randomVariableName).append(".clamp( ").append(observedVariableName).append(" )")
         ));
         return null;
     }
@@ -139,7 +143,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     @Override
     public Void visitAssignment(Stmt.Assignment stmt) {
         StringBuilder expression = stmt.expression.accept(this);
-        Stochasticity stochasticity = stochasticityResolver.getStochasticity(stmt);
+        Stochasticity stochasticity = getStochasticity(stmt);
         ResolvedType type = typeResolver.resolveType(stmt);
 
         addStatement(stmt.name, stochasticity, type, expression);
@@ -150,7 +154,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     @Override
     public Void visitDraw(Stmt.Draw stmt) {
         StringBuilder expression = stmt.expression.accept(this);
-        Stochasticity stochasticity = stochasticityResolver.getStochasticity(stmt);
+        Stochasticity stochasticity = getStochasticity(stmt.expression);
         ResolvedType type = typeResolver.resolveType(stmt);
 
         addStatement(stmt.name, stochasticity, type, expression);
@@ -209,11 +213,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
     @Override
     public StringBuilder visitCall(Expr.Call expr) {
-        Map<String, String> arguments = new HashMap<>();
-        for (Expr.Argument arg : expr.arguments) {
-            arguments.put(arg.name, arg.accept(this).toString());
-        }
-        return RevGeneratorMapping.map(expr.functionName, arguments);
+        return RevGeneratorMapping.map(expr, this);
     }
 
     @Override
@@ -282,7 +282,20 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         return null;
     }
 
-    private RevStmt.Assignment addStatement(String variableName, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
+    void addStatement(RevStmt stmt) {
+        if (stmt instanceof RevStmt.Assignment) {
+            RevStmt.Assignment assignment = (RevStmt.Assignment) stmt;
+            addStatement(assignment.variableName, assignment.stochasticity, assignment.type, assignment.expression);
+        } else {
+            revStatements.add(stmt);
+        }
+    }
+
+    RevStmt.Assignment addStatement(String variableName, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
+        return addStatement(variableName, null, stochasticity, type, expression);
+    }
+
+    RevStmt.Assignment addStatement(String variableName, String index, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
         List<String> takenVariableNames = revStatements.stream()
                 .filter(s -> s instanceof RevStmt.Assignment)
                 .map(s -> ((RevStmt.Assignment) s).variableName)
@@ -295,11 +308,23 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         }
 
         RevStmt.Assignment stmt = new RevStmt.Assignment(
-                nextAvailableName, stochasticity, type, expression, componentResolver
+                nextAvailableName, index, stochasticity, type, expression, componentResolver
         );
         revStatements.add(stmt);
 
         return stmt;
+    }
+
+    Set<ResolvedType> getResolvedType(Expr expr) {
+        return overwrittenResolvedTypes.getOrDefault(expr, typeResolver.resolveType(expr));
+    }
+    Stochasticity getStochasticity(AstNode expr) {
+        return overwrittenStochasticities.getOrDefault(expr, stochasticityResolver.getStochasticity(expr));
+    }
+
+    void overwriteResolvedType(Expr expr, Set<ResolvedType> typeSet, Stochasticity stochasticity) {
+        overwrittenResolvedTypes.put(expr, typeSet);
+        overwrittenStochasticities.put(expr, stochasticity);
     }
 
     static class RevConversionError extends RuntimeException {

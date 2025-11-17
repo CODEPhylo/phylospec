@@ -2,3 +2,9 @@ Vector<Real> a ~ IID(
     base=Normal(mean=100, sd=10),
     n=5
 )
+
+Distribution<Vector<Real>> b = IID(
+    base=Normal(mean=100, sd=10),
+    n=5
+)
+Vector<Real> c ~ b

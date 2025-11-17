@@ -18,9 +18,23 @@ class RevStmt {
 
     static class Assignment extends RevStmt {
         String variableName;
+        String index = null;
         Stochasticity stochasticity;
         ResolvedType type;
         ComponentResolver componentResolver;
+
+        Assignment(
+                String variableName, String index, Stochasticity stochasticity, ResolvedType type, StringBuilder expression,
+                ComponentResolver componentResolver
+        ) {
+            super(expression);
+            this.variableName = variableName;
+            this.index = index;
+            this.stochasticity = stochasticity;
+            this.type = type;
+            this.componentResolver = componentResolver;
+        }
+
 
         Assignment(String variableName, Stochasticity stochasticity, ResolvedType type, StringBuilder expression, ComponentResolver componentResolver) {
             super(expression);
@@ -34,6 +48,10 @@ class RevStmt {
             StringBuilder builder = new StringBuilder();
             builder.append(variableName);
 
+            if (index != null) {
+                builder.append("[").append(index).append("]");
+            }
+
             builder.append(
                     switch (stochasticity) {
                         case CONSTANT -> " <- ";
@@ -44,7 +62,7 @@ class RevStmt {
                     }
             );
 
-            builder.append(expression).append("\n");
+            builder.append(expression);
 
             StringBuilder moves = buildMoves();
             if (stochasticity == Stochasticity.STOCHASTIC && moves != null) builder.append(moves);
@@ -67,7 +85,14 @@ class RevStmt {
         }
 
         private StringBuilder buildMove(String moveName) {
-            return new StringBuilder().append("moves.append( ").append(moveName).append("( ").append(variableName).append(" ) )\n");
+            if (index == null) {
+                return new StringBuilder().append("\nmoves.append( ").append(moveName).append("( ").append(variableName).append(" ) )");
+            } else {
+                return new StringBuilder()
+                        .append("\nmoves.append( ").append(moveName).append("( ")
+                        .append(variableName).append("[").append(index)
+                        .append("] ) )");
+            }
         }
 
         private boolean covers(String typeString) {

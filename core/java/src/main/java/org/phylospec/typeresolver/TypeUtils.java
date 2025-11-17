@@ -206,9 +206,9 @@ public class TypeUtils {
      * A type C is the lowest cover of a typeset T if it covers all types in T,
      * and if all other covers of T cover C. */
     static ResolvedType getLowestCover(List<ResolvedType> typeSet, ComponentResolver componentResolver) {
-        if (typeSet.size() == 1) return typeSet.get(0);
+        if (typeSet.size() == 1) return typeSet.getFirst();
 
-        ResolvedType lowestCover = typeSet.get(0);
+        ResolvedType lowestCover = typeSet.getFirst();
         for (int i = 1; i < typeSet.size(); i++) {
             lowestCover = getLowestCover(lowestCover, typeSet.get(i), componentResolver);
             if (lowestCover == null) return null;

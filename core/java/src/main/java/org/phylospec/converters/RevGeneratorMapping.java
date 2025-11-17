@@ -1,14 +1,31 @@
 package org.phylospec.converters;
 
+import org.phylospec.ast.Expr;
+import org.phylospec.components.ComponentResolver;
+import org.phylospec.typeresolver.ResolvedType;
+import org.phylospec.typeresolver.Stochasticity;
+
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class RevGeneratorMapping {
     /**
      * Takes a PhyloSpec generator name and an arguments map and returns the corresponding Rev expression. Returns
-     * null if the generator cannot be mapped to Rev Rev code.
+     * null if the generator cannot be mapped to Rev code.
      */
-    static StringBuilder map(String phylospecGenerator, Map<String, String> arguments) {
-        return switch (phylospecGenerator) {
+    static StringBuilder map(
+            Expr.Call expr,
+            RevConverter converter
+    ) {
+        Map<String, String> arguments = new HashMap<>();
+        for (Expr.Argument arg : expr.arguments) {
+            arguments.put(arg.name, arg.accept(converter).toString());
+        }
+        Set<ResolvedType> generatedTypeSet = converter.getResolvedType(expr);
+
+        return switch (expr.functionName) {
             case "Exponential" -> build(
                     "dnExponential",
                     "lambda", arg("rate", arguments)
@@ -119,12 +136,58 @@ public class RevGeneratorMapping {
                     "branchRates", arg("branchRates", arguments, true),
                     "L", arg("numSequences", arguments, true)
             );
-            case "IID" -> build(
-                    "dnIID",
-                    "numValues", arg("n", arguments),
-                    "valueDistribution", arg("base", arguments)
-            );
-            default -> throw new RevConverter.RevConversionError("Generator " + phylospecGenerator + " is not supported.");
+            case "IID" -> {
+                // we have smth like a = IID(base=Normal(...), n=5)
+                // we turn this into
+                // for (i in 1:5) {
+                //      temp[i] ~ Normal(...)
+                //}
+                // a = temp
+
+                // extract arguments
+                String base = arg("base", arguments);
+                String n = arg("n", arguments);
+
+                // get type of vector and vector elements
+                ResolvedType vectorType = null;
+                ResolvedType itemType = null;
+                for (ResolvedType iidType : generatedTypeSet) {
+                    if (iidType.getName().equals("Distribution") && iidType.getParameterTypes().containsKey("T")) {
+                        vectorType = iidType.getParameterTypes().get("T");
+
+                        if (vectorType.getParameterTypes().containsKey("T")) {
+                            itemType = vectorType.getParameterTypes().get("T");
+                            break;
+                        }
+                    }
+                }
+                if (vectorType == null || itemType == null) {
+                    // we don't know this specific IID generator
+                    yield null;
+                }
+
+                // add for loop statements
+                converter.addStatement(
+                        new RevStmt(new StringBuilder("for (i in 1:").append(n).append(") {"))
+                );
+                RevStmt.Assignment assignment = converter.addStatement(
+                        "temp",
+                        "i",
+                        Stochasticity.STOCHASTIC,
+                        itemType,
+                        new StringBuilder(base)
+                );
+                converter.addStatement(
+                        new RevStmt(new StringBuilder("}"))
+                );
+
+                // we simply return a reference to the newly created temporary
+                // this means that the expr now is deterministic transformation of temp
+                converter.overwriteResolvedType(expr, Set.of(vectorType), Stochasticity.DETERMINISTIC);
+
+                yield new StringBuilder(assignment.variableName);
+            }
+            default -> throw new RevConverter.RevConversionError("Generator " + expr.functionName + " is not supported.");
         };
     }
 
