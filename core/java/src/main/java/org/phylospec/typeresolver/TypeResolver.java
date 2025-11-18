@@ -575,10 +575,12 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
      * helper functions to store the resolved types
      */
 
+    /** Creates a new scope. All remembered variables will be added to this new scope until it is dropped. */
     private void createScope() {
         this.scopedVariableTypes.addFirst(new HashMap<>());
     }
 
+    /** Drops the most recent scope. All remembered variables since the creation of that scope are dropped too. */
     private void dropScope() {
         this.scopedVariableTypes.removeFirst();
     }
