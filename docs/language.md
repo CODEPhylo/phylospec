@@ -230,35 +230,21 @@ Real y = Normal(mean=mean, sd=2.0);
 
 ### 2.6. Vectorization
 
-Instead of overly flexible loops, vectorization is used. There are multiple proposed syntaxes for vectorization:
+Instead of overly flexible loops, PhyloSpec supports list comprehension:
 ```
-// LPhy-style implicit vectorization
-Vector<Real> x = [1.0, 2.0, 3.0];
-Vector<Real> logX = log(x);
-// Explicit vectorization where the vectorized argument is highlighted
-Vector<Real> logX = log(x...);
-// Julia and MATLAB-style explicit vectorization
-Vector<Real> logX = log.(x);
-// R and python-style explicit vectorization (only works with one argument)
-Vector<Real> logX = map(log, x);
-// List comprehension style
-Vector<Real> logX = [log(xi) for xi in x];
+Vector<Real> x = [1.0, 2.0, 3.0]
+Vector<Real> logX = [log(xi) for xi in x]
+Vector<Real> xTimesLogX = [x * logX for x, logX in zip(first=x, second=logX)]
 ```
 
 **Justification for list comprehensions:**
 List comprehensions provide a declarative, mathematically-inspired syntax that naturally extends beyond simple function application. They excel at:
 - Creating collections with complex expressions: `[xi^2 + yi for xi, yi in zip(x, y)]`
-- Conditional filtering: `[log(xi) for xi in x if xi > 0]`
-- Index-aware operations: `[i * xi for i, xi in enumerate(x)]`
 - Nested structures: `[[f(xi, yj) for yj in y] for xi in x]`
+- Index-aware operations: `[i * xi for i, xi in enumerate(x)]`
+- Conditional filtering: `[log(xi) for xi in x if xi > 0]`
 
 This syntax aligns well with mathematical set-builder notation and provides more flexibility than map-style vectorization while remaining declarative and side-effect free - ideal for model specification languages where clarity and mathematical expressiveness are paramount.
-
-
-> [!NOTE]
-> Open questions:
->
-> - What version of vectorization should we use?
 
 ### 2.7. Distributions as Arguments
 
