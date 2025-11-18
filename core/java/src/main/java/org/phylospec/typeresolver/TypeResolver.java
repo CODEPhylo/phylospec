@@ -413,6 +413,11 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
     }
 
     @Override
+    public Set<ResolvedType> visitListComprehension(Expr.ListComprehension expr) {
+        return Set.of();
+    }
+
+    @Override
     public Set<ResolvedType> visitGet(Expr.Get expr) {
         Set<ResolvedType> objectTypeSet = expr.object.accept(this);
 
