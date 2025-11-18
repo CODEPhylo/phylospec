@@ -19,6 +19,7 @@ public class Lexer {
         keywords.put("true", TokenType.TRUE);
         keywords.put("false", TokenType.FALSE);
         keywords.put("import", TokenType.IMPORT);
+        keywords.put("for", TokenType.FOR);
     }
 
     private final String source;
