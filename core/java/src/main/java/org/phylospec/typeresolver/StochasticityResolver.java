@@ -109,6 +109,17 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
     }
 
     @Override
+    public Stochasticity visitListComprehension(Expr.ListComprehension expr) {
+        return remember(
+                expr,
+                Stochasticity.merge(
+                        expr.expression.accept(this),
+                        expr.list.accept(this)
+                )
+        );
+    }
+
+    @Override
     public Stochasticity visitGet(Expr.Get expr) {
         return remember(expr, expr.object.accept(this));
     }
