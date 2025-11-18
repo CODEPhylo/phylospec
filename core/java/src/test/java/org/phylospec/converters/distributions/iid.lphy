@@ -1,0 +1,5 @@
+data {
+}
+model {
+    a ~ Normal(mean=100, sd=10, replicates=5);
+}

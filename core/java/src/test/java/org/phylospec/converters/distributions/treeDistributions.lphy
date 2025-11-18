@@ -1,0 +1,12 @@
+data {
+}
+model {
+    a ~ Yule(lambda=10.0);
+    b ~ FossilBirthDeathTree(lambda=10.0, mu=5.0, rho=0.5, psi=1.0);
+    c ~ BirthDeath(lambda=10.0, mu=5.0, rootAge=20.0);
+    d ~ Coalescent(theta=200);
+    e ~ Yule(lambda=10.0, taxa=a.taxa());
+    f ~ FossilBirthDeathTree(lambda=10.0, mu=5.0, rho=0.5, psi=1.0, taxa=a.taxa());
+    g ~ BirthDeath(lambda=10.0, mu=5.0, rootAge=20.0, taxa=a.taxa());
+    h ~ Coalescent(theta=200, taxa=a.taxa());
+}

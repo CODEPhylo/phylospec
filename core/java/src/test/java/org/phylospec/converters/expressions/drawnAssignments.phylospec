@@ -1,0 +1,10 @@
+Real meanlog ~ Exponential(rate=1)
+Real a ~ LogNormal(
+    meanlog~Exponential(rate=10),
+    sdlog=2
+)
+
+Real b ~ LogNormal(
+    meanlog~Exponential(rate~Exponential(1.0)),
+    sdlog=2
+)

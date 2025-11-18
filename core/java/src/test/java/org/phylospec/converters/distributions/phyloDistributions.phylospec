@@ -1,0 +1,9 @@
+Tree tree ~ Coalescent(populationSize=200)
+QMatrix q = JC69()
+
+Vector<Real> a ~ PhyloBM(tree=tree, sigma=1.0, rootValue=0)
+Vector<Real> b ~ PhyloOU(tree=tree, sigma=1.0, alpha=0.5, optimum=2.0, rootValue=0.0)
+Alignment c ~ PhyloCTMC(tree=tree, Q=q)
+Alignment d ~ PhyloCTMC(tree=tree, Q=q, siteRates=[0.1])
+Alignment e ~ PhyloCTMC(tree=tree, Q=q, branchRates=[0.1])
+Alignment f ~ PhyloCTMC(tree=tree, Q=q, branchRates=[0.1], siteRates=[0.2])

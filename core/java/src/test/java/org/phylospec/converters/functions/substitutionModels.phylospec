@@ -1,0 +1,5 @@
+QMatrix a = JC69()
+QMatrix b = K80(2.0)
+QMatrix c = F81(baseFrequencies=[0.25, 0.25, 0.25, 0.25])
+QMatrix d = HKY(baseFrequencies=[0.25, 0.25, 0.25, 0.25], kappa=1.0)
+QMatrix e = GTR(rateMatrix=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0], baseFrequencies=[0.25, 0.25, 0.25, 0.25])

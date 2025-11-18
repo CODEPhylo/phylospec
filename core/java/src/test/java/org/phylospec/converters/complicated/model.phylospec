@@ -1,0 +1,17 @@
+Alignment observedAlignment = nexus(
+	file="alignment.nex"
+)
+
+QMatrix Q = HKY(
+	kappa ~ LogNormal(sdlog=0.5, meanlog=1.0),
+	baseFrequencies ~ Dirichlet(alpha=[2.0, 2.0, 2.0, 2.0]),
+)
+Tree tree ~ Coalescent(
+	taxa = observedAlignment.taxa,
+	populationSize ~ LogNormal(meanlog=3.0, sdlog=2.0),
+)
+
+@observedAs(observedAlignment)
+Alignment alignment ~ PhyloCTMC(
+	Q=Q, tree=tree, numSequences=observedAlignment.ntax
+)
