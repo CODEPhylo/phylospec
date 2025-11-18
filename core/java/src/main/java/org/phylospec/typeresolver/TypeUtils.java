@@ -133,7 +133,8 @@ class TypeUtils {
         }
     }
 
-    /** Returns a list containing the type strings of the generic type parameters. */
+    /** Returns a list containing the type strings of the generic type parameters. Supports nested
+     * generics like {@code "Vector<Pair<Real, Real>>"} */
     static List<String> parseParameterTypeNames(String typeString) {
         if (!isGeneric(typeString)) return List.of();
 

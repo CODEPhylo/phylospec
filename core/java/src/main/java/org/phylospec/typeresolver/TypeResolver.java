@@ -1,6 +1,5 @@
 package org.phylospec.typeresolver;
 
-import org.phylospec.Utils;
 import org.phylospec.ast.*;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
@@ -51,7 +50,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
         this.scopedVariableTypes = new ArrayList<>();
         this.printer = new AstPrinter();
 
-        enterScope();
+        createScope();
     }
 
     /**
@@ -433,9 +432,10 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
     public Set<ResolvedType> visitListComprehension(Expr.ListComprehension expr) {
         Set<ResolvedType> listTypeSet = expr.list.accept(this);
 
-        // we collect all possible variable types
+        // we create a new scope for the list comprehension expression
+        // this allows the list comprehension variables to shadow outer variables
 
-        enterScope();
+        createScope();
 
         // case 1: we only have a single variable
         if (expr.variables.size() == 1) {
@@ -481,10 +481,11 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
             remember(expr.variables.getLast(), secondVariableTypeSet);
         }
 
+        // parse the expression
         Set<ResolvedType> expressionTypeSet = expr.expression.accept(this);
-        leaveScope();
+        dropScope();
 
-        // we return a list of the expression
+        // we return an array of the expression
         Set<ResolvedType> returnedTypeSet = ResolvedType.fromString(
                 "Vector<T>",
                 Map.of("T", expressionTypeSet),
@@ -568,11 +569,11 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
      * helper functions to store the resolved types
      */
 
-    private void enterScope() {
+    private void createScope() {
         this.scopedVariableTypes.addFirst(new HashMap<>());
     }
 
-    private void leaveScope() {
+    private void dropScope() {
         this.scopedVariableTypes.removeFirst();
     }
 

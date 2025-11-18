@@ -373,6 +373,8 @@ public class Parser {
     }
 
     private Expr listComprehension(Expr expression, boolean oldSkipNewLines) {
+        // parse parse variable names
+
         Expr firstVariable = expression();
         if (!(firstVariable instanceof Expr.Variable)) {
             throw new ParseError(peek(), "for must be followed by variable names in list comprehensions.");
@@ -391,6 +393,8 @@ public class Parser {
 
         consume(TokenType.IN, "The variables names must be followed by 'in' in list comprehensions.");
 
+        // parse list expression
+        
         Expr list = expression();
 
         consume(TokenType.RIGHT_SQUARE_BRACKET, "List comprehensions must be terminated by a square bracket.");
