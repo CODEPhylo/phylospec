@@ -1,0 +1,31 @@
+Vector<Real> vector = [
+    10.0,
+    2.0,
+    -5.0
+]
+
+Vector<Real> vector2 = [
+    10.0,
+    2.0,
+    -5.0
+]
+
+Vector<Pair<Real, Real>> pairs = zip(first=vector, second=vector2)
+
+Vector<Real> vector3 = [
+    x+y
+    for x, y in zip(first=vector, second=vector2)
+]
+
+Vector<PositiveReal> vector4 = [x - y for x, y in zip(first=vector, second=vector2)]
+
+// EXPECT AST
+// (AS Vector<Real> vector (AR 10.0 2.0 (- 5.0)))
+// (AS Vector<Real> vector2 (AR 10.0 2.0 (- 5.0)))
+// (AS Vector<Real> vector3 (LC (+ x x) (x, y) (CA zip (AA first vector) (AA second vector2))))
+// (AS Vector<Real> vector4 (LC (- x x) (x, y) (CA zip (AA first vector) (AA second vector2))))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Expression of type `Vector<Real>` cannot be assigned to variable `vector4` of type `Vector<PositiveReal>`
+// EXPECT TYPE_ERRORS
