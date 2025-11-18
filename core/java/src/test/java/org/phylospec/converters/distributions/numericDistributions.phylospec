@@ -1,0 +1,9 @@
+Real a ~ Exponential(100)
+Real b ~ Normal(mean=100, sd=10)
+Real c ~ LogNormal(meanlog=100, sdlog=10)
+Real d ~ Gamma(shape=100, rate=10)
+Real e ~ Beta(alpha=100, beta=20)
+Real f ~ Uniform(lower=0.0, upper=1.0)
+Vector<Real> g ~ Dirichlet(alpha=[
+    1.0, 2.0
+]);

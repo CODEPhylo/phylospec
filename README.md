@@ -6,7 +6,7 @@ A specification for phylogenetic modeling components and their interfaces.
 
 PhyloSpec provides a standardized way to describe phylogenetic modeling components (distributions, functions, and types) that can be shared across different phylogenetic inference engines. Core of PhyloSpec is a modeling language designed to describe phylogenetic models.
 
-This enables a more transparent ecosystem, where users can choose the right tool for the job and engines can play to their respective strengths. Having a unified way to specify models opens up possibilities like cross-engine model validation and benchmarks. Furthermore, it allows shared tooling like the [Bayesian Model Builder](https://github.com/alexeid/bayesian-model-builder) web application to construct models that are compatible with multiple engines.
+PhyloSpec aims to bring the community together by developing shared tooling like the [Bayesian Model Builder](https://github.com/alexeid/bayesian-model-builder), editor extensions, simulators, visualization tools and much more. It simplifies model specification for researchers and improves reproducing and building upon existing results.
 
 A (very) simple PhyloSpec model might look like as follows:
 
@@ -46,6 +46,8 @@ The specification consists of:
 
 ## First Steps
 
+- Check out the [introduction slides](https://polybox.ethz.ch/index.php/s/Z2TPYFQBFk5qNjP).
+- Check out the [VS Code extension demo](https://polybox.ethz.ch/index.php/s/8TSWd7mqLRiEcTJ).
 - Check out the [introduction to the PhyloSpec language](docs/language.md).
 - Check out the [other documentation](docs).
 - Install and try out the [VS Code extension](tools/vscode/README.md) featuring syntax highlighting, type checking, auto-completion, and information-on-hover.

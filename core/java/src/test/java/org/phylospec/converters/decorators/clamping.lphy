@@ -1,0 +1,9 @@
+data {
+    observed = readNexus(file="hallo.nex");
+    q = jukesCantor();
+}
+model {
+    tree ~ Coalescent(theta=1.0 * observed.length());
+    alignment ~ PhyloCTMC(tree=tree, Q=q);
+    observed = alignment;
+}

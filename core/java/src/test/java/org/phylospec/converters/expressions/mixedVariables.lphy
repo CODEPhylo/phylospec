@@ -1,0 +1,7 @@
+data {
+    a = 10.0;
+}
+model {
+    b ~ LogNormal(meanlog=a, sdlog=2 * a);
+    c ~ Dirichlet(conc=[b, b, b]);
+}

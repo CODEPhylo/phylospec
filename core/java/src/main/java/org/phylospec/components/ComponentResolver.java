@@ -42,6 +42,18 @@ public class ComponentResolver {
     }
 
     /**
+     * Registers a component library from an input stream.
+     * Note that this does not make the types and generators resolvable. For
+     * this, the appropriate namespace has to be imported first using either
+     * `importEntireNamespace` or `importNamespace`.
+     */
+    public void registerLibraryFromInputStream(InputStream fileStream) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        ComponentLibrarySchema componentLibrary = mapper.readValue(fileStream, ComponentLibrarySchema.class);
+        registerComponentLibrary(componentLibrary.getComponentLibrary());
+    }
+
+    /**
      * Registers a component library.
      * Note that this does not make the types and generators resolvable ("import" them).
      * For this, the appropriate namespace has to be imported first using either

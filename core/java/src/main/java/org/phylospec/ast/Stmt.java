@@ -76,22 +76,22 @@ public abstract class Stmt extends AstNode {
     public static class Decorated extends Stmt {
         public Decorated(Expr.Call decorator, Stmt statement) {
             this.decorator = decorator;
-            this.statememt = statement;
+            this.statement = statement;
         }
 
         public final Expr.Call decorator;
-        public final Stmt statememt;
+        public final Stmt statement;
 
         @Override
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Decorated decorated = (Decorated) o;
-            return Objects.equals(decorator, decorated.decorator) && Objects.equals(statememt, decorated.statememt);
+            return Objects.equals(decorator, decorated.decorator) && Objects.equals(statement, decorated.statement);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(decorator, statememt);
+            return Objects.hash(decorator, statement);
         }
 
         public <S, E, T> S accept(AstVisitor<S, E, T> visitor) {
