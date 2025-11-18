@@ -1,5 +1,6 @@
 package org.phylospec.typeresolver;
 
+import org.phylospec.Utils;
 import org.phylospec.ast.*;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
@@ -39,7 +40,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
     private final TypeMatcher typeMatcher;
 
     public Map<AstNode, Set<ResolvedType>> resolvedTypes;
-    public Map<String, ResolvedType> variableTypes;
+    private List<Map<String, Set<ResolvedType>>> scopedVariableTypes;
 
     AstPrinter printer;
 
@@ -47,8 +48,10 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
         this.componentResolver = componentResolver;
         this.typeMatcher = new TypeMatcher(componentResolver);
         this.resolvedTypes = new HashMap<>();
-        this.variableTypes = new HashMap<>();
+        this.scopedVariableTypes = new ArrayList<>();
         this.printer = new AstPrinter();
+
+        enterScope();
     }
 
     /**
@@ -84,11 +87,25 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
      * Returns the type associated with the given variable name. The type of the
      * variable is determined by the type specified at assignment (e.g. Real a = ...).
      * Thus, every variable is only associated with a single type.
-     * Returns null if
-     * no type is known.
+     * Returns an empty set if no type is known.
      */
-    public ResolvedType resolveVariable(String variableName) {
-        return this.variableTypes.get(variableName);
+    public Set<ResolvedType> resolveVariable(String variableName) {
+        // we go through all nested scopes to check if we find the variable there
+        for (Map<String, Set<ResolvedType>> scope : scopedVariableTypes) {
+            if (scope.containsKey(variableName)) {
+                return scope.get(variableName);
+            }
+        }
+
+        // we don't know this variable
+        return Set.of();
+    }
+
+    /**
+     * Return a set of the global variable names of this model.
+     */
+    public Set<String> getVariableNames() {
+        return this.scopedVariableTypes.getLast().keySet();
     }
 
     /**
@@ -103,7 +120,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
     @Override
     public ResolvedType visitAssignment(Stmt.Assignment stmt) {
         ResolvedType resolvedVariableType = stmt.type.accept(this);
-        remember(stmt.name, resolvedVariableType);
+        remember(stmt.name, Set.of(resolvedVariableType));
 
         Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
 
@@ -117,7 +134,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
     @Override
     public ResolvedType visitDraw(Stmt.Draw stmt) {
         ResolvedType resolvedVariableType = stmt.type.accept(this);
-        remember(stmt.name, resolvedVariableType);
+        remember(stmt.name, Set.of(resolvedVariableType));
 
         Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
 
@@ -197,13 +214,13 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
     @Override
     public Set<ResolvedType> visitVariable(Expr.Variable expr) {
         String variableName = expr.variableName;
-        ResolvedType resolvedType = variableTypes.get(variableName);
+        Set<ResolvedType> resolvedTypeSet = resolveVariable(variableName);
 
-        if (resolvedType == null) {
+        if (resolvedTypeSet.isEmpty()) {
             throw new TypeError(expr, "Variable `" + variableName + "` is not known");
         }
 
-        return remember(expr, Set.of(resolvedType));
+        return remember(expr, resolvedTypeSet);
     }
 
     @Override
@@ -414,7 +431,66 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
 
     @Override
     public Set<ResolvedType> visitListComprehension(Expr.ListComprehension expr) {
-        return Set.of();
+        Set<ResolvedType> listTypeSet = expr.list.accept(this);
+
+        // we collect all possible variable types
+
+        enterScope();
+
+        // case 1: we only have a single variable
+        if (expr.variables.size() == 1) {
+            Set<ResolvedType> variableTypeSet = new HashSet<>();
+
+            for (ResolvedType listType: listTypeSet) {
+                // listType is a Vector<T> or a subclass thereof
+                // we find the corresponding T
+                TypeUtils.visitTypeAndParents(listType, t -> {
+                    if (t.getName().equals("Vector")) {
+                        variableTypeSet.add(t.getParameterTypes().get("T"));
+                        return TypeUtils.Visitor.STOP;
+                    }
+                    return TypeUtils.Visitor.CONTINUE;
+                }, componentResolver);
+            }
+
+            remember(expr.variables.getFirst(), variableTypeSet);
+        }
+
+        // case 2: we have two variables
+        if (expr.variables.size() == 2) {
+            Set<ResolvedType> firstVariableTypeSet = new HashSet<>();
+            Set<ResolvedType> secondVariableTypeSet = new HashSet<>();
+
+            for (ResolvedType listType: listTypeSet) {
+                // listType is a Vector<Pair<F, S>> or a subclass thereof
+                // we find the corresponding F and S
+                TypeUtils.visitTypeAndParents(listType, t -> {
+                    if (t.getName().equals("Vector")) {
+                        ResolvedType pairType = t.getParameterTypes().get("T");
+
+                        if (pairType.getName().equals("Pair")) {
+                            firstVariableTypeSet.add(pairType.getParameterTypes().get("F"));
+                            secondVariableTypeSet.add(pairType.getParameterTypes().get("S"));
+                        }
+                    }
+                    return TypeUtils.Visitor.CONTINUE;
+                }, componentResolver);
+            }
+
+            remember(expr.variables.getFirst(), firstVariableTypeSet);
+            remember(expr.variables.getLast(), secondVariableTypeSet);
+        }
+
+        Set<ResolvedType> expressionTypeSet = expr.expression.accept(this);
+        leaveScope();
+
+        // we return a list of the expression
+        Set<ResolvedType> returnedTypeSet = ResolvedType.fromString(
+                "Vector<T>",
+                Map.of("T", expressionTypeSet),
+                componentResolver
+        );
+        return remember(expr, returnedTypeSet);
     }
 
     @Override
@@ -492,6 +568,14 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
      * helper functions to store the resolved types
      */
 
+    private void enterScope() {
+        this.scopedVariableTypes.addFirst(new HashMap<>());
+    }
+
+    private void leaveScope() {
+        this.scopedVariableTypes.removeFirst();
+    }
+
     private ResolvedType remember(Stmt expr, ResolvedType resolvedType) {
         resolvedTypes.put(expr, Set.of(resolvedType));
         return resolvedType;
@@ -507,9 +591,9 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
         return resolvedType;
     }
 
-    private ResolvedType remember(String variableName, ResolvedType resolvedType) {
-        variableTypes.put(variableName, resolvedType);
-        return resolvedType;
+    private Set<ResolvedType> remember(String variableName, Set<ResolvedType> resolvedTypeSet) {
+        scopedVariableTypes.getFirst().put(variableName, resolvedTypeSet);
+        return resolvedTypeSet;
     }
 
     /**

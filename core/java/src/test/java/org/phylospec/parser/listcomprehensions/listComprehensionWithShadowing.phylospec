@@ -1,0 +1,31 @@
+Vector<PositiveReal> vector = [
+    10.0,
+    2.0,
+    5.0
+]
+
+String x = "Hallo"
+
+Vector<PositiveReal> vector2 = [
+    x*x
+    for x in vector
+]
+
+Vector<Vector<Vector<PositiveReal>>> vector3 = [
+    [
+        [2*x - z for z in vector2]
+        for x in vector
+    ]
+    for x in vector
+]
+
+// EXPECT AST
+// (AS Vector<PositiveReal> vector (AR 10.0 2.0 5.0))
+// (AS String x "Hallo")
+// (AS Vector<PositiveReal> vector2 (LC (* x x) (x) vector))
+// (AS Vector<Vector<Vector<PositiveReal>>> vector3 (LC (LC (LC (- (* 2 x) z) (z) vector2) (x) vector) (x) vector))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Expression of type `Vector<Vector<Vector<Real>>>` cannot be assigned to variable `vector3` of type `Vector<Vector<Vector<PositiveReal>>>`
+// EXPECT TYPE_ERRORS
