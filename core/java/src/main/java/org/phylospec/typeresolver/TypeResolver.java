@@ -437,8 +437,11 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
 
         createScope();
 
-        // case 1: we only have a single variable
+        // add the list comprehension variables to the scope
+
         if (expr.variables.size() == 1) {
+            // we only have a single variable
+
             Set<ResolvedType> variableTypeSet = new HashSet<>();
 
             for (ResolvedType listType: listTypeSet) {
@@ -454,10 +457,9 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
             }
 
             remember(expr.variables.getFirst(), variableTypeSet);
-        }
+        } else if (expr.variables.size() == 2) {
+            // we have two variables
 
-        // case 2: we have two variables
-        if (expr.variables.size() == 2) {
             Set<ResolvedType> firstVariableTypeSet = new HashSet<>();
             Set<ResolvedType> secondVariableTypeSet = new HashSet<>();
 
@@ -479,19 +481,23 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
 
             remember(expr.variables.getFirst(), firstVariableTypeSet);
             remember(expr.variables.getLast(), secondVariableTypeSet);
+        } else {
+            throw new TypeError("List comprehensions can only have one or two variables.");
         }
 
         // parse the expression
+
         Set<ResolvedType> expressionTypeSet = expr.expression.accept(this);
         dropScope();
 
-        // we return an array of the expression
-        Set<ResolvedType> returnedTypeSet = ResolvedType.fromString(
+        // the type of the list comprehension is Vector<type of expression>
+
+        Set<ResolvedType> listComprehensionTypeSet = ResolvedType.fromString(
                 "Vector<T>",
                 Map.of("T", expressionTypeSet),
                 componentResolver
         );
-        return remember(expr, returnedTypeSet);
+        return remember(expr, listComprehensionTypeSet);
     }
 
     @Override
