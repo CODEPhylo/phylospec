@@ -1,0 +1,24 @@
+moves = VectorMoves()
+monitors = VectorMonitors()
+
+vector <- v( 10.0, 2.0, -5.0 )
+temp_list := vector
+for (i in 1:temp_list.size()) {
+temp_expr[i] := temp_list[i] * temp_list[i]
+}
+vector2 := temp_expr
+temp_list2 := vector
+for (i in 1:temp_list2.size()) {
+temp_list3 := vector
+for (i2 in 1:temp_list3.size()) {
+temp_list4 := vector2
+for (i3 in 1:temp_list4.size()) {
+temp_expr2[i3] := 2 * temp_list3[i2] - temp_list4[i3]
+}
+temp_expr3[i2] := temp_expr2
+}
+temp_expr4[i] := temp_expr3
+}
+vector3 := temp_expr4
+
+q()

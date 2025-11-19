@@ -18,10 +18,19 @@ class RevStmt {
 
     static class Assignment extends RevStmt {
         String variableName;
-        String index = null;
         Stochasticity stochasticity;
-        ResolvedType type;
-        ComponentResolver componentResolver;
+        String index = null;
+        ResolvedType type = null;
+        ComponentResolver componentResolver = null;
+
+        Assignment(
+                String variableName, String index, StringBuilder expression
+        ) {
+            super(expression);
+            this.variableName = variableName;
+            this.index = index;
+            this.stochasticity = Stochasticity.DETERMINISTIC;
+        }
 
         Assignment(
                 String variableName, String index, Stochasticity stochasticity, ResolvedType type, StringBuilder expression,
@@ -64,8 +73,10 @@ class RevStmt {
 
             builder.append(expression);
 
-            StringBuilder moves = buildMoves();
-            if (stochasticity == Stochasticity.STOCHASTIC && moves != null) builder.append(moves);
+            if (stochasticity == Stochasticity.STOCHASTIC) {
+                StringBuilder moves = buildMoves();
+                if (moves != null) builder.append(moves);
+            }
 
             return builder;
         }

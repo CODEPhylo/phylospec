@@ -20,14 +20,14 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     private final StochasticityResolver stochasticityResolver;
     private final TypeResolver typeResolver;
 
-    private final List<Stmt> statements;
     private final List<RevStmt> revStatements;
+
+    private final List<HashMap<String, String>> scopedVariableAliases;
 
     /**
      * Private constructor. Use {@code RevConverter.convertToRev}.
      */
     private RevConverter(List<Stmt> statements, ComponentResolver componentResolver) {
-        this.statements = statements;
         revStatements = new ArrayList<>();
 
         this.componentResolver = componentResolver;
@@ -37,6 +37,8 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
         typeResolver = new TypeResolver(componentResolver);
         typeResolver.visitStatements(statements);
+
+        scopedVariableAliases = new ArrayList<>();
     }
 
     /**
@@ -186,6 +188,13 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
     @Override
     public StringBuilder visitVariable(Expr.Variable expr) {
+        // we see if there is any alias in the current scope
+        for (HashMap<String, String> scopedAliases : scopedVariableAliases) {
+            if (scopedAliases.containsKey(expr.variableName)) {
+                return new StringBuilder(scopedAliases.get(expr.variableName));
+            }
+        }
+
         return new StringBuilder(expr.variableName);
     }
 
@@ -265,6 +274,43 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
     @Override
     public StringBuilder visitListComprehension(Expr.ListComprehension expr) {
+        // we have a = [expr(x) for x in list]
+        // we convert this into
+        // a_list = list
+        // for (i in 1:a_list.size()) {
+        // temp_a[i] = expr(a_list[i])
+        // }
+        // a = temp_a
+        StringBuilder list = expr.list.accept(this);
+
+        if (expr.variables.size() == 1) {
+            RevStmt.Assignment listStmt = addStatement(
+                    new RevStmt.Assignment("temp_list", null, list)
+            );
+            String listVarName = listStmt.variableName;
+
+            String indexVarName = getNextAvailableVariableName("i");
+
+            addStatement(new RevStmt(new StringBuilder(
+                    "for (").append(indexVarName).append(" in 1:").append(listVarName).append(".size()) {"
+            )));
+
+            createVariableAliasScope();
+            addVariableAliasToScope(indexVarName, indexVarName);
+            addVariableAliasToScope(expr.variables.getFirst(), listVarName + "[" + indexVarName + "]");
+            StringBuilder expression = expr.expression.accept(this);
+            dropVariableAliasScope();
+
+            RevStmt.Assignment expressionStmt = addStatement(
+                    new RevStmt.Assignment("temp_expr", indexVarName, expression)
+            );
+            String expressionVarName = expressionStmt.variableName;
+
+            addStatement(new RevStmt(new StringBuilder("}")));
+
+            return new StringBuilder(expressionVarName);
+        }
+
         return null;
     }
 
@@ -295,53 +341,62 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         return null;
     }
 
-    RevStmt addStatement(RevStmt stmt) {
+    private RevStmt addStatement(RevStmt stmt) {
         if (stmt instanceof RevStmt.Assignment) {
-            RevStmt.Assignment assignment = (RevStmt.Assignment) stmt;
-            return addStatement(assignment.variableName, assignment.stochasticity, assignment.type, assignment.expression);
+            return addStatement(stmt);
         } else {
             revStatements.add(stmt);
             return stmt;
         }
     }
 
-    RevStmt.Assignment addStatement(String variableName, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
+    private RevStmt.Assignment addStatement(String variableName, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
         return addStatement(variableName, null, stochasticity, type, expression);
     }
 
-    RevStmt.Assignment addStatement(String variableName, String index, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
+    private RevStmt.Assignment addStatement(String variableName, String index, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
+        return addStatement(
+                new RevStmt.Assignment(variableName, index, stochasticity, type, expression, componentResolver)
+        );
+    }
+
+    private RevStmt.Assignment addStatement(RevStmt.Assignment stmt) {
+        stmt.variableName = getNextAvailableVariableName(stmt.variableName);
+        revStatements.add(stmt);
+        return stmt;
+    }
+
+    private String getNextAvailableVariableName(String variableName) {
+        String nextAvailableName = variableName;
+        int suffix = 2;
+        while (isVariableNameInUse(nextAvailableName)) {
+            nextAvailableName = variableName + suffix++;
+        }
+        return nextAvailableName;
+    }
+    private boolean isVariableNameInUse(String variableName) {
         List<String> takenVariableNames = revStatements.stream()
                 .filter(s -> s instanceof RevStmt.Assignment)
                 .map(s -> ((RevStmt.Assignment) s).variableName)
                 .toList();
-
-        String nextAvailableName = variableName;
-        int suffix = 2;
-        while (takenVariableNames.contains(nextAvailableName)) {
-            nextAvailableName = variableName + suffix++;
-        }
-
-        RevStmt.Assignment stmt = new RevStmt.Assignment(
-                nextAvailableName, index, stochasticity, type, expression, componentResolver
+        return (
+                takenVariableNames.contains(variableName) ||
+                scopedVariableAliases.stream().anyMatch(x -> x.containsValue(variableName))
         );
-        revStatements.add(stmt);
-
-        return stmt;
     }
 
-    Set<ResolvedType> getResolvedType(Expr expr) {
-        return typeResolver.resolveType(expr);
-    }
-    Stochasticity getStochasticity(AstNode expr) {
+    private Stochasticity getStochasticity(AstNode expr) {
         return stochasticityResolver.getStochasticity(expr);
     }
 
-    void fixNode(AstNode expr, Set<ResolvedType> typeSet, Stochasticity stochasticity) {
-        this.stochasticityResolver.fixStochasticity(expr, stochasticity);
-        this.stochasticityResolver.visitStatements(statements);
-
-        this.typeResolver.fixType(expr, typeSet);
-        this.typeResolver.visitStatements(statements);
+    private void createVariableAliasScope() {
+        scopedVariableAliases.addFirst(new HashMap<>());
+    }
+    private void dropVariableAliasScope() {
+        scopedVariableAliases.removeFirst();
+    }
+    private void addVariableAliasToScope(String variableName, String alias) {
+        scopedVariableAliases.getFirst().put(variableName, alias);
     }
 
     static class RevConversionError extends RuntimeException {
