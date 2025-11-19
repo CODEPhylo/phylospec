@@ -34,12 +34,10 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         modelStatements = new ArrayList<>();
 
         stochasticityResolver = new StochasticityResolver();
-        typeResolver = new TypeResolver(componentResolver);
+        stochasticityResolver.visitStatements(statements);
 
-        for (Stmt stmt : statements) {
-            stmt.accept(stochasticityResolver);
-            stmt.accept(typeResolver);
-        }
+        typeResolver = new TypeResolver(componentResolver);
+        typeResolver.visitStatements(statements);
 
         variableNames = typeResolver.getVariableNames();
     }

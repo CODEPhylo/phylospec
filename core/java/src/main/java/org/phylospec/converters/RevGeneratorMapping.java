@@ -182,8 +182,8 @@ public class RevGeneratorMapping {
                 );
 
                 // we simply return a reference to the newly created temporary
-                // this means that the expr now is deterministic transformation of temp
-                converter.overwriteResolvedType(expr, Set.of(vectorType), Stochasticity.DETERMINISTIC);
+                // this means that the expr is now a deterministic transformation of temp
+                converter.fixNode(expr, Set.of(vectorType), Stochasticity.DETERMINISTIC);
 
                 yield new StringBuilder(assignment.variableName);
             }

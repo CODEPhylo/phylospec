@@ -14,15 +14,22 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
 
     private final Map<AstNode, Stochasticity> stochasticityMap;
     private final Map<String, Stochasticity> variableStochasticityMap;
+    private final Map<AstNode, Stochasticity> fixedStochasticities;
 
     public StochasticityResolver() {
         this.stochasticityMap = new HashMap<>();
         this.variableStochasticityMap = new HashMap<>();
+        this.fixedStochasticities = new HashMap<>();
     }
 
     /** Returns the stochasticity of the expression corresponding to the given AST node. */
     public Stochasticity getStochasticity(AstNode node) {
-        return stochasticityMap.get(node);
+        return fixedStochasticities.getOrDefault(node, stochasticityMap.get(node));
+    }
+
+    /** Returns the stochasticity of the expression corresponding to the given AST node. */
+    public void fixStochasticity(AstNode node, Stochasticity stochasticity) {
+        fixedStochasticities.put(node, stochasticity);
     }
 
     @Override

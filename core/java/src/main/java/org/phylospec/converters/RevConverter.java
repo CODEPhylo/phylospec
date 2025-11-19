@@ -3,13 +3,9 @@ package org.phylospec.converters;
 import org.phylospec.ast.*;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.TokenType;
-import org.phylospec.typeresolver.ResolvedType;
-import org.phylospec.typeresolver.Stochasticity;
-import org.phylospec.typeresolver.StochasticityResolver;
-import org.phylospec.typeresolver.TypeResolver;
+import org.phylospec.typeresolver.*;
 
 import java.util.*;
-import java.util.stream.Stream;
 
 /// This class converts parsed PhyloSpec statements into an Rev script.
 ///
@@ -20,30 +16,27 @@ import java.util.stream.Stream;
 ///```
 public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
-    final ComponentResolver componentResolver;
+    private final ComponentResolver componentResolver;
     private final StochasticityResolver stochasticityResolver;
     private final TypeResolver typeResolver;
 
-    private final Map<Expr, Set<ResolvedType>> overwrittenResolvedTypes;
-    private final Map<AstNode, Stochasticity> overwrittenStochasticities;
+    private final List<Stmt> statements;
     private final List<RevStmt> revStatements;
 
     /**
      * Private constructor. Use {@code RevConverter.convertToRev}.
      */
     private RevConverter(List<Stmt> statements, ComponentResolver componentResolver) {
+        this.statements = statements;
         revStatements = new ArrayList<>();
-        overwrittenResolvedTypes = new HashMap<>();
-        overwrittenStochasticities = new HashMap<>();
 
         this.componentResolver = componentResolver;
-        stochasticityResolver = new StochasticityResolver();
-        typeResolver = new TypeResolver(componentResolver);
 
-        for (Stmt stmt : statements) {
-            stmt.accept(stochasticityResolver);
-            stmt.accept(typeResolver);
-        }
+        stochasticityResolver = new StochasticityResolver();
+        stochasticityResolver.visitStatements(statements);
+
+        typeResolver = new TypeResolver(componentResolver);
+        typeResolver.visitStatements(statements);
     }
 
     /**
@@ -154,10 +147,21 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     @Override
     public Void visitDraw(Stmt.Draw stmt) {
         StringBuilder expression = stmt.expression.accept(this);
-        Stochasticity stochasticity = getStochasticity(stmt.expression);
         ResolvedType type = typeResolver.resolveType(stmt);
 
-        addStatement(stmt.name, stochasticity, type, expression);
+        Set<ResolvedType> expressionTypeSet = typeResolver.resolveType(stmt.expression);
+        Stochasticity[] stochasticity = new Stochasticity[] {Stochasticity.DETERMINISTIC};
+        for (ResolvedType expressionType : expressionTypeSet) {
+            TypeUtils.visitTypeAndParents(expressionType, t -> {
+                if (t.getName().equals("Distribution")) {
+                    stochasticity[0] = Stochasticity.STOCHASTIC;
+                    return TypeUtils.Visitor.STOP;
+                }
+                return TypeUtils.Visitor.CONTINUE;
+            }, componentResolver);
+        }
+
+        addStatement(stmt.name, stochasticity[0], type, expression);
 
         return null;
     }
@@ -282,12 +286,13 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         return null;
     }
 
-    void addStatement(RevStmt stmt) {
+    RevStmt addStatement(RevStmt stmt) {
         if (stmt instanceof RevStmt.Assignment) {
             RevStmt.Assignment assignment = (RevStmt.Assignment) stmt;
-            addStatement(assignment.variableName, assignment.stochasticity, assignment.type, assignment.expression);
+            return addStatement(assignment.variableName, assignment.stochasticity, assignment.type, assignment.expression);
         } else {
             revStatements.add(stmt);
+            return stmt;
         }
     }
 
@@ -316,15 +321,18 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     }
 
     Set<ResolvedType> getResolvedType(Expr expr) {
-        return overwrittenResolvedTypes.getOrDefault(expr, typeResolver.resolveType(expr));
+        return typeResolver.resolveType(expr);
     }
     Stochasticity getStochasticity(AstNode expr) {
-        return overwrittenStochasticities.getOrDefault(expr, stochasticityResolver.getStochasticity(expr));
+        return stochasticityResolver.getStochasticity(expr);
     }
 
-    void overwriteResolvedType(Expr expr, Set<ResolvedType> typeSet, Stochasticity stochasticity) {
-        overwrittenResolvedTypes.put(expr, typeSet);
-        overwrittenStochasticities.put(expr, stochasticity);
+    void fixNode(AstNode expr, Set<ResolvedType> typeSet, Stochasticity stochasticity) {
+        this.stochasticityResolver.fixStochasticity(expr, stochasticity);
+        this.stochasticityResolver.visitStatements(statements);
+
+        this.typeResolver.fixType(expr, typeSet);
+        this.typeResolver.visitStatements(statements);
     }
 
     static class RevConversionError extends RuntimeException {
