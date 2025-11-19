@@ -1,0 +1,14 @@
+Vector<Real> vector1 = [
+    10.0,
+    2.0,
+    -5.0
+]
+Vector<Real> vector2 = [
+    10.0,
+    2.0,
+    -5.0
+]
+Vector<Real> vector3 = [
+    x+y
+    for x, y in zip(first=vector1, second=vector2)
+]

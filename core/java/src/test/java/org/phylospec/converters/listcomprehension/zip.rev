@@ -1,0 +1,13 @@
+moves = VectorMoves()
+monitors = VectorMonitors()
+
+vector <- v( 10.0, 2.0, -5.0 )
+temp_first := vector
+temp_second := vector
+for (i in 1:temp_first.size()) {
+temp_zipped[i][1] := temp_first[i]
+temp_zipped[i][2] := temp_second[i]
+}
+zipped := temp_zipped
+
+q()

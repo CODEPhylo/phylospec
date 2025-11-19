@@ -130,7 +130,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         // randomVariableName.clamp(observedVariableName)
         // to signal the clamping
         revStatements.add(new RevStmt(
-            new StringBuilder(randomVariableName).append(".clamp( ").append(observedVariableName).append(" )")
+            randomVariableName + ".clamp( " + observedVariableName + " )"
         ));
         return null;
     }
@@ -230,7 +230,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         for (Expr.Argument arg : expr.arguments) {
             arguments.put(arg.name, arg.accept(this).toString());
         }
-        return RevGeneratorMapping.map(expr, arguments);
+        return RevGeneratorMapping.map(expr, arguments, this);
     }
 
     @Override
@@ -274,40 +274,98 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
     @Override
     public StringBuilder visitListComprehension(Expr.ListComprehension expr) {
-        // we have a = [expr(x) for x in list]
-        // we convert this into
-        // a_list = list
-        // for (i in 1:a_list.size()) {
-        // temp_a[i] = expr(a_list[i])
-        // }
-        // a = temp_a
         StringBuilder list = expr.list.accept(this);
 
         if (expr.variables.size() == 1) {
+            // we have a = [expr(x) for x in list]
+            //
+            // we convert this into:
+            //
+            // temp_list := list                    # listStmt
+            // for (i in 1:temp_list.size()) {
+            // temp_expr[i] := expr(temp_list[i])   # expressionStmt
+            // }
+            // a = temp_expr
+
+            // add list statement
+
             RevStmt.Assignment listStmt = addStatement(
-                    new RevStmt.Assignment("temp_list", null, list)
+                    new RevStmt.Assignment("temp_list", list)
             );
             String listVarName = listStmt.variableName;
 
+            // start for loop
+
             String indexVarName = getNextAvailableVariableName("i");
+            addStatement(new RevStmt("for (" + indexVarName + " in 1:" + listVarName + ".size()) {"));
 
-            addStatement(new RevStmt(new StringBuilder(
-                    "for (").append(indexVarName).append(" in 1:").append(listVarName).append(".size()) {"
-            )));
+            // evaluate expr with the list comprehension
 
-            createVariableAliasScope();
-            addVariableAliasToScope(indexVarName, indexVarName);
-            addVariableAliasToScope(expr.variables.getFirst(), listVarName + "[" + indexVarName + "]");
+            createVariableScope();
+
+            addAliasedVariableToScope(expr.variables.getFirst(), listVarName + "[" + indexVarName + "]");
+            addVariableToScope(indexVarName);
+
             StringBuilder expression = expr.expression.accept(this);
-            dropVariableAliasScope();
-
             RevStmt.Assignment expressionStmt = addStatement(
-                    new RevStmt.Assignment("temp_expr", indexVarName, expression)
+                    new RevStmt.Assignment("temp_expr", new String[] {indexVarName}, expression)
             );
             String expressionVarName = expressionStmt.variableName;
 
-            addStatement(new RevStmt(new StringBuilder("}")));
+            dropVariableScope();
 
+            // end for loop
+
+            addStatement(new RevStmt("}"));
+
+            // expressionVarName is now at the place of the original expression
+            return new StringBuilder(expressionVarName);
+        }
+
+        if (expr.variables.size() == 2) {
+            // we have a = [expr(x, y) for x, y in list]
+            //
+            // we convert this into:
+            //
+            // temp_list := list                    # listStmt
+            // for (i in 1:temp_list.size()) {
+            // temp_expr[i] := expr(temp_list[i][1], temp_list[i][2])   # expressionStmt
+            // }
+            // a = temp_expr
+
+            // add list statement
+
+            RevStmt.Assignment listStmt = addStatement(
+                    new RevStmt.Assignment("temp_list", list)
+            );
+            String listVarName = listStmt.variableName;
+
+            // start for loop
+
+            String indexVarName = getNextAvailableVariableName("i");
+            addStatement(new RevStmt("for (" + indexVarName + " in 1:" + listVarName + ".size()) {"));
+
+            // evaluate expr with the list comprehension
+
+            createVariableScope();
+
+            addAliasedVariableToScope(expr.variables.getFirst(), listVarName + "[" + indexVarName + "][1]");
+            addAliasedVariableToScope(expr.variables.getLast(), listVarName + "[" + indexVarName + "][2]");
+            addVariableToScope(indexVarName);
+
+            StringBuilder expression = expr.expression.accept(this);
+            RevStmt.Assignment expressionStmt = addStatement(
+                    new RevStmt.Assignment("temp_expr", new String[] {indexVarName}, expression)
+            );
+            String expressionVarName = expressionStmt.variableName;
+
+            dropVariableScope();
+
+            // end for loop
+
+            addStatement(new RevStmt("}"));
+
+            // expressionVarName is now at the place of the original expression
             return new StringBuilder(expressionVarName);
         }
 
@@ -341,32 +399,34 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         return null;
     }
 
-    private RevStmt addStatement(RevStmt stmt) {
-        if (stmt instanceof RevStmt.Assignment) {
-            return addStatement(stmt);
-        } else {
-            revStatements.add(stmt);
-            return stmt;
-        }
-    }
-
-    private RevStmt.Assignment addStatement(String variableName, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
-        return addStatement(variableName, null, stochasticity, type, expression);
-    }
-
-    private RevStmt.Assignment addStatement(String variableName, String index, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
-        return addStatement(
-                new RevStmt.Assignment(variableName, index, stochasticity, type, expression, componentResolver)
-        );
-    }
-
-    private RevStmt.Assignment addStatement(RevStmt.Assignment stmt) {
-        stmt.variableName = getNextAvailableVariableName(stmt.variableName);
+    RevStmt addStatement(RevStmt stmt) {
         revStatements.add(stmt);
         return stmt;
     }
 
-    private String getNextAvailableVariableName(String variableName) {
+    RevStmt.Assignment addStatement(RevStmt.Assignment stmt) {
+        return addStatement(stmt, true);
+    }
+
+    RevStmt.Assignment addStatement(RevStmt.Assignment stmt, boolean preventNameConflict) {
+        if (preventNameConflict) {
+            stmt.variableName = getNextAvailableVariableName(stmt.variableName);
+        }
+        revStatements.add(stmt);
+        return stmt;
+    }
+
+    RevStmt.Assignment addStatement(String variableName, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
+        return addStatement(variableName, new String[] {}, stochasticity, type, expression);
+    }
+
+    RevStmt.Assignment addStatement(String variableName, String[] indices, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
+        return addStatement(
+                new RevStmt.Assignment(variableName, indices, stochasticity, type, expression, componentResolver)
+        );
+    }
+
+    String getNextAvailableVariableName(String variableName) {
         String nextAvailableName = variableName;
         int suffix = 2;
         while (isVariableNameInUse(nextAvailableName)) {
@@ -389,13 +449,16 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         return stochasticityResolver.getStochasticity(expr);
     }
 
-    private void createVariableAliasScope() {
+    private void createVariableScope() {
         scopedVariableAliases.addFirst(new HashMap<>());
     }
-    private void dropVariableAliasScope() {
+    private void dropVariableScope() {
         scopedVariableAliases.removeFirst();
     }
-    private void addVariableAliasToScope(String variableName, String alias) {
+    private void addVariableToScope(String variableName) {
+        scopedVariableAliases.getFirst().put(variableName, variableName);
+    }
+    private void addAliasedVariableToScope(String variableName, String alias) {
         scopedVariableAliases.getFirst().put(variableName, alias);
     }
 

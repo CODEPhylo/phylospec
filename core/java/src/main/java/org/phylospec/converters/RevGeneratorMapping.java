@@ -1,14 +1,8 @@
 package org.phylospec.converters;
 
 import org.phylospec.ast.Expr;
-import org.phylospec.components.ComponentResolver;
-import org.phylospec.typeresolver.ResolvedType;
-import org.phylospec.typeresolver.Stochasticity;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class RevGeneratorMapping {
     /**
@@ -17,8 +11,8 @@ public class RevGeneratorMapping {
      */
     static StringBuilder map(
             Expr.Call expr,
-            Map<String, String> arguments
-    ) {
+            Map<String, String> arguments,
+            RevConverter converter) {
         return switch (expr.functionName) {
             case "Exponential" -> build(
                     "dnExponential",
@@ -135,6 +129,62 @@ public class RevGeneratorMapping {
                     "numValues", arg("n", arguments),
                     "valueDistribution", arg("base", arguments)
             );
+            case "zip" -> {
+                // we have smth like zip(first=first, second=second)
+                // we convert it into
+                // temp_first = first
+                // temp_second = second
+                // for (i in 1:temp_first.size()) {
+                //     temp_zipped[i][1] <- temp_first[i]
+                //     temp_zipped[i][2] <- temp_second[i]
+                // }
+
+                // assign temp_first and temp_second
+
+                StringBuilder first = new StringBuilder(arg("first", arguments));
+                StringBuilder second = new StringBuilder(arg("second", arguments));
+
+                RevStmt.Assignment firstListStmt = converter.addStatement(
+                        new RevStmt.Assignment("temp_first", first)
+                );
+                String firstListName = firstListStmt.variableName;
+
+                RevStmt.Assignment secondListStmt = converter.addStatement(
+                        new RevStmt.Assignment("temp_second", second)
+                );
+                String secondListName = secondListStmt.variableName;
+
+                // start for loop
+
+                String indexVarName = converter.getNextAvailableVariableName("i");
+                converter.addStatement(new RevStmt(
+                        "for (" + indexVarName + " in 1:" + firstListName + ".size()) {"
+                ));
+
+                // assign  temp_zipped
+
+                RevStmt.Assignment firstExpressionStmt = converter.addStatement(
+                        new RevStmt.Assignment(
+                                "temp_zipped", new String[] {indexVarName, "1"},
+                            new StringBuilder(firstListName).append("[").append(indexVarName).append("]")
+                        )
+                );
+                String zippedVarName = firstExpressionStmt.variableName;
+
+                converter.addStatement(
+                        new RevStmt.Assignment(
+                                "temp_zipped", new String[] {indexVarName, "2"},
+                                new StringBuilder(secondListName).append("[").append(indexVarName).append("]")
+                        ), false
+                );
+
+                // end for loop
+
+                converter.addStatement(new RevStmt("}"));
+
+                // zippedVarName is now in place of the original expression
+                yield new StringBuilder(zippedVarName);
+            }
             default -> throw new RevConverter.RevConversionError("Generator " + expr.functionName + " is not supported.");
         };
     }

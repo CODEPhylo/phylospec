@@ -6,58 +6,47 @@ import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.TypeUtils;
 
 class RevStmt {
-    StringBuilder expression;
+    String expression;
 
-    RevStmt(StringBuilder expression) {
+    RevStmt(String expression) {
         this.expression = expression;
     }
 
     StringBuilder build() {
-        return expression;
+        return new StringBuilder(expression);
     }
 
     static class Assignment extends RevStmt {
         String variableName;
         Stochasticity stochasticity;
-        String index = null;
+        String[] indices;
         ResolvedType type = null;
         ComponentResolver componentResolver = null;
 
-        Assignment(
-                String variableName, String index, StringBuilder expression
-        ) {
-            super(expression);
-            this.variableName = variableName;
-            this.index = index;
-            this.stochasticity = Stochasticity.DETERMINISTIC;
+        Assignment(String variableName, StringBuilder expression) {
+            this(variableName, new String[] {}, expression);
+        }
+
+        Assignment(String variableName, String[] indices, StringBuilder expression) {
+            this(variableName, indices, Stochasticity.DETERMINISTIC, null, expression, null);
         }
 
         Assignment(
-                String variableName, String index, Stochasticity stochasticity, ResolvedType type, StringBuilder expression,
+                String variableName, String[] indices, Stochasticity stochasticity, ResolvedType type, StringBuilder expression,
                 ComponentResolver componentResolver
         ) {
-            super(expression);
+            super(expression.toString());
             this.variableName = variableName;
-            this.index = index;
-            this.stochasticity = stochasticity;
-            this.type = type;
-            this.componentResolver = componentResolver;
-        }
-
-
-        Assignment(String variableName, Stochasticity stochasticity, ResolvedType type, StringBuilder expression, ComponentResolver componentResolver) {
-            super(expression);
-            this.variableName = variableName;
+            this.indices = indices;
             this.stochasticity = stochasticity;
             this.type = type;
             this.componentResolver = componentResolver;
         }
 
         StringBuilder build() {
-            StringBuilder builder = new StringBuilder();
-            builder.append(variableName);
+            StringBuilder builder = new StringBuilder(variableName);
 
-            if (index != null) {
+            for (String index : indices) {
                 builder.append("[").append(index).append("]");
             }
 
@@ -82,23 +71,22 @@ class RevStmt {
         }
 
         private StringBuilder buildMoves() {
-            if (covers("Probability")) {
+            if (covers("Probability", type)) {
                 return buildMove("mvBetaProbability");
-            } else if (covers("PositiveReal")) {
+            } else if (covers("PositiveReal", type)) {
                 return buildMove("mvScaleBactrian");
-            } else if (covers("Real")) {
+            } else if (covers("Real", type)) {
                 return buildMove("mvSlideBactrian");
-            } else if (covers("Simplex")) {
+            } else if (covers("Simplex", type)) {
                 return buildMove("mvDirichletSimplex");
             }
 
             ResolvedType vectorType = TypeUtils.recoverType("Vector", type, componentResolver);
             if (vectorType != null) {
                 ResolvedType elementType = vectorType.getParameterTypes().get("T");
-                if (TypeUtils.covers(ResolvedType.fromString("PositiveReal", componentResolver), elementType, componentResolver)) {
+                if (covers("PositiveReal", elementType)) {
                     return buildMove("mvVectorSingleElementScale");
-                }
-                if (TypeUtils.covers(ResolvedType.fromString("Real", componentResolver), elementType, componentResolver)) {
+                } else if (covers("Real", elementType)) {
                     return buildMove("mvVectorSingleElementSlide");
                 }
             }
@@ -107,17 +95,16 @@ class RevStmt {
         }
 
         private StringBuilder buildMove(String moveName) {
-            if (index == null) {
-                return new StringBuilder().append("\nmoves.append( ").append(moveName).append("( ").append(variableName).append(" ) )");
-            } else {
-                return new StringBuilder()
-                        .append("\nmoves.append( ").append(moveName).append("( ")
-                        .append(variableName).append("[").append(index)
-                        .append("] ) )");
+            StringBuilder move = new StringBuilder();
+            move.append("\nmoves.append( ").append(moveName).append("( ").append(variableName);
+            for (String index : indices) {
+                move.append("[").append(index).append("]");
             }
+            move.append(" ) )");
+            return move;
         }
 
-        private boolean covers(String typeString) {
+        private boolean covers(String typeString, ResolvedType type) {
             return TypeUtils.covers(ResolvedType.fromString(typeString, componentResolver), type, componentResolver);
         }
     }
