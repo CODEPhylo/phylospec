@@ -1,6 +1,7 @@
 package org.phylospec.ast;
 
 import org.phylospec.components.ComponentResolver;
+import org.phylospec.typeresolver.TypeResolver;
 
 import java.util.List;
 
@@ -11,8 +12,14 @@ import java.util.List;
 public abstract class AstTransformer<S, E, T> implements AstVisitor<Stmt, Expr, AstType> {
     List<Stmt> oldStatements;
     List<Stmt> transformedStatements;
+    TypeResolver typeResolver;
 
     public List<Stmt> transformStatements(List<Stmt> statements, ComponentResolver componentResolver) {
+        typeResolver = new TypeResolver(componentResolver);
+        for (Stmt stmt : statements) {
+            stmt.accept(typeResolver);
+        }
+
         oldStatements = statements;
 
         for (Stmt oldStatement : statements) {
@@ -24,19 +31,37 @@ public abstract class AstTransformer<S, E, T> implements AstVisitor<Stmt, Expr, 
 
     @Override
     public Stmt visitDecoratedStmt(Stmt.Decorated stmt) {
-        stmt.statememt.accept(this);
+        stmt.statement.accept(this);
+
+        boolean isOldStatement = oldStatements.contains(stmt);
+        if (isOldStatement) {
+            transformedStatements.add(stmt);
+        }
+
         return stmt;
     }
 
     @Override
     public Stmt visitAssignment(Stmt.Assignment stmt) {
         stmt.expression.accept(this);
+
+        boolean isOldStatement = oldStatements.contains(stmt);
+        if (isOldStatement) {
+            transformedStatements.add(stmt);
+        }
+
         return stmt;
     }
 
     @Override
     public Stmt visitDraw(Stmt.Draw stmt) {
         stmt.expression.accept(this);
+
+        boolean isOldStatement = oldStatements.contains(stmt);
+        if (isOldStatement) {
+            transformedStatements.add(stmt);
+        }
+
         return stmt;
     }
 
@@ -98,6 +123,13 @@ public abstract class AstTransformer<S, E, T> implements AstVisitor<Stmt, Expr, 
         for (Expr element : expr.elements) {
             element.accept(this);
         }
+        return expr;
+    }
+
+    @Override
+    public Expr visitListComprehension(Expr.ListComprehension expr) {
+        expr.expression.accept(this);
+        expr.list.accept(this);
         return expr;
     }
 
