@@ -22,6 +22,22 @@ public class TypeUtils {
         return false;
     }
 
+    public static ResolvedType recoverType(
+            String typeName,
+            ResolvedType resolvedType,
+            ComponentResolver componentResolver
+    ) {
+        ResolvedType[] recoveredType = new ResolvedType[] {null};
+        visitTypeAndParents(resolvedType, t -> {
+            if (t.getName().equals(typeName)) {
+                recoveredType[0] = t;
+                return Visitor.STOP;
+            }
+            return Visitor.CONTINUE;
+        }, componentResolver);
+        return recoveredType[0];
+    }
+
     /** This function returns the typeset containing all possible return
      * types of this generator with the given resolved argument types.
      * This function takes automatically resolves type parameters using

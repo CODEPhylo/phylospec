@@ -39,7 +39,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         typeResolver = new TypeResolver(componentResolver);
         typeResolver.visitStatements(statements);
 
-        variableNames = typeResolver.getVariableNames();
+        variableNames = new HashSet(typeResolver.getVariableNames());
     }
 
     /**

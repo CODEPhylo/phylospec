@@ -81,6 +81,17 @@ class RevStmt {
                 return buildMove("mvDirichletSimplex");
             }
 
+            ResolvedType vectorType = TypeUtils.recoverType("Vector", type, componentResolver);
+            if (vectorType != null) {
+                ResolvedType elementType = vectorType.getParameterTypes().get("T");
+                if (TypeUtils.covers(ResolvedType.fromString("PositiveReal", componentResolver), elementType, componentResolver)) {
+                    return buildMove("mvVectorSingleElementScale");
+                }
+                if (TypeUtils.covers(ResolvedType.fromString("Real", componentResolver), elementType, componentResolver)) {
+                    return buildMove("mvVectorSingleElementSlide");
+                }
+            }
+
             return null;
         }
 

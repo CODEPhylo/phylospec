@@ -217,7 +217,11 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
     @Override
     public StringBuilder visitCall(Expr.Call expr) {
-        return RevGeneratorMapping.map(expr, this);
+        Map<String, String> arguments = new HashMap<>();
+        for (Expr.Argument arg : expr.arguments) {
+            arguments.put(arg.name, arg.accept(this).toString());
+        }
+        return RevGeneratorMapping.map(expr, arguments);
     }
 
     @Override
@@ -257,6 +261,11 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
         builder.append(" )");
         return builder;
+    }
+
+    @Override
+    public StringBuilder visitListComprehension(Expr.ListComprehension expr) {
+        return null;
     }
 
     @Override

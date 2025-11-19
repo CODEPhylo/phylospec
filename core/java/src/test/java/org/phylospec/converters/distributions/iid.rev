@@ -1,17 +1,16 @@
 moves = VectorMoves()
 monitors = VectorMonitors()
 
-for (i in 1:5) {
-temp[i] ~ dnNormal( mean=100, sd=10 )
-moves.append( mvSlideBactrian( temp[i] ) )
-}
-a := temp
+a ~ dnIID( numValues=5, valueDistribution=dnNormal( mean=100, sd=10 ) )
+moves.append( mvVectorSingleElementSlide( a ) )
+b ~ dnIID( numValues=5, valueDistribution=dnExponential( lambda=100 ) )
+moves.append( mvVectorSingleElementScale( b ) )
 
 monitors.append( mnModel( filename = "iid.log", printgen = 10 ) )
 monitors.append( mnFile( filename = "iid.trees", printgen = 10 ) )
 monitors.append( mnScreen( printgen = 10 ) )
 
-mymodel = model( temp )
+mymodel = model( a, b )
 mymcmc = mcmc( mymodel, monitors, moves )
 mymcmc.run( generations=20000, tuningInterval=200 )
 
