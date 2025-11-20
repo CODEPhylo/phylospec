@@ -12,7 +12,7 @@ import java.util.*;
 /// Usage:
 /// ```
 /// List<Stmt> statements = parser.parse();
-/// String lphyString = RevConverter.convertToRev(statements, componentResolver);
+/// String revString = RevConverter.convertToRev(statements, componentResolver);
 ///```
 public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
@@ -138,7 +138,10 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     @Override
     public Void visitAssignment(Stmt.Assignment stmt) {
         StringBuilder expression = stmt.expression.accept(this);
+
         Stochasticity stochasticity = getStochasticity(stmt);
+        if (stochasticity == Stochasticity.STOCHASTIC) stochasticity = Stochasticity.DETERMINISTIC;
+
         ResolvedType type = typeResolver.resolveType(stmt);
 
         addStatement(stmt.name, stochasticity, type, expression);
@@ -379,7 +382,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         Set<ResolvedType> objectTypeSet = this.typeResolver.resolveType(expr.object);
         for (ResolvedType candidateType : objectTypeSet) {
             String componentName = candidateType.getName();
-            StringBuilder mappedMethod = LPhyMethodsMapping.map(componentName, expr.properyName, objectBuilder);
+            StringBuilder mappedMethod = RevMethodsMapping.map(componentName, expr.properyName, objectBuilder, this);
 
             if (mappedMethod != null) {
                 return mappedMethod;

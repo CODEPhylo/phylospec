@@ -1,0 +1,23 @@
+moves = VectorMoves()
+monitors = VectorMonitors()
+
+alignment := readDiscreteCharacterData( file="hallo.nex" )
+a ~ dnCoalescent( theta=200, taxa=alignment.taxa() )
+moves.append( mvNarrow( a ) )
+moves.append( mvNNI( a ) )
+moves.append( mvFNPR( a ) )
+moves.append( mvSubtreeScale( a ) )
+moves.append( mvNodeTimeSlideUniform( a ) )
+moves.append( mvRootTimeScaleBactrian( a ) )
+moves.append( mvTreeScale( a ) )
+taxa := a.taxa()
+
+monitors.append( mnModel( filename = "revTaxonset.log", printgen = 10 ) )
+monitors.append( mnFile( filename = "revTaxonset.trees", printgen = 10 ) )
+monitors.append( mnScreen( printgen = 10 ) )
+
+mymodel = model( a )
+mymcmc = mcmc( mymodel, monitors, moves )
+mymcmc.run( generations=20000, tuningInterval=200 )
+
+q()

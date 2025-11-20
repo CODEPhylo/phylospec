@@ -12,7 +12,8 @@ public class RevGeneratorMapping {
     static StringBuilder map(
             Expr.Call expr,
             Map<String, String> arguments,
-            RevConverter converter) {
+            RevConverter converter
+    ) {
         return switch (expr.functionName) {
             case "Exponential" -> build(
                     "dnExponential",
@@ -47,30 +48,26 @@ public class RevGeneratorMapping {
                     "dnDirichlet",
                     "alpha", arg("alpha", arguments)
             );
-            case "Yule" -> build(
-                    "Yule",
-                    "lambda", arg("birthRate", arguments),
-                    "taxa", arg("taxa", arguments, true)
-            );
             case "FossilBirthDeath" -> build(
-                    "FossilBirthDeathTree",
+                    "dnFossilizedBirthDeath",
+                    "originAge", arg("origin", arguments),
                     "lambda", arg("birthRate", arguments),
                     "mu", arg("deathRate", arguments),
-                    "rho", arg("rho", arguments),
                     "psi", arg("samplingRate", arguments),
-                    "taxa", arg("taxa", arguments, true)
+                    "taxa", arg("taxa", arguments),
+                    "rho", arg("rho", arguments)
             );
             case "BirthDeath" -> build(
-                    "BirthDeath",
+                    "dnBirthDeath",
                     "lambda", arg("birthRate", arguments),
                     "mu", arg("deathRate", arguments),
                     "rootAge", arg("rootHeight", arguments),
-                    "taxa", arg("taxa", arguments, true)
+                    "taxa", arg("taxa", arguments)
             );
             case "Coalescent" -> build(
-                    "Coalescent",
+                    "dnCoalescent",
                     "theta", arg("populationSize", arguments),
-                    "taxa", arg("taxa", arguments, true)
+                    "taxa", arg("taxa", arguments)
             );
             case "JC69" -> build(
                     "fnJC",
@@ -103,26 +100,24 @@ public class RevGeneratorMapping {
                     "file",  arg("file", arguments)
             );
             case "PhyloBM" -> build(
-                    "PhyloBrownian",
+                    "dnPhyloBrownianREML",
                     "tree", arg("tree", arguments),
-                    "diffRate", arg("sigma", arguments),
-                    "y0", arg("rootValue", arguments)
+                    "branchRates", arg("sigma", arguments)
             );
             case "PhyloOU" -> build(
-                    "PhyloOU",
+                    "dnPhyloOrnsteinUhlenbeckREML",
                     "tree", arg("tree", arguments),
-                    "diffRate", arg("sigma", arguments),
-                    "theta", arg("optimum", arguments),
                     "alpha", arg("alpha", arguments),
-                    "y0", arg("rootValue", arguments)
+                    "theta", arg("optimum", arguments),
+                    "sigma", arg("sigma", arguments),
+                    "rootStates", arg("rootValue", arguments)
             );
             case "PhyloCTMC" -> build(
-                    "PhyloCTMC",
+                    "dnPhyloCTMC",
                     "tree", arg("tree", arguments),
                     "Q", arg("Q", arguments),
                     "siteRates", arg("siteRates", arguments, true),
-                    "branchRates", arg("branchRates", arguments, true),
-                    "L", arg("numSequences", arguments, true)
+                    "branchRates", arg("branchRates", arguments, true)
             );
             case "IID" -> build(
                     "dnIID",
@@ -204,7 +199,7 @@ public class RevGeneratorMapping {
         if (optional || arguments.containsKey(name)) {
             return arguments.get(name);
         } else {
-            throw new RevConverter.RevConversionError("Missing argument " + name + ". This should be caught by the type resolver.");
+            throw new RevConverter.RevConversionError("Missing argument " + name + ".");
         }
     }
 

@@ -205,6 +205,9 @@ public class TypeUtils {
     static Set<ResolvedType> getLowestCoverTypeSet(List<Set<ResolvedType>> typeSets, ComponentResolver componentResolver) {
         if (typeSets.isEmpty()) return Set.of();
 
+        // we first remove duplicate type sets as this can quickly turn into a combinatorial explosion
+        typeSets = typeSets.stream().distinct().collect(Collectors.toList());
+
         Set<List<ResolvedType>> possibleElementTypeCombinations = new HashSet<>();
         Utils.visitCombinations(typeSets, possibleElementTypeCombinations::add);
 

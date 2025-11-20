@@ -79,6 +79,15 @@ class RevStmt {
                 return buildMove("mvSlideBactrian");
             } else if (covers("Simplex", type)) {
                 return buildMove("mvDirichletSimplex");
+            } else if (covers("Tree", type)) {
+                StringBuilder moves = buildMove("mvNarrow");
+                moves.append(buildMove("mvNNI"));
+                moves.append(buildMove("mvFNPR"));
+                moves.append(buildMove("mvSubtreeScale"));
+                moves.append(buildMove("mvNodeTimeSlideUniform"));
+                moves.append(buildMove("mvRootTimeScaleBactrian"));
+                moves.append(buildMove("mvTreeScale"));
+                return moves;
             }
 
             ResolvedType vectorType = TypeUtils.recoverType("Vector", type, componentResolver);
@@ -108,5 +117,4 @@ class RevStmt {
             return TypeUtils.covers(ResolvedType.fromString(typeString, componentResolver), type, componentResolver);
         }
     }
-
 }

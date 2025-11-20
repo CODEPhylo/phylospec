@@ -1,0 +1,5 @@
+Alignment alignment = nexus(file="hallo.nex")
+TaxonSet taxa = alignment.taxa
+Tree a ~ FossilBirthDeath(birthRate=10.0, deathRate=5.0, rho=0.5, samplingRate=1.0, origin=20, taxa=taxa )
+Tree c ~ BirthDeath(birthRate=10.0, deathRate=5.0, rootHeight=20.0, taxa=taxa)
+Tree h ~ Coalescent(populationSize=200, taxa=a.taxa)

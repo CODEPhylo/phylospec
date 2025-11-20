@@ -1,0 +1,3 @@
+Alignment alignment = nexus(file="hallo.nex")
+Tree a ~ Coalescent(populationSize=200, taxa=alignment.taxa)
+TaxonSet taxa = a.taxa
