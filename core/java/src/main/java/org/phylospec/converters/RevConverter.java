@@ -76,11 +76,36 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
                 .map(s -> s.variableName)
                 .toList();
 
+        List<String> treeVariableNames = converter.revStatements.stream()
+                .filter(s -> s instanceof RevStmt.Assignment)
+                .map(s -> (RevStmt.Assignment) s)
+                .filter(s -> s.type != null && s.type.getName().equals("Tree"))
+                .map(s -> s.variableName)
+                .toList();
+
         if (!modelVariableNames.isEmpty()) {
             // add monitors
 
             builder.append("\nmonitors.append( mnModel( filename = \"").append(modelName).append(".log\", printgen = 10 ) )\n");
-            builder.append("monitors.append( mnFile( filename = \"").append(modelName).append(".trees\", printgen = 10 ) )\n");
+
+            if (treeVariableNames.size() == 1) {
+                builder
+                        .append("monitors.append( mnNexus( filename = \"")
+                        .append(modelName)
+                        .append(".trees\", tree = ")
+                        .append(treeVariableNames.getFirst())
+                        .append(", printgen = 10 ) )\n");
+            } else {
+                for (String treeVariableName : treeVariableNames) {
+                    builder
+                            .append("monitors.append( mnNexus( filename = \"")
+                            .append(modelName).append("_").append(treeVariableName)
+                            .append(".trees\", tree = ")
+                            .append(treeVariableName)
+                            .append(", printgen = 10 ) )\n");
+                }
+            }
+
             builder.append("monitors.append( mnScreen( printgen = 10 ) )\n\n");
 
             // build mcmc

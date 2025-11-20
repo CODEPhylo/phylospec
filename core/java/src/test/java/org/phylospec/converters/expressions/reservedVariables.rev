@@ -11,7 +11,6 @@ b ~ dnNormal( mean=data__, sd=model_ )
 b.clamp( data )
 
 monitors.append( mnModel( filename = "reservedVariables.log", printgen = 10 ) )
-monitors.append( mnFile( filename = "reservedVariables.trees", printgen = 10 ) )
 monitors.append( mnScreen( printgen = 10 ) )
 
 mymodel = model( a, b )

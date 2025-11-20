@@ -8,7 +8,6 @@ c ~ dnDirichlet( alpha=v( b, b, b ) )
 moves.append( mvDirichletSimplex( c ) )
 
 monitors.append( mnModel( filename = "mixedVariables.log", printgen = 10 ) )
-monitors.append( mnFile( filename = "mixedVariables.trees", printgen = 10 ) )
 monitors.append( mnScreen( printgen = 10 ) )
 
 mymodel = model( b, c )

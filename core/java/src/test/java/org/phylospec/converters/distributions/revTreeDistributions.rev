@@ -29,7 +29,9 @@ moves.append( mvRootTimeScaleBactrian( h ) )
 moves.append( mvTreeScale( h ) )
 
 monitors.append( mnModel( filename = "revTreeDistributions.log", printgen = 10 ) )
-monitors.append( mnFile( filename = "revTreeDistributions.trees", printgen = 10 ) )
+monitors.append( mnNexus( filename = "revTreeDistributions_a.trees", tree = a, printgen = 10 ) )
+monitors.append( mnNexus( filename = "revTreeDistributions_c.trees", tree = c, printgen = 10 ) )
+monitors.append( mnNexus( filename = "revTreeDistributions_h.trees", tree = h, printgen = 10 ) )
 monitors.append( mnScreen( printgen = 10 ) )
 
 mymodel = model( a, c, h )

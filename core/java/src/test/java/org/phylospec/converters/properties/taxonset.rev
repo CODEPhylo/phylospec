@@ -19,7 +19,7 @@ temp_names[i] := temp_taxa[i].getName()
 c := temp_names
 
 monitors.append( mnModel( filename = "taxonset.log", printgen = 10 ) )
-monitors.append( mnFile( filename = "taxonset.trees", printgen = 10 ) )
+monitors.append( mnNexus( filename = "taxonset.trees", tree = a, printgen = 10 ) )
 monitors.append( mnScreen( printgen = 10 ) )
 
 mymodel = model( a )

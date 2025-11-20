@@ -21,7 +21,7 @@ alignment ~ dnPhyloCTMC( tree=tree, Q=Q )
 alignment.clamp( observedAlignment )
 
 monitors.append( mnModel( filename = "model.log", printgen = 10 ) )
-monitors.append( mnFile( filename = "model.trees", printgen = 10 ) )
+monitors.append( mnNexus( filename = "model.trees", tree = tree, printgen = 10 ) )
 monitors.append( mnScreen( printgen = 10 ) )
 
 mymodel = model( kappa, baseFrequencies, populationSize, tree, alignment )

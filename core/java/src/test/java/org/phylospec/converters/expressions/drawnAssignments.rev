@@ -15,7 +15,6 @@ b ~ dnLognormal( mean=meanlog3, sd=2 )
 moves.append( mvSlideBactrian( b ) )
 
 monitors.append( mnModel( filename = "drawnAssignments.log", printgen = 10 ) )
-monitors.append( mnFile( filename = "drawnAssignments.trees", printgen = 10 ) )
 monitors.append( mnScreen( printgen = 10 ) )
 
 mymodel = model( meanlog, meanlog2, a, rate, meanlog3, b )

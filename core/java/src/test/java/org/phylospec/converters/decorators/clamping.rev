@@ -15,7 +15,7 @@ alignment ~ dnPhyloCTMC( tree=tree, Q=q )
 alignment.clamp( observed )
 
 monitors.append( mnModel( filename = "clamping.log", printgen = 10 ) )
-monitors.append( mnFile( filename = "clamping.trees", printgen = 10 ) )
+monitors.append( mnNexus( filename = "clamping.trees", tree = tree, printgen = 10 ) )
 monitors.append( mnScreen( printgen = 10 ) )
 
 mymodel = model( tree, alignment )

@@ -21,7 +21,7 @@ e ~ dnPhyloCTMC( tree=tree, Q=q, branchRates=v( 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.
 f ~ dnPhyloCTMC( tree=tree, Q=q, siteRates=v( 0.2 ), branchRates=v( 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 ) )
 
 monitors.append( mnModel( filename = "phyloDistributions.log", printgen = 10 ) )
-monitors.append( mnFile( filename = "phyloDistributions.trees", printgen = 10 ) )
+monitors.append( mnNexus( filename = "phyloDistributions.trees", tree = tree, printgen = 10 ) )
 monitors.append( mnScreen( printgen = 10 ) )
 
 mymodel = model( tree, a, b, c, d, e, f )

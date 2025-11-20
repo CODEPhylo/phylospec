@@ -7,7 +7,6 @@ b ~ dnIID( numValues=5, valueDistribution=dnExponential( lambda=100 ) )
 moves.append( mvVectorSingleElementScale( b ) )
 
 monitors.append( mnModel( filename = "iid.log", printgen = 10 ) )
-monitors.append( mnFile( filename = "iid.trees", printgen = 10 ) )
 monitors.append( mnScreen( printgen = 10 ) )
 
 mymodel = model( a, b )

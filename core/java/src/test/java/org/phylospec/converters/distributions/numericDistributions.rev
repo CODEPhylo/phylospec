@@ -17,7 +17,6 @@ g ~ dnDirichlet( alpha=v( 1.0, 2.0 ) )
 moves.append( mvDirichletSimplex( g ) )
 
 monitors.append( mnModel( filename = "numericDistributions.log", printgen = 10 ) )
-monitors.append( mnFile( filename = "numericDistributions.trees", printgen = 10 ) )
 monitors.append( mnScreen( printgen = 10 ) )
 
 mymodel = model( a, b, c, d, e, f, g )

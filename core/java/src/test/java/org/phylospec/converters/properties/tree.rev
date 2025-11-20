@@ -16,7 +16,7 @@ d := a.ntips() - 1
 e := a.taxa()
 
 monitors.append( mnModel( filename = "tree.log", printgen = 10 ) )
-monitors.append( mnFile( filename = "tree.trees", printgen = 10 ) )
+monitors.append( mnNexus( filename = "tree.trees", tree = a, printgen = 10 ) )
 monitors.append( mnScreen( printgen = 10 ) )
 
 mymodel = model( a )
