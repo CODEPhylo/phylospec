@@ -126,12 +126,17 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
             throw new RevConversionError("Rev does not support nested decorators.");
         }
 
+        // we have to make sure to not propose moves for the observed value
+        // this is very hacky but should work for now
+        revStatements.getLast().hasMoves = false;
+
         // we add a Rev statement
         // randomVariableName.clamp(observedVariableName)
         // to signal the clamping
-        revStatements.add(new RevStmt(
+        addStatement(new RevStmt(
             randomVariableName + ".clamp( " + observedVariableName + " )"
         ));
+
         return null;
     }
 

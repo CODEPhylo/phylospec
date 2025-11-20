@@ -7,6 +7,7 @@ import org.phylospec.typeresolver.TypeUtils;
 
 class RevStmt {
     String expression;
+    boolean hasMoves = false;
 
     RevStmt(String expression) {
         this.expression = expression;
@@ -41,6 +42,8 @@ class RevStmt {
             this.stochasticity = stochasticity;
             this.type = type;
             this.componentResolver = componentResolver;
+
+            hasMoves = stochasticity == Stochasticity.STOCHASTIC;
         }
 
         StringBuilder build() {
@@ -62,7 +65,7 @@ class RevStmt {
 
             builder.append(expression);
 
-            if (stochasticity == Stochasticity.STOCHASTIC) {
+            if (hasMoves) {
                 StringBuilder moves = buildMoves();
                 if (moves != null) builder.append(moves);
             }

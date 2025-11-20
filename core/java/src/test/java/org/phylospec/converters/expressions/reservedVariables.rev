@@ -8,7 +8,6 @@ model_ <- 2.0
 a ~ dnNormal( mean=data, sd=model )
 moves.append( mvSlideBactrian( a ) )
 b ~ dnNormal( mean=data__, sd=model_ )
-moves.append( mvSlideBactrian( b ) )
 b.clamp( data )
 
 monitors.append( mnModel( filename = "reservedVariables.log", printgen = 10 ) )
