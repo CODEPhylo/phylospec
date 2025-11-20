@@ -139,12 +139,12 @@ public class RevGeneratorMapping {
                 StringBuilder first = new StringBuilder(arg("first", arguments));
                 StringBuilder second = new StringBuilder(arg("second", arguments));
 
-                RevStmt.Assignment firstListStmt = converter.addStatement(
+                RevStmt.Assignment firstListStmt = converter.addRevAssignment(
                         new RevStmt.Assignment("temp_first", first)
                 );
                 String firstListName = firstListStmt.variableName;
 
-                RevStmt.Assignment secondListStmt = converter.addStatement(
+                RevStmt.Assignment secondListStmt = converter.addRevAssignment(
                         new RevStmt.Assignment("temp_second", second)
                 );
                 String secondListName = secondListStmt.variableName;
@@ -152,13 +152,11 @@ public class RevGeneratorMapping {
                 // start for loop
 
                 String indexVarName = converter.getNextAvailableVariableName("i");
-                converter.addStatement(new RevStmt(
-                        "for (" + indexVarName + " in 1:" + firstListName + ".size()) {"
-                ));
+                converter.addSimpleRevStatement("for (" + indexVarName + " in 1:" + firstListName + ".size()) {");
 
                 // assign  temp_zipped
 
-                RevStmt.Assignment firstExpressionStmt = converter.addStatement(
+                RevStmt.Assignment firstExpressionStmt = converter.addRevAssignment(
                         new RevStmt.Assignment(
                                 "temp_zipped", new String[] {indexVarName, "1"},
                             new StringBuilder(firstListName).append("[").append(indexVarName).append("]")
@@ -166,7 +164,7 @@ public class RevGeneratorMapping {
                 );
                 String zippedVarName = firstExpressionStmt.variableName;
 
-                converter.addStatement(
+                converter.addRevAssignment(
                         new RevStmt.Assignment(
                                 "temp_zipped", new String[] {indexVarName, "2"},
                                 new StringBuilder(secondListName).append("[").append(indexVarName).append("]")
@@ -175,7 +173,7 @@ public class RevGeneratorMapping {
 
                 // end for loop
 
-                converter.addStatement(new RevStmt("}"));
+                converter.addSimpleRevStatement("}");
 
                 // zippedVarName is now in place of the original expression
                 yield new StringBuilder(zippedVarName);

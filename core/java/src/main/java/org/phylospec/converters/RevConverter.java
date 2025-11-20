@@ -7,7 +7,7 @@ import org.phylospec.typeresolver.*;
 
 import java.util.*;
 
-/// This class converts parsed PhyloSpec statements into an Rev script.
+/// This class converts parsed PhyloSpec statements into a Rev script.
 ///
 /// Usage:
 /// ```
@@ -158,9 +158,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         // we add a Rev statement
         // randomVariableName.clamp(observedVariableName)
         // to signal the clamping
-        addStatement(new RevStmt(
-            randomVariableName + ".clamp( " + observedVariableName + " )"
-        ));
+        addSimpleRevStatement(randomVariableName + ".clamp( " + observedVariableName + " )");
 
         return null;
     }
@@ -169,12 +167,12 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     public Void visitAssignment(Stmt.Assignment stmt) {
         StringBuilder expression = stmt.expression.accept(this);
 
-        Stochasticity stochasticity = getStochasticity(stmt);
+        Stochasticity stochasticity = stochasticityResolver.getStochasticity(stmt);
         if (stochasticity == Stochasticity.STOCHASTIC) stochasticity = Stochasticity.DETERMINISTIC;
 
         ResolvedType type = typeResolver.resolveType(stmt);
 
-        addStatement(stmt.name, stochasticity, type, expression);
+        addRevAssignment(stmt.name, stochasticity, type, expression);
 
         return null;
     }
@@ -196,7 +194,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
             }, componentResolver);
         }
 
-        addStatement(stmt.name, stochasticity[0], type, expression);
+        addRevAssignment(stmt.name, stochasticity[0], type, expression);
 
         return null;
     }
@@ -278,7 +276,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         Set<ResolvedType> resolvedTypeSet = typeResolver.resolveType(expr);
         ResolvedType mostGeneralType = TypeUtils.getLowestCover(resolvedTypeSet.stream().toList(), componentResolver);
         StringBuilder variableDeclaration = expr.expression.accept(this);
-        RevStmt.Assignment stmt = addStatement(variableName, Stochasticity.STOCHASTIC, mostGeneralType, variableDeclaration);
+        RevStmt.Assignment stmt = addRevAssignment(variableName, Stochasticity.STOCHASTIC, mostGeneralType, variableDeclaration);
 
         // we now pass the new variable to the function
         return new StringBuilder(stmt.variableName);
@@ -323,7 +321,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
             // add list statement
 
-            RevStmt.Assignment listStmt = addStatement(
+            RevStmt.Assignment listStmt = addRevAssignment(
                     new RevStmt.Assignment("temp_list", list)
             );
             String listVarName = listStmt.variableName;
@@ -331,7 +329,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
             // start for loop
 
             String indexVarName = getNextAvailableVariableName("i");
-            addStatement(new RevStmt("for (" + indexVarName + " in 1:" + listVarName + ".size()) {"));
+            addSimpleRevStatement("for (" + indexVarName + " in 1:" + listVarName + ".size()) {");
 
             // evaluate expr with the list comprehension
 
@@ -341,7 +339,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
             addVariableToScope(indexVarName);
 
             StringBuilder expression = expr.expression.accept(this);
-            RevStmt.Assignment expressionStmt = addStatement(
+            RevStmt.Assignment expressionStmt = addRevAssignment(
                     new RevStmt.Assignment("temp_expr", new String[] {indexVarName}, expression)
             );
             String expressionVarName = expressionStmt.variableName;
@@ -350,7 +348,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
             // end for loop
 
-            addStatement(new RevStmt("}"));
+            addSimpleRevStatement("}");
 
             // expressionVarName is now at the place of the original expression
             return new StringBuilder(expressionVarName);
@@ -369,7 +367,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
             // add list statement
 
-            RevStmt.Assignment listStmt = addStatement(
+            RevStmt.Assignment listStmt = addRevAssignment(
                     new RevStmt.Assignment("temp_list", list)
             );
             String listVarName = listStmt.variableName;
@@ -377,7 +375,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
             // start for loop
 
             String indexVarName = getNextAvailableVariableName("i");
-            addStatement(new RevStmt("for (" + indexVarName + " in 1:" + listVarName + ".size()) {"));
+            addSimpleRevStatement("for (" + indexVarName + " in 1:" + listVarName + ".size()) {");
 
             // evaluate expr with the list comprehension
 
@@ -388,7 +386,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
             addVariableToScope(indexVarName);
 
             StringBuilder expression = expr.expression.accept(this);
-            RevStmt.Assignment expressionStmt = addStatement(
+            RevStmt.Assignment expressionStmt = addRevAssignment(
                     new RevStmt.Assignment("temp_expr", new String[] {indexVarName}, expression)
             );
             String expressionVarName = expressionStmt.variableName;
@@ -397,7 +395,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
             // end for loop
 
-            addStatement(new RevStmt("}"));
+            addSimpleRevStatement("}");
 
             // expressionVarName is now at the place of the original expression
             return new StringBuilder(expressionVarName);
@@ -433,16 +431,19 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         return null;
     }
 
-    RevStmt addStatement(RevStmt stmt) {
-        revStatements.add(stmt);
-        return stmt;
+    /** Helpers to add rev statements. */
+
+    RevStmt addSimpleRevStatement(String stmt) {
+        RevStmt revStmt = new RevStmt(stmt);
+        revStatements.add(revStmt);
+        return revStmt;
     }
 
-    RevStmt.Assignment addStatement(RevStmt.Assignment stmt) {
-        return addStatement(stmt, true);
+    RevStmt.Assignment addRevAssignment(RevStmt.Assignment stmt) {
+        return addRevAssignment(stmt, true);
     }
 
-    RevStmt.Assignment addStatement(RevStmt.Assignment stmt, boolean preventNameConflict) {
+    RevStmt.Assignment addRevAssignment(RevStmt.Assignment stmt, boolean preventNameConflict) {
         if (preventNameConflict) {
             stmt.variableName = getNextAvailableVariableName(stmt.variableName);
         }
@@ -450,12 +451,12 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         return stmt;
     }
 
-    RevStmt.Assignment addStatement(String variableName, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
-        return addStatement(variableName, new String[] {}, stochasticity, type, expression);
+    RevStmt.Assignment addRevAssignment(String variableName, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
+        return addRevAssignment(variableName, new String[] {}, stochasticity, type, expression);
     }
 
-    RevStmt.Assignment addStatement(String variableName, String[] indices, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
-        return addStatement(
+    RevStmt.Assignment addRevAssignment(String variableName, String[] indices, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
+        return addRevAssignment(
                 new RevStmt.Assignment(variableName, indices, stochasticity, type, expression, componentResolver)
         );
     }
@@ -479,9 +480,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         );
     }
 
-    private Stochasticity getStochasticity(AstNode expr) {
-        return stochasticityResolver.getStochasticity(expr);
-    }
+    /** Helpers to create new variable scopes and variable aliases. */
 
     private void createVariableScope() {
         scopedVariableAliases.addFirst(new HashMap<>());

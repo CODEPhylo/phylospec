@@ -34,7 +34,7 @@ public class RevMethodsMapping {
 
                     // assign temp_taxa
 
-                    RevStmt.Assignment tempTaxaStmt = converter.addStatement(
+                    RevStmt.Assignment tempTaxaStmt = converter.addRevAssignment(
                             new RevStmt.Assignment("temp_taxa", objectBuilder)
                     );
                     String tempTaxaName = tempTaxaStmt.variableName;
@@ -42,13 +42,11 @@ public class RevMethodsMapping {
                     // begin for loop
 
                     String indexVarName = converter.getNextAvailableVariableName("i");
-                    converter.addStatement(new RevStmt(
-                            "for (" + indexVarName + " in 1:" + tempTaxaName + ".size()) {"
-                    ));
+                    converter.addSimpleRevStatement("for (" + indexVarName + " in 1:" + tempTaxaName + ".size()) {");
 
                     // assign  temp_names
 
-                    RevStmt.Assignment tempNamesStmt = converter.addStatement(
+                    RevStmt.Assignment tempNamesStmt = converter.addRevAssignment(
                             new RevStmt.Assignment(
                                     "temp_names",
                                     new String[] {indexVarName},
@@ -59,7 +57,7 @@ public class RevMethodsMapping {
 
                     // end for loop
 
-                    converter.addStatement(new RevStmt("}"));
+                    converter.addSimpleRevStatement("}");
 
                     // temp_names is now in place of the original expression
                     yield new StringBuilder(tempNamesName);
