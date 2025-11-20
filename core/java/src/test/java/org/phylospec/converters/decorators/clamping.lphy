@@ -3,7 +3,7 @@ data {
     q = jukesCantor();
 }
 model {
-    tree ~ Coalescent(theta=1.0 * observed.length());
+    tree ~ Coalescent(theta=1.0 * observed.length(), taxa=observed.taxa());
     alignment ~ PhyloCTMC(tree=tree, Q=q);
     observed = alignment;
 }
