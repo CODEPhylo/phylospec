@@ -1,5 +1,5 @@
 data {
-    observedAlignment = readNexus(file="alignment.nex");
+    observedAlignment = readNexus(file="hallo.nex");
 }
 model {
     kappa ~ LogNormal(meanlog=1.0, sdlog=0.5);

@@ -372,6 +372,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
                     expressionType, x -> {
                         if (x.getName().equals("Distribution")) {
                             generatedTypeSet.add(x.getParameterTypes().get("T"));
+                            return TypeUtils.Visitor.STOP;
                         }
                         return TypeUtils.Visitor.CONTINUE;
                     }, componentResolver

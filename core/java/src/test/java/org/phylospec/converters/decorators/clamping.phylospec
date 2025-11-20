@@ -1,6 +1,6 @@
 Alignment observed = nexus("hallo.nex")
 
-Tree tree ~ Coalescent(populationSize=1.0*observed.ntax)
+Tree tree ~ Coalescent(populationSize=1.0*observed.ntax, taxa=observed.taxa)
 QMatrix q = JC69()
 
 @observedAs(observed)

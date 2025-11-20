@@ -245,9 +245,10 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     public StringBuilder visitDrawnArgument(Expr.DrawnArgument expr) {
         // we add a separate variable with the result of the draw
         String variableName = expr.name;
-        ResolvedType type = typeResolver.resolveType(expr).iterator().next();
+        Set<ResolvedType> resolvedTypeSet = typeResolver.resolveType(expr);
+        ResolvedType mostGeneralType = TypeUtils.getLowestCover(resolvedTypeSet.stream().toList(), componentResolver);
         StringBuilder variableDeclaration = expr.expression.accept(this);
-        RevStmt.Assignment stmt = addStatement(variableName, Stochasticity.STOCHASTIC, type, variableDeclaration);
+        RevStmt.Assignment stmt = addStatement(variableName, Stochasticity.STOCHASTIC, mostGeneralType, variableDeclaration);
 
         // we now pass the new variable to the function
         return new StringBuilder(stmt.variableName);

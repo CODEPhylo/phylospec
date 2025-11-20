@@ -1,0 +1,25 @@
+moves = VectorMoves()
+monitors = VectorMonitors()
+
+observed := readDiscreteCharacterData( file="hallo.nex" )
+tree ~ dnCoalescent( theta=1.0 * observed.ntaxa(), taxa=observed.taxa() )
+moves.append( mvNarrow( tree ) )
+moves.append( mvNNI( tree ) )
+moves.append( mvFNPR( tree ) )
+moves.append( mvSubtreeScale( tree ) )
+moves.append( mvNodeTimeSlideUniform( tree ) )
+moves.append( mvRootTimeScaleBactrian( tree ) )
+moves.append( mvTreeScale( tree ) )
+q := fnJC( num_states=4 )
+alignment ~ dnPhyloCTMC( tree=tree, Q=q )
+alignment.clamp( observed )
+
+monitors.append( mnModel( filename = "clamping.log", printgen = 10 ) )
+monitors.append( mnFile( filename = "clamping.trees", printgen = 10 ) )
+monitors.append( mnScreen( printgen = 10 ) )
+
+mymodel = model( tree, alignment )
+mymcmc = mcmc( mymodel, monitors, moves )
+mymcmc.run( generations=20000, tuningInterval=200 )
+
+q()
