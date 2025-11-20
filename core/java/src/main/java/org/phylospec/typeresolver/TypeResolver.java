@@ -41,8 +41,6 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
     public Map<AstNode, Set<ResolvedType>> resolvedTypes;
     private List<Map<String, Set<ResolvedType>>> scopedVariableTypes;
 
-    private final Map<AstNode, Set<ResolvedType>> fixedTypes;
-
     AstPrinter printer;
 
     public TypeResolver(ComponentResolver componentResolver) {
@@ -50,7 +48,6 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
         this.typeMatcher = new TypeMatcher(componentResolver);
         this.resolvedTypes = new HashMap<>();
         this.scopedVariableTypes = new ArrayList<>();
-        this.fixedTypes = new HashMap<>();
         this.printer = new AstPrinter();
 
         createScope();
@@ -66,11 +63,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
      * their return type.
      */
     public Set<ResolvedType> resolveType(AstNode expression) {
-        return this.fixedTypes.getOrDefault(expression, this.resolvedTypes.getOrDefault(expression, Set.of()));
-    }
-
-    public void fixType(AstNode expression, Set<ResolvedType> typeSet) {
-        this.fixedTypes.put(expression, typeSet);
+        return this.resolvedTypes.getOrDefault(expression, Set.of());
     }
 
     /**

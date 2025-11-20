@@ -22,6 +22,12 @@ public class TypeUtils {
         return false;
     }
 
+    /**
+     * Takes a type name (e.g. Vector) and a resolved type (e.g. a subclass of Vector<T>). Returns
+     * the {@link ResolvedType} object of the typeName with the correct type parameters.
+     * Note that this does not work when there are multiple type components with the same name
+     * loaded.
+     */
     public static ResolvedType recoverType(
             String typeName,
             ResolvedType resolvedType,

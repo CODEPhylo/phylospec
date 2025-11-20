@@ -233,6 +233,8 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     public StringBuilder visitUnary(Expr.Unary expr) {
         if (expr.operator == TokenType.MINUS) {
             return new StringBuilder().append("-").append(expr.right.accept(this));
+        } else if (expr.operator == TokenType.BANG) {
+            return new StringBuilder().append("!").append(expr.right.accept(this));
         }
         throw new RevConversionError("Unary operation " + TokenType.getLexeme(expr.operator) + " is not supported in Rev.");
     }

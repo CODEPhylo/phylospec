@@ -5,6 +5,11 @@ import org.phylospec.typeresolver.ResolvedType;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.TypeUtils;
 
+/**
+ * Represents a Rev statement.
+ * Each statement contains all information needed to build the Rev statement. Furthermore, it handles
+ * the addition of potential moves for stochastic variables.
+ */
 class RevStmt {
     String expression;
     boolean hasMoves = false;
@@ -17,6 +22,10 @@ class RevStmt {
         return new StringBuilder(expression);
     }
 
+    /**
+     * This type of Rev statement corresponds to an assignment ("<-", ":=", or "~") of the form
+     * variableName[indices] ("<-" | ":=" | "~") expression
+     */
     static class Assignment extends RevStmt {
         String variableName;
         Stochasticity stochasticity;
@@ -73,6 +82,7 @@ class RevStmt {
             return builder;
         }
 
+        /** Construct the moves for this assignment. */
         private StringBuilder buildMoves() {
             if (covers("Probability", type)) {
                 return buildMove("mvBetaProbability");
