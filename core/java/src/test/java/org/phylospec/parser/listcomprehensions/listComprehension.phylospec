@@ -1,0 +1,15 @@
+Vector<Real> vector = [
+    10.0,
+    2.0,
+    -5.0
+]
+
+Vector<Real> vector2 = [
+    x*x
+    for x in vector
+]
+
+// EXPECT AST
+// (AS Vector<Real> vector (AR 10.0 2.0 (- 5.0)))
+// (AS Vector<Real> vector2 (LC (* x x) (x) vector))
+// EXPECT AST

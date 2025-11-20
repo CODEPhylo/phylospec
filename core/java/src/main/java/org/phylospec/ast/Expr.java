@@ -268,6 +268,36 @@ public abstract class Expr extends AstNode {
         }
     }
 
+    /** Represents a list comprehension. */
+    public static class ListComprehension extends Expr {
+        public ListComprehension(Expr expression, List<String> variables, Expr list) {
+            this.expression = expression;
+            this.variables = variables;
+            this.list = list;
+        }
+
+        public final Expr expression;
+        public final List<String> variables;
+        public final Expr list;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            ListComprehension that = (ListComprehension) o;
+            return Objects.equals(expression, that.expression) && Objects.equals(variables, that.variables) && Objects.equals(list, that.list);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(expression, variables, list);
+        }
+
+        @Override
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
+            return visitor.visitListComprehension(this);
+        }
+    }
+
     /** Represents an accessor (`readData().nchars`) or method call
      * (`readData().getNChars()`). The left-hand side (`readData()`)
      * can be an arbitrary expression, whereas the right-hand side

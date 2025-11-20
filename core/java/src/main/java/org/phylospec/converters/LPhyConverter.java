@@ -41,7 +41,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
             stmt.accept(typeResolver);
         }
 
-        variableNames = new HashSet<>(typeResolver.variableTypes.keySet());
+        variableNames = typeResolver.getVariableNames();
     }
 
     /**
@@ -220,6 +220,11 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
 
         builder.append("]");
         return builder;
+    }
+
+    @Override
+    public StringBuilder visitListComprehension(Expr.ListComprehension expr) {
+        return null;
     }
 
     @Override

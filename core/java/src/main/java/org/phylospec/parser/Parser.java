@@ -16,20 +16,21 @@ import java.util.*;
 public class Parser {
     /**
      * Parses the following grammar:
-     * decorated      → ( "@" call )*  statement ;
-     * statement      → "import" IDENTIFIER ( "." IDENTIFIER )* | type IDENTIFIER ( "=" | "~" ) expression ;
-     * type           → IDENTIFIER ("<" type ("," type)* ">" ) ;
-     * expression     → equality ;
-     * equality       → comparison ( ( "!=" | "==" ) comparison )* ;
-     * comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
-     * term           → factor ( ( "-" | "+" ) factor )* ;
-     * factor         → unary ( ( "/" | "*" ) unary )* ;
-     * unary          → ( "!" | "-" ) unary | call ;
-     * call           → array ( "." IDENTIFIER )* | IDENTIFIER ( "(" arguments? ")" ) ;
-     * arguments      → argument ( "," argument )* | expression ;
-     * argument       → IDENTIFIER "=" expression | IDENTIFIER ;
-     * array          → "[" "]" | "[" expression ( "," expression )* ","? "]"  | primary;
-     * primary        → INT | FLOAT | STRING | "true" | "false" | IDENTIFIER | "(" expression ")" ;
+     * decorated         → ( "@" call )*  statement ;
+     * statement         → "import" IDENTIFIER ( "." IDENTIFIER )* | type IDENTIFIER ( "=" | "~" ) expression ;
+     * type              → IDENTIFIER ("<" type ("," type)* ">" ) ;
+     * expression        → equality ;
+     * equality          → comparison ( ( "!=" | "==" ) comparison )* ;
+     * comparison        → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+     * term              → factor ( ( "-" | "+" ) factor )* ;
+     * factor            → unary ( ( "/" | "*" ) unary )* ;
+     * unary             → ( "!" | "-" ) unary | call ;
+     * call              → listComprehension ( "." IDENTIFIER )* | IDENTIFIER ( "(" arguments? ")" ) ;
+     * arguments         → argument ( "," argument )* | expression ;
+     * argument          → IDENTIFIER "=" expression | IDENTIFIER ;
+     * array             → "[" "]" | "[" expression "for" listComprehension | "[" expression ( "," expression )* "]" | primary;
+     * listComprehension → IDENTIFIER ( "," IDENTIFIER ) "in" expression "]" ;
+     * primary           → INT | FLOAT | STRING | "true" | "false" | IDENTIFIER | "(" expression ")" ;
      */
 
     private final List<Token> tokens;
@@ -340,6 +341,14 @@ public class Parser {
             }
 
             Expr element = expression();
+
+            if (match(TokenType.FOR)) {
+                // we have a list comprehension
+                return listComprehension(element, oldSkipNewLines);
+            }
+
+            // we have an array
+
             elements.add(element);
 
             while (match(TokenType.COMMA)) {
@@ -353,7 +362,7 @@ public class Parser {
                 elements.add(element);
             }
 
-            match(TokenType.RIGHT_SQUARE_BRACKET);
+            consume(TokenType.RIGHT_SQUARE_BRACKET, "Arrays must be terminated by square brackets.");
 
             skipNewLines = oldSkipNewLines;
 
@@ -361,6 +370,37 @@ public class Parser {
         }
 
         return remember(primary());
+    }
+
+    private Expr listComprehension(Expr expression, boolean oldSkipNewLines) {
+        // parse parse variable names
+
+        Expr firstVariable = expression();
+        if (!(firstVariable instanceof Expr.Variable)) {
+            throw new ParseError(peek(), "for must be followed by variable names in list comprehensions.");
+        }
+
+        List<String> variables = new ArrayList<>();
+        variables.add(((Expr.Variable) firstVariable).variableName);
+
+        while (match(TokenType.COMMA)) {
+            Expr nextVariable = expression();
+            if (!(nextVariable instanceof Expr.Variable)) {
+                throw new ParseError(peek(), "for must be followed by variable names in list comprehensions.");
+            }
+            variables.add(((Expr.Variable) nextVariable).variableName);
+        }
+
+        consume(TokenType.IN, "The variables names must be followed by 'in' in list comprehensions.");
+
+        // parse list expression
+        
+        Expr list = expression();
+
+        consume(TokenType.RIGHT_SQUARE_BRACKET, "List comprehensions must be terminated by a square bracket.");
+
+        skipNewLines = oldSkipNewLines;
+        return remember(new Expr.ListComprehension(expression, variables, list));
     }
 
     private Expr primary() {

@@ -87,6 +87,14 @@
                 {
                     "name": "keyword.control.phylospec",
                     "match": "\\b(import)\\b"
+                },
+                {
+                    "name": "keyword.control.phylospec",
+                    "match": "\\b(for)\\b"
+                },
+                {
+                    "name": "keyword.control.phylospec",
+                    "match": "\\b(in)\\b"
                 }
             ]
         },

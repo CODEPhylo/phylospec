@@ -9,7 +9,7 @@ public class LexerTest {
 
     @Test
     public void testSingleCharacterTokens() {
-        String source = "(),.-+/*=!~@==!=<>>=<=[]import";
+        String source = "(),.-+/*=!~@==!=<>>=<=[]import for";
 
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
@@ -35,9 +35,10 @@ public class LexerTest {
         assertEquals(new Token(TokenType.LEFT_SQUARE_BRACKET, "[", null, 1, 22, 23), tokens.get(18));
         assertEquals(new Token(TokenType.RIGHT_SQUARE_BRACKET, "]", null, 1, 23, 24), tokens.get(19));
         assertEquals(new Token(TokenType.IMPORT, "import", null, 1, 24, 30), tokens.get(20));
-        assertEquals(new Token(TokenType.EOF, "", null, 1, 30, 30), tokens.get(21));
+        assertEquals(new Token(TokenType.FOR, "for", null, 1, 31, 34), tokens.get(21));
+        assertEquals(new Token(TokenType.EOF, "", null, 1, 34, 34), tokens.get(22));
 
-        assertEquals(tokens.size(), 22);
+        assertEquals(tokens.size(), 23);
     }
 
     @Test
@@ -78,16 +79,17 @@ public class LexerTest {
 
     @Test
     public void testKeywords() {
-        String source = "true false";
+        String source = "true false for";
 
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
 
         assertEquals(new Token(TokenType.TRUE, "true", null, 1, 0, 4), tokens.get(0));
         assertEquals(new Token(TokenType.FALSE, "false", null, 1, 5, 10), tokens.get(1));
-        assertEquals(new Token(TokenType.EOF, "", null, 1, 10, 10), tokens.get(2));
+        assertEquals(new Token(TokenType.FOR, "for", null, 1, 11, 14), tokens.get(2));
+        assertEquals(new Token(TokenType.EOF, "", null, 1, 14, 14), tokens.get(3));
 
-        assertEquals(tokens.size(), 3);
+        assertEquals(tokens.size(), 4);
     }
 
     @Test

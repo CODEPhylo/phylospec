@@ -133,12 +133,35 @@ class TypeUtils {
         }
     }
 
-    /** Returns a list containing the type strings of the generic type parameters. */
+    /** Returns a list containing the type strings of the generic type parameters. Supports nested
+     * generics like {@code "Vector<Pair<Real, Real>>"} */
     static List<String> parseParameterTypeNames(String typeString) {
-        if (isGeneric(typeString))
-            return Arrays.stream(typeString.substring(typeString.indexOf("<") + 1, typeString.length() - 1).split(",")).toList();
-        else
-            return List.of();
+        if (!isGeneric(typeString)) return List.of();
+
+        int numNestedGenerics = 0;
+        int lastStart = typeString.indexOf("<") + 1;
+        List<String> typeParameterNames = new ArrayList<>();
+
+        for (int i = lastStart; i < typeString.length() - 1; i++) {
+            char character = typeString.charAt(i);
+
+            if (character == ',' && numNestedGenerics == 0) {
+                typeParameterNames.add(typeString.substring(lastStart, i).trim());
+                lastStart = i + 1;
+            }
+
+            if (character == '<') {
+                numNestedGenerics++;
+            }
+            if (character == '>') {
+                numNestedGenerics--;
+            }
+        }
+        typeParameterNames.add(
+                typeString.substring(lastStart, typeString.length() - 1).trim()
+        );
+
+        return typeParameterNames;
     }
 
     /** Checks if {@code query} covers {@code reference}. Type A covers type B if A = B or if A extends B. */

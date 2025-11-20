@@ -170,7 +170,29 @@
         "name": "Vector",
         "description": "Generic ordered collection of elements",
         "namespace": "phylospec.types",
-        "typeParameters": ["T"]
+        "typeParameters": ["T"],
+        "properties": {
+          "length": {
+            "type": "Integer",
+            "description": "Length of the vector"
+          }
+        }
+      },
+      {
+        "name": "Pair",
+        "description": "Generic pair of two elements.",
+        "namespace": "phylospec.types",
+        "typeParameters": ["F", "S"],
+        "properties": {
+          "first": {
+            "type": "F",
+            "description": "The first element of the pair."
+          },
+          "second": {
+            "type": "S",
+            "description": "The second element of the pair."
+          }
+        }
       },
       {
         "name": "Matrix",
@@ -1700,6 +1722,28 @@
             "name": "x",
             "type": "Real",
             "description": "Input value",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "zip",
+        "generatorType": "function",
+        "generatedType": "Vector<Pair<F, S>>",
+        "typeParameters": ["F", "S"],
+        "namespace": "phylospec.functions",
+        "description": "Takes two vectors and creates a new vector with each pair. Requires the two vectors to be of the same size.",
+        "arguments": [
+          {
+            "name": "first",
+            "type": "Vector<F>",
+            "description": "The first vector to zip up",
+            "required": true
+          },
+          {
+            "name": "second",
+            "type": "Vector<S>",
+            "description": "The second vector to zip up",
             "required": true
           }
         ]

@@ -164,12 +164,13 @@ class LspDocument implements ParseEventListener {
                 hoverText.append("\n```");
             }
             case Expr.Variable variable -> {
-                ResolvedType resolvedType = typeResolver.resolveVariable(variable.variableName);
-                if (resolvedType == null) return null;
+                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveVariable(variable.variableName);
 
-                hoverText.append("```phylospec\n");
-                hoverText.append(resolvedType).append(" ").append(variable.variableName);
-                hoverText.append("\n```");
+                for (ResolvedType resolvedType : resolvedTypeSet) {
+                    hoverText.append("```phylospec\n");
+                    hoverText.append(resolvedType).append(" ").append(variable.variableName);
+                    hoverText.append("\n```\n\n");
+                }
             }
             case Expr.Call call -> {
                 List<Generator> generators = componentResolver.resolveGenerator(call.functionName);
@@ -214,17 +215,17 @@ class LspDocument implements ParseEventListener {
     public List<CompletionItem> getCompletionItems(CompletionParams position) {
         List<CompletionItem> completionItems = new ArrayList<>();
 
-        for (String variableName : typeResolver.variableTypes.keySet()) {
-            CompletionItem item = new CompletionItem(variableName);
-            item.setKind(CompletionItemKind.Variable);
+        for (String variableName : typeResolver.getVariableNames()) {
+            Set<ResolvedType> variableTypeSet = typeResolver.resolveVariable(variableName);
+            for (ResolvedType variableType : variableTypeSet) {
+                CompletionItem item = new CompletionItem(variableName);
+                item.setKind(CompletionItemKind.Variable);
 
-            ResolvedType variableType = typeResolver.resolveVariable(variableName);
-            if (variableType != null) {
                 item.setDetail(variableType.toString());
                 item.setDocumentation(variableType.getTypeComponent().getDescription());
-            }
 
-            completionItems.add(item);
+                completionItems.add(item);
+            }
         }
 
         for (String generatorName : componentResolver.getImportedGenerators().keySet()) {
