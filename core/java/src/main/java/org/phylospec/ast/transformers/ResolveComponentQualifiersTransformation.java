@@ -13,13 +13,13 @@ import java.util.List;
 
 /**
  * This transformation replaces all type names and function names with the full
- * qualifier including the namespace.
+ * qualifier including their namespace.
  */
-public class ResolveComponentNamesTransformation extends AstTransformer {
+public class ResolveComponentQualifiersTransformation extends AstTransformer {
 
     private final ComponentResolver componentResolver;
 
-    public ResolveComponentNamesTransformation(List<ComponentLibrary> componentLibraries) {
+    public ResolveComponentQualifiersTransformation(List<ComponentLibrary> componentLibraries) {
         this.componentResolver = new ComponentResolver(componentLibraries);
     }
 
@@ -36,8 +36,7 @@ public class ResolveComponentNamesTransformation extends AstTransformer {
         if (generators.isEmpty()) throw new ComponentResolutionError("Function `" + generatorName + "` is not known");
 
         // all imported generators of this name have the same namespace
-        String namespace = generators.getFirst().getNamespace();
-        expr.functionName = namespace + "." + generatorName;
+        expr.functionName = generators.getFirst().getNamespace() + "." + generators.getFirst().getName();
 
         return expr;
     }
@@ -48,8 +47,7 @@ public class ResolveComponentNamesTransformation extends AstTransformer {
         Type typeComponent = componentResolver.resolveType(typeName);
         if (typeComponent == null) throw new ComponentResolutionError("Type `" + typeName + "` is not known");
 
-        String namespace = typeComponent.getNamespace();
-        expr.name = namespace + "." + typeName;
+        expr.name = typeComponent.getNamespace() + "." + typeComponent.getName();
 
         return expr;
     }
@@ -62,8 +60,7 @@ public class ResolveComponentNamesTransformation extends AstTransformer {
         Type typeComponent = componentResolver.resolveType(typeName);
         if (typeComponent == null) throw new ComponentResolutionError("Type `" + typeName + "` is not known");
 
-        String namespace = typeComponent.getNamespace();
-        expr.name = namespace + "." + typeName;
+        expr.name = typeComponent.getNamespace() + "." + typeComponent.getName();
 
         return expr;
     }

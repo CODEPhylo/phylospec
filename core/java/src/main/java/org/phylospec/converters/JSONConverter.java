@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.phylospec.ast.*;
-import org.phylospec.ast.transformers.ResolveComponentNamesTransformation;
+import org.phylospec.ast.transformers.ResolveComponentQualifiersTransformation;
 import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
 
@@ -22,7 +22,7 @@ public class JSONConverter {
         mapper.enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
 
         List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
-        ResolveComponentNamesTransformation transformation = new ResolveComponentNamesTransformation(componentLibraries);
+        ResolveComponentQualifiersTransformation transformation = new ResolveComponentQualifiersTransformation(componentLibraries);
         statements = transformation.transformStatements(statements);
 
         JSONModel model = new JSONModel(statements, originalScript);

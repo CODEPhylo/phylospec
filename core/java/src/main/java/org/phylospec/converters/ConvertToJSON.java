@@ -1,9 +1,6 @@
 package org.phylospec.converters;
 
 import org.phylospec.ast.Stmt;
-import org.phylospec.ast.transformers.ResolveComponentNamesTransformation;
-import org.phylospec.components.ComponentLibrary;
-import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;

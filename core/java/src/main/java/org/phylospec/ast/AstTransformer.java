@@ -1,8 +1,5 @@
 package org.phylospec.ast;
 
-import org.phylospec.components.ComponentResolver;
-import org.phylospec.typeresolver.TypeResolver;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +24,6 @@ public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> 
 
     @Override
     public Stmt visitDecoratedStmt(Stmt.Decorated stmt) {
-        stmt.decorator.accept(this);
         stmt.statement = stmt.statement.accept(this);
 
         boolean isOldStatement = oldStatements.contains(stmt);
