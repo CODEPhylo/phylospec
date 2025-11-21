@@ -3,24 +3,20 @@ package org.phylospec.ast;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.typeresolver.TypeResolver;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * This interface can be implemented by classes that transform the AST tree.
  * The transformation should be stateless to be correct.
  */
-public abstract class AstTransformer<S, E, T> implements AstVisitor<Stmt, Expr, AstType> {
+public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> {
     List<Stmt> oldStatements;
     List<Stmt> transformedStatements;
-    TypeResolver typeResolver;
 
-    public List<Stmt> transformStatements(List<Stmt> statements, ComponentResolver componentResolver) {
-        typeResolver = new TypeResolver(componentResolver);
-        for (Stmt stmt : statements) {
-            stmt.accept(typeResolver);
-        }
-
+    public List<Stmt> transformStatements(List<Stmt> statements) {
         oldStatements = statements;
+        transformedStatements = new ArrayList<>();
 
         for (Stmt oldStatement : statements) {
             oldStatement.accept(this);
@@ -115,7 +111,8 @@ public abstract class AstTransformer<S, E, T> implements AstVisitor<Stmt, Expr, 
 
     @Override
     public Expr visitGrouping(Expr.Grouping expr) {
-        return expr.expression.accept(this);
+        expr.expression = expr.expression.accept(this);
+        return expr;
     }
 
     @Override

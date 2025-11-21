@@ -54,7 +54,7 @@ public abstract class Expr extends AstNode {
 		}
 
         // TODO: make this type generic
-        public final Object value;
+        public Object value;
 
         @Override
         public boolean equals(Object o) {
@@ -138,7 +138,7 @@ public abstract class Expr extends AstNode {
             this.expression = expression;
         }
 
-        public final Expr expression;
+        public Expr expression;
 
         @Override
         public boolean equals(Object o) {
