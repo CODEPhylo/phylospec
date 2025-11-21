@@ -27,6 +27,7 @@ public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> 
 
     @Override
     public Stmt visitDecoratedStmt(Stmt.Decorated stmt) {
+        stmt.decorator.accept(this);
         stmt.statement = stmt.statement.accept(this);
 
         boolean isOldStatement = oldStatements.contains(stmt);
@@ -39,6 +40,7 @@ public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> 
 
     @Override
     public Stmt visitAssignment(Stmt.Assignment stmt) {
+        stmt.type = stmt.type.accept(this);
         stmt.expression = stmt.expression.accept(this);
 
         boolean isOldStatement = oldStatements.contains(stmt);
@@ -51,6 +53,7 @@ public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> 
 
     @Override
     public Stmt visitDraw(Stmt.Draw stmt) {
+        stmt.type = stmt.type.accept(this);
         stmt.expression = stmt.expression.accept(this);
 
         boolean isOldStatement = oldStatements.contains(stmt);

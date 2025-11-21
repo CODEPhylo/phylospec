@@ -3,7 +3,11 @@ package org.phylospec.ast.transformers;
 
 import org.phylospec.ast.AstTransformer;
 import org.phylospec.ast.Expr;
+import org.phylospec.ast.Stmt;
+import org.phylospec.components.ComponentLibrary;
 import org.phylospec.lexer.TokenType;
+
+import java.util.List;
 
 /**
  * This transformation evaluates all unary and binary operation on literals, as well as deterministic

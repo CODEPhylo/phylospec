@@ -20,7 +20,7 @@ public abstract class Stmt extends AstNode {
             this.expression = expression;
         }
 
-        public final AstType type;
+        public AstType type;
         public final String name;
         public Expr expression;
 
@@ -49,7 +49,7 @@ public abstract class Stmt extends AstNode {
             this.expression = expression;
         }
 
-        public final AstType type;
+        public AstType type;
         public final String name;
         public Expr expression;
 

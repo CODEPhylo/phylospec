@@ -4,7 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.phylospec.ast.*;
+import org.phylospec.ast.transformers.ResolveComponentNamesTransformation;
+import org.phylospec.components.ComponentLibrary;
+import org.phylospec.components.ComponentResolver;
 
+import java.io.IOException;
 import java.util.*;
 
 public class JSONConverter {
@@ -12,10 +16,14 @@ public class JSONConverter {
     /**
      * Converts the given statements into an JSON file.
      */
-    public static String convertToJSON(List<Stmt> statements, String originalScript) throws JsonConversionError {
+    public static String convertToJSON(List<Stmt> statements, String originalScript) throws JsonConversionError, IOException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         mapper.enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
+
+        List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
+        ResolveComponentNamesTransformation transformation = new ResolveComponentNamesTransformation(componentLibraries);
+        statements = transformation.transformStatements(statements);
 
         JSONModel model = new JSONModel(statements, originalScript);
 
