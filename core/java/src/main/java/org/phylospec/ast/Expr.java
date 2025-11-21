@@ -173,7 +173,7 @@ public abstract class Expr extends AstNode {
             this.arguments = arguments;
         }
 
-        public final String functionName;
+        public String functionName;
         public final Argument[] arguments;
 
         @Override

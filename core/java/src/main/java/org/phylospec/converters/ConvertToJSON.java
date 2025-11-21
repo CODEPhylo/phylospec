@@ -33,12 +33,6 @@ public class ConvertToJSON {
         Parser parser = new Parser(tokens);
         List<Stmt> statements = parser.parse();
 
-        ComponentResolver componentResolver = new ComponentResolver();
-        componentResolver.registerLibraryFromInputStream(
-                ConvertToJSON.class.getResourceAsStream("/phylospec-core-component-library.json")
-        );
-        componentResolver.importEntireNamespace(List.of("phylospec"));
-
         String jsonString = JSONConverter.convertToJSON(statements, phylospecString);
         System.out.println(jsonString);
     }

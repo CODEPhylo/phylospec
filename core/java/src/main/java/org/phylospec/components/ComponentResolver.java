@@ -20,37 +20,47 @@ public class ComponentResolver {
     final Map<String, List<Generator>> importedGenerators;  // there might be multiple generators with the same name
     final Map<String, Type> importedTypes;
 
-    public ComponentResolver() {
-        componentLibraries = new ArrayList<>();
+    public ComponentResolver(List<ComponentLibrary> componentLibraries) {
+        this.componentLibraries = new ArrayList<>();
         knownNamespaces = new HashSet<>();
         importedGenerators = new HashMap<>();
         importedTypes = new HashMap<>();
+
+        for (ComponentLibrary library : componentLibraries) {
+            this.registerComponentLibrary(library);
+        }
+        importEntireNamespace(List.of("phylospec"));
     }
 
     /**
-     * Registers a component library from a file path.
-     * Note that this does not make the types and generators resolvable. For
-     * this, the appropriate namespace has to be imported first using either
-     * `importEntireNamespace` or `importNamespace`.
+     * Loads a component library from a file path.
      */
-    public void registerLibraryFromFile(String fileName) throws IOException {
+    public static ComponentLibrary loadLibraryFromFile(String fileName) throws IOException {
         try (InputStream fileStream = new FileInputStream(fileName)) {
             ObjectMapper mapper = new ObjectMapper();
             ComponentLibrarySchema componentLibrary = mapper.readValue(fileStream, ComponentLibrarySchema.class);
-            registerComponentLibrary(componentLibrary.getComponentLibrary());
+            return componentLibrary.getComponentLibrary();
         }
     }
 
     /**
-     * Registers a component library from an input stream.
-     * Note that this does not make the types and generators resolvable. For
-     * this, the appropriate namespace has to be imported first using either
-     * `importEntireNamespace` or `importNamespace`.
+     * Loads a component library from an input stream.
      */
-    public void registerLibraryFromInputStream(InputStream fileStream) throws IOException {
+    public static ComponentLibrary loadLibraryFromInputStream(InputStream fileStream) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         ComponentLibrarySchema componentLibrary = mapper.readValue(fileStream, ComponentLibrarySchema.class);
-        registerComponentLibrary(componentLibrary.getComponentLibrary());
+        return componentLibrary.getComponentLibrary();
+    }
+
+    /**
+     * Loads the core component library.
+     */
+    public static List<ComponentLibrary> loadCoreComponentLibraries() throws IOException {
+        List<ComponentLibrary> libraries = new ArrayList<>();
+        libraries.add(loadLibraryFromInputStream(
+                ComponentResolver.class.getResourceAsStream("/phylospec-core-component-library.json"))
+        );
+        return libraries;
     }
 
     /**
@@ -95,7 +105,15 @@ public class ComponentResolver {
         for (ComponentLibrary library : componentLibraries) {
             for (Generator generator : library.getGenerators()) {
                 if (generator.getNamespace().equals(namespaceString)) {
-                    this.importedGenerators.computeIfAbsent(generator.getName(), k -> new ArrayList<>()).add(generator);
+                    this.importedGenerators.computeIfAbsent(generator.getName(), x -> new ArrayList<>());
+
+                    // we only allow multiple generators of the same namespace, otherwise this import
+                    // shadows all others
+                    this.importedGenerators.get(generator.getName()).removeIf(
+                            g -> !g.getNamespace().equals(generator.getNamespace())
+                    );
+
+                    this.importedGenerators.get(generator.getName()).add(generator);
                 }
             }
             for (Type type : library.getTypes()) {
@@ -144,7 +162,8 @@ public class ComponentResolver {
         return importedGenerators.containsKey(generatorName);
     }
 
-    /** Returns the {@link Generator} corresponding to the given name. */
+    /** Returns the {@link Generator}s corresponding to the given name.
+     * Returns an empty list if the generator has not been imported. */
     public List<Generator> resolveGenerator(String generatorName) {
         return importedGenerators.getOrDefault(generatorName, List.of());
     }
@@ -154,7 +173,7 @@ public class ComponentResolver {
         return importedTypes.containsKey(typeName);
     }
 
-    /** Returns the {@link Type} corresponding to the given name. */
+    /** Returns the {@link Type} corresponding to the given name. Returns null if the type has not been imported. */
     public Type resolveType(String typeName) {
         return importedTypes.get(typeName);
     }

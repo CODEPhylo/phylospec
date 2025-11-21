@@ -1,6 +1,7 @@
 package org.phylospec;
 
 import org.phylospec.ast.AstPrinter;
+import org.phylospec.components.ComponentLibrary;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.components.ComponentResolver;
@@ -81,9 +82,8 @@ public class PhyloSpec {
     }
 
     private static TypeResolver loadTypeResolver() throws IOException {
-        ComponentResolver componentResolver = new ComponentResolver();
-        componentResolver.registerLibraryFromFile("schema/phylospec-core-component-library.json");
-        componentResolver.importEntireNamespace(List.of("phylospec"));
+        List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
+        ComponentResolver componentResolver = new ComponentResolver(componentLibraries);
         return new TypeResolver(componentResolver);
     }
 

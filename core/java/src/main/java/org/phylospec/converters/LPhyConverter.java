@@ -1,6 +1,7 @@
 package org.phylospec.converters;
 
 import org.phylospec.ast.*;
+import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.TokenType;
 import org.phylospec.typeresolver.ResolvedType;
@@ -8,6 +9,7 @@ import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeResolver;
 
+import java.io.IOException;
 import java.util.*;
 
 /// This class converts parsed PhyloSpec statements into an LPhy script.
@@ -29,13 +31,14 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     /**
      * Private constructor. Use {@code LPhyConverter.convertToLPhy}.
      */
-    private LPhyConverter(List<Stmt> statements, ComponentResolver componentResolver) {
+    private LPhyConverter(List<Stmt> statements, List<ComponentLibrary> componentLibraries) {
         dataStatements = new ArrayList<>();
         modelStatements = new ArrayList<>();
 
         stochasticityResolver = new StochasticityResolver();
         stochasticityResolver.visitStatements(statements);
 
+        ComponentResolver componentResolver = new ComponentResolver(componentLibraries);
         typeResolver = new TypeResolver(componentResolver);
         typeResolver.visitStatements(statements);
 
@@ -45,8 +48,8 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     /**
      * Converts the given statements into an LPhy script.
      */
-    public static String convertToLPhy(List<Stmt> statements, ComponentResolver componentResolver) {
-        LPhyConverter converter = new LPhyConverter(statements, componentResolver);
+    public static String convertToLPhy(List<Stmt> statements, List<ComponentLibrary> componentLibraries) {
+        LPhyConverter converter = new LPhyConverter(statements, componentLibraries);
 
         // traverse the syntax tree to collect the LPhy statements
         for (Stmt statement : statements) {

@@ -1,6 +1,7 @@
 package org.phylospec.converters;
 
 import org.phylospec.ast.Stmt;
+import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
@@ -35,13 +36,8 @@ public class ConvertToRev {
         Parser parser = new Parser(tokens);
         List<Stmt> statements = parser.parse();
 
-        ComponentResolver componentResolver = new ComponentResolver();
-        componentResolver.registerLibraryFromInputStream(
-                ConvertToRev.class.getResourceAsStream("/phylospec-core-component-library.json")
-        );
-        componentResolver.importEntireNamespace(List.of("phylospec"));
-
-        String revString = RevConverter.convertToRev(pylospecFile.getFileName().toString(), statements, componentResolver);
+        List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
+        String revString = RevConverter.convertToRev(pylospecFile.getFileName().toString(), statements, componentLibraries);
 
         System.out.println(revString);
     }
