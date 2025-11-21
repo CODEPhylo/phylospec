@@ -22,7 +22,7 @@ public abstract class Stmt extends AstNode {
 
         public final AstType type;
         public final String name;
-        public final Expr expression;
+        public Expr expression;
 
         @Override
         public boolean equals(Object o) {
@@ -51,7 +51,7 @@ public abstract class Stmt extends AstNode {
 
         public final AstType type;
         public final String name;
-        public final Expr expression;
+        public Expr expression;
 
         @Override
         public boolean equals(Object o) {
@@ -80,7 +80,7 @@ public abstract class Stmt extends AstNode {
         }
 
         public final Expr.Call decorator;
-        public final Stmt statement;
+        public Stmt statement;
 
         @Override
         public boolean equals(Object o) {

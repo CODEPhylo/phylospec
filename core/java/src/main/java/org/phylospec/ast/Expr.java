@@ -82,7 +82,7 @@ public abstract class Expr extends AstNode {
 		}
 
 		public final TokenType operator;
-        public final Expr right;
+        public Expr right;
 
         @Override
         public boolean equals(Object o) {
@@ -110,9 +110,9 @@ public abstract class Expr extends AstNode {
 			this.right = right;
 		}
 
-		public final Expr left;
+		public Expr left;
 		public final TokenType operator;
-		public final Expr right;
+		public Expr right;
 
         @Override
         public boolean equals(Object o) {
@@ -279,9 +279,9 @@ public abstract class Expr extends AstNode {
             this.list = list;
         }
 
-        public final Expr expression;
+        public Expr expression;
         public final List<String> variables;
-        public final Expr list;
+        public Expr list;
 
         @Override
         public boolean equals(Object o) {
@@ -312,7 +312,7 @@ public abstract class Expr extends AstNode {
             this.properyName = properyName;
         }
 
-        public final Expr object;
+        public Expr object;
         public final String properyName;
 
         @Override

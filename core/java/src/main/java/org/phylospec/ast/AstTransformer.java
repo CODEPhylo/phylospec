@@ -31,7 +31,7 @@ public abstract class AstTransformer<S, E, T> implements AstVisitor<Stmt, Expr, 
 
     @Override
     public Stmt visitDecoratedStmt(Stmt.Decorated stmt) {
-        stmt.statement.accept(this);
+        stmt.statement = stmt.statement.accept(this);
 
         boolean isOldStatement = oldStatements.contains(stmt);
         if (isOldStatement) {
@@ -43,7 +43,7 @@ public abstract class AstTransformer<S, E, T> implements AstVisitor<Stmt, Expr, 
 
     @Override
     public Stmt visitAssignment(Stmt.Assignment stmt) {
-        stmt.expression.accept(this);
+        stmt.expression = stmt.expression.accept(this);
 
         boolean isOldStatement = oldStatements.contains(stmt);
         if (isOldStatement) {
@@ -55,7 +55,7 @@ public abstract class AstTransformer<S, E, T> implements AstVisitor<Stmt, Expr, 
 
     @Override
     public Stmt visitDraw(Stmt.Draw stmt) {
-        stmt.expression.accept(this);
+        stmt.expression = stmt.expression.accept(this);
 
         boolean isOldStatement = oldStatements.contains(stmt);
         if (isOldStatement) {
@@ -82,34 +82,34 @@ public abstract class AstTransformer<S, E, T> implements AstVisitor<Stmt, Expr, 
 
     @Override
     public Expr visitUnary(Expr.Unary expr) {
-        expr.right.accept(this);
+        expr.right = expr.right.accept(this);
         return expr;
     }
 
     @Override
     public Expr visitBinary(Expr.Binary expr) {
-        expr.left.accept(this);
-        expr.right.accept(this);
+        expr.left = expr.left.accept(this);
+        expr.right = expr.right.accept(this);
         return expr;
     }
 
     @Override
     public Expr visitCall(Expr.Call expr) {
-        for (Expr.Argument argument : expr.arguments) {
-            argument.accept(this);
+        for (int i = 0; i < expr.arguments.length; i++) {
+            expr.arguments[i] = (Expr.Argument) expr.arguments[i].accept(this);
         }
         return expr;
     }
 
     @Override
     public Expr visitAssignedArgument(Expr.AssignedArgument expr) {
-        expr.expression.accept(this);
+        expr.expression = expr.expression.accept(this);
         return expr;
     }
 
     @Override
     public Expr visitDrawnArgument(Expr.DrawnArgument expr) {
-        expr.expression.accept(this);
+        expr.expression = expr.expression.accept(this);
         return expr;
     }
 
@@ -120,22 +120,20 @@ public abstract class AstTransformer<S, E, T> implements AstVisitor<Stmt, Expr, 
 
     @Override
     public Expr visitArray(Expr.Array expr) {
-        for (Expr element : expr.elements) {
-            element.accept(this);
-        }
+        expr.elements.replaceAll(expr1 -> expr1.accept(this));
         return expr;
     }
 
     @Override
     public Expr visitListComprehension(Expr.ListComprehension expr) {
-        expr.expression.accept(this);
-        expr.list.accept(this);
+        expr.expression = expr.expression.accept(this);
+        expr.list = expr.list.accept(this);
         return expr;
     }
 
     @Override
     public Expr visitGet(Expr.Get expr) {
-        expr.object.accept(this);
+        expr.object = expr.object.accept(this);
         return expr;
     }
 
@@ -146,8 +144,8 @@ public abstract class AstTransformer<S, E, T> implements AstVisitor<Stmt, Expr, 
 
     @Override
     public AstType visitGenericType(AstType.Generic expr) {
-        for (AstType type : expr.typeParameters) {
-            type.accept(this);
+        for (int i = 0; i < expr.typeParameters.length; i++) {
+            expr.typeParameters[i] = expr.typeParameters[i].accept(this);
         }
         return expr;
     }
