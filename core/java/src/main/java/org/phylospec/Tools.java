@@ -10,6 +10,7 @@ import org.phylospec.converters.RevConverter;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
+import org.phylospec.typeresolver.TypeResolver;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -49,9 +50,15 @@ public class Tools {
         if (args.length != 2) {
             throw new RuntimeException("validate requires you to pass a path to a  phylospec file.");
         }
+
         Path pylospecFile = Paths.get(args[1]);
         String phylospecSource = readPhyloSpecSource(pylospecFile);
-        parseStmts(phylospecSource);
+        List<Stmt> statements = parseStmts(phylospecSource);
+
+        List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
+        ComponentResolver componentResolver = new ComponentResolver(componentLibraries);
+        TypeResolver typeResolver = new TypeResolver(componentResolver);
+        typeResolver.visitStatements(statements);
     }
 
     /** Prints out the JSON schema for the output of the to-json command. */
