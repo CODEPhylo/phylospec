@@ -3,8 +3,9 @@ package org.phylospec.converters;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.github.victools.jsonschema.generator.*;
 import org.phylospec.ast.*;
+import org.phylospec.ast.transformers.EvaluateLiteralsTransformer;
+import org.phylospec.ast.transformers.RemoveGroupingsTransformer;
 import org.phylospec.ast.transformers.ResolveComponentQualifiersTransformation;
 import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
@@ -23,8 +24,14 @@ public class JSONConverter {
         mapper.enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
 
         List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
-        ResolveComponentQualifiersTransformation transformation = new ResolveComponentQualifiersTransformation(componentLibraries);
-        statements = transformation.transformStatements(statements);
+
+        ResolveComponentQualifiersTransformation resolveFullQualifiers = new ResolveComponentQualifiersTransformation(componentLibraries);
+        RemoveGroupingsTransformer removeGroupings = new RemoveGroupingsTransformer();
+        EvaluateLiteralsTransformer evaluateLiterals = new EvaluateLiteralsTransformer();
+
+        statements = resolveFullQualifiers.transform(statements);
+        statements = removeGroupings.transform(statements);
+        statements = evaluateLiterals.transform(statements);
 
         JSONModel model = new JSONModel(statements, originalScript);
 

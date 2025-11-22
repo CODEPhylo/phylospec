@@ -7,7 +7,6 @@ import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiteralsTransformer;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
-import org.phylospec.lexer.TokenType;
 import org.phylospec.parser.Parser;
 
 import java.util.List;
@@ -19,42 +18,46 @@ public class EvaluateLiteralsTest {
     @Test
     public void testUnary() {
         testStatements(
-                "Real a = 10 + -2",
+                "Real a = -2",
                 new Stmt.Assignment(
                         new AstType.Atomic("Real"), "a",
-                        new Expr.Binary(
-                                new Expr.Literal(10),
-                                TokenType.PLUS,
-                                new Expr.Literal(-2)
+                        new Expr.Literal(-2)
+                )
+        );
+        testStatements(
+                "Real a ~ Exponential(-2)",
+                new Stmt.Draw(
+                        new AstType.Atomic("Real"), "a",
+                        new Expr.Call(
+                                "Exponential",
+                                    new Expr.AssignedArgument(
+                                            null, new Expr.Literal(-2)
+                                    )
                         )
                 )
         );
         testStatements(
-                "Boolean a = true == !false",
+                "Boolean a = !false",
                 new Stmt.Assignment(
                         new AstType.Atomic("Boolean"), "a",
-                        new Expr.Binary(
-                                new Expr.Literal(true),
-                                TokenType.EQUAL_EQUAL,
-                                new Expr.Literal(true)
-                        )
+                        new Expr.Literal(true)
                 )
         );
     }
     @Test
     public void testBinary() {
         testStatements(
-                "Real a = 10 + -2",
+                "Real a = 10.0 + -2.0",
                 new Stmt.Assignment(
                         new AstType.Atomic("Real"), "a",
-                        new Expr.Literal(8)
+                        new Expr.Literal(8.0)
                 )
         );
         testStatements(
-                "Real a = 5*10 + -2*1 - 5",
+                "Real a = 5*10.0 + -2*1 - 5",
                 new Stmt.Assignment(
                         new AstType.Atomic("Real"), "a",
-                        new Expr.Literal(43)
+                        new Expr.Literal(43.0)
                 )
         );
         testStatements(
@@ -64,61 +67,72 @@ public class EvaluateLiteralsTest {
                         new Expr.Literal(-16)
                 )
         );
-    }
-
-    @Test
-    public void testNestedGroupings() {
         testStatements(
-                "Real a = (10 + (100 * 5 + 2))",
+                "String a = \"A\" + \"B\" + \"C\"",
                 new Stmt.Assignment(
+                        new AstType.Atomic("String"), "a",
+                        new Expr.Literal("ABC")
+                )
+        );
+        testStatements(
+                "Real a ~ Exponential(100 * 2)",
+                new Stmt.Draw(
                         new AstType.Atomic("Real"), "a",
-                        new Expr.Binary(
-                                new Expr.Literal(10),
-                                TokenType.PLUS,
-                                new Expr.Binary(
-                                        new Expr.Binary(
-                                                new Expr.Literal(100),
-                                                TokenType.STAR,
-                                                new Expr.Literal(5)
-                                        ),
-                                        TokenType.PLUS,
-                                        new Expr.Literal(2)
+                        new Expr.Call(
+                                "Exponential",
+                                new Expr.AssignedArgument(
+                                        null, new Expr.Literal(200)
                                 )
                         )
                 )
         );
-    }
-
-    @Test
-    public void testGroupingsInFunctionCalls() {
         testStatements(
-                "PositiveReal value ~ LogNormal((100 + 50))",
-                new Stmt.Draw(
-                        new AstType.Atomic("PositiveReal"),
-                        "value",
-                        new Expr.Call(
-                                "LogNormal",
-                                new Expr.AssignedArgument(new Expr.Binary(
-                                        new Expr.Literal(100),
-                                        TokenType.PLUS,
-                                        new Expr.Literal(50)
-                                ))
-                        )
+                "Boolean a = true == !false",
+                new Stmt.Assignment(
+                        new AstType.Atomic("Boolean"), "a",
+                        new Expr.Literal(true)
                 )
         );
         testStatements(
-                "PositiveReal value ~ LogNormal((100 + 50))",
-                new Stmt.Draw(
-                        new AstType.Atomic("PositiveReal"),
-                        "value",
-                        new Expr.Call(
-                                "LogNormal",
-                                new Expr.AssignedArgument(new Expr.Binary(
-                                        new Expr.Literal(100),
-                                        TokenType.PLUS,
-                                        new Expr.Literal(50)
-                                ))
-                        )
+                "Boolean a = 10 + 2 == 12",
+                new Stmt.Assignment(
+                        new AstType.Atomic("Boolean"), "a",
+                        new Expr.Literal(true)
+                )
+        );
+        testStatements(
+                "Boolean a = 10 - 2 == 12",
+                new Stmt.Assignment(
+                        new AstType.Atomic("Boolean"), "a",
+                        new Expr.Literal(false)
+                )
+        );
+        testStatements(
+                "Boolean a = 10 - 2 < 14",
+                new Stmt.Assignment(
+                        new AstType.Atomic("Boolean"), "a",
+                        new Expr.Literal(true)
+                )
+        );
+        testStatements(
+                "Boolean a = 10 - 2 <= 14",
+                new Stmt.Assignment(
+                        new AstType.Atomic("Boolean"), "a",
+                        new Expr.Literal(true)
+                )
+        );
+        testStatements(
+                "Boolean a = 10 - 2 > 14",
+                new Stmt.Assignment(
+                        new AstType.Atomic("Boolean"), "a",
+                        new Expr.Literal(false)
+                )
+        );
+        testStatements(
+                "Boolean a = 10 - 2 >= 14",
+                new Stmt.Assignment(
+                        new AstType.Atomic("Boolean"), "a",
+                        new Expr.Literal(false)
                 )
         );
     }
@@ -131,7 +145,7 @@ public class EvaluateLiteralsTest {
         List<Stmt> actualStatements = parser.parse();
 
         EvaluateLiteralsTransformer transformer = new EvaluateLiteralsTransformer();
-        actualStatements = transformer.transformStatements(actualStatements);
+        actualStatements = transformer.transform(actualStatements);
 
         assertEquals(expectedStatements.length, actualStatements.size());
 

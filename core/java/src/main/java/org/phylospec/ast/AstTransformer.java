@@ -11,7 +11,7 @@ public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> 
     List<Stmt> oldStatements;
     List<Stmt> transformedStatements;
 
-    public List<Stmt> transformStatements(List<Stmt> statements) {
+    public List<Stmt> transform(List<Stmt> statements) {
         oldStatements = statements;
         transformedStatements = new ArrayList<>();
 

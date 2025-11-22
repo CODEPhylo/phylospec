@@ -81,7 +81,7 @@ public class RemoveGroupingTest {
         List<Stmt> actualStatements = parser.parse();
 
         RemoveGroupingsTransformer transformer = new RemoveGroupingsTransformer();
-        actualStatements = transformer.transformStatements(actualStatements);
+        actualStatements = transformer.transform(actualStatements);
 
         assertEquals(expectedStatements.length, actualStatements.size());
 
