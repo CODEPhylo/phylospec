@@ -1,4 +1,5 @@
-Tree a ~ Coalescent(populationSize=200)
+Alignment alignment = nexus("hallo.nex")
+Tree a ~ Coalescent(populationSize=200, taxa=alignment.taxa)
 TaxonSet taxa = a.taxa
 Integer b = taxa.ntax
 Vector<String> c = taxa.names

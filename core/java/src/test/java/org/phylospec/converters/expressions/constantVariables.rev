@@ -1,0 +1,11 @@
+moves = VectorMoves()
+monitors = VectorMonitors()
+
+a <- 10.0
+b <- 100
+c <- "Hallo"
+d <- true
+f <- v( 1.0, 2.0 )
+e <- -100
+
+q()

@@ -34,14 +34,12 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         modelStatements = new ArrayList<>();
 
         stochasticityResolver = new StochasticityResolver();
+        stochasticityResolver.visitStatements(statements);
+
         typeResolver = new TypeResolver(componentResolver);
+        typeResolver.visitStatements(statements);
 
-        for (Stmt stmt : statements) {
-            stmt.accept(stochasticityResolver);
-            stmt.accept(typeResolver);
-        }
-
-        variableNames = typeResolver.getVariableNames();
+        variableNames = new HashSet(typeResolver.getVariableNames());
     }
 
     /**
@@ -56,7 +54,6 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         }
 
         StringBuilder result = new StringBuilder();
-
 
         // write the data block
         result.append("data {\n");
@@ -289,16 +286,16 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     }
 
     /**
-     * Adds a new LPhy statement. Depending on the stochastictity of {@code node}, it is added to the data or model
+     * Adds a new LPhy statement. Depending on the stochasticity of {@code node}, it is added to the data or model
      * block.
      */
     private StringBuilder addStatement(AstNode node, StringBuilder builder) {
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
 
-        if (stochasticity == Stochasticity.DETERMINISTIC) {
-            dataStatements.add(builder.toString());
-        } else if (stochasticity == Stochasticity.STOCHASTIC) {
+        if (stochasticity == Stochasticity.STOCHASTIC) {
             modelStatements.add(builder.toString());
+        } else  {
+            dataStatements.add(builder.toString());
         }
 
         return builder;

@@ -1,0 +1,24 @@
+moves = VectorMoves()
+monitors = VectorMonitors()
+
+meanlog ~ dnExponential( lambda=1 )
+moves.append( mvSlideBactrian( meanlog ) )
+meanlog2 ~ dnExponential( lambda=10 )
+moves.append( mvScaleBactrian( meanlog2 ) )
+a ~ dnLognormal( mean=meanlog2, sd=2 )
+moves.append( mvSlideBactrian( a ) )
+rate ~ dnExponential( lambda=1.0 )
+moves.append( mvScaleBactrian( rate ) )
+meanlog3 ~ dnExponential( lambda=rate )
+moves.append( mvScaleBactrian( meanlog3 ) )
+b ~ dnLognormal( mean=meanlog3, sd=2 )
+moves.append( mvSlideBactrian( b ) )
+
+monitors.append( mnModel( filename = "drawnAssignments.log", printgen = 10 ) )
+monitors.append( mnScreen( printgen = 10 ) )
+
+mymodel = model( meanlog, meanlog2, a, rate, meanlog3, b )
+mymcmc = mcmc( mymodel, monitors, moves )
+mymcmc.run( generations=20000, tuningInterval=200 )
+
+q()

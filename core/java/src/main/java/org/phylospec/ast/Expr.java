@@ -1,10 +1,13 @@
 package org.phylospec.ast;
 
 import org.phylospec.lexer.TokenType;
+import org.phylospec.typeresolver.ResolvedType;
+import org.phylospec.typeresolver.Stochasticity;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Expressions are a type of node in the AST tree. This class has a number of

@@ -1,12 +1,13 @@
 data {
+    alignment = readNexus(file="hallo.nex");
     q = jukesCantor();
 }
 model {
-    tree ~ Coalescent(theta=200);
+    tree ~ Coalescent(theta=200, taxa=alignment.taxa());
     a ~ PhyloBrownian(tree=tree, diffRate=1.0, y0=0);
     b ~ PhyloOU(tree=tree, diffRate=1.0, theta=2.0, alpha=0.5, y0=0.0);
     c ~ PhyloCTMC(tree=tree, Q=q);
     d ~ PhyloCTMC(tree=tree, Q=q, siteRates=[0.1]);
-    e ~ PhyloCTMC(tree=tree, Q=q, branchRates=[0.1]);
-    f ~ PhyloCTMC(tree=tree, Q=q, siteRates=[0.2], branchRates=[0.1]);
+    e ~ PhyloCTMC(tree=tree, Q=q, branchRates=[0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]);
+    f ~ PhyloCTMC(tree=tree, Q=q, siteRates=[0.2], branchRates=[0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]);
 }

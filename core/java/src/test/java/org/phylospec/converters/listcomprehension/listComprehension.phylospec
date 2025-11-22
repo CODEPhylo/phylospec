@@ -1,0 +1,18 @@
+Vector<Real> vector = [
+    10.0,
+    2.0,
+    -5.0
+]
+
+Vector<Real> vector2 = [
+    x*x
+    for x in vector
+]
+
+Vector<Vector<Vector<Real>>> vector3 = [
+    [
+        [2*x - z for z in vector2]
+        for x in vector
+    ]
+    for x in vector
+]

@@ -9,17 +9,39 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-class TypeUtils {
+public class TypeUtils {
 
     /**
      * Checks if any of the types in {@code assignedTypeSet} can be assigned to {@code assigneeType}.
      * A type A can be assigned to type B if B covers A.
      */
-    static boolean canBeAssignedTo(Set<ResolvedType> assignedTypeSet, ResolvedType assigneeType, ComponentResolver componentResolver) {
+    public static boolean canBeAssignedTo(Set<ResolvedType> assignedTypeSet, ResolvedType assigneeType, ComponentResolver componentResolver) {
         for (ResolvedType assignedType : assignedTypeSet) {
             if (covers(assigneeType, assignedType, componentResolver)) return true;
         }
         return false;
+    }
+
+    /**
+     * Takes a type name (e.g. Vector) and a resolved type (e.g. a subclass of Vector<T>). Returns
+     * the {@link ResolvedType} object of the typeName with the correct type parameters.
+     * Note that this does not work when there are multiple type components with the same name
+     * loaded.
+     */
+    public static ResolvedType recoverType(
+            String typeName,
+            ResolvedType resolvedType,
+            ComponentResolver componentResolver
+    ) {
+        ResolvedType[] recoveredType = new ResolvedType[] {null};
+        visitTypeAndParents(resolvedType, t -> {
+            if (t.getName().equals(typeName)) {
+                recoveredType[0] = t;
+                return Visitor.STOP;
+            }
+            return Visitor.CONTINUE;
+        }, componentResolver);
+        return recoveredType[0];
     }
 
     /** This function returns the typeset containing all possible return
@@ -165,7 +187,7 @@ class TypeUtils {
     }
 
     /** Checks if {@code query} covers {@code reference}. Type A covers type B if A = B or if A extends B. */
-    static boolean covers(ResolvedType query, ResolvedType reference, ComponentResolver componentResolver) {
+    public static boolean covers(ResolvedType query, ResolvedType reference, ComponentResolver componentResolver) {
         if (query.equals(reference)) return true;
 
         boolean[] covers = {false};
@@ -189,6 +211,9 @@ class TypeUtils {
     static Set<ResolvedType> getLowestCoverTypeSet(List<Set<ResolvedType>> typeSets, ComponentResolver componentResolver) {
         if (typeSets.isEmpty()) return Set.of();
 
+        // we first remove duplicate type sets as this can quickly turn into a combinatorial explosion
+        typeSets = typeSets.stream().distinct().collect(Collectors.toList());
+
         Set<List<ResolvedType>> possibleElementTypeCombinations = new HashSet<>();
         Utils.visitCombinations(typeSets, possibleElementTypeCombinations::add);
 
@@ -205,10 +230,10 @@ class TypeUtils {
      * if no such cover exists.
      * A type C is the lowest cover of a typeset T if it covers all types in T,
      * and if all other covers of T cover C. */
-    static ResolvedType getLowestCover(List<ResolvedType> typeSet, ComponentResolver componentResolver) {
-        if (typeSet.size() == 1) return typeSet.get(0);
+    public static ResolvedType getLowestCover(List<ResolvedType> typeSet, ComponentResolver componentResolver) {
+        if (typeSet.size() == 1) return typeSet.getFirst();
 
-        ResolvedType lowestCover = typeSet.get(0);
+        ResolvedType lowestCover = typeSet.getFirst();
         for (int i = 1; i < typeSet.size(); i++) {
             lowestCover = getLowestCover(lowestCover, typeSet.get(i), componentResolver);
             if (lowestCover == null) return null;
@@ -243,7 +268,7 @@ class TypeUtils {
     }
 
     /** Calls the visitor function on the type and every parent type. */
-    static void visitTypeAndParents(
+    public static void visitTypeAndParents(
             ResolvedType type,
             Function<ResolvedType, Visitor> visitor,
             ComponentResolver componentResolver
@@ -253,7 +278,7 @@ class TypeUtils {
     }
 
     /** Calls the visitor function on the type and every parent type. */
-    static void visitParents(
+    public static void visitParents(
             ResolvedType type,
             Function<ResolvedType, Visitor> visitor,
             ComponentResolver componentResolver
@@ -386,7 +411,7 @@ class TypeUtils {
         return true;
     }
 
-    enum Visitor {
+    public enum Visitor {
         STOP,
         CONTINUE
     }

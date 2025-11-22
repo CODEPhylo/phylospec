@@ -21,15 +21,15 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class LPhyConverterTest {
+public class RevConverterTest {
 
     /**
      * Goes through every .phylospec file in the converters test folder, parses it,
-     * converts it to LPhy using LPhyConverter, and compares the result with the
-     * corresponding .lphy file.
+     * converts it to Rev using RevConverter, and compares the result with the
+     * corresponding .rev file.
      */
     @TestFactory
-    public Iterable<DynamicTest> testAllPsScriptsAgainstExpectedLPhy() throws IOException {
+    public Iterable<DynamicTest> testAllPsScriptsAgainstExpectedRev() throws IOException {
         Path convertersTestDir = Paths.get("src/test/java/org/phylospec/converters");
         List<Path> psFiles = findPsFiles(convertersTestDir);
 
@@ -38,7 +38,7 @@ public class LPhyConverterTest {
 
         List<DynamicTest> tests = new ArrayList<>();
         for (Path psFile : psFiles) {
-            tests.add(assertScriptMatchesExpectedLPhy(psFile));
+            tests.add(assertScriptMatchesExpectedRev(psFile));
         }
         return tests;
     }
@@ -52,24 +52,24 @@ public class LPhyConverterTest {
         }
     }
 
-    private DynamicTest assertScriptMatchesExpectedLPhy(Path psPath) throws IOException {
+    private DynamicTest assertScriptMatchesExpectedRev(Path psPath) throws IOException {
         String source = Files.readString(psPath, StandardCharsets.UTF_8);
 
-        // Find corresponding .lphy file
+        // Find corresponding .rev file
         String psFileName = psPath.getFileName().toString();
-        String lphyFileName = psFileName.replace(".phylospec", ".lphy");
-        Path lphyPath = psPath.getParent().resolve(lphyFileName);
+        String revFileName = psFileName.replace(".phylospec", ".rev");
+        Path revPath = psPath.getParent().resolve(revFileName);
 
-        if (!Files.exists(lphyPath)) {
+        if (!Files.exists(revPath)) {
             return DynamicTest.dynamicTest(
-                    psPath.getFileName().toString() + " (missing .lphy file)",
+                    psPath.getFileName().toString() + " (missing .rev file)",
                     () -> {
-                        System.err.println("Expected LPhy file not found: " + lphyPath);
+                        System.err.println("Expected Rev file not found: " + revPath);
                     }
             );
         }
 
-        String expectedLPhy = Files.readString(lphyPath, StandardCharsets.UTF_8);
+        String expectedRev = Files.readString(revPath, StandardCharsets.UTF_8);
 
         return DynamicTest.dynamicTest(psPath.getFileName().toString(), () -> {
             // Lex and parse the PhyloSpec file
@@ -82,14 +82,14 @@ public class LPhyConverterTest {
             componentResolver.registerLibraryFromFile("../../schema/phylospec-core-component-library.json");
             componentResolver.importEntireNamespace(List.of("phylospec"));
 
-            // Convert AST to LPhy using LPhyConverter
-            String actualLPhyString = LPhyConverter.convertToLPhy(statements, componentResolver).replace("\t", "    ");
-            String expectedLPhyString = expectedLPhy.trim();
+            // Convert AST to Rev using RevConverter
+            String actualRevString = RevConverter.convertToRev(psPath.getFileName().toString(), statements, componentResolver).replace("\t", "    ");
+            String expectedRevString = expectedRev.trim();
 
             assertEquals(
-                    expectedLPhyString,
-                    actualLPhyString,
-                    "LPhy conversion mismatch for: " + psPath
+                    expectedRevString,
+                    actualRevString,
+                    "Rev conversion mismatch for: " + psPath
             );
         });
     }

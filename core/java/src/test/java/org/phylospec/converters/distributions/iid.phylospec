@@ -2,3 +2,7 @@ Vector<Real> a ~ IID(
     base=Normal(mean=100, sd=10),
     n=5
 )
+Vector<PositiveReal> b ~ IID(
+    base=Exponential(rate=100),
+    n=5
+)

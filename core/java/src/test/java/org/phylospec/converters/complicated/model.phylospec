@@ -1,5 +1,5 @@
 Alignment observedAlignment = nexus(
-	file="alignment.nex"
+	file="hallo.nex"
 )
 
 QMatrix Q = HKY(

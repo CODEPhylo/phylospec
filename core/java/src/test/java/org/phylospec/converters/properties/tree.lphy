@@ -1,7 +1,8 @@
 data {
+    alignment = readNexus(file="hallo.nex");
 }
 model {
-    a ~ Coalescent(theta=200);
+    a ~ Coalescent(theta=200, taxa=alignment.taxa());
     b = a.leafCount();
     c = a.branchCount();
     d = a.nodeCount() - a.leafCount();

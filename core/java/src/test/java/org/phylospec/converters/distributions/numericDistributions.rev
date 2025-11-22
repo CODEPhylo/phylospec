@@ -1,0 +1,26 @@
+moves = VectorMoves()
+monitors = VectorMonitors()
+
+a ~ dnExponential( lambda=100 )
+moves.append( mvScaleBactrian( a ) )
+b ~ dnNormal( mean=100, sd=10 )
+moves.append( mvSlideBactrian( b ) )
+c ~ dnLognormal( mean=100, sd=10 )
+moves.append( mvScaleBactrian( c ) )
+d ~ dnGamma( shape=100, rate=10 )
+moves.append( mvScaleBactrian( d ) )
+e ~ dnBeta( alpha=100, beta=20 )
+moves.append( mvBetaProbability( e ) )
+f ~ dnUniform( lower=0.0, upper=1.0 )
+moves.append( mvSlideBactrian( f ) )
+g ~ dnDirichlet( alpha=v( 1.0, 2.0 ) )
+moves.append( mvDirichletSimplex( g ) )
+
+monitors.append( mnModel( filename = "numericDistributions.log", printgen = 10 ) )
+monitors.append( mnScreen( printgen = 10 ) )
+
+mymodel = model( a, b, c, d, e, f, g )
+mymcmc = mcmc( mymodel, monitors, moves )
+mymcmc.run( generations=20000, tuningInterval=200 )
+
+q()

@@ -1,1 +1,0 @@
-Vector<Real> a = DiscreteGamma(shape=2.0, categories=4)
