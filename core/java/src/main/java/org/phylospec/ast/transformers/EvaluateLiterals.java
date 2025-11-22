@@ -6,10 +6,9 @@ import org.phylospec.ast.Expr;
 import org.phylospec.lexer.TokenType;
 
 /**
- * This transformation evaluates all unary and binary operation on literals, as well as deterministic
- * tra
+ * This transformation evaluates all unary and binary operation on literals.
  */
-public class EvaluateLiteralsTransformer extends AstTransformer {
+public class EvaluateLiterals extends AstTransformer {
     @Override
     public Expr visitUnary(Expr.Unary expr) {
         expr.right = expr.right.accept(this);
@@ -42,7 +41,7 @@ public class EvaluateLiteralsTransformer extends AstTransformer {
 
         switch (expr.operator) {
             case TokenType.EQUAL_EQUAL: return new Expr.Literal(expr.left.equals(expr.right));
-            case TokenType.BANG_EQUAL: return new Expr.Literal(expr.left.equals(expr.right));
+            case TokenType.BANG_EQUAL: return new Expr.Literal(!expr.left.equals(expr.right));
         }
 
         // handle string concatenation

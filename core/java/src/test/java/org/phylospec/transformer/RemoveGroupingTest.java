@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.phylospec.ast.AstType;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
-import org.phylospec.ast.transformers.RemoveGroupingsTransformer;
+import org.phylospec.ast.transformers.RemoveGroupings;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.lexer.TokenType;
@@ -80,7 +80,7 @@ public class RemoveGroupingTest {
         Parser parser = new Parser(tokens);
         List<Stmt> actualStatements = parser.parse();
 
-        RemoveGroupingsTransformer transformer = new RemoveGroupingsTransformer();
+        RemoveGroupings transformer = new RemoveGroupings();
         actualStatements = transformer.transform(actualStatements);
 
         assertEquals(expectedStatements.length, actualStatements.size());

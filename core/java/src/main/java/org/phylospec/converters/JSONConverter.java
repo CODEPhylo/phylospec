@@ -4,9 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.phylospec.ast.*;
-import org.phylospec.ast.transformers.EvaluateLiteralsTransformer;
-import org.phylospec.ast.transformers.RemoveGroupingsTransformer;
-import org.phylospec.ast.transformers.ResolveComponentQualifiersTransformation;
+import org.phylospec.ast.transformers.EvaluateLiterals;
+import org.phylospec.ast.transformers.RemoveGroupings;
+import org.phylospec.ast.transformers.AttachComponentNamespaces;
 import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
 
@@ -25,9 +25,9 @@ public class JSONConverter {
 
         List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
 
-        ResolveComponentQualifiersTransformation resolveFullQualifiers = new ResolveComponentQualifiersTransformation(componentLibraries);
-        RemoveGroupingsTransformer removeGroupings = new RemoveGroupingsTransformer();
-        EvaluateLiteralsTransformer evaluateLiterals = new EvaluateLiteralsTransformer();
+        AttachComponentNamespaces resolveFullQualifiers = new AttachComponentNamespaces(componentLibraries);
+        RemoveGroupings removeGroupings = new RemoveGroupings();
+        EvaluateLiterals evaluateLiterals = new EvaluateLiterals();
 
         statements = resolveFullQualifiers.transform(statements);
         statements = removeGroupings.transform(statements);

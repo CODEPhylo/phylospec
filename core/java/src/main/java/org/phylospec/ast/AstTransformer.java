@@ -4,13 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This interface can be implemented by classes that transform the AST tree.
- * The transformation should be stateless to be correct.
+ * This abstract class can be inherited by classes that transform the AST tree.
+ * Every visitor function should return the transformed node. Each concrete
+ * implementation only has to implement the visitor functions for nodes which
+ * it transforms.
  */
 public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> {
     List<Stmt> oldStatements;
     List<Stmt> transformedStatements;
 
+    /**
+     * Applies the transformation to a list of statements. Note that the statement objects
+     * may be mutated by this operation.
+     */
     public List<Stmt> transform(List<Stmt> statements) {
         oldStatements = statements;
         transformedStatements = new ArrayList<>();

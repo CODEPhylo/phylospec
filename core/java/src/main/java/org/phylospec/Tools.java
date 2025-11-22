@@ -19,8 +19,9 @@ import java.nio.file.Paths;
 import java.util.InputMismatchException;
 import java.util.List;
 
-/// This class provides a bunch of tools revolving about .phylospec files. It can be called using the following
-/// CLI arguments:
+/// This class provides a bunch of tools revolving about .phylospec files.
+///
+/// It can be called using the following CLI arguments:
 /// - `validate file.phylospec` - tries to parse the file and runs the type checker.
 /// - `to-lphy file.phylospec` - converts the given script into an LPhy script and prints it to stdout.
 /// - `to-rev file.phylospec` - converts the given script into a Rev script and prints it to stdout.
@@ -43,6 +44,7 @@ public class Tools {
         }
     }
 
+    /** Parses the file and runs the type resolver to detect type errors. */
     private static void validate(String[] args) throws IOException {
         if (args.length != 2) {
             throw new RuntimeException("validate requires you to pass a path to a  phylospec file.");
@@ -52,6 +54,7 @@ public class Tools {
         parseStmts(phylospecSource);
     }
 
+    /** Prints out the JSON schema for the output of the to-json command. */
     private static void printJsonSchema(String[] args) {
         if (args.length != 1) {
             throw new RuntimeException("json-schema requires no arguments.");
@@ -59,7 +62,7 @@ public class Tools {
         System.out.println(JSONModel.getJSONSchema());
     }
 
-
+    /** Parses the file, runs the type resolver, and prints a JSON representation of it to stdout. */
     private static void convertToJson(String[] args) throws IOException, JSONConverter.JsonConversionError {
         if (args.length != 2) {
             throw new RuntimeException("to-json requires you to pass a path to a  phylospec file.");
@@ -73,6 +76,7 @@ public class Tools {
         System.out.println(jsonString);
     }
 
+    /** Parses the file, runs the type resolver, and prints the corresponding Rev script to stdout. */
     private static void convertToRev(String[] args) throws IOException {
         if (args.length != 2) {
             throw new RuntimeException("to-rev requires you to pass a path to a  phylospec file.");
@@ -88,6 +92,7 @@ public class Tools {
         System.out.println(revString);
     }
 
+    /** Parses the file, runs the type resolver, and prints the corresponding LPhy script to stdout. */
     private static void convertToLPhy(String[] args) throws IOException {
         if (args.length != 2) {
             throw new RuntimeException("to-lphy requires you to pass a path to a  phylospec file.");

@@ -15,11 +15,11 @@ import java.util.List;
  * This transformation replaces all type names and function names with the full
  * qualifier including their namespace.
  */
-public class ResolveComponentQualifiersTransformation extends AstTransformer {
+public class AttachComponentNamespaces extends AstTransformer {
 
     private final ComponentResolver componentResolver;
 
-    public ResolveComponentQualifiersTransformation(List<ComponentLibrary> componentLibraries) {
+    public AttachComponentNamespaces(List<ComponentLibrary> componentLibraries) {
         this.componentResolver = new ComponentResolver(componentLibraries);
     }
 

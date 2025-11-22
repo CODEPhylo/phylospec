@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.phylospec.ast.AstType;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
-import org.phylospec.ast.transformers.EvaluateLiteralsTransformer;
+import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
@@ -101,6 +101,13 @@ public class EvaluateLiteralsTest {
                 )
         );
         testStatements(
+                "Boolean a = 10 + 2 != 12",
+                new Stmt.Assignment(
+                        new AstType.Atomic("Boolean"), "a",
+                        new Expr.Literal(false)
+                )
+        );
+        testStatements(
                 "Boolean a = 10 - 2 == 12",
                 new Stmt.Assignment(
                         new AstType.Atomic("Boolean"), "a",
@@ -144,7 +151,7 @@ public class EvaluateLiteralsTest {
         Parser parser = new Parser(tokens);
         List<Stmt> actualStatements = parser.parse();
 
-        EvaluateLiteralsTransformer transformer = new EvaluateLiteralsTransformer();
+        EvaluateLiterals transformer = new EvaluateLiterals();
         actualStatements = transformer.transform(actualStatements);
 
         assertEquals(expectedStatements.length, actualStatements.size());

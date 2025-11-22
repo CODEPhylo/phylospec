@@ -8,7 +8,7 @@ import org.phylospec.ast.Expr;
  * This transformation removes all Grouping nodes from the syntax tree and replaces them
  * with the expression within the group.
  */
-public class RemoveGroupingsTransformer extends AstTransformer {
+public class RemoveGroupings extends AstTransformer {
     @Override
     public Expr visitGrouping(Expr.Grouping expr) {
         return expr.expression.accept(this);
