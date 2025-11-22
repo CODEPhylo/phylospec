@@ -43,10 +43,13 @@ public class Tools {
         }
     }
 
-    private static void validate(String[] args) {
+    private static void validate(String[] args) throws IOException {
         if (args.length != 2) {
             throw new RuntimeException("validate requires you to pass a path to a  phylospec file.");
         }
+        Path pylospecFile = Paths.get(args[1]);
+        String phylospecSource = readPhyloSpecSource(pylospecFile);
+        parseStmts(phylospecSource);
     }
 
     private static void printJsonSchema(String[] args) {
