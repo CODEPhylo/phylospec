@@ -19,6 +19,13 @@ import java.nio.file.Paths;
 import java.util.InputMismatchException;
 import java.util.List;
 
+/// This class provides a bunch of tools revolving about .phylospec files. It can be called using the following
+/// CLI arguments:
+/// - `validate file.phylospec` - tries to parse the file and runs the type checker.
+/// - `to-lphy file.phylospec` - converts the given script into an LPhy script and prints it to stdout.
+/// - `to-rev file.phylospec` - converts the given script into a Rev script and prints it to stdout.
+/// - `to-json file.phylospec` - converts the given script into JSON and prints it to stdout.
+/// - `json-schema` - prints the JSON schema of the JSON representation of PhyloSpec scripts to stdout.
 public class Tools {
     public static void main(String[] args) throws IOException, JSONConverter.JsonConversionError {
         if (args.length == 0) {
