@@ -7,6 +7,7 @@ import org.phylospec.components.Property;
 import org.phylospec.components.Type;
 import org.phylospec.lexer.TokenType;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 

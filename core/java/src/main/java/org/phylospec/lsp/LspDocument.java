@@ -3,10 +3,7 @@ package org.phylospec.lsp;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.phylospec.ast.*;
-import org.phylospec.components.Argument;
-import org.phylospec.components.ComponentResolver;
-import org.phylospec.components.Generator;
-import org.phylospec.components.Type;
+import org.phylospec.components.*;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.lexer.Range;
@@ -49,15 +46,13 @@ class LspDocument implements ParseEventListener {
     }
 
     private static ComponentResolver loadComponentResolver() {
-        ComponentResolver componentResolver = new ComponentResolver();
-
+        List<ComponentLibrary> componentLibraries = null;
         try {
-            componentResolver.registerLibraryFromFile("schema/phylospec-core-component-library.json");
+            componentLibraries = ComponentResolver.loadCoreComponentLibraries();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        componentResolver.importEntireNamespace(List.of("phylospec"));
-        return componentResolver;
+        return new ComponentResolver(componentLibraries);
     }
 
     /** Updates the document content and re-runs the static analysis. */

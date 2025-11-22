@@ -3,6 +3,7 @@ package org.phylospec.converters;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.phylospec.ast.Stmt;
+import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
@@ -78,12 +79,10 @@ public class RevConverterTest {
             Parser parser = new Parser(tokens);
             List<Stmt> statements = parser.parse();
 
-            ComponentResolver componentResolver = new ComponentResolver();
-            componentResolver.registerLibraryFromFile("../../schema/phylospec-core-component-library.json");
-            componentResolver.importEntireNamespace(List.of("phylospec"));
+            List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
 
             // Convert AST to Rev using RevConverter
-            String actualRevString = RevConverter.convertToRev(psPath.getFileName().toString(), statements, componentResolver).replace("\t", "    ");
+            String actualRevString = RevConverter.convertToRev(psPath.getFileName().toString(), statements, componentLibraries).replace("\t", "    ");
             String expectedRevString = expectedRev.trim();
 
             assertEquals(

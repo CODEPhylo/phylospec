@@ -1,5 +1,7 @@
 package org.phylospec.ast;
 
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -20,9 +22,12 @@ public abstract class Stmt extends AstNode {
             this.expression = expression;
         }
 
-        public final AstType type;
+        @JsonPropertyDescription("The type of variable being assigned.")
+        public AstType type;
+        @JsonPropertyDescription("The variable name.")
         public final String name;
-        public final Expr expression;
+        @JsonPropertyDescription("The expression being assigned to the variable.")
+        public Expr expression;
 
         @Override
         public boolean equals(Object o) {
@@ -49,9 +54,12 @@ public abstract class Stmt extends AstNode {
             this.expression = expression;
         }
 
-        public final AstType type;
+        @JsonPropertyDescription("The type of variable being drawn.")
+        public AstType type;
+        @JsonPropertyDescription("The variable name.")
         public final String name;
-        public final Expr expression;
+        @JsonPropertyDescription("The expression being drawn from.")
+        public Expr expression;
 
         @Override
         public boolean equals(Object o) {
@@ -79,8 +87,10 @@ public abstract class Stmt extends AstNode {
             this.statement = statement;
         }
 
+        @JsonPropertyDescription("The decorator call.")
         public final Expr.Call decorator;
-        public final Stmt statement;
+        @JsonPropertyDescription("The decorated statement.")
+        public Stmt statement;
 
         @Override
         public boolean equals(Object o) {
@@ -105,6 +115,7 @@ public abstract class Stmt extends AstNode {
             this.namespace = namespace;
         }
 
+        @JsonPropertyDescription("The imported namespace name.")
         public final List<String> namespace;
 
         @Override

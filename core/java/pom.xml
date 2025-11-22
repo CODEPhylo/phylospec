@@ -95,6 +95,13 @@
             <version>2.20.0</version>
         </dependency>
 
+        <!-- Plugin to generate JSON schema -->
+        <dependency>
+            <groupId>com.github.victools</groupId>
+            <artifactId>jsonschema-generator</artifactId>
+            <version>4.38.0</version>
+        </dependency>
+
         <!-- LSP dependencies -->
         <dependency>
             <groupId>org.eclipse.lsp4j</groupId>
@@ -254,13 +261,12 @@
                 </executions>
             </plugin>
 
-            <!-- Plugin to generate a fat JAR with the ConvertToLPhy class. This is used by phylorun to convert
-             .phylospec to .lphy files. -->
+            <!-- Plugin to generate a fat JAR with the Tools class. -->
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>make-convert-to-lphy</id>
+                        <id>make-tools</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
@@ -268,31 +274,13 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>org.phylospec.converters.ConvertToLPhy</mainClass>
+                                    <mainClass>org.phylospec.Tools</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
-                            <finalName>${project.artifactId}-lphy</finalName>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>make-convert-to-rev</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <archive>
-                                <manifest>
-                                    <mainClass>org.phylospec.converters.ConvertToRev</mainClass>
-                                </manifest>
-                            </archive>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                            <finalName>${project.artifactId}-rev</finalName>
+                            <finalName>${project.artifactId}-tools</finalName>
                         </configuration>
                     </execution>
                 </executions>
