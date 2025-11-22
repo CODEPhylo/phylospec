@@ -16,11 +16,19 @@ public class ConvertToJSON {
     /**
      * This program takes the path to a .phylospec file as a CLI argument. It parses the file,
      * run the type checker, and converts it to a JSON file. The resulting JSON is printed to
-     * stout.
+     * stdout.
+     * If the first argument is equal to {@code "json-schema"}, the JSON schema of the JSON PhyloSpec
+     * representation is printed to stdout.
      */
     public static void main(String[] args) throws IOException, JSONConverter.JsonConversionError {
         if (args.length != 1) {
             throw new RuntimeException("Provide a .phylospec file name to be converted into an JSON file.");
+        }
+
+        if (args[0].equals("json-schema")) {
+            // we print out the JSON schema and exit
+            System.out.println(JSONModel.getJSONSchema());
+            return;
         }
 
         String phylospecFilePath = args[0];

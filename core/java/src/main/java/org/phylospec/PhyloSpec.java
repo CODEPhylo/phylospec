@@ -2,6 +2,7 @@ package org.phylospec;
 
 import org.phylospec.ast.AstPrinter;
 import org.phylospec.components.ComponentLibrary;
+import org.phylospec.converters.JSONConverter;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.components.ComponentResolver;

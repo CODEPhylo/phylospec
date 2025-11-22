@@ -3,6 +3,7 @@ package org.phylospec.converters;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.github.victools.jsonschema.generator.*;
 import org.phylospec.ast.*;
 import org.phylospec.ast.transformers.ResolveComponentQualifiersTransformation;
 import org.phylospec.components.ComponentLibrary;
@@ -34,14 +35,9 @@ public class JSONConverter {
         }
     }
 
-    private record JSONModel(List<Stmt> statements, String phyloSpecModel) {
-    }
-
-
     public static class JsonConversionError extends Exception {
         public JsonConversionError(String s) {
             super(s);
         }
     }
-
 }

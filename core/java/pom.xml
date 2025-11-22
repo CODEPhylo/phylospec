@@ -95,6 +95,13 @@
             <version>2.20.0</version>
         </dependency>
 
+        <!-- Plugin to generate JSON schema -->
+        <dependency>
+            <groupId>com.github.victools</groupId>
+            <artifactId>jsonschema-generator</artifactId>
+            <version>4.38.0</version>
+        </dependency>
+
         <!-- LSP dependencies -->
         <dependency>
             <groupId>org.eclipse.lsp4j</groupId>

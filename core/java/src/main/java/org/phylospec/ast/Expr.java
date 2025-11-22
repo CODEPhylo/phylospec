@@ -1,5 +1,6 @@
 package org.phylospec.ast;
 
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import org.phylospec.lexer.TokenType;
 import org.phylospec.typeresolver.ResolvedType;
 import org.phylospec.typeresolver.Stochasticity;
@@ -26,6 +27,7 @@ public abstract class Expr extends AstNode {
             this.variableName = variableName;
         }
 
+        @JsonPropertyDescription("The name of the variable.")
         public final String variableName;
 
         @Override
@@ -54,6 +56,7 @@ public abstract class Expr extends AstNode {
 		}
 
         // TODO: make this type generic
+        @JsonPropertyDescription("The literal value (either a string, a number, or a boolean).")
         public Object value;
 
         @Override
@@ -81,7 +84,9 @@ public abstract class Expr extends AstNode {
 			this.right = right;
 		}
 
+        @JsonPropertyDescription("The unary operation (either MINUS or BANG).")
 		public final TokenType operator;
+        @JsonPropertyDescription("The expression to which the unary operation is applied to.")
         public Expr right;
 
         @Override
@@ -110,8 +115,11 @@ public abstract class Expr extends AstNode {
 			this.right = right;
 		}
 
+        @JsonPropertyDescription("The LHS expression to which the binary operation is applied to.")
 		public Expr left;
+        @JsonPropertyDescription("The unary operation (either PLUS, MINUS, STAR, SLASH, BANG_EQUAL, EQUAL_EQUAL, GREATER_EQUAL or LESS_EQUAL).")
 		public final TokenType operator;
+        @JsonPropertyDescription("The RHS expression to which the binary operation is applied to.")
 		public Expr right;
 
         @Override
@@ -138,6 +146,7 @@ public abstract class Expr extends AstNode {
             this.expression = expression;
         }
 
+        @JsonPropertyDescription("The expression being grouped.")
         public Expr expression;
 
         @Override
@@ -173,7 +182,9 @@ public abstract class Expr extends AstNode {
             this.arguments = arguments;
         }
 
+        @JsonPropertyDescription("The function name prefixed by its namespace.")
         public String functionName;
+        @JsonPropertyDescription("The passed arguments.")
         public final Argument[] arguments;
 
         @Override
@@ -196,7 +207,9 @@ public abstract class Expr extends AstNode {
 
     /** The base class for function arguments. */
     public static abstract class Argument extends Expr {
+        @JsonPropertyDescription("The argument name. Null if the argument name is not specified for the first and only argument.")
         public String name;
+        @JsonPropertyDescription("The expression passed to the argument.")
         public Expr expression;
 
         @Override
@@ -251,6 +264,7 @@ public abstract class Expr extends AstNode {
             this.elements = elements;
         }
 
+        @JsonPropertyDescription("The elements of the array.")
         public final List<Expr> elements;
 
         @Override
@@ -279,8 +293,11 @@ public abstract class Expr extends AstNode {
             this.list = list;
         }
 
+        @JsonPropertyDescription("The expression which is evaluated for every element of list.")
         public Expr expression;
+        @JsonPropertyDescription("The names of the list comprehension variables.")
         public final List<String> variables;
+        @JsonPropertyDescription("The list over which the expression is applied.")
         public Expr list;
 
         @Override
@@ -312,7 +329,9 @@ public abstract class Expr extends AstNode {
             this.properyName = properyName;
         }
 
+        @JsonPropertyDescription("The expression of the object for which the property is accessed.")
         public Expr object;
+        @JsonPropertyDescription("The name of the property.")
         public final String properyName;
 
         @Override
