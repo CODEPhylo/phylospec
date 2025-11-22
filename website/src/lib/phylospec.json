@@ -1,0 +1,217 @@
+{
+    "displayName": "PhyloSpec",
+    "name": "phylospec",
+    "scopeName": "source.phylospec",
+    "fileTypes": [
+        ".phylospec"
+    ],
+    "patterns": [
+        {
+            "include": "#comments"
+        },
+        {
+            "include": "#decorators"
+        },
+        {
+            "include": "#imports"
+        },
+        {
+            "include": "#keywords"
+        },
+        {
+            "include": "#types"
+        },
+        {
+            "include": "#functions"
+        },
+        {
+            "include": "#operators"
+        },
+        {
+            "include": "#strings"
+        },
+        {
+            "include": "#numbers"
+        },
+        {
+            "include": "#constants"
+        },
+        {
+            "include": "#identifiers"
+        }
+    ],
+    "repository": {
+        "comments": {
+            "patterns": [
+                {
+                    "name": "comment.line.double-slash.phylospec",
+                    "match": "//.*$"
+                },
+                {
+                    "name": "comment.block.phylospec",
+                    "begin": "/\\*",
+                    "end": "\\*/"
+                }
+            ]
+        },
+        "decorators": {
+            "patterns": [
+                {
+                    "name": "meta.decorator.phylospec",
+                    "match": "@[a-zA-Z_][a-zA-Z0-9_]*",
+                    "captures": {
+                        "0": {
+                            "name": "entity.name.function.decorator.phylospec"
+                        }
+                    }
+                }
+            ]
+        },
+        "imports": {
+            "patterns": [
+                {
+                    "name": "meta.import.phylospec",
+                    "match": "\\b(import)\\b\\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\\.[a-zA-Z_][a-zA-Z0-9_]*)*)",
+                    "captures": {
+                        "1": {
+                            "name": "keyword.control.import.phylospec"
+                        },
+                        "2": {
+                            "name": "entity.name.namespace.phylospec"
+                        }
+                    }
+                }
+            ]
+        },
+        "keywords": {
+            "patterns": [
+                {
+                    "name": "keyword.control.phylospec",
+                    "match": "\\b(import)\\b"
+                },
+                {
+                    "name": "keyword.control.phylospec",
+                    "match": "\\b(for)\\b"
+                },
+                {
+                    "name": "keyword.control.phylospec",
+                    "match": "\\b(in)\\b"
+                }
+            ]
+        },
+        "types": {
+            "patterns": [
+                {
+                    "name": "entity.name.type.phylospec",
+                    "match": "\\b[A-Z][a-zA-Z0-9_]*\\b(?=\\s+[a-zA-Z_])"
+                },
+                {
+                    "name": "meta.type.generic.phylospec",
+                    "begin": "\\b([A-Z][a-zA-Z0-9_]*)\\s*(<)",
+                    "end": "(>)",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "entity.name.type.phylospec"
+                        },
+                        "2": {
+                            "name": "punctuation.definition.typeparameters.begin.phylospec"
+                        }
+                    },
+                    "endCaptures": {
+                        "1": {
+                            "name": "punctuation.definition.typeparameters.end.phylospec"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "include": "#types"
+                        },
+                        {
+                            "name": "punctuation.separator.comma.phylospec",
+                            "match": ","
+                        },
+                        {
+                            "name": "entity.name.type.phylospec",
+                            "match": "\\b[A-Z][a-zA-Z0-9_]*\\b"
+                        }
+                    ]
+                }
+            ]
+        },
+        "functions": {
+            "patterns": [
+                {
+                    "name": "entity.name.function.phylospec",
+                    "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*(?=\\s*\\()"
+                }
+            ]
+        },
+        "operators": {
+            "patterns": [
+                {
+                    "name": "keyword.operator.stochastic.phylospec",
+                    "match": "~"
+                },
+                {
+                    "name": "keyword.operator.assignment.phylospec",
+                    "match": "="
+                },
+                {
+                    "name": "keyword.operator.comparison.phylospec",
+                    "match": "==|!=|<=|>=|<|>"
+                },
+                {
+                    "name": "keyword.operator.arithmetic.phylospec",
+                    "match": "\\+|\\-|\\*|\\/"
+                },
+                {
+                    "name": "keyword.operator.logical.phylospec",
+                    "match": "!"
+                }
+            ]
+        },
+        "strings": {
+            "patterns": [
+                {
+                    "name": "string.quoted.double.phylospec",
+                    "begin": "\"",
+                    "end": "\"",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.phylospec",
+                            "match": "\\\\."
+                        }
+                    ]
+                }
+            ]
+        },
+        "numbers": {
+            "patterns": [
+                {
+                    "name": "constant.numeric.float.phylospec",
+                    "match": "\\b[0-9]+\\.[0-9]+\\b"
+                },
+                {
+                    "name": "constant.numeric.integer.phylospec",
+                    "match": "\\b[0-9]+\\b"
+                }
+            ]
+        },
+        "constants": {
+            "patterns": [
+                {
+                    "name": "constant.language.boolean.phylospec",
+                    "match": "\\b(true|false)\\b"
+                }
+            ]
+        },
+        "identifiers": {
+            "patterns": [
+                {
+                    "name": "variable.other.phylospec",
+                    "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+                }
+            ]
+        }
+    }
+}

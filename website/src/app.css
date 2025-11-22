@@ -1,0 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@theme {
+    --color-accent: #15897d;
+    --color-background: #fefefe;
+    --color-light-gray: #f5f5f5;
+    --color-accent-light: #f3f4f6;
+}
+
+@theme {
+    --font-sans: 'Noto Sans', 'sans-serif';
+}
