@@ -1,10 +1,11 @@
 # Introducing PhyloSpec
 
-PhyloSpec has three main parts:
+PhyloSpec consists of four main parts:
 
-1. A **specification for describing phylogenetic model components** (distributions, functions, and types).
-2. A **core set of standardized components**.
+1. A **standardized way to describe phylogenetic model components** (distributions, functions, and types).
+2. A **core set of model components**.
 3. A **modeling language** that allows to combine these components and describe phylogenetic analyses compatible with different engines.
+4. A **standardized way to describe inference engine capabilities** (supported components, limitations, extensions).
 
 ## Core goals
 
@@ -26,19 +27,57 @@ Researches benefit from easier access to the existing inference engines without 
 
 Educators can teach unified workshops using community-built teaching material.
 
+## Join the working group
+
+<a href="mailto:tobia.ochsner@bsse.ethz.ch">Send us an email</a> to join the working group!
+
+Current members:
+
+- Tobia Ochsner, Tim Vaughan, Tanja Stadler (ETH Zürich)
+- Alexei Drummond (University of Auckland)
+- Sebastian Höhna (LMU Munich)
+
 ## Roadmap & Progress
 
-The **Component Specification** is partially completed.
+### JSON Component Library Format
+**Status:** 🔄 Preliminary
 
-The **Modeling Language Specification** is partially completed. There are working prototypes of the following tools:
+A preliminary JSON schema is available. It will be refined throughout the next few months.
 
-- model parser (<a href="https://github.com/CODEPhylo/phylospec/pull/9" target="_blank">PR</a>) and type checker (<a href="https://github.com/CODEPhylo/phylospec/pull/11" target="_blank">PR</a>)
-- runner to run PhyloSpec models in RevBayes and BEAST 2  (<a href="https://github.com/tochsner/phylorun/tree/main" target="_blank">check it out</a>)
-- LSP (<a href="https://github.com/CODEPhylo/phylospec/pull/12" target="_blank">PR</a>) and VS Code extension (<a href="https://github.com/CODEPhylo/phylospec/tree/main/tools/vscode" target="_blank">check it out</a>)
-- PhyloSpec to JSON converter (<a href="https://github.com/CODEPhylo/phylospec/pull/17" target="_blank">PR</a>)
-- PhyloSpec to Rev converter (<a href="https://github.com/CODEPhylo/phylospec/pull/16" target="_blank">PR</a>)
-- PhyloSpec to LPhy converter (<a href="https://github.com/CODEPhylo/phylospec/pull/14" target="_blank">PR</a>)
+<a href="./specification" target="_blank">→ Learn more about the specification</a>
 
-The **Core Components** will need to be specified by a working group in the next few months.
+### Core Component Library
+**Status:** 🔄 Preliminary
 
-Afterwards, the PhyloSpec can be **integrated into the inference engines**.
+An early draft of standard types, distributions, and functions is available. This will be refined through community discussion and the PhyloSpec working group to establish common components and best practices.
+
+<a href="./components">→ View the core components</a>
+
+### Modeling Language
+**Status:** 🚧 In Progress
+
+A preliminary language specification is available. The exact syntax will be refined throughout the next few months.
+
+<a href="./language">→ Read the language documentation</a>
+
+### Prototypes
+**Status:** 🚧 In Progress
+
+Working prototypes include:
+
+- Parser & Type Checker
+- LSP & VS Code Extension
+- Model Converters (to JSON, to Rev, to LPhy)
+- Runner — Execute PhyloSpec models in RevBayes and BEAST 2
+
+<a href="./prototypes">→ Check out the prototypes</a>
+
+### Engine Integration Format
+**Status:** 📝 Planned
+
+A standardized format to document engine-specific capabilities and limitations will enable researchers to specify models which will actually run in real inference engines.
+
+### Inference Engine Integration
+**Status:** 📝 Planned
+
+Direct integration of PhyloSpec into major phylogenetic inference engines (RevBayes, BEAST 2, and others) will allow users to run PhyloSpec models natively without requiring external converters or runners.

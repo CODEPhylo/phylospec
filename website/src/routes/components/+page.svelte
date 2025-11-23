@@ -5,14 +5,21 @@
 <div
 	class="prose prose-h1:text-accent prose-h2:text-accent prose-headings:font-sans font-serif text-[1.1rem] w-full max-w-[700px] py-16 px-4"
 >
-	<h1>Core Components</h1>
+	<h1>Core Component Library</h1>
 
 	<p>
-		The following is the current list of the core components. Note that this is very preliminary and
-		will greatly change in the future. Feedback is always welcome!
+		PhyloSpec aims to start a conversation about standard model components, common assumptions, and
+		best practices in the field of phylogenetics. The result of this will be the <strong
+			>PhyloSpec Core Component Library</strong
+		>, a set of model components which are considered to be common and well-established.
 	</p>
 
-	<p>The prototype tools implement (most of) these core components.</p>
+	<p>
+		The following is the current list of the core components. Note that this is <em>very</em> preliminary
+		and will greatly change in the future. Feedback is always welcome!
+	</p>
+
+	<p>The prototype tools implement most of these core components.</p>
 
 	<h2>Types</h2>
 
