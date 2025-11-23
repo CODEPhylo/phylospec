@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Domine:wght@400..700&family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Solway:wght@300;400;500;700;800&display=swap');
 
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
@@ -12,4 +12,58 @@
 
 @theme {
     --font-sans: 'Noto Sans', 'sans-serif';
+    --font-serif: 'Domine', 'serif';
+}
+
+.prose ul>li::marker,
+.prose ol>li::marker {
+    color: var(--color-accent);
+}
+
+a {
+    @apply text-accent;
+}
+
+a[target='_blank']::before {
+    content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12.2 12.2' width='12' height='12'%3E%3Cpath fill='%2315897d' d='M5.7 0v1.5h4L4.5 6.7l1 1.1 5.3-5.2v3.9h1.4V0z'/%3E%3Cpath fill='none' d='M3.4 6.7l3-2.9H1.5v7h7V5.9l-3 2.9z'/%3E%3Cpath fill='%2315897d' d='M8.5 5.9v4.9h-7v-7h4.9l1.5-1.6H0v10h10V4.4z'/%3E%3C/svg%3E");
+    margin-right: 0.25em;
+    color: var(--color-accent);
+}
+
+nav a {
+    @apply text-gray-900;
+}
+
+nav a:hover {
+    @apply text-accent;
+}
+
+/* Markdown */
+
+.hint {
+    background: var(--color-accent-light);
+    border-radius: 8px;
+    padding: 16px;
+    position: relative;
+    padding-left: 56px;
+}
+
+.tip::before {
+    content: url("data:image/svg+xml,%3Csvg%20%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20%20width%3D%2228%22%20%20height%3D%2228%22%20%20viewBox%3D%220%200%2024%2024%22%20%20fill%3D%22none%22%20%20stroke%3D%22currentColor%22%20%20stroke-width%3D%222%22%20%20stroke-linecap%3D%22round%22%20%20stroke-linejoin%3D%22round%22%20%20class%3D%22icon%20icon-tabler%20icons-tabler-outline%20icon-tabler-info-circle%22%3E%3Cpath%20stroke%3D%22none%22%20d%3D%22M0%200h24v24H0z%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M3%2012a9%209%200%201%200%2018%200a9%209%200%200%200%20-18%200%22%20%2F%3E%3Cpath%20d%3D%22M12%209h.01%22%20%2F%3E%3Cpath%20d%3D%22M11%2012h1v4h1%22%20%2F%3E%3C%2Fsvg%3E");
+    height: 28px;
+    width: 28px;
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.warn::before {
+    content: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-help-hexagon"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19.875 6.27c.7 .398 1.13 1.143 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" /><path d="M12 16v.01" /><path d="M12 13a2 2 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483" /></svg>');
+    height: 28px;
+    width: 28px;
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
 }

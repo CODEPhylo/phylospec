@@ -2,6 +2,7 @@ import { mdsvex, escapeSvelte } from 'mdsvex';
 import adapter from '@sveltejs/adapter-auto';
 import { createHighlighter } from 'shiki'
 import fs from 'fs';
+import hint from 'remark-hint';
 
 const theme = JSON.parse(fs.readFileSync('src/lib/themes/nord.json', 'utf8'));
 const phylospec = JSON.parse(fs.readFileSync('src/lib/phylospec.json', 'utf8'))
@@ -23,6 +24,7 @@ const config = {
 				return `{@html \`${html}\` }`;
 			}
 		},
+		remarkPlugins: [hint]
 	})],
 	extensions: ['.svelte', '.svx', '.md']
 };
