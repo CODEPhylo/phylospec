@@ -6,7 +6,12 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<title>PhyloSpec</title>
+	<meta
+		name="description"
+		content="A standardized way to describe phylogenetic model components, common assumptions, and best practices in the field of phylogenetics."
+	/>
+	<meta name="robots" content="index,follow" />
 </svelte:head>
 
 <div class="bg-background font-sans text-dark min-h-lvh w-lvw flex flex-col items-center pt-16">
