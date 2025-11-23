@@ -13,7 +13,7 @@ They are actively being developed to guide the design of the component library f
 **VS Code Extension** — Complete editing experience for PhyloSpec files using the LSP (<a href="https://github.com/CODEPhylo/phylospec/tree/main/tools/vscode" target="_blank">check it out</a>)
 
 <video
-		src="src/lib/assets/vscode.mp4"
+		src="vscode.mp4"
         autoplay
         loop
         playbackRate="3"
