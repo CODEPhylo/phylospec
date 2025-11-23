@@ -4,7 +4,7 @@ PhyloSpec consists of four main parts:
 
 1. A **standardized way to describe phylogenetic model components** (distributions, functions, and types).
 2. A **core set of model components**.
-3. A **modeling language** that allows to combine these components and describe phylogenetic analyses compatible with different engines.
+3. A **modeling language** that allows us to combine these components and describe phylogenetic analyses compatible with different engines.
 4. A **standardized way to describe inference engine capabilities** (supported components, limitations, extensions).
 
 ## Core goals
@@ -17,13 +17,13 @@ We aim to have regular meetings and workshops.
 
 ### Ecosystem of tools
 
-A shared modeling language allows to break the existing barriers between ecosystems, such that we can build and build upon shared tools. This decreases duplicate development efforts.
+A shared modeling language allows us to break the existing barriers between ecosystems, such that we can build upon shared tools. This decreases duplicate development efforts.
 
 Examples of tools include GUIs, IDE extensions, MCPs, automatic model selectors, model visualization, simulators, model validation, benchmark suites, or code-gen libraries.
 
 ### Simplify research
 
-Researches benefit from easier access to the existing inference engines without having to learn all the intricacies of the  different ecosystems.
+Researchers benefit from easier access to the existing inference engines without having to learn all the intricacies of the different ecosystems.
 
 Educators can teach unified workshops using community-built teaching material.
 
