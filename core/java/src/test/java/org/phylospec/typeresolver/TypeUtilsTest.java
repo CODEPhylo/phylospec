@@ -1,6 +1,7 @@
 package org.phylospec.typeresolver;
 
 import org.junit.jupiter.api.Test;
+import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
 
 import java.io.IOException;
@@ -65,9 +66,7 @@ public class TypeUtilsTest {
     }
 
     private static ComponentResolver buildComponentResolver() throws IOException {
-        ComponentResolver componentResolver = new ComponentResolver();
-        componentResolver.registerLibraryFromFile("../../schema/phylospec-core-component-library.json");
-        componentResolver.importEntireNamespace(List.of("phylospec"));
-        return componentResolver;
+        List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
+        return new ComponentResolver(componentLibraries);
     }
 }

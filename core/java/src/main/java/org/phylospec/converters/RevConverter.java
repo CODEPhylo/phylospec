@@ -1,10 +1,12 @@
 package org.phylospec.converters;
 
 import org.phylospec.ast.*;
+import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.TokenType;
 import org.phylospec.typeresolver.*;
 
+import java.io.IOException;
 import java.util.*;
 
 /// This class converts parsed PhyloSpec statements into a Rev script.
@@ -27,14 +29,13 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     /**
      * Private constructor. Use {@code RevConverter.convertToRev}.
      */
-    private RevConverter(List<Stmt> statements, ComponentResolver componentResolver) {
+    private RevConverter(List<Stmt> statements, List<ComponentLibrary> componentLibraries) {
         revStatements = new ArrayList<>();
-
-        this.componentResolver = componentResolver;
 
         stochasticityResolver = new StochasticityResolver();
         stochasticityResolver.visitStatements(statements);
 
+        componentResolver = new ComponentResolver(componentLibraries);
         typeResolver = new TypeResolver(componentResolver);
         typeResolver.visitStatements(statements);
 
@@ -44,8 +45,10 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     /**
      * Converts the given statements into a Rev script.
      */
-    public static String convertToRev(String phylospecFileName, List<Stmt> statements, ComponentResolver componentResolver) {
-        RevConverter converter = new RevConverter(statements, componentResolver);
+    public static String convertToRev(
+            String phylospecFileName, List<Stmt> statements, List<ComponentLibrary> componentLibraries
+    ) {
+        RevConverter converter = new RevConverter(statements, componentLibraries);
         String modelName = phylospecFileName.endsWith(".phylospec")
                 ? phylospecFileName.substring(0, phylospecFileName.length() - ".phylospec".length())
                 : phylospecFileName;

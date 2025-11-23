@@ -1,5 +1,7 @@
 package org.phylospec.ast;
 
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -10,6 +12,7 @@ import java.util.Objects;
  */
 public abstract class AstType extends AstNode {
 
+    @JsonPropertyDescription("The name of the type prefixed by its namespace.")
     public String name;
 
     abstract public <S, E, T> T accept(AstVisitor<S, E, T> visitor);
@@ -45,6 +48,7 @@ public abstract class AstType extends AstNode {
             this.typeParameters = typeParameters;
         }
 
+        @JsonPropertyDescription("A list of the parameter types.")
         public final AstType[] typeParameters;
 
         @Override
