@@ -34,50 +34,31 @@ Educators can teach unified workshops using community-built teaching material.
 Current members:
 
 - Tobia Ochsner, Tim Vaughan, Tanja Stadler (ETH Zürich)
-- Alexei Drummond (University of Auckland)
+- Alexei Drummond, Walter Xie (University of Auckland)
 - Sebastian Höhna (LMU Munich)
 
 ## Roadmap & Progress
 
-### JSON Component Library Format
-**Status:** 🔄 Preliminary
+**JSON Component Library Format** — 🔄 Preliminary
 
-A preliminary JSON schema is available. It will be refined throughout the next few months.
+A preliminary JSON schema is available. It will be refined throughout the next few months. <a href="./specification" target="_blank">→ Learn more</a>
 
-<a href="./specification" target="_blank">→ Learn more about the specification</a>
+**Core Component Library** — 🔄 Preliminary
 
-### Core Component Library
-**Status:** 🔄 Preliminary
+An early draft of standard types, distributions, and functions is available. This will be refined through community discussion and the PhyloSpec working group to establish common components and best practices. <a href="./components">→ View components</a>
 
-An early draft of standard types, distributions, and functions is available. This will be refined through community discussion and the PhyloSpec working group to establish common components and best practices.
+**Modeling Language** — 🚧 In Progress
 
-<a href="./components">→ View the core components</a>
+A preliminary language specification is available. The exact syntax will be refined throughout the next few months. <a href="./language">→ Read documentation</a>
 
-### Modeling Language
-**Status:** 🚧 In Progress
+**Prototypes** — 🚧 In Progress
 
-A preliminary language specification is available. The exact syntax will be refined throughout the next few months.
+Working prototypes include: Parser & Type Checker, LSP & VS Code Extension, Model Converters (to JSON, to Rev, to LPhy), and Runner (Execute PhyloSpec models in RevBayes and BEAST 2). <a href="./prototypes">→ Check out prototypes</a>
 
-<a href="./language">→ Read the language documentation</a>
+**Engine Integration Format** — 📝 Planned
 
-### Prototypes
-**Status:** 🚧 In Progress
+A standardized format to document engine-specific capabilities and limitations.
 
-Working prototypes include:
+**Inference Engine Integration** — 📝 Planned
 
-- Parser & Type Checker
-- LSP & VS Code Extension
-- Model Converters (to JSON, to Rev, to LPhy)
-- Runner — Execute PhyloSpec models in RevBayes and BEAST 2
-
-<a href="./prototypes">→ Check out the prototypes</a>
-
-### Engine Integration Format
-**Status:** 📝 Planned
-
-A standardized format to document engine-specific capabilities and limitations will enable researchers to specify models which will actually run in real inference engines.
-
-### Inference Engine Integration
-**Status:** 📝 Planned
-
-Direct integration of PhyloSpec into major phylogenetic inference engines (RevBayes, BEAST 2, and others) will allow users to run PhyloSpec models natively without requiring external converters or runners.
+Direct integration of PhyloSpec into major phylogenetic inference engines (RevBayes, BEAST 2, and others).

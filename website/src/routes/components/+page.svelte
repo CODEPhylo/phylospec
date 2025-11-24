@@ -10,7 +10,7 @@
 	<p>
 		PhyloSpec aims to start a conversation about standard model components, common assumptions, and
 		best practices in the field of phylogenetics. The result of this will be the <strong
-			>PhyloSpec Core Component Library</strong
+			>Core Component Library</strong
 		>, a set of model components which are considered to be common and well-established.
 	</p>
 
