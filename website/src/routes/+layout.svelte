@@ -1,8 +1,12 @@
 <script>
 	import '../app.css';
-	import favicon from '$lib/assets/favicon.svg';
 
 	let { children } = $props();
+	let mobileMenuOpen = $state(false);
+
+	function toggleMenu() {
+		mobileMenuOpen = !mobileMenuOpen;
+	}
 </script>
 
 <svelte:head>
@@ -22,14 +26,53 @@
 			<span class="text-accent">Phylo</span><span class="text-gray-900">Spec</span>
 		</a>
 
-		<nav class="flex gap-10">
+		<!-- Desktop Navigation -->
+		<nav class="hidden lg:flex gap-10">
 			<a href="/">Introduction</a>
 			<a href="/specification">Specification</a>
 			<a href="/components">Core Components</a>
 			<a href="/language">Modeling Language</a>
 			<a href="/prototypes">Prototypes</a>
 		</nav>
+
+		<!-- Hamburger Menu Button (Mobile Only) -->
+		<button
+			onclick={toggleMenu}
+			class="lg:hidden flex flex-col gap-1.5 p-2"
+			aria-label="Toggle menu"
+		>
+			<span
+				class="w-6 h-0.5 bg-gray-900 transition-all duration-300 {mobileMenuOpen
+					? 'rotate-45 translate-y-2'
+					: ''}"
+			></span>
+			<span
+				class="w-6 h-0.5 bg-gray-900 transition-all duration-300 {mobileMenuOpen
+					? 'opacity-0'
+					: ''}"
+			></span>
+			<span
+				class="w-6 h-0.5 bg-gray-900 transition-all duration-300 {mobileMenuOpen
+					? '-rotate-45 -translate-y-2'
+					: ''}"
+			></span>
+		</button>
 	</header>
+
+	<!-- Mobile Navigation Menu -->
+	{#if mobileMenuOpen}
+		<nav
+			class="lg:hidden fixed top-16 left-0 right-0 bg-light-gray/80 backdrop-blur-md z-10 border-b border-gray-200"
+		>
+			<div class="flex flex-col p-4 gap-4">
+				<a href="/" onclick={toggleMenu}>Introduction</a>
+				<a href="/specification" onclick={toggleMenu}>Specification</a>
+				<a href="/components" onclick={toggleMenu}>Core Components</a>
+				<a href="/language" onclick={toggleMenu}>Modeling Language</a>
+				<a href="/prototypes" onclick={toggleMenu}>Prototypes</a>
+			</div>
+		</nav>
+	{/if}
 
 	{@render children()}
 </div>

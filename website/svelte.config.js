@@ -1,15 +1,15 @@
 import { mdsvex, escapeSvelte } from 'mdsvex';
 import adapter from '@sveltejs/adapter-auto';
 import { createHighlighter } from 'shiki'
-import fs from 'fs';
 import hint from 'remark-hint';
 
-const theme = JSON.parse(fs.readFileSync('src/lib/themes/nord.json', 'utf8'));
-const phylospec = JSON.parse(fs.readFileSync('src/lib/phylospec.json', 'utf8'))
+import phylospec from './src/lib/phylospec.json' with { type: 'json' };
+import nord from './src/lib/themes/nord.json' with { type: 'json' };
+
 const highlighter = await createHighlighter({
-	themes: [theme],
+	themes: [nord],
 	langs: [phylospec, 'javascript', 'json', 'java', 'bash', 'bibtex'],
-})
+});
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -20,7 +20,7 @@ const config = {
 		extensions: ['.md'],
 		highlight: {
 			highlighter: async (code, lang = 'text') => {
-				const html = escapeSvelte(highlighter.codeToHtml(code, { lang, theme }));
+				const html = escapeSvelte(highlighter.codeToHtml(code, { lang, theme: nord }));
 				return `{@html \`${html}\` }`;
 			}
 		},

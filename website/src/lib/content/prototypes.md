@@ -1,8 +1,8 @@
 # Prototypes
 
-PhyloSpec has working prototype tools that demonstrate the feasibility and utility of the specification.
+PhyloSpec has working prototype tools that are being developed to guide the design of the component library format and core components. Furthermore, they allow to catch potential challenges related to integration into engines early on.
 
-They are actively being developed to guide the design of the component library format and core components. Furthermore, they allow to catch potential challenges related to integration into engines early on.
+!> Some of the prototypes like the converters are *not* aiming to be production-ready. They do not represent how things will work down the line, but are merely part of the process to learn about the problem at hand.
 
 ## Language Tools
 
@@ -13,11 +13,17 @@ They are actively being developed to guide the design of the component library f
 **VS Code Extension** — Complete editing experience for PhyloSpec files using the LSP (<a href="https://github.com/CODEPhylo/phylospec/tree/main/tools/vscode" target="_blank">check it out</a>)
 
 <video
-		src="src/lib/assets/vscode.mp4"
+		src="vscode.mp4"
         autoplay
         loop
         playbackRate="3"
-/>
+>
+</video>
+
+## Runner
+
+**PhyloRun** — Executes PhyloSpec models in RevBayes and BEAST 2 (<a href="https://github.com/tochsner/phylorun/tree/main" target="_blank">Try it out</a>)
+
 
 ## Converters
 
@@ -27,7 +33,3 @@ They are actively being developed to guide the design of the component library f
 **PhyloSpec to LPhy** — Allows PhyloSpec models to run in BEAST 2 using LPhyBEAST (<a href="https://github.com/CODEPhylo/phylospec/pull/14" target="_blank">PR #14</a>, <a href="https://github.com/tochsner/phylorun/tree/main#run-phylospec-analyses" target="_blank">try it out</a>)
 
 **PhyloSpec to JSON** — Simplifies integration into inference engines (<a href="https://github.com/CODEPhylo/phylospec/pull/17" target="_blank">PR #17</a>)
-
-## Runner
-
-**PhyloRun** — Executes PhyloSpec models in RevBayes and BEAST 2 (<a href="https://github.com/tochsner/phylorun/tree/main" target="_blank">Try it out</a>)

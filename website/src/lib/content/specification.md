@@ -1,8 +1,8 @@
 # Specification
 
-We introduce the __component library format__, a machine-readable way to define what components should exist and what their interfaces should look like.
+We introduce the __Component Library Format__, a machine-readable way to define what components should exist and what their interfaces should look like.
 
-!> The JSON Component Library Format does *not* define the components themselves, but provides a standardized way to describe them.
+!> The Component Library Format does *not* define the components themselves, but provides a standardized way to describe them.
 
 ## JSON Component Library Format
 
