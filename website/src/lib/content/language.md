@@ -2,16 +2,16 @@
 
 This page describes the philosophy and features of the modeling language.
 
-## 1. Language Philosophy
+## Language Philosophy
 
 - PhyloSpec is a language for describing phylogenetic models. It is _not_ a programming language.
-- PhyloSpec aims to be expressive enough to describe complex models, even if they cannot be efficiently inferred in current engines. However, its scope is explicitly restricted to __phylogenetic models__. Things like proposal distributions or the specific inference algorithm are not part of the language (see 3.2 for ways to specify these).
+- PhyloSpec aims to be expressive enough to describe a wide range of models, even if they cannot be efficiently inferred in current engines. However, its scope is explicitly restricted to __phylogenetic models__. Things like proposal distributions or the specific inference algorithm are not part of the core language.
 - PhyloSpec is designed to be __human-readable__. It should be concise and easy to understand.
 - PhyloSpec is designed to be __declarative__. Models should describe _what_ the relationships are, not _how_ to compute them. This promotes clarity, prevents side effects, and aligns with mathematical notation.
 - PhyloSpec is designed to __prevent invalid models__. Types and other language features are used to detect invalid models before inference.
 - PhyloSpec is designed to be __extensible__. Engines can add custom types, distributions, and functions to the language.
 
-## 2. Language Features
+## Language Features
 
 This example shows some features of the language:
 
@@ -36,7 +36,7 @@ Alignment sequences ~ PhyloCTMC(
 )
 ```
 
-### 2.1. General Syntax
+### General Syntax
 
 PhyloSpec models describe a graphical model. Every statement corresponds to one variable in the graph.
 
@@ -90,7 +90,7 @@ Some examples of valid and invalid statements:
 PositiveReal a ~ Exponential(rate=1.0)
 
 // ✅
-Real b=log(a)
+Real b = log(a)
 
 // 🚫 b is not a distribution
 Real c ~ b                          
@@ -112,19 +112,11 @@ By convention, functions returning a distribution always start with an uppercase
 
 We now look at more details, but we've already covered the main things to know.
 
-!> Check out the [types.md](types.md), [distributions.md](distributions.md), and [functions.md](functions.md) documents for a list of all types, distributions, and functions.
+!> Check out the [Core Component Library](components) for a current list of all types, distributions, and functions.
 
-### 2.2. Naming Conventions
+### Types
 
-- Types and functions returning distributions should use PascalCase (e.g., `PositiveReal`). Only alphanumeric characters are allowed, they must start with a letter.
-- Variable names should use camelCase (e.g., `rate`) and can contain Unicode characters. They must start with a letter (a greek letter like `α` also works).
-- Function not returning distributions should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
-- Function argument names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
-- Attribute names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
-
-### 2.3. Types
-
-Every object has [one of many types](./types.md).
+Every object has [one of many types](components).
 
 #### Literals are associated with one or more types
 
@@ -132,7 +124,7 @@ A `"string"` is always of type `String`, `true` and `false` are always of type `
 
 What about numbers? `10` could refer to a `PositiveInteger`, a `NonNegativeInteger`, a `Integer`, a `PositiveReal`, a `NonNegativeReal`, a `Real`, a `Rate`. `0.5` could also refer to a `Probability` among others. In these cases, the exact type is determined by its usage:
 
-```
+```phylospec
 Real a = 10     // here, 10 is a Real
 Real b = log(5) // log takes a PositiveReal, so 5 is a PositiveReal
 ```
@@ -141,27 +133,25 @@ Real b = log(5) // log takes a PositiveReal, so 5 is a PositiveReal
 
 One reason why PhyloSpec uses types is to make scripts more readable. One part of this is the use of aliases:
 
-```
+```phylospec
 Rate birthRate ~ LogNormal(logMean=1, logSd=2)
 Tree tree ~ Yule(birthRate)
 ```
 
 If type `A` is an alias of type `B`, the two of them can be used interchangeably.
 
-?> Open questions:
->
-> How far do we go with aliases? Do we use things like `Count` (for `NonNegativeInteger`), `Frequencies` (for `Simplex`), or `Path` and `TaxonName` (for `String`?).
+?> __Open question__: How far do we go with aliases? Do we use things like `Count` (for `NonNegativeInteger`), `Frequencies` (for `Simplex`), or `Path` and `TaxonName` (for `String`?).
 
 #### Types can be parameterized
 
-Every type can have one or more type parameters. Examples of parameterized types are `Vector<T>`, `Map<K,V>`, and `Sequence<T>`. The type of an object attribute can dependent on the type parameters:
+Every type can have one or more type parameters. Examples of parameterized types are `Vector<T>`, `Map<K,V>`, and `Sequence<T>`.
 
-```
+From the perspective of an object, its type parameter is *fixed upon generation*. The type of an object attribute can dependent on the type parameters:
+
+```phylospec
 Vector<Real> numbers = [0.5, 0.1]
 Real last = numbers.first         // for Vector<T>, .first has type T
 ```
-
-From the perspective of an object, its type parameter is *fixed upon generation*.
 
 One might add *bounds* to a type parameter. However, we only ever interact with objects through generators. Hence, it is sufficient (and more flexible) to specify type parameter bounds there.
 
@@ -171,64 +161,60 @@ We have the luxury that we can define our type hierarchy from a purely conceptua
 
 An object of a subtype can always be used in places where a supertype is required:
 
-```
+```phylospec
 PositiveReal a = 10
 Real b = a  // this still works, as PositiveReal extends Real
 ```
 
-?> Open questions:
->
-> - Subtyping combined with generics raises the question of [covariance](https://web.archive.org/web/20150905085310/http://blogs.msdn.com/b/ericlippert/archive/2009/11/30/what-s-the-difference-between-covariance-and-assignment-compatibility.aspx): if `A` extends `B`, does `T<A>` extend `T<B>`? I think yes, but a more careful argument will follow.
+?> __Open questions:__ Subtyping combined with generics raises the question of [covariance](https://web.archive.org/web/20150905085310/http://blogs.msdn.com/b/ericlippert/archive/2009/11/30/what-s-the-difference-between-covariance-and-assignment-compatibility.aspx): if `A` extends `B`, does `T<A>` extend `T<B>`? I think yes, but a more careful argument will follow.
 
-### 2.4. Function Calls
+### Function Calls
 
-```
+```phylospec
 PositiveReal mean ~ Exponential(1.0);
 Real y ~ Normal(mean=mean, sd=2.0);
 Real y ~ Normal(mean=mean, sd=2.0, offset=1.0);
 ```
 
-- If there is only one argument, it can be passed directly (e.g., `Exponential(1.0)`).
-- If there are multiple arguments, they must be named explicitly (e.g., `Normal(mean=1.0, sd=2.0)`).
-- There might be optional arguments.
-- There might be multiple functions with the same name but different argument types. Functions with the same name cannot only differ in their return type.
+If there is only one argument, it can be passed directly (e.g., `Exponential(1.0)`). If there are multiple arguments, they must be named explicitly (e.g., `Normal(mean=1.0, sd=2.0)`).
 
-?> Open questions:
->
-> - Do we allow default values?
+There might be optional arguments. One can have multiple functions with the same name but different argument types. Functions with the same name cannot only differ in their return type.
 
-### 2.5. Nested Expressions
+?> __Open question:__ Do we allow default values?
+
+### Nested Expressions
 
 Nested expressions are allowed:
 
-```
+```phylospec
 Real y ~ Normal(mean=log(100), sd=2.0);
 ```
 
 is equivalent to:
 
-```
+```phylospec
 Real mean = log(100);
 Real y = Normal(mean=mean, sd=2.0);
 ```
 
 Whereas
 
-```
+```phylospec
 Real y ~ Normal(mean~Exponential(1.0), sd=2.0);
 ```
 
 is equivalent to:
 
-```
+```phylospec
 Real mean ~ Exponential(1.0);
 Real y = Normal(mean=mean, sd=2.0);
 ```
 
-### 2.6. Vectorization
+### Vectorization
 
 Instead of overly flexible loops, PhyloSpec supports list comprehension:
-```
+
+```phylospec
 Vector<Real> x = [1.0, 2.0, 3.0]
 Vector<Real> logX = [log(xi) for xi in x]
 Vector<Real> xTimesLogX = [x * logX for x, logX in zip(first=x, second=logX)]
@@ -243,10 +229,11 @@ List comprehensions provide a declarative, mathematically-inspired syntax that n
 
 This syntax aligns well with mathematical set-builder notation and provides more flexibility than map-style vectorization while remaining declarative and side-effect free - ideal for model specification languages where clarity and mathematical expressiveness are paramount.
 
-### 2.7. Distributions as Arguments
+### Distributions as Arguments
 
 Distribution are normal objects produced by normal functions and can be assigned to variables and passed as arguments (distributions as first-class citizens):
-```
+
+```phylospec
 // Create a vector of distribution objects
 Vector<Distribution<Real>> components = [
     Normal(mean=0.0, sd=1.0),       // Normal is simply a function returning Distribution<Real>
@@ -265,42 +252,18 @@ Mixture mixture = Mixture(components=components, weights=weights);
 Real x ~ mixture;
 ```
 
-### 2.8. Clamping
+### Clamping
 
 We use the decorator `@observedAs` to assign an observation to a random variable:
 
-```
+```phylospec
 @observedAs(50)
 Real x ~ Normal(mean=0.0, sd=1.0);
 ```
 
-### 2.9. Blocks
-
-Blocks could be used to group statements:
-
-```
-data {
-    Real x = 100;
-}
-
-model {
-    Real y ~ Normal(mean=x, sd=1.0);
-}
-```
-
-?> Open questions:
->
-> - Should blocks be used?
-
-### 2.10. Numerical Expressions
+### Numerical Expressions
 
 PhyloSpec supports standard numerical operations to enable mathematical transformations of variables. These operations are particularly useful when canonical distributions provide convenient priors, but transformed values are needed for downstream model components.
-
-#### Supported Operations
-
-- **Arithmetic**: `+`, `-`, `*`, `/` (division), `^` (exponentiation)
-- **Element-wise operations**: When applied to vectors, operations are performed element-wise
-- **Scalar-vector operations**: Scalars are broadcast to match vector dimensions
 
 #### Syntax Rules
 
@@ -309,89 +272,49 @@ PhyloSpec supports standard numerical operations to enable mathematical transfor
 - Standard operator precedence applies: `^` > `*,/` > `+,-`
 - Parentheses can be used to override precedence
 
-#### Examples
+## Naming Conventions
 
-**Example 1: Dirichlet with weighted transformation**
-```
-// Define weights and concentration parameters
-Vector<PositiveReal> weights = [2.0, 3.0, 1.0, 4.0];
-Vector<PositiveReal> alpha = [1, 1, 1, 1];
+- Types and functions returning distributions should use PascalCase (e.g., `PositiveReal`). Only alphanumeric characters are allowed, they must start with a letter.
+- Variable names should use camelCase (e.g., `rate`) and can contain Unicode characters. They must start with a letter (a greek letter like `α` also works).
+- Function not returning distributions should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
+- Function argument names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
+- Attribute names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
 
-// Sample from Dirichlet with weighted concentration
-Simplex unr ~ Dirichlet(alpha=alpha * weights);
 
-// Transform to get weighted rates
-Vector<Real> r = unr * weights / sum(weights);
-```
+## Engine-Specific Features
 
-In this example, the Dirichlet distribution provides a convenient prior over simplex values, but the model requires weighted rates. The transformation `r = unr * weights / sum(weights)` converts the raw simplex values to the needed parameterization.
-Concretely this is needed for relative rates of partitions of different sizes (weights).
-
-**Example 2: Multinomial with offset transformation**
-```
-// Model parameters
-PositiveInteger k = 10;
-PositiveInteger numTaxa = 100;
-
-// Sample counts from multinomial
-Vector<NonNegativeInteger> x ~ Multinomial(p=repeat(1/k, k), n=numTaxa-k);
-
-// Transform to positive integers by adding 1
-Vector<PositiveInteger> y = x + 1;
-```
-
-Here, the Multinomial distribution naturally produces counts including zeros, but downstream components may require strictly positive integers. The simple transformation `y = x + 1` ensures all values are positive while maintaining the stochastic structure from the prior.
-Concretely this is needed for group sizes in the skyline model, which must sum to numTaxa-1 and must all be positive.
-
-#### Design Rationale
-
-Separating random variable declarations from deterministic transformations:
-- Maintains clarity about which variables are stochastic vs. deterministic
-- Preserves the declarative nature of distribution statements
-- Makes the computational graph explicit for inference engines
-- Allows type checking to ensure operations are valid
-
-?> Open questions:
-> - Should we support additional operations like modulo (`%`) or integer division (`//`)?
-> - Should we allow more complex expressions like `x[i] + y[j]` with indexing?
-> - How do we handle type promotion in mixed-type operations (e.g., `Integer + Real`)?
-
-### 3. Engine-Specific Features
-
-#### 3.1. Extensions
+### Extensions
 
 Engines can add custom types, distributions, and functions to the language. These extensions are namespaced and can be imported:
 
-```
+```phylospec
 import revbayes.readAtlas;
 import revbayes.RlAtlas;
 
 RlAtlas atlas = readAtlas("atlas.csv");
 ```
 
-Extensions are defined in *component libraries*. A component library is a JSON file describing every additional types and functions. Check out the [JSON schema](../schema/component-library.schema.json) and the [core component library](../schema/phylospec-core-component-library.json) to see how this looks like.
+Extensions are defined in *component libraries*. A [component library](specification) is a JSON file describing every additional types and functions.
 
-#### 3.2. Engine Blocks
+### Engine Blocks
 
 There can be engine-specific blocks that are not part of the language and can be used to configure the engine. _These blocks must not change the model specified and will be ignored by any other engine._
 
-```
+```phylospec
 revbayes {
     // Configuration for RevBayes
     // these could be moves
 }
 ```
 
-?> Open questions:
+?> __Open question:__ Is there a standardized syntax for engine blocks?
 
-?> - Is there a standardized syntax for engine blocks?
-
-#### 3.3. Engine Decorators
+### Engine Decorators
 
 - Statements can be decorated with engine-specific information. _These decorators must not change the model specified and will be ignored by any other engine._
 - The syntax for the decorator arguments is identical to function call arguments.
 
-```
+```phylospec
 @revbayes(someInternalArgument=true)
 Real x ~ Normal(mean=0.0, sd=1.0);
 ```
