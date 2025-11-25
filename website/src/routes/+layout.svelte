@@ -28,7 +28,7 @@
 		</a>
 
 		<!-- Desktop Navigation -->
-		<nav class="hidden lg:flex gap-10">
+		<nav class="hidden lg:flex gap-10 mx-5">
 			<a href="{base}/">Introduction</a>
 			<a href="{base}/specification">Specification</a>
 			<a href="{base}/components">Core Components</a>

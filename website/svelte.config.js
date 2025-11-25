@@ -3,7 +3,7 @@ import adapter from '@sveltejs/adapter-static';
 import { createHighlighter } from 'shiki'
 import hint from 'remark-hint';
 
-import phylospec from './src/lib/phylospec.json' with { type: 'json' };
+import phylospec from './src/lib/themes/phylospec.json' with { type: 'json' };
 import nord from './src/lib/themes/nord.json' with { type: 'json' };
 
 const highlighter = await createHighlighter({
