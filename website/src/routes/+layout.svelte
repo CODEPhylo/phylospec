@@ -1,5 +1,6 @@
 <script>
 	import '../app.css';
+	import { base } from '$app/paths';
 
 	let { children } = $props();
 	let mobileMenuOpen = $state(false);
@@ -22,17 +23,17 @@
 	<header
 		class="w-full bg-light-gray/80 backdrop-blur-md p-4 flex items-center fixed top-0 left-0 right-0 z-10 border-b border-gray-200"
 	>
-		<a class="text-2xl font-bold flex-1" href="/">
+		<a class="text-2xl font-bold flex-1" href="{base}/">
 			<span class="text-accent">Phylo</span><span class="text-gray-900">Spec</span>
 		</a>
 
 		<!-- Desktop Navigation -->
 		<nav class="hidden lg:flex gap-10">
-			<a href="/">Introduction</a>
-			<a href="/specification">Specification</a>
-			<a href="/components">Core Components</a>
-			<a href="/language">Modeling Language</a>
-			<a href="/prototypes">Prototypes</a>
+			<a href="{base}/">Introduction</a>
+			<a href="{base}/specification">Specification</a>
+			<a href="{base}/components">Core Components</a>
+			<a href="{base}/language">Modeling Language</a>
+			<a href="{base}/prototypes">Prototypes</a>
 		</nav>
 
 		<!-- Hamburger Menu Button (Mobile Only) -->
@@ -65,11 +66,11 @@
 			class="lg:hidden fixed top-16 left-0 right-0 bg-light-gray/80 backdrop-blur-md z-10 border-b border-gray-200"
 		>
 			<div class="flex flex-col p-4 gap-4">
-				<a href="/" onclick={toggleMenu}>Introduction</a>
-				<a href="/specification" onclick={toggleMenu}>Specification</a>
-				<a href="/components" onclick={toggleMenu}>Core Components</a>
-				<a href="/language" onclick={toggleMenu}>Modeling Language</a>
-				<a href="/prototypes" onclick={toggleMenu}>Prototypes</a>
+				<a href="{base}/" onclick={toggleMenu}>Introduction</a>
+				<a href="{base}/specification" onclick={toggleMenu}>Specification</a>
+				<a href="{base}/components" onclick={toggleMenu}>Core Components</a>
+				<a href="{base}/language" onclick={toggleMenu}>Modeling Language</a>
+				<a href="{base}/prototypes" onclick={toggleMenu}>Prototypes</a>
 			</div>
 		</nav>
 	{/if}
