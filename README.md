@@ -63,6 +63,7 @@ The specification consists of:
 │       │       ├── annotations/   # PhyloSpec annotations
 │       │       ├── ast/           # Nodes of syntax tree
 │       │       ├── components/    # Classes corresponding to components in component libraries
+│       │       ├── converters/    # Classes to convert PhyloSpec into other languages (Rev, LPhy, JSON)
 │       │       ├── domain/        # Bounded primitive types (PositiveReal, Probability, etc.)
 │       │       ├── factory/       # Type factory utilities
 │       │       ├── lexer/         # Lexer
@@ -79,6 +80,7 @@ The specification consists of:
 │   ├── distributions.md           # Distribution signatures
 │   ├── functions.md               # Function signatures
 │   └── constraints.md             # Constraint definitions
+├── website/                       # Svelte website for the project
 └── schema/                        # JSON schemas and specifications
     ├── component-library.schema.json  # Metaschema for component libraries for validating model libraries
     └── phylospec-core-component-library.json # Core PhyloSpec components
