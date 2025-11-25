@@ -1,38 +1,79 @@
-# sv
+# PhyloSpec Website
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Website for [PhyloSpec](https://github.com/CODEPhylo/phylospec) - a specification for phylogenetic modeling components.
 
-## Creating a project
+## Tech Stack
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **SvelteKit** - Web framework with static site generation
+- **MDsveX** - Markdown preprocessing with Svelte components
+- **Tailwind CSS** - Utility-first styling
+- **Shiki** - Syntax highlighting with custom PhyloSpec language support
 
-```sh
-# create a new project in the current directory
-npx sv create
+## Prerequisites
 
-# create a new project in my-app
-npx sv create my-app
-```
+- Node.js 18+ (or Bun)
+- npm/pnpm/yarn/bun
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Getting Started
 
 ```sh
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
 
-# or start the server and open the app in a new browser tab
+# Open in browser
 npm run dev -- --open
 ```
 
-## Building
+## Development
 
-To create a production version of your app:
+### Available Scripts
+
+```sh
+npm run dev          # Start dev server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run check        # Run Svelte type checking
+npm run check:watch  # Run type checking in watch mode
+npm run format       # Format code with Prettier
+npm run lint         # Check code formatting
+```
+
+### Project Structure
+
+```
+website/
+├── src/
+│   ├── lib/
+│   │   ├── assets/              # Assets
+│   │   ├── content/             # Markdown content (language.md, specification.md, etc.)
+│   │   ├── schema/              # JSON schemas
+│   │   ├── themes/              # Syntax highlighting (nord.json, phylospec.json)
+│   └── routes/
+│       ├── [[document]]/        # Dynamic markdown document routes
+│       ├── components/          # Components page
+│       ├── +layout.svelte       # Root layout
+├── static/                      # Static assets (favicons, videos, manifest)
+└── svelte.config.js             # SvelteKit + MDsveX configuration
+```
+
+### Key Features
+
+- **MDsveX**: Write pages in Markdown with embedded Svelte components (`.md` files)
+- **Custom Syntax Highlighting**: PhyloSpec language support via Shiki
+- **Static Deployment**: Pre-rendered for GitHub Pages at `/phylospec` base path
+- **Remark Hints**: Enhanced markdown with hint blocks
+
+## Building
 
 ```sh
 npm run build
 ```
 
-You can preview the production build with `npm run preview`.
+Outputs static site to `build/` directory, configured for deployment to GitHub Pages with base path `/phylospec`.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+## Deployment
+
+The site is automatically deployed to GitHub Pages via GitHub Actions. See repository workflows for deployment configuration.
