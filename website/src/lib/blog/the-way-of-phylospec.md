@@ -34,7 +34,7 @@ This discussion about standards also benefits educators and students, since it m
 
 ## It's an Ecosystem
 
-PhyloSpec attempts to break down existing fragmentation in the field. It tries to create a thriving ecosystem of shared tools, model repositories, [experiment repositories](https://www.phylodata.com), educational material, documentation, and workshops. Who knows, we might have a PhyloSpec conference at some point!
+PhyloSpec attempts to break down existing fragmentation in the field. It tries to create a thriving ecosystem of shared tools, model repositories, <a href="https://www.phylodata.com" target="_blank">experiment repositories</a>, educational material, documentation, and workshops. Who knows, we might have a PhyloSpec conference at some point!
 
 ## Layered Extensibility
 
