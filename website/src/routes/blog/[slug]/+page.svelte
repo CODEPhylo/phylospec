@@ -6,15 +6,19 @@
 <div
 	class="prose prose-h1:text-accent prose-h2:text-accent prose-headings:font-sans font-serif text-[1.1rem] w-full max-w-[700px] py-16 px-4"
 >
-	{#if meta.date || meta.author}
-		<div class="not-prose mb-8">
-			<div class="flex gap-3 items-center">
+	{#if meta.date || meta.author || meta.readingTime}
+		<div class="not-prose mb-6">
+			<div class="flex gap-3 items-center italic text-gray-500 text-base font-sans">
 				{#if meta.date}
-					<p class="text-sm text-gray-500">{meta.date}</p>
+					<p>{meta.date}</p>
 				{/if}
 				{#if meta.author}
-					<span class="text-sm text-gray-400">•</span>
-					<p class="text-sm text-gray-500">{meta.author}</p>
+					<span>•</span>
+					<p>{meta.author}</p>
+				{/if}
+				{#if meta.readingTime}
+					<span>•</span>
+					<p>{meta.readingTime} min read</p>
 				{/if}
 			</div>
 		</div>
