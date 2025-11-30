@@ -8,7 +8,7 @@ author: "Tobia Ochsner"
 
 Designing a phylogenetic modeling language involves making many decisions. Existing languages and tools offer countless variations in syntax, abstraction levels, model parameterizations, and best practices. In a vacuum, no perfect language exists—it emerges only when you have clear priorities and constraints.
 
-This post is an attempt to outline my personal view of what we're trying to achieve with PhyloSpec. This should guide us in making decisions, especially the ones that would otherwise just come down to subjective personal preference.
+This post is an attempt to outline my personal view of what we're trying to achieve with PhyloSpec. It should guide us in making decisions, especially the ones that would otherwise just come down to subjective personal preference.
 
 ## Researchers First
 
@@ -20,9 +20,9 @@ We __aim to cover the most commonly used models__ first. If you are looking for 
 
 At the core of PhyloSpec is a modeling language. It should allow researchers to clearly describe the experiment they want to perform.
 
-The chosen abstraction level should __reflect the modeling choices and assumptions made by the researcher__. All irrelevant mathematical or technical details are abstracted away or stored in a secondary block.
+The chosen abstraction level should __reflect the modeling choices and assumptions made by the researcher__. Irrelevant mathematical or technical details are abstracted away or stored in a secondary block.
 
-Furthermore, the language should __help researchers understand the Bayesian phylogenetic framework__ by making core concepts explicit (like priors, substitution models, site and clock models, and the phylogenetic CTMC.)
+Furthermore, the language should __help researchers understand the Bayesian phylogenetic framework__ by making core concepts explicit (like priors, substitution models, site and clock models, and the phylogenetic CTMC).
 
 ## Driven by Consensus
 
@@ -50,8 +50,10 @@ PhyloSpec should come with parsers, converters, scientific and technical linters
 
 ## Language Design
 
-While components are flexible and community-driven, the __language design is opinionated__. There should be one preferred way to express most ideas. The syntax should be as concise as possible, but not at the expense of readability or clarity. Naming should be ultra-consistent, descriptive, and focused on concepts rather than mathematical or engine-specific jargon. We're paying special attention to helpful and educational error messages.
+While components are flexible and community-driven, the __language design is opinionated__. There should be one preferred way to express most ideas. The syntax should be as concise as possible, but not at the expense of readability or clarity.
+
+Naming should be ultra-consistent, descriptive, and focused on concepts rather than mathematical or engine-specific jargon. We're paying special attention to helpful and educational error messages.
 
 ---
 
-While these points don't cover everything and are rather vague, they still represent how I currently think about the project. I'm happy to discuss all of it in the GitHub Discussion (@Tobia link tbd) of this post!
+That my current thinking on PhyloSpec. I'm excited to refine it together in the GitHub Discussion (@Tobia link tbd) of this post!
