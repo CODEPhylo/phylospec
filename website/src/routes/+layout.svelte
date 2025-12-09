@@ -34,6 +34,7 @@
 			<a href="{base}/components">Core Components</a>
 			<a href="{base}/language">Modeling Language</a>
 			<a href="{base}/prototypes">Prototypes</a>
+			<a href="{base}/blog">Blog</a>
 		</nav>
 
 		<!-- Hamburger Menu Button (Mobile Only) -->
@@ -71,6 +72,7 @@
 				<a href="{base}/components" onclick={toggleMenu}>Core Components</a>
 				<a href="{base}/language" onclick={toggleMenu}>Modeling Language</a>
 				<a href="{base}/prototypes" onclick={toggleMenu}>Prototypes</a>
+				<a href="{base}/blog" onclick={toggleMenu}>Blog</a>
 			</div>
 		</nav>
 	{/if}

@@ -96,6 +96,10 @@
                 {
                     "name": "keyword.control.phylospec",
                     "match": "\\b(in)\\b"
+                },
+                {
+                    "name": "keyword.control.phylospec",
+                    "match": "\\b(observed as)\\b"
                 }
             ]
         },
