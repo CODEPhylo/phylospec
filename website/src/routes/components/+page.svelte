@@ -19,7 +19,7 @@
 		implement most of these core components.
 	</p>
 
-	<p class="hint tip">Add your feedback on the GitHub Discussion of this draft!</p>
+	<p class="hint tip">Add your feedback in the <a href="https://github.com/CODEPhylo/phylospec/discussions/23">GitHub Discussion</a> of this draft!</p>
 
 	<h2>Types</h2>
 
