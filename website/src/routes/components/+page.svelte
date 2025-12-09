@@ -15,18 +15,18 @@
 	</p>
 
 	<p>
-		The following is the current list of the core components. Note that this is <em>very</em> preliminary
-		and will greatly change in the future. Feedback is always welcome!
+		The following represents <strong>Draft 12.2025</strong> of the core components. The prototype tools
+		implement most of these core components.
 	</p>
 
-	<p>The prototype tools implement most of these core components.</p>
+	<p class="hint tip">Add your feedback on the GitHub Discussion of this draft!</p>
 
 	<h2>Types</h2>
 
-	<div class="space-y-6">
+	<div class="space-y-3">
 		{#each coreComponents.componentLibrary.types as type}
-			<div class="border border-accent-light rounded-xl p-4">
-				<h3 class="text-xl font-sans font-semibold mt-0 mb-1 flex items-center gap-0">
+			<div class="border border-accent-light rounded-lg p-3">
+				<h3 class="text-lg font-sans font-semibold mt-0 mb-0.5 flex items-center gap-0">
 					{#if type.typeParameters && type.typeParameters.length > 0}
 						{type.name}{'<'}{type.typeParameters.join(', ')}{'>'}
 					{:else}
@@ -34,29 +34,19 @@
 					{/if}
 				</h3>
 				{#if type.description}
-					<p class="text-gray-600 text-base mb-0">{type.description}</p>
+					<p class="text-gray-600 text-sm mb-0">{type.description}</p>
 				{/if}
 				<div class="text-sm">
 					{#if type.extends}
-						<div class="mt-2">
+						<div class="mt-1.5">
 							<span class="font-medium">Extends:</span>
 							<code class="bg-gray-100 px-1 rounded">{type.extends}</code>
 						</div>
 					{/if}
-					{#if type.properties && Object.keys(type.properties).length > 0}
-						<div class="mt-2">
-							<span class="font-medium">Properties:</span>
-							<ul class="list-disc list-inside ml-2 mt-1">
-								{#each Object.entries(type.properties) as [propName, prop]}
-									<li>
-										<code class="bg-gray-100 px-1 rounded">{propName}</code>:
-										<code class="bg-gray-100 px-1 rounded">{prop.type}</code>
-										{#if prop.description}
-											<span class="text-gray-600"> - {prop.description}</span>
-										{/if}
-									</li>
-								{/each}
-							</ul>
+					{#if type.alias}
+						<div class="mt-1.5">
+							<span class="font-medium">Alias for:</span>
+							<code class="bg-gray-100 px-1 rounded">{type.alias}</code>
 						</div>
 					{/if}
 				</div>

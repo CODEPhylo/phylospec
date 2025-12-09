@@ -79,6 +79,9 @@
         "extends": {
           "type": "string"
         },
+        "alias": {
+          "type": "string"
+        },
         "typeParameters": {
           "type": "array",
           "items": {
@@ -115,13 +118,6 @@
         },
         "namespace": {
           "type": "string"
-        },
-        "generatorType": {
-          "type": "string",
-          "enum": [
-            "distribution",
-            "function"
-          ]
         },
         "generatedType": {
           "type": "string"
