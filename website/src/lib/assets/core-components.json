@@ -69,6 +69,14 @@
                 "namespace": "phylospec.types"
             },
             {
+                "name": "Map",
+                "description": "Generic map of key-value pairs",
+                "namespace": "phylospec.types",
+                "typeParameters": [
+                    "K", "V"
+                ]
+            },
+            {
                 "name": "Vector",
                 "description": "Generic ordered collection of elements",
                 "namespace": "phylospec.types",
@@ -97,6 +105,11 @@
                 "name": "Simplex",
                 "description": "Probability vector with elements that sum to 1.0",
                 "extends": "Vector<Probability>",
+                "namespace": "phylospec.types"
+            },
+            {
+                "name": "SubstitutionModel",
+                "description": "Substitution model describing the evolution on a branch",
                 "namespace": "phylospec.types"
             },
             {
@@ -388,6 +401,55 @@
                 ]
             },
             {
+                "name": "readCSV",
+                "generatedType": "Vector<Map<String, String>>",
+                "namespace": "phylospec.functions.io",
+                "description": "Load a CSV file",
+                "ioHints": {
+                    "role": "dataInput",
+                    "extensions": [
+                        ".csv",
+                        ".tsv"
+                    ],
+                    "fileArgument": "file"
+                },
+                "arguments": [
+                    {
+                        "name": "file",
+                        "type": "String",
+                        "description": "Path to csv file",
+                        "required": true
+                    },
+                    {
+                        "name": "delimiter",
+                        "type": "String",
+                        "description": "Path to csv file",
+                        "required": false,
+                        "default": ","
+                    },
+                    {
+                        "name": "headers",
+                        "type": "Vector<String>",
+                        "description": "Headers to use instead of the first row",
+                        "required": false
+                    }
+                ]
+            },
+            {
+                "name": "env",
+                "generatedType": "String",
+                "namespace": "phylospec.functions.io",
+                "description": "Reads an env variable.",
+                "arguments": [
+                    {
+                        "name": "variable",
+                        "type": "String",
+                        "description": "Name of the environment variable",
+                        "required": true
+                    }
+                ]
+            },
+            {
                 "name": "parseNewick",
                 "generatedType": "Tree",
                 "namespace": "phylospec.functions.io",
@@ -614,6 +676,26 @@
                 ]
             },
             {
+                "name": "age",
+                "generatedType": "NonNegativeReal",
+                "namespace": "phylospec.functions.accessor",
+                "description": "Get the age of a node in a tree",
+                "arguments": [
+                    {
+                        "name": "node",
+                        "type": "String",
+                        "description": "Input node ID",
+                        "required": true
+                    },
+                    {
+                        "name": "tree",
+                        "type": "Tree",
+                        "description": "Input tree",
+                        "required": true
+                    }
+                ]
+            },
+            {
                 "name": "numRows",
                 "generatedType": "PositiveInteger",
                 "namespace": "phylospec.functions.accessor",
@@ -729,7 +811,7 @@
             {
                 "name": "Mixture",
                 "generatedType": "Distribution<T>",
-                "namespace": "phylospec.distributions.mixture",
+                "namespace": "phylospec.distributions",
                 "description": "Mixture of distributions with the same return type",
                 "typeParameters": [
                     "T"
@@ -746,6 +828,37 @@
                         "type": "Simplex",
                         "description": "Mixture weights for each component",
                         "required": true
+                    }
+                ]
+            },
+            {
+                "name": "Truncated",
+                "generatedType": "Distribution<T>",
+                "namespace": "phylospec.distributions",
+                "description": "Truncated version of the given distribution on reals",
+                "typeParameters": [
+                    "T"
+                ],
+                "arguments": [
+                    {
+                        "name": "base",
+                        "description": "The base distribution to truncate",
+                        "type": "Distribution<Real>",
+                        "required": true
+                    },
+                    {
+                        "name": "lower",
+                        "type": "T",
+                        "description": "Lower bound",
+                        "required": false,
+                        "default": "-Inf"
+                    },
+                    {
+                        "name": "upper",
+                        "type": "T",
+                        "description": "Upper bound",
+                        "required": false,
+                        "default": "+Inf"
                     }
                 ]
             },
@@ -904,6 +1017,26 @@
                 ]
             },
             {
+                "name": "Cauchy",
+                "generatedType": "Distribution<Real>",
+                "namespace": "phylospec.distributions",
+                "description": "Cauchy distribution",
+                "arguments": [
+                    {
+                        "name": "location",
+                        "type": "Real",
+                        "description": "location parameter",
+                        "required": true
+                    },
+                    {
+                        "name": "scale",
+                        "type": "PositiveReal",
+                        "description": "scale parameter",
+                        "required": true
+                    }
+                ]
+            },
+            {
                 "name": "Dirichlet",
                 "generatedType": "Distribution<Simplex>",
                 "namespace": "phylospec.distributions",
@@ -961,6 +1094,26 @@
                         "name": "probabilities",
                         "type": "Simplex",
                         "description": "Success probabilities",
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "name": "Binomial",
+                "generatedType": "Distribution<NonNegativeInteger>",
+                "namespace": "phylospec.distributions",
+                "description": "Binomial distribution (number of successes)",
+                "arguments": [
+                    {
+                        "name": "numTrials",
+                        "type": "NonNegativeInteger",
+                        "description": "Number of trials",
+                        "required": true
+                    },
+                    {
+                        "name": "p",
+                        "type": "Probability",
+                        "description": "Probability of success",
                         "required": true
                     }
                 ]
@@ -1340,9 +1493,9 @@
                         "required": true
                     },
                     {
-                        "name": "qMatrix",
-                        "type": "QMatrix",
-                        "description": "Rate matrix",
+                        "name": "subtitutionModel",
+                        "type": "SubstitutionModel",
+                        "description": "Substitution model",
                         "required": true
                     },
                     {
@@ -1373,9 +1526,9 @@
                         "required": true
                     },
                     {
-                        "name": "siteQMatrices",
-                        "type": "Vector<QMatrix>",
-                        "description": "Rate matrix per site",
+                        "name": "siteSubtitutionModel",
+                        "type": "Vector<SubstitutionModel>",
+                        "description": "Substitution model per site",
                         "required": true
                     },
                     {
@@ -1468,14 +1621,14 @@
             },
             {
                 "name": "jc69",
-                "generatedType": "QMatrix",
+                "generatedType": "SubstitutionModel",
                 "namespace": "phylospec.functions.substitution",
                 "description": "Jukes-Cantor model (equal rates)",
                 "arguments": []
             },
             {
                 "name": "k80",
-                "generatedType": "QMatrix",
+                "generatedType": "SubstitutionModel",
                 "namespace": "phylospec.functions.substitution",
                 "description": "Kimura 2-parameter model",
                 "arguments": [
@@ -1489,7 +1642,7 @@
             },
             {
                 "name": "f81",
-                "generatedType": "QMatrix",
+                "generatedType": "SubstitutionModel",
                 "namespace": "phylospec.functions.substitution",
                 "description": "Felsenstein 81 model",
                 "arguments": [
@@ -1503,7 +1656,7 @@
             },
             {
                 "name": "hky",
-                "generatedType": "QMatrix",
+                "generatedType": "SubstitutionModel",
                 "namespace": "phylospec.functions.substitution",
                 "description": "Hasegawa-Kishino-Yano model",
                 "arguments": [
@@ -1523,7 +1676,7 @@
             },
             {
                 "name": "gtr",
-                "generatedType": "QMatrix",
+                "generatedType": "SubstitutionModel",
                 "namespace": "phylospec.functions.substitution",
                 "description": "General Time-Reversible model",
                 "arguments": [
@@ -1543,7 +1696,7 @@
             },
             {
                 "name": "wag",
-                "generatedType": "QMatrix",
+                "generatedType": "SubstitutionModel",
                 "namespace": "phylospec.functions.substitution",
                 "description": "Whelan And Goldman model",
                 "arguments": [
@@ -1557,7 +1710,7 @@
             },
             {
                 "name": "jtt",
-                "generatedType": "QMatrix",
+                "generatedType": "SubstitutionModel",
                 "namespace": "phylospec.functions.substitution",
                 "description": "Jones-Taylor-Thornton model",
                 "arguments": [
@@ -1571,7 +1724,7 @@
             },
             {
                 "name": "lg",
-                "generatedType": "QMatrix",
+                "generatedType": "SubstitutionModel",
                 "namespace": "phylospec.functions.substitution",
                 "description": "Le-Gascuel model",
                 "arguments": [
@@ -1585,7 +1738,7 @@
             },
             {
                 "name": "gy94",
-                "generatedType": "QMatrix",
+                "generatedType": "SubstitutionModel",
                 "namespace": "phylospec.functions.substitution",
                 "description": "The M0 (GY94) codon substitution model",
                 "arguments": [
@@ -1611,7 +1764,7 @@
             },
             {
                 "name": "mk",
-                "generatedType": "QMatrix",
+                "generatedType": "SubstitutionModel",
                 "namespace": "phylospec.functions.substitution",
                 "description": "The Lewis-Mk model for discrete traits",
                 "arguments": []
