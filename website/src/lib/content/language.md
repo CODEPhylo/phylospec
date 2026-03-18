@@ -16,7 +16,7 @@ This page describes the philosophy and features of the modeling language.
 This example shows some features of the language:
 
 ```phylospec
-Alignment observedSequences = nexus("alignment.nex")
+Alignment observedSequences = readNexus("alignment.nex")
 
 QMatrix substModel = HKY(
     kappa~LogNormal(meanlog=1.0, sdlog=0.5),
@@ -28,12 +28,11 @@ Tree phylogeny ~ Yule(
     taxa=observedSequences.taxa
 )
 
-@observedAs(observedSequences)
 Alignment sequences ~ PhyloCTMC(
     tree=phylogeny, 
     Q=substModel, 
     numSequences=observedSequences.ntax
-)
+) observed as observedSequences
 ```
 
 ### General Syntax
@@ -134,8 +133,7 @@ Real b = log(5) // log takes a PositiveReal, so 5 is a PositiveReal
 One reason why PhyloSpec uses types is to make scripts more readable. One part of this is the use of aliases:
 
 ```phylospec
-Rate birthRate ~ LogNormal(logMean=1, logSd=2)
-Tree tree ~ Yule(birthRate)
+Rate birthRate ~ LogNormal(logMean=1, logSd=2) // Rate is an alias for PositiveReal
 ```
 
 If type `A` is an alias of type `B`, the two of them can be used interchangeably.
@@ -153,7 +151,7 @@ Vector<Real> numbers = [0.5, 0.1]
 Real last = numbers.first         // for Vector<T>, .first has type T
 ```
 
-One might add *bounds* to a type parameter. However, we only ever interact with objects through generators. Hence, it is sufficient (and more flexible) to specify type parameter bounds there.
+Some languages allow to set *bounds* to a type parameter. However, we only ever interact with objects through generators. Hence, it is sufficient (and more flexible) to specify type parameter bounds there.
 
 #### Types can extend from another type.
 
@@ -171,14 +169,22 @@ Real b = a  // this still works, as PositiveReal extends Real
 ### Function Calls
 
 ```phylospec
-PositiveReal mean ~ Exponential(1.0);
-Real y ~ Normal(mean=mean, sd=2.0);
-Real y ~ Normal(mean=mean, sd=2.0, offset=1.0);
+PositiveReal mean ~ Exponential(1.0)
+Real y ~ Normal(mean=mean, sd=2.0)
+Real y ~ Normal(mean=mean, sd=2.0, offset=1.0)
 ```
 
 If there is only one argument, it can be passed directly (e.g., `Exponential(1.0)`). If there are multiple arguments, they must be named explicitly (e.g., `Normal(mean=1.0, sd=2.0)`).
 
 There might be optional arguments. One can have multiple functions with the same name but different argument types. Functions with the same name cannot only differ in their return type.
+
+If a variable has the same name as a function argument, it can be passed directly:
+
+```phylospec
+PositiveReal mean ~ Exponential(1.0)
+PositiveReal sd ~ Exponential(1.0)
+Real y ~ Normal(mean, sd)
+```
 
 ?> __Open question:__ Do we allow default values?
 
@@ -187,45 +193,44 @@ There might be optional arguments. One can have multiple functions with the same
 Nested expressions are allowed:
 
 ```phylospec
-Real y ~ Normal(mean=log(100), sd=2.0);
+Real y ~ Normal(mean=log(100), sd=2.0)
 ```
 
 is equivalent to:
 
 ```phylospec
-Real mean = log(100);
-Real y = Normal(mean=mean, sd=2.0);
+Real mean = log(100)
+Real y = Normal(mean=mean, sd=2.0)
 ```
 
 Whereas
 
 ```phylospec
-Real y ~ Normal(mean~Exponential(1.0), sd=2.0);
+Real y ~ Normal(mean~Exponential(1.0), sd=2.0)
 ```
 
 is equivalent to:
 
 ```phylospec
-Real mean ~ Exponential(1.0);
-Real y = Normal(mean=mean, sd=2.0);
+Real mean ~ Exponential(1.0)
+Real y = Normal(mean=mean, sd=2.0)
 ```
 
 ### Vectorization
 
-Instead of overly flexible loops, PhyloSpec supports list comprehension:
+Instead of overly flexible loops, PhyloSpec supports indexed assignments:
 
 ```phylospec
 Vector<Real> x = [1.0, 2.0, 3.0]
-Vector<Real> logX = [log(xi) for xi in x]
-Vector<Real> xTimesLogX = [x * logX for x, logX in zip(first=x, second=logX)]
+Real logX[i] = log(x[i]) for i in num(x)  // logX[i] is a Real, logX a Vector<Real>
+Real xTimesLogX[i] = x[i] * logX[i] for i in num(x)
 ```
 
-**Justification for list comprehensions:**
-List comprehensions provide a declarative, mathematically-inspired syntax that naturally extends beyond simple function application. They excel at:
-- Creating collections with complex expressions: `[xi^2 + yi for xi, yi in zip(x, y)]`
-- Nested structures: `[[f(xi, yj) for yj in y] for xi in x]`
-- Index-aware operations: `[i * xi for i, xi in enumerate(x)]`
-- Conditional filtering: `[log(xi) for xi in x if xi > 0]`
+**Justification for indexed assignments:**
+Indexed assignments provide a declarative, mathematically-inspired syntax that naturally extends beyond simple function application. They excel at:
+- Creating collections with complex expressions: `x[i]^2 + y[i] for i in num(x)`
+- Nested structures: `f(x[i], y[j]) for i in num(x) for j in num(j)`
+- Index-aware operations: `i * x[i] for i in num(x)`
 
 This syntax aligns well with mathematical set-builder notation and provides more flexibility than map-style vectorization while remaining declarative and side-effect free - ideal for model specification languages where clarity and mathematical expressiveness are paramount.
 
@@ -239,26 +244,41 @@ Vector<Distribution<Real>> components = [
     Normal(mean=0.0, sd=1.0),       // Normal is simply a function returning Distribution<Real>
     Normal(mean=5.0, sd=2.0),
     Normal(mean=10.0, sd=1.5)
-];
-Vector<Real> weights = [0.3, 0.5, 0.2];
-Mixture mixture = Mixture(components=components, weights=weights);
+]
+Vector<Real> weights = [0.3, 0.5, 0.2]
+Mixture mixture = Mixture(components=components, weights=weights)
 
 // Or using list comprehension for programmatic creation
-Vector<Distribution<Real>> components = [Normal(mean=i*2.0, sd=1.0) for i in 1:10];
-Vector<Real> weights = repeat(x=0.1, rep=10);
-Mixture mixture = Mixture(components=components, weights=weights);
+Vector<Distribution<Real>> components = [Normal(mean=i*2.0, sd=1.0) for i in 1:10]
+Vector<Real> weights = repeat(x=0.1, rep=10)
+Mixture mixture = Mixture(components=components, weights=weights)
 
 // Sample from the mixture
-Real x ~ mixture;
+Real x ~ mixture
 ```
 
 ### Clamping
 
-We use the decorator `@observedAs` to assign an observation to a random variable:
+We use the syntax `observed as` to assign an observation to a random variable:
 
 ```phylospec
-@observedAs(50)
-Real x ~ Normal(mean=0.0, sd=1.0);
+Real x ~ Normal(mean=0.0, sd=1.0) observed as 50
+```
+
+### Blocks
+
+Optionally, `data` and `model` blocks can be used to aid readability and group the statements:
+
+```phylospec
+data {
+  Alignment alignment = readNexus("file.nex")
+}
+
+model {
+  PositiveInteger numAffectedSites ~ Binomial(
+    p=0.1, n=numSites(alignment)
+  )
+}
 ```
 
 ### Numerical Expressions
@@ -280,7 +300,6 @@ PhyloSpec supports standard numerical operations to enable mathematical transfor
 - Function argument names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
 - Attribute names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
 
-
 ## Engine-Specific Features
 
 ### Extensions
@@ -288,10 +307,10 @@ PhyloSpec supports standard numerical operations to enable mathematical transfor
 Engines can add custom types, distributions, and functions to the language. These extensions are namespaced and can be imported:
 
 ```phylospec
-import revbayes.readAtlas;
-import revbayes.RlAtlas;
+use revbayes.readAtlas
+use revbayes.RlAtlas
 
-RlAtlas atlas = readAtlas("atlas.csv");
+RlAtlas atlas = readAtlas("atlas.csv")
 ```
 
 Extensions are defined in *component libraries*. A [component library](specification) is a JSON file describing every additional types and functions.
@@ -316,5 +335,5 @@ revbayes {
 
 ```phylospec
 @revbayes(someInternalArgument=true)
-Real x ~ Normal(mean=0.0, sd=1.0);
+Real x ~ Normal(mean=0.0, sd=1.0)
 ```
