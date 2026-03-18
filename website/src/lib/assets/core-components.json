@@ -108,11 +108,6 @@
                 "namespace": "phylospec.types"
             },
             {
-                "name": "SubstitutionModel",
-                "description": "Substitution model describing the evolution on a branch",
-                "namespace": "phylospec.types"
-            },
-            {
                 "name": "QMatrix",
                 "description": "Rate matrix for substitution models",
                 "extends": "SquareMatrix<Real>",
@@ -1493,9 +1488,9 @@
                         "required": true
                     },
                     {
-                        "name": "subtitutionModel",
-                        "type": "SubstitutionModel",
-                        "description": "Substitution model",
+                        "name": "qMatrix",
+                        "type": "QMatrix",
+                        "description": "Q Matrix",
                         "required": true
                     },
                     {
@@ -1514,7 +1509,6 @@
             },
             {
                 "name": "PhyloCTMC",
-                "generatorType": "distribution",
                 "generatedType": "Distribution<Alignment>",
                 "namespace": "phylospec.distributions.sequence",
                 "description": "Phylogenetic continuous-time Markov chain",
@@ -1526,9 +1520,9 @@
                         "required": true
                     },
                     {
-                        "name": "siteSubtitutionModel",
-                        "type": "Vector<SubstitutionModel>",
-                        "description": "Substitution model per site",
+                        "name": "siteQMatrices",
+                        "type": "Vector<QMatrix>",
+                        "description": "Q Matrix per site",
                         "required": true
                     },
                     {
@@ -1547,7 +1541,6 @@
             },
             {
                 "name": "PhyloBM",
-                "generatorType": "distribution",
                 "generatedType": "Distribution<Alignment<Real>>",
                 "namespace": "phylospec.distributions.continuous",
                 "description": "Phylogenetic Brownian motion for the evolution of continuous traits",
@@ -1580,7 +1573,6 @@
             },
             {
                 "name": "PhyloOU",
-                "generatorType": "distribution",
                 "generatedType": "Distribution<Alignment<Real>>",
                 "namespace": "phylospec.distributions.continuous",
                 "description": "Phylogenetic Ornstein-Uhlenbeck process for univariate traits with selection",
@@ -1620,15 +1612,89 @@
                 ]
             },
             {
+                "name": "StrictClock",
+                "generatedType": "Distribution<Vector<Real>>",
+                "namespace": "phylospec.distributions.clock",
+                "description": "Strict clock model for branch rates",
+                "arguments": [
+                    {
+                        "name": "tree",
+                        "type": "Tree",
+                        "description": "Phylogenetic tree",
+                        "required": true
+                    },
+                    {
+                        "name": "rate",
+                        "type": "Rate",
+                        "description": "The base rate",
+                        "required": false,
+                        "default": 1
+                    }
+                ]
+            },
+            {
+                "name": "RelaxedClock",
+                "generatedType": "Distribution<Vector<Real>>",
+                "namespace": "phylospec.distributions.clock",
+                "description": "Relaxed clock model for branch rates",
+                "arguments": [
+                    {
+                        "name": "base",
+                        "type": "Distribution<Rate>",
+                        "description": "The distribution to draw branch-wise rates from",
+                        "required": true
+                    },
+                    {
+                        "name": "tree",
+                        "type": "Tree",
+                        "description": "Phylogenetic tree",
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "name": "DiscreteGammaInv",
+                "generatedType": "Distribution<Vector<Real>>",
+                "namespace": "phylospec.distributions.siterates",
+                "description": "Discrete gamma site rates with a proportion of invariant sites",
+                "arguments": [
+                    {
+                        "name": "shape",
+                        "type": "PositiveReal",
+                        "description": "The shape parameter of the gamma distribution",
+                        "required": true
+                    },
+                    {
+                        "name": "numCategories",
+                        "type": "PositiveInteger",
+                        "description": "Number of discrete categories",
+                        "required": true
+                    },
+                    {
+                        "name": "invariantProportion",
+                        "type": "Probability",
+                        "description": "Proportion of invariant sites",
+                        "required": false,
+                        "default": 0
+                    },
+                    {
+                        "name": "numSites",
+                        "type": "NonNegativeInteger",
+                        "description": "Number of sites",
+                        "required": true
+                    }
+                ]
+            },
+            {
                 "name": "jc69",
-                "generatedType": "SubstitutionModel",
+                "generatedType": "QMatrix",
                 "namespace": "phylospec.functions.substitution",
                 "description": "Jukes-Cantor model (equal rates)",
                 "arguments": []
             },
             {
                 "name": "k80",
-                "generatedType": "SubstitutionModel",
+                "generatedType": "QMatrix",
                 "namespace": "phylospec.functions.substitution",
                 "description": "Kimura 2-parameter model",
                 "arguments": [
@@ -1642,7 +1708,7 @@
             },
             {
                 "name": "f81",
-                "generatedType": "SubstitutionModel",
+                "generatedType": "QMatrix",
                 "namespace": "phylospec.functions.substitution",
                 "description": "Felsenstein 81 model",
                 "arguments": [
@@ -1656,7 +1722,7 @@
             },
             {
                 "name": "hky",
-                "generatedType": "SubstitutionModel",
+                "generatedType": "QMatrix",
                 "namespace": "phylospec.functions.substitution",
                 "description": "Hasegawa-Kishino-Yano model",
                 "arguments": [
@@ -1676,7 +1742,7 @@
             },
             {
                 "name": "gtr",
-                "generatedType": "SubstitutionModel",
+                "generatedType": "QMatrix",
                 "namespace": "phylospec.functions.substitution",
                 "description": "General Time-Reversible model",
                 "arguments": [
@@ -1696,7 +1762,7 @@
             },
             {
                 "name": "wag",
-                "generatedType": "SubstitutionModel",
+                "generatedType": "QMatrix",
                 "namespace": "phylospec.functions.substitution",
                 "description": "Whelan And Goldman model",
                 "arguments": [
@@ -1710,7 +1776,7 @@
             },
             {
                 "name": "jtt",
-                "generatedType": "SubstitutionModel",
+                "generatedType": "QMatrix",
                 "namespace": "phylospec.functions.substitution",
                 "description": "Jones-Taylor-Thornton model",
                 "arguments": [
@@ -1724,7 +1790,7 @@
             },
             {
                 "name": "lg",
-                "generatedType": "SubstitutionModel",
+                "generatedType": "QMatrix",
                 "namespace": "phylospec.functions.substitution",
                 "description": "Le-Gascuel model",
                 "arguments": [
@@ -1738,7 +1804,7 @@
             },
             {
                 "name": "gy94",
-                "generatedType": "SubstitutionModel",
+                "generatedType": "QMatrix",
                 "namespace": "phylospec.functions.substitution",
                 "description": "The M0 (GY94) codon substitution model",
                 "arguments": [
@@ -1764,7 +1830,7 @@
             },
             {
                 "name": "mk",
-                "generatedType": "SubstitutionModel",
+                "generatedType": "QMatrix",
                 "namespace": "phylospec.functions.substitution",
                 "description": "The Lewis-Mk model for discrete traits",
                 "arguments": []
