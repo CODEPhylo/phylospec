@@ -240,19 +240,34 @@ Elements of vectors, matrices and arrays can be accessed using special index acc
 
 ```phylospec
 Vector<Real> x = [1.0, 2.0, 3.0]
-Real x1 = x[1] // 1.0
+Real x1 = x[1]   // 1.0
 
 Matrix<Real> y = [
   [1.0, 2.0],
   [2.0, 1.0],
 ]
-Real y12 = y[1, 2]  // 2.0
+Real y12 = y[1, 2]   // 2.0
 
 Vector<Map<String, String>> data = fromCSV("file.csv")
-String item = data[1]["header"]
+String entry = data[1]["header"]
 ```
 
 We use one-based indexing.
+
+### String Interpolation
+
+We can inject variables _into_ string literals using string interpolation:
+
+```phylospec
+String seed = env(seed) # reads in an environment variable
+String fileName = "analysis_${seed}.nex"
+```
+
+Only variable names can be used within the curly brackets. If a string literal should actually contain `${`, we can escape it using `\`:
+
+```phylospec
+String fileName = "analysis_\${seed}.nex" // p
+```
 
 ### Distributions as Arguments
 
