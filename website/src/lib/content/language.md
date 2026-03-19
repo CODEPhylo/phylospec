@@ -234,6 +234,26 @@ Indexed assignments provide a declarative, mathematically-inspired syntax that n
 
 This syntax aligns well with mathematical set-builder notation and provides more flexibility than map-style vectorization while remaining declarative and side-effect free - ideal for model specification languages where clarity and mathematical expressiveness are paramount.
 
+### Indexing
+
+Elements of vectors, matrices and arrays can be accessed using special index accessors:
+
+```phylospec
+Vector<Real> x = [1.0, 2.0, 3.0]
+Real x1 = x[1] // 1.0
+
+Matrix<Real> y = [
+  [1.0, 2.0],
+  [2.0, 1.0],
+]
+Real y12 = y[1, 2]  // 2.0
+
+Vector<Map<String, String>> data = fromCSV("file.csv")
+String item = data[1]["header"]
+```
+
+We use one-based indexing.
+
 ### Distributions as Arguments
 
 Distribution are normal objects produced by normal functions and can be assigned to variables and passed as arguments (distributions as first-class citizens):
