@@ -295,7 +295,7 @@
                 ]
             },
             {
-                "name": "readNexus",
+                "name": "fromNexus",
                 "generatedType": "Alignment",
                 "namespace": "phylospec.functions.io",
                 "description": "Load an alignment from Nexus file",
@@ -318,7 +318,7 @@
                 ]
             },
             {
-                "name": "readFasta",
+                "name": "fromFasta",
                 "generatedType": "Alignment",
                 "namespace": "phylospec.functions.io",
                 "description": "Load alignment from FASTA file",
@@ -341,7 +341,7 @@
                 ]
             },
             {
-                "name": "readPhylip",
+                "name": "fromPhylip",
                 "generatedType": "Alignment",
                 "namespace": "phylospec.functions.io",
                 "description": "Load alignment from PHYLIP file",
@@ -370,7 +370,7 @@
                 ]
             },
             {
-                "name": "readTree",
+                "name": "fromTree",
                 "generatedType": "Tree",
                 "namespace": "phylospec.functions.io",
                 "description": "Load a phylogenetic tree from Newick or Nexus file",
@@ -396,7 +396,7 @@
                 ]
             },
             {
-                "name": "readCSV",
+                "name": "fromCSV",
                 "generatedType": "Vector<Map<String, String>>",
                 "namespace": "phylospec.functions.io",
                 "description": "Load a CSV file",
@@ -445,7 +445,7 @@
                 ]
             },
             {
-                "name": "parseNewick",
+                "name": "fromNewick",
                 "generatedType": "Tree",
                 "namespace": "phylospec.functions.io",
                 "description": "Parse a phylogenetic tree from Newick string",
