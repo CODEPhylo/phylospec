@@ -22,7 +22,7 @@ const config = {
 			strict: true
 		}),
 		paths: {
-			base: process.argv.includes('dev') ? '' : '/phylospec'
+			base: process.env.VERCEL || process.argv.includes('dev') ? '' : '/phylospec'
 		}
 	},
 	preprocess: [mdsvex({
