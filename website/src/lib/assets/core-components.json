@@ -1774,17 +1774,17 @@
                 "description": "Strict clock model for branch rates",
                 "arguments": [
                     {
-                        "name": "tree",
-                        "type": "Tree",
-                        "description": "Phylogenetic tree",
-                        "required": true
-                    },
-                    {
                         "name": "rate",
                         "type": "Rate",
                         "description": "The base rate",
                         "required": false,
                         "default": 1
+                    },
+                    {
+                        "name": "tree",
+                        "type": "Tree",
+                        "description": "Phylogenetic tree",
+                        "required": true
                     }
                 ]
             },
@@ -1989,7 +1989,15 @@
                 "generatedType": "QMatrix",
                 "namespace": "phylospec.functions.substitution",
                 "description": "The Lewis-Mk model for discrete traits",
-                "arguments": []
+                "arguments": [
+                    {
+                        "name": "rate",
+                        "type": "PositiveReal",
+                        "description": "The expected rate of change",
+                        "required": false,
+                        "default": 1.0
+                    }
+                ]
             },
             {
                 "name": "constantPopulationFunction",
