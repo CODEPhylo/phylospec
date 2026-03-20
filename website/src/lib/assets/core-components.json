@@ -277,7 +277,7 @@
                 ]
             },
             {
-                "name": "replicate",
+                "name": "repeat",
                 "generatedType": "Vector<T>",
                 "namespace": "phylospec.functions.math",
                 "description": "Create a vector by repeating a value n times",
@@ -288,13 +288,13 @@
                     {
                         "name": "value",
                         "type": "T",
-                        "description": "Value to replicate",
+                        "description": "Value to repeat",
                         "required": true
                     },
                     {
                         "name": "n",
                         "type": "PositiveInteger",
-                        "description": "Number of times to replicate",
+                        "description": "Number of times to repeat",
                         "required": true
                     }
                 ]
