@@ -174,7 +174,7 @@ Real y ~ Normal(mean=mean, sd=2.0)
 Real y ~ Normal(mean=mean, sd=2.0, offset=1.0)
 ```
 
-If there is only one argument, it can be passed directly (e.g., `Exponential(1.0)`). If there are multiple arguments, they must be named explicitly (e.g., `Normal(mean=1.0, sd=2.0)`).
+If there is only one argument, it can be passed directly (e.g., `Exponential(1.0)`). If there are multiple arguments, all but the first one must be named explicitly (e.g., `Normal(mean=1.0, sd=2.0)` or `Normal(1.0, sd=2.0)`).
 
 There might be optional arguments. One can have multiple functions with the same name but different argument types. Functions with the same name cannot only differ in their return type.
 
