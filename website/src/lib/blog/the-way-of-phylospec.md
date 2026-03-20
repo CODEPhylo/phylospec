@@ -40,7 +40,7 @@ PhyloSpec attempts to break down existing fragmentation in the field. It tries t
 
 PhyloSpec should start small and grow carefully. The core components are stable, consensus-driven, and compatible with multiple inference engines.
 
-However, is should be __easy to incorporate additional engine-specific components and features__ in models.
+However, it should be __easy to incorporate additional engine-specific components and features__ in models.
 
 There must be a clearly defined path to add external components to the core. This keeps the language evolving and enables innovation without fragmenting the ecosystem or losing stability.
 
