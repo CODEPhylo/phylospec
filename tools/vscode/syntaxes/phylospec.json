@@ -95,6 +95,14 @@
                 {
                     "name": "keyword.control.phylospec",
                     "match": "\\b(in)\\b"
+                },
+                {
+                    "name": "keyword.control.phylospec",
+                    "match": "\\b(observed as)\\b"
+                },
+                {
+                    "name": "keyword.control.phylospec",
+                    "match": "\\b(per)\\b"
                 }
             ]
         },
@@ -166,6 +174,14 @@
                 {
                     "name": "keyword.operator.logical.phylospec",
                     "match": "!"
+                },
+                {
+                    "name": "constant.numeric",
+                    "match": "Myr"
+                },
+                {
+                    "name": "constant.numeric",
+                    "match": "yr"
                 }
             ]
         },

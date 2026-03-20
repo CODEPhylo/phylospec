@@ -16,22 +16,22 @@ This page describes the philosophy and features of the modeling language.
 This example shows some features of the language:
 
 ```phylospec
-Alignment observedSequences = readNexus("alignment.nex")
+Alignment observedSequences = fromNexus("alignment.nex")
 
-QMatrix substModel = HKY(
-    kappa~LogNormal(meanlog=1.0, sdlog=0.5),
-    baseFrequencies~Dirichlet(alpha=[1.0, 1.0, 1.0, 1.0])
+QMatrix qMatrix = hky(
+    kappa~LogNormal(logMean=1.0, logSd=0.5),
+    baseFrequencies~Dirichlet(concentration=[1.0, 1.0, 1.0, 1.0])
 )
 
-Tree phylogeny ~ Yule(
+Tree tree ~ Yule(
     birthRate~Exponential(10.0),
-    taxa=observedSequences.taxa
+    taxa=taxa(observedSequences)
 )
 
 Alignment sequences ~ PhyloCTMC(
-    tree=phylogeny, 
-    Q=substModel, 
-    numSequences=observedSequences.ntax
+    tree, 
+    qMatrix,
+    numSequences=numTaxa(observedSequences)
 ) observed as observedSequences
 ```
 
@@ -67,8 +67,8 @@ Functions can create more sophisticated types:
 
 ```phylospec
 Alignment alignment = nexus(file="sequences.nex")
-Count numTaxa = alignment.numTaxa
-TaxonSet taxa = alignment.taxa
+Integer numTaxa = numTaxa(alignment)
+Taxa taxa = taxa(alignment)
 ```
 
 So far, we only have deterministic variables. Let's change that!
@@ -222,15 +222,15 @@ Instead of overly flexible loops, PhyloSpec supports indexed assignments:
 
 ```phylospec
 Vector<Real> x = [1.0, 2.0, 3.0]
-Real logX[i] = log(x[i]) for i in num(x)  // logX[i] is a Real, logX a Vector<Real>
-Real xTimesLogX[i] = x[i] * logX[i] for i in num(x)
+Real logX[i] = log(x[i]) for i in 1:num(x)  // logX[i] is a Real, logX a Vector<Real>
+Real xTimesLogX[i] = x[i] * logX[i] for i in 1:num(x)
 ```
 
 **Justification for indexed assignments:**
 Indexed assignments provide a declarative, mathematically-inspired syntax that naturally extends beyond simple function application. They excel at:
-- Creating collections with complex expressions: `x[i]^2 + y[i] for i in num(x)`
-- Nested structures: `f(x[i], y[j]) for i in num(x) for j in num(j)`
-- Index-aware operations: `i * x[i] for i in num(x)`
+- Creating collections with complex expressions: `x[i]^2 + y[i] for i in 1:num(x)`
+- Nested structures: `f(x[i], y[j]) for i in 1:num(x) for j in num(j)`
+- Index-aware operations: `i * x[i] for i in 1:num(x)`
 
 This syntax aligns well with mathematical set-builder notation and provides more flexibility than map-style vectorization while remaining declarative and side-effect free - ideal for model specification languages where clarity and mathematical expressiveness are paramount.
 
@@ -259,7 +259,7 @@ We use one-based indexing.
 We can inject variables into string literals using string interpolation:
 
 ```phylospec
-String seed = env(seed) // reads in an environment variable
+String seed = env("seed") // reads in an environment variable
 String fileName = "analysis_${seed}.nex"
 ```
 
@@ -283,8 +283,7 @@ Vector<Distribution<Real>> components = [
 Vector<Real> weights = [0.3, 0.5, 0.2]
 Mixture mixture = Mixture(components=components, weights=weights)
 
-// Or using list comprehension for programmatic creation
-Vector<Distribution<Real>> components = [Normal(mean=i*2.0, sd=1.0) for i in 1:10]
+Distribution<Real> components[i] = Normal(mean=i*2.0, sd=1.0) for i in 1:10
 Vector<Real> weights = repeat(x=0.1, rep=10)
 Mixture mixture = Mixture(components=components, weights=weights)
 
@@ -306,7 +305,7 @@ Optionally, blocks can be used to aid readability and group the statements:
 
 ```phylospec
 data {
-  Alignment alignment = readNexus("file.nex")
+  Alignment alignment = fromNexus("file.nex")
 }
 
 model {
