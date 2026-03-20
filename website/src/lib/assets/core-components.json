@@ -174,6 +174,11 @@
                 "typeParameters": [
                     "T"
                 ]
+            },
+            {
+                "name": "Parser",
+                "description": "Description of how to parse a value from a string",
+                "namespace": "phylospec.types"
             }
         ],
         "generators": [
@@ -314,6 +319,53 @@
                         "type": "String",
                         "description": "Path to Nexus file",
                         "required": true
+                    },
+                    {
+                        "name": "age",
+                        "type": "Parser",
+                        "description": "How to parse the taxon ages from the taxon names",
+                        "required": false
+                    },
+                    {
+                        "name": "speciesName",
+                        "type": "Parser",
+                        "description": "How to parse the species names from the taxon names",
+                        "required": false
+                    }
+                ]
+            },
+            {
+                "name": "fromNexus",
+                "generatedType": "Alignment",
+                "namespace": "phylospec.functions.io",
+                "description": "Load an alignment from Nexus file",
+                "ioHints": {
+                    "role": "dataInput",
+                    "extensions": [
+                        ".nex",
+                        ".nexus",
+                        ".nxs"
+                    ],
+                    "fileArgument": "file"
+                },
+                "arguments": [
+                    {
+                        "name": "file",
+                        "type": "String",
+                        "description": "Path to Nexus file",
+                        "required": true
+                    },
+                    {
+                        "name": "date",
+                        "type": "Parser",
+                        "description": "How to parse the absolute taxon dates from the taxon names",
+                        "required": false
+                    },
+                    {
+                        "name": "speciesName",
+                        "type": "Parser",
+                        "description": "How to parse the species names from the taxon names",
+                        "required": false
                     }
                 ]
             },
@@ -337,19 +389,32 @@
                         "type": "String",
                         "description": "Path to FASTA file",
                         "required": true
+                    },
+                    {
+                        "name": "age",
+                        "type": "Parser",
+                        "description": "How to parse the taxon ages from the taxon names",
+                        "required": false
+                    },
+                    {
+                        "name": "speciesName",
+                        "type": "Parser",
+                        "description": "How to parse the species names from the taxon names",
+                        "required": false
                     }
                 ]
             },
             {
-                "name": "fromPhylip",
+                "name": "fromFasta",
                 "generatedType": "Alignment",
                 "namespace": "phylospec.functions.io",
-                "description": "Load alignment from PHYLIP file",
+                "description": "Load alignment from FASTA file",
                 "ioHints": {
                     "role": "dataInput",
                     "extensions": [
-                        ".phy",
-                        ".phylip"
+                        ".fasta",
+                        ".fas",
+                        ".fa"
                     ],
                     "fileArgument": "file"
                 },
@@ -357,15 +422,20 @@
                     {
                         "name": "file",
                         "type": "String",
-                        "description": "Path to PHYLIP file",
+                        "description": "Path to FASTA file",
                         "required": true
                     },
                     {
-                        "name": "interleaved",
-                        "type": "Boolean",
-                        "description": "Whether the file is in interleaved format",
-                        "required": false,
-                        "default": false
+                        "name": "date",
+                        "type": "Parser",
+                        "description": "How to parse the absolute taxon dates from the taxon names",
+                        "required": false
+                    },
+                    {
+                        "name": "speciesName",
+                        "type": "Parser",
+                        "description": "How to parse the species names from the taxon names",
+                        "required": false
                     }
                 ]
             },
@@ -459,15 +529,35 @@
                 ]
             },
             {
-                "name": "taxa",
-                "generatedType": "Taxa",
-                "namespace": "phylospec.functions.accessor",
-                "description": "Create taxa from a vector of taxon names",
+                "name": "parse",
+                "generatedType": "Parser",
+                "namespace": "phylospec.functions.io",
+                "description": "Creates a parser to extract information out of a delimited string",
                 "arguments": [
                     {
-                        "name": "names",
-                        "type": "Vector<String>",
-                        "description": "Taxon names",
+                        "name": "delimiter",
+                        "type": "String",
+                        "description": "The delimiter to separate parts of the input string",
+                        "required": true
+                    },
+                    {
+                        "name": "part",
+                        "type": "PositiveInteger",
+                        "description": "Which part to take from the delimited input string",
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "name": "parse",
+                "generatedType": "Parser",
+                "namespace": "phylospec.functions.io",
+                "description": "Creates a parser to extract information out of a string using regex",
+                "arguments": [
+                    {
+                        "name": "regex",
+                        "type": "String",
+                        "description": "The regex pattern with a capturing group",
                         "required": true
                     }
                 ]
@@ -504,7 +594,7 @@
                 "name": "taxon",
                 "generatedType": "Taxon",
                 "namespace": "phylospec.functions.accessor",
-                "description": "Create a taxon from a name and an optional species name",
+                "description": "Create a taxon from a name, an optional species name and an optional age",
                 "arguments": [
                     {
                         "name": "name",
@@ -517,6 +607,13 @@
                         "type": "String",
                         "description": "Species name",
                         "required": false
+                    },
+                    {
+                        "name": "age",
+                        "type": "PositiveReal",
+                        "description": "The age of the sample of this taxon",
+                        "required": false,
+                        "default": 0
                     }
                 ]
             },
@@ -686,6 +783,20 @@
                         "name": "tree",
                         "type": "Tree",
                         "description": "Input tree",
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "name": "age",
+                "generatedType": "NonNegativeReal",
+                "namespace": "phylospec.functions.accessor",
+                "description": "Get the age of a taxon",
+                "arguments": [
+                    {
+                        "name": "taxon",
+                        "type": "Taxon",
+                        "description": "Input taxon",
                         "required": true
                     }
                 ]
