@@ -46,6 +46,11 @@
                 "namespace": "phylospec.types"
             },
             {
+                "name": "Age",
+                "description": "An age (a non-negative number)",
+                "alias": "NonNegativeReal",
+                "namespace": "phylospec.types"
+            },            {
                 "name": "Integer",
                 "description": "Integer-valued number",
                 "namespace": "phylospec.types"
@@ -630,7 +635,7 @@
                     },
                     {
                         "name": "age",
-                        "type": "PositiveReal",
+                        "type": "Age",
                         "description": "The age of the sample of this taxon",
                         "required": false,
                         "default": 0
@@ -775,7 +780,7 @@
             },
             {
                 "name": "rootAge",
-                "generatedType": "NonNegativeReal",
+                "generatedType": "Age",
                 "namespace": "phylospec.functions.accessor",
                 "description": "Get the age of the root node in a tree",
                 "arguments": [
@@ -789,14 +794,14 @@
             },
             {
                 "name": "age",
-                "generatedType": "NonNegativeReal",
+                "generatedType": "Age",
                 "namespace": "phylospec.functions.accessor",
-                "description": "Get the age of a node in a tree",
+                "description": "Get the age of a taxon in a tree",
                 "arguments": [
                     {
                         "name": "node",
                         "type": "String",
-                        "description": "Input node ID",
+                        "description": "Taxon name or species name",
                         "required": true
                     },
                     {
@@ -809,7 +814,7 @@
             },
             {
                 "name": "age",
-                "generatedType": "NonNegativeReal",
+                "generatedType": "Age",
                 "namespace": "phylospec.functions.accessor",
                 "description": "Get the age of a taxon",
                 "arguments": [
@@ -817,6 +822,26 @@
                         "name": "taxon",
                         "type": "Taxon",
                         "description": "Input taxon",
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "name": "mrca",
+                "generatedType": "Age",
+                "namespace": "phylospec.functions.accessor",
+                "description": "Get the age of the most common recent ancestor of a clade in the tree",
+                "arguments": [
+                    {
+                        "name": "clade",
+                        "type": "Vector<String>",
+                        "description": "Vector with the taxon or species names of the clade",
+                        "required": true
+                    },
+                    {
+                        "name": "tree",
+                        "type": "Tree",
+                        "description": "Input tree",
                         "required": true
                     }
                 ]
