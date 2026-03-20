@@ -6,7 +6,7 @@ author: "Tobia Ochsner"
 
 # Proposed Improvements
 
-This post describes several proposed improvements over *Draft 12.2025* of the language specifications and core component library. The changes take into account feedback from several people, as well as learnings from trying to describe more complex models in PhyloSpec. Lastly, I tried to improve consistency and adherence to [our core principles](/blog/the-way-of-phylospec).
+This post describes several proposed improvements over *Draft 12.2025* of the language specifications and core component library. The changes take into account feedback from several people, as well as learnings from trying to describe more complex models in PhyloSpec. Lastly, I tried to improve consistency and adherence to [our core principles](./the-way-of-phylospec).
 
 There is a great level ob subjectivity to some of these changes. Feel free to provide feedback in the GitHub discussion of this post!
 
@@ -94,7 +94,7 @@ This greatly reduces verbosity without affecting redability.
 
 ## Abstraction Level
 
-From [our core principles](/blog/the-way-of-phylospec): *(...) the language should help researchers understand the Bayesian phylogenetic framework by making core concepts explicit (...)*.
+From [our core principles](./the-way-of-phylospec): *(...) the language should help researchers understand the Bayesian phylogenetic framework by making core concepts explicit (...)*.
 
 The following changes adress the abstraction level of the building blocks used to describe models. My goal is to use building blocks that correspond to concepts which might show up in a Bayesian Phylogenetics class or in the methodology section of a paper applying Bayesian phylogenetics.
 
