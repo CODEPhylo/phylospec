@@ -256,17 +256,17 @@ We use one-based indexing.
 
 ### String Interpolation
 
-We can inject variables _into_ string literals using string interpolation:
+We can inject variables into string literals using string interpolation:
 
 ```phylospec
-String seed = env(seed) # reads in an environment variable
+String seed = env(seed) // reads in an environment variable
 String fileName = "analysis_${seed}.nex"
 ```
 
 Only variable names can be used within the curly brackets. If a string literal should actually contain `${`, we can escape it using `\`:
 
 ```phylospec
-String fileName = "analysis_\${seed}.nex" // p
+String fileName = "analysis_\\${seed}.nex"
 ```
 
 ### Distributions as Arguments
@@ -302,7 +302,7 @@ Real x ~ Normal(mean=0.0, sd=1.0) observed as 50
 
 ### Blocks
 
-Optionally, `data` and `model` blocks can be used to aid readability and group the statements:
+Optionally, blocks can be used to aid readability and group the statements:
 
 ```phylospec
 data {
@@ -314,7 +314,17 @@ model {
     p=0.1, n=numSites(alignment)
   )
 }
+
+mcmc {
+    // some general technicalities like chain length and output files
+}
 ```
+
+All blocks are optional. Statements in the `data` and `model` can also be put outside of any block.
+
+The `data` block cannot contain any random variables drawn from distributions. No statement in the `data` can reference a variable defined in another block. Statements in the `model` block can reference variables defined in the `data` block.
+
+An engine should choose reasonable defaults if no `mcmc` or engine-specific block is given. There will be a concrete list of allowed variables in the `mcmc` block (tbd).
 
 ### Numerical Expressions
 
@@ -361,7 +371,7 @@ revbayes {
 }
 ```
 
-?> __Open question:__ Is there a standardized syntax for engine blocks?
+Statements in engine-specific should adhere to the same syntax as any other PhyloSpec statements. However, statements in engine specific-blocks are neither resolved nor type-checked and are directly passed to the engine.
 
 ### Engine Decorators
 
