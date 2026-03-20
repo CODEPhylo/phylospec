@@ -10,6 +10,8 @@ This post describes my proposed improvements over *Draft 12.2025* of the languag
 
 There is a great level of subjectivity to some of these changes. Feel free to provide feedback in the [GitHub discussion](https://github.com/CODEPhylo/phylospec/discussions/27) of this post!
 
+All proposed changes can be found in the [corresponding pull request](https://github.com/CODEPhylo/phylospec/pull/28).
+
 ## Improving the Feel of PhyloSpec
 
 With the first batch of changes, I tried to make PhyloSpec feel less like a programming language and more like a natural description of the model.
