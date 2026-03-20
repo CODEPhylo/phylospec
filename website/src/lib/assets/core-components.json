@@ -501,6 +501,26 @@
                 ]
             },
             {
+                "name": "traitsFromTaxa",
+                "generatedType": "Alignment",
+                "namespace": "phylospec.functions.io",
+                "description": "Retrieves an alignment with a single trait from taxa names.",
+                "arguments": [
+                    {
+                        "name": "taxa",
+                        "type": "Taxa",
+                        "description": "The taxa to extract the traits from",
+                        "required": true
+                    },
+                    {
+                        "name": "trait",
+                        "type": "Parser",
+                        "description": "How to parse the trait from the taxon names",
+                        "required": true
+                    }
+                ]
+            },
+            {
                 "name": "env",
                 "generatedType": "String",
                 "namespace": "phylospec.functions.io",
