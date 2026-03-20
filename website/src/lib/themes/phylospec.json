@@ -10,6 +10,9 @@
             "include": "#comments"
         },
         {
+            "include": "#blocks"
+        },
+        {
             "include": "#decorators"
         },
         {
@@ -41,6 +44,41 @@
         }
     ],
     "repository": {
+        "blocks": {
+            "patterns": [
+                {
+                    "name": "meta.block.phylospec",
+                    "begin": "\\b(data|model|mcmc|revbayes|beast2|beast3|beastX)\\b\\s*({)",
+                    "end": "(})",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "keyword.other.block.phylospec"
+                        },
+                        "2": {
+                            "name": "punctuation.section.block.begin.phylospec"
+                        }
+                    },
+                    "endCaptures": {
+                        "1": {
+                            "name": "punctuation.section.block.end.phylospec"
+                        }
+                    },
+                    "patterns": [
+                        { "include": "#comments" },
+                        { "include": "#decorators" },
+                        { "include": "#imports" },
+                        { "include": "#keywords" },
+                        { "include": "#types" },
+                        { "include": "#functions" },
+                        { "include": "#operators" },
+                        { "include": "#strings" },
+                        { "include": "#numbers" },
+                        { "include": "#constants" },
+                        { "include": "#identifiers" }
+                    ]
+                }
+            ]
+        },
         "comments": {
             "patterns": [
                 {

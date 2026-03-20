@@ -568,7 +568,7 @@
                     {
                         "name": "part",
                         "type": "PositiveInteger",
-                        "description": "Which part to take from the delimited input string",
+                        "description": "Which part to take from the delimited input string (one-based)",
                         "required": true
                     }
                 ]
