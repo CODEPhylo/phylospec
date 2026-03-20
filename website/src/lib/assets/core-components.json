@@ -249,7 +249,7 @@
                         "required": true
                     },
                     {
-                        "name": "n",
+                        "name": "num",
                         "type": "PositiveInteger",
                         "description": "Number of values to generate",
                         "required": true
@@ -292,7 +292,7 @@
                         "required": true
                     },
                     {
-                        "name": "n",
+                        "name": "num",
                         "type": "PositiveInteger",
                         "description": "Number of times to repeat",
                         "required": true
@@ -927,7 +927,7 @@
                         "required": true
                     },
                     {
-                        "name": "n",
+                        "name": "num",
                         "type": "PositiveInteger",
                         "description": "Number of independent draws",
                         "required": true
