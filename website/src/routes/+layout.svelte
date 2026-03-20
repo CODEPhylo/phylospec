@@ -19,7 +19,7 @@
 	<meta name="robots" content="index,follow" />
 </svelte:head>
 
-<div class="bg-background font-sans text-dark min-h-lvh w-lvw flex flex-col items-center pt-16">
+<div class="bg-background font-sans text-dark min-h-lvh w-full flex flex-col items-center pt-16">
 	<header
 		class="w-full bg-light-gray/80 backdrop-blur-md p-4 flex items-center fixed top-0 left-0 right-0 z-10 border-b border-gray-200"
 	>
