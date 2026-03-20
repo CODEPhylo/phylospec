@@ -8,7 +8,7 @@ author: "Tobia Ochsner"
 
 This post describes several proposed improvements over *Draft 12.2025* of the language specifications and core component library. The changes take into account feedback from several people, as well as learnings from trying to describe more complex models in PhyloSpec. Lastly, I tried to improve consistency and adherence to [our core principles](./the-way-of-phylospec).
 
-There is a great level of subjectivity to some of these changes. Feel free to provide feedback in the GitHub discussion of this post!
+There is a great level of subjectivity to some of these changes. Feel free to provide feedback in the [GitHub discussion](https://github.com/CODEPhylo/phylospec/discussions/27) of this post!
 
 ## Improving the Feel of PhyloSpec
 
@@ -312,3 +312,7 @@ mcmc {
     String treesFile = "output.trees"
 }
 ```
+
+## Feedback
+
+Feel free to provide feedback in the [GitHub discussion](https://github.com/CODEPhylo/phylospec/discussions/27) of this post! Thank you!
