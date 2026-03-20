@@ -102,6 +102,10 @@
                 },
                 {
                     "name": "keyword.control.phylospec",
+                    "match": "\\b(observed between)\\b"
+                },
+                {
+                    "name": "keyword.control.phylospec",
                     "match": "\\b(per)\\b"
                 }
             ]

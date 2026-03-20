@@ -122,7 +122,7 @@ Another way to look at these changes is that we put a label on generators, but a
 QMatrix qMatrix = jc69()
 ```
 
-## Allowing More Realistic Models
+## Describing More Complex Models
 
 The following changes resulted after I attempted to translate existing BEAST 2 XMLs into PhyloSpec. They are things required to model realistic models in practice.
 
@@ -249,13 +249,33 @@ Varying<Rate> rate4 ~ Piecewise(
 )
 ```
 
+### Change #14: Likelihood-based Node Calibration
+
+The following syntax allows to clamp a scalar variable into an interval:
+
+```phylospec
+Age mrca = mrca(
+    ["humans", "gorillas"], tree
+) observed between [7, 8]
+```
+
+This syntax is short-hand for the following:
+
+```phylospec
+Age mrca = mrca(["humans", "gorillas"], tree)
+Real uniformOverInterval ~ Uniform(lower=7, upper=8)
+Real diff = (uniformOverInterval - mrca) observed as 0.0
+```
+
+This corresponds to a non-zero likelihood whenever the MRCA is in the given interval and mirrors to how RevBayes handles calibration (see e.g. [here](https://revbayes.github.io/tutorials/fbd_simple/) in section *Sampling Fossil Occurrence Times*).
+
 ### Minor Changes
 
-- #14: The `env` function allows access to environment variables.
-- #15: The `fromCSV` function and the `Map<K, V>` type have been added.
-- #16: The `Binomial` and `Cauchy` distributions have been added.
-- #17: The functions `mrca` and `age` have been added to retrieve clade and taxon ages.
-- #18: The `mk` substitution model now has an optional parameter for the expected rate.
+- #15: The `env` function allows access to environment variables.
+- #16: The `fromCSV` function and the `Map<K, V>` type have been added.
+- #17: The `Binomial` and `Cauchy` distributions have been added.
+- #18: The functions `mrca` and `age` have been added to retrieve clade and taxon ages.
+- #19: The `mk` substitution model now has an optional parameter for the expected rate.
 
 ## Examples
 
@@ -306,6 +326,8 @@ model {
     Alignment traits ~ PhyloCTMC(
         tree, qMatrix=traitQ, branchRates
     ) observed as traitData
+
+    Age rootAge = rootAge(tree) observed between [20, 40]
 }
 
 mcmc {

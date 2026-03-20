@@ -299,6 +299,26 @@ We use the syntax `observed as` to assign an observation to a random variable:
 Real x ~ Normal(mean=0.0, sd=1.0) observed as 50
 ```
 
+The following syntax allows to clamp a scalar variable into an interval:
+
+```phylospec
+Age mrca = mrca(
+    ["humans", "gorillas"], tree
+) observed between [7, 8]
+```
+
+This syntax is short-hand for the following:
+
+```phylospec
+Age mrca = mrca(
+    ["humans", "gorillas"], tree
+)
+Real uniformOverInterval ~ Uniform(lower=7, upper=8)
+Real diff = (uniformOverInterval - mrca) observed as 0.0
+```
+
+This corresponds to a non-zero likelihood whenever the MRCA is in the given interval and mirrors to how RevBayes handles calibration (see e.g. [here](https://revbayes.github.io/tutorials/fbd_simple/) in section *Sampling Fossil Occurrence Times*).
+
 ### Blocks
 
 Optionally, blocks can be used to aid readability and group the statements:
