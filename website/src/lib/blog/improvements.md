@@ -74,13 +74,14 @@ Alignment alignment = PhyloCTMC(
 The name of a function parameter can be dropped for the first argument and if the variable is called like the parameter:
 
 ```phylospec
+// we drop the file= for the first parameter
 Alignment data = fromNexus("file.nex", ageParser=parse(...))
 
 Tree tree ~ ...
 QMatrix qMatrix = ...
 
 Alignment alignment ~ PhyloCTMC(
-    tree, qMatrix
+    tree, qMatrix // instead of tree=tree, qMatrix=qMatrix
 )
 ```
 
@@ -125,7 +126,28 @@ QMatrix qMatrix = jc69()
 
 The following changes resulted after I attempted to translate existing BEAST 2 XMLs into PhyloSpec. They are things required to model realistic models in practice.
 
-### Change #9: Blocks
+### Change #9: Truncated Distributions
+
+We can truncate existing scalar distributions:
+
+```phylospec
+PositiveReal x ~ Truncated(
+    Normal(mean=0, sd=1), lower=2.0
+)
+
+Real y ~ Truncated(
+    Normal(mean=0, sd=1), upper=2.0
+)
+
+NonNegativeReal z ~ Truncated(
+    Normal(mean=0, sd=1), lower=0.0, upper=10.0
+)
+```
+
+Type parameters on the `lower` and `upper` arguments provide type safety up to the discrete set of scalar types.
+
+
+### Change #10: Blocks
 
 Ideally, researchers would want to put their PhyloSpec model into a figure of their paper, because it is the most concise way to summarize their analysis.
 
@@ -158,7 +180,7 @@ The statements in all blocks are parsed by the PhyloSpec parser and must adhere 
 
 An engine should choose reasonable defaults if no `mcmc` or engine-specific block is given. There will be a concrete list of allowed variables in the `mcmc` block (tbd).
 
-### Change #10: String Interpolation
+### Change #11: String Interpolation
 
 We can inject variables into string literals using string interpolation:
 
@@ -173,7 +195,7 @@ Only variable names can be used within the curly brackets. If a string literal s
 String fileName = "analysis_\\${seed}.nex" // "analysis_\\${seed}.nex"
 ```
 
-### Change #11: Extracting Information Out of Taxa Names
+### Change #12: Extracting Information Out of Taxa Names
 
 We introduce the `parse` function which describes a way to extract information out of a string. This can be used to extract information out of taxa names:
 
@@ -195,26 +217,6 @@ Conceptually, the `traits` alignment inherits the taxon ages and species names f
 Age age = age(taxa(alignment)[1])
 String speciesName = species(taxa(alignment)[1])
 ```
-
-### Change #12: Truncated Distributions
-
-We can truncate existing scalar distributions:
-
-```phylospec
-PositiveReal x ~ Truncated(
-    Normal(mean=0, sd=1), lower=2.0
-)
-
-Real y ~ Truncated(
-    Normal(mean=0, sd=1), upper=2.0
-)
-
-NonNegativeReal z ~ Truncated(
-    Normal(mean=0, sd=1), lower=0.0, upper=10.0
-)
-```
-
-Type parameters on the `lower` and `upper` arguments provide type safety up to the discrete set of scalar types.
 
 ### Change #13: Time-varying Values
 
