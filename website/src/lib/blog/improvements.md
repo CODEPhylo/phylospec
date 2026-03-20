@@ -8,7 +8,7 @@ author: "Tobia Ochsner"
 
 This post describes several proposed improvements over *Draft 12.2025* of the language specifications and core component library. The changes take into account feedback from several people, as well as learnings from trying to describe more complex models in PhyloSpec. Lastly, I tried to improve consistency and adherence to [our core principles](./the-way-of-phylospec).
 
-There is a great level ob subjectivity to some of these changes. Feel free to provide feedback in the GitHub discussion of this post!
+There is a great level of subjectivity to some of these changes. Feel free to provide feedback in the GitHub discussion of this post!
 
 ## Improving the Feel of PhyloSpec
 
@@ -84,7 +84,7 @@ Alignment alignment ~ PhyloCTMC(
 )
 ```
 
-This greatly reduces verbosity without affecting redability.
+This greatly reduces verbosity without affecting readability.
 
 ### Minor changes
 
@@ -96,7 +96,7 @@ This greatly reduces verbosity without affecting redability.
 
 From [our core principles](./the-way-of-phylospec): *(...) the language should help researchers understand the Bayesian phylogenetic framework by making core concepts explicit (...)*.
 
-The following changes adress the abstraction level of the building blocks used to describe models. My goal is to use building blocks that correspond to concepts which might show up in a Bayesian Phylogenetics class or in the methodology section of a paper applying Bayesian phylogenetics.
+The following changes address the abstraction level of the building blocks used to describe models. My goal is to use building blocks that correspond to concepts which might show up in a Bayesian Phylogenetics class or in the methodology section of a paper applying Bayesian phylogenetics.
 
 ### Change #7: Clock Models
 
@@ -154,7 +154,7 @@ All blocks are optional. Statements in the `data` and `model` can also be put ou
 
 The `data` block cannot contain any random variables drawn from distributions. No statement in the `data` can reference a variable defined in another block. Statements in the `model` block can reference variables defined in the `data` block.
 
-The statements in all blocks are parsed by the PhyloSpec parser and must adhere to the grammar. However, statements in engine specific-blocks are neither resolved nor type-checked and are directly passed to the engine.
+The statements in all blocks are parsed by the PhyloSpec parser and must adhere to the grammar. However, statements in engine-specific blocks are neither resolved nor type-checked and are directly passed to the engine.
 
 An engine should choose reasonable defaults if no `mcmc` or engine-specific block is given. There will be a concrete list of allowed variables in the `mcmc` block (tbd).
 
@@ -228,8 +228,8 @@ Varying<Rate> rate1 = piecewise(
 Varying<Rate> rate2 = piecewise(
     pieces=[
         constant(2.0),
-		exponentialGrowth(startValue=10, growthRate=2.0),
-		logisticGrowth(inflectionAge=2, carryingCapacity=10, growthRate=2.0),
+        exponentialGrowth(startValue=10, growthRate=2.0),
+        logisticGrowth(inflectionAge=2, carryingCapacity=10, growthRate=2.0),
     ],
     changeAges=[5.0, 10.0]
 )
@@ -249,11 +249,11 @@ Varying<Rate> rate4 ~ Piecewise(
 
 ### Minor Changes
 
-- #14: The `env` function allows to access environment variables.
+- #14: The `env` function allows access to environment variables.
 - #15: The `fromCSV` function and the `Map<K, V>` type have been added.
 - #16: The `Binomial` and `Cauchy` distributions have been added.
 - #17: The functions `mrca` and `age` have been added to retrieve clade and taxon ages.
-- #18: The `mk` subtitution model now has an optional parameter for the expected rate.
+- #18: The `mk` substitution model now has an optional parameter for the expected rate.
 
 ## Examples
 
