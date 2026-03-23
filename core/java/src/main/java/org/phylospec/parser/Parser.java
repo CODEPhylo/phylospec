@@ -260,12 +260,13 @@ public class Parser {
             // we are in a bracket, let's ignore EOL statements
             boolean oldSkipNewLines = skipNewLines;
             skipNewLines = true;
-
-            expr = finishCall(functionName);
-
-            consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
-
-            skipNewLines = oldSkipNewLines;
+            
+            try {
+                expr = finishCall(functionName);
+                consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
+            } finally {
+                skipNewLines = oldSkipNewLines;
+            }
         }
 
         while (match(TokenType.DOT)) {
@@ -331,49 +332,49 @@ public class Parser {
             // we are in a bracket, let's ignore EOL statements
             boolean oldSkipNewLines = skipNewLines;
             skipNewLines = true;
+            try {
+                List<Expr> elements = new ArrayList<>();
 
-            List<Expr> elements = new ArrayList<>();
-
-            if (match(TokenType.RIGHT_SQUARE_BRACKET)) {
-                // we have an empty list
-                skipNewLines = oldSkipNewLines;
-                return remember(new Expr.Array(elements));
-            }
-
-            Expr element = expression();
-
-            if (match(TokenType.FOR)) {
-                // we have a list comprehension
-                return listComprehension(element, oldSkipNewLines);
-            }
-
-            // we have an array
-
-            elements.add(element);
-
-            while (match(TokenType.COMMA)) {
                 if (match(TokenType.RIGHT_SQUARE_BRACKET)) {
-                    // the last comma has been a trailing one
-                    skipNewLines = oldSkipNewLines;
+                    // we have an empty list
                     return remember(new Expr.Array(elements));
                 }
 
-                element = expression();
+                Expr element = expression();
+
+                if (match(TokenType.FOR)) {
+                    // we have a list comprehension
+                    return listComprehension(element);
+                }
+
+                // we have an array
+
                 elements.add(element);
+
+                while (match(TokenType.COMMA)) {
+                    if (match(TokenType.RIGHT_SQUARE_BRACKET)) {
+                        // the last comma has been a trailing one
+                        return remember(new Expr.Array(elements));
+                    }
+
+                    element = expression();
+                    elements.add(element);
+                }
+
+                consume(TokenType.RIGHT_SQUARE_BRACKET, "Arrays must be terminated by square brackets.");
+
+                return remember(new Expr.Array(elements));
+            } finally {
+                skipNewLines = oldSkipNewLines;
             }
 
-            consume(TokenType.RIGHT_SQUARE_BRACKET, "Arrays must be terminated by square brackets.");
-
-            skipNewLines = oldSkipNewLines;
-
-            return remember(new Expr.Array(elements));
         }
 
         return remember(primary());
     }
 
-    private Expr listComprehension(Expr expression, boolean oldSkipNewLines) {
-        // parse parse variable names
+    private Expr listComprehension(Expr expression) {
+        // parse variable names
 
         Expr firstVariable = expression();
         if (!(firstVariable instanceof Expr.Variable)) {
@@ -399,7 +400,6 @@ public class Parser {
 
         consume(TokenType.RIGHT_SQUARE_BRACKET, "List comprehensions must be terminated by a square bracket.");
 
-        skipNewLines = oldSkipNewLines;
         return remember(new Expr.ListComprehension(expression, variables, list));
     }
 
@@ -417,13 +417,13 @@ public class Parser {
             // we are in a bracket, let's ignore EOL statements
             boolean oldIgnoreNewLines = skipNewLines;
             skipNewLines = true;
-
-            Expr expr = expression();
-            consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
-
-            skipNewLines = oldIgnoreNewLines;
-
-            return remember(new Expr.Grouping(expr));
+            try {
+                Expr expr = expression();
+                consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
+                return remember(new Expr.Grouping(expr));
+            } finally {
+                skipNewLines = oldIgnoreNewLines;
+            }
         }
 
         if (match(TokenType.IDENTIFIER)) {
@@ -440,7 +440,7 @@ public class Parser {
         if (isAtEnd()) return previous();
 
         if (skipNewLines) {
-            while (tokens.get(current).type == TokenType.EOL) {
+            while (tokens.get(current).type == TokenType.EOL && current + 1 < this.tokens.size()) {
                 current++;
             }
         }
@@ -474,7 +474,7 @@ public class Parser {
     private Token peek() {
         if (skipNewLines) {
             int currentToPeek = current;
-            while (tokens.get(currentToPeek).type == TokenType.EOL) {
+            while (tokens.get(currentToPeek).type == TokenType.EOL && currentToPeek + 1 < tokens.size()) {
                 currentToPeek++;
             }
             return tokens.get(currentToPeek);
@@ -487,7 +487,7 @@ public class Parser {
     private Token previous() {
         if (skipNewLines) {
             int currentToPeek = current - 1;
-            while (tokens.get(currentToPeek).type == TokenType.EOL) {
+            while (tokens.get(currentToPeek).type == TokenType.EOL && 0 < currentToPeek) {
                 currentToPeek--;
             }
             return tokens.get(currentToPeek);
@@ -581,6 +581,7 @@ public class Parser {
             // we could now be at the beginning of a new statement, let's check that
 
             int oldCurrent = current;
+            int oldStackSize = astNodeStartPositions.size();
             try {
                 decorated();
                 // we successfully parsed a statement
@@ -588,6 +589,12 @@ public class Parser {
                 current = oldCurrent;
                 return;
             } catch (ParseError ignored) {
+                // restore the astNodeStartPositions stack to its pre-attempt state,
+                // since startAstNode() calls inside the failed decorated() were never
+                // matched by a remember() call
+                while (astNodeStartPositions.size() > oldStackSize) {
+                    astNodeStartPositions.pop();
+                }
                 // we couldn't parse a proper statement, let's search for longer
                 skipEOLs();
             }
