@@ -87,21 +87,4 @@ public class PhyloSpec {
         ComponentResolver componentResolver = new ComponentResolver(componentLibraries);
         return new TypeResolver(componentResolver);
     }
-
-    /** Report an error on a specific line but not directly connected
-     * to a specified token. */
-    public static void error(int line, String message) {
-        report(line, "", message);
-    }
-
-    /** Report an error related to specific token. */
-    public static void error(Token token, String message) {
-        report(token.range.startLine, "", message);
-    }
-
-    private static void report(int line, String where, String message) {
-        System.err.println(
-                "[line " + line + "] Error" + where + ": " + message);
-        hadError = true;
-    }
 }

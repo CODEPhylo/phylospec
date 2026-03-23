@@ -1,7 +1,10 @@
 package org.phylospec.lexer;
 
+import org.phylospec.Error;
 import org.phylospec.PhyloSpec;
+import org.phylospec.parser.ParseEventListener;
 
+import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +35,8 @@ public class Lexer {
     private int currentLine = 1;
     private int currentLineStart = 0;
 
+    private final List<LexerEventListener> eventListeners;
+
     /**
      * Creates a new Lexer capable of reading a PhyloSpec script and
      * splitting it up into tokens.
@@ -40,6 +45,11 @@ public class Lexer {
      */
     public Lexer(String source) {
         this.source = source;
+        this.eventListeners = new ArrayList<>();
+    }
+
+    public void registerEventListener (LexerEventListener listener) {
+        this.eventListeners.add(listener);
     }
 
     /**
@@ -49,6 +59,8 @@ public class Lexer {
      * @return list of scanned tokens.
      */
     public List<Token> scanTokens() {
+        if (isAtEnd()) return tokens;
+
         while (!isAtEnd()) {
             start = current;
             scanToken();
@@ -172,9 +184,14 @@ public class Lexer {
                     identifier();
                 } else if (isDigit(c)) {
                     number();
+                } else {
+                    reportError(
+                            new Range(currentLine, start, current),
+                            "'" + c + "' is not an allowed character.",
+                            "Only use letters or digits."
+                    );
                 }
         }
-        ;
     }
 
     private void string() {
@@ -192,7 +209,11 @@ public class Lexer {
         }
 
         if (isAtEnd()) {
-            PhyloSpec.error(currentLine, "Unterminated string.");
+            reportError(
+                    new Range(currentLine, start, current),
+                    "A string must be terminated with an '\"'.",
+                    "Use quotation marks to end the string."
+            );
             return;
         }
 
@@ -226,10 +247,26 @@ public class Lexer {
 
             while (isDigit(peek())) advance();
 
-            addToken(TokenType.FLOAT, Double.parseDouble(source.substring(start, current)));
+            try {
+                addToken(TokenType.FLOAT, Double.parseDouble(source.substring(start, current)));
+            } catch (NumberFormatException ignored) {
+                reportError(
+                        new Range(currentLine, start, current),
+                        "'" + source.substring(start, current) + "' is not a valid number.",
+                        "Try a smaller number."
+                );
+            }
         } else {
             // this number has no fractional part, it is thus an integer
-            addToken(TokenType.INT, Integer.parseInt(source.substring(start, current)));
+            try {
+                addToken(TokenType.INT, Integer.parseInt(source.substring(start, current)));
+            } catch (NumberFormatException e) {
+                reportError(
+                        new Range(currentLine, start, current),
+                        "'" + source.substring(start, current) + "' is not a valid number.",
+                        "Try a smaller number."
+                );
+            }
         }
     }
 
@@ -270,7 +307,7 @@ public class Lexer {
      * Returns the next current character without advancing the cursor.
      */
     private char peekNext() {
-        if (source.length() < current + 1) return '\0';
+        if (source.length() <= current + 1) return '\0';
         return source.charAt(current + 1);
     }
 
@@ -308,5 +345,14 @@ public class Lexer {
     private void addToken(TokenType type, Object literal) {
         String text = source.substring(start, current);
         tokens.add(new Token(type, text, literal, currentLine, start - currentLineStart, current - currentLineStart));
+    }
+
+    /**
+     * Reports an error to the registered event listeners.
+     */
+    private void reportError(Range range, String description, String hint) {
+        for (LexerEventListener eventListener : eventListeners) {
+            eventListener.lexerErrorDetected(new Error(description, range, hint));
+        }
     }
 }

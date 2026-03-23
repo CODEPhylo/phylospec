@@ -3,6 +3,7 @@ package org.phylospec.lexer;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class LexerTest {
@@ -142,5 +143,31 @@ public class LexerTest {
         assertEquals(new Token(TokenType.EOF, "", null, 7, 9, 9), tokens.get(25));
 
         assertEquals(tokens.size(), 26);
+    }
+
+    @Test
+    public void testErrors() {
+        String source = "()$Hallo 1324523564356345892013245235643563458920 -5643563458920.4523564356345892045235643563458920 \"khkh";
+
+        List<org.phylospec.Error> errors = new ArrayList<>();
+        LexerEventListener listener = errors::add;
+
+        Lexer lexer = new Lexer(source);
+        lexer.registerEventListener(listener);
+        lexer.scanTokens();
+
+        assertEquals(3, errors.size());
+
+        assertEquals("(line 1 2:3)", errors.get(0).range().toString());
+        assertEquals("'$' is not an allowed character.", errors.get(0).description());
+        assertEquals("Only use letters or digits.", errors.get(0).hint());
+
+        assertEquals("(line 1 9:49)", errors.get(1).range().toString());
+        assertEquals("'1324523564356345892013245235643563458920' is not a valid number.", errors.get(1).description());
+        assertEquals("Try a smaller number.", errors.get(1).hint());
+
+        assertEquals("(line 1 100:105)", errors.get(2).range().toString());
+        assertEquals("A string must be terminated with an '\"'.", errors.get(2).description());
+        assertEquals("Use quotation marks to end the string.", errors.get(2).hint());
     }
 }
