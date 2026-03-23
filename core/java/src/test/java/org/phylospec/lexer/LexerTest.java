@@ -75,8 +75,8 @@ public class LexerTest {
 
         assertEquals(new Token(TokenType.STRING, "\"Hallo this is a string\"", "Hallo this is a string", 1, 0, 24), tokens.get(0));
         assertEquals(new Token(TokenType.EOL, "\n", null, 1, 24, 25), tokens.get(1));
-        assertEquals(new Token(TokenType.STRING, "\"This is a\nmultiline\r\nstring\"", "This is a\nmultiline\r\nstring", 4, 0, 29), tokens.get(2));
-        assertEquals(new Token(TokenType.EOF, "", null, 4, 29, 29), tokens.get(3));
+        assertEquals(new Token(TokenType.STRING, "\"This is a\nmultiline\r\nstring\"", "This is a\nmultiline\r\nstring", new Range(2, 4, 0, 8)), tokens.get(2));
+        assertEquals(new Token(TokenType.EOF, "", null, 4, 8, 8), tokens.get(3));
 
         assertEquals(tokens.size(), 4);
     }
@@ -204,8 +204,13 @@ public class LexerTest {
                         "startLine must be >= 1 (iter=" + i + ", token=" + token + ")");
                 assertTrue(token.range.start >= 0,
                         "start must be >= 0 (iter=" + i + ", token=" + token + ")");
-                assertTrue(token.range.end >= token.range.start,
+                assertTrue(token.range.endLine >= token.range.startLine,
                         "end must be >= start (iter=" + i + ", token=" + token + ")");
+
+                if (token.range.startLine == token.range.endLine) {
+                    assertTrue(token.range.end >= token.range.start,
+                            "end must be >= start (iter=" + i + ", token=" + token + ")");
+                }
             }
         }
     }
