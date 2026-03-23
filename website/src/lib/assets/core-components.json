@@ -1379,7 +1379,7 @@
                     },
                     {
                         "name": "rootAge",
-                        "type": "NonNegativeReal",
+                        "type": "Age",
                         "description": "The age of the root",
                         "required": true
                     },
@@ -1424,7 +1424,7 @@
                     },
                     {
                         "name": "rootAge",
-                        "type": "NonNegativeReal",
+                        "type": "Age",
                         "description": "The age of the root",
                         "required": false
                     }
@@ -1457,7 +1457,7 @@
                     },
                     {
                         "name": "rootAge",
-                        "type": "NonNegativeReal",
+                        "type": "Age",
                         "description": "The age of the root",
                         "required": false
                     },
@@ -1574,7 +1574,7 @@
                     },
                     {
                         "name": "rootAge",
-                        "type": "NonNegativeReal",
+                        "type": "Age",
                         "description": "The age of the root",
                         "required": false
                     },
@@ -1619,7 +1619,7 @@
                     },
                     {
                         "name": "rootAge",
-                        "type": "NonNegativeReal",
+                        "type": "Age",
                         "description": "The age of the root",
                         "required": false
                     },
@@ -2041,7 +2041,7 @@
                 "arguments": [
                     {
                         "name": "inflectionAge",
-                        "type": "PositiveReal",
+                        "type": "Age",
                         "description": "The age of the inflection point t50",
                         "required": true
                     },

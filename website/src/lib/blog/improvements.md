@@ -8,9 +8,11 @@ author: "Tobia Ochsner"
 
 This post describes my proposed improvements over *Draft 12.2025* of the language specifications and core component library. The changes take into account feedback from several people, as well as my learnings from trying to describe more complex models in PhyloSpec. Lastly, I tried to improve consistency and adherence to [our core principles](./the-way-of-phylospec).
 
-There is a great level of subjectivity to some of these changes. Feel free to provide feedback in the [GitHub discussion](https://github.com/CODEPhylo/phylospec/discussions/27) of this post!
+There is a level of subjectivity to some of these changes. Feel free to provide feedback in the [GitHub discussion](https://github.com/CODEPhylo/phylospec/discussions/27) of this post!
 
 All proposed changes can be found in the [corresponding pull request](https://github.com/CODEPhylo/phylospec/pull/28).
+
+**tl;dr: [skip to the example model](#example) to see these changes in action**
 
 ## Improving the Feel of PhyloSpec
 
@@ -73,7 +75,7 @@ Alignment alignment = PhyloCTMC(
 
 ### Change #3: Function Parameters
 
-The name of a function parameter can be dropped for the first argument and if the variable is called like the parameter:
+The name of a function parameter can be dropped for the first argument or if the variable is called like the parameter:
 
 ```phylospec
 // we drop the file= for the first parameter
@@ -89,11 +91,25 @@ Alignment alignment ~ PhyloCTMC(
 
 This greatly reduces verbosity without affecting readability.
 
+### Change #4: Time Units
+
+Every rate and age in a model is implicitly tied to a time scale. This change makes this more apparent.
+
+Adding explicit units to every variable can get complicated pretty quickly (what is the unit of the log mean?). However, we allow to indicate the global time scale by adding units to `Age`-typed literals:
+
+```phylospec
+Tree tree ~ Yule(birthRate=1.0, rootAge=20 Ma)
+
+Age cladeAge = age(["humans", "chimpanzees"], tree) observed as 7 Ma
+```
+
+This also implicitly sets the time scale for rates and for parsed tip dates. For simplicity, we only allow a single type of time unit in a model.
+
 ### Minor changes
 
-- #4: External namespaces are imported using the `use` keyword to make them feel less like a programming language: `use bdmmprime.BirthDeathMigration`.
-- #5: The alias `Age` was added to highlight that we measure time backwards from the present.
-- #6: The IO functions `readXYZ` have been renamed to `fromXYZ`.
+- #5: External namespaces are imported using the `use` keyword to make them feel less like a programming language: `use bdmmprime.BirthDeathMigration`.
+- #6: The alias `Age` was added to highlight that we measure time backwards from the present.
+- #7: The IO functions `readXYZ` have been renamed to `fromXYZ`.
 
 ## Abstraction Level
 
@@ -101,7 +117,7 @@ From [our core principles](./the-way-of-phylospec): *(...) the language should h
 
 The following changes address the abstraction level of the building blocks used to describe models. My goal is to use building blocks that correspond to concepts which might show up in a Bayesian Phylogenetics class or in the methodology section of a paper applying Bayesian phylogenetics.
 
-### Change #7: Clock Models
+### Change #8: Clock Models
 
 ```phylospec
 Vector<Rate> branchRates1 ~ StrictClock(2.0, tree)
@@ -110,7 +126,7 @@ Vector<Rate> branchRates2 ~ RelaxedClock(
 )
 ```
 
-### Change #8: Site Heterogeneity
+### Change #9: Site Heterogeneity
 
 ```phylospec
 Vector<Rate> siteRates ~ DiscreteGammaInv(
@@ -128,7 +144,7 @@ QMatrix qMatrix = jc69()
 
 The following changes resulted after I attempted to translate existing BEAST 2 XMLs into PhyloSpec. They are things required to model realistic models in practice.
 
-### Change #9: Truncated Distributions
+### Change #10: Truncated Distributions
 
 We can truncate existing scalar distributions:
 
@@ -149,7 +165,7 @@ NonNegativeReal z ~ Truncated(
 Type parameters on the `lower` and `upper` arguments provide type safety up to the discrete set of scalar types.
 
 
-### Change #10: Blocks
+### Change #11: Blocks
 
 Ideally, researchers would want to put their PhyloSpec model into a figure of their paper, because it is the most concise way to summarize their analysis.
 
@@ -182,7 +198,7 @@ The statements in all blocks are parsed by the PhyloSpec parser and must adhere 
 
 An engine should choose reasonable defaults if no `mcmc` or engine-specific block is given. There will be a concrete list of allowed variables in the `mcmc` block (tbd).
 
-### Change #11: String Interpolation
+### Change #12: String Interpolation
 
 We can inject variables into string literals using string interpolation:
 
@@ -197,7 +213,7 @@ Only variable names can be used within the curly brackets. If a string literal s
 String fileName = "analysis_\\${seed}.nex" // "analysis_\\${seed}.nex"
 ```
 
-### Change #12: Extracting Information Out of Taxa Names
+### Change #13: Extracting Information Out of Taxa Names
 
 We introduce the `parse` function which describes a way to extract information out of a string. This can be used to extract information out of taxa names:
 
@@ -220,7 +236,7 @@ Age age = age(taxa(alignment)[1])
 String speciesName = species(taxa(alignment)[1])
 ```
 
-### Change #13: Time-varying Values
+### Change #14: Time-varying Values
 
 I propose native support for time-varying values like rates or population sizes:
 
@@ -251,7 +267,7 @@ Varying<Rate> rate4 ~ Piecewise(
 )
 ```
 
-### Change #14: Likelihood-based Node Calibration
+### Change #15: Likelihood-based Node Calibration
 
 The following syntax allows to clamp a scalar variable into an interval:
 
@@ -273,13 +289,13 @@ This corresponds to a non-zero likelihood whenever the MRCA is in the given inte
 
 ### Minor Changes
 
-- #15: The `env` function allows access to environment variables.
-- #16: The `fromCSV` function and the `Map<K, V>` type have been added.
-- #17: The `Binomial` and `Cauchy` distributions have been added.
-- #18: The functions `mrca` and `age` have been added to retrieve clade and taxon ages.
-- #19: The `mk` substitution model now has an optional parameter for the expected rate.
+- #16: The `env` function allows access to environment variables.
+- #17: The `fromCSV` function and the `Map<K, V>` type have been added.
+- #18: The `Binomial` and `Cauchy` distributions have been added.
+- #19: The functions `mrca` and `age` have been added to retrieve clade and taxon ages.
+- #20: The `mk` substitution model now has an optional parameter for the expected rate.
 
-## Examples
+<h2 id="example">Example</h2>
 
 The following model leverages some of the proposed changes:
 
@@ -296,29 +312,29 @@ data {
 
 model {
     Varying<Rate> branchRate ~ Piecewise(
-        Exponential(rate=1.0), changeAges=[5.0, 10.0]
+        Exponential(rate=1), changeAges=[1 yr, 2.5 yr]
     )
     Tree tree ~ Yule(
         birthRate, taxa=taxa(molecularData)
     )
 
     QMatrix molecularQ = hky(
-        kappa~LogNormal(logMean=0.1, logSd=2.0),
-        baseFrequencies~Dirichlet([1.0, 1.0, 1.0, 1.0])
+        kappa~LogNormal(logMean=0.1, logSd=2),
+        baseFrequencies~Dirichlet([1, 1, 1, 1])
     )
     QMatrix traitQ = mk(
-        rate~LogNormal(logMean=0.1, logSd=2.0)
+        rate~LogNormal(logMean=0.1, logSd=2)
     )
 
     Vector<Rate> siteRates ~ DiscreteGammaInv(
-        shape=1.0, 
+        shape=1, 
         numCategories=4, 
         invariantProportion=0.1, 
         numSites=numSites(molecularData)
     )
 
     Vector<Rate> branchRates ~ RelaxedClock(
-        LogNormal(logMean=1.0, logSd=2.0),
+        LogNormal(logMean=1, logSd=2),
         numBranches=numBranches(tree)
     )
 
@@ -329,7 +345,7 @@ model {
         tree, qMatrix=traitQ, branchRates
     ) observed as traitData
 
-    Age rootAge = rootAge(tree) observed between [20, 40]
+    Age rootAge = rootAge(tree) observed between [1.7 yr, 4 yr]
 }
 
 mcmc {
