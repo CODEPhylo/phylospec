@@ -143,8 +143,7 @@ public class Lexer {
                 break;
             case '/': {
                 if (match('/')) {
-                    // this is a comment, it goes until the end of the line
-                    while (peek() != '\n' && !isAtEnd()) advance();
+                    comment();
                 } else {
                     addToken(TokenType.SLASH);
                 }
@@ -266,6 +265,12 @@ public class Lexer {
                 );
             }
         }
+    }
+
+    private void comment() {
+        // this is a comment, it goes until the end of the line
+        while (peek() != '\n' && !isAtEnd()) advance();
+        addToken(TokenType.COMMENT, source.substring(start + 2, current));
     }
 
     /* general helper methods */

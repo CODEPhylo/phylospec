@@ -98,7 +98,7 @@ public class LexerTest {
 
     @Test
     public void testMisc() {
-        String source = "(),.-+/*=!~\ntrue\rfalse\r\n\"Hallo\"10\n\r\n10.5\nsomeFun()";
+        String source = "(),.-+/*=!~\ntrue\rfalse\r\n\"Hallo\"10\n\r\n10.5  // this is some comment\nsomeFun()";
 
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
@@ -133,19 +133,20 @@ public class LexerTest {
         // 5th line: <empty>
         assertEquals(new Token(TokenType.EOL, "\r\n", null, 5, 0, 2), tokens.get(19));
 
-        // 6th line: 10.5
+        // 6th line: 10.5  // this is some comment
         assertEquals(new Token(TokenType.FLOAT, "10.5", 10.5, 6, 0, 4), tokens.get(20));
-        assertEquals(new Token(TokenType.EOL, "\n", null, 6, 4, 5), tokens.get(21));
+        assertEquals(new Token(TokenType.COMMENT, "// this is some comment", " this is some comment", 6, 6, 29), tokens.get(21));
+        assertEquals(new Token(TokenType.EOL, "\n", null, 6, 29, 30), tokens.get(22));
 
         // 7th line: someFun()
-        assertEquals(new Token(TokenType.IDENTIFIER, "someFun", null, 7, 0, 7), tokens.get(22));
-        assertEquals(new Token(TokenType.LEFT_PAREN, "(", null, 7, 7, 8), tokens.get(23));
-        assertEquals(new Token(TokenType.RIGHT_PAREN, ")", null, 7, 8, 9), tokens.get(24));
+        assertEquals(new Token(TokenType.IDENTIFIER, "someFun", null, 7, 0, 7), tokens.get(23));
+        assertEquals(new Token(TokenType.LEFT_PAREN, "(", null, 7, 7, 8), tokens.get(24));
+        assertEquals(new Token(TokenType.RIGHT_PAREN, ")", null, 7, 8, 9), tokens.get(25));
 
         // EOF
-        assertEquals(new Token(TokenType.EOF, "", null, 7, 9, 9), tokens.get(25));
+        assertEquals(new Token(TokenType.EOF, "", null, 7, 9, 9), tokens.get(26));
 
-        assertEquals(tokens.size(), 26);
+        assertEquals(tokens.size(), 27);
     }
 
     @Test
