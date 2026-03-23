@@ -226,11 +226,22 @@ String fileName = "analysis_\\${seed}.nex" // "analysis_\\${seed}.nex"
 We introduce the `parse` function which describes a way to extract information out of a string. This can be used to extract information out of taxa names:
 
 ```phylospec
-Alignment alignment = fromNexus(
+Alignment alignment1 = fromNexus(
     "file.nex",
     speciesName=parse(delimiter="_", part=1),
-    age=parse(delimiter="_", part=3),
+    age=parse(delimiter="_", part=3)
 )
+Alignment alignment2 = fromNexus(
+    "datedFile.nex",
+    date=parse(delimiter="_", part=3)
+)
+```
+
+If tip dates are parsed and no explicit time scale is set, an implicit time scale of years is used when converting to tip ages.
+
+We can also parse traits:
+
+```phylospec
 Alignment traits = traitsFromTaxa(
     taxa=taxa(alignment),
     trait=parse(regex="^[^_]+_[^_]+_([^_]+)")
