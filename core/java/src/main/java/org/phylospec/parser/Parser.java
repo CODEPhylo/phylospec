@@ -1,4 +1,5 @@
 package org.phylospec.parser;
+import org.phylospec.Error;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
@@ -77,7 +78,7 @@ public class Parser {
                 statements.add(decorated());
 
                 if (!isAtEnd()) {
-                    consume(TokenType.EOL, "Assignment has to be terminated by a line break.");
+                    consume(TokenType.EOL, "Missing line break.", "There already is a complete statement on this line. Put each statement on its own line.");
 
                     // skip all EOL until the next statement
                     skipEOLs();
@@ -100,7 +101,7 @@ public class Parser {
             Expr decorator = call();
 
             if (!(decorator instanceof Expr.Call)) {
-                throw new ParseError(previous(), "Decorators can only be function calls.");
+                throw new ParseError(previous(), "Decorators can only be function calls.",  "");
             }
 
             // skip all EOL until the next statement
@@ -119,12 +120,12 @@ public class Parser {
         if (match(TokenType.IMPORT)) {
             List<String> namespace = new ArrayList<>();
             namespace.add(
-                    consume(TokenType.IDENTIFIER, "Import path must be provided.").lexeme
+                    consume(TokenType.IDENTIFIER, "No import path provided.", "Specify what you want to import.").lexeme
             );
 
             while (match(TokenType.DOT)) {
                 namespace.add(
-                        consume(TokenType.IDENTIFIER, "Invalid import path.").lexeme
+                        consume(TokenType.IDENTIFIER, "Invalid import path.", "Specify an import path consisting of names delimited with a period.").lexeme
                 );
             }
 
@@ -133,7 +134,7 @@ public class Parser {
 
         AstType type = type();
 
-        Token nameToken = consume(TokenType.IDENTIFIER, "Invalid variable name.");
+        Token nameToken = consume(TokenType.IDENTIFIER, "Invalid variable name.", "Choose a variable name which starts with a letter and only consists of letters and digits.");
 
         if (match(TokenType.EQUAL)) {
             Expr expression = expression();
@@ -145,13 +146,13 @@ public class Parser {
             return remember(new Stmt.Draw(type, nameToken.lexeme, expression));
         }
 
-        throw new ParseError(peek(), "Except assignment or draw.");
+        throw new ParseError(peek(), "No assignment or draw.", "When defining a variable, either directly assign a value with '=', or draw a value from a distribution with '~'.");
     }
 
     private AstType type() {
         startAstNode();
 
-        Token typeNameToken = consume(TokenType.IDENTIFIER, "Invalid variable type.");
+        Token typeNameToken = consume(TokenType.IDENTIFIER, "Invalid variable type.", "Type names only consist of letters.");
 
         if (match(TokenType.LESS)) {
             List<AstType> innerTypes = new ArrayList<>();
@@ -162,7 +163,7 @@ public class Parser {
             }
 
             // parse closing brackets
-            consume(TokenType.GREATER, "Generic type must be closed with a '>'.");
+            consume(TokenType.GREATER, "Generic type must be closed with a '>'.", "Close the opening square brackets of the generic type with a '>'.");
 
             return remember(
                     new AstType.Generic(typeNameToken.lexeme, innerTypes.toArray(AstType[]::new))
@@ -263,14 +264,14 @@ public class Parser {
             
             try {
                 expr = finishCall(functionName);
-                consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
+                consume(TokenType.RIGHT_PAREN, "Function arguments not closed.", "Add closing brackets ')' after the arguments.");
             } finally {
                 skipNewLines = oldSkipNewLines;
             }
         }
 
         while (match(TokenType.DOT)) {
-            Token name = consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+            Token name = consume(TokenType.IDENTIFIER, "Expect property name after '.'.", "");
             expr = new Expr.Get(expr, name.lexeme);
         }
 
@@ -289,7 +290,7 @@ public class Parser {
                 arguments.add(argument());
 
                 if (arguments.getFirst().name == null && check(TokenType.COMMA)) {
-                    throw new ParseError(peek(), "Arguments can only be omitted when there is only one argument.");
+                    throw new ParseError(peek(), "Arguments can only be omitted when there is only one argument.", "");
                 }
             } while (match(TokenType.COMMA));
         }
@@ -361,7 +362,7 @@ public class Parser {
                     elements.add(element);
                 }
 
-                consume(TokenType.RIGHT_SQUARE_BRACKET, "Arrays must be terminated by square brackets.");
+                consume(TokenType.RIGHT_SQUARE_BRACKET, "Vector not terminated.", "Add square brackets ']' after the last item of the vector.");
 
                 return remember(new Expr.Array(elements));
             } finally {
@@ -378,7 +379,7 @@ public class Parser {
 
         Expr firstVariable = expression();
         if (!(firstVariable instanceof Expr.Variable)) {
-            throw new ParseError(peek(), "for must be followed by variable names in list comprehensions.");
+            throw new ParseError(peek(), "for must be followed by variable names in list comprehensions.", "");
         }
 
         List<String> variables = new ArrayList<>();
@@ -387,18 +388,18 @@ public class Parser {
         while (match(TokenType.COMMA)) {
             Expr nextVariable = expression();
             if (!(nextVariable instanceof Expr.Variable)) {
-                throw new ParseError(peek(), "for must be followed by variable names in list comprehensions.");
+                throw new ParseError(peek(), "for must be followed by variable names in list comprehensions.", "");
             }
             variables.add(((Expr.Variable) nextVariable).variableName);
         }
 
-        consume(TokenType.IN, "The variables names must be followed by 'in' in list comprehensions.");
+        consume(TokenType.IN, "The variables names must be followed by 'in' in list comprehensions.", "");
 
         // parse list expression
         
         Expr list = expression();
 
-        consume(TokenType.RIGHT_SQUARE_BRACKET, "List comprehensions must be terminated by a square bracket.");
+        consume(TokenType.RIGHT_SQUARE_BRACKET, "List comprehensions must be terminated by a square bracket.", "");
 
         return remember(new Expr.ListComprehension(expression, variables, list));
     }
@@ -419,7 +420,7 @@ public class Parser {
             skipNewLines = true;
             try {
                 Expr expr = expression();
-                consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
+                consume(TokenType.RIGHT_PAREN, "Missing ')' after expression.", "Add brackets ')' to close the grouped expression.");
                 return remember(new Expr.Grouping(expr));
             } finally {
                 skipNewLines = oldIgnoreNewLines;
@@ -430,7 +431,7 @@ public class Parser {
             return remember(new Expr.Variable(previous().lexeme));
         }
 
-        throw new ParseError(peek(), "Expect expression.");
+        throw new ParseError(peek(), "Invalid expression.", "Something is missing.");
     }
 
     /* helper methods to inspect the tokens */
@@ -498,10 +499,10 @@ public class Parser {
 
     /** Advances the cursor if the next token matches the expected token type. If this
      * is not the case, an error is raised. */
-    private Token consume(TokenType tokenType, String message) {
+    private Token consume(TokenType tokenType, String message, String hint) {
         if (check(tokenType)) return advance();
 
-        throw new ParseError(peek(), message);
+        throw new ParseError(peek(), message, hint);
     }
 
     /** Checks if the current cursor points to the end of the file. */
@@ -562,8 +563,9 @@ public class Parser {
     /* error handling */
 
     private void logError(ParseError error) {
+        Error generalError = new Error(error.description, error.token.range, error.hint);
         for (ParseEventListener listener : eventListeners) {
-            listener.parseErrorDetected(error.token, error.message);
+            listener.parseErrorDetected(error.token, generalError);
         }
     }
 
@@ -607,16 +609,13 @@ public class Parser {
 
     private static class ParseError extends RuntimeException {
         private final Token token;
-        private final String message;
+        private final String description;
+        private final String hint;
 
-        public ParseError(Token token, String message) {
+        public ParseError(Token token, String description, String hint) {
             this.token = token;
-            this.message = message;
-        }
-
-        @Override
-        public String getMessage() {
-            return message;
+            this.description = description;
+            this.hint = hint;
         }
     }
 }

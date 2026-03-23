@@ -104,12 +104,12 @@ class LspDocument implements ParseEventListener, LexerEventListener {
     }
 
     @Override
-    public void parseErrorDetected(Token token, String message) {
+    public void parseErrorDetected(Token token, Error error) {
         foundDiagnostics.add(new Diagnostic(
                 new org.eclipse.lsp4j.Range(
                         new Position(token.range.startLine - 1, token.range.start),
                         new Position(token.range.endLine - 1, token.range.end)
-                ), message
+                ), error.description() + "\n\n" + error.hint()
         ));
     }
 
