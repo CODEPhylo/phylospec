@@ -1014,6 +1014,26 @@
                 ]
             },
             {
+                "name": "Offset",
+                "generatedType": "Distribution<Real>",
+                "namespace": "phylospec.distributions",
+                "description": "Offset version of the given distribution on reals",
+                "arguments": [
+                    {
+                        "name": "base",
+                        "description": "The base distribution to offset",
+                        "type": "Distribution<Real>",
+                        "required": true
+                    },
+                    {
+                        "name": "offset",
+                        "type": "Real",
+                        "description": "How much to offset the distribution",
+                        "required": true
+                    }
+                ]
+            },
+            {
                 "name": "Normal",
                 "generatedType": "Distribution<Real>",
                 "namespace": "phylospec.distributions",

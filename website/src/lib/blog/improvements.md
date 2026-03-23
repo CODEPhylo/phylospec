@@ -144,25 +144,33 @@ QMatrix qMatrix = jc69()
 
 The following changes resulted after I attempted to translate existing BEAST 2 XMLs into PhyloSpec. They are things required to model realistic models in practice.
 
-### Change #10: Truncated Distributions
+### Change #10: Truncated and Offset Distributions
 
-We can truncate existing scalar distributions:
+We can truncate and offset existing scalar distributions:
 
 ```phylospec
 PositiveReal x ~ Truncated(
     Normal(mean=0, sd=1), lower=2.0
 )
-
 Real y ~ Truncated(
     Normal(mean=0, sd=1), upper=2.0
 )
-
 NonNegativeReal z ~ Truncated(
     Normal(mean=0, sd=1), lower=0.0, upper=10.0
 )
+
+Real w ~ Offset(
+    Normal(mean=0, sd=1), offset=2.0
+)
+PositiveReal k ~ Offset(
+    Exponential(rate=1), offset=2.0
+)
+Real m ~ Offset(
+    Exponential(rate=1), offset=-2.0
+)
 ```
 
-Type parameters on the `lower` and `upper` arguments provide type safety up to the discrete set of scalar types.
+Type parameters on the `lower` and `upper` arguments provide type safety up to the discrete set of scalar types. `Offset` has to be hard-coded into the type checker to provide fine-grained type safety.
 
 
 ### Change #11: Blocks
