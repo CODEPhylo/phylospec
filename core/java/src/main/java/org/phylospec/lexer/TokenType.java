@@ -18,7 +18,10 @@ public enum TokenType {
     TRUE, FALSE, IMPORT, FOR, IN,
 
     // terminators
-    EOL, EOF;
+    EOL, EOF,
+
+    // comment
+    COMMENT;
 
     public static String getLexeme(TokenType token) {
         return switch (token) {
