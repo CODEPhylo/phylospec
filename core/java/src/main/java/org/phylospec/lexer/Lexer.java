@@ -34,6 +34,8 @@ public class Lexer {
     private int current = 0;
     private int currentLine = 1;
     private int currentLineStart = 0;
+    private int startLine = 1;
+    private int startLineStart = 0;
 
     private final List<LexerEventListener> eventListeners;
 
@@ -61,10 +63,16 @@ public class Lexer {
     public List<Token> scanTokens() {
         while (!isAtEnd()) {
             start = current;
+            startLine = currentLine;
+            startLineStart = currentLineStart;
+
             scanToken();
         }
 
         start = current;
+        startLine = currentLine;
+        startLineStart = currentLineStart;
+
         addToken(TokenType.EOF);
         return tokens;
     }
@@ -191,9 +199,6 @@ public class Lexer {
     }
 
     private void string() {
-        int startLine = currentLine;
-        int startLineStart = currentLineStart;
-
         while (peek() != '"' && !isAtEnd()) {
             if (peek() == '\n') {
                 currentLine++;
@@ -350,7 +355,8 @@ public class Lexer {
      */
     private void addToken(TokenType type, Object literal) {
         String text = source.substring(start, current);
-        tokens.add(new Token(type, text, literal, currentLine, start - currentLineStart, current - currentLineStart));
+        Range range = new Range(startLine, currentLine, start - startLineStart, current - currentLineStart);
+        tokens.add(new Token(type, text, literal, range));
     }
 
     /**

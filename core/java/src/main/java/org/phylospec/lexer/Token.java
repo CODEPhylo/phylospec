@@ -16,6 +16,13 @@ public class Token {
         this.range = new Range(line, start, end);
     }
 
+    public Token(TokenType type, String lexeme, Object literal, Range range) {
+        this.type = type;
+        this.lexeme = lexeme;
+        this.literal = literal;
+        this.range = range;
+    }
+
     public String toString() {
         return type + " " + lexeme + " " + literal  + range.toString();
     }
