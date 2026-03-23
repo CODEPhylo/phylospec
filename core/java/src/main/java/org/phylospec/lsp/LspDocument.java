@@ -2,9 +2,11 @@ package org.phylospec.lsp;
 
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.phylospec.Error;
 import org.phylospec.ast.*;
 import org.phylospec.components.*;
 import org.phylospec.lexer.Lexer;
+import org.phylospec.lexer.LexerEventListener;
 import org.phylospec.lexer.Token;
 import org.phylospec.lexer.Range;
 import org.phylospec.parser.ParseEventListener;
@@ -23,7 +25,7 @@ import java.util.Set;
  * It supports parsing and type error diagnostics, hover information,
  * and basic auto-completion.
  */
-class LspDocument implements ParseEventListener {
+class LspDocument implements ParseEventListener, LexerEventListener {
     final private String uri;
     private LanguageClient client;
 
@@ -57,17 +59,18 @@ class LspDocument implements ParseEventListener {
 
     /** Updates the document content and re-runs the static analysis. */
     void updateContent(String newContent) {
+        foundDiagnostics.clear();
+
         // run lexer
 
         Lexer lexer = new Lexer(newContent);
+        lexer.registerEventListener(this);
         tokens = lexer.scanTokens();
 
         // run parser
 
         parser = new Parser(tokens);
         parser.registerEventListener(this);
-
-        foundDiagnostics.clear();
         statements = parser.parse();
 
         // run type resolver and publish diagnostics
@@ -107,6 +110,16 @@ class LspDocument implements ParseEventListener {
                         new Position(token.range.startLine - 1, token.range.start),
                         new Position(token.range.endLine - 1, token.range.end)
                 ), message
+        ));
+    }
+
+    @Override
+    public void lexerErrorDetected(Error error) {
+        foundDiagnostics.add(new Diagnostic(
+                new org.eclipse.lsp4j.Range(
+                        new Position(error.range().startLine - 1, error.range().start),
+                        new Position(error.range().endLine - 1, error.range().end)
+                ), error.description() + "\n\n" + error.hint()
         ));
     }
 
