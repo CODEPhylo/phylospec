@@ -333,6 +333,8 @@ Age cladeAge = age(["humans", "chimpanzees"], tree) observed as 7 Ma
 
 This also implicitly sets the time scale for rates and for parsed tip dates. For simplicity, we only allow a single type of time unit in a model.
 
+Valid units are `d`, `yr`, `kyr`, `Myr`, `ka`, and `Ma`.
+
 ### Blocks
 
 Optionally, blocks can be used to aid readability and group the statements:
