@@ -255,38 +255,7 @@ Age age = age(taxa(alignment)[1])
 String speciesName = species(taxa(alignment)[1])
 ```
 
-### Change #14: Time-varying Values
-
-I propose native support for time-varying values like rates or population sizes:
-
-```phylospec
-Varying<Rate> rate1 = piecewise(
-    pieces=[0.01, 0.02, 0.03],
-    changeAges=[5.0, 10.0]
-)
-Varying<Rate> rate2 = piecewise(
-    pieces=[
-        constant(2.0),
-        exponentialGrowth(startValue=10, growthRate=2.0),
-        logisticGrowth(inflectionAge=2, carryingCapacity=10, growthRate=2.0),
-    ],
-    changeAges=[5.0, 10.0]
-)
-
-Varying<Rate> rate3 ~ Piecewise(
-    LogNormal(logMean=1.0, logSd=1.0), changeAges=[5.0, 10.0]
-)
-Varying<Rate> rate4 ~ Piecewise(
-    pieces=[
-        LogNormal(logMean=1.0, logSd=1.0),
-        LogNormal(logMean=2.0, logSd=1.0),
-        LogNormal(logMean=3.0, logSd=1.0)
-    ],
-    changeAges=[5.0, 10.0]
-)
-```
-
-### Change #15: Likelihood-based Node Calibration
+### Change #14: Likelihood-based Node Calibration
 
 The following syntax allows to clamp a scalar variable into an interval:
 
@@ -308,11 +277,11 @@ This corresponds to a non-zero likelihood whenever the MRCA is in the given inte
 
 ### Minor Changes
 
-- #16: The `env` function allows access to environment variables.
-- #17: The `fromCSV` function and the `Map<K, V>` type have been added.
-- #18: The `Binomial` and `Cauchy` distributions have been added.
-- #19: The functions `mrca` and `age` have been added to retrieve clade and taxon ages.
-- #20: The `mk` substitution model now has an optional parameter for the expected rate.
+- #15: The `env` function allows access to environment variables.
+- #16: The `fromCSV` function and the `Map<K, V>` type have been added.
+- #17: The `Binomial` and `Cauchy` distributions have been added.
+- #18: The functions `mrca` and `age` have been added to retrieve clade and taxon ages.
+- #19: The `mk` substitution model now has an optional parameter for the expected rate.
 
 <h2 id="example">Example</h2>
 
@@ -330,11 +299,9 @@ data {
 }
 
 model {
-    Varying<Rate> branchRate ~ Piecewise(
-        Exponential(rate=1), changeAges=[1 yr, 2.5 yr]
-    )
     Tree tree ~ Yule(
-        birthRate, taxa=taxa(molecularData)
+        birthRate~Exponential(rate=1),
+        taxa=taxa(molecularData)
     )
 
     QMatrix molecularQ = hky(
