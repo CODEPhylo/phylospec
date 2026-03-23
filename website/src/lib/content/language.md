@@ -319,6 +319,20 @@ Real diff = (uniformOverInterval - mrca) observed as 0.0
 
 This corresponds to a non-zero likelihood whenever the MRCA is in the given interval and mirrors to how RevBayes handles calibration (see e.g. [here](https://revbayes.github.io/tutorials/fbd_simple/) in section *Sampling Fossil Occurrence Times*).
 
+### Time Units
+
+Every rate and age in a model is implicitly tied to a time scale. This change makes this more apparent.
+
+Adding explicit units to every variable can get complicated pretty quickly (what is the unit of the log mean?). However, we allow to indicate the global time scale by adding units to `Age`-typed literals:
+
+```phylospec
+Tree tree ~ Yule(birthRate=1.0, rootAge=20 Ma)
+
+Age cladeAge = age(["humans", "chimpanzees"], tree) observed as 7 Ma
+```
+
+This also implicitly sets the time scale for rates and for parsed tip dates. For simplicity, we only allow a single type of time unit in a model.
+
 ### Blocks
 
 Optionally, blocks can be used to aid readability and group the statements:

@@ -260,6 +260,10 @@
                 {
                     "name": "constant.language.boolean.phylospec",
                     "match": "\\b(true|false)\\b"
+                },
+                {
+                    "name": "constant.language.unit.phylospec",
+                    "match": "\\b(Myr|kyr|yr|Ma|ka)\\b"
                 }
             ]
         },
