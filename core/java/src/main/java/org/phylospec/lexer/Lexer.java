@@ -59,8 +59,6 @@ public class Lexer {
      * @return list of scanned tokens.
      */
     public List<Token> scanTokens() {
-        if (isAtEnd()) return tokens;
-
         while (!isAtEnd()) {
             start = current;
             scanToken();

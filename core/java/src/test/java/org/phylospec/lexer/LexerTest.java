@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class LexerTest {
 
@@ -169,5 +170,138 @@ public class LexerTest {
         assertEquals("(line 1 100:105)", errors.get(2).range().toString());
         assertEquals("A string must be terminated with an '\"'.", errors.get(2).description());
         assertEquals("Use quotation marks to end the string.", errors.get(2).hint());
+    }
+
+    @Test
+    public void testFuzz() {
+        Random random = new Random(0);
+
+        for (int i = 0; i < 10000; i++) {
+            String input = generateFuzzInput(random, i);
+            List<Token> tokens;
+
+            try {
+                tokens = new Lexer(input).scanTokens();
+            } catch (Exception e) {
+                fail("Lexer threw an exception on iteration " + i
+                        + " (input=" + repr(input) + "): " + e);
+                return;
+            }
+
+            // invariant: result is never null or empty
+            assertNotNull(tokens, "tokens must not be null (iter=" + i + ")");
+
+            // invariant: last token is always EOF
+            assertEquals(TokenType.EOF, tokens.get(tokens.size() - 1).type,
+                    "last token must be EOF (iter=" + i + ")");
+
+            // invariant: all token ranges are internally consistent
+            for (Token token : tokens) {
+                assertTrue(token.range.startLine >= 1,
+                        "startLine must be >= 1 (iter=" + i + ", token=" + token + ")");
+                assertTrue(token.range.start >= 0,
+                        "start must be >= 0 (iter=" + i + ", token=" + token + ")");
+                assertTrue(token.range.end >= token.range.start,
+                        "end must be >= start (iter=" + i + ", token=" + token + ")");
+            }
+        }
+    }
+
+    // generates one fuzz input chosen from several strategies
+    private String generateFuzzInput(Random r, int iteration) {
+        // first few iterations cover deterministic edge cases
+        switch (iteration) {
+            case 0: return "";
+            case 1: return " ";
+            case 2: return "\n";
+            case 3: return "\r\n";
+            case 4: return "\"";
+            case 5: return "\"unterminated";
+            case 6: return "//";
+            case 7: return "// comment only";
+            case 8: return String.valueOf((char) 0);
+            case 9: return "\t\t\t";
+        }
+
+        int strategy = r.nextInt(5);
+        switch (strategy) {
+            case 0:
+                // random printable ASCII (32–126)
+                return randomString(r, r.nextInt(80) + 1, 32, 126);
+            case 1:
+                // full byte range including control characters
+                return randomString(r, r.nextInt(50) + 1, 0, 127);
+            case 2:
+                // digit-heavy input to exercise number parsing and overflow paths
+                return randomDigitHeavyString(r, r.nextInt(60) + 1);
+            case 3:
+                // mutated snippet of valid-looking PhyloSpec source
+                return mutate(r, pickValidSnippet(r), r.nextInt(5) + 1);
+            default:
+                // very long random printable string
+                return randomString(r, r.nextInt(500) + 100, 32, 126);
+        }
+    }
+
+    private String randomString(Random r, int length, int minChar, int maxChar) {
+        StringBuilder sb = new StringBuilder(length);
+        int range = maxChar - minChar + 1;
+        for (int i = 0; i < length; i++) {
+            sb.append((char) (minChar + r.nextInt(range)));
+        }
+        return sb.toString();
+    }
+
+    private String randomDigitHeavyString(Random r, int length) {
+        // mix of digits, dots, +/- and occasional letters to stress number tokenisation
+        String chars = "0123456789.+-eE ";
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            sb.append(chars.charAt(r.nextInt(chars.length())));
+        }
+        return sb.toString();
+    }
+
+    private String pickValidSnippet(Random r) {
+        String[] snippets = {
+            "foo = 1.5\n",
+            "import bar\n",
+            "for x in [1, 2, 3]\n",
+            "\"hello world\"\n",
+            "a + b * c\n",
+            "x != y == z\n",
+            "true false\n",
+            "fn(a, b)\n",
+            "// comment\nx = 42\n",
+            "x >= 0.0\n",
+        };
+        return snippets[r.nextInt(snippets.length)];
+    }
+
+    // randomly flips, inserts, or deletes characters in a string
+    private String mutate(Random r, String input, int mutations) {
+        StringBuilder sb = new StringBuilder(input);
+        for (int i = 0; i < mutations; i++) {
+            if (sb.isEmpty()) break;
+            int op = r.nextInt(3);
+            int pos = r.nextInt(sb.length());
+            if (op == 0) {
+                // flip a character to a random printable ASCII value
+                sb.setCharAt(pos, (char) (32 + r.nextInt(95)));
+            } else if (op == 1 && sb.length() > 1) {
+                // delete a character
+                sb.deleteCharAt(pos);
+            } else {
+                // insert a random printable character
+                sb.insert(pos, (char) (32 + r.nextInt(95)));
+            }
+        }
+        return sb.toString();
+    }
+
+    // returns a compact representation of a string for failure messages
+    private String repr(String s) {
+        if (s.length() > 60) return "\"" + s.substring(0, 60).replace("\n", "\\n") + "...\"";
+        return "\"" + s.replace("\n", "\\n").replace("\r", "\\r") + "\"";
     }
 }
