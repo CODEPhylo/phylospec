@@ -183,7 +183,6 @@ public class Lexer {
                     number();
                 } else {
                     reportError(
-                            new Range(currentLine, start, current),
                             "'" + c + "' is not an allowed character.",
                             "Only use letters or digits."
                     );
@@ -192,22 +191,28 @@ public class Lexer {
     }
 
     private void string() {
+        int startLine = currentLine;
+        int startLineStart = currentLineStart;
+
         while (peek() != '"' && !isAtEnd()) {
-            if (peek() == '\n')
+            if (peek() == '\n') {
                 currentLine++;
+                currentLineStart = current;
+            }
             if (peek() == '\r') {
                 // we also consider "\r\n" as one new line, as it is done on Windows
                 if (peekNext() == '\n') {
                     advance();
                 }
                 currentLine++;
+                currentLineStart = current;
             }
             advance();
         }
 
         if (isAtEnd()) {
             reportError(
-                    new Range(currentLine, start, current),
+                    new Range(startLine, currentLine, start - startLineStart, current - currentLineStart),
                     "A string must be terminated with an '\"'.",
                     "Use quotation marks to end the string."
             );
@@ -248,7 +253,6 @@ public class Lexer {
                 addToken(TokenType.FLOAT, Double.parseDouble(source.substring(start, current)));
             } catch (NumberFormatException ignored) {
                 reportError(
-                        new Range(currentLine, start, current),
                         "'" + source.substring(start, current) + "' is not a valid number.",
                         "Try a smaller number."
                 );
@@ -259,7 +263,6 @@ public class Lexer {
                 addToken(TokenType.INT, Integer.parseInt(source.substring(start, current)));
             } catch (NumberFormatException e) {
                 reportError(
-                        new Range(currentLine, start, current),
                         "'" + source.substring(start, current) + "' is not a valid number.",
                         "Try a smaller number."
                 );
@@ -354,6 +357,16 @@ public class Lexer {
      * Reports an error to the registered event listeners.
      */
     private void reportError(Range range, String description, String hint) {
+        for (LexerEventListener eventListener : eventListeners) {
+            eventListener.lexerErrorDetected(new Error(description, range, hint));
+        }
+    }
+
+    /**
+     * Reports an error to the registered event listeners.
+     */
+    private void reportError(String description, String hint) {
+        Range range = new Range(currentLine, start - currentLineStart, current - currentLineStart);
         for (LexerEventListener eventListener : eventListeners) {
             eventListener.lexerErrorDetected(new Error(description, range, hint));
         }
