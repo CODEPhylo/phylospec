@@ -8,7 +8,7 @@ author: "Tobia Ochsner"
 
 This post describes my proposed improvements over *Draft 12.2025* of the language specifications and core component library. The changes take into account feedback from several people, as well as my learnings from trying to describe more complex models in PhyloSpec. Lastly, I tried to improve consistency and adherence to [our core principles](./the-way-of-phylospec).
 
-There is a level of subjectivity to some of these changes. Feel free to provide feedback in the <a href="https://github.com/CODEPhylo/phylospec/discussions/27" target="_blank">GitHub discussion</a> of this post!
+Feel free to provide feedback in the <a href="https://github.com/CODEPhylo/phylospec/discussions/27" target="_blank">GitHub discussion</a> of this post!
 
 All proposed changes can be found in the <a href="https://github.com/CODEPhylo/phylospec/pull/28" target="_blank">corresponding pull request</a>.
 
@@ -95,7 +95,7 @@ This greatly reduces verbosity without affecting readability.
 
 Every rate and age in a model is implicitly tied to a time scale. This change makes this more apparent.
 
-Adding explicit units to every variable can get complicated pretty quickly (what is the unit of the log mean?). However, we allow to indicate the global time scale by adding units to `Age`-typed literals:
+Adding explicit units to every variable can get complicated pretty quickly (what is the unit of the log mean?). However, we can indicate the global time scale by adding units to `Age`-typed literals:
 
 ```phylospec
 Tree tree ~ Yule(birthRate=1.0, rootAge=20 Ma)
@@ -134,7 +134,7 @@ Vector<Rate> siteRates ~ DiscreteGammaInv(
 )
 ```
 
-Another way to look at these changes is that we put a label on generators, but are explicit in what they generate (a `StrictClock` explicitly generates a vector of branch rates). This is consistent with how we treat substitution models:
+Another way to look at these changes is that we attach a label to generators, while remaining explicit about what they generate (a `StrictClock` explicitly generates a vector of branch rates). This is consistent with how we treat substitution models:
 
 ```phylospec
 QMatrix qMatrix = jc69()
@@ -142,7 +142,7 @@ QMatrix qMatrix = jc69()
 
 ## Describing More Complex Models
 
-The following changes resulted after I attempted to translate existing BEAST 2 XMLs into PhyloSpec. They are things required to model realistic models in practice.
+The following changes resulted after I attempted to translate existing BEAST 2 XMLs into PhyloSpec. These are required to model realistic analyses in practice.
 
 ### Change #10: Truncated and Offset Distributions
 
@@ -273,7 +273,7 @@ Real uniformOverInterval ~ Uniform(lower=7, upper=8)
 Real diff = (uniformOverInterval - mrca) observed as 0.0
 ```
 
-This corresponds to a non-zero likelihood whenever the MRCA is in the given interval and mirrors to how RevBayes handles calibration (see e.g. [here](https://revbayes.github.io/tutorials/fbd_simple/) in section *Sampling Fossil Occurrence Times*).
+This corresponds to a non-zero likelihood whenever the MRCA is in the given interval and is similar to how RevBayes handles calibration (see e.g. [here](https://revbayes.github.io/tutorials/fbd_simple/) in section *Sampling Fossil Occurrence Times*).
 
 ### Minor Changes
 
