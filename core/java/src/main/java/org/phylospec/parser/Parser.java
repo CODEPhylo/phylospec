@@ -1,9 +1,10 @@
 package org.phylospec.parser;
-import org.phylospec.Error;
+import org.phylospec.errors.Error;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.AstType;
+import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.lexer.Token;
 import org.phylospec.lexer.Range;
 import org.phylospec.lexer.TokenType;
@@ -42,7 +43,7 @@ public class Parser {
     private final Map<AstNode, Range> astNodeRanges;
     private final LinkedList<Integer> astNodeStartPositions;
 
-    private final List<ParseEventListener> eventListeners;
+    private final List<ErrorEventListener> eventListeners;
 
     /**
      * Creates a new Parser.
@@ -57,7 +58,7 @@ public class Parser {
         this.astNodeStartPositions = new LinkedList<>();
     }
 
-    public void registerEventListener (ParseEventListener listener) {
+    public void registerEventListener (ErrorEventListener listener) {
         this.eventListeners.add(listener);
     }
 
@@ -564,8 +565,8 @@ public class Parser {
 
     private void logError(ParseError error) {
         Error generalError = new Error(error.description, error.token.range, error.hint);
-        for (ParseEventListener listener : eventListeners) {
-            listener.parseErrorDetected(error.token, generalError);
+        for (ErrorEventListener listener : eventListeners) {
+            listener.errorDetected(generalError);
         }
     }
 

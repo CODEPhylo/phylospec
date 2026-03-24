@@ -1,10 +1,8 @@
 package org.phylospec.lexer;
 
-import org.phylospec.Error;
-import org.phylospec.PhyloSpec;
-import org.phylospec.parser.ParseEventListener;
+import org.phylospec.errors.Error;
+import org.phylospec.errors.ErrorEventListener;
 
-import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +35,7 @@ public class Lexer {
     private int startLine = 1;
     private int startLineStart = 0;
 
-    private final List<LexerEventListener> eventListeners;
+    private final List<ErrorEventListener> eventListeners;
 
     /**
      * Creates a new Lexer capable of reading a PhyloSpec script and
@@ -50,7 +48,7 @@ public class Lexer {
         this.eventListeners = new ArrayList<>();
     }
 
-    public void registerEventListener (LexerEventListener listener) {
+    public void registerEventListener (ErrorEventListener listener) {
         this.eventListeners.add(listener);
     }
 
@@ -363,8 +361,8 @@ public class Lexer {
      * Reports an error to the registered event listeners.
      */
     private void reportError(Range range, String description, String hint) {
-        for (LexerEventListener eventListener : eventListeners) {
-            eventListener.lexerErrorDetected(new Error(description, range, hint));
+        for (ErrorEventListener eventListener : eventListeners) {
+            eventListener.errorDetected(new Error(description, range, hint));
         }
     }
 
@@ -373,8 +371,8 @@ public class Lexer {
      */
     private void reportError(String description, String hint) {
         Range range = new Range(currentLine, start - currentLineStart, current - currentLineStart);
-        for (LexerEventListener eventListener : eventListeners) {
-            eventListener.lexerErrorDetected(new Error(description, range, hint));
+        for (ErrorEventListener eventListener : eventListeners) {
+            eventListener.errorDetected(new Error(description, range, hint));
         }
     }
 }

@@ -2,14 +2,13 @@ package org.phylospec.lsp;
 
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.LanguageClient;
-import org.phylospec.Error;
+import org.phylospec.errors.Error;
 import org.phylospec.ast.*;
 import org.phylospec.components.*;
 import org.phylospec.lexer.Lexer;
-import org.phylospec.lexer.LexerEventListener;
+import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.lexer.Token;
 import org.phylospec.lexer.Range;
-import org.phylospec.parser.ParseEventListener;
 import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.ResolvedType;
 import org.phylospec.typeresolver.TypeError;
@@ -25,7 +24,7 @@ import java.util.Set;
  * It supports parsing and type error diagnostics, hover information,
  * and basic auto-completion.
  */
-class LspDocument implements ParseEventListener, LexerEventListener {
+class LspDocument implements ErrorEventListener {
     final private String uri;
     private LanguageClient client;
 
@@ -104,17 +103,7 @@ class LspDocument implements ParseEventListener, LexerEventListener {
     }
 
     @Override
-    public void parseErrorDetected(Token token, Error error) {
-        foundDiagnostics.add(new Diagnostic(
-                new org.eclipse.lsp4j.Range(
-                        new Position(token.range.startLine - 1, token.range.start),
-                        new Position(token.range.endLine - 1, token.range.end)
-                ), error.description() + "\n\n" + error.hint()
-        ));
-    }
-
-    @Override
-    public void lexerErrorDetected(Error error) {
+    public void errorDetected(Error error) {
         foundDiagnostics.add(new Diagnostic(
                 new org.eclipse.lsp4j.Range(
                         new Position(error.range().startLine - 1, error.range().start),
