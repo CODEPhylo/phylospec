@@ -1,4 +1,4 @@
-package org.phylospec;
+package org.phylospec.errors;
 
 import org.phylospec.lexer.Range;
 

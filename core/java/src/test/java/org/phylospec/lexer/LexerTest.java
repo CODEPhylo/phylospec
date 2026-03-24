@@ -2,6 +2,8 @@ package org.phylospec.lexer;
 
 import org.junit.jupiter.api.Test;
 import org.phylospec.FuzzingUtils;
+import org.phylospec.errors.Error;
+import org.phylospec.errors.ErrorEventListener;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -153,8 +155,8 @@ public class LexerTest {
     public void testErrors() {
         String source = "()$Hallo 1324523564356345892013245235643563458920 -5643563458920.4523564356345892045235643563458920 \"khkh";
 
-        List<org.phylospec.Error> errors = new ArrayList<>();
-        LexerEventListener listener = errors::add;
+        List<Error> errors = new ArrayList<>();
+        ErrorEventListener listener = errors::add;
 
         Lexer lexer = new Lexer(source);
         lexer.registerEventListener(listener);
