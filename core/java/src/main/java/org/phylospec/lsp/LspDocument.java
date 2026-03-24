@@ -74,28 +74,18 @@ class LspDocument implements ErrorEventListener {
         parser.registerEventListener(this);
         statements = parser.parse();
 
-        // run type resolver and publish diagnostics
+        // run type resolver
 
         typeResolver = new TypeResolver(componentResolver);
         for (Stmt statement : statements) {
             try {
                 statement.accept(typeResolver);
             } catch (TypeError error) {
-                Range range = parser.getRangeForAstNode(error.getAstNode());
-                if (range == null) {
-                    range = parser.getRangeForAstNode(statement);
-                }
-
-                String message = error.getMessage();
-
-                foundDiagnostics.add(new Diagnostic(
-                        new org.eclipse.lsp4j.Range(
-                                new Position(range.startLine - 1, range.start), // we use 1-based line indexing
-                                new Position(range.endLine - 1, range.end)
-                        ), message
-                ));
+                errorDetected(error, statement);
             }
         }
+
+        // publish diagnostics
 
         this.client.publishDiagnostics(
                 new PublishDiagnosticsParams(
@@ -125,6 +115,14 @@ class LspDocument implements ErrorEventListener {
                         new Position(error.range().endLine - 1, error.range().end)
                 ), text.toString()
         ));
+    }
+
+    public void errorDetected(TypeError astNodeError, Stmt stmt) {
+        Range range = parser.getRangeForAstNode(astNodeError.getAstNode());
+        if (range == null) {
+            range = parser.getRangeForAstNode(stmt);
+        }
+        this.errorDetected(astNodeError.toError(range));
     }
 
     /** Applied changes to the content. Assumes that the LSP is configured to

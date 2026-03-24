@@ -1,6 +1,8 @@
 package org.phylospec.typeresolver;
 
+import org.phylospec.Utils;
 import org.phylospec.components.ComponentResolver;
+import org.phylospec.components.Generator;
 import org.phylospec.components.Type;
 
 import java.util.*;
@@ -57,7 +59,10 @@ public class ResolvedType {
             // return type is not a generic
             Type typeComponent = componentResolver.resolveType(typeString);
             if (typeComponent == null) {
-                throw new TypeError("Unknown type: " + typeString);
+                throw new TypeError(
+                        "The type '" + typeString + "' does not exist.",
+                        "Are you looking for '" + componentResolver.findClosestType(typeString) + "'?"
+                );
             }
             return Set.of(new ResolvedType(typeComponent, new HashMap<>()));
         }
@@ -67,7 +72,10 @@ public class ResolvedType {
         String atomicTypeString = TypeUtils.stripGenerics(typeString);
         Type typeComponent = componentResolver.resolveType(atomicTypeString);
         if (typeComponent == null) {
-            throw new TypeError("Unknown type: " + typeString);
+            throw new TypeError(
+                    "The type '" + typeString + "' does not exist.",
+                    "Are you looking for '" + componentResolver.findClosestType(typeString) + "'?"
+            );
         }
 
         // resolve the possible type parameters
@@ -143,4 +151,5 @@ public class ResolvedType {
 
         return string.toString();
     }
+
 }
