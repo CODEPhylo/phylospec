@@ -109,7 +109,40 @@ public abstract class Stmt extends AstNode {
         }
     }
 
-    /** Represents an import statement like `import revbayes.core`. */
+    /** Represents an indexed statement like `Real value[i] ~ Normal(mean=1, sd=1) for i in 1:10`. It consists of the
+     * statement without index (`Real value[i] ~ Normal(mean=1, sd=1)`), the index (`ì`), and the range (`1:10`) */
+    public static class Indexed extends Stmt {
+        public Indexed(Stmt statement, Expr.Variable index, Expr range) {
+            this.statement = statement;
+            this.index = index;
+            this.range = range;
+        }
+
+        @JsonPropertyDescription("The indexed statement.")
+        public final Stmt statement;
+        @JsonPropertyDescription("The index variable.")
+        public final Expr.Variable index;
+        @JsonPropertyDescription("The range over which the index goes.")
+        public final Expr range;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Indexed indexed = (Indexed) o;
+            return Objects.equals(statement, indexed.statement) && Objects.equals(index, indexed.index) && Objects.equals(range, indexed.range);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(statement, index, range);
+        }
+
+        public <S, E, T> S accept(AstVisitor<S, E, T> visitor) {
+            return visitor.visitIndexedStmt(this);
+        }
+    }
+
+    /** Represents an import statement like `use revbayes.core`. */
     public static class Import extends Stmt {
         public Import(List<String> namespace) {
             this.namespace = namespace;
@@ -135,4 +168,66 @@ public abstract class Stmt extends AstNode {
         }
     }
 
+    /** Represents an observed statement like `Real value ~ Normal(mean=1, sd=1) observed as 10.0`. */
+    public static class ObservedAs extends Stmt {
+        public ObservedAs(Stmt stmt, Expr observedAs) {
+            this.stmt = stmt;
+            this.observedAs = observedAs;
+        }
+
+        @JsonPropertyDescription("The statement observed.")
+        private final Stmt stmt;
+        @JsonPropertyDescription("The observed value.")
+        private final Expr observedAs;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            ObservedAs that = (ObservedAs) o;
+            return Objects.equals(stmt, that.stmt) && Objects.equals(observedAs, that.observedAs);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(stmt, observedAs);
+        }
+
+        @Override
+        public <S, E, T> S accept(AstVisitor<S, E, T> visitor) {
+            return visitor.visitObservedAsStmt(this);
+        }
+    }
+
+    /** Represents an observed between statement like `Real value ~ Normal(mean=1, sd=1) observed between [10.0, 12.0]`. */
+    public static class ObservedBetween extends Stmt {
+        public ObservedBetween(Stmt stmt, Expr observedFrom, Expr observedTo) {
+            this.stmt = stmt;
+            this.observedFrom = observedFrom;
+            this.observedTo = observedTo;
+        }
+
+        @JsonPropertyDescription("The statement observed.")
+        private final Stmt stmt;
+        @JsonPropertyDescription("The lower bound.")
+        private final Expr observedFrom;
+        @JsonPropertyDescription("The upper bound.")
+        private final Expr observedTo;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            ObservedBetween that = (ObservedBetween) o;
+            return Objects.equals(stmt, that.stmt) && Objects.equals(observedFrom, that.observedFrom) && Objects.equals(observedTo, that.observedTo);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(stmt, observedFrom, observedTo);
+        }
+
+        @Override
+        public <S, E, T> S accept(AstVisitor<S, E, T> visitor) {
+            return visitor.visitObservedBetweenStmt(this);
+        }
+    }
 }

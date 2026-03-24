@@ -1,10 +1,7 @@
 package org.phylospec.parser;
 
+import org.phylospec.ast.*;
 import org.phylospec.errors.Error;
-import org.phylospec.ast.AstNode;
-import org.phylospec.ast.Expr;
-import org.phylospec.ast.Stmt;
-import org.phylospec.ast.AstType;
 import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.lexer.Token;
 import org.phylospec.lexer.Range;
@@ -19,21 +16,27 @@ import java.util.*;
 public class Parser {
     /**
      * Parses the following grammar:
-     * decorated         → ( "@" call )*  statement ;
-     * statement         → "import" IDENTIFIER ( "." IDENTIFIER )* | type IDENTIFIER ( "=" | "~" ) expression ;
+     * import            → "use" IDENTIFIER ( "." IDENTIFIER )* | decorated ;
+     * decorated         → ( "@" IDENTIFIER "(" arguments? ")" )*  indexedStatement ;
+     * observedStatement → indexedStatement ( clamping )? ;
+     * indexedStatement  → type IDENTIFIER "[" IDENTIFIER "] ( "=" | "~" ) indexedExpression | statement ;
+     * statement         → type IDENTIFIER ( "=" | "~" ) expression ;
      * type              → IDENTIFIER ("<" type ("," type)* ">" ) ;
+     * indexedExpression → equality "for" IDENTIFIER "in" expression ;
+     * clamping          → "observed as" expression | "observed between" "[" expression "," expression "]" ;
      * expression        → equality ;
      * equality          → comparison ( ( "!=" | "==" ) comparison )* ;
      * comparison        → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
      * term              → factor ( ( "-" | "+" ) factor )* ;
-     * factor            → unary ( ( "/" | "*" ) unary )* ;
-     * unary             → ( "!" | "-" ) unary | call ;
-     * call              → listComprehension ( "." IDENTIFIER )* | IDENTIFIER ( "(" arguments? ")" ) ;
-     * arguments         → argument ( "," argument )* | expression ;
-     * argument          → IDENTIFIER "=" expression | IDENTIFIER ;
-     * array             → "[" "]" | "[" expression "for" listComprehension | "[" expression ( "," expression )* "]" | primary;
-     * listComprehension → IDENTIFIER ( "," IDENTIFIER ) "in" expression "]" ;
-     * primary           → INT | FLOAT | STRING | "true" | "false" | IDENTIFIER | "(" expression ")" ;
+     * factor            → range ( ( "/" | "*" ) range )* ;
+     * range             → unary ( ":" unary )? ;
+     * unary             → ( "!" | "-" ) unary | postfix ;
+     * postfix           → array ( "[" expression "]" | "(" arguments? ")" )* ;
+     * arguments         → argument ( "," argument )* ;
+     * argument          → IDENTIFIER ( "=" | "~" ) expression | expression ;
+     * array             → "[" "]" | "[" expression ( "," expression )* "]" | primary;
+     * primary           → INT ( unit )? | FLOAT ( unit )? | STRING | "true" | "false" | IDENTIFIER | "(" expression ")" ;
+     * unit              → "d" | "yr" | "kyr" | "Myr" | "ka" | "Ma"
      */
 
     private final List<Token> tokens;
@@ -77,7 +80,7 @@ public class Parser {
 
         while (!isAtEnd()) {
             try {
-                statements.add(decorated());
+                statements.add(importRule());
 
                 if (!isAtEnd()) {
                     consume(
@@ -98,48 +101,15 @@ public class Parser {
         return statements;
     }
 
-    /* parser methods */
+    /* parser rules */
 
-    private Stmt decorated() throws Error {
-        startAstNode();
-
-        if (match(TokenType.AT)) {
-            Expr decorator = call();
-
-            if (!(decorator instanceof Expr.Call)) {
-                throw new Error(
-                        previous().range,
-                        "Decorators can only be function calls.",
-                        "",
-                        List.of("@revbayes(useHighPrecision=True)")
-                );
-            }
-
-            // skip all EOL until the next statement
-            skipEOLs();
-
-            Stmt statement = decorated();
-            return remember(new Stmt.Decorated((Expr.Call) decorator, statement));
-        }
-
-        return remember(statement());
-    }
-
-    private Stmt statement() throws Error {
+    private Stmt importRule() throws Error {
         startAstNode();
 
         if (match(TokenType.IMPORT)) {
             List<String> namespace = new ArrayList<>();
-            namespace.add(
-                    consume(
-                            TokenType.IDENTIFIER,
-                            "Invalid import path.",
-                            "Specify an import path consisting of names delimited with a period.",
-                            List.of("use phylospec.io")
-                    ).lexeme
-            );
 
-            while (match(TokenType.DOT)) {
+            do {
                 namespace.add(
                         consume(
                                 TokenType.IDENTIFIER,
@@ -148,10 +118,106 @@ public class Parser {
                                 List.of("use phylospec.io")
                         ).lexeme
                 );
-            }
+            } while (match(TokenType.DOT));
 
             return remember(new Stmt.Import(namespace));
         }
+
+        return remember(decorated());
+    }
+
+    private Stmt decorated() throws Error {
+        startAstNode();
+
+        while (match(TokenType.AT)) {
+            Token decoratorName = consume(
+                    TokenType.IDENTIFIER,
+                    "Invalid hint.",
+                    "Directly follow the '@' with the name of the engine or extension you want to talk to.",
+                    List.of("@revbayes(discretize=true)")
+            );
+            Expr.Variable decoratorNameVar = new Expr.Variable(decoratorName.lexeme);
+
+            consume(
+                    TokenType.LEFT_PAREN,
+                    "Missing brackets in hint.",
+                    "Follow the engine or extension name with brackets, similar to function calls.",
+                    List.of("@revbayes(discretize=true)")
+            );
+
+            // we are in a bracket, let's ignore EOL statements
+            boolean oldSkipNewLines = skipNewLines;
+            skipNewLines = true;
+
+            try {
+                Expr decorator = finishCall(decoratorNameVar);
+                consume(
+                        TokenType.RIGHT_PAREN,
+                        "Missing closinng brackets in hint.",
+                        "Add the closing brackets ')' at the end of the hint.",
+                        List.of("@revbayes(discretize=true)")
+                );
+
+                // skip all EOL until the next statement
+                skipEOLs();
+
+                Stmt statement = decorated();
+                return remember(new Stmt.Decorated((Expr.Call) decorator, statement));
+            } finally {
+                skipNewLines = oldSkipNewLines;
+            }
+        }
+
+        return remember(observedStatement());
+    }
+
+    private Stmt observedStatement() throws Error {
+        startAstNode();
+
+        Stmt stmt = indexedStatement();
+
+        if (match(TokenType.OBSERVED_AS)) {
+            startAstNode();
+            Expr observedAs = expression();
+            return remember(new Stmt.ObservedAs(stmt, observedAs));
+        } else if (match(TokenType.OBSERVED_BETWEEN)) {
+            startAstNode();
+
+            consume(
+                    TokenType.LEFT_SQUARE_BRACKET,
+                    "Invalid range.",
+                    "Use square brackets to specify a range of an observed variable.",
+                    List.of("Real a ~ Exponential(1.0) observed between [20.0, 30.0]")
+            );
+
+            Expr observedFrom = expression();
+
+            consume(
+                    TokenType.COMMA,
+                    "Invalid range.",
+                    "Use two values separated by a comma to specify a range of an observed variable.",
+                    List.of("Real a ~ Exponential(1.0) observed between [20.0, 30.0]")
+            );
+
+            Expr observedTo = expression();
+
+            consume(
+                    TokenType.RIGHT_SQUARE_BRACKET,
+                    "Invalid range.",
+                    "Use square brackets to specify a range of an observed variable.",
+                    List.of("Real a ~ Exponential(1.0) observed between [20.0, 30.0]")
+            );
+
+            return remember(new Stmt.ObservedBetween(stmt, observedFrom, observedTo));
+        }
+
+        return remember(stmt);
+    }
+
+    private Stmt indexedStatement() throws Error {
+        startAstNode();
+
+        // parse type
 
         AstType type = type();
 
@@ -162,21 +228,83 @@ public class Parser {
                 List.of("Real x = 10")
         );
 
+        // check if this is an indexed statement and parse the index if needed
+
+        boolean isIndexed = match(TokenType.LEFT_SQUARE_BRACKET);
+        Token index = null;
+        if (isIndexed) {
+            index = consume(
+                    TokenType.IDENTIFIER,
+                    "Invalid index.",
+                    "Only letters can be used as an index.",
+                    List.of("Real x[i] = i for i in 1:3")
+            );
+
+            consume(
+                    TokenType.RIGHT_SQUARE_BRACKET,
+                    "Invalid index.",
+                    "Follow the index name with closing square brackets (']').",
+                    List.of("Real x[i] = i for i in 1:3")
+            );
+        }
+
+        // parse the statement
+
+        Stmt stmt;
         if (match(TokenType.EQUAL)) {
             Expr expression = expression();
-            return remember(new Stmt.Assignment(type, nameToken.lexeme, expression));
-        }
-
-        if (match(TokenType.TILDE)) {
+            stmt = new Stmt.Assignment(type, nameToken.lexeme, expression);
+        } else if (match(TokenType.TILDE)) {
             Expr expression = expression();
-            return remember(new Stmt.Draw(type, nameToken.lexeme, expression));
+            stmt = new Stmt.Draw(type, nameToken.lexeme, expression);
+        } else {
+            throw new Error(
+                    peek().range,
+                    "No assignment or draw.",
+                    "When defining a variable, either directly assign a value with '=', or draw a value from a distribution with '~'.",
+                    List.of("Real x = 10")
+            );
         }
 
-        throw new Error(
-                peek().range,
-                "No assignment or draw.",
-                "When defining a variable, either directly assign a value with '=', or draw a value from a distribution with '~'.",
-                List.of("Real x = 10")
+        if (!isIndexed) {
+            return remember(stmt);
+        }
+
+        // this is an indexed statement, so we need to parse the range ("for <index> in <range>")
+
+        consume(
+                TokenType.FOR,
+                "Missing range in index statement.",
+                "End index statements by indicating the range of the index variable.",
+                List.of("Real x[" + index.lexeme + "] = 1 for " + index.lexeme + " in 1:3")
+        );
+
+        Token rangeIndex = consume(
+                TokenType.IDENTIFIER,
+                "Wrong range in index statement.",
+                "End index statements by indicating the range of the index variable.",
+                List.of("Real x[" + index.lexeme + "] = 1 for " + index.lexeme + " in 1:3")
+        );
+
+        if (!Objects.equals(rangeIndex.lexeme, index.lexeme)) {
+            throw new Error(
+                    previous().range,
+                    "Wrong index variable.",
+                    "This statement is indexed by `" + index.lexeme + "', but you specify the range of the variable '" + rangeIndex.lexeme + "'. The two indices must be the same: `... for " + index.lexeme + " in ..."
+            );
+        }
+
+        consume(
+                TokenType.IN,
+                "Missing range in index statement.",
+                "End index statements by indicating the range of the index variable.",
+                List.of("Real x[" + index.lexeme + "] = 1 for " + index.lexeme + " in 1:3")
+        );
+
+        Expr range = expression();
+
+        return remember(
+                new Stmt.Indexed(stmt, new Expr.Variable(index.lexeme), range)
         );
     }
 
@@ -260,12 +388,25 @@ public class Parser {
     private Expr factor() throws Error {
         startAstNode();
 
-        Expr expr = unary();
+        Expr expr = range();
 
         while (match(TokenType.STAR, TokenType.SLASH)) {
             Token operatorToken = previous();
-            Expr rightExpr = unary();
+            Expr rightExpr = range();
             expr = new Expr.Binary(expr, operatorToken.type, rightExpr);
+        }
+
+        return remember(expr);
+    }
+
+    private Expr range() throws Error {
+        startAstNode();
+
+        Expr expr = unary();
+
+        if (match(TokenType.COLON)) {
+            Expr upperBound = unary();
+            return remember(new Expr.Range(expr, upperBound));
         }
 
         return remember(expr);
@@ -312,11 +453,6 @@ public class Parser {
             }
         }
 
-        while (match(TokenType.DOT)) {
-            Token name = consume(TokenType.IDENTIFIER, "Expect property name after '.'.", "");
-            expr = new Expr.Get(expr, name.lexeme);
-        }
-
         return remember(expr);
     }
 
@@ -330,10 +466,6 @@ public class Parser {
                 }
 
                 arguments.add(argument());
-
-                if (arguments.getFirst().name == null && check(TokenType.COMMA)) {
-                    throw new Error(peek().range, "Arguments can only be omitted when there is only one argument.", "");
-                }
             } while (match(TokenType.COMMA));
         }
 
@@ -384,14 +516,6 @@ public class Parser {
                 }
 
                 Expr element = expression();
-
-                if (match(TokenType.FOR)) {
-                    // we have a list comprehension
-                    return listComprehension(element);
-                }
-
-                // we have an array
-
                 elements.add(element);
 
                 while (match(TokenType.COMMA)) {
@@ -420,43 +544,25 @@ public class Parser {
         return remember(primary());
     }
 
-    private Expr listComprehension(Expr expression) throws Error {
-        // parse variable names
-
-        Expr firstVariable = expression();
-        if (!(firstVariable instanceof Expr.Variable)) {
-            throw new Error(peek().range, "for must be followed by variable names in list comprehensions.", "");
-        }
-
-        List<String> variables = new ArrayList<>();
-        variables.add(((Expr.Variable) firstVariable).variableName);
-
-        while (match(TokenType.COMMA)) {
-            Expr nextVariable = expression();
-            if (!(nextVariable instanceof Expr.Variable)) {
-                throw new Error(peek().range, "for must be followed by variable names in list comprehensions.", "");
-            }
-            variables.add(((Expr.Variable) nextVariable).variableName);
-        }
-
-        consume(TokenType.IN, "The variables names must be followed by 'in' in list comprehensions.", "");
-
-        // parse list expression
-
-        Expr list = expression();
-
-        consume(TokenType.RIGHT_SQUARE_BRACKET, "List comprehensions must be terminated by a square bracket.", "");
-
-        return remember(new Expr.ListComprehension(expression, variables, list));
-    }
-
     private Expr primary() throws Error {
         startAstNode();
 
         if (match(TokenType.FALSE)) return remember(new Expr.Literal(false));
         if (match(TokenType.TRUE)) return remember(new Expr.Literal(true));
 
-        if (match(TokenType.INT, TokenType.FLOAT, TokenType.STRING)) {
+        if (match(TokenType.INT, TokenType.FLOAT)) {
+            Expr.Literal literal = new Expr.Literal(previous().literal);
+
+            Token next = peek();
+            if (next.type == TokenType.IDENTIFIER && Unit.isValidUnit(next.lexeme)) {
+                match(TokenType.IDENTIFIER);
+                literal.attachUnit(Unit.toUnit(next.lexeme));
+            }
+
+            return remember(literal);
+        }
+
+        if (match(TokenType.STRING)) {
             return remember(new Expr.Literal(previous().literal));
         }
 

@@ -54,21 +54,30 @@ public abstract class Expr extends AstNode {
 		public Literal(Object value) {
 			this.value = value;
 		}
+        public Literal(Object value, Unit unit) {
+            this.value = value;
+            this.unit = unit;
+        }
 
         // TODO: make this type generic
         @JsonPropertyDescription("The literal value (either a string, a number, or a boolean).")
         public Object value;
+        public Unit unit = null;
 
         @Override
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Literal literal = (Literal) o;
-            return Objects.equals(value, literal.value);
+            return Objects.equals(value, literal.value) && unit == literal.unit;
+        }
+
+        public void attachUnit(Unit unit) {
+            this.unit = unit;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(value);
+            return Objects.hash(value, unit);
         }
 
         @Override
@@ -349,6 +358,36 @@ public abstract class Expr extends AstNode {
         @Override
         public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitGet(this);
+        }
+    }
+
+    /** Represents a range (`1:num(taxa)`). */
+    public static class Range extends Expr {
+        public Range(Expr from, Expr to) {
+            this.from = from;
+            this.to = to;
+        }
+
+        @JsonPropertyDescription("The lower bound of the range (inclusive).")
+        private final Expr from;
+        @JsonPropertyDescription("The upper bound of the range (inclusive).")
+        private final Expr to;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Range range = (Range) o;
+            return Objects.equals(from, range.from) && Objects.equals(to, range.to);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(from, to);
+        }
+
+        @Override
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
+            return visitor.visitRange(this);
         }
     }
 

@@ -18,6 +18,15 @@ public interface AstVisitor<S, E, T> {
     public S visitAssignment(Stmt.Assignment stmt);
     public S visitDraw(Stmt.Draw stmt);
     public S visitImport(Stmt.Import stmt);
+    default S visitIndexedStmt(Stmt.Indexed indexed) {
+        return null;
+    }
+    default S visitObservedAsStmt(Stmt.ObservedAs observedAs) {
+        return null;
+    }
+    default S visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
+        return null;
+    }
 
     public E visitLiteral(Expr.Literal expr);
     public E visitVariable(Expr.Variable expr);
@@ -30,6 +39,9 @@ public interface AstVisitor<S, E, T> {
     public E visitArray(Expr.Array expr);
     public E visitListComprehension(Expr.ListComprehension expr);
     public E visitGet(Expr.Get expr);
+    default E visitRange(Expr.Range range) {
+        return null;
+    }
 
     public T visitAtomicType(AstType.Atomic expr);
     public T visitGenericType(AstType.Generic expr);
