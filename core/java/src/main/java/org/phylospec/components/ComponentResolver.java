@@ -1,6 +1,7 @@
 package org.phylospec.components;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.phylospec.Utils;
 import org.phylospec.typeresolver.TypeError;
 
 import java.io.FileInputStream;
@@ -99,7 +100,12 @@ public class ComponentResolver {
         String namespaceString = String.join(".", namespace);
 
         if (!knownNamespaces.contains(namespaceString)) {
-            throw new TypeError("Import " + namespaceString + " is not known");
+            String closestNamespace = findClosestNamespace(namespaceString);
+            throw new TypeError(
+                    "The import " + namespaceString + " does not exist.",
+                    "Do you want to use '" + closestNamespace + "'?",
+                    List.of("use " + closestNamespace)
+            );
         }
 
         for (ComponentLibrary library : componentLibraries) {
@@ -134,7 +140,12 @@ public class ComponentResolver {
         String namespaceStringWithDot = String.join(".", namespace) + ".";
 
         if (!knownNamespaces.contains(namespaceString)) {
-            throw new TypeError("Import " + namespaceString + " is not known");
+            String closestNamespace = findClosestNamespace(namespaceString);
+            throw new TypeError(
+                    "The import " + namespaceString + " does not exist.",
+                    "Do you want to use '" + closestNamespace + "'?",
+                    List.of("use " + closestNamespace)
+            );
         }
 
         for (ComponentLibrary library : componentLibraries) {
@@ -186,5 +197,30 @@ public class ComponentResolver {
     /** Returns all imported types. */
     public Map<String, Type> getImportedTypes() {
         return importedTypes;
+    }
+
+    /** helper functions for better errors */
+
+    public String findClosestComponent(String componentName) {
+        return getImportedGenerators().values().stream()
+                .flatMap(
+                        Collection::stream
+                )
+                .map(Generator::getName)
+                .min(Comparator.comparingInt(x -> Utils.editDistance(x, componentName)))
+                .orElse("");
+    }
+
+    public String findClosestType(String typeName) {
+        return getImportedTypes().values().stream()
+                .map(Type::getName)
+                .min(Comparator.comparingInt(x -> Utils.editDistance(x, typeName)))
+                .orElse("");
+    }
+
+    public String findClosestNamespace(String namespaceString) {
+        return knownNamespaces.stream()
+                .min(Comparator.comparingInt(x -> Utils.editDistance(x, namespaceString)))
+                .orElse("");
     }
 }

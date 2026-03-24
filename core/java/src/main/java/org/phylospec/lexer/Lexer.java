@@ -116,6 +116,9 @@ public class Lexer {
             case '$':
                 addToken(TokenType.DOLLAR);
                 break;
+            case ':':
+                addToken(TokenType.COLON);
+                break;
 
             // one or two character tokens
             case '!':
