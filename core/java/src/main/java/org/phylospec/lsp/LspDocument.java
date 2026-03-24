@@ -60,6 +60,8 @@ class LspDocument implements ErrorEventListener {
     void updateContent(String newContent) {
         foundDiagnostics.clear();
 
+        content = newContent;
+
         // run lexer
 
         Lexer lexer = new Lexer(newContent);
