@@ -12,6 +12,7 @@ public class TypeError extends RuntimeException {
     private final List<String> examples;
 
     public TypeError(AstNode astNode, String description, String hint, List<String> examples) {
+        super(description + (hint.isBlank() ? "" : " " + hint));
         this.astNode = astNode;
         this.description = description;
         this.hint = hint;

@@ -562,16 +562,7 @@ public class Parser {
      * is not the case, an error is raised.
      */
     private Token consume(TokenType tokenType, String message, String hint) throws Error {
-        if (check(tokenType)) return advance();
-
-        // we couldn't consume the requested token
-        // let's throw an error
-
-        Token startToken = tokens.get(astNodeStartPositions.peek());
-        Token currentToken = tokens.get(current);
-        Range range = new Range(startToken.range.startLine, currentToken.range.endLine, startToken.range.start, currentToken.range.end);
-
-        throw new Error(range, message, hint);
+        return consume(tokenType, message, hint, List.of());
     }
 
     /**
@@ -584,9 +575,14 @@ public class Parser {
         // we couldn't consume the requested token
         // let's throw an error
 
-        Token startToken = tokens.get(astNodeStartPositions.peek());
-        Token currentToken = tokens.get(current);
-        Range range = new Range(startToken.range.startLine, currentToken.range.endLine, startToken.range.start, currentToken.range.end);
+        Range range;
+        if (astNodeStartPositions.isEmpty()) {
+            range = peek().range;
+        } else {
+            Token startToken = tokens.get(astNodeStartPositions.peek());
+            Token currentToken = tokens.get(current);
+            range = new Range(startToken.range.startLine, currentToken.range.endLine, startToken.range.start, currentToken.range.end);
+        }
 
         throw new Error(range, message, hint, examples);
     }
