@@ -113,6 +113,9 @@ public class Lexer {
             case ']':
                 addToken(TokenType.RIGHT_SQUARE_BRACKET);
                 break;
+            case '$':
+                addToken(TokenType.DOLLAR);
+                break;
 
             // one or two character tokens
             case '!':
@@ -236,7 +239,22 @@ public class Lexer {
         String text = source.substring(start, current);
 
         TokenType identifierType = keywords.get(text);
-        if (identifierType == null) identifierType = TokenType.IDENTIFIER;
+        if (identifierType == null) {
+            // handle the special case for the two-word identifiers "observed as" and "observed between"
+            if (text.equals("observed")) {
+                if (peek(2).equals("as")) {
+                    for (int i = 0; i <= 2; i++) advance();
+                    identifierType = TokenType.OBSERVED_AS;
+                } else if(peek(7).equals("between")) {
+                    for (int i = 0; i <= 7; i++) advance();
+                    identifierType = TokenType.OBSERVED_BETWEEN;
+                } else {
+                    identifierType = TokenType.IDENTIFIER;
+                }
+            } else {
+                identifierType = TokenType.IDENTIFIER;
+            }
+        }
 
         addToken(identifierType);
     }
@@ -318,6 +336,13 @@ public class Lexer {
     private char peekNext() {
         if (source.length() <= current + 1) return '\0';
         return source.charAt(current + 1);
+    }
+
+    /**
+     * Returns the next howMany current characters without advancing the cursor.
+     */
+    private String peek(int howMany) {
+        return source.substring(current + 1, Math.min(current + howMany + 1, source.length()));
     }
 
     /**

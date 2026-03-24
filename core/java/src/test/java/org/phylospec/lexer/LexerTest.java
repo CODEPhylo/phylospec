@@ -153,7 +153,7 @@ public class LexerTest {
 
     @Test
     public void testErrors() {
-        String source = "()$Hallo 1324523564356345892013245235643563458920 -5643563458920.4523564356345892045235643563458920 \"khkh";
+        String source = "()£Hallo 1324523564356345892013245235643563458920 -5643563458920.4523564356345892045235643563458920 \"khkh";
 
         List<Error> errors = new ArrayList<>();
         ErrorEventListener listener = errors::add;
@@ -165,7 +165,7 @@ public class LexerTest {
         assertEquals(3, errors.size());
 
         assertEquals("(line 1 2:3)", errors.get(0).range().toString());
-        assertEquals("'$' is not an allowed character.", errors.get(0).description());
+        assertEquals("'£' is not an allowed character.", errors.get(0).description());
         assertEquals("Only use letters or digits.", errors.get(0).hint());
 
         assertEquals("(line 1 9:49)", errors.get(1).range().toString());
@@ -175,6 +175,21 @@ public class LexerTest {
         assertEquals("(line 1 100:105)", errors.get(2).range().toString());
         assertEquals("A string must be terminated with an '\"'.", errors.get(2).description());
         assertEquals("Use quotation marks to end the string.", errors.get(2).hint());
+    }
+
+    @Test
+    public void testMultiWordIdentifiers() {
+        String source = "observed as true observed between";
+
+        Lexer lexer = new Lexer(source);
+        List<Token> tokens = lexer.scanTokens();
+
+        assertEquals(new Token(TokenType.OBSERVED_AS, "observed as", null, 1, 0, 11), tokens.get(0));
+        assertEquals(new Token(TokenType.TRUE, "true", null, 1, 12, 16), tokens.get(1));
+        assertEquals(new Token(TokenType.OBSERVED_BETWEEN, "observed between", null, 1, 17, 33), tokens.get(2));
+        assertEquals(new Token(TokenType.EOF, "", null, 1, 33, 33), tokens.get(3));
+
+        assertEquals(4, tokens.size());
     }
 
     @Test

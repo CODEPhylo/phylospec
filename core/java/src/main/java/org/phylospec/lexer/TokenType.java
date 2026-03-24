@@ -4,6 +4,7 @@ public enum TokenType {
     // single-character tokens
     LEFT_PAREN, RIGHT_PAREN, COMMA, DOT, MINUS, PLUS,
     SLASH, STAR, TILDE, AT, LEFT_SQUARE_BRACKET, RIGHT_SQUARE_BRACKET,
+    DOLLAR,
 
     // one or two character tokens
     BANG, BANG_EQUAL,
@@ -15,7 +16,7 @@ public enum TokenType {
     IDENTIFIER, STRING, INT, FLOAT,
 
     // keywords
-    TRUE, FALSE, IMPORT, FOR, IN,
+    TRUE, FALSE, IMPORT, FOR, IN, OBSERVED_AS, OBSERVED_BETWEEN,
 
     // terminators
     EOL, EOF,
