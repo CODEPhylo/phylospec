@@ -104,11 +104,24 @@ class LspDocument implements ErrorEventListener {
 
     @Override
     public void errorDetected(Error error) {
+        StringBuilder text = new StringBuilder(error.description());
+
+        if (!error.hint().isBlank()) {
+            text.append("\n\n").append(error.hint());
+        }
+
+        if (!error.examples().isEmpty()) {
+            text.append("\n\nFor example:\n");
+            for (String example : error.examples()) {
+                text.append("\n\t").append(example);
+            }
+        }
+
         foundDiagnostics.add(new Diagnostic(
                 new org.eclipse.lsp4j.Range(
                         new Position(error.range().startLine - 1, error.range().start),
                         new Position(error.range().endLine - 1, error.range().end)
-                ), error.description() + "\n\n" + error.hint()
+                ), text.toString()
         ));
     }
 

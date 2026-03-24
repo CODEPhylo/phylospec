@@ -362,7 +362,7 @@ public class Lexer {
      */
     private void reportError(Range range, String description, String hint) {
         for (ErrorEventListener eventListener : eventListeners) {
-            eventListener.errorDetected(new Error(description, range, hint));
+            eventListener.errorDetected(new Error(range, description, hint));
         }
     }
 
@@ -372,7 +372,7 @@ public class Lexer {
     private void reportError(String description, String hint) {
         Range range = new Range(currentLine, start - currentLineStart, current - currentLineStart);
         for (ErrorEventListener eventListener : eventListeners) {
-            eventListener.errorDetected(new Error(description, range, hint));
+            eventListener.errorDetected(new Error(range, description, hint));
         }
     }
 }

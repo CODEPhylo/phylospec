@@ -1,4 +1,5 @@
 package org.phylospec.parser;
+
 import org.phylospec.errors.Error;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
@@ -58,7 +59,7 @@ public class Parser {
         this.astNodeStartPositions = new LinkedList<>();
     }
 
-    public void registerEventListener (ErrorEventListener listener) {
+    public void registerEventListener(ErrorEventListener listener) {
         this.eventListeners.add(listener);
     }
 
@@ -79,12 +80,16 @@ public class Parser {
                 statements.add(decorated());
 
                 if (!isAtEnd()) {
-                    consume(TokenType.EOL, "Missing line break.", "There already is a complete statement on this line. Put each statement on its own line.");
+                    consume(
+                            TokenType.EOL,
+                            "Missing line break.",
+                            "There already is a complete statement on this line. Put each statement on its own line."
+                    );
 
                     // skip all EOL until the next statement
                     skipEOLs();
                 }
-            } catch (ParseError error) {
+            } catch (Error error) {
                 logError(error);
                 recover();
             }
@@ -95,14 +100,19 @@ public class Parser {
 
     /* parser methods */
 
-    private Stmt decorated() {
+    private Stmt decorated() throws Error {
         startAstNode();
 
         if (match(TokenType.AT)) {
             Expr decorator = call();
 
             if (!(decorator instanceof Expr.Call)) {
-                throw new ParseError(previous(), "Decorators can only be function calls.",  "");
+                throw new Error(
+                        previous().range,
+                        "Decorators can only be function calls.",
+                        "",
+                        List.of("@revbayes(useHighPrecision=True)")
+                );
             }
 
             // skip all EOL until the next statement
@@ -115,18 +125,28 @@ public class Parser {
         return remember(statement());
     }
 
-    private Stmt statement() {
+    private Stmt statement() throws Error {
         startAstNode();
 
         if (match(TokenType.IMPORT)) {
             List<String> namespace = new ArrayList<>();
             namespace.add(
-                    consume(TokenType.IDENTIFIER, "No import path provided.", "Specify what you want to import.").lexeme
+                    consume(
+                            TokenType.IDENTIFIER,
+                            "Invalid import path.",
+                            "Specify an import path consisting of names delimited with a period.",
+                            List.of("use phylospec.io")
+                    ).lexeme
             );
 
             while (match(TokenType.DOT)) {
                 namespace.add(
-                        consume(TokenType.IDENTIFIER, "Invalid import path.", "Specify an import path consisting of names delimited with a period.").lexeme
+                        consume(
+                                TokenType.IDENTIFIER,
+                                "Invalid import path.",
+                                "Specify an import path consisting of names delimited with a period.",
+                                List.of("use phylospec.io")
+                        ).lexeme
                 );
             }
 
@@ -135,7 +155,12 @@ public class Parser {
 
         AstType type = type();
 
-        Token nameToken = consume(TokenType.IDENTIFIER, "Invalid variable name.", "Choose a variable name which starts with a letter and only consists of letters and digits.");
+        Token nameToken = consume(
+                TokenType.IDENTIFIER,
+                "Invalid variable name.",
+                "Choose a variable name which starts with a letter and only consists of letters and digits.",
+                List.of("Real x = 10")
+        );
 
         if (match(TokenType.EQUAL)) {
             Expr expression = expression();
@@ -147,13 +172,22 @@ public class Parser {
             return remember(new Stmt.Draw(type, nameToken.lexeme, expression));
         }
 
-        throw new ParseError(peek(), "No assignment or draw.", "When defining a variable, either directly assign a value with '=', or draw a value from a distribution with '~'.");
+        throw new Error(
+                peek().range,
+                "No assignment or draw.",
+                "When defining a variable, either directly assign a value with '=', or draw a value from a distribution with '~'.",
+                List.of("Real x = 10")
+        );
     }
 
-    private AstType type() {
+    private AstType type() throws Error {
         startAstNode();
 
-        Token typeNameToken = consume(TokenType.IDENTIFIER, "Invalid variable type.", "Type names only consist of letters.");
+        Token typeNameToken = consume(
+                TokenType.IDENTIFIER,
+                "Invalid variable type.",
+                "Type names can only consist of letters."
+        );
 
         if (match(TokenType.LESS)) {
             List<AstType> innerTypes = new ArrayList<>();
@@ -164,7 +198,10 @@ public class Parser {
             }
 
             // parse closing brackets
-            consume(TokenType.GREATER, "Generic type must be closed with a '>'.", "Close the opening square brackets of the generic type with a '>'.");
+            consume(
+                    TokenType.GREATER, "Generic type must be closed with a '>'.",
+                    "Close the opening square brackets of the generic type with a '>'."
+            );
 
             return remember(
                     new AstType.Generic(typeNameToken.lexeme, innerTypes.toArray(AstType[]::new))
@@ -174,11 +211,11 @@ public class Parser {
         return remember(new AstType.Atomic(typeNameToken.lexeme));
     }
 
-    private Expr expression() {
+    private Expr expression() throws Error {
         return equality();
     }
 
-    private Expr equality() {
+    private Expr equality() throws Error {
         startAstNode();
 
         Expr expr = comparison();
@@ -192,7 +229,7 @@ public class Parser {
         return remember(expr);
     }
 
-    private Expr comparison() {
+    private Expr comparison() throws Error {
         startAstNode();
 
         Expr expr = term();
@@ -206,7 +243,7 @@ public class Parser {
         return remember(expr);
     }
 
-    private Expr term() {
+    private Expr term() throws Error {
         startAstNode();
 
         Expr expr = factor();
@@ -220,7 +257,7 @@ public class Parser {
         return remember(expr);
     }
 
-    private Expr factor() {
+    private Expr factor() throws Error {
         startAstNode();
 
         Expr expr = unary();
@@ -234,7 +271,7 @@ public class Parser {
         return remember(expr);
     }
 
-    private Expr unary() {
+    private Expr unary() throws Error {
         startAstNode();
 
         if (match(TokenType.BANG, TokenType.MINUS)) {
@@ -246,7 +283,7 @@ public class Parser {
         }
     }
 
-    private Expr call() {
+    private Expr call() throws Error {
         startAstNode();
 
         Expr expr = array();
@@ -262,10 +299,14 @@ public class Parser {
             // we are in a bracket, let's ignore EOL statements
             boolean oldSkipNewLines = skipNewLines;
             skipNewLines = true;
-            
+
             try {
                 expr = finishCall(functionName);
-                consume(TokenType.RIGHT_PAREN, "Function arguments not closed.", "Add closing brackets ')' after the arguments.");
+                consume(
+                        TokenType.RIGHT_PAREN,
+                        "Function arguments not closed.",
+                        "Add closing brackets ')' after the arguments."
+                );
             } finally {
                 skipNewLines = oldSkipNewLines;
             }
@@ -279,7 +320,7 @@ public class Parser {
         return remember(expr);
     }
 
-    private Expr finishCall(Expr.Variable callee) {
+    private Expr finishCall(Expr.Variable callee) throws Error {
         List<Expr.Argument> arguments = new ArrayList<>();
         if (!check(TokenType.RIGHT_PAREN)) {
             do {
@@ -291,7 +332,7 @@ public class Parser {
                 arguments.add(argument());
 
                 if (arguments.getFirst().name == null && check(TokenType.COMMA)) {
-                    throw new ParseError(peek(), "Arguments can only be omitted when there is only one argument.", "");
+                    throw new Error(peek().range, "Arguments can only be omitted when there is only one argument.", "");
                 }
             } while (match(TokenType.COMMA));
         }
@@ -299,7 +340,7 @@ public class Parser {
         return new Expr.Call(callee.variableName, arguments.toArray(Expr.Argument[]::new));
     }
 
-    private Expr.Argument argument() {
+    private Expr.Argument argument() throws Error {
         startAstNode();
 
         Expr expression = expression();
@@ -327,7 +368,7 @@ public class Parser {
         return remember(new Expr.AssignedArgument(argumentName, expression));
     }
 
-    private Expr array() {
+    private Expr array() throws Error {
         startAstNode();
 
         if (match(TokenType.LEFT_SQUARE_BRACKET)) {
@@ -363,7 +404,11 @@ public class Parser {
                     elements.add(element);
                 }
 
-                consume(TokenType.RIGHT_SQUARE_BRACKET, "Vector not terminated.", "Add square brackets ']' after the last item of the vector.");
+                consume(
+                        TokenType.RIGHT_SQUARE_BRACKET,
+                        "Vector not terminated.", "Add square brackets ']' after the last item of the vector.",
+                        List.of("[1, 5]")
+                );
 
                 return remember(new Expr.Array(elements));
             } finally {
@@ -375,12 +420,12 @@ public class Parser {
         return remember(primary());
     }
 
-    private Expr listComprehension(Expr expression) {
+    private Expr listComprehension(Expr expression) throws Error {
         // parse variable names
 
         Expr firstVariable = expression();
         if (!(firstVariable instanceof Expr.Variable)) {
-            throw new ParseError(peek(), "for must be followed by variable names in list comprehensions.", "");
+            throw new Error(peek().range, "for must be followed by variable names in list comprehensions.", "");
         }
 
         List<String> variables = new ArrayList<>();
@@ -389,7 +434,7 @@ public class Parser {
         while (match(TokenType.COMMA)) {
             Expr nextVariable = expression();
             if (!(nextVariable instanceof Expr.Variable)) {
-                throw new ParseError(peek(), "for must be followed by variable names in list comprehensions.", "");
+                throw new Error(peek().range, "for must be followed by variable names in list comprehensions.", "");
             }
             variables.add(((Expr.Variable) nextVariable).variableName);
         }
@@ -397,7 +442,7 @@ public class Parser {
         consume(TokenType.IN, "The variables names must be followed by 'in' in list comprehensions.", "");
 
         // parse list expression
-        
+
         Expr list = expression();
 
         consume(TokenType.RIGHT_SQUARE_BRACKET, "List comprehensions must be terminated by a square bracket.", "");
@@ -405,7 +450,7 @@ public class Parser {
         return remember(new Expr.ListComprehension(expression, variables, list));
     }
 
-    private Expr primary() {
+    private Expr primary() throws Error {
         startAstNode();
 
         if (match(TokenType.FALSE)) return remember(new Expr.Literal(false));
@@ -421,7 +466,11 @@ public class Parser {
             skipNewLines = true;
             try {
                 Expr expr = expression();
-                consume(TokenType.RIGHT_PAREN, "Missing ')' after expression.", "Add brackets ')' to close the grouped expression.");
+                consume(
+                        TokenType.RIGHT_PAREN,
+                        "Missing ')' after expression.",
+                        "Add brackets ')' to close the grouped expression."
+                );
                 return remember(new Expr.Grouping(expr));
             } finally {
                 skipNewLines = oldIgnoreNewLines;
@@ -432,12 +481,14 @@ public class Parser {
             return remember(new Expr.Variable(previous().lexeme));
         }
 
-        throw new ParseError(peek(), "Invalid expression.", "Something is missing.");
+        throw new Error(peek().range, "Invalid expression.", "Something is missing.");
     }
 
     /* helper methods to inspect the tokens */
 
-    /** Returns the current token and advances the cursor afterward. */
+    /**
+     * Returns the current token and advances the cursor afterward.
+     */
     private Token advance() {
         if (isAtEnd()) return previous();
 
@@ -452,8 +503,10 @@ public class Parser {
         return previous();
     }
 
-    /** Checks if the current token matches any of the expected ones and
-     * advances the cursor if that is the case. */
+    /**
+     * Checks if the current token matches any of the expected ones and
+     * advances the cursor if that is the case.
+     */
     private boolean match(TokenType... tokenTypes) {
         for (TokenType type : tokenTypes) {
             if (check(type)) {
@@ -465,14 +518,18 @@ public class Parser {
         return false;
     }
 
-    /** Checks if the current token matches any of the expected ones without
-     * advancing the cursor. */
+    /**
+     * Checks if the current token matches any of the expected ones without
+     * advancing the cursor.
+     */
     private boolean check(TokenType type) {
         if (isAtEnd()) return false;
         return peek().type == type;
     }
 
-    /** Returns the current character without advancing the cursor. */
+    /**
+     * Returns the current character without advancing the cursor.
+     */
     private Token peek() {
         if (skipNewLines) {
             int currentToPeek = current;
@@ -485,7 +542,9 @@ public class Parser {
         return tokens.get(current);
     }
 
-    /** Returns the last character without changing the cursor. */
+    /**
+     * Returns the last character without changing the cursor.
+     */
     private Token previous() {
         if (skipNewLines) {
             int currentToPeek = current - 1;
@@ -498,26 +557,58 @@ public class Parser {
         return tokens.get(current - 1);
     }
 
-    /** Advances the cursor if the next token matches the expected token type. If this
-     * is not the case, an error is raised. */
-    private Token consume(TokenType tokenType, String message, String hint) {
+    /**
+     * Advances the cursor if the next token matches the expected token type. If this
+     * is not the case, an error is raised.
+     */
+    private Token consume(TokenType tokenType, String message, String hint) throws Error {
         if (check(tokenType)) return advance();
 
-        throw new ParseError(peek(), message, hint);
+        // we couldn't consume the requested token
+        // let's throw an error
+
+        Token startToken = tokens.get(astNodeStartPositions.peek());
+        Token currentToken = tokens.get(current);
+        Range range = new Range(startToken.range.startLine, currentToken.range.endLine, startToken.range.start, currentToken.range.end);
+
+        throw new Error(range, message, hint);
     }
 
-    /** Checks if the current cursor points to the end of the file. */
+    /**
+     * Advances the cursor if the next token matches the expected token type. If this
+     * is not the case, an error with the given correct code examples is raised.
+     */
+    private Token consume(TokenType tokenType, String message, String hint, List<String> examples) throws Error {
+        if (check(tokenType)) return advance();
+
+        // we couldn't consume the requested token
+        // let's throw an error
+
+        Token startToken = tokens.get(astNodeStartPositions.peek());
+        Token currentToken = tokens.get(current);
+        Range range = new Range(startToken.range.startLine, currentToken.range.endLine, startToken.range.start, currentToken.range.end);
+
+        throw new Error(range, message, hint, examples);
+    }
+
+    /**
+     * Checks if the current cursor points to the end of the file.
+     */
     private boolean isAtEnd() {
         return peek().type == TokenType.EOF;
     }
 
-    /** Marks the beginning of an AstNode. */
+    /**
+     * Marks the beginning of an AstNode.
+     */
     private void startAstNode() {
         astNodeStartPositions.push(current);
     }
 
-    /** Associated the tokens since the last {@code startAstNode()} call with the
-     * given parsed {@link AstNode}. */
+    /**
+     * Associated the tokens since the last {@code startAstNode()} call with the
+     * given parsed {@link AstNode}.
+     */
     private <T extends AstNode> T remember(T newAstNode) {
         int lastPosition = astNodeStartPositions.pop();
 
@@ -535,10 +626,12 @@ public class Parser {
         return newAstNode;
     }
 
-    /** Remove the previously made entries in the token-to-ast-node map
+    /**
+     * Remove the previously made entries in the token-to-ast-node map
      * since the last {@code startAstNode()} call. This is useful if
      * the last parsed AstNode is dropped and replaced by a more general
-     * one. */
+     * one.
+     */
     private void forgetLast() {
         int lastPosition = astNodeStartPositions.peek();
 
@@ -548,30 +641,34 @@ public class Parser {
         }
     }
 
-    /** Returns the {@link AstNode} associated with the given {@link Token}.
+    /**
+     * Returns the {@link AstNode} associated with the given {@link Token}.
      * Returns null if no node was associated.
      */
     public AstNode getAstNodeForToken(Token token) {
         return this.tokenAstNodeMap.get(token);
     }
 
-    /** Returns the range associated with the given {@link AstNode}. Returns null
-     * if no range was associated. */
+    /**
+     * Returns the range associated with the given {@link AstNode}. Returns null
+     * if no range was associated.
+     */
     public Range getRangeForAstNode(AstNode node) {
         return this.astNodeRanges.get(node);
     }
 
     /* error handling */
 
-    private void logError(ParseError error) {
-        Error generalError = new Error(error.description, error.token.range, error.hint);
+    private void logError(Error error) {
         for (ErrorEventListener listener : eventListeners) {
-            listener.errorDetected(generalError);
+            listener.errorDetected(error);
         }
     }
 
-    /** Finds the next location in the source string with a valid statement and advances
-     * to that point. */
+    /**
+     * Finds the next location in the source string with a valid statement and advances
+     * to that point.
+     */
     private void recover() {
         while (!isAtEnd()) {
             // the next statement has to be preceded by an EOL. let's find it
@@ -591,7 +688,7 @@ public class Parser {
                 // let's reset cursor and return to the normal parsing loop
                 current = oldCurrent;
                 return;
-            } catch (ParseError ignored) {
+            } catch (Error ignored) {
                 // restore the astNodeStartPositions stack to its pre-attempt state,
                 // since startAstNode() calls inside the failed decorated() were never
                 // matched by a remember() call
@@ -605,18 +702,8 @@ public class Parser {
     }
 
     private void skipEOLs() {
-        while (match(TokenType.EOL)) {}
-    }
-
-    private static class ParseError extends RuntimeException {
-        private final Token token;
-        private final String description;
-        private final String hint;
-
-        public ParseError(Token token, String description, String hint) {
-            this.token = token;
-            this.description = description;
-            this.hint = hint;
+        while (match(TokenType.EOL)) {
         }
     }
+
 }
