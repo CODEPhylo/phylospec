@@ -551,29 +551,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
         boolean foundMatchingProperty = false;
 
         for (ResolvedType objectType : objectTypeSet) {
-            Map<String, Property> propertyMap = objectType.getTypeComponent().getProperties().getAdditionalProperties();
-            for (Map.Entry<String, Property> propertyEntry : propertyMap.entrySet()) {
-                if (!propertyEntry.getKey().equals(expr.properyName)) continue;
-                foundMatchingProperty = true;
-
-                // we fetch the return type of this parameter while taking into account
-                // the generic type parameters
-
-                // some hacky conversion from Map<String, ResolvedType> to Map<String, Set<ResolvedType>>
-                // to adhere to types
-                // TODO: this is very hacky rn, look if we can improve this
-                Map<String, Set<ResolvedType>> typeParameterTypeSets = new HashMap<>();
-                for (Map.Entry<String, ResolvedType> entry : objectType.getParameterTypes().entrySet()) {
-                    typeParameterTypeSets.put(entry.getKey(), Set.of(entry.getValue()));
-                }
-
-                Set<ResolvedType> propertyTypeSet = ResolvedType.fromString(
-                        propertyEntry.getValue().getType(), typeParameterTypeSets, componentResolver
-                );
-                returnTypeSet.addAll(propertyTypeSet);
-
-                break;
-            }
+            
         }
 
         if (!foundMatchingProperty) {
