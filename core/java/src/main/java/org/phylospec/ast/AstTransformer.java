@@ -140,10 +140,18 @@ public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> 
     }
 
     @Override
-    public AstType visitAtomicType(AstType.Atomic expr) {
+    public Expr visitIndex(Expr.Index expr) {
+        expr.object = expr.object.accept(this);
+        for (int i = 0; i < expr.indices.size(); i++) {
+            expr.indices.set(i, expr.indices.get(i).accept(this));
+        }
         return expr;
     }
 
+    @Override
+    public AstType visitAtomicType(AstType.Atomic expr) {
+        return expr;
+    }
     @Override
     public AstType visitGenericType(AstType.Generic expr) {
         for (int i = 0; i < expr.typeParameters.length; i++) {

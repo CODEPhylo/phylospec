@@ -28,6 +28,21 @@ public class AstPrinter implements AstVisitor<String, String, String> {
     }
 
     @Override
+    public String visitIndexedStmt(Stmt.Indexed indexed) {
+        return "(IS " + indexed.statement.accept(this) + " " + indexed.index.variableName + " " + indexed.range.accept(this) + ")";
+    }
+
+    @Override
+    public String visitObservedAsStmt(Stmt.ObservedAs observedAs) {
+        return "(OA " + observedAs.stmt.accept(this) + " " + observedAs.observedAs.accept(this) + ")";
+    }
+
+    @Override
+    public String visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
+        return "(OB " + observedBetween.stmt.accept(this) + " " + observedBetween.observedFrom.accept(this) + " " + observedBetween.observedTo.accept(this) + ")";
+    }
+
+    @Override
     public String visitImport(Stmt.Import stmt) {
         String result = "(IM ";
 
@@ -47,6 +62,11 @@ public class AstPrinter implements AstVisitor<String, String, String> {
         if (expr.value instanceof String) {
             return "\"" + expr.value.toString() + "\"";
         }
+
+        if (expr.unit != null) {
+            return expr.value.toString() + " " + expr.unit.toString();
+        }
+
         return expr.value.toString();
     }
 
@@ -124,6 +144,23 @@ public class AstPrinter implements AstVisitor<String, String, String> {
     @Override
     public String visitGet(Expr.Get expr) {
         return "(GET " + expr.object.accept(this) + " " + expr.properyName + ")";
+    }
+
+    @Override
+    public String visitIndex(Expr.Index expr) {
+        String result = "(IX " + expr.object.accept(this);
+
+        for (Expr index : expr.indices) {
+            result += " " + index.accept(this);
+        }
+
+        result += ")";
+        return result;
+    }
+
+    @Override
+    public String visitRange(Expr.Range range) {
+        return "(R " + range.from.accept(this) + " " + range.to.accept(this) + ")";
     }
 
     @Override

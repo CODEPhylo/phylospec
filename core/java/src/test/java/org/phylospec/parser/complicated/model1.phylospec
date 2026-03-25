@@ -7,20 +7,19 @@ QMatrix Q = HKY(
 	baseFrequencies ~ Dirichlet(alpha=[2.0, 2.0, 2.0, 2.0]),
 )
 Tree tree ~ Coalescent(
-	taxa = observedAlignment.taxa,
+	taxa = taxa(observedAlignment),
 	populationSize ~ LogNormal(meanlog=3.0, sdlog=2.0),
 )
 
-@observedAs(observedAlignment)
 Alignment alignment ~ PhyloCTMC(
 	Q, tree
-)
+) observed as observedAlignment
 
 // EXPECT AST
 // (AS Alignment observedAlignment (CA nexus (AA file "alignment.nexus")))
 // (AS QMatrix Q (CA HKY (DA kappa (CA LogNormal (AA sdlog 0.5) (AA meanlog 1.0))) (DA baseFrequencies (CA Dirichlet (AA alpha (AR 2.0 2.0 2.0 2.0))))))
-// (DR Tree tree (CA Coalescent (AA taxa (GET observedAlignment taxa)) (DA populationSize (CA LogNormal (AA meanlog 3.0) (AA sdlog 2.0)))))
-// (@ (CA observedAs (AA observedAlignment observedAlignment)) (DR Alignment alignment (CA PhyloCTMC (AA Q Q) (AA tree tree))))
+// (DR Tree tree (CA Coalescent (AA taxa (CA taxa (AA observedAlignment observedAlignment))) (DA populationSize (CA LogNormal (AA meanlog 3.0) (AA sdlog 2.0)))))
+// (OA (DR Alignment alignment (CA PhyloCTMC (AA Q Q) (AA tree tree))) observedAlignment)
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS

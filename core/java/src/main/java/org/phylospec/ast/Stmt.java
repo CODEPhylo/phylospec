@@ -176,9 +176,9 @@ public abstract class Stmt extends AstNode {
         }
 
         @JsonPropertyDescription("The statement observed.")
-        private final Stmt stmt;
+        public final Stmt stmt;
         @JsonPropertyDescription("The observed value.")
-        private final Expr observedAs;
+        public final Expr observedAs;
 
         @Override
         public boolean equals(Object o) {
@@ -207,11 +207,11 @@ public abstract class Stmt extends AstNode {
         }
 
         @JsonPropertyDescription("The statement observed.")
-        private final Stmt stmt;
+        public final Stmt stmt;
         @JsonPropertyDescription("The lower bound.")
-        private final Expr observedFrom;
+        public final Expr observedFrom;
         @JsonPropertyDescription("The upper bound.")
-        private final Expr observedTo;
+        public final Expr observedTo;
 
         @Override
         public boolean equals(Object o) {

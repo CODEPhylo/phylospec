@@ -39,6 +39,9 @@ public interface AstVisitor<S, E, T> {
     public E visitArray(Expr.Array expr);
     public E visitListComprehension(Expr.ListComprehension expr);
     public E visitGet(Expr.Get expr);
+    default E visitIndex(Expr.Index expr) {
+        return null;
+    }
     default E visitRange(Expr.Range range) {
         return null;
     }

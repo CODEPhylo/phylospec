@@ -31,7 +31,7 @@ public class Parser {
      * factor            → range ( ( "/" | "*" ) range )* ;
      * range             → unary ( ":" unary )? ;
      * unary             → ( "!" | "-" ) unary | postfix ;
-     * postfix           → array ( "[" expression "]" | "(" arguments? ")" )* ;
+     * postfix           → array ( "[" expression (, expression)* "]" | "(" arguments? ")" )* ; // only IDENTIFIER "(" ... ")" is a valid call
      * arguments         → argument ( "," argument )* ;
      * argument          → IDENTIFIER ( "=" | "~" ) expression | expression ;
      * array             → "[" "]" | "[" expression ( "," expression )* "]" | primary;
@@ -420,36 +420,66 @@ public class Parser {
             Expr rightExpr = unary();
             return remember(new Expr.Unary(operatorToken.type, rightExpr));
         } else {
-            return remember(call());
+            return remember(postfix());
         }
     }
 
-    private Expr call() throws Error {
+    private Expr postfix() throws Error {
         startAstNode();
 
         Expr expr = array();
 
-        if (expr instanceof Expr.Variable && match(TokenType.LEFT_PAREN)) {
-            // this is a function call
+        while (true) {
+            if (expr instanceof Expr.Variable && match(TokenType.LEFT_PAREN)) {
+                // this is a function call
 
-            // remove the assignment of the variable token, because we will remember it as a call
-            forgetLast();
+                // remove the mapping of the variable token, because we will remember it as a call
+                forgetLast();
 
-            Expr.Variable functionName = (Expr.Variable) expr;
+                Expr.Variable functionName = (Expr.Variable) expr;
 
-            // we are in a bracket, let's ignore EOL statements
-            boolean oldSkipNewLines = skipNewLines;
-            skipNewLines = true;
+                // we are inside brackets, let's ignore EOL tokens
+                boolean oldSkipNewLines = skipNewLines;
+                skipNewLines = true;
 
-            try {
-                expr = finishCall(functionName);
-                consume(
-                        TokenType.RIGHT_PAREN,
-                        "Function arguments not closed.",
-                        "Add closing brackets ')' after the arguments."
-                );
-            } finally {
-                skipNewLines = oldSkipNewLines;
+                try {
+                    expr = finishCall(functionName);
+                    consume(
+                            TokenType.RIGHT_PAREN,
+                            "Function arguments not closed.",
+                            "Add closing brackets ')' after the arguments."
+                    );
+                } finally {
+                    skipNewLines = oldSkipNewLines;
+                }
+            } else if (match(TokenType.LEFT_SQUARE_BRACKET)) {
+                // this is an index access (e.g. x[1] or data[1]["header"])
+
+                // we are inside brackets, let's ignore EOL tokens
+                boolean oldSkipNewLines = skipNewLines;
+                skipNewLines = true;
+
+                try {
+                    List<Expr> indices = new ArrayList<>();
+                    indices.add(expression());
+
+                    while (match(TokenType.COMMA)) {
+                        indices.add(expression());
+                    }
+
+                    consume(
+                            TokenType.RIGHT_SQUARE_BRACKET,
+                            "Index not closed.",
+                            "Add closing square brackets ']' after the index expression.",
+                            List.of("x[1]", "data[1][\"header\"]")
+                    );
+
+                    expr = new Expr.Index(expr, indices);
+                } finally {
+                    skipNewLines = oldSkipNewLines;
+                }
+            } else {
+                break;
             }
         }
 

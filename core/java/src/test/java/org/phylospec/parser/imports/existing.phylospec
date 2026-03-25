@@ -1,5 +1,5 @@
-import phylospec
-import phylospec.distributions
+use phylospec
+use phylospec.distributions
 
 // EXPECT AST
 // (IM phylospec)
