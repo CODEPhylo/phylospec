@@ -29,7 +29,14 @@ public class AstPrinter implements AstVisitor<String, String, String> {
 
     @Override
     public String visitIndexedStmt(Stmt.Indexed indexed) {
-        return "(IS " + indexed.statement.accept(this) + " " + indexed.index.variableName + " " + indexed.range.accept(this) + ")";
+        String result = "(IS " + indexed.statement.accept(this);
+
+        for (int i = 0; i < indexed.indices.size(); i++) {
+            result += " " + indexed.indices.get(i).variableName + " " + indexed.ranges.get(i).accept(this);
+        }
+
+        result += ")";
+        return result;
     }
 
     @Override
