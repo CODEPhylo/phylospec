@@ -1,0 +1,14 @@
+Integer n = 5
+
+Vector<Integer> r1 = 1:10
+Vector<Integer> r2 = 1:n
+Vector<Integer> r3 = n:num(r2)
+Real x[i] = i * 2.0 for i in 1:n
+
+// EXPECT AST
+// (AS Integer n 5)
+// (AS Vector<Integer> r1 (R 1 10))
+// (AS Vector<Integer> r2 (R 1 n))
+// (AS Vector<Integer> r3 (R n (CA num (AA r2 r2))))
+// (IS (AS Real x (* i 2.0)) i (R 1 n))
+// EXPECT AST

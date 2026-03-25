@@ -1,0 +1,19 @@
+Boolean a = true
+Boolean b = false
+Boolean c = !true
+Boolean d = !false
+Boolean e = !(true == false)
+Boolean f = true == false
+Boolean g = true != false
+Boolean h = true == true != false
+
+// EXPECT AST
+// (AS Boolean a true)
+// (AS Boolean b false)
+// (AS Boolean c (! true))
+// (AS Boolean d (! false))
+// (AS Boolean e (! (GR (== true false))))
+// (AS Boolean f (== true false))
+// (AS Boolean g (!= true false))
+// (AS Boolean h (!= (== true true) false))
+// EXPECT AST

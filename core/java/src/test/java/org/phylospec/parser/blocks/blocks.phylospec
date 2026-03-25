@@ -1,0 +1,34 @@
+// statements outside any block are allowed
+Real outside = 1.0
+
+data {
+    Integer n = 10
+    Real x = 2.5
+}
+
+model {
+    Real y ~ Normal(mean=outside, sd=x)
+    Real z ~ LogNormal(
+        logMean=0.0, logSd=1.0
+    ) observed as outside
+}
+
+mcmc {
+    Integer chainLength = 1000
+    String logFile = "output.log"
+}
+
+revbayes {
+    Integer moves = 5
+}
+
+// EXPECT AST
+// (AS Real outside 1.0)
+// (AS Integer n 10)
+// (AS Real x 2.5)
+// (DR Real y (CA Normal (AA mean outside) (AA sd x)))
+// (OA (DR Real z (CA LogNormal (AA logMean 0.0) (AA logSd 1.0))) outside)
+// (AS Integer chainLength 1000)
+// (AS String logFile "output.log")
+// (AS Integer moves 5)
+// EXPECT AST

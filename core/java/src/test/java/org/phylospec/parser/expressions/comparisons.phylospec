@@ -1,0 +1,23 @@
+Boolean a = 5 > 3
+Boolean b = 5 >= 5
+Boolean c = 3 < 5
+Boolean d = 3 <= 3
+
+// arithmetic has higher precedence than comparison
+Boolean e = 5 + 1 > 3 * 2
+Boolean f = 10 / 2 >= 4 - 1
+
+// grouping wraps a comparison in equality
+Boolean g = (5 > 3) == true
+Boolean h = (3 < 1) != false
+
+// EXPECT AST
+// (AS Boolean a (> 5 3))
+// (AS Boolean b (>= 5 5))
+// (AS Boolean c (< 3 5))
+// (AS Boolean d (<= 3 3))
+// (AS Boolean e (> (+ 5 1) (* 3 2)))
+// (AS Boolean f (>= (/ 10 2) (- 4 1)))
+// (AS Boolean g (== (GR (> 5 3)) true))
+// (AS Boolean h (!= (GR (< 3 1)) false))
+// EXPECT AST
