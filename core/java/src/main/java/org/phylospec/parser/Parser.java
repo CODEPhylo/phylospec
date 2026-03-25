@@ -17,12 +17,12 @@ public class Parser {
     /**
      * Parses the following grammar:
      * import            → "use" IDENTIFIER ( "." IDENTIFIER )* | decorated ;
-     * decorated         → ( "@" IDENTIFIER "(" arguments? ")" )*  indexedStatement ;
-     * observedStatement → indexedStatement ( clamping )? ;
-     * indexedStatement  → type IDENTIFIER "[" IDENTIFIER "] ( "=" | "~" ) indexedExpression | statement ;
+     * decorated         → ( "@" IDENTIFIER "(" arguments? ")" )*  observedStatement ;
+     * observedStatement → indexedStatement | statement ( clamping )? ;
+     * indexedStatement  → type IDENTIFIER "[" IDENTIFIER "] ( "=" | "~" ) indexedExpression ;
      * statement         → type IDENTIFIER ( "=" | "~" ) expression ;
      * type              → IDENTIFIER ("<" type ("," type)* ">" ) ;
-     * indexedExpression → equality "for" IDENTIFIER "in" expression ;
+     * indexedExpression → equality ( clamping )? "for" IDENTIFIER "in" expression ;
      * clamping          → "observed as" expression | "observed between" "[" expression "," expression "]" ;
      * expression        → equality ;
      * equality          → comparison ( ( "!=" | "==" ) comparison )* ;
@@ -214,50 +214,7 @@ public class Parser {
             }
         }
 
-        return remember(observedStatement());
-    }
-
-    private Stmt observedStatement() throws Error {
-        startAstNode();
-
-        Stmt stmt = indexedStatement();
-
-        if (match(TokenType.OBSERVED_AS)) {
-            startAstNode();
-            Expr observedAs = expression();
-            return remember(new Stmt.ObservedAs(stmt, observedAs));
-        } else if (match(TokenType.OBSERVED_BETWEEN)) {
-            startAstNode();
-
-            consume(
-                    TokenType.LEFT_SQUARE_BRACKET,
-                    "Invalid range.",
-                    "Use square brackets to specify a range of an observed variable.",
-                    List.of("Real a ~ Exponential(1.0) observed between [20.0, 30.0]")
-            );
-
-            Expr observedFrom = expression();
-
-            consume(
-                    TokenType.COMMA,
-                    "Invalid range.",
-                    "Use two values separated by a comma to specify a range of an observed variable.",
-                    List.of("Real a ~ Exponential(1.0) observed between [20.0, 30.0]")
-            );
-
-            Expr observedTo = expression();
-
-            consume(
-                    TokenType.RIGHT_SQUARE_BRACKET,
-                    "Invalid range.",
-                    "Use square brackets to specify a range of an observed variable.",
-                    List.of("Real a ~ Exponential(1.0) observed between [20.0, 30.0]")
-            );
-
-            return remember(new Stmt.ObservedBetween(stmt, observedFrom, observedTo));
-        }
-
-        return remember(stmt);
+        return remember(indexedStatement());
     }
 
     private Stmt indexedStatement() throws Error {
@@ -312,6 +269,9 @@ public class Parser {
             );
         }
 
+        // parse clamping if needed
+        stmt = observedStatement(stmt);
+
         if (!isIndexed) {
             return remember(stmt);
         }
@@ -352,6 +312,45 @@ public class Parser {
         return remember(
                 new Stmt.Indexed(stmt, new Expr.Variable(index.lexeme), range)
         );
+    }
+
+    private Stmt observedStatement(Stmt stmt) throws Error {
+        if (match(TokenType.OBSERVED_AS)) {
+            startAstNode();
+            Expr observedAs = expression();
+            return remember(new Stmt.ObservedAs(stmt, observedAs));
+        } else if (match(TokenType.OBSERVED_BETWEEN)) {
+            startAstNode();
+
+            consume(
+                    TokenType.LEFT_SQUARE_BRACKET,
+                    "Invalid range.",
+                    "Use square brackets to specify a range of an observed variable.",
+                    List.of("Real a ~ Exponential(1.0) observed between [20.0, 30.0]")
+            );
+
+            Expr observedFrom = expression();
+
+            consume(
+                    TokenType.COMMA,
+                    "Invalid range.",
+                    "Use two values separated by a comma to specify a range of an observed variable.",
+                    List.of("Real a ~ Exponential(1.0) observed between [20.0, 30.0]")
+            );
+
+            Expr observedTo = expression();
+
+            consume(
+                    TokenType.RIGHT_SQUARE_BRACKET,
+                    "Invalid range.",
+                    "Use square brackets to specify a range of an observed variable.",
+                    List.of("Real a ~ Exponential(1.0) observed between [20.0, 30.0]")
+            );
+
+            return remember(new Stmt.ObservedBetween(stmt, observedFrom, observedTo));
+        }
+
+        return stmt;
     }
 
     private AstType type() throws Error {

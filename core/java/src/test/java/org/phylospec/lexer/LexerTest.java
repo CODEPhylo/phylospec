@@ -75,9 +75,9 @@ public class LexerTest {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
 
-        assertEquals(new Token(TokenType.STRING_PART, "\"Hallo this is a string\"", "Hallo this is a string", 1, 0, 24), tokens.get(0));
+        assertEquals(new Token(TokenType.STRING_END, "\"Hallo this is a string\"", "Hallo this is a string", 1, 0, 24), tokens.get(0));
         assertEquals(new Token(TokenType.EOL, "\n", null, 1, 24, 25), tokens.get(1));
-        assertEquals(new Token(TokenType.STRING_PART, "\"This is a\nmultiline\r\nstring\"", "This is a\nmultiline\r\nstring", new Range(2, 4, 0, 8)), tokens.get(2));
+        assertEquals(new Token(TokenType.STRING_END, "\"This is a\nmultiline\r\nstring\"", "This is a\nmultiline\r\nstring", new Range(2, 4, 0, 8)), tokens.get(2));
         assertEquals(new Token(TokenType.EOF, "", null, 4, 8, 8), tokens.get(3));
 
         assertEquals(tokens.size(), 4);
@@ -96,11 +96,12 @@ public class LexerTest {
         assertEquals(new Token(TokenType.IDENTIFIER, "cool", null, 1, 40, 44), tokens.get(3));
         assertEquals(new Token(TokenType.STRING_PART, " ", " ", 1, 45, 46), tokens.get(4));
         assertEquals(new Token(TokenType.IDENTIFIER, "string", null, 1, 48, 54), tokens.get(5));
-        assertEquals(new Token(TokenType.EOL, "\n", null, 1, 56, 57), tokens.get(6));
-        assertEquals(new Token(TokenType.STRING_PART, "\"Hallo this is not a \\${interpolated} string\"", "Hallo this is not a \\${interpolated} string", new Range(2, 0, 45)), tokens.get(7));
-        assertEquals(new Token(TokenType.EOF, "", null, 2, 45, 45), tokens.get(8));
+        assertEquals(new Token(TokenType.STRING_END, "\"", "", 1, 55, 56), tokens.get(6));
+        assertEquals(new Token(TokenType.EOL, "\n", null, 1, 56, 57), tokens.get(7));
+        assertEquals(new Token(TokenType.STRING_END, "\"Hallo this is not a \\${interpolated} string\"", "Hallo this is not a \\${interpolated} string", new Range(2, 0, 45)), tokens.get(8));
+        assertEquals(new Token(TokenType.EOF, "", null, 2, 45, 45), tokens.get(9));
 
-        assertEquals(tokens.size(), 9);
+        assertEquals(tokens.size(), 10);
     }
 
     @Test
@@ -148,7 +149,7 @@ public class LexerTest {
         assertEquals(new Token(TokenType.EOL, "\r\n", null, 3, 5, 7), tokens.get(15));
 
         // 4th line: "Hallo" 10
-        assertEquals(new Token(TokenType.STRING_PART, "\"Hallo\"", "Hallo", 4, 0, 7), tokens.get(16));
+        assertEquals(new Token(TokenType.STRING_END, "\"Hallo\"", "Hallo", 4, 0, 7), tokens.get(16));
         assertEquals(new Token(TokenType.INT, "10", 10, 4, 7, 9), tokens.get(17));
         assertEquals(new Token(TokenType.EOL, "\n", null, 4, 9, 10), tokens.get(18));
 
