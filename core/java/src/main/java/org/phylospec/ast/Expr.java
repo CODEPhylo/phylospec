@@ -361,6 +361,36 @@ public abstract class Expr extends AstNode {
         }
     }
 
+    /** Represents an index access (e.g. `x[1]` or `data[1]["header"]`). */
+    public static class Index extends Expr {
+        public Index(Expr object, List<Expr> indices) {
+            this.object = object;
+            this.indices = indices;
+        }
+
+        @JsonPropertyDescription("The expression being indexed.")
+        public Expr object;
+        @JsonPropertyDescription("The index expressions.")
+        public List<Expr> indices;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Index that = (Index) o;
+            return Objects.equals(object, that.object) && Objects.equals(indices, that.indices);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(object, indices);
+        }
+
+        @Override
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
+            return visitor.visitIndex(this);
+        }
+    }
+
     /** Represents a range (`1:num(taxa)`). */
     public static class Range extends Expr {
         public Range(Expr from, Expr to) {
@@ -369,9 +399,9 @@ public abstract class Expr extends AstNode {
         }
 
         @JsonPropertyDescription("The lower bound of the range (inclusive).")
-        private final Expr from;
+        public final Expr from;
         @JsonPropertyDescription("The upper bound of the range (inclusive).")
-        private final Expr to;
+        public final Expr to;
 
         @Override
         public boolean equals(Object o) {

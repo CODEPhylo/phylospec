@@ -1,5 +1,5 @@
-import beastx
-import revbayes.distributions
+use beastx
+use revbayes.distributions
 
 // EXPECT AST
 // (IM beastx)

@@ -24,4 +24,13 @@ public enum Unit {
     public static Unit toUnit(String string) {
         return mapping.get(string);
     }
+
+    public String toString() {
+        for (String key : mapping.keySet()) {
+            if (mapping.get(key) == this) {
+                return key;
+            }
+        }
+        throw new UnsupportedOperationException();
+    }
 }

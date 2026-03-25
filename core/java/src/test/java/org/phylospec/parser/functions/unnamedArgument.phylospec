@@ -1,8 +1,12 @@
-Real a = log(10)
+Real logSd = log(10)
+Real x ~ LogNormal(3, logSd)
+Real y ~ LogNormal(x, logSd)
 QMatrix b = HKY(10)
 
 // EXPECT AST
-// (AS Real a (CA log (AA null 10)))
+// (AS Real logSd (CA log (AA null 10)))
+// (DR Real x (CA LogNormal (AA null 3) (AA logSd logSd)))
+// (DR Real y (CA LogNormal (AA x x) (AA logSd logSd)))
 // (AS QMatrix b (CA HKY (AA null 10)))
 // EXPECT AST
 

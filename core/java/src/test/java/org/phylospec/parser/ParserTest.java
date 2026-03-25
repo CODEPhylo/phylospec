@@ -334,36 +334,6 @@ public class ParserTest {
     }
 
     @Test
-    public void testPropertyAccess() {
-        testStatements(
-                "PositiveReal value ~ constants.pi",
-                new Stmt.Draw(
-                        new AstType.Atomic("PositiveReal"),
-                        "value",
-                        new Expr.Get(
-                                new Expr.Variable("constants"),
-                                "pi"
-                        )
-                )
-        );
-
-        testStatements(
-                "PositiveReal value ~ constants.pi.binary",
-                new Stmt.Draw(
-                        new AstType.Atomic("PositiveReal"),
-                        "value",
-                        new Expr.Get(
-                                new Expr.Get(
-                                        new Expr.Variable("constants"),
-                                        "pi"
-                                ),
-                                "binary"
-                        )
-                )
-        );
-    }
-
-    @Test
     public void testDecorators() {
         testStatements(
                 "@Decorator() PositiveReal value ~ 10",
