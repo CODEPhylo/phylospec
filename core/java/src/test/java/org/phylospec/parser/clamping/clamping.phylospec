@@ -1,0 +1,13 @@
+Real a = 10
+
+Real b ~ LogNormal(logMean=0.0, logSd=1.0) observed as a
+Real c ~ LogNormal(logMean=0.0, logSd=1.0) observed between [a + b, 100]
+
+Real d[i] ~ LogNormal(logMean=i, logSd=1.0) observed as i for i in 1:10
+
+// EXPECT AST
+// (AS Real a 10)
+// (OA (DR Real b (CA LogNormal (AA logMean 0.0) (AA logSd 1.0))) a)
+// (OB (DR Real c (CA LogNormal (AA logMean 0.0) (AA logSd 1.0))) (+ a b) 100)
+// (IS (OA (DR Real d (CA LogNormal (AA logMean i) (AA logSd 1.0))) i) i (R 1 10))
+// EXPECT AST
