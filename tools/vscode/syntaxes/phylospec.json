@@ -199,6 +199,21 @@
                         {
                             "name": "constant.character.escape.phylospec",
                             "match": "\\\\."
+                        },
+                        {
+                            "name": "meta.interpolation.phylospec",
+                            "match": "(\\$\\{)([a-zA-Z_][a-zA-Z0-9_]*)(\\})",
+                            "captures": {
+                                "1": {
+                                    "name": "punctuation.definition.template-expression.begin.phylospec"
+                                },
+                                "2": {
+                                    "name": "variable.other.phylospec"
+                                },
+                                "3": {
+                                    "name": "punctuation.definition.template-expression.end.phylospec"
+                                }
+                            }
                         }
                     ]
                 }
