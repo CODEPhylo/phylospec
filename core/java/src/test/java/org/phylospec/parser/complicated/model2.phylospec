@@ -1,44 +1,52 @@
-String seed = env("SEED")
-Alignment molecularData = fromNexus(
-    "alignment_${seed}.nex", age=parse(delimiter="_", part=1)
-)
-Alignment traitData = traitsFromTaxa(
-    taxa(molecularData), trait=parse(delimiter="_", part=2)
-)
+data {
+    String seed = env("SEED")
+    Alignment molecularData = fromNexus(
+        "alignment_${seed}.nex", age=parse(delimiter="_", part=1)
+    )
+    Alignment traitData = traitsFromTaxa(
+        taxa(molecularData), trait=parse(delimiter="_", part=2)
+    )
+}
 
-Tree tree ~ Yule(
-    birthRate~Exponential(rate=1),
-    taxa=taxa(molecularData)
-)
+model {
+    Tree tree ~ Yule(
+        birthRate~Exponential(rate=1),
+        taxa=taxa(molecularData)
+    )
 
-QMatrix molecularQ = hky(
-    kappa~LogNormal(logMean=0.1, logSd=2),
-    baseFrequencies~Dirichlet([1, 1, 1, 1])
-)
-QMatrix traitQ = mk(
-    rate~LogNormal(logMean=0.1, logSd=2)
-)
+    QMatrix molecularQ = hky(
+        kappa~LogNormal(logMean=0.1, logSd=2),
+        baseFrequencies~Dirichlet([1, 1, 1, 1])
+    )
+    QMatrix traitQ = mk(
+        rate~LogNormal(logMean=0.1, logSd=2)
+    )
 
-Vector<Rate> siteRates ~ DiscreteGammaInv(
-    shape=1,
-    numCategories=4,
-    invariantProportion=0.1,
-    numSites=numSites(molecularData)
-)
+    Vector<Rate> siteRates ~ DiscreteGammaInv(
+        shape=1,
+        numCategories=4,
+        invariantProportion=0.1,
+        numSites=numSites(molecularData)
+    )
 
-Vector<Rate> branchRates ~ RelaxedClock(
-    LogNormal(logMean=1, logSd=2),
-    numBranches=numBranches(tree)
-)
+    Vector<Rate> branchRates ~ RelaxedClock(
+        LogNormal(logMean=1, logSd=2),
+        numBranches=numBranches(tree)
+    )
 
-Alignment molecular ~ PhyloCTMC(
-    tree, qMatrix=molecularQ, siteRates, branchRates
-) observed as molecularData
-Alignment traits ~ PhyloCTMC(
-    tree, qMatrix=traitQ, branchRates
-) observed as traitData
+    Alignment molecular ~ PhyloCTMC(
+        tree, qMatrix=molecularQ, siteRates, branchRates
+    ) observed as molecularData
+    Alignment traits ~ PhyloCTMC(
+        tree, qMatrix=traitQ, branchRates
+    ) observed as traitData
 
-Age rootAge = rootAge(tree) observed between [1.7 yr, 4 yr]
+    Age rootAge = rootAge(tree) observed between [1.7 yr, 4 yr]
+}
+
+mcmc {
+    Integer chainLength = 100
+}
 
 // EXPECT AST
 // (AS String seed (CA env (AA null "SEED")))
@@ -52,6 +60,7 @@ Age rootAge = rootAge(tree) observed between [1.7 yr, 4 yr]
 // (OA (DR Alignment molecular (CA PhyloCTMC (AA tree tree) (AA qMatrix molecularQ) (AA siteRates siteRates) (AA branchRates branchRates))) molecularData)
 // (OA (DR Alignment traits (CA PhyloCTMC (AA tree tree) (AA qMatrix traitQ) (AA branchRates branchRates))) traitData)
 // (OB (AS Age rootAge (CA rootAge (AA tree tree))) 1.7 yr 4 yr)
+// (AS Integer chainLength 100)
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS

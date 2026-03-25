@@ -26,7 +26,7 @@ public enum Unit {
     }
 
     public String toString() {
-        for (String key : mapping.keySet()) {
+        for (String key : mapping.keySet().stream().sorted().toList()) {
             if (mapping.get(key) == this) {
                 return key;
             }
