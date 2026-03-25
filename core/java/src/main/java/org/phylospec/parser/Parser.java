@@ -19,10 +19,10 @@ public class Parser {
      * import            → "use" IDENTIFIER ( "." IDENTIFIER )* | decorated ;
      * decorated         → ( "@" IDENTIFIER "(" arguments? ")" )*  observedStatement ;
      * observedStatement → indexedStatement | statement ( clamping )? ;
-     * indexedStatement  → type IDENTIFIER "[" IDENTIFIER "] ( "=" | "~" ) indexedExpression ;
+     * indexedStatement  → type IDENTIFIER "[" ( IDENTIFIER )+ "] ( "=" | "~" ) indexedExpression ;
      * statement         → type IDENTIFIER ( "=" | "~" ) expression ;
      * type              → IDENTIFIER ("<" type ("," type)* ">" ) ;
-     * indexedExpression → equality ( clamping )? "for" IDENTIFIER "in" expression ;
+     * indexedExpression → equality ( clamping )? ( "for" IDENTIFIER "in" expression )+ ;
      * clamping          → "observed as" expression | "observed between" "[" expression "," expression "]" ;
      * expression        → equality ;
      * equality          → comparison ( ( "!=" | "==" ) comparison )* ;
@@ -234,14 +234,25 @@ public class Parser {
         // check if this is an indexed statement and parse the index if needed
 
         boolean isIndexed = match(TokenType.LEFT_SQUARE_BRACKET);
-        Token index = null;
+        List<Token> indices = new ArrayList<>();
         if (isIndexed) {
-            index = consume(
-                    TokenType.IDENTIFIER,
-                    "Invalid index.",
-                    "Only letters can be used as an index.",
-                    List.of("Real x[i] = i for i in 1:3")
-            );
+            indices.add(
+                    consume(
+                            TokenType.IDENTIFIER,
+                            "Invalid index.",
+                            "Only letters can be used as an index.",
+                            List.of("Real x[i] = i for i in 1:3")
+                    ));
+
+            while (match(TokenType.COMMA)) {
+                indices.add(
+                        consume(
+                                TokenType.IDENTIFIER,
+                                "Invalid index.",
+                                "Only letters can be used as an index.",
+                                List.of("Real x[i, j] = i for i in 1:3 for j in 1:3")
+                        ));
+            }
 
             consume(
                     TokenType.RIGHT_SQUARE_BRACKET,
@@ -276,41 +287,47 @@ public class Parser {
             return remember(stmt);
         }
 
-        // this is an indexed statement, so we need to parse the range ("for <index> in <range>")
+        // this is an indexed statement, so we need to parse the range ("for <index> in <range>") for every index
 
-        consume(
-                TokenType.FOR,
-                "Missing range in index statement.",
-                "End index statements by indicating the range of the index variable.",
-                List.of("Real x[" + index.lexeme + "] = 1 for " + index.lexeme + " in 1:3")
-        );
-
-        Token rangeIndex = consume(
-                TokenType.IDENTIFIER,
-                "Wrong range in index statement.",
-                "End index statements by indicating the range of the index variable.",
-                List.of("Real x[" + index.lexeme + "] = 1 for " + index.lexeme + " in 1:3")
-        );
-
-        if (!Objects.equals(rangeIndex.lexeme, index.lexeme)) {
-            throw new Error(
-                    previous().range,
-                    "Wrong index variable.",
-                    "This statement is indexed by `" + index.lexeme + "', but you specify the range of the variable '" + rangeIndex.lexeme + "'. The two indices must be the same: `... for " + index.lexeme + " in ..."
+        List<Expr.Variable> indexVariables = new ArrayList<>();
+        List<Expr> ranges = new ArrayList<>();
+        for (Token index : indices) {
+            consume(
+                    TokenType.FOR,
+                    "Missing range for index '" + index.lexeme + "'.",
+                    "End index statements by indicating the range of the index variable.",
+                    List.of("Real x[" + index.lexeme + "] = 1 for " + index.lexeme + " in 1:3")
             );
+
+            Token rangeIndex = consume(
+                    TokenType.IDENTIFIER,
+                    "Wrong range for index '" + index.lexeme + "'.",
+                    "End index statements by indicating the range of the index variable.",
+                    List.of("Real x[" + index.lexeme + "] = 1 for " + index.lexeme + " in 1:3")
+            );
+
+            if (!Objects.equals(rangeIndex.lexeme, index.lexeme)) {
+                throw new Error(
+                        previous().range,
+                        "Wrong index variable.",
+                        "This statement is indexed by `" + index.lexeme + "', but you specify the range of the variable '" + rangeIndex.lexeme + "'. Specify the ranges in the order of the indices."
+                );
+            }
+
+            consume(
+                    TokenType.IN,
+                    "Missing range for index '" + index.lexeme + "'.",
+                    "End index statements by indicating the range of the index variable.",
+                    List.of("Real x[" + index.lexeme + "] = 1 for " + index.lexeme + " in 1:3")
+            );
+
+            Expr range = expression();
+            ranges.add(range);
+            indexVariables.add(new Expr.Variable(index.lexeme));
         }
 
-        consume(
-                TokenType.IN,
-                "Missing range in index statement.",
-                "End index statements by indicating the range of the index variable.",
-                List.of("Real x[" + index.lexeme + "] = 1 for " + index.lexeme + " in 1:3")
-        );
-
-        Expr range = expression();
-
         return remember(
-                new Stmt.Indexed(stmt, new Expr.Variable(index.lexeme), range)
+                new Stmt.Indexed(stmt, indexVariables, ranges)
         );
     }
 

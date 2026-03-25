@@ -148,29 +148,29 @@ public abstract class Stmt extends AstNode {
     /** Represents an indexed statement like `Real value[i] ~ Normal(mean=1, sd=1) for i in 1:10`. It consists of the
      * statement without index (`Real value[i] ~ Normal(mean=1, sd=1)`), the index (`ì`), and the range (`1:10`) */
     public static class Indexed extends Stmt {
-        public Indexed(Stmt statement, Expr.Variable index, Expr range) {
+        public Indexed(Stmt statement, List<Expr.Variable> indices, List<Expr> ranges) {
             this.statement = statement;
-            this.index = index;
-            this.range = range;
+            this.indices = indices;
+            this.ranges = ranges;
         }
 
         @JsonPropertyDescription("The indexed statement.")
         public final Stmt statement;
-        @JsonPropertyDescription("The index variable.")
-        public final Expr.Variable index;
-        @JsonPropertyDescription("The range over which the index goes.")
-        public final Expr range;
+        @JsonPropertyDescription("The index variables.")
+        public final List<Expr.Variable> indices;
+        @JsonPropertyDescription("The ranges over which the indices go.")
+        public final List<Expr> ranges;
 
         @Override
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Indexed indexed = (Indexed) o;
-            return Objects.equals(statement, indexed.statement) && Objects.equals(index, indexed.index) && Objects.equals(range, indexed.range);
+            return Objects.equals(statement, indexed.statement) && Objects.equals(indices, indexed.indices) && Objects.equals(ranges, indexed.ranges);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(statement, index, range);
+            return Objects.hash(statement, indices, ranges);
         }
 
         public <S, E, T> S accept(AstVisitor<S, E, T> visitor) {
