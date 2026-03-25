@@ -15,7 +15,7 @@ public class LexerTest {
 
     @Test
     public void testSingleCharacterTokens() {
-        String source = "(),.-+/*=!~@==!=<>>=<=[]import for";
+        String source = "(),.-+/*=!~@==!=<>>=<=[]use for";
 
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
@@ -40,9 +40,9 @@ public class LexerTest {
         assertEquals(new Token(TokenType.LESS_EQUAL, "<=", null, 1, 20, 22), tokens.get(17));
         assertEquals(new Token(TokenType.LEFT_SQUARE_BRACKET, "[", null, 1, 22, 23), tokens.get(18));
         assertEquals(new Token(TokenType.RIGHT_SQUARE_BRACKET, "]", null, 1, 23, 24), tokens.get(19));
-        assertEquals(new Token(TokenType.IMPORT, "import", null, 1, 24, 30), tokens.get(20));
-        assertEquals(new Token(TokenType.FOR, "for", null, 1, 31, 34), tokens.get(21));
-        assertEquals(new Token(TokenType.EOF, "", null, 1, 34, 34), tokens.get(22));
+        assertEquals(new Token(TokenType.IMPORT, "use", null, 1, 24, 27), tokens.get(20));
+        assertEquals(new Token(TokenType.FOR, "for", null, 1, 28, 31), tokens.get(21));
+        assertEquals(new Token(TokenType.EOF, "", null, 1, 31, 31), tokens.get(22));
 
         assertEquals(tokens.size(), 23);
     }
@@ -75,12 +75,32 @@ public class LexerTest {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
 
-        assertEquals(new Token(TokenType.STRING, "\"Hallo this is a string\"", "Hallo this is a string", 1, 0, 24), tokens.get(0));
+        assertEquals(new Token(TokenType.STRING_PART, "\"Hallo this is a string\"", "Hallo this is a string", 1, 0, 24), tokens.get(0));
         assertEquals(new Token(TokenType.EOL, "\n", null, 1, 24, 25), tokens.get(1));
-        assertEquals(new Token(TokenType.STRING, "\"This is a\nmultiline\r\nstring\"", "This is a\nmultiline\r\nstring", new Range(2, 4, 0, 8)), tokens.get(2));
+        assertEquals(new Token(TokenType.STRING_PART, "\"This is a\nmultiline\r\nstring\"", "This is a\nmultiline\r\nstring", new Range(2, 4, 0, 8)), tokens.get(2));
         assertEquals(new Token(TokenType.EOF, "", null, 4, 8, 8), tokens.get(3));
 
         assertEquals(tokens.size(), 4);
+    }
+
+    @Test
+    public void testStringInterpolation() {
+        String source = "\"Hallo this is a ${interpolated} very ${cool} ${string}\"\n\"Hallo this is not a \\${interpolated} string\"";
+
+        Lexer lexer = new Lexer(source);
+        List<Token> tokens = lexer.scanTokens();
+
+        assertEquals(new Token(TokenType.STRING_PART, "\"Hallo this is a ", "Hallo this is a ", 1, 0, 17), tokens.get(0));
+        assertEquals(new Token(TokenType.IDENTIFIER, "interpolated", null, 1, 19, 31), tokens.get(1));
+        assertEquals(new Token(TokenType.STRING_PART, " very ", " very ", 1, 32, 38), tokens.get(2));
+        assertEquals(new Token(TokenType.IDENTIFIER, "cool", null, 1, 40, 44), tokens.get(3));
+        assertEquals(new Token(TokenType.STRING_PART, " ", " ", 1, 45, 46), tokens.get(4));
+        assertEquals(new Token(TokenType.IDENTIFIER, "string", null, 1, 48, 54), tokens.get(5));
+        assertEquals(new Token(TokenType.EOL, "\n", null, 1, 56, 57), tokens.get(6));
+        assertEquals(new Token(TokenType.STRING_PART, "\"Hallo this is not a \\${interpolated} string\"", "Hallo this is not a \\${interpolated} string", new Range(2, 0, 45)), tokens.get(7));
+        assertEquals(new Token(TokenType.EOF, "", null, 2, 45, 45), tokens.get(8));
+
+        assertEquals(tokens.size(), 9);
     }
 
     @Test
@@ -128,7 +148,7 @@ public class LexerTest {
         assertEquals(new Token(TokenType.EOL, "\r\n", null, 3, 5, 7), tokens.get(15));
 
         // 4th line: "Hallo" 10
-        assertEquals(new Token(TokenType.STRING, "\"Hallo\"", "Hallo", 4, 0, 7), tokens.get(16));
+        assertEquals(new Token(TokenType.STRING_PART, "\"Hallo\"", "Hallo", 4, 0, 7), tokens.get(16));
         assertEquals(new Token(TokenType.INT, "10", 10, 4, 7, 9), tokens.get(17));
         assertEquals(new Token(TokenType.EOL, "\n", null, 4, 9, 10), tokens.get(18));
 

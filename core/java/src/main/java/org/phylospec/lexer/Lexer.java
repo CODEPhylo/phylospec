@@ -1,5 +1,6 @@
 package org.phylospec.lexer;
 
+import org.phylospec.ast.Expr;
 import org.phylospec.errors.Error;
 import org.phylospec.errors.ErrorEventListener;
 
@@ -60,10 +61,6 @@ public class Lexer {
      */
     public List<Token> scanTokens() {
         while (!isAtEnd()) {
-            start = current;
-            startLine = currentLine;
-            startLineStart = currentLineStart;
-
             scanToken();
         }
 
@@ -76,6 +73,10 @@ public class Lexer {
     }
 
     private void scanToken() {
+        start = current;
+        startLine = currentLine;
+        startLineStart = currentLineStart;
+
         char c = advance();
 
         switch (c) {
@@ -209,7 +210,11 @@ public class Lexer {
     }
 
     private void string() {
+        int currentPartStart = start + 1;
+
         while (peek() != '"' && !isAtEnd()) {
+            // handle multiline strings
+
             if (peek() == '\n') {
                 currentLine++;
                 currentLineStart = current;
@@ -222,7 +227,48 @@ public class Lexer {
                 currentLine++;
                 currentLineStart = current;
             }
-            advance();
+
+            // handle string interpolation
+
+            if (previous() != '\\' && peek() == '$' && peekNext() == '{' && !isAtEnd()) {
+                // we are in an interpolated part of the string
+
+                // add a new string part
+                String part = source.substring(currentPartStart, current);
+                addToken(TokenType.STRING_PART, part);
+
+                // consume the ${
+
+                advance();
+                advance();
+
+                // lex the interpolated bit
+                while (peek() != '}' && !isAtEnd()) {
+                    scanToken();
+                }
+
+                if (isAtEnd()) {
+                    reportError(
+                            new Range(startLine, currentLine, start - startLineStart, current - currentLineStart),
+                            "A string interpolation must be terminated with an '}'.",
+                            "Use curly brackets to add an interpolated value into a string.",
+                            List.of("String name = \"file_{seed}.nex")
+                    );
+                    return;
+                }
+
+                // consume the terminal }
+                advance();
+
+                start = current;
+                startLine = currentLine;
+                startLineStart = currentLineStart;
+                currentPartStart = current;
+
+            } else {
+                // we are not in an interpolated area, simply advance the cursor
+                advance();
+            }
         }
 
         if (isAtEnd()) {
@@ -238,8 +284,11 @@ public class Lexer {
         advance();
 
         // Trim the surrounding quotes.
-        String value = source.substring(start + 1, current - 1);
-        addToken(TokenType.STRING, value);
+        String value = source.substring(currentPartStart, current - 1);
+
+        if (!value.isBlank()) {
+            addToken(TokenType.STRING_PART, value);
+        }
     }
 
     private void identifier() {
@@ -332,6 +381,14 @@ public class Lexer {
     }
 
     /**
+     * Returns the previous character without changing the cursor.
+     */
+    private char previous() {
+        if (current == 0) return '\0';
+        return source.charAt(current - 1);
+    }
+
+    /**
      * Returns the current character without advancing the cursor.
      */
     private char peek() {
@@ -397,6 +454,15 @@ public class Lexer {
     private void reportError(Range range, String description, String hint) {
         for (ErrorEventListener eventListener : eventListeners) {
             eventListener.errorDetected(new Error(range, description, hint));
+        }
+    }
+
+    /**
+     * Reports an error to the registered event listeners.
+     */
+    private void reportError(Range range, String description, String hint, List<String> examples) {
+        for (ErrorEventListener eventListener : eventListeners) {
+            eventListener.errorDetected(new Error(range, description, hint, examples));
         }
     }
 

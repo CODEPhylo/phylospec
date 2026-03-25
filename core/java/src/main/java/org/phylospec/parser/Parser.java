@@ -638,7 +638,7 @@ public class Parser {
             return remember(literal);
         }
 
-        if (match(TokenType.STRING)) {
+        if (match(TokenType.STRING_PART)) {
             return remember(new Expr.Literal(previous().literal));
         }
 
