@@ -76,14 +76,14 @@ class LspDocument implements ErrorEventListener {
 
         // run type resolver
 
-        typeResolver = new TypeResolver(componentResolver);
-        for (Stmt statement : statements) {
-            try {
-                statement.accept(typeResolver);
-            } catch (TypeError error) {
-                errorDetected(error, statement);
-            }
-        }
+//        typeResolver = new TypeResolver(componentResolver);
+//        for (Stmt statement : statements) {
+//            try {
+//                statement.accept(typeResolver);
+//            } catch (TypeError error) {
+//                errorDetected(error, statement);
+//            }
+//        }
 
         // publish diagnostics
 

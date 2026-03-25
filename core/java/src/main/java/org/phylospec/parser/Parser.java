@@ -638,8 +638,12 @@ public class Parser {
             return remember(literal);
         }
 
-        if (match(TokenType.STRING_PART)) {
+        if (match(TokenType.STRING_END)) {
             return remember(new Expr.Literal(previous().literal));
+        }
+
+        if (match(TokenType.STRING_PART)) {
+            return remember(stringTemplate());
         }
 
         if (match(TokenType.LEFT_PAREN)) {
@@ -664,6 +668,45 @@ public class Parser {
         }
 
         throw new Error(peek().range, "Invalid expression.", "Something is missing.");
+    }
+
+    private Expr stringTemplate() throws Error {
+        startAstNode();
+
+        List<Expr.StringTemplate.Part> parts = new ArrayList<>();
+        parts.add(new Expr.StringTemplate.StringPart(previous().literal.toString()));
+
+        while (true) {
+            if (check(TokenType.IDENTIFIER)) {
+                Token interpolated = advance();
+                parts.add(new Expr.StringTemplate.ExpressionPart(new Expr.Variable(interpolated.lexeme)));
+
+                if (!check(TokenType.STRING_END, TokenType.STRING_PART)) {
+                    throw new Error(
+                            peek().range,
+                            "Invalid string template.",
+                            "Only use simple variable names in string templates.",
+                            List.of("String file = \"name ${seed}.nex\"")
+                    );
+                }
+            } else if (check(TokenType.STRING_PART)) {
+                Token stringPart = advance();
+                parts.add(new Expr.StringTemplate.StringPart(stringPart.literal.toString()));
+            } else if (check(TokenType.STRING_END)) {
+                Token stringPart = advance();
+                parts.add(new Expr.StringTemplate.StringPart(stringPart.literal.toString()));
+                break;
+            } else {
+                throw new Error(
+                        peek().range,
+                        "Invalid string template.",
+                        "Only use variable names in string templates and end the template with curly braces.",
+                        List.of("String file = \"name ${seed}.nex\"")
+                );
+            }
+        }
+
+        return remember(new Expr.StringTemplate(parts));
     }
 
     /* helper methods to inspect the tokens */
@@ -704,9 +747,16 @@ public class Parser {
      * Checks if the current token matches any of the expected ones without
      * advancing the cursor.
      */
-    private boolean check(TokenType type) {
+    private boolean check(TokenType... tokenTypes) {
         if (isAtEnd()) return false;
-        return peek().type == type;
+
+        for (TokenType type : tokenTypes) {
+            if (peek().type == type) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

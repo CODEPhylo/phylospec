@@ -16,7 +16,7 @@ public enum TokenType {
     IDENTIFIER, INT, FLOAT,
 
     // strings
-    STRING_PART, INTERPOLATED_EXPRESSION,
+    STRING_PART, STRING_END,
 
     // keywords
     TRUE, FALSE, IMPORT, FOR, IN, OBSERVED_AS, OBSERVED_BETWEEN,
