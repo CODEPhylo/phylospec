@@ -34,6 +34,12 @@ public enum TokenType {
             case STAR -> "*";
             case SLASH -> "/";
             case BANG -> "!";
+            case GREATER -> ">";
+            case GREATER_EQUAL -> ">=";
+            case LESS -> "<";
+            case LESS_EQUAL -> "<=";
+            case EQUAL_EQUAL -> "==";
+            case BANG_EQUAL -> "!=";
             default -> "";
         };
     }
