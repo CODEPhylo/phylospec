@@ -44,7 +44,7 @@ class TypeMatcher {
 
                 boolean allInputsMatch = true;
                 for (int i = 0; i < inputCombination.size(); i++) {
-                    if (!TypeUtils.covers(
+                    if (rule.inputTypes[i] != ANY && !TypeUtils.covers(
                             ResolvedType.fromString(rule.inputTypes[i], componentResolver),
                             inputCombination.get(i),
                             componentResolver

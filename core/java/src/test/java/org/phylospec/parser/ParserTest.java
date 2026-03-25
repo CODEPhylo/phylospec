@@ -169,7 +169,7 @@ public class ParserTest {
                         new Expr.Call(
                                 "LogNormal",
                                 new Expr.AssignedArgument("meanLog", new Expr.Literal(10.5)),
-                                new Expr.AssignedArgument("sdLog", new Expr.Variable("sdLog"))
+                                new Expr.AssignedArgument(null, new Expr.Variable("sdLog"))
                         )
                 )
         );
@@ -182,7 +182,7 @@ public class ParserTest {
                         new Expr.Call(
                                 "LogNormal",
                                 new Expr.AssignedArgument("meanLog", new Expr.Literal(10.5)),
-                                new Expr.AssignedArgument("sdLog", new Expr.Variable("sdLog"))
+                                new Expr.AssignedArgument(null, new Expr.Variable("sdLog"))
                         )
                 )
         );

@@ -9,6 +9,6 @@ Real vector2[i, j] = x*x for i in 1:num(vector) for j in 1:5
 
 // EXPECT AST
 // (AS Vector<Real> vector (AR 10.0 2.0 (- 5.0)))
-// (IS (AS Real vector2 (* x x)) i (R 1 (CA num (AA vector vector))))
-// (IS (AS Real vector2 (* x x)) i (R 1 (CA num (AA vector vector))) j (R 1 5))
+// (IS (AS Real vector2 (* x x)) i (R 1 (CA num (AA null vector))))
+// (IS (AS Real vector2 (* x x)) i (R 1 (CA num (AA null vector))) j (R 1 5))
 // EXPECT AST

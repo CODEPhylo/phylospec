@@ -41,6 +41,7 @@ public class Utils {
     }
 
     public static int editDistance(String a, String b) {
+        if (a.equalsIgnoreCase(b)) return 0;
         int[] prev = new int[b.length() + 1];
         for (int j = 0; j <= b.length(); j++) prev[j] = j;
         for (int i = 1; i <= a.length(); i++) {

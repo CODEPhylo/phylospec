@@ -1,6 +1,6 @@
 // IID
-Exponential base = Exponential(rate = 10)
-Distribution<Vector<Real>> iidDist = IID(base = base, n = 2)
+Distribution<Real>  base = Exponential(rate = 10)
+Distribution<Vector<Real>> iidDist = IID(base = base, num = 2)
 Vector<Real> iid ~ iidDist
 
 // Mixture
@@ -9,8 +9,8 @@ Simplex weights ~ Dirichlet(alpha = [1, 1])
 Mixture<Real> mixture = Mixture(components = components, weights = weights)
 
 // EXPECT AST
-// (AS Exponential base (CA Exponential (AA rate 10)))
-// (AS Distribution<Vector<Real>> iidDist (CA IID (AA base base) (AA n 2)))
+// (AS Distribution<Real> base (CA Exponential (AA rate 10)))
+// (AS Distribution<Vector<Real>> iidDist (CA IID (AA base base) (AA num 2)))
 // (DR Vector<Real> iid iidDist)
 // (AS Vector<Distribution<Real>> components (AR (CA Exponential (AA rate 10)) (CA Normal (AA mean 1) (AA sd 2))))
 // (DR Simplex weights (CA Dirichlet (AA alpha (AR 1 1))))
@@ -18,4 +18,5 @@ Mixture<Real> mixture = Mixture(components = components, weights = weights)
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
+// Wrong argument type for function `Exponential` and argument `rate`.
 // EXPECT TYPE_ERRORS

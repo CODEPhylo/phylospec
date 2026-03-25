@@ -32,3 +32,7 @@ revbayes {
 // (AS String logFile "output.log")
 // (AS Integer moves 5)
 // EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Wrong argument type for function `Normal` and argument `sd`.
+// EXPECT TYPE_ERRORS

@@ -4,9 +4,7 @@ import org.phylospec.Utils;
 import org.phylospec.ast.*;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
-import org.phylospec.components.Property;
 import org.phylospec.components.Type;
-import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.lexer.TokenType;
 
 import java.util.*;
@@ -230,6 +228,36 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
     }
 
     @Override
+    public Set<ResolvedType> visitStringTemplate(Expr.StringTemplate expr) {
+        // we have to make sure that the interpolated expressions are all either strings or numbers
+
+        for (Expr.StringTemplate.Part part : expr.parts) {
+            if (part instanceof Expr.StringTemplate.ExpressionPart) {
+                Expr interpolatedExpr = ((Expr.StringTemplate.ExpressionPart) part).expression();
+                Set<ResolvedType> interpolatedTypeSet = interpolatedExpr.accept(this);
+
+                if (!(
+                        TypeUtils.canBeAssignedTo(interpolatedTypeSet, ResolvedType.fromString("String", componentResolver), componentResolver)
+                                || TypeUtils.canBeAssignedTo(interpolatedTypeSet, ResolvedType.fromString("Integer", componentResolver), componentResolver)
+                                || TypeUtils.canBeAssignedTo(interpolatedTypeSet, ResolvedType.fromString("Real", componentResolver), componentResolver)
+                )) {
+                    // this variable is neither a string, real, nor integer and cannot be used in a string template
+                    throw new TypeError(
+                            expr,
+                            "Invalid variable in string template.",
+                            "You try to use a variable of type '" + printType(interpolatedTypeSet) + "' in a string template. However, only strings and numbers can be used here."
+                    );
+                }
+
+                // all good
+            }
+        }
+
+        // the return type is always a string
+        return remember(expr, Set.of(ResolvedType.fromString("String", componentResolver)));
+    }
+
+    @Override
     public Set<ResolvedType> visitVariable(Expr.Variable expr) {
         String variableName = expr.variableName;
         Set<ResolvedType> resolvedTypeSet = resolveVariable(variableName);
@@ -342,9 +370,40 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
     @Override
     public Set<ResolvedType> visitCall(Expr.Call expr) {
         // resolve arguments
-        Map<String, Set<ResolvedType>> resolvedArguments = Arrays.stream(expr.arguments).collect(
-                Collectors.toMap(x -> x.name, x -> x.accept(this))
-        );
+
+        Map<String, Set<ResolvedType>> resolvedArguments = new HashMap<>();
+        String firstArgumentName = null;
+        for (int i = 0; i < expr.arguments.length; i++) {
+            Expr.Argument argument = expr.arguments[i];
+
+            if (argument.name != null) {
+                resolvedArguments.put(argument.name, argument.accept(this));
+
+                if (i == 0) {
+                    firstArgumentName = argument.name;
+                }
+            } else if (argument.expression instanceof Expr.Variable) {
+                // any argument can drop the name if a variable name is passed with the same name
+                resolvedArguments.put(
+                        ((Expr.Variable) argument.expression).variableName,
+                        argument.accept(this)
+                );
+
+                if (i == 0) {
+                    firstArgumentName = ((Expr.Variable) argument.expression).variableName;
+                }
+            } else if (i == 0) {
+                // the first argument does not need a name
+                resolvedArguments.put(null, argument.accept(this));
+            } else {
+                // we are not in a situation where the argument name can be dropped
+                throw new TypeError(
+                        argument,
+                        "Argument name not specified.",
+                        "You have to specify the name of the argument here using 'name=<value>'. You can only omit the argument name for the first argument or when your variable has the same name as the argument."
+                );
+            }
+        }
 
         // fetch all compatible generators
         List<Generator> generators = componentResolver.resolveGenerator(expr.functionName);
@@ -362,7 +421,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
         for (Generator generator : generators) {
             try {
                 Set<ResolvedType> possibleGeneratorReturnTypes = TypeUtils.resolveGeneratedType(
-                        generator, resolvedArguments, componentResolver
+                        generator, resolvedArguments, firstArgumentName, componentResolver
                 );
                 possibleReturnTypes.addAll(possibleGeneratorReturnTypes);
             } catch (TypeError e) {
@@ -551,7 +610,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
         boolean foundMatchingProperty = false;
 
         for (ResolvedType objectType : objectTypeSet) {
-            
+
         }
 
         if (!foundMatchingProperty) {
@@ -559,6 +618,43 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
         }
 
         return remember(expr, returnTypeSet);
+    }
+
+    @Override
+    public Set<ResolvedType> visitRange(Expr.Range range) {
+        Set<ResolvedType> fromTypeSet = range.from.accept(this);
+        Set<ResolvedType> toTypeSet = range.to.accept(this);
+
+        if (!TypeUtils.canBeAssignedTo(fromTypeSet, ResolvedType.fromString("Integer", componentResolver), componentResolver)) {
+            throw new TypeError(
+                    range,
+                    "The lower bound of the range is not an integer.",
+                    "Use an integer expression as lower and upper bounds of a range.",
+                    List.of("5:20")
+            );
+        }
+        if (!TypeUtils.canBeAssignedTo(toTypeSet, ResolvedType.fromString("Integer", componentResolver), componentResolver)) {
+            throw new TypeError(
+                    range,
+                    "The upper bound of the range is not an integer.",
+                    "Use an integer expression as lower and upper bounds of a range.",
+                    List.of("5:20")
+            );
+        }
+
+        // the type of the items is the cover of the two bounds
+
+        Set<ResolvedType> itemTypeSet = TypeUtils.getLowestCoverTypeSet(List.of(fromTypeSet, toTypeSet), componentResolver);
+
+        // the type of the vector produced is the vector of the item type set
+
+        Set<ResolvedType> listComprehensionTypeSet = ResolvedType.fromString(
+                "Vector<T>",
+                Map.of("T", itemTypeSet),
+                componentResolver
+        );
+
+        return remember(range, listComprehensionTypeSet);
     }
 
     @Override

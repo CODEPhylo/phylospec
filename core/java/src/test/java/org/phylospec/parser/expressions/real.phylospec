@@ -14,6 +14,6 @@ Vector<PositiveReal> v2 = [p, 0.2]
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Expression of type `Real` cannot be assigned to variable `a` of type `Integer`
-// Expression of type `[Vector<Probability>,Vector<NonNegativeReal>]` cannot be assigned to variable `v2` of type `Vector<PositiveReal>`
+// Expression of type `Real` cannot be assigned to variable `a` of type `Integer`. Change the type of the variable to `Real`, or change what you assign to it.
+// Expression of type `Vector<NonNegativeReal> | Vector<Probability>` cannot be assigned to variable `v2` of type `Vector<PositiveReal>`. Change the type of the variable to `Vector<NonNegativeReal> | Vector<Probability>`, or change what you assign to it.
 // EXPECT TYPE_ERRORS

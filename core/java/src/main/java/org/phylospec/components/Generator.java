@@ -2,27 +2,23 @@
 package org.phylospec.components;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.annotation.JsonValue;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "name",
     "description",
     "namespace",
-    "generatorType",
     "generatedType",
     "typeParameters",
     "arguments",
@@ -43,13 +39,6 @@ public class Generator {
     private String description;
     @JsonProperty("namespace")
     private String namespace;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("generatorType")
-    private Generator.GeneratorType generatorType;
     /**
      * 
      * (Required)
@@ -126,26 +115,6 @@ public class Generator {
     @JsonProperty("namespace")
     public void setNamespace(String namespace) {
         this.namespace = namespace;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("generatorType")
-    public Generator.GeneratorType getGeneratorType() {
-        return generatorType;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("generatorType")
-    public void setGeneratorType(Generator.GeneratorType generatorType) {
-        this.generatorType = generatorType;
     }
 
     /**
@@ -268,10 +237,6 @@ public class Generator {
         sb.append('=');
         sb.append(((this.namespace == null)?"<null>":this.namespace));
         sb.append(',');
-        sb.append("generatorType");
-        sb.append('=');
-        sb.append(((this.generatorType == null)?"<null>":this.generatorType));
-        sb.append(',');
         sb.append("generatedType");
         sb.append('=');
         sb.append(((this.generatedType == null)?"<null>":this.generatedType));
@@ -316,7 +281,6 @@ public class Generator {
         result = ((result* 31)+((this.arguments == null)? 0 :this.arguments.hashCode()));
         result = ((result* 31)+((this.additionalProperties == null)? 0 :this.additionalProperties.hashCode()));
         result = ((result* 31)+((this.typeParameters == null)? 0 :this.typeParameters.hashCode()));
-        result = ((result* 31)+((this.generatorType == null)? 0 :this.generatorType.hashCode()));
         return result;
     }
 
@@ -329,47 +293,7 @@ public class Generator {
             return false;
         }
         Generator rhs = ((Generator) other);
-        return (((((((((((this.generatedType == rhs.generatedType)||((this.generatedType!= null)&&this.generatedType.equals(rhs.generatedType)))&&((this.examples == rhs.examples)||((this.examples!= null)&&this.examples.equals(rhs.examples))))&&((this.ioHints == rhs.ioHints)||((this.ioHints!= null)&&this.ioHints.equals(rhs.ioHints))))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.namespace == rhs.namespace)||((this.namespace!= null)&&this.namespace.equals(rhs.namespace))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.arguments == rhs.arguments)||((this.arguments!= null)&&this.arguments.equals(rhs.arguments))))&&((this.additionalProperties == rhs.additionalProperties)||((this.additionalProperties!= null)&&this.additionalProperties.equals(rhs.additionalProperties))))&&((this.typeParameters == rhs.typeParameters)||((this.typeParameters!= null)&&this.typeParameters.equals(rhs.typeParameters))))&&((this.generatorType == rhs.generatorType)||((this.generatorType!= null)&&this.generatorType.equals(rhs.generatorType))));
-    }
-
-    @Generated("jsonschema2pojo")
-    public enum GeneratorType {
-
-        DISTRIBUTION("distribution"),
-        FUNCTION("function");
-        private final String value;
-        private final static Map<String, Generator.GeneratorType> CONSTANTS = new HashMap<String, Generator.GeneratorType>();
-
-        static {
-            for (Generator.GeneratorType c: values()) {
-                CONSTANTS.put(c.value, c);
-            }
-        }
-
-        GeneratorType(String value) {
-            this.value = value;
-        }
-
-        @Override
-        public String toString() {
-            return this.value;
-        }
-
-        @JsonValue
-        public String value() {
-            return this.value;
-        }
-
-        @JsonCreator
-        public static Generator.GeneratorType fromValue(String value) {
-            Generator.GeneratorType constant = CONSTANTS.get(value);
-            if (constant == null) {
-                throw new IllegalArgumentException(value);
-            } else {
-                return constant;
-            }
-        }
-
+        return ((((((((((this.generatedType == rhs.generatedType)||((this.generatedType!= null)&&this.generatedType.equals(rhs.generatedType)))&&((this.examples == rhs.examples)||((this.examples!= null)&&this.examples.equals(rhs.examples))))&&((this.ioHints == rhs.ioHints)||((this.ioHints!= null)&&this.ioHints.equals(rhs.ioHints))))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.namespace == rhs.namespace)||((this.namespace!= null)&&this.namespace.equals(rhs.namespace))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.arguments == rhs.arguments)||((this.arguments!= null)&&this.arguments.equals(rhs.arguments))))&&((this.additionalProperties == rhs.additionalProperties)||((this.additionalProperties!= null)&&this.additionalProperties.equals(rhs.additionalProperties))))&&((this.typeParameters == rhs.typeParameters)||((this.typeParameters!= null)&&this.typeParameters.equals(rhs.typeParameters))));
     }
 
 }

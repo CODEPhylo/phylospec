@@ -6,6 +6,10 @@ String e = ":) ${a} world"
 String f = "${a}"
 String g = "${a}${b} ${c}"
 String h = ":) \${a} world"
+PositiveReal i = 3.0
+Integer j = 3
+Vector<Real> k = [3.0]
+String l = "${i}${j}${k}"
 
 // EXPECT AST
 // (AS String a "Hallo")
@@ -16,9 +20,14 @@ String h = ":) \${a} world"
 // (AS String f (ST "" a ""))
 // (AS String g (ST "" a "" b " " c ""))
 // (AS String h ":) \${a} world")
+// (AS PositiveReal i 3.0)
+// (AS Integer j 3)
+// (AS Vector<Real> k (AR 3.0))
+// (AS String l (ST "" i "" j "" k ""))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Operation `+` is not supported for types `String` and `Real`
-// Operation `+` is not supported for types `PositiveReal` and `String`
+// Operation `+` is not supported for types `String` and `Real`.
+// Operation `+` is not supported for types `PositiveReal` and `String`.
+// Invalid variable in string template. You try to use a variable of type 'Vector<Real>' in a string template. However, only strings and numbers can be used here.
 // EXPECT TYPE_ERRORS
