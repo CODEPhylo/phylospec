@@ -13,7 +13,10 @@ public enum TokenType {
     LESS, LESS_EQUAL,
 
     // literals
-    IDENTIFIER, STRING, INT, FLOAT,
+    IDENTIFIER, INT, FLOAT,
+
+    // strings
+    STRING_PART, INTERPOLATED_EXPRESSION,
 
     // keywords
     TRUE, FALSE, IMPORT, FOR, IN, OBSERVED_AS, OBSERVED_BETWEEN,
