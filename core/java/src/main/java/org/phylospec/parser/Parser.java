@@ -42,6 +42,7 @@ public class Parser {
     private final List<Token> tokens;
     private int current = 0;
     private boolean skipNewLines = false;
+    private Stmt.Block currentBlock = Stmt.Block.NO_BLOCK;
 
     private final Map<Token, AstNode> tokenAstNodeMap;
     private final Map<AstNode, Range> astNodeRanges;
@@ -80,7 +81,15 @@ public class Parser {
 
         while (!isAtEnd()) {
             try {
-                statements.add(importRule());
+                if (isBlockHeader()) {
+                    parseBlockHeader();
+                } else if (isBlockEnd()) {
+                    parseBlockEnd();
+                } else {
+                    Stmt stmt = importRule();
+                    stmt.block = currentBlock;
+                    statements.add(stmt);
+                }
 
                 if (!isAtEnd()) {
                     consume(
@@ -99,6 +108,43 @@ public class Parser {
         }
 
         return statements;
+    }
+
+    private boolean isBlockHeader() {
+        if (isAtEnd()) return false;
+        if (!check(TokenType.IDENTIFIER)) return false;
+        int nextIdx = current + 1;
+        return nextIdx < tokens.size() && tokens.get(nextIdx).type == TokenType.LEFT_BRACE;
+    }
+
+    private void parseBlockHeader() throws Error {
+        String blockName = advance().lexeme;
+
+        if (currentBlock != Stmt.Block.NO_BLOCK) {
+            throw new Error(
+                    peek().range,
+                    "Block not closed.",
+                    "You are starting a '" + blockName + "' without closing the '" + currentBlock.toString() + "' block. End the block with curly braces first.",
+                    List.of(currentBlock.toString() + "{\n\t\t...\t\n}\n\t" + blockName + "\n\t\t...\n\t}")
+            );
+        }
+
+        advance(); // consume LEFT_BRACE
+        currentBlock = switch (blockName) {
+            case "data" -> Stmt.Block.DATA;
+            case "model" -> Stmt.Block.MODEL;
+            case "mcmc" -> Stmt.Block.MCMC;
+            default -> new Stmt.Block.Custom(blockName);
+        };
+    }
+
+    private boolean isBlockEnd() {
+        return check(TokenType.RIGHT_BRACE);
+    }
+
+    private void parseBlockEnd() {
+        advance(); // consume RIGHT_BRACE
+        currentBlock = Stmt.Block.NO_BLOCK;
     }
 
     /* parser rules */

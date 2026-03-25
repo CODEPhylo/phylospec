@@ -14,6 +14,42 @@ public abstract class Stmt extends AstNode {
 
     abstract public <S, E, T> S accept(AstVisitor<S, E, T> visitor);
 
+    /** Identifies which block a statement belongs to. */
+    public sealed interface Block permits Block.NoBlock, Block.Data, Block.Model, Block.Mcmc, Block.Custom {
+        record NoBlock() implements Block {}
+        record Data() implements Block {
+            @Override
+            public String toString() {
+                return "data";
+            }
+        }
+        record Model() implements Block {
+            @Override
+            public String toString() {
+                return "model";
+            }
+        }
+        record Mcmc() implements Block {
+            @Override
+            public String toString() {
+                return "mcmc";
+            }
+        }
+        record Custom(String blockName) implements Block {
+            @Override
+            public String toString() {
+                return blockName;
+            }
+        }
+
+        Block NO_BLOCK = new NoBlock();
+        Block DATA = new Data();
+        Block MODEL = new Model();
+        Block MCMC = new Mcmc();
+    }
+
+    public Block block = Block.NO_BLOCK;
+
     /** Represents an assignment like `Real value = 10`. */
     public static class Assignment extends Stmt {
         public Assignment(AstType type, String name, Expr expression) {

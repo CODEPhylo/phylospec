@@ -6,7 +6,7 @@ String e = "200" yr
 
 // EXPECT AST
 // (AS Age a 100 yr)
-// (AS Age b 200 Myr)
+// (AS Age b 200 Ma)
 // (AS Real c 200 yr)
 // (AS Age d (+ 200 100 yr))
 // (AS String e "200")

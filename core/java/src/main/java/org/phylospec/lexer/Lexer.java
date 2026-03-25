@@ -119,6 +119,12 @@ public class Lexer {
             case ':':
                 addToken(TokenType.COLON);
                 break;
+            case '{':
+                addToken(TokenType.LEFT_BRACE);
+                break;
+            case '}':
+                addToken(TokenType.RIGHT_BRACE);
+                break;
 
             // one or two character tokens
             case '!':

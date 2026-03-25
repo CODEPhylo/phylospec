@@ -2,12 +2,16 @@ String a = "Hallo"
 String b = a + a + "Nooooo"
 String c = a + -5.0
 String d = 10.0 + "hallo"
+String e = ":) ${a + 1} world"
+String f = ":) \${a} world"
 
 // EXPECT AST
 // (AS String a "Hallo")
 // (AS String b (+ (+ a a) "Nooooo"))
 // (AS String c (+ a (- 5.0)))
 // (AS String d (+ 10.0 "hallo"))
+// (AS String e (IS ":) " " world" (+ a a))
+// (AS String f ":) \${a} world")
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
