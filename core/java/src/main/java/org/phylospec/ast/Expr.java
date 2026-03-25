@@ -48,6 +48,41 @@ public abstract class Expr extends AstNode {
         }
     }
 
+    /** Represents a string template that may contain interpolated expressions,
+     * e.g. {@code "file_${seed}.nex"}. Plain strings with no interpolations
+     * are represented by {@link Literal} instead. */
+    public static class StringTemplate extends Expr {
+
+        /** A single piece of a string template, either literal text or an interpolated expression. */
+        public sealed interface Part permits StringTemplate.StringPart, StringTemplate.ExpressionPart {}
+        public record StringPart(String value) implements Part {}
+        public record ExpressionPart(Expr.Variable expression) implements Part {}
+
+        public StringTemplate(List<Part> parts) {
+            this.parts = parts;
+        }
+
+        @JsonPropertyDescription("The parts of the string template, alternating between literal text and interpolated expressions.")
+        public final List<Part> parts;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            StringTemplate that = (StringTemplate) o;
+            return Objects.equals(parts, that.parts);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(parts);
+        }
+
+        @Override
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
+            return visitor.visitStringTemplate(this);
+        }
+    }
+
     /** Represents a literal, i.e. either a String, an Integer, or a
      * Real. */
 	public static class Literal extends Expr {

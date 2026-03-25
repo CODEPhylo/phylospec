@@ -71,6 +71,27 @@ public class AstPrinter implements AstVisitor<String, String, String> {
     }
 
     @Override
+    public String visitStringTemplate(Expr.StringTemplate expr) {
+        StringBuilder result = new StringBuilder("(ST ");
+
+        for (int i = 0; i < expr.parts.size(); i++) {
+            Expr.StringTemplate.Part part = expr.parts.get(i);
+            if (part instanceof Expr.StringTemplate.StringPart) {
+                result.append("\"").append(((Expr.StringTemplate.StringPart) part).value()).append("\"");
+            } else {
+                result.append(((Expr.StringTemplate.ExpressionPart) part).expression().variableName);
+            }
+
+            if (i < expr.parts.size() - 1) {
+                result.append(" ");
+            }
+        }
+
+        result.append(")");
+        return result.toString();
+    }
+
+    @Override
     public String visitVariable(Expr.Variable expr) {
         return expr.variableName;
     }

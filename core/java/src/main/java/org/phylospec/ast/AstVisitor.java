@@ -29,6 +29,9 @@ public interface AstVisitor<S, E, T> {
     }
 
     public E visitLiteral(Expr.Literal expr);
+    default E visitStringTemplate(Expr.StringTemplate expr) {
+        return null;
+    }
     public E visitVariable(Expr.Variable expr);
     public E visitUnary(Expr.Unary expr);
     public E visitBinary(Expr.Binary expr);

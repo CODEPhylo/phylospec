@@ -250,8 +250,8 @@ public class Lexer {
                 if (isAtEnd()) {
                     reportError(
                             new Range(startLine, currentLine, start - startLineStart, current - currentLineStart),
-                            "A string interpolation must be terminated with an '}'.",
-                            "Use curly brackets to add an interpolated value into a string.",
+                            "A string template must be terminated with an '}'.",
+                            "Use curly brackets to add an variable name into a string.",
                             List.of("String name = \"file_{seed}.nex")
                     );
                     return;
@@ -285,10 +285,7 @@ public class Lexer {
 
         // Trim the surrounding quotes.
         String value = source.substring(currentPartStart, current - 1);
-
-        if (!value.isBlank()) {
-            addToken(TokenType.STRING_PART, value);
-        }
+        addToken(TokenType.STRING_END, value);
     }
 
     private void identifier() {
