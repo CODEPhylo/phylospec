@@ -1,4 +1,4 @@
-use beastx
+use phylospc
 use revbayes.distributions
 
 // EXPECT AST
@@ -7,6 +7,6 @@ use revbayes.distributions
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Import beastx is not known
-// Import revbayes.distributions is not known
+// The import 'phylospc' does not exist. Do you want to use 'phylospec'?
+// The import 'revbayes.distributions' does not exist. Do you want to use 'phylospec.distributions'?
 // EXPECT TYPE_ERRORS

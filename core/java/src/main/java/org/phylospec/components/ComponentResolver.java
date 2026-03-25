@@ -102,7 +102,7 @@ public class ComponentResolver {
         if (!knownNamespaces.contains(namespaceString)) {
             String closestNamespace = findClosestNamespace(namespaceString);
             throw new TypeError(
-                    "The import " + namespaceString + " does not exist.",
+                    "The import '" + namespaceString + "' does not exist.",
                     "Do you want to use '" + closestNamespace + "'?",
                     List.of("use " + closestNamespace)
             );
@@ -142,7 +142,7 @@ public class ComponentResolver {
         if (!knownNamespaces.contains(namespaceString)) {
             String closestNamespace = findClosestNamespace(namespaceString);
             throw new TypeError(
-                    "The import " + namespaceString + " does not exist.",
+                    "The import '" + namespaceString + "' does not exist.",
                     "Do you want to use '" + closestNamespace + "'?",
                     List.of("use " + closestNamespace)
             );

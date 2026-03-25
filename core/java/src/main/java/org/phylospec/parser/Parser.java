@@ -581,15 +581,13 @@ public class Parser {
         if (match(TokenType.TILDE)) {
             expression = expression();
             return remember(new Expr.DrawnArgument(argumentName, expression));
-        }
-
-        if (match(TokenType.EQUAL)) {
+        } else if (match(TokenType.EQUAL)) {
             expression = expression();
+            return remember(new Expr.AssignedArgument(argumentName, expression));
         } else {
-            expression = new Expr.Variable(argumentName);
+            // we have no argument name
+            return remember(new Expr.AssignedArgument(expression));
         }
-
-        return remember(new Expr.AssignedArgument(argumentName, expression));
     }
 
     private Expr array() throws Error {

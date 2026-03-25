@@ -52,18 +52,10 @@ public class TypeUtils {
     static Set<ResolvedType> resolveGeneratedType(
             Generator generator,
             Map<String, Set<ResolvedType>> resolvedArguments,
+            String firstArgumentName,
             ComponentResolver componentResolver
     ) {
         List<Argument> parameters = generator.getArguments();
-
-        // handle edge case when a single unnamed parameter is passed
-
-        if (resolvedArguments.size() == 1 && resolvedArguments.get(null) != null) {
-            // make sure there is exactly one required parameter
-            if (parameters.stream().filter(Argument::getRequired).count() != 1) {
-                throw new TypeError("Missing required argument for function `" + generator.getName() + "`");
-            }
-        }
 
         // make sure we don't pass any unknown arguments
 
@@ -71,8 +63,8 @@ public class TypeUtils {
                 .map(Argument::getName)
                 .collect(Collectors.toSet());
         for (String argument : resolvedArguments.keySet()) {
-            if (!parameterNames.contains(argument) && argument != null) {
-                throw new TypeError("Function `" + generator.getName() + "` takes no argument named `" + argument + "`");
+            if (!parameterNames.contains(argument) && !Objects.equals(argument, firstArgumentName)) {
+                throw new TypeError("Function `" + generator.getName() + "` takes no argument named `" + argument + "`.");
             }
         }
 
@@ -84,14 +76,14 @@ public class TypeUtils {
 
             Set<ResolvedType> resolvedArgumentTypeSet = resolvedArguments.get(parameterName);
 
-            if (resolvedArgumentTypeSet == null && parameter.getRequired()) {
+            if (resolvedArgumentTypeSet == null && parameter == parameters.getFirst()) {
                 // there might be an unnamed argument
-                resolvedArgumentTypeSet = resolvedArguments.get(null);
+                resolvedArgumentTypeSet = resolvedArguments.get(firstArgumentName);
             }
 
             if (resolvedArgumentTypeSet == null) {
                 if (parameter.getRequired()) {
-                    throw new TypeError("Function `" + generator.getName() + "` takes the required argument `" + parameterName + "`");
+                    throw new TypeError("Function `" + generator.getName() + "` takes the required argument `" + parameterName + "`.");
                 }
 
                 continue;
@@ -115,7 +107,9 @@ public class TypeUtils {
             }
 
             if (!foundMatch) {
-                throw new TypeError("Wrong argument type for function `" + generator.getName() + "` and argument `" + parameterName + "`");
+                throw new TypeError(
+                        "Wrong argument type for function `" + generator.getName() + "` and argument `" + parameterName + "`."
+                );
             }
 
         }

@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "name",
     "description",
     "extends",
+    "alias",
     "typeParameters",
     "properties",
     "namespace"
@@ -42,6 +43,8 @@ public class Type {
     private String description;
     @JsonProperty("extends")
     private String _extends;
+    @JsonProperty("alias")
+    private String alias;
     /**
      * Type parameters for generic types (e.g., ['T'] for Vector<T>)
      * 
@@ -109,6 +112,16 @@ public class Type {
     @JsonProperty("extends")
     public void setExtends(String _extends) {
         this._extends = _extends;
+    }
+
+    @JsonProperty("alias")
+    public String getAlias() {
+        return alias;
+    }
+
+    @JsonProperty("alias")
+    public void setAlias(String alias) {
+        this.alias = alias;
     }
 
     /**
@@ -183,6 +196,10 @@ public class Type {
         sb.append('=');
         sb.append(((this._extends == null)?"<null>":this._extends));
         sb.append(',');
+        sb.append("alias");
+        sb.append('=');
+        sb.append(((this.alias == null)?"<null>":this.alias));
+        sb.append(',');
         sb.append("typeParameters");
         sb.append('=');
         sb.append(((this.typeParameters == null)?"<null>":this.typeParameters));
@@ -214,6 +231,7 @@ public class Type {
         result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
         result = ((result* 31)+((this.namespace == null)? 0 :this.namespace.hashCode()));
         result = ((result* 31)+((this.description == null)? 0 :this.description.hashCode()));
+        result = ((result* 31)+((this.alias == null)? 0 :this.alias.hashCode()));
         result = ((result* 31)+((this.additionalProperties == null)? 0 :this.additionalProperties.hashCode()));
         result = ((result* 31)+((this.typeParameters == null)? 0 :this.typeParameters.hashCode()));
         result = ((result* 31)+((this.properties == null)? 0 :this.properties.hashCode()));
@@ -229,7 +247,7 @@ public class Type {
             return false;
         }
         Type rhs = ((Type) other);
-        return ((((((((this._extends == rhs._extends)||((this._extends!= null)&&this._extends.equals(rhs._extends)))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.namespace == rhs.namespace)||((this.namespace!= null)&&this.namespace.equals(rhs.namespace))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.additionalProperties == rhs.additionalProperties)||((this.additionalProperties!= null)&&this.additionalProperties.equals(rhs.additionalProperties))))&&((this.typeParameters == rhs.typeParameters)||((this.typeParameters!= null)&&this.typeParameters.equals(rhs.typeParameters))))&&((this.properties == rhs.properties)||((this.properties!= null)&&this.properties.equals(rhs.properties))));
+        return (((((((((this._extends == rhs._extends)||((this._extends!= null)&&this._extends.equals(rhs._extends)))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.namespace == rhs.namespace)||((this.namespace!= null)&&this.namespace.equals(rhs.namespace))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.alias == rhs.alias)||((this.alias!= null)&&this.alias.equals(rhs.alias))))&&((this.additionalProperties == rhs.additionalProperties)||((this.additionalProperties!= null)&&this.additionalProperties.equals(rhs.additionalProperties))))&&((this.typeParameters == rhs.typeParameters)||((this.typeParameters!= null)&&this.typeParameters.equals(rhs.typeParameters))))&&((this.properties == rhs.properties)||((this.properties!= null)&&this.properties.equals(rhs.properties))));
     }
 
 }

@@ -1,15 +1,18 @@
-Real logSd = log(10)
+PositiveReal logSd = exp(10)
 Real x ~ LogNormal(3, logSd)
 Real y ~ LogNormal(x, logSd)
-QMatrix b = HKY(10)
+Real z ~ LogNormal(logSd, x)
+QMatrix b = hky(10)
 
 // EXPECT AST
-// (AS Real logSd (CA log (AA null 10)))
-// (DR Real x (CA LogNormal (AA null 3) (AA logSd logSd)))
-// (DR Real y (CA LogNormal (AA x x) (AA logSd logSd)))
-// (AS QMatrix b (CA HKY (AA null 10)))
+// (AS PositiveReal logSd (CA exp (AA null 10)))
+// (DR Real x (CA LogNormal (AA null 3) (AA null logSd)))
+// (DR Real y (CA LogNormal (AA null x) (AA null logSd)))
+// (DR Real z (CA LogNormal (AA null logSd) (AA null x)))
+// (AS QMatrix b (CA hky (AA null 10)))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Missing required argument for function `HKY`
+// Function `LogNormal` takes no argument named `x`.
+// Function `hky` takes the required argument `baseFrequencies`.
 // EXPECT TYPE_ERRORS

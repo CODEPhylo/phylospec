@@ -3,9 +3,9 @@ Real b = CCD0(tree)
 
 // EXPECT AST
 // (AS Integer tree 20)
-// (AS Real b (CA CCD0 (AA tree tree)))
+// (AS Real b (CA CCD0 (AA null tree)))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Function `CCD0` is not known
+// The function `CCD0` does not exist. Are you looking for `k80'?
 // EXPECT TYPE_ERRORS

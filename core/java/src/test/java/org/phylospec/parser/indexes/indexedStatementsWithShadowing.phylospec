@@ -11,7 +11,7 @@ PositiveReal vector2[x] = vector[x] * vector[x] for x in 1:num(vector)
 // EXPECT AST
 // (AS Vector<PositiveReal> vector (AR 10.0 2.0 5.0))
 // (AS String x "Hallo")
-// (IS (AS PositiveReal vector2 (* (IX vector x) (IX vector x))) x (R 1 (CA num (AA vector vector))))
+// (IS (AS PositiveReal vector2 (* (IX vector x) (IX vector x))) x (R 1 (CA num (AA null vector))))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS

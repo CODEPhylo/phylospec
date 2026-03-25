@@ -51,15 +51,15 @@ mcmc {
 // EXPECT AST
 // (AS String seed (CA env (AA null "SEED")))
 // (AS Alignment molecularData (CA fromNexus (AA null (ST "alignment_" seed ".nex")) (AA age (CA parse (AA delimiter "_") (AA part 1)))))
-// (AS Alignment traitData (CA traitsFromTaxa (AA null (CA taxa (AA molecularData molecularData))) (AA trait (CA parse (AA delimiter "_") (AA part 2)))))
-// (DR Tree tree (CA Yule (DA birthRate (CA Exponential (AA rate 1))) (AA taxa (CA taxa (AA molecularData molecularData)))))
+// (AS Alignment traitData (CA traitsFromTaxa (AA null (CA taxa (AA null molecularData))) (AA trait (CA parse (AA delimiter "_") (AA part 2)))))
+// (DR Tree tree (CA Yule (DA birthRate (CA Exponential (AA rate 1))) (AA taxa (CA taxa (AA null molecularData)))))
 // (AS QMatrix molecularQ (CA hky (DA kappa (CA LogNormal (AA logMean 0.1) (AA logSd 2))) (DA baseFrequencies (CA Dirichlet (AA null (AR 1 1 1 1))))))
 // (AS QMatrix traitQ (CA mk (DA rate (CA LogNormal (AA logMean 0.1) (AA logSd 2)))))
-// (DR Vector<Rate> siteRates (CA DiscreteGammaInv (AA shape 1) (AA numCategories 4) (AA invariantProportion 0.1) (AA numSites (CA numSites (AA molecularData molecularData)))))
-// (DR Vector<Rate> branchRates (CA RelaxedClock (AA null (CA LogNormal (AA logMean 1) (AA logSd 2))) (AA numBranches (CA numBranches (AA tree tree)))))
-// (OA (DR Alignment molecular (CA PhyloCTMC (AA tree tree) (AA qMatrix molecularQ) (AA siteRates siteRates) (AA branchRates branchRates))) molecularData)
-// (OA (DR Alignment traits (CA PhyloCTMC (AA tree tree) (AA qMatrix traitQ) (AA branchRates branchRates))) traitData)
-// (OB (AS Age rootAge (CA rootAge (AA tree tree))) 1.7 yr 4 yr)
+// (DR Vector<Rate> siteRates (CA DiscreteGammaInv (AA shape 1) (AA numCategories 4) (AA invariantProportion 0.1) (AA numSites (CA numSites (AA null molecularData)))))
+// (DR Vector<Rate> branchRates (CA RelaxedClock (AA null (CA LogNormal (AA logMean 1) (AA logSd 2))) (AA numBranches (CA numBranches (AA null tree)))))
+// (OA (DR Alignment molecular (CA PhyloCTMC (AA null tree) (AA qMatrix molecularQ) (AA null siteRates) (AA null branchRates))) molecularData)
+// (OA (DR Alignment traits (CA PhyloCTMC (AA null tree) (AA qMatrix traitQ) (AA null branchRates))) traitData)
+// (OB (AS Age rootAge (CA rootAge (AA null tree))) 1.7 yr 4 yr)
 // (AS Integer chainLength 100)
 // EXPECT AST
 
