@@ -621,6 +621,88 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
     }
 
     @Override
+    public Set<ResolvedType> visitIndex(Expr.Index expr) {
+        Set<ResolvedType> containerTypeSet = expr.object.accept(this);
+
+        // collect the possible index types and item types based on the resolved container types
+
+        Set<ResolvedType> itemTypeSet = new HashSet<>();
+        Set<ResolvedType> indexTypeSet = new HashSet<>();
+        Set<Integer> numberOfIndicesRequired = new HashSet<>();
+
+        for (ResolvedType possibleContainerType : containerTypeSet) {
+            Map<String, List<ResolvedType>> resolvedTypeParameterTypes = new HashMap<>();
+            if (TypeUtils.checkAssignabilityAndResolveTypeParameters(
+                    "Map<K, V>", possibleContainerType, List.of("K", "V"), resolvedTypeParameterTypes, componentResolver
+            )) {
+                itemTypeSet.addAll(resolvedTypeParameterTypes.get("V"));
+                indexTypeSet.addAll(resolvedTypeParameterTypes.get("K"));
+                numberOfIndicesRequired.add(1);
+            }
+
+            resolvedTypeParameterTypes.clear();
+            if (TypeUtils.checkAssignabilityAndResolveTypeParameters(
+                    "Matrix<T>", possibleContainerType, List.of("T"), resolvedTypeParameterTypes, componentResolver
+            )) {
+                itemTypeSet.addAll(resolvedTypeParameterTypes.get("T"));
+                indexTypeSet.add(ResolvedType.fromString("NonNegativeInteger", componentResolver));
+                numberOfIndicesRequired.add(2);
+            }
+
+            resolvedTypeParameterTypes.clear();
+            if (TypeUtils.checkAssignabilityAndResolveTypeParameters(
+                    "Vector<T>", possibleContainerType, List.of("T"), resolvedTypeParameterTypes, componentResolver
+            )) {
+                itemTypeSet.addAll(resolvedTypeParameterTypes.get("T"));
+                indexTypeSet.add(ResolvedType.fromString("NonNegativeInteger", componentResolver));
+                numberOfIndicesRequired.add(1);
+            }
+        }
+
+        // check if we can even index this
+
+        if (numberOfIndicesRequired.isEmpty()) {
+            throw new TypeError(
+                    "This element cannot be accessed with an index.",
+                    "You use the index notation ('items[3]') on an element which is neither a vector, a matrix nor a map. Remove the index."
+            );
+        }
+
+        // check if there are the right number of indices
+
+        if (!numberOfIndicesRequired.contains(expr.indices.size())) {
+            throw new TypeError(
+                    "Wrong number of indices provided.",
+                    "You provide " + expr.indices.size() + " indices, but " + numberOfIndicesRequired.stream().map(String::valueOf).collect(Collectors.joining("|")) + " are needed."
+            );
+        }
+
+        // check that the passed indices have the correct type
+
+        for (Expr index : expr.indices) {
+            Set<ResolvedType> resolvedIndexTypeSet = index.accept(this);
+
+            // we need at least one match
+            boolean hasMatch = false;
+            for (ResolvedType possibleIndexType : indexTypeSet) {
+                if (TypeUtils.canBeAssignedTo(resolvedIndexTypeSet, possibleIndexType, componentResolver)) {
+                    hasMatch = true;
+                    break;
+                }
+            }
+
+            if (!hasMatch) {
+                throw new TypeError(
+                        "Invalid index.",
+                        "Your index is of type '" + printType(resolvedIndexTypeSet) + "'. Only use values of type '" + printType(indexTypeSet) + "' as an index."
+                );
+            }
+        }
+
+        return itemTypeSet;
+    }
+
+    @Override
     public Set<ResolvedType> visitRange(Expr.Range range) {
         Set<ResolvedType> fromTypeSet = range.from.accept(this);
         Set<ResolvedType> toTypeSet = range.to.accept(this);

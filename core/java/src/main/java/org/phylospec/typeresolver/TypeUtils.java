@@ -321,7 +321,7 @@ public class TypeUtils {
      * @param componentResolver the component resolver
      * @return true if the object can be assigned to the argument
      */
-    private static boolean checkAssignabilityAndResolveTypeParameters(
+    public static boolean checkAssignabilityAndResolveTypeParameters(
             String requiredTypeName,
             ResolvedType resolvedType,
             List<String> typeParameterNames,
