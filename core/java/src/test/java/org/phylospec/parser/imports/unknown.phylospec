@@ -2,7 +2,7 @@ use phylospc
 use revbayes.distributions
 
 // EXPECT AST
-// (IM beastx)
+// (IM phylospc)
 // (IM revbayes distributions)
 // EXPECT AST
 
