@@ -187,6 +187,83 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
     }
 
     @Override
+    public ResolvedType visitIndexedStmt(Stmt.Indexed indexed) {
+        if (indexed.indices.size() != indexed.ranges.size()) {
+            throw new TypeError(
+                    indexed,
+                    "Number of index variables does not match number of ranges.",
+                    "Provide one range for each index variable."
+            );
+        }
+
+        if (indexed.indices.isEmpty() || 2 < indexed.indices.size()) {
+            throw new TypeError(
+                    indexed,
+                    "Indexed statements must have one or two indices.",
+                    "Use one index for vectors and two indices for matrices."
+            );
+        }
+
+        // evaluate each range and add the corresponding index variable to a new scope
+
+        createScope();
+
+        ResolvedType innerType;
+        try {
+            for (int i = 0; i < indexed.indices.size(); i++) {
+                Expr.Variable indexVar = indexed.indices.get(i);
+                Set<ResolvedType> rangeTypeSet = indexed.ranges.get(i).accept(this);
+
+                if (!TypeUtils.canBeAssignedTo(rangeTypeSet, ResolvedType.fromString("Vector<NonNegativeInteger>", componentResolver), componentResolver)) {
+                    throw new TypeError(
+                            indexed,
+                            "Index range must produce positive integer values.",
+                            "Use integer expressions as the range bounds (e.g., '1:10')."
+                    );
+                }
+
+                Set<ResolvedType> indexVarTypeSet = Set.of(ResolvedType.fromString("NonNegativeInteger", componentResolver));
+                remember(indexVar.variableName, indexVarTypeSet);
+            }
+
+            // evaluate the inner statement with the index variables in scope
+
+            innerType = indexed.statement.accept(this);
+        } finally {
+            dropScope();
+        }
+
+        if (innerType == null) {
+            return null;
+        }
+
+        // widen the result type: Vector<T> for one index, Matrix<T> for two
+
+        Set<ResolvedType> widenedType;
+        if (indexed.indices.size() == 1) {
+            widenedType = ResolvedType.fromString("Vector<T>",  Map.of("T", Set.of(innerType)), componentResolver);
+        } else {
+            widenedType = ResolvedType.fromString("Matrix<T>",  Map.of("T", Set.of(innerType)), componentResolver);
+        }
+
+        // register the widened type in the outer scope under the variable name
+
+        String variableName = extractVariableName(indexed.statement);
+        if (variableName != null) {
+            remember(variableName, widenedType);
+        }
+
+        return remember(indexed, widenedType.iterator().next());
+    }
+
+    private String extractVariableName(Stmt stmt) {
+        if (stmt instanceof Stmt.Assignment a) return a.name;
+        if (stmt instanceof Stmt.Draw d) return d.name;
+        if (stmt instanceof Stmt.Decorated decorated) return extractVariableName(decorated.statement);
+        return null;
+    }
+
+    @Override
     public Set<ResolvedType> visitLiteral(Expr.Literal expr) {
         // TODO: only specify the most specific type. this does not work atm due to a bug in TypeMatcher
         Set<String> typeName = switch (expr.value) {

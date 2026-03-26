@@ -6,7 +6,7 @@ Vector<PositiveReal> vector = [
 
 PositiveReal x = vector[2]
 
-Matrix<PositiveReal>> matrix = [
+Matrix<PositiveReal> matrix = [
    [10.0, 2.0],
    [10.0, 2.0],
    [10.0, 5.0],
@@ -15,7 +15,7 @@ Matrix<PositiveReal>> matrix = [
 PositiveReal y = matrix[2, 1]
 PositiveReal z = matrix[vector[2], 1 * 100]
 String w = vector[2]
-String z = vector["2"]
+String k = vector["2"]
 
 // EXPECT AST
 // (AS Vector<PositiveReal> vector (AR 10.0 2.0 5.0))
@@ -23,7 +23,8 @@ String z = vector["2"]
 // (AS Matrix<PositiveReal> matrix (AR (AR 10.0 2.0) (AR 10.0 2.0) (AR 10.0 5.0)))
 // (AS PositiveReal y (IX matrix 2 1))
 // (AS PositiveReal z (IX matrix (IX vector 2) (* 1 100)))
-// (AS String w (IX matrix (IX vector 2) (* 1 100)))
+// (AS String w (IX vector 2))
+// (AS String k (IX vector "2"))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS

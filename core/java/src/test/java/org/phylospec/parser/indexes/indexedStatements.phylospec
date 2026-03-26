@@ -4,11 +4,31 @@ Vector<Real> vector = [
     -5.0
 ]
 
-Real vector2[i] = x*x for i in 1:num(vector)
-Real vector2[i, j] = x*x for i in 1:num(vector) for j in 1:5
+String i = ""
+
+Integer vector2[i] = i*i for i in 1:num(vector)
+Real vector3[i, j] = vector2[i]*vector2[j] for i in 1:num(vector) for j in 1:5
+Integer vector4[i] = 2.5*i for i in 1:num(vector)
+
+Vector<Integer> vector5 = vector2
+Vector<Real> vector6 = vector2
+
+Real vector7[i] = 2.5*j for i in 1:10
 
 // EXPECT AST
 // (AS Vector<Real> vector (AR 10.0 2.0 (- 5.0)))
-// (IS (AS Real vector2 (* x x)) i (R 1 (CA num (AA null vector))))
-// (IS (AS Real vector2 (* x x)) i (R 1 (CA num (AA null vector))) j (R 1 5))
+// (AS String i "")
+// (IS (AS Integer vector2 (* i i)) i (R 1 (CA num (AA null vector))))
+// (IS (AS Real vector3 (* (IX vector2 i) (IX vector2 j))) i (R 1 (CA num (AA null vector))) j (R 1 5))
+// (IS (AS Integer vector4 (* 2.5 i)) i (R 1 (CA num (AA null vector))))
+// (AS Vector<Integer> vector5 vector2)
+// (AS Vector<Real> vector6 vector2)
+// (IS (AS Real vector7 (* 2.5 j)) i (R 1 10))
 // EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Expression of type `Integer` cannot be assigned to variable `vector3` of type `Real`. Change the type of the variable to `Integer`, or change what you assign to it.
+// Expression of type `Real` cannot be assigned to variable `vector4` of type `Integer`. Change the type of the variable to `Real`, or change what you assign to it.
+// Expression of type `Vector<Integer>` cannot be assigned to variable `vector6` of type `Vector<Real>`. Change the type of the variable to `Vector<Integer>`, or change what you assign to it.
+// Variable `j` does not exist. Do you mean `i'?
+// EXPECT TYPE_ERRORS
