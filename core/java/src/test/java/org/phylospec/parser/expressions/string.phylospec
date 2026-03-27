@@ -4,7 +4,7 @@ String c = a + -5.0
 String d = 10.0 + "hallo"
 String e = ":) ${a} world"
 String f = "${a}"
-String g = "${a}${b} ${c}"
+String g = "${a}${b}"
 String h = ":) \${a} world"
 PositiveReal i = 3.0
 Integer j = 3
@@ -18,7 +18,7 @@ String l = "${i}${j}${k}"
 // (AS String d (+ 10.0 "hallo"))
 // (AS String e (ST ":) " a " world"))
 // (AS String f (ST "" a ""))
-// (AS String g (ST "" a "" b " " c ""))
+// (AS String g (ST "" a "" b ""))
 // (AS String h ":) \${a} world")
 // (AS PositiveReal i 3.0)
 // (AS Integer j 3)

@@ -173,7 +173,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(stmt);
         if (stochasticity == Stochasticity.STOCHASTIC) stochasticity = Stochasticity.DETERMINISTIC;
 
-        ResolvedType type = typeResolver.resolveType(stmt);
+        ResolvedType type = typeResolver.resolveType(stmt).iterator().next();
 
         addRevAssignment(stmt.name, stochasticity, type, expression);
 
@@ -183,7 +183,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     @Override
     public Void visitDraw(Stmt.Draw stmt) {
         StringBuilder expression = stmt.expression.accept(this);
-        ResolvedType type = typeResolver.resolveType(stmt);
+        ResolvedType type = typeResolver.resolveType(stmt).iterator().next();
 
         Set<ResolvedType> expressionTypeSet = typeResolver.resolveType(stmt.expression);
         Stochasticity[] stochasticity = new Stochasticity[] {Stochasticity.DETERMINISTIC};

@@ -15,38 +15,38 @@ public class TypeUtilsTest {
         ComponentResolver componentResolver = buildComponentResolver();
 
         assertTrue(TypeUtils.covers(
-                ResolvedType.fromString("Real", componentResolver),
-                ResolvedType.fromString("Real", componentResolver),
+                ResolvedType.fromString("Real", componentResolver).iterator().next(),
+                ResolvedType.fromString("Real", componentResolver).iterator().next(),
                 componentResolver
         ));
 
         assertTrue(TypeUtils.covers(
-                ResolvedType.fromString("Real", componentResolver),
-                ResolvedType.fromString("PositiveReal", componentResolver),
+                ResolvedType.fromString("Real", componentResolver).iterator().next(),
+                ResolvedType.fromString("PositiveReal", componentResolver).iterator().next(),
                 componentResolver
         ));
 
         assertTrue(TypeUtils.covers(
-                ResolvedType.fromString("Real", componentResolver),
-                ResolvedType.fromString("NonNegativeReal", componentResolver),
+                ResolvedType.fromString("Real", componentResolver).iterator().next(),
+                ResolvedType.fromString("NonNegativeReal", componentResolver).iterator().next(),
                 componentResolver
         ));
 
         assertTrue(TypeUtils.covers(
-                ResolvedType.fromString("Vector<Real>", componentResolver),
-                ResolvedType.fromString("Vector<PositiveReal>", componentResolver),
+                ResolvedType.fromString("Vector<Real>", componentResolver).iterator().next(),
+                ResolvedType.fromString("Vector<PositiveReal>", componentResolver).iterator().next(),
                 componentResolver
         ));
 
         assertFalse(TypeUtils.covers(
-                ResolvedType.fromString("PositiveReal", componentResolver),
-                ResolvedType.fromString("Real", componentResolver),
+                ResolvedType.fromString("PositiveReal", componentResolver).iterator().next(),
+                ResolvedType.fromString("Real", componentResolver).iterator().next(),
                 componentResolver
         ));
 
         assertFalse(TypeUtils.covers(
-                ResolvedType.fromString("Vector<PositiveReal>", componentResolver),
-                ResolvedType.fromString("Vector<Real>", componentResolver),
+                ResolvedType.fromString("Vector<PositiveReal>", componentResolver).iterator().next(),
+                ResolvedType.fromString("Vector<Real>", componentResolver).iterator().next(),
                 componentResolver
         ));
     }
@@ -56,10 +56,10 @@ public class TypeUtilsTest {
         ComponentResolver componentResolver = buildComponentResolver();
 
         assertEquals(
-                ResolvedType.fromString("Real", componentResolver),
+                ResolvedType.fromString("Real", componentResolver).iterator().next(),
                 TypeUtils.getLowestCover(
-                    ResolvedType.fromString("Real", componentResolver),
-                    ResolvedType.fromString("NonNegativeReal", componentResolver),
+                    ResolvedType.fromString("Real", componentResolver).iterator().next(),
+                    ResolvedType.fromString("NonNegativeReal", componentResolver).iterator().next(),
                     componentResolver
             )
         );

@@ -4,14 +4,14 @@ Distribution<Vector<PositiveReal>> iidDist = IID(base = base, num = 2)
 
 // Mixture
 Vector<Distribution<Real>> components = [Exponential(rate = 10), Normal(mean = 1, sd = 2)]
-Simplex weights ~ Dirichlet(alpha = [1, 1])
+Simplex weights ~ Dirichlet(concentration = [1, 1])
 Distribution<PositiveReal> mixture = Mixture(components = components, weights = weights)
 
 // EXPECT AST
 // (AS Distribution<Real> base (CA Exponential (AA rate 10)))
 // (AS Distribution<Vector<PositiveReal>> iidDist (CA IID (AA base base) (AA num 2)))
 // (AS Vector<Distribution<Real>> components (AR (CA Exponential (AA rate 10)) (CA Normal (AA mean 1) (AA sd 2))))
-// (DR Simplex weights (CA Dirichlet (AA alpha (AR 1 1))))
+// (DR Simplex weights (CA Dirichlet (AA concentration (AR 1 1))))
 // (AS Distribution<PositiveReal> mixture (CA Mixture (AA components components) (AA weights weights)))
 // EXPECT AST
 

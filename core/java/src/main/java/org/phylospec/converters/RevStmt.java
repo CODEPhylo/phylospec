@@ -127,7 +127,7 @@ class RevStmt {
         }
 
         private boolean covers(String typeString, ResolvedType type) {
-            return TypeUtils.covers(ResolvedType.fromString(typeString, componentResolver), type, componentResolver);
+            return TypeUtils.covers(ResolvedType.fromString(typeString, componentResolver).iterator().next(), type, componentResolver);
         }
     }
 }

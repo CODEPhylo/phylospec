@@ -5,7 +5,7 @@ Age d = 200 + 100 yr
 String e = "200" yr
 
 // EXPECT AST
-// (AS Age a 100 yr)
+// (AS Age a (- 100 yr))
 // (AS Age b 200 Ma)
 // (AS Real c 200 yr)
 // (AS Age d (+ 200 100 yr))
@@ -13,5 +13,5 @@ String e = "200" yr
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Expression of type `Integer | Real` cannot be assigned to variable `a` of type `NonNegativeReal`. Change the type of the variable to `Integer | Real`, or change what you assign to it.
+// Expression of type `Integer | Real` cannot be assigned to variable `a` of type `Age | NonNegativeReal`. Change the type of the variable to `Integer | Real`, or change what you assign to it.
 // EXPECT TYPE_ERRORS

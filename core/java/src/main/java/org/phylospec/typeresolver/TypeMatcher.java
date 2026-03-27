@@ -45,7 +45,7 @@ class TypeMatcher {
                 boolean allInputsMatch = true;
                 for (int i = 0; i < inputCombination.size(); i++) {
                     if (rule.inputTypes[i] != ANY && !TypeUtils.covers(
-                            ResolvedType.fromString(rule.inputTypes[i], componentResolver),
+                            ResolvedType.fromString(rule.inputTypes[i], componentResolver).iterator().next(),
                             inputCombination.get(i),
                             componentResolver
                     )) {
@@ -55,7 +55,7 @@ class TypeMatcher {
                 }
 
                 if (allInputsMatch) resultTypesOfMatches.add(
-                        ResolvedType.fromString(rule.resultType, componentResolver)
+                        ResolvedType.fromString(rule.resultType, componentResolver).iterator().next()
                 );
             }
         }
