@@ -1,0 +1,18 @@
+// drawing from a distribution stored in a variable
+Distribution<PositiveReal> d = LogNormal(logMean=0.0, logSd=1.0)
+
+// valid: variable type matches the generated type
+PositiveReal x ~ d
+
+// invalid: Integer cannot hold PositiveReal
+Integer y ~ d
+
+// EXPECT AST
+// (AS Distribution<PositiveReal> d (CA LogNormal (AA logMean 0.0) (AA logSd 1.0)))
+// (DR PositiveReal x d)
+// (DR Integer y d)
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Expression of type `NonNegativeReal | PositiveReal | Real` cannot be assigned to variable `y` of type `Integer`. Change the type of the variable to `Distribution<PositiveReal>`, or change what value you draw and assign to it.
+// EXPECT TYPE_ERRORS

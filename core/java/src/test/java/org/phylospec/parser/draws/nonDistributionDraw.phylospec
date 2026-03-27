@@ -1,0 +1,15 @@
+// using ~ on a non-distribution value is an error
+Real x = 5.0
+Real y ~ x
+Real z ~ 5.0
+
+// EXPECT AST
+// (AS Real x 5.0)
+// (DR Real y x)
+// (DR Real z 5.0)
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Expression after `~' is not a distribution. After '~', you always need to provide a distribution. Do you want use `=` instead?
+// Expression after `~' is not a distribution. After '~', you always need to provide a distribution. Do you want use `=` instead?
+// EXPECT TYPE_ERRORS

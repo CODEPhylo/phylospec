@@ -1,0 +1,14 @@
+// array of float literals summing to 1.0 is recognised as a Simplex
+Simplex s1 = [0.25, 0.25, 0.25, 0.25]
+
+// array that does not sum to 1.0 is not a Simplex
+Simplex s2 = [0.25, 0.25, 0.25]
+
+// EXPECT AST
+// (AS Simplex s1 (AR 0.25 0.25 0.25 0.25))
+// (AS Simplex s2 (AR 0.25 0.25 0.25))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Expression of type `Vector<PositiveReal> | Vector<Probability>` cannot be assigned to variable `s2` of type `Simplex`. Change the type of the variable to `Vector<PositiveReal> | Vector<Probability>`, or change what you assign to it.
+// EXPECT TYPE_ERRORS

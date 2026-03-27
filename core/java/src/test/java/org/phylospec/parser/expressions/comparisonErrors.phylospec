@@ -1,0 +1,19 @@
+// == and != accept any pair of types
+Boolean a = "hello" == "world"
+Boolean b = true != 5
+
+// >= and <= require Real or Integer operands
+Boolean c = "hello" >= "world"
+Boolean d = true < false
+
+// EXPECT AST
+// (AS Boolean a (== "hello" "world"))
+// (AS Boolean b (!= true 5))
+// (AS Boolean c (>= "hello" "world"))
+// (AS Boolean d (< true false))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Operation `>=` is not supported for types `String` and `String`.
+// Operation `<` is not supported for types `Boolean` and `Boolean`.
+// EXPECT TYPE_ERRORS
