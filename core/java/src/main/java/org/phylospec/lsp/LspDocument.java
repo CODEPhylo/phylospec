@@ -149,29 +149,35 @@ class LspDocument implements ErrorEventListener {
 
         switch (node) {
             case AstType typeNode -> {
-                ResolvedType resolvedType = typeResolver.resolveType(typeNode);
-                if (resolvedType == null) return null;
+                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveType(typeNode);
+                if (resolvedTypeSet == null) return null;
 
-                hoverText.append("```phylospec\n");
-                hoverText.append(resolvedType);
-                hoverText.append("\n```\n\n");
-                hoverText.append(resolvedType.getTypeComponent().getDescription());
+                for (ResolvedType resolvedType : resolvedTypeSet) {
+                    hoverText.append("```phylospec\n");
+                    hoverText.append(resolvedType);
+                    hoverText.append("\n```\n\n");
+                    hoverText.append(resolvedType.getTypeComponent().getDescription());
+                }
             }
             case Stmt.Assignment stmt -> {
-                ResolvedType resolvedType = typeResolver.resolveType(stmt);
-                if (resolvedType == null) return null;
+                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveType(stmt);
+                if (resolvedTypeSet == null) return null;
 
-                hoverText.append("```phylospec\n");
-                hoverText.append(resolvedType).append(" ").append(stmt.name);
-                hoverText.append("\n```");
+                for (ResolvedType resolvedType : resolvedTypeSet) {
+                    hoverText.append("```phylospec\n");
+                    hoverText.append(resolvedType).append(" ").append(stmt.name);
+                    hoverText.append("\n```");
+                }
             }
             case Stmt.Draw stmt -> {
-                ResolvedType resolvedType = typeResolver.resolveType(stmt);
-                if (resolvedType == null) return null;
+                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveType(stmt);
+                if (resolvedTypeSet == null) return null;
 
-                hoverText.append("```phylospec\n");
-                hoverText.append(resolvedType).append(" ").append(stmt.name);
-                hoverText.append("\n```");
+                for (ResolvedType resolvedType : resolvedTypeSet) {
+                    hoverText.append("```phylospec\n");
+                    hoverText.append(resolvedType).append(" ").append(stmt.name);
+                    hoverText.append("\n```");
+                }
             }
             case Expr.Variable variable -> {
                 Set<ResolvedType> resolvedTypeSet = typeResolver.resolveVariable(variable.variableName);

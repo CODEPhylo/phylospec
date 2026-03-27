@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 /// Set<ResolvedType> exprType = resolver.resolveType(<some AST expression>);
 /// ResolvedType varType = resolver.resolveVariable(<some var name>);
 ///```
-public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>, ResolvedType> {
+public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedType>, Set<ResolvedType>> {
 
     private final ComponentResolver componentResolver;
     private final TypeMatcher typeMatcher;
@@ -70,16 +70,16 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
      * Returns the types associated with the given AST type node. Returns null if no
      * type is known.
      */
-    public ResolvedType resolveType(AstType astTypeNode) {
-        return this.resolvedTypes.containsKey(astTypeNode) ? this.resolvedTypes.get(astTypeNode).iterator().next() : null;
+    public Set<ResolvedType> resolveType(AstType astTypeNode) {
+        return this.resolvedTypes.getOrDefault(astTypeNode, null);
     }
 
     /**
      * Returns the types associated with the given AST statement node. Returns null if
      * no type is known.
      */
-    public ResolvedType resolveType(Stmt astTypeNode) {
-        return this.resolvedTypes.containsKey(astTypeNode) ? this.resolvedTypes.get(astTypeNode).iterator().next() : null;
+    public Set<ResolvedType> resolveType(Stmt astTypeNode) {
+        return this.resolvedTypes.getOrDefault(astTypeNode, null);
     }
 
     /**
@@ -112,33 +112,49 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
      */
 
     @Override
-    public ResolvedType visitDecoratedStmt(Stmt.Decorated stmt) {
+    public Set<ResolvedType> visitDecoratedStmt(Stmt.Decorated stmt) {
         return remember(stmt, stmt.statement.accept(this));
     }
 
     @Override
-    public ResolvedType visitAssignment(Stmt.Assignment stmt) {
-        ResolvedType resolvedVariableType = stmt.type.accept(this);
-        remember(stmt.name, Set.of(resolvedVariableType));
+    public Set<ResolvedType> visitAssignment(Stmt.Assignment stmt) {
+        Set<ResolvedType> resolvedVariableTypeSet = stmt.type.accept(this);
 
         Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
 
-        if (!TypeUtils.canBeAssignedTo(resolvedExpressionTypeSet, resolvedVariableType, componentResolver)) {
+        if (!TypeUtils.canBeAssignedTo(resolvedExpressionTypeSet, resolvedVariableTypeSet, componentResolver)) {
             // TODO: check if distribution and give hint to use ~
             throw new TypeError(
                     stmt,
-                    "Expression of type `" + printType(resolvedExpressionTypeSet) + "` cannot be assigned to variable `" + stmt.name + "` of type `" + printType(Set.of(resolvedVariableType)) + "`.",
+                    "Expression of type `" + printType(resolvedExpressionTypeSet) + "` cannot be assigned to variable `" + stmt.name + "` of type `" + printType(resolvedVariableTypeSet) + "`.",
                     "Change the type of the variable to `" + printType(resolvedExpressionTypeSet) + "`, or change what you assign to it."
             );
         }
 
-        return remember(stmt, resolvedVariableType);
+        // the resolved type variables might be stripped of the type parameters
+        // if this is the case, we try to attach the resolved parameter types
+        // so far, this only works if the type is not extended
+
+        for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
+            if (resolvedVariableType.hasUnresolvedParameterTypes()) {
+                // find the matching resolved types
+                for (ResolvedType resolvedExpressionType: resolvedExpressionTypeSet) {
+                    if (resolvedVariableType.getName().equals(resolvedExpressionType.getName())) {
+                        resolvedVariableType.getParameterTypes().putAll(
+                                resolvedExpressionType.getParameterTypes()
+                        );
+                    }
+                }
+            }
+        }
+
+        remember(stmt.name, resolvedVariableTypeSet);
+        return remember(stmt, resolvedExpressionTypeSet);
     }
 
     @Override
-    public ResolvedType visitDraw(Stmt.Draw stmt) {
-        ResolvedType resolvedVariableType = stmt.type.accept(this);
-        remember(stmt.name, Set.of(resolvedVariableType));
+    public Set<ResolvedType> visitDraw(Stmt.Draw stmt) {
+        Set<ResolvedType> resolvedVariableTypeSet = stmt.type.accept(this);
 
         Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
 
@@ -165,19 +181,37 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
             );
         }
 
-        if (!TypeUtils.canBeAssignedTo(generatedTypeSet, resolvedVariableType, componentResolver)) {
+        if (!TypeUtils.canBeAssignedTo(generatedTypeSet, resolvedVariableTypeSet, componentResolver)) {
             throw new TypeError(
                     stmt,
-                    "Expression of type `" + printType(generatedTypeSet) + "` cannot be assigned to variable `" + stmt.name + "` of type `" + printType(Set.of(resolvedVariableType)) + "`.",
+                    "Expression of type `" + printType(generatedTypeSet) + "` cannot be assigned to variable `" + stmt.name + "` of type `" + printType(resolvedVariableTypeSet) + "`.",
                     "Change the type of the variable to `" + printType(resolvedExpressionTypeSet) + "`, or change what value you draw and assign to it."
             );
         }
 
-        return remember(stmt, resolvedVariableType);
+        // the resolved type variables might be stripped of the type parameters
+        // if this is the case, we try to attach the resolved parameter types
+        // so far, this only works if the type is not extended
+
+        for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
+            if (resolvedVariableType.hasUnresolvedParameterTypes()) {
+                // find the matching resolved types
+                for (ResolvedType resolvedExpressionType: resolvedExpressionTypeSet) {
+                    if (resolvedVariableType.getName().equals(resolvedExpressionType.getName())) {
+                        resolvedVariableType.getParameterTypes().putAll(
+                                resolvedExpressionType.getParameterTypes()
+                        );
+                    }
+                }
+            }
+        }
+
+        remember(stmt.name, resolvedVariableTypeSet);
+        return remember(stmt, resolvedExpressionTypeSet);
     }
 
     @Override
-    public ResolvedType visitImport(Stmt.Import stmt) {
+    public Set<ResolvedType> visitImport(Stmt.Import stmt) {
         try {
             componentResolver.importNamespace(stmt.namespace);
         } catch (TypeError e) {
@@ -187,7 +221,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
     }
 
     @Override
-    public ResolvedType visitIndexedStmt(Stmt.Indexed indexed) {
+    public Set<ResolvedType> visitIndexedStmt(Stmt.Indexed indexed) {
         if (indexed.indices.size() != indexed.ranges.size()) {
             throw new TypeError(
                     indexed,
@@ -208,7 +242,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
 
         createScope();
 
-        ResolvedType innerType;
+        Set<ResolvedType> innerTypeSet;
         try {
             for (int i = 0; i < indexed.indices.size(); i++) {
                 Expr.Variable indexVar = indexed.indices.get(i);
@@ -222,38 +256,38 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
                     );
                 }
 
-                Set<ResolvedType> indexVarTypeSet = Set.of(ResolvedType.fromString("NonNegativeInteger", componentResolver));
+                Set<ResolvedType> indexVarTypeSet = ResolvedType.fromString("NonNegativeInteger", componentResolver);
                 remember(indexVar.variableName, indexVarTypeSet);
             }
 
             // evaluate the inner statement with the index variables in scope
 
-            innerType = indexed.statement.accept(this);
+            innerTypeSet = indexed.statement.accept(this);
         } finally {
             dropScope();
         }
 
-        if (innerType == null) {
+        if (innerTypeSet == null) {
             return null;
         }
 
         // widen the result type: Vector<T> for one index, Matrix<T> for two
 
-        Set<ResolvedType> widenedType;
+        Set<ResolvedType> widenedTypeSet;
         if (indexed.indices.size() == 1) {
-            widenedType = ResolvedType.fromString("Vector<T>",  Map.of("T", Set.of(innerType)), componentResolver);
+            widenedTypeSet = ResolvedType.fromString("Vector<T>",  Map.of("T", innerTypeSet), componentResolver);
         } else {
-            widenedType = ResolvedType.fromString("Matrix<T>",  Map.of("T", Set.of(innerType)), componentResolver);
+            widenedTypeSet = ResolvedType.fromString("Matrix<T>",  Map.of("T", innerTypeSet), componentResolver);
         }
 
         // register the widened type in the outer scope under the variable name
 
         String variableName = extractVariableName(indexed.statement);
         if (variableName != null) {
-            remember(variableName, widenedType);
+            remember(variableName, widenedTypeSet);
         }
 
-        return remember(indexed, widenedType.iterator().next());
+        return remember(indexed, widenedTypeSet);
     }
 
     private String extractVariableName(Stmt stmt) {
@@ -297,11 +331,13 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
             case Boolean ignored -> Set.of("Boolean");
             default -> Set.of();
         };
-        Set<ResolvedType> resolvedType = typeName.stream()
-                .map(x -> ResolvedType.fromString(x, componentResolver))
-                .collect(Collectors.toSet());
 
-        return remember(expr, resolvedType);
+        Set<ResolvedType> resolvedTypeSet = new HashSet<>();
+        for (String name : typeName) {
+            resolvedTypeSet.addAll(ResolvedType.fromString(name, componentResolver));
+        }
+
+        return remember(expr, resolvedTypeSet);
     }
 
     @Override
@@ -331,7 +367,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
         }
 
         // the return type is always a string
-        return remember(expr, Set.of(ResolvedType.fromString("String", componentResolver)));
+        return remember(expr, ResolvedType.fromString("String", componentResolver));
     }
 
     @Override
@@ -455,10 +491,6 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
 
             if (argument.name != null) {
                 resolvedArguments.put(argument.name, argument.accept(this));
-
-                if (i == 0) {
-                    firstArgumentName = argument.name;
-                }
             } else if (argument.expression instanceof Expr.Variable) {
                 // any argument can drop the name if a variable name is passed with the same name
                 resolvedArguments.put(
@@ -598,7 +630,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
         }
         if (Math.abs(summedUpLiterals - 1.0) < 1e-10) {
             // this is a simplex
-            arrayTypeSet.add(ResolvedType.fromString("Simplex", componentResolver));
+            arrayTypeSet.addAll(ResolvedType.fromString("Simplex", componentResolver));
         }
 
         return remember(expr, arrayTypeSet);
@@ -722,7 +754,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
                     "Matrix<T>", possibleContainerType, List.of("T"), resolvedTypeParameterTypes, componentResolver
             )) {
                 itemTypeSet.addAll(resolvedTypeParameterTypes.get("T"));
-                indexTypeSet.add(ResolvedType.fromString("NonNegativeInteger", componentResolver));
+                indexTypeSet.addAll(ResolvedType.fromString("NonNegativeInteger", componentResolver));
                 numberOfIndicesRequired.add(2);
             }
 
@@ -731,7 +763,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
                     "Vector<T>", possibleContainerType, List.of("T"), resolvedTypeParameterTypes, componentResolver
             )) {
                 itemTypeSet.addAll(resolvedTypeParameterTypes.get("T"));
-                indexTypeSet.add(ResolvedType.fromString("NonNegativeInteger", componentResolver));
+                indexTypeSet.addAll(ResolvedType.fromString("NonNegativeInteger", componentResolver));
                 numberOfIndicesRequired.add(1);
             }
         }
@@ -758,17 +790,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
 
         for (Expr index : expr.indices) {
             Set<ResolvedType> resolvedIndexTypeSet = index.accept(this);
-
-            // we need at least one match
-            boolean hasMatch = false;
-            for (ResolvedType possibleIndexType : indexTypeSet) {
-                if (TypeUtils.canBeAssignedTo(resolvedIndexTypeSet, possibleIndexType, componentResolver)) {
-                    hasMatch = true;
-                    break;
-                }
-            }
-
-            if (!hasMatch) {
+            if (!TypeUtils.canBeAssignedTo(resolvedIndexTypeSet, indexTypeSet, componentResolver)) {
                 throw new TypeError(
                         "Invalid index.",
                         "Your index is of type '" + printType(resolvedIndexTypeSet) + "'. Only use values of type '" + printType(indexTypeSet) + "' as an index."
@@ -817,24 +839,24 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
     }
 
     @Override
-    public ResolvedType visitAtomicType(AstType.Atomic expr) {
+    public Set<ResolvedType> visitAtomicType(AstType.Atomic expr) {
         try {
-            return remember(expr, ResolvedType.fromString(expr.name, componentResolver));
+            return remember(expr, ResolvedType.fromString(expr.name, componentResolver, true));
         } catch (TypeError e) {
             throw e.attachAstNode(expr);
         }
     }
 
     @Override
-    public ResolvedType visitGenericType(AstType.Generic expr) {
+    public Set<ResolvedType> visitGenericType(AstType.Generic expr) {
         List<Set<ResolvedType>> typeParameters = new ArrayList<>();
 
         // resolve the type parameters
         for (AstType type : expr.typeParameters) {
-            typeParameters.add(Set.of(type.accept(this)));
+            typeParameters.add(type.accept(this));
         }
 
-        ResolvedType resolvedType = ResolvedType.fromString(expr.name, typeParameters, componentResolver).iterator().next();
+        Set<ResolvedType> resolvedType = ResolvedType.fromString(expr.name, typeParameters, componentResolver, true);
         return remember(expr, resolvedType);
     }
 
@@ -856,8 +878,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
         this.scopedVariableTypes.removeFirst();
     }
 
-    private ResolvedType remember(Stmt expr, ResolvedType resolvedType) {
-        resolvedTypes.put(expr, Set.of(resolvedType));
+    private Set<ResolvedType> remember(Stmt expr, Set<ResolvedType> resolvedType) {
         return resolvedType;
     }
 
@@ -866,8 +887,8 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
         return resolvedType;
     }
 
-    private ResolvedType remember(AstType expr, ResolvedType resolvedType) {
-        resolvedTypes.put(expr, Set.of(resolvedType));
+    private Set<ResolvedType> remember(AstType expr, Set<ResolvedType> resolvedType) {
+        resolvedTypes.put(expr, resolvedType);
         return resolvedType;
     }
 

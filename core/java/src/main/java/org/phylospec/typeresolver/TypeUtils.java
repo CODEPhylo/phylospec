@@ -16,9 +16,11 @@ public class TypeUtils {
      * Checks if any of the types in {@code assignedTypeSet} can be assigned to {@code assigneeType}.
      * A type A can be assigned to type B if B covers A.
      */
-    public static boolean canBeAssignedTo(Set<ResolvedType> assignedTypeSet, ResolvedType assigneeType, ComponentResolver componentResolver) {
+    public static boolean canBeAssignedTo(Set<ResolvedType> assignedTypeSet, Set<ResolvedType> assigneeTypeSet, ComponentResolver componentResolver) {
         for (ResolvedType assignedType : assignedTypeSet) {
-            if (covers(assigneeType, assignedType, componentResolver)) return true;
+            for (ResolvedType assigneeType : assigneeTypeSet) {
+                if (covers(assigneeType, assignedType, componentResolver)) return true;
+            }
         }
         return false;
     }
@@ -64,7 +66,7 @@ public class TypeUtils {
                 .map(Argument::getName)
                 .collect(Collectors.toSet());
         for (String argument : resolvedArguments.keySet()) {
-            if (!parameterNames.contains(argument) && !Objects.equals(argument, firstArgumentName)) {
+            if (!parameterNames.contains(argument) && firstArgumentName != null && !argument.equals(firstArgumentName)) {
                 throw new TypeError("Function `" + generator.getName() + "` takes no argument named `" + argument + "`.");
             }
         }
@@ -185,6 +187,9 @@ public class TypeUtils {
     public static boolean covers(ResolvedType query, ResolvedType reference, ComponentResolver componentResolver) {
         if (query.equals(reference)) return true;
 
+        // test if the reference is stripped from its generics and if yes, if the stripped type matches
+        if (query.getParameterTypes().isEmpty() && query.getTypeComponent().equals(reference.getTypeComponent())) return true;
+
         boolean[] covers = {false};
         visitParents(
                 reference, x -> {
@@ -279,8 +284,10 @@ public class TypeUtils {
             ComponentResolver componentResolver
     ) {
         if (type.getExtends() != null) {
-            ResolvedType directlyExtendedType = ResolvedType.fromString(type.getExtends(), componentResolver);
-            visitTypeAndParents(directlyExtendedType, visitor, componentResolver);
+            Set<ResolvedType> directlyExtendedTypeSet = ResolvedType.fromString(type.getExtends(), componentResolver);
+            for (ResolvedType directlyExtendedType : directlyExtendedTypeSet) {
+                visitTypeAndParents(directlyExtendedType, visitor, componentResolver);
+            }
         }
 
         for (final String parameterName : type.getParameterTypes().keySet()) {
@@ -339,10 +346,15 @@ public class TypeUtils {
         }
 
         if (!isGeneric(requiredTypeName)) {
-            return covers(
-                    ResolvedType.fromString(requiredTypeName, componentResolver),
-                    resolvedType,
-                    componentResolver);
+            Set<ResolvedType> requiredTypeSet = ResolvedType.fromString(requiredTypeName, componentResolver, true);
+
+            for (ResolvedType requiredType : requiredTypeSet) {
+                if (covers(requiredType, resolvedType, componentResolver)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         Type requiredTypeComponent = componentResolver.resolveType(requiredTypeName);

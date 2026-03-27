@@ -5,6 +5,7 @@ Vector<PositiveReal> vector = [
 ]
 
 PositiveReal x = vector[2]
+PositiveReal p = vector[2, 3]
 
 Matrix<PositiveReal> matrix = [
    [10.0, 2.0],
@@ -20,6 +21,7 @@ String k = vector["2"]
 // EXPECT AST
 // (AS Vector<PositiveReal> vector (AR 10.0 2.0 5.0))
 // (AS PositiveReal x (IX vector 2))
+// (AS PositiveReal p (IX vector 2 3))
 // (AS Matrix<PositiveReal> matrix (AR (AR 10.0 2.0) (AR 10.0 2.0) (AR 10.0 5.0)))
 // (AS PositiveReal y (IX matrix 2 1))
 // (AS PositiveReal z (IX matrix (IX vector 2) (* 1 100)))
@@ -29,6 +31,7 @@ String k = vector["2"]
 
 // EXPECT TYPE_ERRORS
 // Wrong number of indices provided. You provide 2 indices, but 1 are needed.
+// Invalid index. Your index is of type 'PositiveReal'. Only use values of type 'NonNegativeInteger' as an index.
 // Expression of type `PositiveReal` cannot be assigned to variable `w` of type `String`. Change the type of the variable to `PositiveReal`, or change what you assign to it.
 // Invalid index. Your index is of type 'String'. Only use values of type 'NonNegativeInteger' as an index.
 // EXPECT TYPE_ERRORS

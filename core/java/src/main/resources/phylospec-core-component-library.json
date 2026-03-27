@@ -1823,7 +1823,7 @@
       },
       {
         "name": "StrictClock",
-        "generatedType": "Distribution<Vector<Real>>",
+        "generatedType": "Distribution<Vector<Rate>>",
         "namespace": "phylospec.distributions.clock",
         "description": "Strict clock model for branch rates",
         "arguments": [
@@ -1844,7 +1844,7 @@
       },
       {
         "name": "RelaxedClock",
-        "generatedType": "Distribution<Vector<Real>>",
+        "generatedType": "Distribution<Vector<Rate>>",
         "namespace": "phylospec.distributions.clock",
         "description": "Relaxed clock model for branch rates",
         "arguments": [
@@ -1864,7 +1864,7 @@
       },
       {
         "name": "DiscreteGammaInv",
-        "generatedType": "Distribution<Vector<Real>>",
+        "generatedType": "Distribution<Vector<Rate>>",
         "namespace": "phylospec.distributions.siterates",
         "description": "Discrete gamma site rates with a proportion of invariant sites",
         "arguments": [
