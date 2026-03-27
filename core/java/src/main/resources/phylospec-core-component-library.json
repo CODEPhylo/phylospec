@@ -93,6 +93,7 @@
         "name": "Matrix",
         "description": "Generic two-dimensional grid of values",
         "namespace": "phylospec.types",
+        "alias": "Vector<Vector<T>>",
         "typeParameters": [
           "T"
         ]
@@ -125,14 +126,21 @@
         "namespace": "phylospec.types"
       },
       {
+        "name": "Character",
+        "description": "Discrete character",
+        "namespace": "phylospec.types"
+      },
+      {
         "name": "Nucleotide",
         "description": "DNA/RNA nucleotide alphabet",
-        "namespace": "phylospec.types"
+        "namespace": "phylospec.types",
+        "extends": "Character"
       },
       {
         "name": "AminoAcid",
         "description": "Standard amino acid alphabet",
-        "namespace": "phylospec.types"
+        "namespace": "phylospec.types",
+        "extends": "Character"
       },
       {
         "name": "Sequence",
@@ -306,7 +314,7 @@
       },
       {
         "name": "fromNexus",
-        "generatedType": "Alignment",
+        "generatedType": "Alignment<Character>",
         "namespace": "phylospec.functions.io",
         "description": "Load an alignment from Nexus file",
         "ioHints": {
@@ -341,7 +349,7 @@
       },
       {
         "name": "fromNexus",
-        "generatedType": "Alignment",
+        "generatedType": "Alignment<Character>",
         "namespace": "phylospec.functions.io",
         "description": "Load an alignment from Nexus file",
         "ioHints": {
@@ -376,7 +384,7 @@
       },
       {
         "name": "fromFasta",
-        "generatedType": "Alignment",
+        "generatedType": "Alignment<Character>",
         "namespace": "phylospec.functions.io",
         "description": "Load alignment from FASTA file",
         "ioHints": {
@@ -411,7 +419,7 @@
       },
       {
         "name": "fromFasta",
-        "generatedType": "Alignment",
+        "generatedType": "Alignment<Character>",
         "namespace": "phylospec.functions.io",
         "description": "Load alignment from FASTA file",
         "ioHints": {
@@ -506,8 +514,28 @@
         ]
       },
       {
-        "name": "traitsFromTaxa",
-        "generatedType": "Alignment",
+        "name": "discreteTraitsFromTaxa",
+        "generatedType": "Alignment<Character>",
+        "namespace": "phylospec.functions.io",
+        "description": "Retrieves an alignment with a single trait from taxa names.",
+        "arguments": [
+          {
+            "name": "taxa",
+            "type": "Taxa",
+            "description": "The taxa to extract the traits from",
+            "required": true
+          },
+          {
+            "name": "trait",
+            "type": "Parser",
+            "description": "How to parse the trait from the taxon names",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "continuousTraitsFromTaxa",
+        "generatedType": "Alignment<Real>",
         "namespace": "phylospec.functions.io",
         "description": "Retrieves an alignment with a single trait from taxa names.",
         "arguments": [
@@ -644,13 +672,16 @@
       },
       {
         "name": "subset",
-        "generatedType": "Alignment",
+        "generatedType": "Alignment<T>",
         "namespace": "phylospec.functions.alignment",
         "description": "Extract a subset of sites from an alignment",
+        "typeParameters": [
+          "T"
+        ],
         "arguments": [
           {
             "name": "alignment",
-            "type": "Alignment",
+            "type": "Alignment<T>",
             "description": "Input alignment",
             "required": true
           },
@@ -670,13 +701,16 @@
       },
       {
         "name": "codonPosition",
-        "generatedType": "Alignment",
+        "generatedType": "Alignment<T>",
         "namespace": "phylospec.functions.alignment",
         "description": "Extract sites at a specific codon position from a coding sequence alignment",
+        "typeParameters": [
+          "T"
+        ],
         "arguments": [
           {
             "name": "alignment",
-            "type": "Alignment",
+            "type": "Alignment<T>",
             "description": "Input coding sequence alignment",
             "required": true
           },

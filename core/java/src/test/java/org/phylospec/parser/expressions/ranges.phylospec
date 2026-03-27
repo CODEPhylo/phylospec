@@ -17,4 +17,5 @@ Real x[i] = i * 2.0 for i in 1:n
 
 // EXPECT TYPE_ERRORS
 // The lower bound of the range is not an integer. Use an integer expression as lower and upper bounds of a range.
+// Index range must produce positive integer values. Use integer expressions as the range bounds (e.g., '1:10').
 // EXPECT TYPE_ERRORS
