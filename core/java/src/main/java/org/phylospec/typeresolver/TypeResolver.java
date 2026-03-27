@@ -149,7 +149,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
         for (ResolvedType expressionType : resolvedExpressionTypeSet) {
             TypeUtils.visitTypeAndParents(
                     expressionType, x -> {
-                        if (x.getName().equals("Distribution")) {
+                        if (x.getName().equals("phylospec.types.Distribution")) {
                             generatedTypeSet.add(x.getParameterTypes().get("T"));
                         }
                         return TypeUtils.Visitor.CONTINUE;
@@ -535,7 +535,7 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
         for (ResolvedType expressionType : resolvedTypeSet) {
             TypeUtils.visitTypeAndParents(
                     expressionType, x -> {
-                        if (x.getName().equals("Distribution")) {
+                        if (x.getName().equals("phylospec.types.Distribution")) {
                             generatedTypeSet.add(x.getParameterTypes().get("T"));
                             return TypeUtils.Visitor.STOP;
                         }
@@ -827,29 +827,14 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
 
     @Override
     public ResolvedType visitGenericType(AstType.Generic expr) {
-        ResolvedType resolvedType;
-        try {
-            resolvedType = ResolvedType.fromString(expr.name, componentResolver);
-        } catch (TypeError e) {
-            throw e.attachAstNode(expr);
-        }
-
-        if (resolvedType.getParametersNames().size() != expr.typeParameters.length) {
-            throw new TypeError(
-                    expr,
-                    "Wrong number of type parameters.",
-                    "Type `" + expr.name + "` takes " + resolvedType.getParametersNames().size() + " type parameters."
-            );
-        }
+        List<Set<ResolvedType>> typeParameters = new ArrayList<>();
 
         // resolve the type parameters
-        for (int i = 0; i < resolvedType.getParametersNames().size(); i++) {
-            resolvedType.getParameterTypes().put(
-                    resolvedType.getParametersNames().get(i),
-                    expr.typeParameters[i].accept(this)
-            );
+        for (AstType type : expr.typeParameters) {
+            typeParameters.add(Set.of(type.accept(this)));
         }
 
+        ResolvedType resolvedType = ResolvedType.fromString(expr.name, typeParameters, componentResolver).iterator().next();
         return remember(expr, resolvedType);
     }
 
@@ -902,11 +887,11 @@ public class TypeResolver implements AstVisitor<ResolvedType, Set<ResolvedType>,
         if (type.size() == 1) {
             return printType(type.iterator().next());
         }
-        return String.join(" | ", type.stream().map(TypeResolver::printType).toList());
+        return String.join(" | ", type.stream().map(TypeResolver::printType).sorted().toList());
     }
 
     private static String printType(ResolvedType type) {
-        String result = type.getName();
+        String result = type.getShortName();
 
         if (type.getParameterTypes().isEmpty()) return result;
 

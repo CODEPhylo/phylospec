@@ -238,7 +238,7 @@ class LspDocument implements ErrorEventListener {
             }
         }
 
-        for (String generatorName : componentResolver.getImportedGenerators().keySet()) {
+        for (String generatorName : componentResolver.getKnownGenerators().keySet()) {
             List<Generator> generators = componentResolver.resolveGenerator(generatorName);
 
             for (Generator generator : generators) {
@@ -251,7 +251,7 @@ class LspDocument implements ErrorEventListener {
             }
         }
 
-        for (String typeName : componentResolver.getImportedTypes().keySet()) {
+        for (String typeName : componentResolver.getKnownTypes().keySet()) {
             Type type = componentResolver.resolveType(typeName);
 
             CompletionItem item;

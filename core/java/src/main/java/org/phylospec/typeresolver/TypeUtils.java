@@ -4,6 +4,7 @@ import org.phylospec.Utils;
 import org.phylospec.components.Argument;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
+import org.phylospec.components.Type;
 
 import java.util.*;
 import java.util.function.Function;
@@ -141,7 +142,7 @@ public class TypeUtils {
     }
 
     /** Strips the generic part of the type name (e.g. {@code "Vector<Real>"} to {@code "Vector"}). */
-    static String stripGenerics(String typeString) {
+    public static String stripGenerics(String typeString) {
         if (isGeneric(typeString)) {
             return typeString.substring(0, typeString.indexOf("<"));
         } else {
@@ -151,8 +152,8 @@ public class TypeUtils {
 
     /** Returns a list containing the type strings of the generic type parameters. Supports nested
      * generics like {@code "Vector<Pair<Real, Real>>"} */
-    static List<String> parseParameterTypeNames(String typeString) {
-        if (!isGeneric(typeString)) return List.of();
+    public static List<String> parseParameterTypes(String typeString) {
+        if (!isGeneric(typeString)) return new ArrayList<>();
 
         int numNestedGenerics = 0;
         int lastStart = typeString.indexOf("<") + 1;
@@ -338,15 +339,14 @@ public class TypeUtils {
         }
 
         if (!isGeneric(requiredTypeName)) {
-            //
             return covers(
                     ResolvedType.fromString(requiredTypeName, componentResolver),
                     resolvedType,
                     componentResolver);
         }
 
-        String strippedRequiredTypeName = stripGenerics(requiredTypeName);
-        List<String> requiredParameterTypeNames = parseParameterTypeNames(requiredTypeName);
+        Type requiredTypeComponent = componentResolver.resolveType(requiredTypeName);
+        List<String> requiredParameterTypeNames = parseParameterTypes(requiredTypeName);
 
         // we look at all parents of resolvedType to find the type matching the given requiredTypeName
 
@@ -357,7 +357,7 @@ public class TypeUtils {
         visitTypeAndParents(
                 resolvedType,
                 type -> {
-                    if (!Objects.equals(type.getName(), strippedRequiredTypeName)) {
+                    if (!Objects.equals(type.getName(), requiredTypeComponent.getName())) {
                         return Visitor.CONTINUE;
                     }
                     if (requiredParameterTypeNames.size() != type.getParametersNames().size()) {

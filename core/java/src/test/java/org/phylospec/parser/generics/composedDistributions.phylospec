@@ -6,7 +6,7 @@ Vector<Real> iid ~ iidDist
 // Mixture
 Vector<Distribution<Real>> components = [Exponential(rate = 10), Normal(mean = 1, sd = 2)]
 Simplex weights ~ Dirichlet(alpha = [1, 1])
-Mixture<Real> mixture = Mixture(components = components, weights = weights)
+Distribution<Real> mixture = Mixture(components = components, weights = weights)
 
 // EXPECT AST
 // (AS Distribution<Real> base (CA Exponential (AA rate 10)))
@@ -18,5 +18,4 @@ Mixture<Real> mixture = Mixture(components = components, weights = weights)
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Wrong argument type for function `Exponential` and argument `rate`.
 // EXPECT TYPE_ERRORS

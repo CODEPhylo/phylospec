@@ -1,8 +1,6 @@
 package org.phylospec.typeresolver;
 
-import org.phylospec.Utils;
 import org.phylospec.components.ComponentResolver;
-import org.phylospec.components.Generator;
 import org.phylospec.components.Type;
 
 import java.util.*;
@@ -30,6 +28,11 @@ public class ResolvedType {
         return typeComponent.getName();
     }
 
+    public String getShortName() {
+        String[] splitNamespace = typeComponent.getName().split("\\.");
+        return splitNamespace[splitNamespace.length - 1];
+    }
+
     public String getExtends() {
         return typeComponent.getExtends();
     }
@@ -42,32 +45,21 @@ public class ResolvedType {
         return typeComponent.getTypeParameters();
     }
 
-    /** Creates a {@link ResolvedType} object based on the type name. Note that the given type must not
-     * be a generic type, and it must have been imported in the given {@link ComponentResolver}. */
+    /**
+     * Creates a {@link ResolvedType} object based on the type name. Note that the given type must not
+     * be a generic type, and it must have been imported in the given {@link ComponentResolver}.
+     */
     public static ResolvedType fromString(String typeString, ComponentResolver componentResolver) {
         return ResolvedType.fromString(typeString, new HashMap<>(), componentResolver).iterator().next();
     }
 
-    /// Returns all [ResolvedType] objects that can be created based on the type name and the
-    /// type parameter map. Note that the type must have been imported in the given [ComponentResolver].
-    ///
-    /// This method returns a set of [ResolvedType] objects because you can pass type sets for
-    /// the type parameters. As an example, {@code Vector<T>} with {@code T = [Real, Integer]} will
-    /// return {@code [Vector<Real>, Vector<Integer>]}.
-    public static Set<ResolvedType> fromString(String typeString, Map<String, Set<ResolvedType>> typeParameters, ComponentResolver componentResolver) {
-        if (!TypeUtils.isGeneric(typeString)) {
-            // return type is not a generic
-            Type typeComponent = componentResolver.resolveType(typeString);
-            if (typeComponent == null) {
-                throw new TypeError(
-                        "The type '" + typeString + "' does not exist.",
-                        "Are you looking for '" + componentResolver.findClosestType(typeString) + "'?"
-                );
-            }
-            return Set.of(new ResolvedType(typeComponent, new HashMap<>()));
-        }
-
-        // type is a generic
+    /**
+     * Creates a {@link ResolvedType} object based on the type name and the given resolved type parameters in
+     * correct order.
+     * Note that the given type must have been imported in the given {@link ComponentResolver}.
+     */
+    public static Set<ResolvedType> fromString(String typeString, List<Set<ResolvedType>> typeParameters, ComponentResolver componentResolver) {
+        // we build a map of the type parameters and then use the more general overloaded method
 
         String atomicTypeString = TypeUtils.stripGenerics(typeString);
         Type typeComponent = componentResolver.resolveType(atomicTypeString);
@@ -78,22 +70,81 @@ public class ResolvedType {
             );
         }
 
+        if (typeParameters.size() != typeComponent.getTypeParameters().size()) {
+            throw new TypeError(
+                    "The type '" + typeString + "' takes " + typeComponent.getTypeParameters().size() + " type parameters, but you provided " + typeParameters.size() + ".",
+                    "Provide exactly " + typeParameters.size() + " type parameters."
+            );
+        }
+
+        Map<String, Set<ResolvedType>> typeParameterMap = new HashMap<>();
+        for (int i = 0; i < typeParameters.size(); i++) {
+            typeParameterMap.put(typeComponent.getTypeParameters().get(i), typeParameters.get(i));
+        }
+
+        return ResolvedType.fromString(typeString, typeParameterMap, componentResolver);
+    }
+
+    /// Returns all [ResolvedType] objects that can be created based on the type name and the
+    /// type parameter map. Note that the type must have been imported in the given [ComponentResolver].
+    ///
+    /// This method returns a set of [ResolvedType] objects because you can pass type sets for
+    /// the type parameters. As an example, {@code Vector<T>} with {@code T = [Real, Integer]} will
+    /// return {@code [Vector<Real>, Vector<Integer>]}.
+    public static Set<ResolvedType> fromString(String typeString, Map<String, Set<ResolvedType>> typeParameters, ComponentResolver componentResolver) {
+        String atomicTypeString = TypeUtils.stripGenerics(typeString);
+        Type typeComponent = componentResolver.resolveType(atomicTypeString);
+        if (typeComponent == null) {
+            throw new TypeError(
+                    "The type '" + typeString + "' does not exist.",
+                    "Are you looking for '" + componentResolver.findClosestType(typeString) + "'?"
+            );
+        }
+
+        if (typeComponent.getAlias() != null) {
+            // this has an alias
+            // we resolve the aliased type
+            return ResolvedType.fromString(typeComponent.getAlias(), typeParameters, componentResolver);
+        }
+
         // resolve the possible type parameters
 
-        List<String> typeParameterNames = TypeUtils.parseParameterTypeNames(typeString);
+        // we have two cases:
+        // either, the type name is given as a generic ("Vector<Real>"), and we resolve the type parameters for the given type names
+        // or it is not given as a generic ("Vector"). in that case, it still might actually be a generic type, and we can use the
+        // given typeParameters to resolve the parameters
+
+        List<String> typeParameterNames = TypeUtils.parseParameterTypes(typeString);
         List<Set<ResolvedType>> inferredTypeParameters = new ArrayList<>();
-        for (String typeParameterName : typeParameterNames) {
-            if (
-                    typeComponent.getTypeParameters().contains(typeParameterName)
-                            && typeParameters.containsKey(typeParameterName)
-            ) {
-                // parameter type is a Generic (like T) and we know its value
+
+        if (TypeUtils.isGeneric(typeString)) {
+            // in this case, the given type string directly indicates the type parameters (e.g. Vector<Real>).
+            // we resolve the type parameters from the string
+
+            for (String typeParameterName : typeParameterNames) {
+                if (typeComponent.getTypeParameters().contains(typeParameterName) && typeParameters.containsKey(typeParameterName)) {
+                    // parameter type is a Generic (like T) and we know its value
+                    inferredTypeParameters.add(typeParameters.get(typeParameterName));
+                } else {
+                    // parameter type is another type (like Real) and we resolve it recursively
+                    inferredTypeParameters.add(
+                            ResolvedType.fromString(typeParameterName, typeParameters, componentResolver)
+                    );
+                }
+            }
+        } else {
+            // in this case, the type string has no indication of type parameters
+            // however, the type might still be a generic one, and we got the resolved parameter types through the
+            // passed 'typeParameters'
+
+            for (String typeParameterName : typeComponent.getTypeParameters()) {
+                if (!typeParameters.containsKey(typeParameterName)) {
+                    throw new TypeError(
+                            "The type '" + typeString + "' does not exist.",
+                            "Are you looking for '" + componentResolver.findClosestType(typeString) + "'?"
+                    );
+                }
                 inferredTypeParameters.add(typeParameters.get(typeParameterName));
-            } else if (!typeComponent.getTypeParameters().contains(typeParameterName)) {
-                // parameter type is another type (like Real) and we resolve it recursively
-                inferredTypeParameters.add(
-                        ResolvedType.fromString(typeParameterName, typeParameters, componentResolver)
-                );
             }
         }
 

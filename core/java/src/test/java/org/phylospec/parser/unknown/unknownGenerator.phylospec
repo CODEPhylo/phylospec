@@ -7,5 +7,5 @@ Real b = CCD0(tree)
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// The function `CCD0` does not exist. Are you looking for `k80'?
+// The function `CCD0` does not exist. Are you looking for `IID'?
 // EXPECT TYPE_ERRORS
