@@ -1,0 +1,13 @@
+// drawing from a distribution that generates a type incompatible with the declared variable type
+Integer x ~ Normal(mean=0.0, sd=1.0)
+PositiveReal y ~ Normal(mean=0.0, sd=1.0)
+
+// EXPECT AST
+// (DR Integer x (CA Normal (AA mean 0.0) (AA sd 1.0)))
+// (DR PositiveReal y (CA Normal (AA mean 0.0) (AA sd 1.0)))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Expression of type `Real` cannot be assigned to variable `x` of type `Integer`. Change the type of the variable to `Distribution<Real>`, or change what value you draw and assign to it.
+// Expression of type `Real` cannot be assigned to variable `y` of type `PositiveReal`. Change the type of the variable to `Distribution<Real>`, or change what value you draw and assign to it.
+// EXPECT TYPE_ERRORS

@@ -1,0 +1,29 @@
+// valid: boolean assigned to boolean
+Boolean a = true
+
+// invalid: boolean assigned to integer
+Integer b = true
+
+// invalid: + is not defined for booleans
+Boolean c = true + false
+
+// invalid: > is not defined for strings
+Boolean d = "hello" > "world"
+
+// invalid: > does not accept a boolean as the right operand
+Boolean e = 5 > true
+
+// EXPECT AST
+// (AS Boolean a true)
+// (AS Integer b true)
+// (AS Boolean c (+ true false))
+// (AS Boolean d (> "hello" "world"))
+// (AS Boolean e (> 5 true))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Expression of type `Boolean` cannot be assigned to variable `b` of type `Integer`. Change the type of the variable to `Boolean`, or change what you assign to it.
+// Operation `+` is not supported for types `Boolean` and `Boolean`.
+// Operation `>` is not supported for types `String` and `String`.
+// Operation `>` is not supported for types `PositiveInteger | PositiveReal` and `Boolean`.
+// EXPECT TYPE_ERRORS
