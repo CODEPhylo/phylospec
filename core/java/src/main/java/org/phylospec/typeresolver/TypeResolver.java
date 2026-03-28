@@ -256,7 +256,14 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                     );
                 }
 
-                Set<ResolvedType> indexVarTypeSet = ResolvedType.fromString("NonNegativeInteger", componentResolver);
+                Set<ResolvedType> indexVarTypeSet = new HashSet<>();
+                for (ResolvedType rangeType : rangeTypeSet) {
+                    ResolvedType indexVarType = TypeUtils.recoverType(
+                            "phylospec.types.Vector", rangeType, componentResolver
+                    ).getParameterTypes().get("T");
+                    if (indexVarType != null) indexVarTypeSet.add(indexVarType);
+                }
+
                 remember(indexVar.variableName, indexVarTypeSet);
             }
 
@@ -288,6 +295,125 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         }
 
         return remember(indexed, widenedTypeSet);
+    }
+
+    @Override
+    public Set<ResolvedType> visitObservedAsStmt(Stmt.ObservedAs observedAs) {
+        Set<ResolvedType> observationTypeSet = observedAs.observedAs.accept(this);
+        Set<ResolvedType> generatedDistributionTypeSet = observedAs.stmt.accept(this);
+
+        // go through generatedDistributionTypeSet, filter the Distribution<> ones and get the actual underlying values
+
+        Set<ResolvedType> generatedTypeSet = new HashSet<>();
+        for (ResolvedType generatedDistType : generatedDistributionTypeSet) {
+            ResolvedType recoveredDistributionType = TypeUtils.recoverType(
+                    "phylospec.types.Distribution", generatedDistType, componentResolver
+            );
+            if (recoveredDistributionType == null) {
+                // this is not a distribution type directly
+                // it could still be a random variable though
+                generatedTypeSet.add(generatedDistType);
+                continue;
+            }
+
+            ResolvedType generatedType = recoveredDistributionType.getParameterTypes().get("T");
+            if (generatedType == null) continue;
+
+            generatedTypeSet.add(generatedType);
+        }
+
+        if (generatedTypeSet.isEmpty()) {
+            throw new TypeError(
+                    "Invalid observation.",
+                    "You are observing a variable which is not a random variable. You can only observe variables drawn from a distribution."
+            );
+        }
+
+        // test if the observed value can be assigned to the generated value
+
+        if (!TypeUtils.canBeAssignedTo(
+                observationTypeSet, generatedTypeSet, componentResolver
+        )) {
+            throw new TypeError(
+                    "Wrong observation type.",
+                    "You specify an observation of type '" + printType(observationTypeSet) + "' for a random variable of type '" + printType(generatedTypeSet) + "'. Use an observation of type '" + printType(generatedTypeSet) + "' instead."
+            );
+        }
+
+        return generatedDistributionTypeSet;
+    }
+
+    @Override
+    public Set<ResolvedType> visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
+        Set<ResolvedType> observationFromTypeSet = observedBetween.observedFrom.accept(this);
+        Set<ResolvedType> observationToTypeSet = observedBetween.observedTo.accept(this);
+
+        Set<ResolvedType> scalarTypeSet = ResolvedType.fromString("phylospec.types.Integer", componentResolver);
+        scalarTypeSet.addAll(ResolvedType.fromString("phylospec.types.Real", componentResolver));
+
+        if (!TypeUtils.canBeAssignedTo(
+                observationFromTypeSet, scalarTypeSet, componentResolver
+        )) {
+            throw new TypeError(
+                    "Invalid observation.",
+                    "Observations ranges have to be specified using numbers."
+            );
+        }
+
+        if (!TypeUtils.canBeAssignedTo(
+                observationToTypeSet, scalarTypeSet, componentResolver
+        )) {
+            throw new TypeError(
+                    "Invalid observation.",
+                    "Observations ranges have to be specified using numbers."
+            );
+        }
+
+        Set<ResolvedType> observationTypeSet = TypeUtils.getLowestCoverTypeSet(
+                List.of(observationFromTypeSet, observationToTypeSet), componentResolver
+        );
+
+        Set<ResolvedType> generatedDistributionTypeSet = observedBetween.stmt.accept(this);
+
+        // go through generatedDistributionTypeSet, filter the Distribution<> ones and get the actual underlying values
+
+        Set<ResolvedType> generatedTypeSet = new HashSet<>();
+        for (ResolvedType generatedDistType : generatedDistributionTypeSet) {
+            ResolvedType recoveredDistributionType = TypeUtils.recoverType(
+                    "phylospec.types.Distribution", generatedDistType, componentResolver
+            );
+            if (recoveredDistributionType == null) {
+                // this is not a distribution type directly
+                // it could still be a random variable though
+                generatedTypeSet.add(generatedDistType);
+                continue;
+            }
+
+            ResolvedType generatedType = recoveredDistributionType.getParameterTypes().get("T");
+            if (generatedType == null) continue;
+
+            generatedTypeSet.add(generatedType);
+        }
+
+        if (generatedTypeSet.isEmpty()) {
+            throw new TypeError(
+                    "Invalid observation.",
+                    "You are observing a variable which is not a random variable. You can only observe variables drawn from a distribution."
+            );
+        }
+
+        // test if the observed value can be assigned to the generated value
+
+        if (!TypeUtils.canBeAssignedTo(
+                observationTypeSet, generatedTypeSet, componentResolver
+        )) {
+            throw new TypeError(
+                    "Wrong observation type.",
+                    "You specify an observation of type '" + printType(observationTypeSet) + "' for a random variable of type '" + printType(generatedTypeSet) + "'. Use an observation of type '" + printType(generatedTypeSet) + "' instead."
+            );
+        }
+
+        return generatedDistributionTypeSet;
     }
 
     private String extractVariableName(Stmt stmt) {

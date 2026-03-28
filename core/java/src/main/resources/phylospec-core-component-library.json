@@ -1687,7 +1687,7 @@
       },
       {
         "name": "PhyloCTMC",
-        "generatedType": "Distribution<Alignment>",
+        "generatedType": "Distribution<Alignment<Character>>",
         "namespace": "phylospec.distributions.sequence",
         "description": "Phylogenetic continuous-time Markov chain",
         "arguments": [
@@ -1719,7 +1719,7 @@
       },
       {
         "name": "PhyloCTMC",
-        "generatedType": "Distribution<Alignment>",
+        "generatedType": "Distribution<Alignment<Character>>",
         "namespace": "phylospec.distributions.sequence",
         "description": "Phylogenetic continuous-time Markov chain",
         "arguments": [
