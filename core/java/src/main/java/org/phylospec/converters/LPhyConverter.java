@@ -223,28 +223,6 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     }
 
     @Override
-    public StringBuilder visitListComprehension(Expr.ListComprehension expr) {
-        return null;
-    }
-
-    @Override
-    public StringBuilder visitGet(Expr.Get expr) {
-        StringBuilder objectBuilder = expr.object.accept(this);
-
-        Set<ResolvedType> objectTypeSet = this.typeResolver.resolveType(expr.object);
-        for (ResolvedType candidateType : objectTypeSet) {
-            String componentName = candidateType.getName();
-            StringBuilder mappedMethod = LPhyMethodsMapping.map(componentName, expr.properyName, objectBuilder);
-
-            if (mappedMethod != null) {
-                return mappedMethod;
-            }
-        }
-
-        throw new LPhyConversionError("Property " + expr.properyName + " is not supported in LPhy.");
-    }
-
-    @Override
     public Void visitAtomicType(AstType.Atomic expr) {
         return null;
     }

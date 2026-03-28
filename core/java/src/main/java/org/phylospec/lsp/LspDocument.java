@@ -207,15 +207,6 @@ class LspDocument implements ErrorEventListener {
                     hoverText.append("\n```\n\n");
                 }
             }
-            case Expr.Get get -> {
-                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveType(get);
-
-                for (ResolvedType resolvedType : resolvedTypeSet) {
-                    hoverText.append("```phylospec\n");
-                    hoverText.append(resolvedType).append(" ").append(get.properyName);
-                    hoverText.append("\n```\n\n");
-                }
-            }
             default -> {
                 return null;
             }

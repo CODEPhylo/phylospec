@@ -158,23 +158,6 @@ public class AstPrinter implements AstVisitor<String, String, String> {
     }
 
     @Override
-    public String visitListComprehension(Expr.ListComprehension expr) {
-        String result = "(LC ";
-
-        result += expr.expression.accept(this) + " ";
-        result += "(" + String.join(" ", expr.variables) + ") ";
-        result += expr.list.accept(this);
-
-        result += ")";
-        return result;
-    }
-
-    @Override
-    public String visitGet(Expr.Get expr) {
-        return "(GET " + expr.object.accept(this) + " " + expr.properyName + ")";
-    }
-
-    @Override
     public String visitIndex(Expr.Index expr) {
         String result = "(IX " + expr.object.accept(this);
 
