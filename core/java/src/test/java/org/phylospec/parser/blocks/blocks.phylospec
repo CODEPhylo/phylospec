@@ -1,5 +1,5 @@
 // statements outside any block are allowed
-Real outside = 1.0
+PositiveReal outside = 1.0
 
 data {
     Integer n = 10
@@ -23,7 +23,7 @@ revbayes {
 }
 
 // EXPECT AST
-// (AS Real outside 1.0)
+// (AS PositiveReal outside 1.0)
 // (AS Integer n 10)
 // (AS Real x 2.5)
 // (DR Real y (CA Normal (AA mean outside) (AA sd x)))

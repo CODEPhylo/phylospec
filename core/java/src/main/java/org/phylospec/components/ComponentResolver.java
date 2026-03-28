@@ -282,15 +282,26 @@ public class ComponentResolver {
         for (List<Generator> generators : knownGenerators.values()) {
             for (Generator generator: generators) {
                 String generatedTypeName = generator.getGeneratedType();
-                String atomicGeneratedTypeName = TypeUtils.stripGenerics(generatedTypeName);
-                Type generatedType = resolveType(atomicGeneratedTypeName);
-
-                List<String> specifiedParameterTypes = TypeUtils.parseParameterTypes(generatedTypeName);
-
-                if (specifiedParameterTypes.size() != generatedType.getTypeParameters().size()) {
-                    throw new IllegalArgumentException("Invalid number of type parameters of the generated type of '" + generator.getName() + "'.");
-                }
+                checkTypeParameters(generatedTypeName, generator);
             }
+        }
+    }
+
+    private void checkTypeParameters(String typeName, Generator generator) {
+        String atomicGeneratedTypeName = TypeUtils.stripGenerics(typeName);
+        Type generatedType = resolveType(atomicGeneratedTypeName);
+
+        List<String> specifiedParameterTypes = TypeUtils.parseParameterTypes(typeName);
+
+        if (specifiedParameterTypes.size() != generatedType.getTypeParameters().size()) {
+            throw new IllegalArgumentException("Invalid number of type parameters of the generated type of '" + generator.getName() + "'. Type '" + typeName + "' takes " + generatedType.getTypeParameters().size() + " type paramters.");
+        }
+
+        // recursively check parameter types
+
+        for (String parameterType : specifiedParameterTypes) {
+            if (generator.getTypeParameters().contains(parameterType)) continue;
+            checkTypeParameters(parameterType, generator);
         }
     }
 

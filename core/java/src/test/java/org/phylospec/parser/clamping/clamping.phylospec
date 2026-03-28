@@ -1,15 +1,25 @@
-Real a = 10
+PositiveReal a = 10
+Real aa = 10
 
 Real b ~ LogNormal(logMean=0.0, logSd=1.0) observed as a
 Real c ~ LogNormal(logMean=0.0, logSd=1.0) observed between [a + b, 100]
+Real d ~ LogNormal(logMean=0.0, logSd=1.0) observed as "Hallo"
 
-Real d[i] ~ LogNormal(logMean=i, logSd=1.0) observed as i for i in 1:10
-Real d[i, j] ~ LogNormal(logMean=i, logSd=1.0) observed as j for i in 1:10 for j in 1:2
+Real e[i] ~ LogNormal(logMean=1.0*i, logSd=1.0) observed as i for i in 1:10
+Real f[i, j] ~ LogNormal(logMean=1.0*i, logSd=1.0) observed as aa for i in 1:10 for j in 1:2
 
 // EXPECT AST
-// (AS Real a 10)
+// (AS PositiveReal a 10)
+// (AS Real aa 10)
 // (OA (DR Real b (CA LogNormal (AA logMean 0.0) (AA logSd 1.0))) a)
 // (OB (DR Real c (CA LogNormal (AA logMean 0.0) (AA logSd 1.0))) (+ a b) 100)
-// (IS (OA (DR Real d (CA LogNormal (AA logMean i) (AA logSd 1.0))) i) i (R 1 10))
-// (IS (OA (DR Real d (CA LogNormal (AA logMean i) (AA logSd 1.0))) j) i (R 1 10) j (R 1 2))
+// (OA (DR Real d (CA LogNormal (AA logMean 0.0) (AA logSd 1.0))) "Hallo")
+// (IS (OA (DR Real e (CA LogNormal (AA logMean (* 1.0 i)) (AA logSd 1.0))) i) i (R 1 10))
+// (IS (OA (DR Real f (CA LogNormal (AA logMean (* 1.0 i)) (AA logSd 1.0))) aa) i (R 1 10) j (R 1 2))
 // EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Wrong observation type. You specify an observation of type 'Real' for a random variable of type 'PositiveReal'. Use an observation of type 'PositiveReal' instead.
+// Wrong observation type. You specify an observation of type 'String' for a random variable of type 'PositiveReal'. Use an observation of type 'PositiveReal' instead.
+// Wrong observation type. You specify an observation of type 'Real' for a random variable of type 'PositiveReal'. Use an observation of type 'PositiveReal' instead.
+// EXPECT TYPE_ERRORS
