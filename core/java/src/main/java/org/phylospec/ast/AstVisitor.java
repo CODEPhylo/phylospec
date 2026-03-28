@@ -40,8 +40,6 @@ public interface AstVisitor<S, E, T> {
     public E visitDrawnArgument(Expr.DrawnArgument expr);
     public E visitGrouping(Expr.Grouping expr);
     public E visitArray(Expr.Array expr);
-    public E visitListComprehension(Expr.ListComprehension expr);
-    public E visitGet(Expr.Get expr);
     default E visitIndex(Expr.Index expr) {
         return null;
     }

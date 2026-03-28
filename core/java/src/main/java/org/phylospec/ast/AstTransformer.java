@@ -127,19 +127,6 @@ public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> 
     }
 
     @Override
-    public Expr visitListComprehension(Expr.ListComprehension expr) {
-        expr.expression = expr.expression.accept(this);
-        expr.list = expr.list.accept(this);
-        return expr;
-    }
-
-    @Override
-    public Expr visitGet(Expr.Get expr) {
-        expr.object = expr.object.accept(this);
-        return expr;
-    }
-
-    @Override
     public Expr visitIndex(Expr.Index expr) {
         expr.object = expr.object.accept(this);
         for (int i = 0; i < expr.indices.size(); i++) {
