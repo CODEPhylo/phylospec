@@ -452,6 +452,31 @@ public class ParserTest {
         return "\"" + s.replace("\n", "\\n").replace("\r", "\\r") + "\"";
     }
 
+    @Test
+    public void testBlocks() {
+        // statements are assigned the correct block
+        Lexer lexer = new Lexer("data {\nReal x = 1\n}\nmodel {\nReal y = 2\n}");
+        Parser parser = new Parser(lexer.scanTokens());
+        List<Stmt> stmts = parser.parse();
+        assertEquals(2, stmts.size());
+        assertEquals(Stmt.Block.DATA, stmts.get(0).block);
+        assertEquals(Stmt.Block.MODEL, stmts.get(1).block);
+
+        // unclosed block produces an error
+        List<org.phylospec.errors.Error> errors = new java.util.ArrayList<>();
+        parser = new Parser(new Lexer("data {\nReal x = 1").scanTokens());
+        parser.registerEventListener(errors::add);
+        parser.parse();
+        assertEquals(1, errors.size());
+
+        // unclosed block followed by a second block also produces an error
+        errors.clear();
+        parser = new Parser(new Lexer("data {\nReal x = 1\nmodel {\nReal y = 2\n}").scanTokens());
+        parser.registerEventListener(errors::add);
+        parser.parse();
+        assertEquals(1, errors.size());
+    }
+
     void testStatements(String source, Stmt... expectedStatements) {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
