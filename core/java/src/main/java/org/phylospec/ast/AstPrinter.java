@@ -70,7 +70,7 @@ public class AstPrinter implements AstVisitor<String, String, String> {
             return "\"" + expr.value.toString() + "\"";
         }
 
-        if (expr.unit != null) {
+        if (expr.unit != Unit.IMPLICIT) {
             return expr.value.toString() + " " + expr.unit.toString();
         }
 

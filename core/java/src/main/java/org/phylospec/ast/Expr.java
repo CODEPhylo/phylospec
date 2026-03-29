@@ -97,7 +97,7 @@ public abstract class Expr extends AstNode {
         // TODO: make this type generic
         @JsonPropertyDescription("The literal value (either a string, a number, or a boolean).")
         public Object value;
-        public Unit unit = null;
+        public Unit unit = Unit.IMPLICIT;
 
         @Override
         public boolean equals(Object o) {
