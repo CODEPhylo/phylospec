@@ -279,7 +279,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 Expr.Variable indexVar = indexed.indices.get(i);
                 Set<ResolvedType> rangeTypeSet = indexed.ranges.get(i).accept(this);
 
-                if (!TypeUtils.canBeAssignedTo(rangeTypeSet, ResolvedType.fromString("Vector<NonNegativeInteger>", componentResolver), componentResolver)) {
+                if (!TypeUtils.canBeAssignedTo(rangeTypeSet, ResolvedType.fromString("phylospec.types.Vector<NonNegativeInteger>", componentResolver), componentResolver)) {
                     throw new TypeError(
                             indexed,
                             "Index range must produce positive integer values.",
@@ -793,7 +793,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         // build the Vector result type
 
-        Type vectorComponent = componentResolver.resolveType("Vector");
+        Type vectorComponent = componentResolver.resolveType("phylospec.types.Vector");
         Set<ResolvedType> arrayTypeSet = lcTypeSet.stream().map(
                 x -> new ResolvedType(vectorComponent, Map.of("T", x))
         ).collect(Collectors.toSet());
@@ -922,7 +922,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         // the type of the vector produced is the vector of the item type set
 
         Set<ResolvedType> listComprehensionTypeSet = ResolvedType.fromString(
-                "Vector<T>",
+                "phylospec.types.Vector<T>",
                 Map.of("T", itemTypeSet),
                 componentResolver
         );
