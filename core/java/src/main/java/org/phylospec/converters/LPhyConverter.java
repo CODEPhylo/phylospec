@@ -20,6 +20,8 @@ import java.util.*;
 /// String lphyString = LPhyConverter.convertToLPhy(statements, componentResolver);
 ///```
 ///
+/// @deprecated not updated to 03-2026
+@Deprecated
 public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, Void> {
 
     private final List<String> dataStatements;

@@ -16,6 +16,8 @@ import java.util.*;
 /// List<Stmt> statements = parser.parse();
 /// String revString = RevConverter.convertToRev(statements, componentResolver);
 ///```
+/// @deprecated not updated to 03-2026
+@Deprecated
 public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
 
     private final ComponentResolver componentResolver;

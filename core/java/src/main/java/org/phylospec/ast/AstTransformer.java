@@ -8,7 +8,10 @@ import java.util.List;
  * Every visitor function should return the transformed node. Each concrete
  * implementation only has to implement the visitor functions for nodes which
  * it transforms.
+ *
+ * @deprecated not updated to 03-2026
  */
+@Deprecated
 public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> {
     List<Stmt> oldStatements;
     List<Stmt> transformedStatements;
