@@ -50,7 +50,8 @@ public abstract class Expr extends AstNode {
 
     /** Represents a string template that may contain interpolated expressions,
      * e.g. {@code "file_${seed}.nex"}. Plain strings with no interpolations
-     * are represented by {@link Literal} instead. */
+     * are represented by {@link Literal} instead.
+     * A string template is composed into {@link StringPart} and {@link ExpressionPart} objects. */
     public static class StringTemplate extends Expr {
 
         /** A single piece of a string template, either literal text or an interpolated expression. */
