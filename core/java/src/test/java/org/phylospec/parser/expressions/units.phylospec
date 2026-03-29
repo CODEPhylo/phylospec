@@ -14,4 +14,5 @@ String e = "200" yr
 
 // EXPECT TYPE_ERRORS
 // Expression of type `Integer | Real` cannot be assigned to variable `a` of type `Age | NonNegativeReal`. Change the type of the variable to `Integer | Real`, or change what you assign to it.
+// Multiple units are not allowed. You use the unit 'Ma', but have previously used the unit 'yr'. You can only use a single unit in a model. Convert this value to 'yr'.
 // EXPECT TYPE_ERRORS

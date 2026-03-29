@@ -41,6 +41,8 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     public Map<AstNode, Set<ResolvedType>> resolvedTypes;
     private final List<Map<String, Set<ResolvedType>>> scopedVariableTypes;
 
+    Unit globalUnit = Unit.IMPLICIT;
+
     AstPrinter printer;
 
     public TypeResolver(ComponentResolver componentResolver) {
@@ -461,6 +463,35 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         Set<ResolvedType> resolvedTypeSet = new HashSet<>();
         for (String name : typeName) {
             resolvedTypeSet.addAll(ResolvedType.fromString(name, componentResolver));
+        }
+
+        if (expr.unit != Unit.IMPLICIT) {
+            // this literal has an explicit unit
+
+            // check that it matches a previously used explicit unit
+
+            if (globalUnit != Unit.IMPLICIT && expr.unit != globalUnit) {
+                throw new TypeError(
+                        "Multiple units are not allowed.",
+                        "You use the unit '" + expr.unit + "', but have previously used the unit '" + globalUnit + "'. You can only use a single unit in a model. Convert this value to '" + globalUnit + "'.",
+                        List.of("100 " + globalUnit)
+                );
+            }
+
+            // check that we have a number literal
+
+            Set<ResolvedType> scalarTypeSet = ResolvedType.fromString("phylospec.types.Real", componentResolver);
+            scalarTypeSet.addAll(ResolvedType.fromString("phylospec.types.Integer", componentResolver));
+            if (!TypeUtils.canBeAssignedTo(resolvedTypeSet, scalarTypeSet, componentResolver)) {
+                throw new TypeError(
+                        "Only numbers can have units.",
+                        "You specify a unit for a value of the type '" + printType(resolvedTypeSet) +"'. Only numbers can have units."
+                );
+            }
+
+            // set the global unit
+
+            globalUnit = expr.unit;
         }
 
         return remember(expr, resolvedTypeSet);

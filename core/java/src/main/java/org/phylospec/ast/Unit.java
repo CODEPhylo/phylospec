@@ -3,12 +3,14 @@ package org.phylospec.ast;
 import java.util.Map;
 
 public enum Unit {
+    IMPLICIT,
     DAYS,
     YEARS,
     THOUSAND_YEARS,
     MILLION_YEARS;
 
     static Map<String, Unit> mapping = Map.of(
+            "", IMPLICIT,
             "d", DAYS,
             "yr", YEARS,
             "kyr", THOUSAND_YEARS,
