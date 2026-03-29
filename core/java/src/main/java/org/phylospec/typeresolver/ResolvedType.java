@@ -28,13 +28,13 @@ public class ResolvedType {
         return typeComponent.getName();
     }
 
-    public boolean hasUnresolvedParameterTypes() {
-        return getParameterTypes().size() != typeComponent.getTypeParameters().size();
-    }
-
-    public String getShortName() {
+    public String getUnqualifiedName() {
         String[] splitNamespace = typeComponent.getName().split("\\.");
         return splitNamespace[splitNamespace.length - 1];
+    }
+
+    public boolean hasUnresolvedParameterTypes() {
+        return getParameterTypes().size() != typeComponent.getTypeParameters().size();
     }
 
     public String getExtends() {
@@ -52,6 +52,7 @@ public class ResolvedType {
     /**
      * Creates a {@link ResolvedType} object based on the type name. Note that the given type must not
      * be a generic type, and it must have been imported in the given {@link ComponentResolver}.
+     * This method throws an error if the type parameters cannot be fully resolved from the given string.
      */
     public static Set<ResolvedType> fromString(String typeString, ComponentResolver componentResolver) {
         return ResolvedType.fromString(typeString, componentResolver, false);
@@ -82,7 +83,7 @@ public class ResolvedType {
             );
         }
 
-        if (typeParameters.size() != typeComponent.getTypeParameters().size()) {
+        if (!allowUnresolvedTypeParameter && typeParameters.size() != typeComponent.getTypeParameters().size()) {
             throw new TypeError(
                     "The type '" + typeString + "' takes " + typeComponent.getTypeParameters().size() + " type parameters, but you provided " + typeParameters.size() + ".",
                     "Provide exactly " + typeParameters.size() + " type parameters."
@@ -212,13 +213,15 @@ public class ResolvedType {
         string.append(typeComponent.getName());
 
         string.append("<");
+        List<String> paramStrings = new ArrayList<>();
         for (String typeParameter : getParametersNames()) {
             if (getParameterTypes().containsKey(typeParameter)) {
-                string.append(getParameterTypes().get(typeParameter).toString());
+                paramStrings.add(getParameterTypes().get(typeParameter).toString());
             } else {
-                string.append(typeParameter);
+                paramStrings.add(typeParameter);
             }
         }
+        string.append(String.join(", ", paramStrings));
         string.append(">");
 
         return string.toString();

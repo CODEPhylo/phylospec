@@ -148,10 +148,21 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                     }
                 }
             }
+
+            if (resolvedVariableType.hasUnresolvedParameterTypes()) {
+                // we weren't able to resolve all parameter types based on the assigned expression
+                throw new TypeError(
+                        stmt,
+                        "Missing type parameters.",
+                        "The type '" + resolvedVariableType + "' expects " + resolvedVariableType.getParametersNames().size() + " parameter types, but you specified none. Add the type parameters using brackets.",
+                        List.of("Vector<Real>")
+                );
+            }
         }
 
+
         remember(stmt.name, resolvedVariableTypeSet);
-        return remember(stmt, resolvedExpressionTypeSet);
+        return remember(stmt, resolvedVariableTypeSet);
     }
 
     @Override
@@ -187,7 +198,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
             throw new TypeError(
                     stmt,
                     "Expression of type `" + printType(generatedTypeSet) + "` cannot be assigned to variable `" + stmt.name + "` of type `" + printType(resolvedVariableTypeSet) + "`.",
-                    "Change the type of the variable to `" + printType(resolvedExpressionTypeSet) + "`, or change what value you draw and assign to it."
+                    "Change the type of the variable to `" + printType(generatedTypeSet) + "`, or change what value you draw and assign to it."
             );
         }
 
@@ -198,18 +209,28 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
             if (resolvedVariableType.hasUnresolvedParameterTypes()) {
                 // find the matching resolved types
-                for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
-                    if (resolvedVariableType.getName().equals(resolvedExpressionType.getName())) {
+                for (ResolvedType generatedType : generatedTypeSet) {
+                    if (resolvedVariableType.getName().equals(generatedType.getName())) {
                         resolvedVariableType.getParameterTypes().putAll(
-                                resolvedExpressionType.getParameterTypes()
+                                generatedType.getParameterTypes()
                         );
                     }
                 }
             }
+
+            if (resolvedVariableType.hasUnresolvedParameterTypes()) {
+                // we weren't able to resolve all parameter types based on the assigned expression
+                throw new TypeError(
+                        stmt,
+                        "Missing type parameters.",
+                        "The type '" + resolvedVariableType + "' expects " + resolvedVariableType.getParametersNames().size() + " parameter types, but you specified none. Add the type parameters using brackets.",
+                        List.of("Vector<Real>")
+                );
+            }
         }
 
         remember(stmt.name, resolvedVariableTypeSet);
-        return remember(stmt, resolvedExpressionTypeSet);
+        return remember(stmt, resolvedVariableTypeSet);
     }
 
     @Override
@@ -284,9 +305,9 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         Set<ResolvedType> widenedTypeSet;
         if (indexed.indices.size() == 1) {
-            widenedTypeSet = ResolvedType.fromString("Vector<T>", Map.of("T", innerTypeSet), componentResolver);
+            widenedTypeSet = ResolvedType.fromString("phylospec.types.Vector<T>", Map.of("T", innerTypeSet), componentResolver);
         } else {
-            widenedTypeSet = ResolvedType.fromString("Matrix<T>", Map.of("T", innerTypeSet), componentResolver);
+            widenedTypeSet = ResolvedType.fromString("phylospec.types.Matrix<T>", Map.of("T", innerTypeSet), componentResolver);
         }
 
         // register the widened type in the outer scope under the variable name
@@ -783,7 +804,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 break;
             }
 
-            summedUpLiterals += (Double) ((Expr.Literal) element).value;
+            summedUpLiterals += ((Number) ((Expr.Literal) element).value).doubleValue();
         }
         if (Math.abs(summedUpLiterals - 1.0) < 1e-10) {
             // this is a simplex
@@ -862,7 +883,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
             }
         }
 
-        return itemTypeSet;
+        return remember(expr, itemTypeSet);
     }
 
     @Override
@@ -943,6 +964,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     private Set<ResolvedType> remember(Stmt expr, Set<ResolvedType> resolvedType) {
+        resolvedTypes.put(expr, resolvedType);
         return resolvedType;
     }
 
@@ -976,7 +998,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     private static String printType(ResolvedType type) {
-        String result = type.getShortName();
+        String result = type.getUnqualifiedName();
 
         if (type.getParameterTypes().isEmpty()) return result;
 

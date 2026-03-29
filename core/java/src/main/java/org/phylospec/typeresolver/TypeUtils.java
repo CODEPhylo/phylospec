@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public class TypeUtils {
 
     /**
-     * Checks if any of the types in {@code assignedTypeSet} can be assigned to {@code assigneeType}.
+     * Checks if some of the types in {@code assignedTypeSet} can be assigned to some of the types in {@code assigneeType}.
      * A type A can be assigned to type B if B covers A.
      */
     public static boolean canBeAssignedTo(Set<ResolvedType> assignedTypeSet, Set<ResolvedType> assigneeTypeSet, ComponentResolver componentResolver) {

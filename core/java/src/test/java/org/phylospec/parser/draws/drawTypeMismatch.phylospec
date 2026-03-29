@@ -8,6 +8,6 @@ PositiveReal y ~ Normal(mean=0.0, sd=1.0)
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Expression of type `Real` cannot be assigned to variable `x` of type `Integer`. Change the type of the variable to `Distribution<Real>`, or change what value you draw and assign to it.
-// Expression of type `Real` cannot be assigned to variable `y` of type `PositiveReal`. Change the type of the variable to `Distribution<Real>`, or change what value you draw and assign to it.
+// Expression of type `Real` cannot be assigned to variable `x` of type `Integer`. Change the type of the variable to `Real`, or change what value you draw and assign to it.
+// Expression of type `Real` cannot be assigned to variable `y` of type `PositiveReal`. Change the type of the variable to `Real`, or change what value you draw and assign to it.
 // EXPECT TYPE_ERRORS

@@ -14,5 +14,5 @@ Integer y ~ d
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Expression of type `NonNegativeReal | PositiveReal | Real` cannot be assigned to variable `y` of type `Integer`. Change the type of the variable to `Distribution<PositiveReal>`, or change what value you draw and assign to it.
+// Expression of type `NonNegativeReal | PositiveReal | Real` cannot be assigned to variable `y` of type `Integer`. Change the type of the variable to `NonNegativeReal | PositiveReal | Real`, or change what value you draw and assign to it.
 // EXPECT TYPE_ERRORS

@@ -345,13 +345,12 @@ public class Parser {
     }
 
     private Stmt observedStatement(Stmt stmt) throws Error {
+        startAstNode();
+
         if (match(TokenType.OBSERVED_AS)) {
-            startAstNode();
             Expr observedAs = expression();
             return remember(new Stmt.ObservedAs(stmt, observedAs));
         } else if (match(TokenType.OBSERVED_BETWEEN)) {
-            startAstNode();
-
             consume(
                     TokenType.LEFT_SQUARE_BRACKET,
                     "Invalid range.",
@@ -380,7 +379,7 @@ public class Parser {
             return remember(new Stmt.ObservedBetween(stmt, observedFrom, observedTo));
         }
 
-        return stmt;
+        return remember(stmt);
     }
 
     private AstType type() throws Error {

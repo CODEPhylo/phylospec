@@ -7,7 +7,7 @@ Vector<Real> vector = [
 String i = ""
 
 Integer vector2[i] = i*i for i in 1:num(vector)
-Real vector3[i, j] = vector2[i]*vector2[j] for i in 1:num(vector) for j in 1:5
+Real matrix[i, j] = 1.0*vector2[i]*vector2[j] for i in 1:num(vector) for j in 1:5
 Integer vector4[i] = 2.5*i for i in 1:num(vector)
 
 Vector<Integer> vector5 = vector2
@@ -15,20 +15,33 @@ Vector<Real> vector6 = vector2
 
 Real vector7[i] = 2.5*j for i in 1:10
 
+Real x[i] ~ Normal(0.0, sd=1.0) for i in 1:10
+Real y = x[1]
+
+Real z = matrix[1, 1]
+Real zz = matrix[1, -1]
+Integer zzz = vector5[1, 1]
+
 // EXPECT AST
 // (AS Vector<Real> vector (AR 10.0 2.0 (- 5.0)))
 // (AS String i "")
 // (IS (AS Integer vector2 (* i i)) i (R 1 (CA num (AA null vector))))
-// (IS (AS Real vector3 (* (IX vector2 i) (IX vector2 j))) i (R 1 (CA num (AA null vector))) j (R 1 5))
+// (IS (AS Real matrix (* (* 1.0 (IX vector2 i)) (IX vector2 j))) i (R 1 (CA num (AA null vector))) j (R 1 5))
 // (IS (AS Integer vector4 (* 2.5 i)) i (R 1 (CA num (AA null vector))))
 // (AS Vector<Integer> vector5 vector2)
 // (AS Vector<Real> vector6 vector2)
 // (IS (AS Real vector7 (* 2.5 j)) i (R 1 10))
+// (IS (DR Real x (CA Normal (AA null 0.0) (AA sd 1.0))) i (R 1 10))
+// (AS Real y (IX x 1))
+// (AS Real z (IX matrix 1 1))
+// (AS Real zz (IX matrix 1 (- 1)))
+// (AS Integer zzz (IX vector5 1 1))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Expression of type `Integer` cannot be assigned to variable `vector3` of type `Real`. Change the type of the variable to `Integer`, or change what you assign to it.
 // Expression of type `Real` cannot be assigned to variable `vector4` of type `Integer`. Change the type of the variable to `Real`, or change what you assign to it.
 // Expression of type `Vector<Integer>` cannot be assigned to variable `vector6` of type `Vector<Real>`. Change the type of the variable to `Vector<Integer>`, or change what you assign to it.
 // Variable `j` does not exist. Do you mean `i'?
+// Invalid index. Your index is of type 'Integer | Real'. Only use values of type 'NonNegativeInteger' as an index.
+// Wrong number of indices provided. You provide 2 indices, but 1 are needed.
 // EXPECT TYPE_ERRORS
