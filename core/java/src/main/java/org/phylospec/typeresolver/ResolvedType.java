@@ -207,10 +207,10 @@ public class ResolvedType {
     @Override
     public String toString() {
         if (getParametersNames().isEmpty())
-            return typeComponent.getName();
+            return getUnqualifiedName();
 
         StringBuilder string = new StringBuilder();
-        string.append(typeComponent.getName());
+        string.append(getUnqualifiedName());
 
         string.append("<");
         List<String> paramStrings = new ArrayList<>();

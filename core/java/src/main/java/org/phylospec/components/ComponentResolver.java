@@ -350,7 +350,7 @@ public class ComponentResolver {
     /**
      * Gets the unqualified name (without the namespace).
      */
-    private String getUnqualifiedName(String name) {
+    public static String getUnqualifiedName(String name) {
         String[] splitNamespace = splitNamespace(name);
         return splitNamespace[splitNamespace.length - 1];
     }
