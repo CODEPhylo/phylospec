@@ -19,7 +19,5 @@ Real f[i, j] ~ LogNormal(logMean=1.0*i, logSd=1.0) observed as aa for i in 1:10 
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Wrong observation type. You specify an observation of type 'Real' for a random variable of type 'PositiveReal'. Use an observation of type 'PositiveReal' instead.
-// Wrong observation type. You specify an observation of type 'String' for a random variable of type 'PositiveReal'. Use an observation of type 'PositiveReal' instead.
-// Wrong observation type. You specify an observation of type 'Real' for a random variable of type 'PositiveReal'. Use an observation of type 'PositiveReal' instead.
+// Wrong observation type. You specify an observation of type 'String' for a random variable of type 'Real'. Use an observation of type 'Real' instead.
 // EXPECT TYPE_ERRORS

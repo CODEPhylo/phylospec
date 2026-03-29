@@ -234,6 +234,7 @@ public class Lexer {
                 // we are in an interpolated part of the string
 
                 // add a new string part
+
                 String part = source.substring(currentPartStart, current);
                 addToken(TokenType.STRING_PART, part);
 
@@ -243,6 +244,7 @@ public class Lexer {
                 advance();
 
                 // lex the interpolated bit
+
                 while (peek() != '}' && !isAtEnd()) {
                     scanToken();
                 }
@@ -258,6 +260,7 @@ public class Lexer {
                 }
 
                 // consume the terminal }
+
                 advance();
 
                 start = current;

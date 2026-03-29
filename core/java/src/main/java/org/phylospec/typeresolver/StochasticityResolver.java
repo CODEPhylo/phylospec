@@ -9,7 +9,9 @@ import java.util.Map;
 /**
  * Resolves the stochasticity of each node of the AST tree: for each node, it is determined if it
  * represents a deterministic or stochastic expression.
+ * @deprecated not yet up to date with 03-2026
  */
+@Deprecated
 public class StochasticityResolver implements AstVisitor<Stochasticity, Stochasticity, Stochasticity> {
 
     private final Map<AstNode, Stochasticity> stochasticityMap;
