@@ -13,6 +13,7 @@ import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.ResolvedType;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
+import org.phylospec.typeresolver.TypeUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -155,10 +156,10 @@ class LspDocument implements ErrorEventListener {
                 if (resolvedTypeSet == null) return null;
 
                 for (ResolvedType resolvedType : resolvedTypeSet) {
-                    hoverText.append("```phylospec\n");
+                    hoverText.append(resolvedType.getTypeComponent().getDescription());
+                    hoverText.append("\n\n```phylospec\n");
                     hoverText.append(resolvedType);
                     hoverText.append("\n```\n\n");
-                    hoverText.append(resolvedType.getTypeComponent().getDescription());
                 }
             }
             case Stmt.Assignment stmt -> {
@@ -194,10 +195,10 @@ class LspDocument implements ErrorEventListener {
                 List<Generator> generators = componentResolver.resolveGenerator(call.functionName);
 
                 for (Generator generator : generators) {
+                    hoverText.append(generator.getDescription()).append("\n\n");
                     hoverText.append("```phylospec\n");
                     printGeneratorInfo(hoverText, generator);
                     hoverText.append("\n```\n\n");
-                    hoverText.append(generator.getDescription()).append("\n\n");
                 }
             }
             case Expr.Argument argument -> {
@@ -277,9 +278,13 @@ class LspDocument implements ErrorEventListener {
             Argument argument = generator.getArguments().get(i);
 
             if (argument.getRequired()) {
-                stringBuilder.append(argument.getType()).append(" ").append(argument.getName());
+                stringBuilder
+                        .append(argument.getType())
+                        .append(" ").append(argument.getName());
             } else {
-                stringBuilder.append("[").append(argument.getType()).append(" ").append(argument.getName()).append("]");
+                stringBuilder.append("[")
+                        .append(argument.getType())
+                        .append(" ").append(argument.getName()).append("]");
             }
 
             if (i != generator.getArguments().size() - 1) {
