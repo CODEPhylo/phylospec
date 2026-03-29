@@ -261,6 +261,14 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
             );
         }
 
+        if (indexed.indices.size() != new HashSet<>(indexed.indices).size()) {
+            throw new TypeError(
+                    indexed,
+                    "Duplicate indices.",
+                    "You use the same index name multiple times. Use a distinct name for each index."
+            );
+        }
+
         // evaluate each range and add the corresponding index variable to a new scope
 
         createScope();
@@ -337,12 +345,12 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 // it could still be a random variable though
                 generatedTypeSet.add(generatedDistType);
                 continue;
+            } else {
+                ResolvedType generatedType = recoveredDistributionType.getParameterTypes().get("T");
+                if (generatedType == null) continue;
+
+                generatedTypeSet.add(generatedType);
             }
-
-            ResolvedType generatedType = recoveredDistributionType.getParameterTypes().get("T");
-            if (generatedType == null) continue;
-
-            generatedTypeSet.add(generatedType);
         }
 
         if (generatedTypeSet.isEmpty()) {
@@ -410,12 +418,12 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 // it could still be a random variable though
                 generatedTypeSet.add(generatedDistType);
                 continue;
+            } else {
+                ResolvedType generatedType = recoveredDistributionType.getParameterTypes().get("T");
+                if (generatedType == null) continue;
+
+                generatedTypeSet.add(generatedType);
             }
-
-            ResolvedType generatedType = recoveredDistributionType.getParameterTypes().get("T");
-            if (generatedType == null) continue;
-
-            generatedTypeSet.add(generatedType);
         }
 
         if (generatedTypeSet.isEmpty()) {
@@ -582,8 +590,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         if (resultType.isEmpty()) {
             throw new TypeError(
                     expr,
-                    "Operation `" + TokenType.getLexeme(expr.operator) + "` is not supported for type `" + rightType + "`.",
-                    ""
+                    "Operation `" + TokenType.getLexeme(expr.operator) + "` is not supported for type `" + rightType + "`."
             );
         }
 
@@ -808,7 +815,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         }
         if (Math.abs(summedUpLiterals - 1.0) < 1e-10) {
             // this is a simplex
-            arrayTypeSet.addAll(ResolvedType.fromString("Simplex", componentResolver));
+            arrayTypeSet.addAll(ResolvedType.fromString("phylospec.types.Simplex", componentResolver));
         }
 
         return remember(expr, arrayTypeSet);
@@ -827,7 +834,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         for (ResolvedType possibleContainerType : containerTypeSet) {
             Map<String, List<ResolvedType>> resolvedTypeParameterTypes = new HashMap<>();
             if (TypeUtils.checkAssignabilityAndResolveTypeParameters(
-                    "Map<K, V>", possibleContainerType, List.of("K", "V"), resolvedTypeParameterTypes, componentResolver
+                    "phylospec.types.Map<K, V>", possibleContainerType, List.of("K", "V"), resolvedTypeParameterTypes, componentResolver
             )) {
                 itemTypeSet.addAll(resolvedTypeParameterTypes.get("V"));
                 indexTypeSet.addAll(resolvedTypeParameterTypes.get("K"));
@@ -836,19 +843,19 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
             resolvedTypeParameterTypes.clear();
             if (TypeUtils.checkAssignabilityAndResolveTypeParameters(
-                    "Matrix<T>", possibleContainerType, List.of("T"), resolvedTypeParameterTypes, componentResolver
+                    "phylospec.types.Matrix<T>", possibleContainerType, List.of("T"), resolvedTypeParameterTypes, componentResolver
             )) {
                 itemTypeSet.addAll(resolvedTypeParameterTypes.get("T"));
-                indexTypeSet.addAll(ResolvedType.fromString("NonNegativeInteger", componentResolver));
+                indexTypeSet.addAll(ResolvedType.fromString("phylospec.types.NonNegativeInteger", componentResolver));
                 numberOfIndicesRequired.add(2);
             }
 
             resolvedTypeParameterTypes.clear();
             if (TypeUtils.checkAssignabilityAndResolveTypeParameters(
-                    "Vector<T>", possibleContainerType, List.of("T"), resolvedTypeParameterTypes, componentResolver
+                    "phylospec.types.Vector<T>", possibleContainerType, List.of("T"), resolvedTypeParameterTypes, componentResolver
             )) {
                 itemTypeSet.addAll(resolvedTypeParameterTypes.get("T"));
-                indexTypeSet.addAll(ResolvedType.fromString("NonNegativeInteger", componentResolver));
+                indexTypeSet.addAll(ResolvedType.fromString("phylospec.types.NonNegativeInteger", componentResolver));
                 numberOfIndicesRequired.add(1);
             }
         }

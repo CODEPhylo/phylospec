@@ -6,5 +6,6 @@ We have two main ways how errors can reach a user: through the LSP in a tooltip,
 
 - The LSP needs the precise location of an error to highlight.
 - The console output should also show the entire line to give more context.
-- Every error message should consist of an error type, a description of what's wrong, and a hint on how to fix it.  
-
+- Every error message should consist of an error type, a description of what's wrong, and a hint on how to fix it.
+- Error messages and hints should include context on the specific names and types in question.
+- If appropriate, errors should provide examples of correct code.

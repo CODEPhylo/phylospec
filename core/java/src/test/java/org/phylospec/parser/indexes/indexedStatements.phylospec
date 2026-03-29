@@ -8,6 +8,7 @@ String i = ""
 
 Integer vector2[i] = i*i for i in 1:num(vector)
 Real matrix[i, j] = 1.0*vector2[i]*vector2[j] for i in 1:num(vector) for j in 1:5
+Real matrix2[i, i] = 1.0 for i in 1:5 for i in 1:5
 Integer vector4[i] = 2.5*i for i in 1:num(vector)
 
 Vector<Integer> vector5 = vector2
@@ -27,6 +28,7 @@ Integer zzz = vector5[1, 1]
 // (AS String i "")
 // (IS (AS Integer vector2 (* i i)) i (R 1 (CA num (AA null vector))))
 // (IS (AS Real matrix (* (* 1.0 (IX vector2 i)) (IX vector2 j))) i (R 1 (CA num (AA null vector))) j (R 1 5))
+// (IS (AS Real matrix2 1.0) i (R 1 5) i (R 1 5))
 // (IS (AS Integer vector4 (* 2.5 i)) i (R 1 (CA num (AA null vector))))
 // (AS Vector<Integer> vector5 vector2)
 // (AS Vector<Real> vector6 vector2)
@@ -39,6 +41,7 @@ Integer zzz = vector5[1, 1]
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
+// Duplicate indices. You use the same index name multiple times. Use a distinct name for each index.
 // Expression of type `Real` cannot be assigned to variable `vector4` of type `Integer`. Change the type of the variable to `Real`, or change what you assign to it.
 // Expression of type `Vector<Integer>` cannot be assigned to variable `vector6` of type `Vector<Real>`. Change the type of the variable to `Vector<Integer>`, or change what you assign to it.
 // Variable `j` does not exist. Do you mean `i'?

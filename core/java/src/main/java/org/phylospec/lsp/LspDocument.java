@@ -115,6 +115,8 @@ class LspDocument implements ErrorEventListener {
                         new Position(error.range().endLine - 1, error.range().end)
                 ), text.toString()
         ));
+
+        System.out.println(error.toStdOutString(content));
     }
 
     public void errorDetected(TypeError astNodeError, Stmt stmt) {
