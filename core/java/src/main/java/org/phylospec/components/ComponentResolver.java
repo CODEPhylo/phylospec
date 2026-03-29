@@ -280,13 +280,16 @@ public class ComponentResolver {
      */
     private void checkTypeParameters() {
         for (List<Generator> generators : knownGenerators.values()) {
-            for (Generator generator: generators) {
+            for (Generator generator : generators) {
                 String generatedTypeName = generator.getGeneratedType();
                 checkTypeParameters(generatedTypeName, generator);
             }
         }
     }
 
+    /**
+     * Recursively checks if potential generic parameters types are specified for the given typeName.
+     */
     private void checkTypeParameters(String typeName, Generator generator) {
         String atomicGeneratedTypeName = TypeUtils.stripGenerics(typeName);
         Type generatedType = resolveType(atomicGeneratedTypeName);

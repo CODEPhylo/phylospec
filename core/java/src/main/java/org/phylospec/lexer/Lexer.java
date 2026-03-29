@@ -49,7 +49,7 @@ public class Lexer {
         this.eventListeners = new ArrayList<>();
     }
 
-    public void registerEventListener (ErrorEventListener listener) {
+    public void registerEventListener(ErrorEventListener listener) {
         this.eventListeners.add(listener);
     }
 
@@ -300,7 +300,7 @@ public class Lexer {
                 if (peek(2).equals("as")) {
                     for (int i = 0; i <= 2; i++) advance();
                     identifierType = TokenType.OBSERVED_AS;
-                } else if(peek(7).equals("between")) {
+                } else if (peek(7).equals("between")) {
                     for (int i = 0; i <= 7; i++) advance();
                     identifierType = TokenType.OBSERVED_BETWEEN;
                 } else {

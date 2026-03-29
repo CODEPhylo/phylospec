@@ -140,7 +140,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
             if (resolvedVariableType.hasUnresolvedParameterTypes()) {
                 // find the matching resolved types
-                for (ResolvedType resolvedExpressionType: resolvedExpressionTypeSet) {
+                for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
                     if (resolvedVariableType.getName().equals(resolvedExpressionType.getName())) {
                         resolvedVariableType.getParameterTypes().putAll(
                                 resolvedExpressionType.getParameterTypes()
@@ -198,7 +198,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
             if (resolvedVariableType.hasUnresolvedParameterTypes()) {
                 // find the matching resolved types
-                for (ResolvedType resolvedExpressionType: resolvedExpressionTypeSet) {
+                for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
                     if (resolvedVariableType.getName().equals(resolvedExpressionType.getName())) {
                         resolvedVariableType.getParameterTypes().putAll(
                                 resolvedExpressionType.getParameterTypes()
@@ -284,9 +284,9 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         Set<ResolvedType> widenedTypeSet;
         if (indexed.indices.size() == 1) {
-            widenedTypeSet = ResolvedType.fromString("Vector<T>",  Map.of("T", innerTypeSet), componentResolver);
+            widenedTypeSet = ResolvedType.fromString("Vector<T>", Map.of("T", innerTypeSet), componentResolver);
         } else {
-            widenedTypeSet = ResolvedType.fromString("Matrix<T>",  Map.of("T", innerTypeSet), componentResolver);
+            widenedTypeSet = ResolvedType.fromString("Matrix<T>", Map.of("T", innerTypeSet), componentResolver);
         }
 
         // register the widened type in the outer scope under the variable name
@@ -485,7 +485,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
             if (!TypeUtils.canBeAssignedTo(resolvedTypeSet, scalarTypeSet, componentResolver)) {
                 throw new TypeError(
                         "Only numbers can have units.",
-                        "You specify a unit for a value of the type '" + printType(resolvedTypeSet) +"'. Only numbers can have units."
+                        "You specify a unit for a value of the type '" + printType(resolvedTypeSet) + "'. Only numbers can have units."
                 );
             }
 

@@ -36,7 +36,7 @@ public class TypeUtils {
             ResolvedType resolvedType,
             ComponentResolver componentResolver
     ) {
-        ResolvedType[] recoveredType = new ResolvedType[] {null};
+        ResolvedType[] recoveredType = new ResolvedType[]{null};
         visitTypeAndParents(resolvedType, t -> {
             if (t.getName().equals(typeName)) {
                 recoveredType[0] = t;
@@ -47,11 +47,13 @@ public class TypeUtils {
         return recoveredType[0];
     }
 
-    /** This function returns the typeset containing all possible return
+    /**
+     * This function returns the typeset containing all possible return
      * types of this generator with the given resolved argument types.
      * This function takes automatically resolves type parameters using
      * the resolved arguments and uses that to build the possible return
-     * types. */
+     * types.
+     */
     static Set<ResolvedType> resolveGeneratedType(
             Generator generator,
             Map<String, Set<ResolvedType>> resolvedArguments,
@@ -138,12 +140,16 @@ public class TypeUtils {
         return ResolvedType.fromString(returnTypeName, parameterTypeSets, componentResolver);
     }
 
-    /** Checks whether the given type String (e.g. {@code "Vector<Real>"}) is a generic. */
+    /**
+     * Checks whether the given type String (e.g. {@code "Vector<Real>"}) is a generic.
+     */
     static boolean isGeneric(String typeString) {
         return typeString.contains("<");
     }
 
-    /** Strips the generic part of the type name (e.g. {@code "Vector<Real>"} to {@code "Vector"}). */
+    /**
+     * Strips the generic part of the type name (e.g. {@code "Vector<Real>"} to {@code "Vector"}).
+     */
     public static String stripGenerics(String typeString) {
         if (isGeneric(typeString)) {
             return typeString.substring(0, typeString.indexOf("<"));
@@ -152,8 +158,10 @@ public class TypeUtils {
         }
     }
 
-    /** Returns a list containing the type strings of the generic type parameters. Supports nested
-     * generics like {@code "Vector<Pair<Real, Real>>"} */
+    /**
+     * Returns a list containing the type strings of the generic type parameters. Supports nested
+     * generics like {@code "Vector<Pair<Real, Real>>"}
+     */
     public static List<String> parseParameterTypes(String typeString) {
         if (!isGeneric(typeString)) return new ArrayList<>();
 
@@ -183,12 +191,15 @@ public class TypeUtils {
         return typeParameterNames;
     }
 
-    /** Checks if {@code query} covers {@code reference}. Type A covers type B if A = B or if A extends B. */
+    /**
+     * Checks if {@code query} covers {@code reference}. Type A covers type B if A = B or if A extends B.
+     */
     public static boolean covers(ResolvedType query, ResolvedType reference, ComponentResolver componentResolver) {
         if (query.equals(reference)) return true;
 
         // test if the reference is stripped from its generics and if yes, if the stripped type matches
-        if (query.getParameterTypes().isEmpty() && query.getTypeComponent().equals(reference.getTypeComponent())) return true;
+        if (query.getParameterTypes().isEmpty() && query.getTypeComponent().equals(reference.getTypeComponent()))
+            return true;
 
         boolean[] covers = {false};
         visitParents(
@@ -203,11 +214,13 @@ public class TypeUtils {
         return covers[0];
     }
 
-    /** Returns a set containing the lowest cover for every possible combinations
+    /**
+     * Returns a set containing the lowest cover for every possible combinations
      * of types in {@code typeSets}.
      * This function build every combination by taking one type out of every set in
      * {@code typeSets}. Then, for every such combination, the lowest cover type is
-     * determined. Then the set of all lowest covers is returned. */
+     * determined. Then the set of all lowest covers is returned.
+     */
     static Set<ResolvedType> getLowestCoverTypeSet(List<Set<ResolvedType>> typeSets, ComponentResolver componentResolver) {
         if (typeSets.isEmpty()) return Set.of();
 
@@ -226,10 +239,12 @@ public class TypeUtils {
         return lcTypeSet;
     }
 
-    /** Returns the lowest cover of all types in the {@code typeSet}. Returns null
+    /**
+     * Returns the lowest cover of all types in the {@code typeSet}. Returns null
      * if no such cover exists.
      * A type C is the lowest cover of a typeset T if it covers all types in T,
-     * and if all other covers of T cover C. */
+     * and if all other covers of T cover C.
+     */
     public static ResolvedType getLowestCover(List<ResolvedType> typeSet, ComponentResolver componentResolver) {
         if (typeSet.size() == 1) return typeSet.getFirst();
 
@@ -242,10 +257,12 @@ public class TypeUtils {
         return lowestCover;
     }
 
-    /** Returns the lowest cover of {@code type1} and {@code type2}. Returns null
+    /**
+     * Returns the lowest cover of {@code type1} and {@code type2}. Returns null
      * if no such cover exists.
      * A type C is the lowest cover of type A and type B if it covers both A and B,
-     * and if all other covers of A and B cover C. */
+     * and if all other covers of A and B cover C.
+     */
     static ResolvedType getLowestCover(ResolvedType type1, ResolvedType type2, ComponentResolver componentResolver) {
         if (type1.equals(type2)) return type1;
 
@@ -267,7 +284,9 @@ public class TypeUtils {
         return lowestCover[0];
     }
 
-    /** Calls the visitor function on the type and every parent type. */
+    /**
+     * Calls the visitor function on the type and every parent type.
+     */
     public static void visitTypeAndParents(
             ResolvedType type,
             Function<ResolvedType, Visitor> visitor,
@@ -277,7 +296,9 @@ public class TypeUtils {
         visitParents(type, visitor, componentResolver);
     }
 
-    /** Calls the visitor function on the type and every parent type. */
+    /**
+     * Calls the visitor function on the type and every parent type.
+     */
     public static void visitParents(
             ResolvedType type,
             Function<ResolvedType, Visitor> visitor,
@@ -322,11 +343,12 @@ public class TypeUtils {
      * can be assigned to an argument of type {@code resolvedType} (e.g. {@code "Vector<Real>"}).
      * If this is the case, the passed {@code resolvedTypeParameterTypes} will be updated with the
      * matching type parameter (e.g. T -> Real).
-     * @param requiredTypeName the type name of the argument
-     * @param resolvedType the resolved type of the object to be assigned to the argument
-     * @param typeParameterNames the names of the type parameters of the generator
+     *
+     * @param requiredTypeName           the type name of the argument
+     * @param resolvedType               the resolved type of the object to be assigned to the argument
+     * @param typeParameterNames         the names of the type parameters of the generator
      * @param resolvedTypeParameterTypes the dict with type parameter types, will be updated if the argument matches
-     * @param componentResolver the component resolver
+     * @param componentResolver          the component resolver
      * @return true if the object can be assigned to the argument
      */
     public static boolean checkAssignabilityAndResolveTypeParameters(
@@ -365,7 +387,7 @@ public class TypeUtils {
         // we don't want to update the type parameter map until we are sure that everything matches
         Map<String, List<ResolvedType>> localResolvedTypeParameterTypes = new HashMap<>();
 
-        boolean[] foundMatch = new boolean[] { false };
+        boolean[] foundMatch = new boolean[]{false};
         visitTypeAndParents(
                 resolvedType,
                 type -> {
