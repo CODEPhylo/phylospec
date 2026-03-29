@@ -43,6 +43,7 @@ public class Parser {
     private int current = 0;
     private boolean skipNewLines = false;
     private Stmt.Block currentBlock = Stmt.Block.NO_BLOCK;
+    private Range currentBlockRange = null;
 
     private final Map<Token, AstNode> tokenAstNodeMap;
     private final Map<AstNode, Range> astNodeRanges;
@@ -107,6 +108,16 @@ public class Parser {
             }
         }
 
+        // make sure that the last block has been closed
+
+        if (currentBlock != Stmt.Block.NO_BLOCK) {
+            logError(new Error(
+                    currentBlockRange,
+                    "Unclosed block.",
+                    "You started a '" + currentBlock + "' block but did not close it. Use curly brackets to close the block."
+            ));
+        }
+
         return statements;
     }
 
@@ -122,12 +133,14 @@ public class Parser {
 
         if (currentBlock != Stmt.Block.NO_BLOCK) {
             throw new Error(
-                    peek().range,
+                    previous().range,
                     "Block not closed.",
                     "You are starting a '" + blockName + "' without closing the '" + currentBlock.toString() + "' block. End the block with curly braces first.",
                     List.of(currentBlock.toString() + "{\n\t\t...\t\n}\n\t" + blockName + "\n\t\t...\n\t}")
             );
         }
+
+        currentBlockRange = previous().range;
 
         advance(); // consume LEFT_BRACE
         currentBlock = switch (blockName) {
