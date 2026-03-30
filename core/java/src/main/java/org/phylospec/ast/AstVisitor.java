@@ -33,6 +33,7 @@ public interface AstVisitor<S, E, T> {
         return null;
     }
     public E visitVariable(Expr.Variable expr);
+    default E visitTemplateVariable(Expr.TemplateVariable expr) { return null; }
     public E visitUnary(Expr.Unary expr);
     public E visitBinary(Expr.Binary expr);
     public E visitCall(Expr.Call expr);

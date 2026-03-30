@@ -48,6 +48,34 @@ public abstract class Expr extends AstNode {
         }
     }
 
+    /** Represents a template variable. This is not used in normal PhyloSpec models, but in PhyloSpec
+     * templates which have template variables which are not defined in the PhyloSpec template. */
+    public static class TemplateVariable extends Expr {
+        public TemplateVariable(String variableName) {
+            this.variableName = variableName;
+        }
+
+        @JsonPropertyDescription("The template name of the variable.")
+        public final String variableName;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Variable variable1 = (Variable) o;
+            return Objects.equals(variableName, variable1.variableName);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(variableName);
+        }
+
+        @Override
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
+            return visitor.visitTemplateVariable(this);
+        }
+    }
+
     /** Represents a string template that may contain interpolated expressions,
      * e.g. {@code "file_${seed}.nex"}. Plain strings with no interpolations
      * are represented by {@link Literal} instead.

@@ -575,6 +575,15 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
+    public Set<ResolvedType> visitTemplateVariable(Expr.TemplateVariable expr) {
+        // template variables are not allowed in normal PhyloSpec models
+        throw new TypeError(
+                "Template variables are not allowed.",
+                "You use a variable name starting with a '$'. This is not allowed in a PhyloSpec model. Use a variable name without a dollar symbol."
+        );
+    }
+
+    @Override
     public Set<ResolvedType> visitUnary(Expr.Unary expr) {
         List<TypeMatcher.Rule> typeMap = List.of(
                 new TypeMatcher.Rule(TokenType.BANG, "Boolean", "Boolean"),

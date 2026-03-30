@@ -1,0 +1,10 @@
+String a = $hallo
+String $b = "b"
+
+// EXPECT AST
+// (AS String a $hallo)
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Template variables are not allowed. You use a variable name starting with a '$'. This is not allowed in a PhyloSpec model. Use a variable name without a dollar symbol.
+// EXPECT TYPE_ERRORS
