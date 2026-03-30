@@ -64,7 +64,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
      * or PositiveInteger. Another example are generators overloaded in
      * their return type.
      */
-    public Set<ResolvedType> resolveType(AstNode expression) {
+    public Set<ResolvedType> resolveTypeSet(AstNode expression) {
         return this.resolvedTypes.getOrDefault(expression, Set.of());
     }
 
@@ -72,7 +72,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
      * Returns the types associated with the given AST type node. Returns null if no
      * type is known.
      */
-    public Set<ResolvedType> resolveType(AstType astTypeNode) {
+    public Set<ResolvedType> resolveTypeSet(AstType astTypeNode) {
         return this.resolvedTypes.getOrDefault(astTypeNode, null);
     }
 
@@ -80,7 +80,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
      * Returns the types associated with the given AST statement node. Returns null if
      * no type is known.
      */
-    public Set<ResolvedType> resolveType(Stmt astTypeNode) {
+    public Set<ResolvedType> resolveTypeSet(Stmt astTypeNode) {
         return this.resolvedTypes.getOrDefault(astTypeNode, null);
     }
 

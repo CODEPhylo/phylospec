@@ -8,10 +8,12 @@ import java.util.List;
  * the visitor pattern.
  */
 public interface AstVisitor<S, E, T> {
-    default void visitStatements(List<Stmt> statements) {
+    default S visitStatements(List<Stmt> statements) {
+        S last = null;
         for (Stmt stmt : statements) {
-            stmt.accept(this);
+            last = stmt.accept(this);
         }
+        return last;
     }
 
     public S visitDecoratedStmt(Stmt.Decorated stmt);
