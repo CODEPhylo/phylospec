@@ -5,9 +5,14 @@
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.phylospec</groupId>
+    <parent>
+        <groupId>org.phylospec</groupId>
+        <artifactId>phylospec</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
     <artifactId>phylospec-core</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>PhyloSpec Core Java</name>
@@ -40,24 +45,6 @@
         <developerConnection>scm:git:ssh://github.com:CODEPhylo/phylospec.git</developerConnection>
         <url>https://github.com/CODEPhylo/phylospec/tree/main</url>
     </scm>
-
-    <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        
-        <!-- Dependency versions -->
-        <junit.jupiter.version>5.10.1</junit.jupiter.version>
-        <auto-service.version>1.1.1</auto-service.version>
-        
-        <!-- Plugin versions -->
-        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.2.2</maven-surefire-plugin.version>
-        <maven-javadoc-plugin.version>3.6.2</maven-javadoc-plugin.version>
-        <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
-        <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
-    </properties>
 
     <dependencies>
         <!-- Test dependencies -->
@@ -118,8 +105,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
+                    <source>25</source>
+                    <target>25</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <showWarnings>true</showWarnings>
                     <showDeprecation>true</showDeprecation>

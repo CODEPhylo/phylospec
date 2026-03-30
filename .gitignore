@@ -3,3 +3,4 @@
 /.idea/
 phylospec-core.iml
 out
+/integrations/beast3/java/target/
