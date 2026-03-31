@@ -5,20 +5,16 @@ import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.TypeResolver;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 
 public abstract class GeneratorTile<T> extends Tile {
 
-    private final Type generatedType;
+    protected final Type generatedType;
 
     protected GeneratorTile() {
-        // parse the type parameter T
-        Type superclass = this.getClass().getGenericSuperclass();
-        if (superclass instanceof ParameterizedType pt) {
-            this.generatedType = pt.getActualTypeArguments()[0];
-        } else {
+        this.generatedType = TileUtils.getParametricType(this);
+        if (this.generatedType == null) {
             throw new IllegalArgumentException("Generator tile " + this.getClass() + " has no type parameter. Set a type parameter to ensure type safety.");
         }
     }
@@ -68,38 +64,22 @@ public abstract class GeneratorTile<T> extends Tile {
 
         for (Input<?> expectedInput : expectedInputs) {
             Set<EvaluatedTile> possibleTiles = argumentTiles.get(expectedInput.getPhylospecArgumentName());
+            EvaluatedTile matchingTile = Tile.getBestInput(possibleTiles, expectedInput.getTypeToken());
 
-            if (possibleTiles == null || possibleTiles.isEmpty()) {
-                // no input for this argument found. we cannot match this tile
+            if (matchingTile == null) {
+                // we cannot find a matching input
+                // this tile cannot be matched
                 return Set.of();
             }
 
-            int bestScore = 0;
-            for (EvaluatedTile possibleTile : possibleTiles) {
-                if (expectedInput.getTypeToken().isAssignableFrom(possibleTile.generatedType())) {
-                    // we can use the input tile to assign it to this argument
-                    bestScore = Math.max(bestScore, possibleTile.score());
-                    expectedInput.setValue(possibleTile.generatedObject());
-                }
-            }
-
-            if (bestScore == 0) {
-                // none of the input tiles generate objects which can be assigned to the expected inputs
-                // we cannot match this tile
-                return Set.of();
-            }
-
-            totalScore += bestScore;
+            expectedInput.setValue(matchingTile.generatedObject());
+            totalScore += matchingTile.score();
         }
 
-        T generatedObject = this.operateTile();
-        
-        return Set.of(
-                new EvaluatedTile(this, generatedObject, generatedType, totalScore)
-        );
+        return this.operateTile(totalScore);
     }
 
-    protected abstract T operateTile();
+    protected abstract Set<EvaluatedTile> operateTile(int score);
 
     public static class Input<T> {
         private final String phylospecArgumentName;

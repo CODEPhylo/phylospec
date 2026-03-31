@@ -1,5 +1,7 @@
 import beast.base.core.BEASTObject;
 import org.phylospec.ast.Stmt;
+import org.phylospec.ast.transformers.EvaluateLiterals;
+import org.phylospec.ast.transformers.RemoveGroupings;
 import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.Lexer;
@@ -7,7 +9,9 @@ import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.TypeResolver;
 import patternmatching.EvaluateTiles;
+import patternmatching.EvaluatedTile;
 import patternmatching.Tile;
+import tiles.DrawTile;
 import tiles.LiteralTile;
 import tiles.NormalTile;
 
@@ -16,19 +20,25 @@ import java.util.List;
 
 public class Test2 {
     static void main(String[] args) {
-        String source = "Real a ~ Normal(mean=0.0, sd=4.0)";
+        String source = """
+        Real mean ~ Normal(mean=0.0, sd=1.0)
+        // Real data ~ Normal(mean, sd=4.0) // observed as 20.0
+        """;
 
         ComponentResolver componentResolver = loadComponentResolver();
 
          // run lexer
 
-        Lexer lexer = new Lexer(source);
-        List<Token> tokens = lexer.scanTokens();
+        List<Token> tokens = new Lexer(source).scanTokens();
 
         // run parser
 
-        Parser parser = new Parser(tokens);
-        List<Stmt> statements = parser.parse();
+        List<Stmt> statements = new Parser(tokens).parse();
+
+        // simplify graph
+
+        statements = new RemoveGroupings().transform(statements);
+        statements = new EvaluateLiterals().transform(statements);
 
         // run type resolver
 
@@ -37,14 +47,14 @@ public class Test2 {
 
         // define tiles
 
-        List<Tile> tiles = List.of(new NormalTile(), new LiteralTile());
+        List<Tile> tiles = List.of(new NormalTile(), new LiteralTile(), new DrawTile());
 
         // perform tiling
 
         EvaluateTiles applyTiles = new EvaluateTiles(tiles, typeResolver);
-        Object result = applyTiles.visitStatements(statements);
+        EvaluatedTile result = applyTiles.visitStatements(statements);
 
-        ((BEASTObject) result).initAndValidate();
+        ((BEASTObject) result.generatedObject()).initAndValidate();
 
         System.out.println(result);
     }

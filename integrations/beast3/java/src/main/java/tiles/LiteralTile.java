@@ -7,14 +7,14 @@ import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.TypeResolver;
 import patternmatching.EvaluatedTile;
-import patternmatching.ExprNodeTile;
+import patternmatching.AstNodeTile;
 import patternmatching.TypeToken;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class LiteralTile extends ExprNodeTile<Expr.Literal> {
+public class LiteralTile extends AstNodeTile<Expr.Literal> {
     @Override
     public Class<Expr.Literal> getTargetNodeType() {
         return Expr.Literal.class;

@@ -1,14 +1,21 @@
 package patternmatching;
 
+import beast.base.inference.Distribution;
+import beast.base.inference.Operator;
+import beast.base.inference.StateNode;
 import org.phylospec.ast.*;
 import org.phylospec.typeresolver.TypeResolver;
 
 import java.util.*;
 
-public class EvaluateTiles implements AstVisitor<Object, Object, Object> {
+public class EvaluateTiles implements AstVisitor<EvaluatedTile, EvaluatedTile, EvaluatedTile> {
 
     private final TypeResolver typeResolver;
     private final List<Tile> tiles;
+
+    private final Set<StateNode> stateNodes;
+    private final Set<Distribution> distributions;
+    private final Set<Operator> operators;
 
     private final Map<AstNode, Set<EvaluatedTile>> evaluatedTiles;
 
@@ -16,101 +23,118 @@ public class EvaluateTiles implements AstVisitor<Object, Object, Object> {
         this.tiles = tiles;
         this.typeResolver = typeResolver;
         this.evaluatedTiles = new HashMap<>();
+        this.stateNodes = new HashSet<>();
+        this.distributions = new HashSet<>();
+        this.operators = new HashSet<>();
     }
 
     @Override
-    public Object visitLiteral(Expr.Literal expr) {
-        return this.visitExpr(expr);
+    public EvaluatedTile visitDraw(Stmt.Draw stmt) {
+        stmt.expression.accept(this);
+        return this.visitNode(stmt);
     }
 
     @Override
-    public Object visitStringTemplate(Expr.StringTemplate expr) {
+    public EvaluatedTile visitLiteral(Expr.Literal expr) {
+        return this.visitNode(expr);
+    }
+
+    @Override
+    public EvaluatedTile visitStringTemplate(Expr.StringTemplate expr) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Object visitVariable(Expr.Variable expr) {
-        return this.visitExpr(expr);
+    public EvaluatedTile visitVariable(Expr.Variable expr) {
+        return this.visitNode(expr);
     }
 
     @Override
-    public Object visitUnary(Expr.Unary expr) {
+    public EvaluatedTile visitUnary(Expr.Unary expr) {
         expr.right.accept(this);
-        return this.visitExpr(expr);
+        return this.visitNode(expr);
     }
 
     @Override
-    public Object visitBinary(Expr.Binary expr) {
+    public EvaluatedTile visitBinary(Expr.Binary expr) {
         expr.left.accept(this);
         expr.right.accept(this);
-        return this.visitExpr(expr);
+        return this.visitNode(expr);
     }
 
     @Override
-    public Object visitCall(Expr.Call expr) {
+    public EvaluatedTile visitCall(Expr.Call expr) {
         for (Expr.Argument argument : expr.arguments) {
             argument.expression.accept(this);
         }
-        return this.visitExpr(expr);
+        return this.visitNode(expr);
     }
 
     @Override
-    public Object visitAssignedArgument(Expr.AssignedArgument expr) {
-        return this.visitExpr(expr.expression);
+    public EvaluatedTile visitAssignedArgument(Expr.AssignedArgument expr) {
+        return this.visitNode(expr.expression);
     }
 
     @Override
-    public Object visitDrawnArgument(Expr.DrawnArgument expr) {
-        return this.visitExpr(expr.expression);
+    public EvaluatedTile visitDrawnArgument(Expr.DrawnArgument expr) {
+        return this.visitNode(expr.expression);
     }
 
     @Override
-    public Object visitGrouping(Expr.Grouping expr) {
-        return this.visitExpr(expr.expression);
+    public EvaluatedTile visitGrouping(Expr.Grouping expr) {
+        return this.visitNode(expr.expression);
     }
 
     @Override
-    public Object visitArray(Expr.Array expr) {
+    public EvaluatedTile visitArray(Expr.Array expr) {
         for (Expr element : expr.elements) {
             element.accept(this);
         }
-        return this.visitExpr(expr);
+        return this.visitNode(expr);
     }
 
     @Override
-    public Object visitIndex(Expr.Index expr) {
+    public EvaluatedTile visitIndex(Expr.Index expr) {
         expr.object.accept(this);
         for (Expr index : expr.indices) {
             index.accept(this);
         }
-        return this.visitExpr(expr);
+        return this.visitNode(expr);
     }
 
     @Override
-    public Object visitRange(Expr.Range range) {
+    public EvaluatedTile visitRange(Expr.Range range) {
         range.from.accept(this);
         range.to.accept(this);
-        return this.visitExpr(range);
+        return this.visitNode(range);
     }
 
-    private Object visitExpr(Expr expr) {
+    private EvaluatedTile visitNode(AstNode node) {
         int bestScore = 0;
-        Object bestGeneratedObject = null;
+        EvaluatedTile bestEvaluatedTile = null;
 
         for (Tile tile : this.tiles) {
-            Set<EvaluatedTile> evaluatedTiles = tile.tryToTile(expr, this.evaluatedTiles, this.typeResolver);
+            Set<EvaluatedTile> evaluatedTiles = tile.tryToTile(node, this.evaluatedTiles, this.typeResolver);
 
             for (EvaluatedTile evaluatedTile : evaluatedTiles) {
-                this.evaluatedTiles.computeIfAbsent(expr, x -> new HashSet<>()).add(evaluatedTile);
+                this.evaluatedTiles.computeIfAbsent(node, x -> new HashSet<>()).add(evaluatedTile);
 
                 if (bestScore < evaluatedTile.score()) {
                     bestScore = evaluatedTile.score();
-                    bestGeneratedObject = evaluatedTile.generatedObject();
+                    bestEvaluatedTile = evaluatedTile;
                 }
             }
         }
 
-        return bestGeneratedObject;
+        if (bestEvaluatedTile != null) {
+            // add new state nodes, distributions, and operators
+
+            this.stateNodes.addAll(bestEvaluatedTile.newStateNodes());
+            this.distributions.addAll(bestEvaluatedTile.newDistributions());
+            this.operators.addAll(bestEvaluatedTile.newOperators());
+        }
+
+        return bestEvaluatedTile;
     }
 
     /*
@@ -118,47 +142,42 @@ public class EvaluateTiles implements AstVisitor<Object, Object, Object> {
      */
 
     @Override
-    public Object visitDecoratedStmt(Stmt.Decorated stmt) {
+    public EvaluatedTile visitDecoratedStmt(Stmt.Decorated stmt) {
         return stmt.statement.accept(this);
     }
 
     @Override
-    public Object visitAssignment(Stmt.Assignment stmt) {
+    public EvaluatedTile visitAssignment(Stmt.Assignment stmt) {
         return stmt.expression.accept(this);
     }
 
     @Override
-    public Object visitDraw(Stmt.Draw stmt) {
-        return stmt.expression.accept(this);
-    }
-
-    @Override
-    public Object visitImport(Stmt.Import stmt) {
+    public EvaluatedTile visitImport(Stmt.Import stmt) {
         return null;
     }
 
     @Override
-    public Object visitIndexedStmt(Stmt.Indexed indexed) {
+    public EvaluatedTile visitIndexedStmt(Stmt.Indexed indexed) {
         return indexed.statement.accept(this);
     }
 
     @Override
-    public Object visitObservedAsStmt(Stmt.ObservedAs observedAs) {
+    public EvaluatedTile visitObservedAsStmt(Stmt.ObservedAs observedAs) {
         return observedAs.stmt.accept(this);
     }
 
     @Override
-    public Object visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
+    public EvaluatedTile visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
         return observedBetween.stmt.accept(this);
     }
 
     @Override
-    public Object visitAtomicType(AstType.Atomic expr) {
+    public EvaluatedTile visitAtomicType(AstType.Atomic expr) {
         return null;
     }
 
     @Override
-    public Object visitGenericType(AstType.Generic expr) {
+    public EvaluatedTile visitGenericType(AstType.Generic expr) {
         return null;
     }
 

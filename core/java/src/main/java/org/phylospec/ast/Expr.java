@@ -396,9 +396,9 @@ public abstract class Expr extends AstNode {
         }
 
         @JsonPropertyDescription("The lower bound of the range (inclusive).")
-        public final Expr from;
+        public Expr from;
         @JsonPropertyDescription("The upper bound of the range (inclusive).")
-        public final Expr to;
+        public Expr to;
 
         @Override
         public boolean equals(Object o) {
