@@ -38,8 +38,9 @@ public abstract class TypeToken<T> {
             Type[] sourceArgs = sourcePt.getActualTypeArguments();
             if (targetArgs.length != sourceArgs.length) return false;
 
+            // type arguments are invariant: RealScalarParam<Real> does not accept RealScalarParam<PositiveReal>
             for (int i = 0; i < targetArgs.length; i++) {
-                if (!isAssignable(targetArgs[i], sourceArgs[i])) return false;
+                if (!targetArgs[i].equals(sourceArgs[i])) return false;
             }
             return true;
         }
