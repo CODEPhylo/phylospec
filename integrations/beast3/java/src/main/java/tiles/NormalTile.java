@@ -14,18 +14,18 @@ import java.util.Set;
 
 public class NormalTile extends DistributionTile<Normal> {
 
-    Input<RealScalarParam<Real>> mean = new Input<>("mean", new TypeToken<>() {});
-    Input<RealScalarParam<PositiveReal>> sd = new Input<>("sd", new TypeToken<>() {});
-
     @Override
-    public String getGeneratorName() {
+    public String getPhyloSpecGeneratorName() {
         return "Normal";
     }
+
+    Input<RealScalar<Real>> mean = new Input<>("mean", new TypeToken<>() {});
+    Input<RealScalar<PositiveReal>> sd = new Input<>("sd", new TypeToken<>() {});
 
     @Override
     protected EvaluatedDistribution<Normal> apply() {
         RealScalarParam<Real> state = new RealScalarParam<>();
-        Normal distribution = new Normal(state, this.mean.getValue(), this.sd.getValue());
+        Normal distribution = new Normal(state, this.mean.get(), this.sd.get());
 
         ScaleOperator operator = new ScaleOperator();
         operator.determindClassOfInputs();

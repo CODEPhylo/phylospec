@@ -16,6 +16,7 @@ public class TileLibrary {
 
         addTile(new EnvTile());
 
+        addTile(new OffsetTile());
         addTile(new NormalTile());
     }
 

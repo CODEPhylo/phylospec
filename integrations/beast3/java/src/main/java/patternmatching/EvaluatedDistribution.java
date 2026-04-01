@@ -10,5 +10,14 @@ public record EvaluatedDistribution<T extends beast.base.inference.Distribution>
         T distribution,
         StateNode stateNode,
         Type stateNodeType,
-        Set<Operator> operatorSet) {
+        Set<Operator> operatorSet,
+        boolean hasBeenDrawnBefore) {
+    public EvaluatedDistribution(
+            T distribution,
+            StateNode stateNode,
+            Type stateNodeType,
+            Set<Operator> operatorSet
+    ) {
+        this(distribution, stateNode, stateNodeType, operatorSet, false);
+    }
 }

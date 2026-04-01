@@ -4,6 +4,7 @@ import beast.base.inference.Distribution;
 import org.phylospec.ast.Stmt;
 import patternmatching.*;
 
+import java.util.Map;
 import java.util.Set;
 
 public class DrawTile extends AstNodeTile<Stmt.Draw> {
@@ -34,7 +35,7 @@ public class DrawTile extends AstNodeTile<Stmt.Draw> {
                         evaluatedDistribution.stateNode(),
                         evaluatedDistribution.stateNodeType(),
                         Set.of(evaluatedDistribution.stateNode()),
-                        Set.of(evaluatedDistribution.distribution()),
+                        Map.of(evaluatedDistribution.stateNode(), evaluatedDistribution.distribution()),
                         evaluatedDistribution.operatorSet()
                 )
         );

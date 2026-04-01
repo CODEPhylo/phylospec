@@ -2,8 +2,11 @@ package patternmatching;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public abstract class TypeToken<T> {
@@ -60,9 +63,10 @@ public abstract class TypeToken<T> {
         }
 
         if (target instanceof ParameterizedType targetPt) {
-            if (!(source instanceof ParameterizedType sourcePt)) return false;
-
-            if (!isAssignable(targetPt.getRawType(), sourcePt.getRawType())) return false;
+            // walk the source's generic supertype chain to find a parameterized version of targetRaw,
+            // substituting any type variables along the way
+            Type resolvedSource = resolveAsParameterized(source, (Class<?>) targetPt.getRawType(), Map.of());
+            if (!(resolvedSource instanceof ParameterizedType sourcePt)) return false;
 
             Type[] targetArgs = targetPt.getActualTypeArguments();
             Type[] sourceArgs = sourcePt.getActualTypeArguments();
@@ -75,6 +79,62 @@ public abstract class TypeToken<T> {
         }
 
         return false;
+    }
+
+    /**
+     * Walks the generic supertype chain of {@code source} to find a parameterized
+     * instantiation of {@code targetRaw}, substituting type variables as it descends.
+     * Returns {@code null} if no match is found.
+     */
+    private static Type resolveAsParameterized(Type source, Class<?> targetRaw, Map<TypeVariable<?>, Type> subs) {
+        if (source instanceof ParameterizedType pt) {
+            Class<?> rawClass = (Class<?>) pt.getRawType();
+            if (targetRaw.equals(rawClass)) return substituteType(pt, subs);
+
+            // build substitution map: each type parameter of rawClass → the (substituted) type arg
+            TypeVariable<?>[] params = rawClass.getTypeParameters();
+            Type[] args = pt.getActualTypeArguments();
+            Map<TypeVariable<?>, Type> newSubs = new HashMap<>(subs);
+            for (int i = 0; i < params.length; i++)
+                newSubs.put(params[i], substituteType(args[i], subs));
+
+            return resolveAsParameterized(rawClass, targetRaw, newSubs);
+        }
+
+        if (!(source instanceof Class<?> sourceClass)) return null;
+        if (!targetRaw.isAssignableFrom(sourceClass)) return null;
+
+        // check generic superclass
+        Type genericSuper = sourceClass.getGenericSuperclass();
+        if (genericSuper != null) {
+            Type result = resolveAsParameterized(genericSuper, targetRaw, subs);
+            if (result != null) return result;
+        }
+
+        // check generic interfaces
+        for (Type iface : sourceClass.getGenericInterfaces()) {
+            Type result = resolveAsParameterized(iface, targetRaw, subs);
+            if (result != null) return result;
+        }
+
+        return null;
+    }
+
+    private static Type substituteType(Type type, Map<TypeVariable<?>, Type> subs) {
+        if (subs.isEmpty()) return type;
+        if (type instanceof TypeVariable<?> tv)
+            return subs.getOrDefault(tv, tv);
+        if (type instanceof ParameterizedType pt) {
+            Type[] args = pt.getActualTypeArguments();
+            Type[] newArgs = new Type[args.length];
+            boolean changed = false;
+            for (int i = 0; i < args.length; i++) {
+                newArgs[i] = substituteType(args[i], subs);
+                if (!newArgs[i].equals(args[i])) changed = true;
+            }
+            return changed ? parameterized((Class<?>) pt.getRawType(), newArgs).getType() : pt;
+        }
+        return type;
     }
 
     // type arguments are invariant by default, but wildcards relax this:

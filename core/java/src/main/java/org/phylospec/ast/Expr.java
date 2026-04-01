@@ -61,7 +61,7 @@ public abstract class Expr extends AstNode {
         @Override
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
-            Variable variable1 = (Variable) o;
+            TemplateVariable variable1 = (TemplateVariable) o;
             return Objects.equals(variableName, variable1.variableName);
         }
 

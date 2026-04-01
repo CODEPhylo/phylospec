@@ -23,6 +23,9 @@ Real z = matrix[1, 1]
 Real zz = matrix[1, -1]
 Integer zzz = vector5[1, 1]
 
+PositiveInteger a = 1
+Integer b[a] = a for a in 1:a
+
 // EXPECT AST
 // (AS Vector<Real> vector (AR 10.0 2.0 (- 5.0)))
 // (AS String i "")
@@ -38,6 +41,8 @@ Integer zzz = vector5[1, 1]
 // (AS Real z (IX matrix 1 1))
 // (AS Real zz (IX matrix 1 (- 1)))
 // (AS Integer zzz (IX vector5 1 1))
+// (AS Integer a 1)
+// (IS (AS Integer b a) a (R 1 a))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS

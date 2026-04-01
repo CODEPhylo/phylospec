@@ -5,6 +5,7 @@ import beast.base.inference.Operator;
 import beast.base.inference.StateNode;
 import org.phylospec.ast.*;
 import org.phylospec.typeresolver.TypeResolver;
+import org.phylospec.typeresolver.VariableResolver;
 
 import java.util.*;
 
@@ -14,17 +15,19 @@ public class EvaluateTiles implements AstVisitor<EvaluatedTile, EvaluatedTile, E
     private final List<Tile> tiles;
 
     private final Set<StateNode> stateNodes;
-    private final Set<Distribution> distributions;
+    private final HashMap<StateNode, Distribution> distributions;
     private final Set<Operator> operators;
 
     private final Map<AstNode, Set<EvaluatedTile>> evaluatedTiles;
+    private final VariableResolver variableResolver;
 
-    public EvaluateTiles(List<Tile> tiles, TypeResolver typeResolver) {
+    public EvaluateTiles(List<Tile> tiles, TypeResolver typeResolver, VariableResolver variableResolver) {
         this.tiles = tiles;
         this.typeResolver = typeResolver;
+        this.variableResolver = variableResolver;
         this.evaluatedTiles = new HashMap<>();
         this.stateNodes = new HashSet<>();
-        this.distributions = new HashSet<>();
+        this.distributions = new HashMap<>();
         this.operators = new HashSet<>();
     }
 
@@ -120,7 +123,7 @@ public class EvaluateTiles implements AstVisitor<EvaluatedTile, EvaluatedTile, E
         EvaluatedTile bestEvaluatedTile = null;
 
         for (Tile tile : this.tiles) {
-            Set<EvaluatedTile> evaluatedTiles = tile.tryToTile(node, this.evaluatedTiles, this.typeResolver);
+            Set<EvaluatedTile> evaluatedTiles = tile.tryToTile(node, this.evaluatedTiles, this.typeResolver, this.variableResolver);
 
             for (EvaluatedTile evaluatedTile : evaluatedTiles) {
                 this.evaluatedTiles.computeIfAbsent(node, x -> new HashSet<>()).add(evaluatedTile);
@@ -136,7 +139,7 @@ public class EvaluateTiles implements AstVisitor<EvaluatedTile, EvaluatedTile, E
             // add new state nodes, distributions, and operators
 
             this.stateNodes.addAll(bestEvaluatedTile.newStateNodes());
-            this.distributions.addAll(bestEvaluatedTile.newDistributions());
+            this.distributions.putAll(bestEvaluatedTile.newDistributions());
             this.operators.addAll(bestEvaluatedTile.newOperators());
         }
 

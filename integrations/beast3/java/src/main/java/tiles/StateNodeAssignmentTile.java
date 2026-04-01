@@ -6,6 +6,7 @@ import patternmatching.AstNodeTile;
 import patternmatching.EvaluatedTile;
 import patternmatching.TypeToken;
 
+import java.util.Map;
 import java.util.Set;
 
 public class StateNodeAssignmentTile extends AstNodeTile<Stmt.Assignment> {
@@ -36,7 +37,7 @@ public class StateNodeAssignmentTile extends AstNodeTile<Stmt.Assignment> {
                         stateNode,
                         evaluatedDistributionInput.getType(),
                         Set.of(stateNode),
-                        Set.of(),
+                        Map.of(),
                         Set.of()
                 )
         );

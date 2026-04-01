@@ -8,12 +8,9 @@ import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.TypeResolver;
+import org.phylospec.typeresolver.VariableResolver;
 import patternmatching.EvaluateTiles;
 import patternmatching.EvaluatedTile;
-import patternmatching.Tile;
-import tiles.DrawTile;
-import tiles.LiteralTile;
-import tiles.NormalTile;
 import tiles.TileLibrary;
 
 import java.io.IOException;
@@ -22,8 +19,8 @@ import java.util.List;
 public class Test2 {
     static void main(String[] args) {
         String source = """
-        Integer seed = 100
-        Alignment alignment = fromNexus("test.nex")
+        Real x ~ Normal(mean=0.1, sd=2.2)
+        Real y ~ Normal(mean=x + 2.0, sd=1.0)
         """;
 
         ComponentResolver componentResolver = loadComponentResolver();
@@ -41,6 +38,10 @@ public class Test2 {
         statements = new RemoveGroupings().transform(statements);
         statements = new EvaluateLiterals().transform(statements);
 
+        // run variable resolver
+
+        VariableResolver variableResolver = new VariableResolver(statements);
+
         // run type resolver
 
         TypeResolver typeResolver = new TypeResolver(componentResolver);
@@ -48,7 +49,7 @@ public class Test2 {
 
         // perform tiling
 
-        EvaluateTiles applyTiles = new EvaluateTiles(TileLibrary.getTiles(), typeResolver);
+        EvaluateTiles applyTiles = new EvaluateTiles(TileLibrary.getTiles(), typeResolver, variableResolver);
         EvaluatedTile result = applyTiles.visitStatements(statements);
 
         ((BEASTObject) result.generatedObject()).initAndValidate();

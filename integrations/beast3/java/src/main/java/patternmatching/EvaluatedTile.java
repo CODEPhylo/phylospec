@@ -5,6 +5,7 @@ import beast.base.inference.Operator;
 import beast.base.inference.StateNode;
 
 import java.lang.reflect.Type;
+import java.util.Map;
 import java.util.Set;
 
 public record EvaluatedTile (
@@ -12,7 +13,7 @@ public record EvaluatedTile (
         Object generatedObject,
         Type generatedType,
         Set<StateNode> newStateNodes,
-        Set<Distribution> newDistributions,
+        Map<StateNode, Distribution> newDistributions,
         Set<Operator> newOperators,
         int weight
 ) {
@@ -21,7 +22,7 @@ public record EvaluatedTile (
             Object generatedObject,
             Type generatedType,
             Set<StateNode> newStateNodes,
-            Set<Distribution> newDistributions,
+            Map<StateNode, Distribution> newDistributions,
             Set<Operator> newOperators
     ) {
         this(tile, generatedObject, generatedType, newStateNodes, newDistributions, newOperators, 0);
@@ -32,7 +33,7 @@ public record EvaluatedTile (
             Object generatedObject,
             Type generatedType
     ) {
-        this(tile, generatedObject, generatedType, Set.of(), Set.of(), Set.of(), 0);
+        this(tile, generatedObject, generatedType, Set.of(), Map.of(), Set.of(), 0);
     }
 
     public EvaluatedTile withWeight(int weight) {

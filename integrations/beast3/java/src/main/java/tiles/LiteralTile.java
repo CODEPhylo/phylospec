@@ -30,18 +30,25 @@ public class LiteralTile extends AstNodeTile<Expr.Literal> {
                 Set<EvaluatedTile> tiles = new HashSet<>();
 
                 tiles.add(
-                        new EvaluatedTile(this, new IntScalarParam<>(1, Int.INSTANCE), new TypeToken<IntScalarParam<Int>>() {}.getType())
+                        new EvaluatedTile(this, new IntScalarParam<>(value, Int.INSTANCE), new TypeToken<IntScalarParam<Int>>() {}.getType())
                 );
 
                 if (0 <= value)
                     tiles.add(
-                            new EvaluatedTile(this, new IntScalarParam<>(1, NonNegativeInt.INSTANCE), new TypeToken<IntScalarParam<NonNegativeInt>>() {}.getType())
+                            new EvaluatedTile(this, new IntScalarParam<>(value, NonNegativeInt.INSTANCE), new TypeToken<IntScalarParam<NonNegativeInt>>() {}.getType())
                     );
 
                 if (0 < value)
                     tiles.add(
-                            new EvaluatedTile(this, new IntScalarParam<>(1, PositiveInt.INSTANCE), new TypeToken<IntScalarParam<PositiveInt>>() {}.getType())
+                            new EvaluatedTile(this, new IntScalarParam<>(value, PositiveInt.INSTANCE), new TypeToken<IntScalarParam<PositiveInt>>() {}.getType())
                     );
+
+                tiles.add(
+                        new EvaluatedTile(this, value, new TypeToken<Integer>() {}.getType())
+                );
+                tiles.add(
+                        new EvaluatedTile(this, 1.0*value, new TypeToken<Double>() {}.getType())
+                );
 
                 yield tiles;
             }
@@ -66,6 +73,10 @@ public class LiteralTile extends AstNodeTile<Expr.Literal> {
                     tiles.add(
                             new EvaluatedTile(this, new RealScalarParam<>(0.5, UnitInterval.INSTANCE), new TypeToken<RealScalarParam<UnitInterval>>() {}.getType())
                     );
+
+                tiles.add(
+                        new EvaluatedTile(this, value, new TypeToken<Double>() {}.getType())
+                );
 
                 yield tiles;
             }

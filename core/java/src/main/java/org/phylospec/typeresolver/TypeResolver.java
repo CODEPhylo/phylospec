@@ -269,7 +269,17 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
             );
         }
 
-        // evaluate each range and add the corresponding index variable to a new scope
+        // evaluate each range
+
+        List<Set<ResolvedType>> rangeTypeSets = new ArrayList<>();
+
+        for (int i = 0; i < indexed.indices.size(); i++) {
+            Expr.Variable indexVar = indexed.indices.get(i);
+            Set<ResolvedType> rangeTypeSet = indexed.ranges.get(i).accept(this);
+            rangeTypeSets.add(rangeTypeSet);
+        }
+
+        // add the corresponding index variable to a new scope
 
         createScope();
 
@@ -277,7 +287,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         try {
             for (int i = 0; i < indexed.indices.size(); i++) {
                 Expr.Variable indexVar = indexed.indices.get(i);
-                Set<ResolvedType> rangeTypeSet = indexed.ranges.get(i).accept(this);
+                Set<ResolvedType> rangeTypeSet = rangeTypeSets.get(i);
 
                 if (!TypeUtils.canBeAssignedTo(rangeTypeSet, ResolvedType.fromString("phylospec.types.Vector<NonNegativeInteger>", componentResolver), componentResolver)) {
                     throw new TypeError(
@@ -320,7 +330,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         // register the widened type in the outer scope under the variable name
 
-        String variableName = extractVariableName(indexed.statement);
+        String variableName = this.extractVariableName(indexed.statement);
         if (variableName != null) {
             remember(variableName, widenedTypeSet);
         }

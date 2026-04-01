@@ -1,11 +1,13 @@
 package tiles;
 
+import beast.base.inference.StateNode;
 import org.phylospec.ast.Stmt;
 import patternmatching.AstNodeTile;
 import patternmatching.EvaluatedTile;
 import patternmatching.TilePriority;
 import patternmatching.TypeToken;
 
+import java.util.Map;
 import java.util.Set;
 
 public class AssignmentTile extends AstNodeTile<Stmt.Assignment> {
@@ -24,7 +26,13 @@ public class AssignmentTile extends AstNodeTile<Stmt.Assignment> {
     public Set<EvaluatedTile> applyTile(Stmt.Assignment expr) {
         Object input = this.evaluatedDistributionInput.get();
 
-        // we now return the state node without doing anything
+        // set the variable name as the ID of the state node
+
+        if (input instanceof StateNode stateNode) {
+            stateNode.setID(expr.name);
+        }
+
+        // return the state node
 
         return Set.of(
                 new EvaluatedTile(
@@ -32,7 +40,7 @@ public class AssignmentTile extends AstNodeTile<Stmt.Assignment> {
                         input,
                         evaluatedDistributionInput.getType(),
                         Set.of(),
-                        Set.of(),
+                        Map.of(),
                         Set.of()
                 )
         );
