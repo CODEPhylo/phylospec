@@ -23,7 +23,7 @@ public class NormalTile extends DistributionTile<Normal> {
     }
 
     @Override
-    protected EvaluatedDistribution<Normal> operateTile() {
+    protected EvaluatedDistribution<Normal> apply() {
         RealScalarParam<Real> state = new RealScalarParam<>();
         Normal distribution = new Normal(state, this.mean.getValue(), this.sd.getValue());
 

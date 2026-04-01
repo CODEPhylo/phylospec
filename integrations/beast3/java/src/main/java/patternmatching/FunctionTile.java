@@ -5,13 +5,13 @@ import java.util.*;
 public abstract class FunctionTile<T> extends GeneratorTile<T> {
 
     @Override
-    protected Set<EvaluatedTile> operateTile(int score) {
-        T generatedObject = this.operateTile();
+    protected Set<EvaluatedTile> applyTile() {
+        T generatedObject = this.apply();
         return Set.of(
-                new EvaluatedTile(this, generatedObject, this.generatedType, score)
+                new EvaluatedTile(this, generatedObject, this.generatedType)
         );
     }
 
-    protected abstract T operateTile();
+    protected abstract T apply();
 
 }

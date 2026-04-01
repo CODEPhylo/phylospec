@@ -11,17 +11,33 @@ public record EvaluatedTile (
         Tile tile,
         Object generatedObject,
         Type generatedType,
-        int score,
         Set<StateNode> newStateNodes,
         Set<Distribution> newDistributions,
-        Set<Operator> newOperators
+        Set<Operator> newOperators,
+        int weight
 ) {
     public EvaluatedTile(
             Tile tile,
             Object generatedObject,
             Type generatedType,
-            int score
+            Set<StateNode> newStateNodes,
+            Set<Distribution> newDistributions,
+            Set<Operator> newOperators
     ) {
-        this(tile, generatedObject, generatedType, score, Set.of(), Set.of(), Set.of());
+        this(tile, generatedObject, generatedType, newStateNodes, newDistributions, newOperators, 0);
+    }
+
+    public EvaluatedTile(
+            Tile tile,
+            Object generatedObject,
+            Type generatedType
+    ) {
+        this(tile, generatedObject, generatedType, Set.of(), Set.of(), Set.of(), 0);
+    }
+
+    public EvaluatedTile withWeight(int weight) {
+        return new EvaluatedTile(
+                tile, generatedObject, generatedType, newStateNodes, newDistributions, newOperators, weight
+        );
     }
 }

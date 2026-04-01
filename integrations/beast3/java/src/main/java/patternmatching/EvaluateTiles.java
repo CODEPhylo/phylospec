@@ -110,7 +110,7 @@ public class EvaluateTiles implements AstVisitor<EvaluatedTile, EvaluatedTile, E
     }
 
     private EvaluatedTile visitNode(AstNode node) {
-        int bestScore = 0;
+        int lowestWeight = 0;
         EvaluatedTile bestEvaluatedTile = null;
 
         for (Tile tile : this.tiles) {
@@ -119,8 +119,8 @@ public class EvaluateTiles implements AstVisitor<EvaluatedTile, EvaluatedTile, E
             for (EvaluatedTile evaluatedTile : evaluatedTiles) {
                 this.evaluatedTiles.computeIfAbsent(node, x -> new HashSet<>()).add(evaluatedTile);
 
-                if (bestScore < evaluatedTile.score()) {
-                    bestScore = evaluatedTile.score();
+                if (lowestWeight < evaluatedTile.weight()) {
+                    lowestWeight = evaluatedTile.weight();
                     bestEvaluatedTile = evaluatedTile;
                 }
             }

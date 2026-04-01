@@ -7,18 +7,17 @@ import java.util.Set;
 public abstract class DistributionTile<T extends Distribution> extends GeneratorTile<T> {
 
     @Override
-    protected Set<EvaluatedTile> operateTile(int score) {
-        EvaluatedDistribution<T> generatedObject = this.operateTile();
+    protected Set<EvaluatedTile> applyTile() {
+        EvaluatedDistribution<T> generatedObject = this.apply();
         return Set.of(
                 new EvaluatedTile(
                         this,
                         generatedObject,
-                        TypeToken.parameterized(EvaluatedDistribution.class, generatedType).getType(),
-                        score
+                        TypeToken.parameterized(EvaluatedDistribution.class, generatedType).getType()
                 )
         );
     }
 
-    protected abstract EvaluatedDistribution<T> operateTile();
+    protected abstract EvaluatedDistribution<T> apply();
 
 }

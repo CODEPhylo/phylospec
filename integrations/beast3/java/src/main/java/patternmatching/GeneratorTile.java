@@ -7,6 +7,7 @@ import org.phylospec.typeresolver.TypeResolver;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class GeneratorTile<T> extends Tile {
 
@@ -60,11 +61,11 @@ public abstract class GeneratorTile<T> extends Tile {
 
         // we now go through all expected inputs and check if there is a tile with the right type
 
-        int totalScore = this.getPriority().getScore();
+        int inputWeight = 0;
 
         for (Input<?> expectedInput : expectedInputs) {
             Set<EvaluatedTile> possibleTiles = argumentTiles.get(expectedInput.getPhylospecArgumentName());
-            EvaluatedTile matchingTile = Tile.getBestInput(possibleTiles, expectedInput.getTypeToken());
+            EvaluatedTile matchingTile = TileUtils.getBestInput(possibleTiles, expectedInput.getTypeToken());
 
             if (matchingTile == null) {
                 // we cannot find a matching input
@@ -73,13 +74,21 @@ public abstract class GeneratorTile<T> extends Tile {
             }
 
             expectedInput.setValue(matchingTile.generatedObject());
-            totalScore += matchingTile.score();
+            inputWeight += matchingTile.weight();
         }
 
-        return this.operateTile(totalScore);
+        // we can apply all inputs and have set them
+        // let's tile
+
+        Set<EvaluatedTile> evaluatedTiles = applyTile();
+
+        // update weights
+
+        int totalWeight = inputWeight + this.getPriority().getWeight();
+        return evaluatedTiles.stream().map(t -> t.withWeight(totalWeight)).collect(Collectors.toSet());
     }
 
-    protected abstract Set<EvaluatedTile> operateTile(int score);
+    protected abstract Set<EvaluatedTile> applyTile();
 
     public static class Input<T> {
         private final String phylospecArgumentName;

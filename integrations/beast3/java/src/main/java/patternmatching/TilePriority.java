@@ -11,7 +11,7 @@ public enum TilePriority {
         this.score = score;
     }
 
-    public int getScore() {
+    public int getWeight() {
         return this.score;
     }
 }

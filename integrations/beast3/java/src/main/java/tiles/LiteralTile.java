@@ -21,26 +21,26 @@ public class LiteralTile extends AstNodeTile<Expr.Literal> {
     }
 
     @Override
-    public Set<EvaluatedTile> tryToTileExpr(Expr.Literal expr, Map<AstNode, Set<EvaluatedTile>> inputTiles, TypeResolver typeResolver) {
+    public Set<EvaluatedTile> applyTile(Expr.Literal expr) {
         return switch (expr.value) {
             case String value -> Set.of(
-                    new EvaluatedTile(this, value, new TypeToken<String>() {}.getType(), 1)
+                    new EvaluatedTile(this, value, new TypeToken<String>() {}.getType())
             );
             case Integer value -> {
                 Set<EvaluatedTile> tiles = new HashSet<>();
 
                 tiles.add(
-                        new EvaluatedTile(this, new IntScalarParam<>(1, Int.INSTANCE), new TypeToken<IntScalarParam<Int>>() {}.getType(), 1)
+                        new EvaluatedTile(this, new IntScalarParam<>(1, Int.INSTANCE), new TypeToken<IntScalarParam<Int>>() {}.getType())
                 );
 
                 if (0 <= value)
                     tiles.add(
-                            new EvaluatedTile(this, new IntScalarParam<>(1, NonNegativeInt.INSTANCE), new TypeToken<IntScalarParam<NonNegativeInt>>() {}.getType(), 1)
+                            new EvaluatedTile(this, new IntScalarParam<>(1, NonNegativeInt.INSTANCE), new TypeToken<IntScalarParam<NonNegativeInt>>() {}.getType())
                     );
 
                 if (0 < value)
                     tiles.add(
-                            new EvaluatedTile(this, new IntScalarParam<>(1, PositiveInt.INSTANCE), new TypeToken<IntScalarParam<PositiveInt>>() {}.getType(), 1)
+                            new EvaluatedTile(this, new IntScalarParam<>(1, PositiveInt.INSTANCE), new TypeToken<IntScalarParam<PositiveInt>>() {}.getType())
                     );
 
                 yield tiles;
@@ -49,22 +49,22 @@ public class LiteralTile extends AstNodeTile<Expr.Literal> {
                 Set<EvaluatedTile> tiles = new HashSet<>();
 
                 tiles.add(
-                        new EvaluatedTile(this, new RealScalarParam<>(1.0, Real.INSTANCE), new TypeToken<RealScalarParam<Real>>() {}.getType(), 1)
+                        new EvaluatedTile(this, new RealScalarParam<>(1.0, Real.INSTANCE), new TypeToken<RealScalarParam<Real>>() {}.getType())
                 );
 
                 if (0 <= value)
                     tiles.add(
-                            new EvaluatedTile(this, new RealScalarParam<>(1.0, NonNegativeReal.INSTANCE), new TypeToken<RealScalarParam<NonNegativeReal>>() {}.getType(), 1)
+                            new EvaluatedTile(this, new RealScalarParam<>(1.0, NonNegativeReal.INSTANCE), new TypeToken<RealScalarParam<NonNegativeReal>>() {}.getType())
                     );
 
                 if (0 < value)
                     tiles.add(
-                            new EvaluatedTile(this, new RealScalarParam<>(1.0, PositiveReal.INSTANCE), new TypeToken<RealScalarParam<PositiveReal>>() {}.getType(), 1)
+                            new EvaluatedTile(this, new RealScalarParam<>(1.0, PositiveReal.INSTANCE), new TypeToken<RealScalarParam<PositiveReal>>() {}.getType())
                     );
 
                 if (0 < value && value < 1)
                     tiles.add(
-                            new EvaluatedTile(this, new RealScalarParam<>(0.5, UnitInterval.INSTANCE), new TypeToken<RealScalarParam<UnitInterval>>() {}.getType(), 1)
+                            new EvaluatedTile(this, new RealScalarParam<>(0.5, UnitInterval.INSTANCE), new TypeToken<RealScalarParam<UnitInterval>>() {}.getType())
                     );
 
                 yield tiles;
