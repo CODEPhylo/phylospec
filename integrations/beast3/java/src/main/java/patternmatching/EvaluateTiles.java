@@ -29,6 +29,12 @@ public class EvaluateTiles implements AstVisitor<EvaluatedTile, EvaluatedTile, E
     }
 
     @Override
+    public EvaluatedTile visitAssignment(Stmt.Assignment stmt) {
+        stmt.expression.accept(this);
+        return this.visitNode(stmt);
+    }
+
+    @Override
     public EvaluatedTile visitDraw(Stmt.Draw stmt) {
         stmt.expression.accept(this);
         return this.visitNode(stmt);
@@ -110,7 +116,7 @@ public class EvaluateTiles implements AstVisitor<EvaluatedTile, EvaluatedTile, E
     }
 
     private EvaluatedTile visitNode(AstNode node) {
-        int lowestWeight = 0;
+        int lowestWeight = Integer.MAX_VALUE;
         EvaluatedTile bestEvaluatedTile = null;
 
         for (Tile tile : this.tiles) {
@@ -119,7 +125,7 @@ public class EvaluateTiles implements AstVisitor<EvaluatedTile, EvaluatedTile, E
             for (EvaluatedTile evaluatedTile : evaluatedTiles) {
                 this.evaluatedTiles.computeIfAbsent(node, x -> new HashSet<>()).add(evaluatedTile);
 
-                if (lowestWeight < evaluatedTile.weight()) {
+                if (evaluatedTile.weight() < lowestWeight) {
                     lowestWeight = evaluatedTile.weight();
                     bestEvaluatedTile = evaluatedTile;
                 }
@@ -144,11 +150,6 @@ public class EvaluateTiles implements AstVisitor<EvaluatedTile, EvaluatedTile, E
     @Override
     public EvaluatedTile visitDecoratedStmt(Stmt.Decorated stmt) {
         return stmt.statement.accept(this);
-    }
-
-    @Override
-    public EvaluatedTile visitAssignment(Stmt.Assignment stmt) {
-        return stmt.expression.accept(this);
     }
 
     @Override

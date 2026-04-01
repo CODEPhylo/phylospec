@@ -1,9 +1,10 @@
 package patternmatching;
 
 public enum TilePriority {
-    DEFAULT(1),
+    LOW(4),
+    DEFAULT(3),
     SPECIALIZED(2),
-    CUSTOM(3);
+    CUSTOM(1);
 
     private final int score;
 

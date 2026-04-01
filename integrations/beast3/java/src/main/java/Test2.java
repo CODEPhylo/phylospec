@@ -14,6 +14,7 @@ import patternmatching.Tile;
 import tiles.DrawTile;
 import tiles.LiteralTile;
 import tiles.NormalTile;
+import tiles.TileLibrary;
 
 import java.io.IOException;
 import java.util.List;
@@ -21,8 +22,8 @@ import java.util.List;
 public class Test2 {
     static void main(String[] args) {
         String source = """
-        Real mean ~ Normal(mean=0.0, sd=1.0)
-        // Real data ~ Normal(mean, sd=4.0) // observed as 20.0
+        Integer seed = 100
+        Alignment alignment = fromNexus("test.nex")
         """;
 
         ComponentResolver componentResolver = loadComponentResolver();
@@ -45,13 +46,9 @@ public class Test2 {
         TypeResolver typeResolver = new TypeResolver(componentResolver);
         typeResolver.visitStatements(statements);
 
-        // define tiles
-
-        List<Tile> tiles = List.of(new NormalTile(), new LiteralTile(), new DrawTile());
-
         // perform tiling
 
-        EvaluateTiles applyTiles = new EvaluateTiles(tiles, typeResolver);
+        EvaluateTiles applyTiles = new EvaluateTiles(TileLibrary.getTiles(), typeResolver);
         EvaluatedTile result = applyTiles.visitStatements(statements);
 
         ((BEASTObject) result.generatedObject()).initAndValidate();

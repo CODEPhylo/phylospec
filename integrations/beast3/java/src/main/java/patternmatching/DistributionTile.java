@@ -13,7 +13,7 @@ public abstract class DistributionTile<T extends Distribution> extends Generator
                 new EvaluatedTile(
                         this,
                         generatedObject,
-                        TypeToken.parameterized(EvaluatedDistribution.class, generatedType).getType()
+                        TypeToken.parameterized(EvaluatedDistribution.class, this.generatedType).getType()
                 )
         );
     }

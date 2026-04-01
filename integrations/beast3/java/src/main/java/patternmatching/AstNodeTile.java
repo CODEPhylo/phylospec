@@ -4,6 +4,7 @@ import org.phylospec.ast.AstNode;
 import org.phylospec.typeresolver.TypeResolver;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -71,32 +72,38 @@ public abstract class AstNodeTile<T extends AstNode> extends Tile {
 
     public static class TileInput<T, O> {
         private final Function<T, AstNode> getter;
-        private final TypeToken<O> typeToken;
+        private final TypeToken<O> expectedTypeToken;
 
-        O value;
+        private O value;
+        private Type valueType;
 
         public TileInput(Function<T, AstNode> getter, TypeToken<O> typeToken) {
             this.getter = getter;
-            this.typeToken = typeToken;
+            this.expectedTypeToken = typeToken;
         }
 
         public boolean canBeApplied(T astNode, Map<AstNode, Set<EvaluatedTile>> inputTiles) {
             AstNode inputAstNode = this.getter.apply(astNode);
             Set<EvaluatedTile> potentialInputs = inputTiles.get(inputAstNode);
-            EvaluatedTile bestInput = TileUtils.getBestInput(potentialInputs, this.typeToken);
+            EvaluatedTile bestInput = TileUtils.getBestInput(potentialInputs, this.expectedTypeToken);
             return bestInput != null;
         }
 
         public int set(T astNode, Map<AstNode, Set<EvaluatedTile>> inputTiles) {
             AstNode inputAstNode = this.getter.apply(astNode);
             Set<EvaluatedTile> potentialInputs = inputTiles.get(inputAstNode);
-            EvaluatedTile bestInputTile = TileUtils.getBestInput(potentialInputs, this.typeToken);
+            EvaluatedTile bestInputTile = TileUtils.getBestInput(potentialInputs, this.expectedTypeToken);
             this.value = (O) bestInputTile.generatedObject();
+            this.valueType = bestInputTile.generatedType();
             return bestInputTile.weight();
         }
 
         public O get() {
             return this.value;
+        }
+
+        public Type getType() {
+            return this.valueType;
         }
 
     }
