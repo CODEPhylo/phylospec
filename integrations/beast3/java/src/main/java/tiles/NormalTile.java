@@ -10,18 +10,20 @@ import patternmatching.*;
 
 import java.util.Set;
 
-public class NormalTile extends GeneratorTile<EvaluatedDistribution<Normal>> {
+public class NormalTile extends GeneratorTile<EvaluatedDistribution<RealScalarParam<Real>, Normal>> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "Normal";
     }
 
-    Input<RealScalar<Real>> meanInput = new Input<>("mean");
-    Input<RealScalar<PositiveReal>> sdInput = new Input<>("sd");
+    Input<RealScalar<Real>> meanInput = new Input<>("mean", new TypeToken<>() {
+    });
+    Input<RealScalar<PositiveReal>> sdInput = new Input<>("sd", new TypeToken<>() {
+    });
 
     @Override
-    public EvaluatedDistribution<Normal> applyTile(BEASTState beastState) {
+    public EvaluatedDistribution<RealScalarParam<Real>, Normal> applyTile(BEASTState beastState) {
         RealScalar<Real> mean = this.meanInput.apply(beastState);
         RealScalar<PositiveReal> sd = this.sdInput.apply(beastState);
 
@@ -34,12 +36,12 @@ public class NormalTile extends GeneratorTile<EvaluatedDistribution<Normal>> {
         operator.m_pWeight.setValue(1.0, null);
 
         return new EvaluatedDistribution<>(
-                distribution, state, new TypeToken<RealScalar<Real>>() {}.getType(), Set.of(operator)
+                distribution, state, Set.of(operator)
         );
     }
 
     @Override
-    protected Tile<EvaluatedDistribution<Normal>> createInstance() {
+    protected Tile<?> createInstance() {
         return new NormalTile();
     }
 }

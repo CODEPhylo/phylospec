@@ -21,6 +21,11 @@ public abstract class TypeToken<T> {
         this.type = type;
     }
 
+    /** Wraps an existing {@link Type} in a {@code TypeToken}. */
+    public static TypeToken<?> of(Type type) {
+        return new TypeToken<>(type) {};
+    }
+
     /** Constructs a parameterized type at runtime, e.g. {@code parameterized(List.class, String.class)}. */
     public static TypeToken<?> parameterized(Class<?> raw, Type... typeArgs) {
         ParameterizedType pt = new ParameterizedType() {
@@ -50,6 +55,10 @@ public abstract class TypeToken<T> {
 
     public boolean isAssignableFrom(Type other) {
         return isAssignable(type, other);
+    }
+
+    public boolean isAssignableFrom(TypeToken<?> other) {
+        return isAssignable(type, other.type);
     }
 
     private static boolean isAssignable(Type target, Type source) {

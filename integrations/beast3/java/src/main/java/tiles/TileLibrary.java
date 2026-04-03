@@ -6,13 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TileLibrary {
-    private static List<Tile> tiles = new ArrayList<>();
+    private static List<Tile<?>> tiles = new ArrayList<>();
 
     static {
         addTile(new AssignmentTile());
         addTile(new StateNodeAssignmentTile());
         addTile(new DrawTile());
-        addTile(new LiteralTile());
+        addTile(new LiteralTile<>());
 
         addTile(new EnvTile());
 
@@ -20,11 +20,11 @@ public class TileLibrary {
         addTile(new NormalTile());
     }
 
-    public static void addTile(Tile tile) {
+    public static void addTile(Tile<?> tile) {
         tiles.add(tile);
     }
 
-    public static List<Tile> getTiles() {
+    public static List<Tile<?>> getTiles() {
         return tiles;
     }
 }

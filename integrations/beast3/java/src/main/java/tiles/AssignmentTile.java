@@ -1,15 +1,14 @@
 package tiles;
 
+import beast.base.inference.StateNode;
 import org.phylospec.ast.Stmt;
 import patternmatching.*;
 
-import java.lang.reflect.Type;
+public class AssignmentTile extends AstNodeTile<StateNode, Stmt.Assignment> {
 
-public class AssignmentTile<T> extends AstNodeTile<T, Stmt.Assignment> {
-
-    TileInput<Stmt.Assignment, T> evaluatedDistributionInput = new TileInput<>(
-            expr -> expr.expression,
-            new TypeToken<>() {}
+    TileInput<Stmt.Assignment, StateNode> expressionInput = new TileInput<>(
+            expr -> expr.expression, new TypeToken<>() {
+    }
     );
 
     @Override
@@ -18,8 +17,8 @@ public class AssignmentTile<T> extends AstNodeTile<T, Stmt.Assignment> {
     }
 
     @Override
-    public T applyTile(Stmt.Assignment node, BEASTState beastState) {
-        return this.evaluatedDistributionInput.apply(beastState);
+    public StateNode applyTile(BEASTState beastState) {
+        return this.expressionInput.apply(beastState);
     }
 
     @Override
@@ -28,13 +27,13 @@ public class AssignmentTile<T> extends AstNodeTile<T, Stmt.Assignment> {
     }
 
     @Override
-    protected Tile<T> createInstance() {
-        return new AssignmentTile<>();
+    public TypeToken<?> getTypeToken() {
+        return expressionInput.getTypeToken();
     }
 
     @Override
-    public Type getGeneratedType() {
-        return new TypeToken<T>() {}.getType();
+    protected Tile<?> createInstance() {
+        return new StateNodeAssignmentTile();
     }
 
 }

@@ -1,139 +1,133 @@
 package patternmatching;
 
+import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
-public abstract class MultiAstNodeTile extends Tile {
+public abstract class MultiAstNodeTile<T> extends Tile<T> {
 
     protected abstract String getPhyloSpecTemplate();
 
-    AstTemplateMatcher astTemplateMatcher;
+    private final AstTemplateMatcher astTemplateMatcher;
 
     public MultiAstNodeTile() {
         this.astTemplateMatcher = new AstTemplateMatcher(this.getPhyloSpecTemplate());
     }
 
     @Override
-    public Set<EvaluatedTile> tryToTile(AstNode node, Map<AstNode, Set<EvaluatedTile>> inputTiles, TypeResolver typeResolver, VariableResolver variableResolver) {
-        // match the PhyloSpec template
-
+    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, TypeResolver typeResolver, VariableResolver variableResolver) {
         Map<String, AstNode> matchedTemplateVariables = this.astTemplateMatcher.match(node, variableResolver);
 
         if (matchedTemplateVariables == null) {
-            // we could not match the template
-            // the tile cannot be applied
             return Set.of();
         }
 
-        // compare the inputs specified with TileInput fields with the template inputs
-
-        Set<TileInput<?>> tileInputs = this.getInputs();
+        // collect TileInput fields from this template in declaration order
+        List<TileInput<?>> tileInputs = getInputs(this);
 
         if (tileInputs.size() != matchedTemplateVariables.size()) {
-            // the number of inputs does not match
-            // the tile cannot be applied
             return Set.of();
         }
 
-        int inputWeight = 0;
-
+        // build ordered list of compatible tiles per input
+        List<String> orderedVars = new ArrayList<>();
+        List<Set<Tile<?>>> compatibleInputTiles = new ArrayList<>();
         for (TileInput<?> tileInput : tileInputs) {
             AstNode inputAstNode = matchedTemplateVariables.get(tileInput.templateVariable);
+            if (inputAstNode == null) return Set.of();
 
-            if (inputAstNode == null) {
-                // this PhyloSpec template input has not been specified in a TileInput field
-                return Set.of();
-            }
+            Set<Tile<?>> compatible = tileInput.getCompatibleInputTiles(inputAstNode, allInputTiles);
+            if (compatible.isEmpty()) return Set.of();
 
-            if (!tileInput.canBeApplied(inputAstNode, inputTiles)) {
-                // the types don't match
-                return Set.of();
-            }
-
-            // the input matches: we apply it
-
-            inputWeight += tileInput.apply(inputAstNode, inputTiles);
+            orderedVars.add(tileInput.templateVariable);
+            compatibleInputTiles.add(compatible);
         }
 
-        // now that the inputs have been applied, we can apply the tile
+        // for each combination, create a freshly wired up tile
+        Set<Tile<?>> wiredUpTiles = new HashSet<>();
+        Utils.visitCombinations(
+                compatibleInputTiles,
+                inputs -> {
+                    MultiAstNodeTile<T> wiredUpTile = (MultiAstNodeTile<T>) this.createInstance();
 
-        Set<EvaluatedTile> evaluatedTiles = this.applyTile(beastState);
+                    // get TileInput fields from fresh instance, keyed by template variable
+                    Map<String, TileInput<?>> freshInputsByVar = new HashMap<>();
+                    for (TileInput<?> freshInput : getInputs(wiredUpTile)) {
+                        freshInputsByVar.put(freshInput.templateVariable, freshInput);
+                    }
 
-        // update weights
+                    // wire each input tile and accumulate weight
+                    int totalWeight = this.getPriority().getWeight();
+                    for (int i = 0; i < orderedVars.size(); i++) {
+                        Tile<?> inputTile = inputs.get(i);
+                        freshInputsByVar.get(orderedVars.get(i)).setTile(inputTile);
+                        totalWeight += inputTile.getWeight();
+                    }
 
-        int totalWeight = inputWeight + this.getPriority().getWeight();
-        return evaluatedTiles.stream().map(t -> t.withWeight(totalWeight)).collect(Collectors.toSet());
+                    wiredUpTile.setWeight(totalWeight);
+                    wiredUpTiles.add(wiredUpTile);
+                }
+        );
+
+        return wiredUpTiles;
     }
 
-    abstract public Set<EvaluatedTile> applyTile(BEASTState beastState);
-
-    private Set<TileInput<?>> getInputs() {
-        // the expected inputs correspond to the class fields with type GeneratorTile.Input (similar to BEAST inputs)
-        // we use reflection to get the expected inputs
-        Set<TileInput<?>> inputs = new HashSet<>();
-
-        for (Field field : this.getClass().getDeclaredFields()) {
+    private static List<TileInput<?>> getInputs(MultiAstNodeTile<?> tile) {
+        List<TileInput<?>> inputs = new ArrayList<>();
+        for (Field field : tile.getClass().getDeclaredFields()) {
             if (field.getType().equals(TileInput.class)) {
                 field.setAccessible(true);
                 try {
-                    TileInput<?> input = (TileInput<?>) field.get(this);
-                    inputs.add(input);
+                    inputs.add((TileInput<?>) field.get(tile));
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
             }
         }
-
         return inputs;
     }
-
 
     public static class TileInput<O> {
         private final String templateVariable;
         private final TypeToken<O> expectedTypeToken;
 
-        private O value;
-        private Type valueType;
+        private Tile<O> tile;
 
-        public TileInput(String templateVariable, TypeToken<O> typeToken) {
+        public TileInput(String templateVariable) {
             if (!templateVariable.startsWith("$")) {
                 throw new RuntimeException("Invalid template variable '" + templateVariable + "'. A template variable has to start with a dollar sign (e.g. '$" + templateVariable + "'.");
             }
-
             this.templateVariable = templateVariable;
-            this.expectedTypeToken = typeToken;
+            this.expectedTypeToken = new TypeToken<>() {};
         }
 
-        public boolean canBeApplied(AstNode astNode, Map<AstNode, Set<EvaluatedTile>> inputTiles) {
-            Set<EvaluatedTile> potentialInputs = inputTiles.get(astNode);
-            EvaluatedTile bestInput = TileUtils.getBestInput(potentialInputs, this.expectedTypeToken);
-            return bestInput != null;
+        public Set<Tile<?>> getCompatibleInputTiles(AstNode astNode, Map<AstNode, Set<Tile<?>>> inputTiles) {
+            Set<Tile<?>> potentialInputs = inputTiles.get(astNode);
+            if (potentialInputs == null) return Set.of();
+
+            Set<Tile<?>> compatible = new HashSet<>();
+            for (Tile<?> candidate : potentialInputs) {
+                if (expectedTypeToken.isAssignableFrom(candidate.getTypeToken())) {
+                    compatible.add(candidate);
+                }
+            }
+            return compatible;
         }
 
-        public int apply(AstNode astNode, Map<AstNode, Set<EvaluatedTile>> inputTiles) {
-            Set<EvaluatedTile> potentialInputs = inputTiles.get(astNode);
-            EvaluatedTile bestInputTile = TileUtils.getBestInput(potentialInputs, this.expectedTypeToken);
-            this.value = (O) bestInputTile.generatedObject();
-            this.valueType = bestInputTile.generatedType();
-            return bestInputTile.weight();
+        public void setTile(Tile<?> tile) {
+            this.tile = (Tile<O>) tile;
         }
 
-        public O get() {
-            return this.value;
+        public O apply(BEASTState beastState) {
+            return this.tile.applyTile(beastState);
         }
 
-        public Type getType() {
-            return this.valueType;
+        public TypeToken<?> getTypeToken() {
+            return this.tile != null ? this.tile.getTypeToken() : expectedTypeToken;
         }
-
     }
-
 }

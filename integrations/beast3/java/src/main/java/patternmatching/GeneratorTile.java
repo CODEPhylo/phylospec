@@ -7,24 +7,14 @@ import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.*;
 
 public abstract class GeneratorTile<T> extends Tile<T> {
 
-    protected final Type generatedType;
-
-    protected GeneratorTile() {
-        this.generatedType = TileUtils.getParametricType(this);
-        if (this.generatedType == null) {
-            throw new IllegalArgumentException("Generator tile " + this.getClass() + " has no type parameter. Set a type parameter to ensure type safety.");
-        }
-    }
-
     public abstract String getPhyloSpecGeneratorName();
 
     @Override
-    public Set<Tile<T>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> inputTiles, TypeResolver typeResolver, VariableResolver variableResolver) {
+    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> inputTiles, TypeResolver typeResolver, VariableResolver variableResolver) {
         if (!(node instanceof Expr.Call call)) return Set.of();
         if (!Objects.equals(call.functionName, this.getPhyloSpecGeneratorName())) return Set.of();
 
@@ -67,7 +57,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
 
             Set<Tile<?>> currentCompatibleInputTiles = new HashSet<>();
             for (Tile<?> argumentTile : currentArgumentTiles) {
-                if (argumentInput.getTypeToken().isAssignableFrom(argumentTile.getGeneratedType())) {
+                if (argumentInput.getTypeToken().isAssignableFrom(argumentTile.getTypeToken())) {
                     currentCompatibleInputTiles.add(argumentTile);
                 }
             }
@@ -78,13 +68,13 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         // we have all compatible input tiles
         // we now look at every possible input combination and create a new tile object correctly wired up
 
-        Set<Tile<T>> wiredUpTiles = new HashSet<>();
+        Set<Tile<?>> wiredUpTiles = new HashSet<>();
         Utils.visitCombinations(
                 compatibleInputTiles,
                 inputs -> {
                     // for this combination of inputs, create a new Tile object with correctly wired up Input fields
 
-                    Tile<T> wiredUpTile = this.createInstance();
+                    Tile<?> wiredUpTile = this.createInstance();
 
                     // get Input fields from the new instance, keyed by argument name
 
@@ -122,22 +112,15 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         return wiredUpTiles;
     }
 
-
-    @Override
-    public Type getGeneratedType() {
-        return this.generatedType;
-    }
-
     public static class Input<T> {
         private final String phylospecArgumentName;
         private final TypeToken<T> typeToken;
 
         private Tile<T> tile;
 
-        public Input(String phylospecArgumentName) {
+        public Input(String phylospecArgumentName, TypeToken<T> typeToken) {
             this.phylospecArgumentName = phylospecArgumentName;
-            this.typeToken = new TypeToken<>() {
-            };
+            this.typeToken = typeToken;
         }
 
         public String getPhylospecArgumentName() {

@@ -25,6 +25,10 @@ public class Test2 {
         Real y ~ Normal(mean=x + z, sd=1.0)
         """;
 
+        source = """
+        Real x ~ Normal(mean=0.1, sd=2.2)
+        """;
+
         ComponentResolver componentResolver = loadComponentResolver();
 
          // run lexer

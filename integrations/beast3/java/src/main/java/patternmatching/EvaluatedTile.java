@@ -3,13 +3,13 @@ package patternmatching;
 import java.lang.reflect.Type;
 
 public record EvaluatedTile (
-        Tile tile,
+        Tile<?> tile,
         Object generatedObject,
         Type generatedType,
         int weight
 ) {
     public EvaluatedTile(
-            Tile tile,
+            Tile<?> tile,
             Object generatedObject,
             Type generatedType
     ) {

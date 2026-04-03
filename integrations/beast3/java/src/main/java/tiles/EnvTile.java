@@ -3,6 +3,7 @@ package tiles;
 import patternmatching.BEASTState;
 import patternmatching.GeneratorTile;
 import patternmatching.Tile;
+import patternmatching.TypeToken;
 
 public class EnvTile extends GeneratorTile<String> {
 
@@ -11,7 +12,8 @@ public class EnvTile extends GeneratorTile<String> {
         return "env";
     }
 
-    Input<String> variableInput = new Input<>("variable");
+    Input<String> variableInput = new Input<>("variable", new TypeToken<String>() {
+    });
 
     @Override
     public String applyTile(BEASTState beastState) {
@@ -29,7 +31,7 @@ public class EnvTile extends GeneratorTile<String> {
     }
 
     @Override
-    protected Tile<String> createInstance() {
+    protected Tile<?> createInstance() {
         return new EnvTile();
     }
 

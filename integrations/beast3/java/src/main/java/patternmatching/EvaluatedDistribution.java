@@ -3,21 +3,19 @@ package patternmatching;
 import beast.base.inference.Operator;
 import beast.base.inference.StateNode;
 
-import java.lang.reflect.Type;
 import java.util.Set;
 
-public record EvaluatedDistribution<T extends beast.base.inference.Distribution>(
-        T distribution,
-        StateNode stateNode,
-        Type stateNodeType,
+public record EvaluatedDistribution<T extends StateNode, O extends beast.base.inference.Distribution>(
+        O distribution,
+        T stateNode,
+        TypeToken<T> stateNodeType,
         Set<Operator> operatorSet,
         boolean hasBeenDrawnBefore) {
     public EvaluatedDistribution(
-            T distribution,
-            StateNode stateNode,
-            Type stateNodeType,
+            O distribution,
+            T stateNode,
             Set<Operator> operatorSet
     ) {
-        this(distribution, stateNode, stateNodeType, operatorSet, false);
+        this(distribution, stateNode, new TypeToken<>() {}, operatorSet, false);
     }
 }

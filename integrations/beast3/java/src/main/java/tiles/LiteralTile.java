@@ -6,81 +6,114 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.TypeResolver;
-import patternmatching.EvaluatedTile;
-import patternmatching.AstNodeTile;
-import patternmatching.TypeToken;
+import org.phylospec.typeresolver.VariableResolver;
+import patternmatching.*;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class LiteralTile extends AstNodeTile<Expr.Literal> {
+public class LiteralTile<T> extends AstNodeTile<Object, Expr.Literal> {
+    private final TypeToken<T> typeToken;
+    private final T value;
+
+    public LiteralTile() {
+        this(new TypeToken<>() {
+        }, null);
+    }
+
+    public LiteralTile(TypeToken<T> typeToken, T value) {
+        this.typeToken = typeToken;
+        this.value = value;
+    }
+
     @Override
     public Class<Expr.Literal> getTargetNodeType() {
         return Expr.Literal.class;
     }
 
+    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, TypeResolver typeResolver, VariableResolver variableResolver) {
+        if (!(node instanceof Expr.Literal literal)) return Set.of();
+
+        // depending on the actual literal, we return different tiles
+
+        if (literal.value instanceof String string) {
+            return Set.of(new LiteralTile<String>(new TypeToken<String>() {
+            }, string));
+        }
+
+        if (literal.value instanceof Integer number) {
+            Set<Tile<?>> tiles = new HashSet<>();
+
+            tiles.add(new LiteralTile<>(new TypeToken<>() {
+            }, number));
+            tiles.add(new LiteralTile<>(new TypeToken<>() {
+            }, number.doubleValue()));
+
+            tiles.add(new LiteralTile<>(new TypeToken<>() {
+            }, new IntScalarParam<>(number, Int.INSTANCE)));
+            tiles.add(new LiteralTile<>(new TypeToken<>() {
+            }, new RealScalarParam<>(number.doubleValue(), Real.INSTANCE)));
+
+            if (0 <= number) {
+                tiles.add(new LiteralTile<>(new TypeToken<>() {
+                }, new IntScalarParam<>(number, NonNegativeInt.INSTANCE)));
+                tiles.add(new LiteralTile<>(new TypeToken<>() {
+                }, new RealScalarParam<>(number.doubleValue(), NonNegativeReal.INSTANCE)));
+            }
+
+            if (0 < number) {
+                tiles.add(new LiteralTile<>(new TypeToken<>() {
+                }, new IntScalarParam<>(number, PositiveInt.INSTANCE)));
+                tiles.add(new LiteralTile<>(new TypeToken<>() {
+                }, new RealScalarParam<>(number.doubleValue(), PositiveReal.INSTANCE)));
+            }
+
+            return tiles;
+        }
+
+        if (literal.value instanceof Double number) {
+            Set<Tile<?>> tiles = new HashSet<>();
+
+            tiles.add(new LiteralTile<>(new TypeToken<>() {
+            }, number));
+
+            tiles.add(new LiteralTile<>(new TypeToken<>() {
+            }, new RealScalarParam<>(number, Real.INSTANCE)));
+
+            if (0 <= number) {
+                tiles.add(new LiteralTile<>(new TypeToken<>() {
+                }, new RealScalarParam<>(number, NonNegativeReal.INSTANCE)));
+            }
+
+            if (0 < number) {
+                tiles.add(new LiteralTile<>(new TypeToken<>() {
+                }, new RealScalarParam<>(number, PositiveReal.INSTANCE)));
+            }
+
+            if (0 < number && number < 1) {
+                tiles.add(new LiteralTile<>(new TypeToken<>() {
+                }, new RealScalarParam<>(number, UnitInterval.INSTANCE)));
+            }
+
+            return tiles;
+        }
+
+        return Set.of();
+    }
+
     @Override
-    public Set<EvaluatedTile> applyTile(Expr.Literal expr) {
-        return switch (expr.value) {
-            case String value -> Set.of(
-                    new EvaluatedTile(this, value, new TypeToken<String>() {}.getType())
-            );
-            case Integer value -> {
-                Set<EvaluatedTile> tiles = new HashSet<>();
+    public T applyTile(BEASTState beastState) {
+        return this.value;
+    }
 
-                tiles.add(
-                        new EvaluatedTile(this, new IntScalarParam<>(value, Int.INSTANCE), new TypeToken<IntScalarParam<Int>>() {}.getType())
-                );
+    public TypeToken<?> getTypeToken() {
+        return this.typeToken;
+    }
 
-                if (0 <= value)
-                    tiles.add(
-                            new EvaluatedTile(this, new IntScalarParam<>(value, NonNegativeInt.INSTANCE), new TypeToken<IntScalarParam<NonNegativeInt>>() {}.getType())
-                    );
-
-                if (0 < value)
-                    tiles.add(
-                            new EvaluatedTile(this, new IntScalarParam<>(value, PositiveInt.INSTANCE), new TypeToken<IntScalarParam<PositiveInt>>() {}.getType())
-                    );
-
-                tiles.add(
-                        new EvaluatedTile(this, value, new TypeToken<Integer>() {}.getType())
-                );
-                tiles.add(
-                        new EvaluatedTile(this, 1.0*value, new TypeToken<Double>() {}.getType())
-                );
-
-                yield tiles;
-            }
-            case Double value -> {
-                Set<EvaluatedTile> tiles = new HashSet<>();
-
-                tiles.add(
-                        new EvaluatedTile(this, new RealScalarParam<>(1.0, Real.INSTANCE), new TypeToken<RealScalarParam<Real>>() {}.getType())
-                );
-
-                if (0 <= value)
-                    tiles.add(
-                            new EvaluatedTile(this, new RealScalarParam<>(1.0, NonNegativeReal.INSTANCE), new TypeToken<RealScalarParam<NonNegativeReal>>() {}.getType())
-                    );
-
-                if (0 < value)
-                    tiles.add(
-                            new EvaluatedTile(this, new RealScalarParam<>(1.0, PositiveReal.INSTANCE), new TypeToken<RealScalarParam<PositiveReal>>() {}.getType())
-                    );
-
-                if (0 < value && value < 1)
-                    tiles.add(
-                            new EvaluatedTile(this, new RealScalarParam<>(0.5, UnitInterval.INSTANCE), new TypeToken<RealScalarParam<UnitInterval>>() {}.getType())
-                    );
-
-                tiles.add(
-                        new EvaluatedTile(this, value, new TypeToken<Double>() {}.getType())
-                );
-
-                yield tiles;
-            }
-            default -> Set.of();
-        };
+    @Override
+    protected Tile<?> createInstance() {
+        return new LiteralTile<>(new TypeToken<>() {
+        }, null);
     }
 }

@@ -1,17 +1,19 @@
 package tiles;
 
-import beast.base.inference.Distribution;
+import beast.base.inference.StateNode;
 import org.phylospec.ast.Stmt;
 import patternmatching.*;
 
-import java.util.Map;
-import java.util.Set;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 
-public class DrawTile extends AstNodeTile<Stmt.Draw> {
+public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw> {
 
-    TileInput<Stmt.Draw, EvaluatedDistribution<? extends Distribution>> evaluatedDistributionInput = new TileInput<>(
-            expr -> expr.expression,
-            new TypeToken<>() {}
+    TileInput<Stmt.Draw, EvaluatedDistribution<?, ?>> expressionInput = new TileInput<>(
+            expr -> expr.expression, new TypeToken<>() {
+    }
     );
 
     @Override
@@ -20,24 +22,39 @@ public class DrawTile extends AstNodeTile<Stmt.Draw> {
     }
 
     @Override
-    public Set<EvaluatedTile> applyTile(Stmt.Draw expr) {
-        EvaluatedDistribution<? extends Distribution> evaluatedDistribution = this.evaluatedDistributionInput.get();
+    public StateNode applyTile(BEASTState beastState) {
+        EvaluatedDistribution<?, ?> evaluatedDistribution = this.expressionInput.apply(beastState);
 
-        // set the variable name as the ID of the state node
+        // add to state
 
-        evaluatedDistribution.stateNode().setID(expr.name);
+        beastState.addStateNode(evaluatedDistribution.stateNode());
+        beastState.addDistribution(evaluatedDistribution.stateNode(), evaluatedDistribution.distribution());
+        beastState.addOperators(evaluatedDistribution.operatorSet());
 
-        // we now return the state node as the generated object
+        // return the unwrapped state node
 
-        return Set.of(
-                new EvaluatedTile(
-                        this,
-                        evaluatedDistribution.stateNode(),
-                        evaluatedDistribution.stateNodeType(),
-                        Set.of(evaluatedDistribution.stateNode()),
-                        Map.of(evaluatedDistribution.stateNode(), evaluatedDistribution.distribution()),
-                        evaluatedDistribution.operatorSet()
-                )
-        );
+        return evaluatedDistribution.stateNode();
     }
+
+    @Override
+    public TypeToken<?> getTypeToken() {
+        // we first try to get the state node type from the EvaluatedDistribution input
+        Type expressionType = this.expressionInput.getTypeToken().getType();
+        if (expressionType instanceof ParameterizedType pt) {
+            Type typeArg = pt.getActualTypeArguments()[0];
+            if (!(typeArg instanceof TypeVariable) && !(typeArg instanceof WildcardType)) {
+                return TypeToken.of(typeArg);
+            }
+        }
+
+        // we cannot obtain the type yet (e.g. before tiling)
+        // we return a more general StateNode
+        return new TypeToken<StateNode>() {};
+    }
+
+    @Override
+    protected Tile<?> createInstance() {
+        return new DrawTile();
+    }
+
 }

@@ -1,64 +1,91 @@
 package patternmatching;
 
+import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.Function;
 
 public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
     public abstract Class<N> getTargetNodeType();
 
-    private N matchedNode;
-
     @Override
-    public Set<Tile<T>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> inputTiles, TypeResolver typeResolver, VariableResolver variableResolver) {
-        if (!this.getTargetNodeType().isAssignableFrom(node.getClass())) return Set.of();
+    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, TypeResolver typeResolver, VariableResolver variableResolver) {
+        if (!this.getTargetNodeType().isAssignableFrom(node.getClass())){
+            // node is not of the expected AstNode type
+            // we cannot tile this tile
+            return Set.of();
+        }
+
+        // the node has the right type
 
         N narrowedNode = (N) node;
 
-        // check all inputs can be satisfied before allocating a fresh instance
-        for (TileInput<N, ?> input : this.getInputs()) {
-            if (!input.canBeApplied(narrowedNode, inputTiles)) return Set.of();
-        }
+        // the inputs correspond to the class fields with type GeneratorTile.Input (similar to BEAST inputs)
+        // we use reflection to get the expected inputs
 
-        // create a fresh instance and wire it up
-        AstNodeTile<T, N> freshTile = (AstNodeTile<T, N>) this.createInstance();
-        freshTile.matchedNode = narrowedNode;
-
-        int inputWeight = 0;
-        for (TileInput<N, ?> freshInput : freshTile.getInputs()) {
-            inputWeight += freshInput.set(narrowedNode, inputTiles);
-        }
-
-        freshTile.setWeight(inputWeight + this.getPriority().getWeight());
-
-        return Set.of(freshTile);
-    }
-
-    @Override
-    public T applyTile(BEASTState beastState) {
-        return this.applyTile(this.matchedNode, beastState);
-    }
-
-    public abstract T applyTile(N node, BEASTState beastState);
-
-    private Set<TileInput<N, ?>> getInputs() {
-        Set<TileInput<N, ?>> inputs = new HashSet<>();
+        List<TileInput<N, ?>> inputTiles = new ArrayList<>();
         for (Field field : this.getClass().getDeclaredFields()) {
             if (field.getType().equals(TileInput.class)) {
                 field.setAccessible(true);
                 try {
-                    inputs.add((TileInput<N, ?>) field.get(this));
+                    TileInput<N, ?> input = (TileInput<N, ?>) field.get(this);
+                    inputTiles.add(input);
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
             }
         }
-        return inputs;
+
+        // for every specified TileInput, we collect the compatible tiles
+
+        List<Set<Tile<?>>> compatibleInputTiles = new ArrayList<>();
+        for (TileInput<N, ?> tileInput : inputTiles) {
+            compatibleInputTiles.add(
+                    tileInput.getCompatibleInputTiles(narrowedNode, allInputTiles)
+            );
+        }
+
+        // we now look at every combination of the inputs and create a freshly wired up tile
+
+        Set<Tile<?>> wiredUpTiles = new HashSet<>();
+        Utils.visitCombinations(
+                compatibleInputTiles,
+                inputs -> {
+                    Tile<?> wiredUpTile = this.createInstance();
+
+                    // get TileInput fields from the fresh instance in declaration order
+
+                    List<TileInput<N, ?>> freshInputs = new ArrayList<>();
+                    for (Field field : wiredUpTile.getClass().getDeclaredFields()) {
+                        if (field.getType().equals(TileInput.class)) {
+                            field.setAccessible(true);
+                            try {
+                                freshInputs.add((TileInput<N, ?>) field.get(wiredUpTile));
+                            } catch (IllegalAccessException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
+
+                    // wire each input tile and accumulate weight
+
+                    int totalWeight = this.getPriority().getWeight();
+                    for (int i = 0; i < freshInputs.size(); i++) {
+                        Tile<?> inputTile = inputs.get(i);
+                        freshInputs.get(i).setTile(inputTile);
+                        totalWeight += inputTile.getWeight();
+                    }
+
+                    wiredUpTile.setWeight(totalWeight);
+                    wiredUpTiles.add(wiredUpTile);
+                }
+        );
+
+        return wiredUpTiles;
     }
 
     public static class TileInput<N, O> {
@@ -67,42 +94,35 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
 
         private Tile<O> tile;
 
-        public TileInput(Function<N, AstNode> getter, TypeToken<O> typeToken) {
+        public TileInput(Function<N, AstNode> getter, TypeToken<O> expectedTypeToken) {
             this.getter = getter;
-            this.expectedTypeToken = typeToken;
+            this.expectedTypeToken = expectedTypeToken;
         }
 
-        public boolean canBeApplied(N astNode, Map<AstNode, Set<Tile<?>>> inputTiles) {
+        public Set<Tile<?>> getCompatibleInputTiles(N astNode, Map<AstNode, Set<Tile<?>>> inputTiles) {
             AstNode inputAstNode = this.getter.apply(astNode);
             Set<Tile<?>> potentialInputs = inputTiles.get(inputAstNode);
-            return getBestTile(potentialInputs) != null;
+
+            Set<Tile<?>> compatibleInputs = new HashSet<>();
+            for (Tile<?> potentialInput : potentialInputs) {
+                if (expectedTypeToken.isAssignableFrom(potentialInput.getTypeToken())) {
+                    compatibleInputs.add(potentialInput);
+                }
+            }
+
+            return compatibleInputs;
         }
 
-        public int set(N astNode, Map<AstNode, Set<Tile<?>>> inputTiles) {
-            AstNode inputAstNode = this.getter.apply(astNode);
-            Set<Tile<?>> potentialInputs = inputTiles.get(inputAstNode);
-            this.tile = getBestTile(potentialInputs);
-            return this.tile.getWeight();
+        public void setTile(Tile<?> tile) {
+            this.tile = (Tile<O>) tile;
         }
 
         public O apply(BEASTState beastState) {
             return this.tile.applyTile(beastState);
         }
 
-        private Tile<O> getBestTile(Set<Tile<?>> potentialInputs) {
-            if (potentialInputs == null || potentialInputs.isEmpty()) return null;
-
-            int lowestWeight = Integer.MAX_VALUE;
-            Tile<O> bestTile = null;
-
-            for (Tile<?> candidate : potentialInputs) {
-                if (expectedTypeToken.isAssignableFrom(candidate.getGeneratedType()) && candidate.getWeight() < lowestWeight) {
-                    lowestWeight = candidate.getWeight();
-                    bestTile = (Tile<O>) candidate;
-                }
-            }
-
-            return bestTile;
+        public TypeToken<?> getTypeToken() {
+            return this.tile != null ? this.tile.getTypeToken() : expectedTypeToken;
         }
     }
 }

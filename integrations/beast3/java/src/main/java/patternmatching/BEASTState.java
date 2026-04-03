@@ -28,8 +28,8 @@ public class BEASTState {
         this.distributions.put(stateNode, distribution);
     }
 
-    public void addOperator(Operator operator) {
-        this.operators.add(operator);
+    public void addOperators(Set<Operator> operators) {
+        this.operators.addAll(operators);
     }
 
     public void replaceDistribution(StateNode stateNode, Distribution distribution) {

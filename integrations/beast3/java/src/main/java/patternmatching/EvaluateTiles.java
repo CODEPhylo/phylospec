@@ -6,15 +6,15 @@ import org.phylospec.typeresolver.VariableResolver;
 
 import java.util.*;
 
-public class EvaluateTiles implements AstVisitor<Tile, Tile, Tile> {
+public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
 
     private final TypeResolver typeResolver;
-    private final List<Tile> tiles;
+    private final List<Tile<?>> tiles;
 
-    private final Map<AstNode, Set<Tile>> evaluatedTiles;
+    private final Map<AstNode, Set<Tile<?>>> evaluatedTiles;
     private final VariableResolver variableResolver;
 
-    public EvaluateTiles(List<Tile> tiles, TypeResolver typeResolver, VariableResolver variableResolver) {
+    public EvaluateTiles(List<Tile<?>> tiles, TypeResolver typeResolver, VariableResolver variableResolver) {
         this.tiles = tiles;
         this.typeResolver = typeResolver;
         this.variableResolver = variableResolver;
@@ -22,7 +22,7 @@ public class EvaluateTiles implements AstVisitor<Tile, Tile, Tile> {
     }
 
     public BEASTState applyBestTiling(List<Stmt> stmts) {
-        Tile bestTiling = this.visitStatements(stmts);
+        Tile<?> bestTiling = this.visitStatements(stmts);
 
         BEASTState beastState = new BEASTState();
         bestTiling.applyTile(beastState);
@@ -31,47 +31,47 @@ public class EvaluateTiles implements AstVisitor<Tile, Tile, Tile> {
     }
 
     @Override
-    public Tile visitAssignment(Stmt.Assignment stmt) {
+    public Tile<?> visitAssignment(Stmt.Assignment stmt) {
         stmt.expression.accept(this);
         return this.visitNode(stmt);
     }
 
     @Override
-    public Tile visitDraw(Stmt.Draw stmt) {
+    public Tile<?> visitDraw(Stmt.Draw stmt) {
         stmt.expression.accept(this);
         return this.visitNode(stmt);
     }
 
     @Override
-    public Tile visitLiteral(Expr.Literal expr) {
+    public Tile<?> visitLiteral(Expr.Literal expr) {
         return this.visitNode(expr);
     }
 
     @Override
-    public Tile visitStringTemplate(Expr.StringTemplate expr) {
+    public Tile<?> visitStringTemplate(Expr.StringTemplate expr) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Tile visitVariable(Expr.Variable expr) {
+    public Tile<?> visitVariable(Expr.Variable expr) {
         return this.visitNode(expr);
     }
 
     @Override
-    public Tile visitUnary(Expr.Unary expr) {
+    public Tile<?> visitUnary(Expr.Unary expr) {
         expr.right.accept(this);
         return this.visitNode(expr);
     }
 
     @Override
-    public Tile visitBinary(Expr.Binary expr) {
+    public Tile<?> visitBinary(Expr.Binary expr) {
         expr.left.accept(this);
         expr.right.accept(this);
         return this.visitNode(expr);
     }
 
     @Override
-    public Tile visitCall(Expr.Call expr) {
+    public Tile<?> visitCall(Expr.Call expr) {
         for (Expr.Argument argument : expr.arguments) {
             argument.expression.accept(this);
         }
@@ -79,22 +79,22 @@ public class EvaluateTiles implements AstVisitor<Tile, Tile, Tile> {
     }
 
     @Override
-    public Tile visitAssignedArgument(Expr.AssignedArgument expr) {
+    public Tile<?> visitAssignedArgument(Expr.AssignedArgument expr) {
         return this.visitNode(expr.expression);
     }
 
     @Override
-    public Tile visitDrawnArgument(Expr.DrawnArgument expr) {
+    public Tile<?> visitDrawnArgument(Expr.DrawnArgument expr) {
         return this.visitNode(expr.expression);
     }
 
     @Override
-    public Tile visitGrouping(Expr.Grouping expr) {
+    public Tile<?> visitGrouping(Expr.Grouping expr) {
         return this.visitNode(expr.expression);
     }
 
     @Override
-    public Tile visitArray(Expr.Array expr) {
+    public Tile<?> visitArray(Expr.Array expr) {
         for (Expr element : expr.elements) {
             element.accept(this);
         }
@@ -102,7 +102,7 @@ public class EvaluateTiles implements AstVisitor<Tile, Tile, Tile> {
     }
 
     @Override
-    public Tile visitIndex(Expr.Index expr) {
+    public Tile<?> visitIndex(Expr.Index expr) {
         expr.object.accept(this);
         for (Expr index : expr.indices) {
             index.accept(this);
@@ -111,20 +111,24 @@ public class EvaluateTiles implements AstVisitor<Tile, Tile, Tile> {
     }
 
     @Override
-    public Tile visitRange(Expr.Range range) {
+    public Tile<?> visitRange(Expr.Range range) {
         range.from.accept(this);
         range.to.accept(this);
         return this.visitNode(range);
     }
 
-    private Tile visitNode(AstNode node) {
+    private Tile<?> visitNode(AstNode node) {
         int lowestWeight = Integer.MAX_VALUE;
-        Tile bestEvaluatedTile = null;
+        Tile<?> bestEvaluatedTile = null;
 
-        for (Tile tile : this.tiles) {
-            Set<Tile> evaluatedTiles = tile.tryToTile(node, this.evaluatedTiles, this.typeResolver, this.variableResolver);
+        this.evaluatedTiles.putIfAbsent(node, new HashSet<>());
 
-            for (Tile evaluatedTile : evaluatedTiles) {
+        for (Tile<?> tile : this.tiles) {
+            Set<? extends Tile<?>> evaluatedTiles = tile.tryToTile(node, this.evaluatedTiles, this.typeResolver, this.variableResolver);
+
+            this.evaluatedTiles.get(node).addAll(evaluatedTiles);
+
+            for (Tile<?> evaluatedTile : evaluatedTiles) {
                 if (evaluatedTile.getWeight() < lowestWeight) {
                     lowestWeight = evaluatedTile.getWeight();
                     bestEvaluatedTile = evaluatedTile;
@@ -140,37 +144,37 @@ public class EvaluateTiles implements AstVisitor<Tile, Tile, Tile> {
      */
 
     @Override
-    public Tile visitDecoratedStmt(Stmt.Decorated stmt) {
+    public Tile<?> visitDecoratedStmt(Stmt.Decorated stmt) {
         return stmt.statement.accept(this);
     }
 
     @Override
-    public Tile visitImport(Stmt.Import stmt) {
+    public Tile<?> visitImport(Stmt.Import stmt) {
         return null;
     }
 
     @Override
-    public Tile visitIndexedStmt(Stmt.Indexed indexed) {
+    public Tile<?> visitIndexedStmt(Stmt.Indexed indexed) {
         return indexed.statement.accept(this);
     }
 
     @Override
-    public Tile visitObservedAsStmt(Stmt.ObservedAs observedAs) {
+    public Tile<?> visitObservedAsStmt(Stmt.ObservedAs observedAs) {
         return observedAs.stmt.accept(this);
     }
 
     @Override
-    public Tile visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
+    public Tile<?> visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
         return observedBetween.stmt.accept(this);
     }
 
     @Override
-    public Tile visitAtomicType(AstType.Atomic expr) {
+    public Tile<?> visitAtomicType(AstType.Atomic expr) {
         return null;
     }
 
     @Override
-    public Tile visitGenericType(AstType.Generic expr) {
+    public Tile<?> visitGenericType(AstType.Generic expr) {
         return null;
     }
 
