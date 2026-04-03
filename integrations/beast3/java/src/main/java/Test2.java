@@ -21,12 +21,8 @@ public class Test2 {
     static void main(String[] args) {
         String source = """
         Real x ~ Normal(mean=0.1, sd=2.2)
-        Real z ~ Normal(mean=0.1, sd=2.2)
+        Real z = 100.0
         Real y ~ Normal(mean=x + z, sd=1.0)
-        """;
-
-        source = """
-        Real x ~ Normal(mean=0.1, sd=2.2)
         """;
 
         ComponentResolver componentResolver = loadComponentResolver();

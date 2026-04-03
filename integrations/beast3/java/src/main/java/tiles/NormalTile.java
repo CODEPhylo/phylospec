@@ -17,10 +17,8 @@ public class NormalTile extends GeneratorTile<EvaluatedDistribution<RealScalarPa
         return "Normal";
     }
 
-    Input<RealScalar<Real>> meanInput = new Input<>("mean", new TypeToken<>() {
-    });
-    Input<RealScalar<PositiveReal>> sdInput = new Input<>("sd", new TypeToken<>() {
-    });
+    Input<RealScalar<Real>> meanInput = new Input<>("mean");
+    Input<RealScalar<PositiveReal>> sdInput = new Input<>("sd");
 
     @Override
     public EvaluatedDistribution<RealScalarParam<Real>, Normal> applyTile(BEASTState beastState) {

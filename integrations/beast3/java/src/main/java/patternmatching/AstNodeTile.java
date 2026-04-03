@@ -6,6 +6,7 @@ import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.util.*;
 import java.util.function.Function;
 
@@ -33,6 +34,7 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
                 field.setAccessible(true);
                 try {
                     TileInput<N, ?> input = (TileInput<N, ?>) field.get(this);
+                    input.resolveTypeFromField(field);
                     inputTiles.add(input);
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
@@ -90,13 +92,22 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
 
     public static class TileInput<N, O> {
         private final Function<N, AstNode> getter;
-        private final TypeToken<O> expectedTypeToken;
+        private TypeToken<O> expectedTypeToken;
 
         private Tile<O> tile;
 
-        public TileInput(Function<N, AstNode> getter, TypeToken<O> expectedTypeToken) {
+        public TileInput(Function<N, AstNode> getter) {
             this.getter = getter;
-            this.expectedTypeToken = expectedTypeToken;
+        }
+
+        // called during reflection-based field scanning in tryToTile to resolve
+        // the type token from the field's generic signature rather than requiring
+        // it to be passed explicitly at the call site
+        void resolveTypeFromField(Field field) {
+            if (this.expectedTypeToken != null) return;
+            // TileInput<N, O> — O is the second type argument
+            ParameterizedType fieldType = (ParameterizedType) field.getGenericType();
+            this.expectedTypeToken = (TypeToken<O>) TypeToken.of(fieldType.getActualTypeArguments()[1]);
         }
 
         public Set<Tile<?>> getCompatibleInputTiles(N astNode, Map<AstNode, Set<Tile<?>>> inputTiles) {

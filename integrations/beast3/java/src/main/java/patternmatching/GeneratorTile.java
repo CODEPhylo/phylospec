@@ -7,6 +7,7 @@ import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.util.*;
 
 public abstract class GeneratorTile<T> extends Tile<T> {
@@ -29,6 +30,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
                 field.setAccessible(true);
                 try {
                     Input<?> input = (Input<?>) field.get(this);
+                    input.resolveTypeFromField(field);
                     expectedInputs.put(input.getPhylospecArgumentName(), input);
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
@@ -114,13 +116,22 @@ public abstract class GeneratorTile<T> extends Tile<T> {
 
     public static class Input<T> {
         private final String phylospecArgumentName;
-        private final TypeToken<T> typeToken;
+        private TypeToken<T> typeToken;
 
         private Tile<T> tile;
 
-        public Input(String phylospecArgumentName, TypeToken<T> typeToken) {
+        public Input(String phylospecArgumentName) {
             this.phylospecArgumentName = phylospecArgumentName;
-            this.typeToken = typeToken;
+        }
+
+        // called during reflection-based field scanning in tryToTile to resolve
+        // the type token from the field's generic signature rather than requiring
+        // it to be passed explicitly at the call site
+        void resolveTypeFromField(Field field) {
+            if (this.typeToken != null) return;
+            // Input<T> — T is the first type argument
+            ParameterizedType fieldType = (ParameterizedType) field.getGenericType();
+            this.typeToken = (TypeToken<T>) TypeToken.of(fieldType.getActualTypeArguments()[0]);
         }
 
         public String getPhylospecArgumentName() {

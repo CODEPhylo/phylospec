@@ -7,8 +7,7 @@ import patternmatching.*;
 public class StateNodeAssignmentTile extends AstNodeTile<StateNode, Stmt.Assignment> {
 
     TileInput<Stmt.Assignment, StateNode> expressionInput = new TileInput<>(
-            expr -> expr.expression, new TypeToken<>() {
-    }
+            expr -> expr.expression
     );
 
     @Override

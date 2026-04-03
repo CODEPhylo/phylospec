@@ -1,15 +1,11 @@
 package tiles;
 
-import beast.base.inference.StateNode;
 import org.phylospec.ast.Stmt;
 import patternmatching.*;
 
-public class AssignmentTile extends AstNodeTile<StateNode, Stmt.Assignment> {
+public class AssignmentTile extends AstNodeTile<Object, Stmt.Assignment> {
 
-    TileInput<Stmt.Assignment, StateNode> expressionInput = new TileInput<>(
-            expr -> expr.expression, new TypeToken<>() {
-    }
-    );
+    TileInput<Stmt.Assignment, Object> expressionInput = new TileInput<>(expr -> expr.expression);
 
     @Override
     public Class<Stmt.Assignment> getTargetNodeType() {
@@ -17,7 +13,7 @@ public class AssignmentTile extends AstNodeTile<StateNode, Stmt.Assignment> {
     }
 
     @Override
-    public StateNode applyTile(BEASTState beastState) {
+    public Object applyTile(BEASTState beastState) {
         return this.expressionInput.apply(beastState);
     }
 
@@ -33,7 +29,7 @@ public class AssignmentTile extends AstNodeTile<StateNode, Stmt.Assignment> {
 
     @Override
     protected Tile<?> createInstance() {
-        return new StateNodeAssignmentTile();
+        return new AssignmentTile();
     }
 
 }

@@ -11,10 +11,7 @@ import java.lang.reflect.WildcardType;
 
 public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw> {
 
-    TileInput<Stmt.Draw, EvaluatedDistribution<?, ?>> expressionInput = new TileInput<>(
-            expr -> expr.expression, new TypeToken<>() {
-    }
-    );
+    TileInput<Stmt.Draw, EvaluatedDistribution<?, ?>> expressionInput = new TileInput<>(expr -> expr.expression);
 
     @Override
     public Class<Stmt.Draw> getTargetNodeType() {

@@ -6,6 +6,7 @@ import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.util.*;
 
 public abstract class MultiAstNodeTile<T> extends Tile<T> {
@@ -82,7 +83,9 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
             if (field.getType().equals(TileInput.class)) {
                 field.setAccessible(true);
                 try {
-                    inputs.add((TileInput<?>) field.get(tile));
+                    TileInput<?> input = (TileInput<?>) field.get(tile);
+                    input.resolveTypeFromField(field);
+                    inputs.add(input);
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
@@ -93,7 +96,7 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
 
     public static class TileInput<O> {
         private final String templateVariable;
-        private final TypeToken<O> expectedTypeToken;
+        private TypeToken<O> expectedTypeToken;
 
         private Tile<O> tile;
 
@@ -102,7 +105,16 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
                 throw new RuntimeException("Invalid template variable '" + templateVariable + "'. A template variable has to start with a dollar sign (e.g. '$" + templateVariable + "'.");
             }
             this.templateVariable = templateVariable;
-            this.expectedTypeToken = new TypeToken<>() {};
+        }
+
+        // called during reflection-based field scanning in tryToTile to resolve
+        // the type token from the field's generic signature rather than requiring
+        // it to be passed explicitly at the call site
+        void resolveTypeFromField(Field field) {
+            if (this.expectedTypeToken != null) return;
+            // TileInput<O> — O is the first type argument
+            ParameterizedType fieldType = (ParameterizedType) field.getGenericType();
+            this.expectedTypeToken = (TypeToken<O>) TypeToken.of(fieldType.getActualTypeArguments()[0]);
         }
 
         public Set<Tile<?>> getCompatibleInputTiles(AstNode astNode, Map<AstNode, Set<Tile<?>>> inputTiles) {
