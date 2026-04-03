@@ -8,104 +8,101 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
-public abstract class AstNodeTile<T extends AstNode> extends Tile {
-    public abstract Class<T> getTargetNodeType();
+public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
+    public abstract Class<N> getTargetNodeType();
+
+    private N matchedNode;
 
     @Override
-    public Set<EvaluatedTile> tryToTile(AstNode node, Map<AstNode, Set<EvaluatedTile>> inputTiles, TypeResolver typeResolver, VariableResolver variableResolver) {
-        if (this.getTargetNodeType().isAssignableFrom(node.getClass())) {
-            T narrowedNode = (T) node;
+    public Set<Tile<T>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> inputTiles, TypeResolver typeResolver, VariableResolver variableResolver) {
+        if (!this.getTargetNodeType().isAssignableFrom(node.getClass())) return Set.of();
 
-            Set<TileInput<T, ?>> inputs = this.getInputs();
+        N narrowedNode = (N) node;
 
-            // check if all inputs can be applied
-
-            int inputWeight = 0;
-
-            for (TileInput<T, ?> input : inputs) {
-                if (input.canBeApplied(narrowedNode, inputTiles)) {
-                    // set the input value
-                    inputWeight += input.set(narrowedNode, inputTiles);
-                } else {
-                    // we cannot find a matching tile for this input
-                    // we cannot apply this tile
-                    return Set.of();
-                }
-            }
-
-            // we can apply all inputs and have set them
-            // let's tile
-
-            Set<EvaluatedTile> evaluatedTiles = applyTile((T) node);
-
-            // update weights
-
-            int totalWeight = inputWeight + this.getPriority().getWeight();
-            return evaluatedTiles.stream().map(t -> t.withWeight(totalWeight)).collect(Collectors.toSet());
-        } else {
-            return Set.of();
+        // check all inputs can be satisfied before allocating a fresh instance
+        for (TileInput<N, ?> input : this.getInputs()) {
+            if (!input.canBeApplied(narrowedNode, inputTiles)) return Set.of();
         }
+
+        // create a fresh instance and wire it up
+        AstNodeTile<T, N> freshTile = (AstNodeTile<T, N>) this.createInstance();
+        freshTile.matchedNode = narrowedNode;
+
+        int inputWeight = 0;
+        for (TileInput<N, ?> freshInput : freshTile.getInputs()) {
+            inputWeight += freshInput.set(narrowedNode, inputTiles);
+        }
+
+        freshTile.setWeight(inputWeight + this.getPriority().getWeight());
+
+        return Set.of(freshTile);
     }
 
-    abstract public Set<EvaluatedTile> applyTile(T astNode);
+    @Override
+    public T applyTile(BEASTState beastState) {
+        return this.applyTile(this.matchedNode, beastState);
+    }
 
-    private Set<TileInput<T, ?>> getInputs() {
-        // the expected inputs correspond to the class fields with type GeneratorTile.Input (similar to BEAST inputs)
-        // we use reflection to get the expected inputs
-        Set<TileInput<T, ?>> inputs = new HashSet<>();
+    public abstract T applyTile(N node, BEASTState beastState);
 
+    private Set<TileInput<N, ?>> getInputs() {
+        Set<TileInput<N, ?>> inputs = new HashSet<>();
         for (Field field : this.getClass().getDeclaredFields()) {
             if (field.getType().equals(TileInput.class)) {
                 field.setAccessible(true);
                 try {
-                    TileInput<T, ?> input = (TileInput<T, ?>) field.get(this);
-                    inputs.add(input);
+                    inputs.add((TileInput<N, ?>) field.get(this));
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
             }
         }
-
         return inputs;
     }
 
-    public static class TileInput<T, O> {
-        private final Function<T, AstNode> getter;
+    public static class TileInput<N, O> {
+        private final Function<N, AstNode> getter;
         private final TypeToken<O> expectedTypeToken;
 
-        private O value;
-        private Type valueType;
+        private Tile<O> tile;
 
-        public TileInput(Function<T, AstNode> getter, TypeToken<O> typeToken) {
+        public TileInput(Function<N, AstNode> getter, TypeToken<O> typeToken) {
             this.getter = getter;
             this.expectedTypeToken = typeToken;
         }
 
-        public boolean canBeApplied(T astNode, Map<AstNode, Set<EvaluatedTile>> inputTiles) {
+        public boolean canBeApplied(N astNode, Map<AstNode, Set<Tile<?>>> inputTiles) {
             AstNode inputAstNode = this.getter.apply(astNode);
-            Set<EvaluatedTile> potentialInputs = inputTiles.get(inputAstNode);
-            EvaluatedTile bestInput = TileUtils.getBestInput(potentialInputs, this.expectedTypeToken);
-            return bestInput != null;
+            Set<Tile<?>> potentialInputs = inputTiles.get(inputAstNode);
+            return getBestTile(potentialInputs) != null;
         }
 
-        public int set(T astNode, Map<AstNode, Set<EvaluatedTile>> inputTiles) {
+        public int set(N astNode, Map<AstNode, Set<Tile<?>>> inputTiles) {
             AstNode inputAstNode = this.getter.apply(astNode);
-            Set<EvaluatedTile> potentialInputs = inputTiles.get(inputAstNode);
-            EvaluatedTile bestInputTile = TileUtils.getBestInput(potentialInputs, this.expectedTypeToken);
-            this.value = (O) bestInputTile.generatedObject();
-            this.valueType = bestInputTile.generatedType();
-            return bestInputTile.weight();
+            Set<Tile<?>> potentialInputs = inputTiles.get(inputAstNode);
+            this.tile = getBestTile(potentialInputs);
+            return this.tile.getWeight();
         }
 
-        public O get() {
-            return this.value;
+        public O apply(BEASTState beastState) {
+            return this.tile.applyTile(beastState);
         }
 
-        public Type getType() {
-            return this.valueType;
-        }
+        private Tile<O> getBestTile(Set<Tile<?>> potentialInputs) {
+            if (potentialInputs == null || potentialInputs.isEmpty()) return null;
 
+            int lowestWeight = Integer.MAX_VALUE;
+            Tile<O> bestTile = null;
+
+            for (Tile<?> candidate : potentialInputs) {
+                if (expectedTypeToken.isAssignableFrom(candidate.getGeneratedType()) && candidate.getWeight() < lowestWeight) {
+                    lowestWeight = candidate.getWeight();
+                    bestTile = (Tile<O>) candidate;
+                }
+            }
+
+            return bestTile;
+        }
     }
 }

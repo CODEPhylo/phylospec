@@ -9,6 +9,7 @@ import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
+import patternmatching.BEASTState;
 import patternmatching.EvaluateTiles;
 import patternmatching.EvaluatedTile;
 import tiles.TileLibrary;
@@ -20,7 +21,8 @@ public class Test2 {
     static void main(String[] args) {
         String source = """
         Real x ~ Normal(mean=0.1, sd=2.2)
-        Real y ~ Normal(mean=x + 2.0, sd=1.0)
+        Real z ~ Normal(mean=0.1, sd=2.2)
+        Real y ~ Normal(mean=x + z, sd=1.0)
         """;
 
         ComponentResolver componentResolver = loadComponentResolver();
@@ -50,9 +52,7 @@ public class Test2 {
         // perform tiling
 
         EvaluateTiles applyTiles = new EvaluateTiles(TileLibrary.getTiles(), typeResolver, variableResolver);
-        EvaluatedTile result = applyTiles.visitStatements(statements);
-
-        ((BEASTObject) result.generatedObject()).initAndValidate();
+        BEASTState result = applyTiles.applyBestTiling(statements);
 
         System.out.println(result);
     }

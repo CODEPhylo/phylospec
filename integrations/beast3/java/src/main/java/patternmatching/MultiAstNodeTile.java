@@ -65,7 +65,7 @@ public abstract class MultiAstNodeTile extends Tile {
 
         // now that the inputs have been applied, we can apply the tile
 
-        Set<EvaluatedTile> evaluatedTiles = this.applyTile();
+        Set<EvaluatedTile> evaluatedTiles = this.applyTile(beastState);
 
         // update weights
 
@@ -73,7 +73,7 @@ public abstract class MultiAstNodeTile extends Tile {
         return evaluatedTiles.stream().map(t -> t.withWeight(totalWeight)).collect(Collectors.toSet());
     }
 
-    abstract public Set<EvaluatedTile> applyTile();
+    abstract public Set<EvaluatedTile> applyTile(BEASTState beastState);
 
     private Set<TileInput<?>> getInputs() {
         // the expected inputs correspond to the class fields with type GeneratorTile.Input (similar to BEAST inputs)

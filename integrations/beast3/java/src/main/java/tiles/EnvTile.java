@@ -1,29 +1,36 @@
 package tiles;
 
-import patternmatching.FunctionTile;
-import patternmatching.TypeToken;
+import patternmatching.BEASTState;
+import patternmatching.GeneratorTile;
+import patternmatching.Tile;
 
-public class EnvTile extends FunctionTile<String> {
+public class EnvTile extends GeneratorTile<String> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "env";
     }
 
-    Input<String> variable = new Input<>("variable", new TypeToken<>() {});
+    Input<String> variableInput = new Input<>("variable");
 
     @Override
-    protected String apply() {
-        String value = System.getenv(this.variable.get());
+    public String applyTile(BEASTState beastState) {
+        String variable = this.variableInput.apply(beastState);
+        String value = System.getenv(variable);
 
         if (value == null) {
             throw new TilingError(
-                    "Environment variable '" + this.variable.get() + "' is not set.",
+                    "Environment variable '" + variable + "' is not set.",
                     "Set the environment variable."
             );
         }
 
         return value;
+    }
+
+    @Override
+    protected Tile<String> createInstance() {
+        return new EnvTile();
     }
 
 }

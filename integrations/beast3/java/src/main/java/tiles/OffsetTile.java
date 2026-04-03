@@ -25,7 +25,7 @@ public class OffsetTile extends MultiAstNodeTile {
     TileInput<Double> offsetInput = new TileInput<>("$offset", new TypeToken<>() {});
 
     @Override
-    public Set<EvaluatedTile> applyTile() {
+    public Set<EvaluatedTile> applyTile(BEASTState beastState) {
         EvaluatedDistribution<? extends ScalarDistribution<RealScalar<Real>, Double>> distribution = this.distributionInput.get();
         Double offset = this.offsetInput.get();
 

@@ -2,16 +2,13 @@ package tiles;
 
 import beast.base.inference.StateNode;
 import org.phylospec.ast.Stmt;
-import patternmatching.AstNodeTile;
-import patternmatching.EvaluatedTile;
-import patternmatching.TypeToken;
+import patternmatching.*;
 
-import java.util.Map;
-import java.util.Set;
+import java.lang.reflect.Type;
 
-public class StateNodeAssignmentTile extends AstNodeTile<Stmt.Assignment> {
+public class StateNodeAssignmentTile<T extends StateNode> extends AstNodeTile<StateNode, Stmt.Assignment> {
 
-    TileInput<Stmt.Assignment, ? extends StateNode> evaluatedDistributionInput = new TileInput<>(
+    TileInput<Stmt.Assignment, T> evaluatedDistributionInput = new TileInput<>(
             expr -> expr.expression,
             new TypeToken<>() {}
     );
@@ -22,25 +19,28 @@ public class StateNodeAssignmentTile extends AstNodeTile<Stmt.Assignment> {
     }
 
     @Override
-    public Set<EvaluatedTile> applyTile(Stmt.Assignment expr) {
-        StateNode stateNode = this.evaluatedDistributionInput.get();
+    public T applyTile(Stmt.Assignment node, BEASTState beastState) {
+        T value = this.evaluatedDistributionInput.apply(beastState);
 
-        // set the variable name as the ID of the state node
+        // add to state
+        beastState.addStateNode(value);
 
-        stateNode.setID(expr.name);
+        return value;
+    }
 
-        // we now return the state node as the generated object while adding it to the state
+    @Override
+    public TilePriority getPriority() {
+        return TilePriority.LOW;
+    }
 
-        return Set.of(
-                new EvaluatedTile(
-                        this,
-                        stateNode,
-                        evaluatedDistributionInput.getType(),
-                        Set.of(stateNode),
-                        Map.of(),
-                        Set.of()
-                )
-        );
+    @Override
+    protected Tile<StateNode> createInstance() {
+        return new AssignmentTile<>();
+    }
+
+    @Override
+    public Type getGeneratedType() {
+        return new TypeToken<T>() {}.getType();
     }
 
 }
