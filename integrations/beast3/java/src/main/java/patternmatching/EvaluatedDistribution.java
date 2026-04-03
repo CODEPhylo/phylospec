@@ -8,7 +8,6 @@ import java.util.Set;
 public record EvaluatedDistribution<T extends StateNode, O extends beast.base.inference.Distribution>(
         O distribution,
         T stateNode,
-        TypeToken<T> stateNodeType,
         Set<Operator> operatorSet,
         boolean hasBeenDrawnBefore) {
     public EvaluatedDistribution(
@@ -16,6 +15,6 @@ public record EvaluatedDistribution<T extends StateNode, O extends beast.base.in
             T stateNode,
             Set<Operator> operatorSet
     ) {
-        this(distribution, stateNode, new TypeToken<>() {}, operatorSet, false);
+        this(distribution, stateNode, operatorSet, false);
     }
 }

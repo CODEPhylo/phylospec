@@ -95,7 +95,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
 
                     // wire each input to the corresponding tile from this combination
 
-                    int totalWeight = wiredUpTile.getWeight();
+                    int totalWeight = wiredUpTile.getPriority().getWeight();
 
                     for (int i = 0; i < call.arguments.length; i++) {
                         String argumentName = call.arguments[i].name;
