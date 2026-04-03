@@ -17,14 +17,14 @@ public class OffsetTile extends MultiAstNodeTile<RealScalarParam<Real>> {
                """;
     }
 
-    TileInput<EvaluatedDistribution<RealScalarParam<Real>, ScalarDistribution<RealScalar<Real>, Double>>> distributionInput = new TileInput<>(
+    TileInput<EvaluatedDistribution<RealScalarParam<Real>, ? extends ScalarDistribution<RealScalar<Real>, Double>>> distributionInput = new TileInput<>(
             "$distribution"
     );
     TileInput<Double> offsetInput = new TileInput<>("$offset");
 
     @Override
     public RealScalarParam<Real> applyTile(BEASTState beastState) {
-        EvaluatedDistribution<RealScalarParam<Real>, ScalarDistribution<RealScalar<Real>, Double>> distribution = this.distributionInput.apply(
+        EvaluatedDistribution<RealScalarParam<Real>, ? extends ScalarDistribution<RealScalar<Real>, Double>> distribution = this.distributionInput.apply(
                 beastState
         );
         Double offset = this.offsetInput.apply(beastState);
@@ -39,6 +39,6 @@ public class OffsetTile extends MultiAstNodeTile<RealScalarParam<Real>> {
 
     @Override
     protected Tile<?> createInstance() {
-        return new AssignmentTile();
+        return new OffsetTile();
     }
 }
