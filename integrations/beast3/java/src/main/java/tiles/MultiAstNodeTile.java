@@ -1,9 +1,13 @@
-package patternmatching;
+package tiles;
 
 import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
+import patternmatching.AstTemplateMatcher;
+import patternmatching.BEASTState;
+import patternmatching.Tile;
+import patternmatching.TypeToken;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;

@@ -1,9 +1,9 @@
-package tiles;
+package tiles.functions;
 
 import patternmatching.BEASTState;
-import patternmatching.GeneratorTile;
 import patternmatching.Tile;
-import patternmatching.TypeToken;
+import tiles.GeneratorTile;
+import patternmatching.TilingError;
 
 public class EnvTile extends GeneratorTile<String> {
 

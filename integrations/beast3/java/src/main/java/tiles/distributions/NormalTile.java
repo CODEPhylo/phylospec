@@ -1,4 +1,4 @@
-package tiles;
+package tiles.distributions;
 
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
@@ -7,6 +7,7 @@ import beast.base.spec.inference.operator.ScaleOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import patternmatching.*;
+import tiles.GeneratorTile;
 
 import java.util.Set;
 

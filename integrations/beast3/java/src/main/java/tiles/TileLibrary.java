@@ -1,6 +1,13 @@
 package tiles;
 
 import patternmatching.Tile;
+import tiles.distributions.NormalTile;
+import tiles.distributions.OffsetTile;
+import tiles.functions.EnvTile;
+import tiles.misc.AssignmentTile;
+import tiles.misc.DrawTile;
+import tiles.misc.LiteralTile;
+import tiles.misc.StateNodeAssignmentTile;
 
 import java.util.ArrayList;
 import java.util.List;
