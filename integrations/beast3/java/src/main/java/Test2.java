@@ -1,4 +1,3 @@
-import beast.base.core.BEASTObject;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.RemoveGroupings;
@@ -11,7 +10,6 @@ import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import patternmatching.BEASTState;
 import patternmatching.EvaluateTiles;
-import patternmatching.EvaluatedTile;
 import tiles.TileLibrary;
 
 import java.io.IOException;

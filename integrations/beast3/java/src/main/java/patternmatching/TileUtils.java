@@ -14,27 +14,4 @@ public class TileUtils {
             return null;
         }
     }
-
-    public static <T> EvaluatedTile getBestInput(Set<EvaluatedTile> possibleTiles, TypeToken<T> expectedType) {
-        if (possibleTiles == null || possibleTiles.isEmpty()) {
-            // no tiled input found. we cannot match this tile
-            return null;
-        }
-
-        int lowestWeight = Integer.MAX_VALUE;
-        EvaluatedTile bestTile = null;
-
-        for (EvaluatedTile possibleTile : possibleTiles) {
-            if (expectedType.isAssignableFrom(possibleTile.generatedType())) {
-                // we can use the input tile to assign it to this argument
-                // let's check if it is the tile with the lowest weight
-                if (possibleTile.weight() < lowestWeight) {
-                    lowestWeight = possibleTile.weight();
-                    bestTile = possibleTile;
-                }
-            }
-        }
-
-        return bestTile;
-    }
 }
