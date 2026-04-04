@@ -31,8 +31,6 @@ public class OffsetTile extends MultiAstNodeTile<RealScalarParam<Real>> {
         Double offset = this.offsetInput.apply(beastState);
 
         OffsetReal offsetDistribution = new OffsetReal(distribution.distribution(), offset);
-
-        // we replace the prior on the state node
         beastState.replaceDistribution(distribution.stateNode(), offsetDistribution);
 
         return distribution.stateNode();

@@ -53,10 +53,6 @@ public abstract class TypeToken<T> {
         return type;
     }
 
-    public boolean isAssignableFrom(Type other) {
-        return isAssignable(type, other);
-    }
-
     public boolean isAssignableFrom(TypeToken<?> other) {
         return isAssignable(type, other.type);
     }

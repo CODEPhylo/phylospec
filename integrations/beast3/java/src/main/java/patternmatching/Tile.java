@@ -34,7 +34,7 @@ public abstract class Tile<T> {
         return this.weight;
     }
 
-    protected void setWeight(int weight) {
+    public void setWeight(int weight) {
         this.weight = weight;
     }
 }
