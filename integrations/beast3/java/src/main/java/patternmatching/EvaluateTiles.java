@@ -12,20 +12,45 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     private final List<Tile<?>> tiles;
 
     private final Map<AstNode, Set<Tile<?>>> evaluatedTiles;
+    private final Map<AstNode, Tile<?>> bestEvaluatedTiles;
     private final VariableResolver variableResolver;
+
+    private final Set<Stmt> consumedStatements;
 
     public EvaluateTiles(List<Tile<?>> tiles, TypeResolver typeResolver, VariableResolver variableResolver) {
         this.tiles = tiles;
         this.typeResolver = typeResolver;
         this.variableResolver = variableResolver;
         this.evaluatedTiles = new HashMap<>();
+        this.bestEvaluatedTiles = new HashMap<>();
+        this.consumedStatements = new HashSet<>();
+    }
+
+    public List<Tile<?>> getBestTiling(List<Stmt> statements) {
+        // we start with the last statements and go backwards
+
+        List<Tile<?>> bestTiles = new ArrayList<>();
+
+        for (int i = statements.size() - 1; i >= 0 ; i--) {
+            Stmt stmt = statements.get(i);
+
+            if (this.consumedStatements.contains(stmt)) continue;
+
+            Tile<?> bestTile = stmt.accept(this);
+            bestTiles.addFirst(bestTile);
+        }
+
+        return bestTiles;
     }
 
     public BEASTState applyBestTiling(List<Stmt> stmts) {
-        Tile<?> bestTiling = this.visitStatements(stmts);
+        List<Tile<?>> bestTilingComposition = this.getBestTiling(stmts);
 
         BEASTState beastState = new BEASTState();
-        bestTiling.applyTile(beastState);
+
+        for (Tile<?> bestTiling : bestTilingComposition) {
+            bestTiling.applyTile(beastState);
+        }
 
         return beastState;
     }
@@ -54,7 +79,14 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
 
     @Override
     public Tile<?> visitVariable(Expr.Variable expr) {
-        return this.visitNode(expr);
+        Stmt variableDefinitionStmt = this.variableResolver.resolveVariable(expr);
+
+        if (variableDefinitionStmt != null) {
+            this.consumedStatements.add(variableDefinitionStmt);
+            return variableDefinitionStmt.accept(this);
+        } else {
+            return this.visitNode(expr);
+        }
     }
 
     @Override
@@ -118,6 +150,10 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     }
 
     private Tile<?> visitNode(AstNode node) {
+        if (this.bestEvaluatedTiles.containsKey(node)) {
+            return this.bestEvaluatedTiles.get(node);
+        }
+
         int lowestWeight = Integer.MAX_VALUE;
         Tile<?> bestEvaluatedTile = null;
 
@@ -136,6 +172,7 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
             }
         }
 
+        this.bestEvaluatedTiles.put(node, bestEvaluatedTile);
         return bestEvaluatedTile;
     }
 

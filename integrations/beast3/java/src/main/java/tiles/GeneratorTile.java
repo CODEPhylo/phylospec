@@ -117,6 +117,28 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         return wiredUpTiles;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("(").append(getClass().getSimpleName());
+        for (Field field : getClass().getDeclaredFields()) {
+            if (field.getType().equals(Input.class)) {
+                field.setAccessible(true);
+                try {
+                    Input<?> input = (Input<?>) field.get(this);
+                    Tile<?> child = input.getTile();
+                    if (child != null) {
+                        sb.append(" (").append(input.getPhylospecArgumentName()).append(" ").append(child).append(")");
+                    }
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        sb.append(")");
+        return sb.toString();
+    }
+
     public static class Input<T> {
         private final String phylospecArgumentName;
         private TypeToken<T> typeToken;
@@ -148,6 +170,10 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         public void setTile(Tile<?> tile) {
             // we assume that the generated type is compatible
             this.tile = (Tile<T>) tile;
+        }
+
+        public Tile<T> getTile() {
+            return this.tile;
         }
 
         public T apply(BEASTState beastState) {

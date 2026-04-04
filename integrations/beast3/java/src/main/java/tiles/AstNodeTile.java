@@ -93,6 +93,28 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
         return wiredUpTiles;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("(").append(getClass().getSimpleName());
+        for (Field field : getClass().getDeclaredFields()) {
+            if (field.getType().equals(TileInput.class)) {
+                field.setAccessible(true);
+                try {
+                    TileInput<?, ?> input = (TileInput<?, ?>) field.get(this);
+                    Tile<?> child = input.getTile();
+                    if (child != null) {
+                        sb.append(" ").append(child);
+                    }
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        sb.append(")");
+        return sb.toString();
+    }
+
     public static class TileInput<N, O> {
         private final Function<N, AstNode> getter;
         private TypeToken<O> expectedTypeToken;
@@ -129,6 +151,10 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
 
         public void setTile(Tile<?> tile) {
             this.tile = (Tile<O>) tile;
+        }
+
+        public Tile<O> getTile() {
+            return this.tile;
         }
 
         public O apply(BEASTState beastState) {

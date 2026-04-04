@@ -81,6 +81,30 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
         return wiredUpTiles;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("(").append(getClass().getSimpleName());
+        for (Field field : getClass().getDeclaredFields()) {
+            if (field.getType().equals(TileInput.class)) {
+                field.setAccessible(true);
+                try {
+                    TileInput<?> input = (TileInput<?>) field.get(this);
+                    Tile<?> child = input.getTile();
+                    if (child != null) {
+                        // strip leading $ from template variable name
+                        String varName = input.getTemplateVariable().substring(1);
+                        sb.append(" (").append(varName).append(" ").append(child).append(")");
+                    }
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        sb.append(")");
+        return sb.toString();
+    }
+
     private static List<TileInput<?>> getInputs(MultiAstNodeTile<?> tile) {
         List<TileInput<?>> inputs = new ArrayList<>();
         for (Field field : tile.getClass().getDeclaredFields()) {
@@ -136,6 +160,14 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
 
         public void setTile(Tile<?> tile) {
             this.tile = (Tile<O>) tile;
+        }
+
+        public Tile<O> getTile() {
+            return this.tile;
+        }
+
+        public String getTemplateVariable() {
+            return this.templateVariable;
         }
 
         public O apply(BEASTState beastState) {
