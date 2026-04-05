@@ -50,11 +50,9 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
      */
     public Map<String, AstNode> match(AstNode queryRoot, VariableResolver queryVariableResolver) {
         this.queryVariableResolver = queryVariableResolver;
+        this.templateVariableMap.clear();
         try {
             this.match(this.templateRoot, queryRoot);
-
-            // make sure all every template variable has a distinct AST node attached
-
             return this.templateVariableMap;
         } catch (MatchingError error) {
             return null;
@@ -390,6 +388,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             this.check(queryArgumentName != null);
 
             Expr.Argument templateArgument = templateArguments.get(queryArgumentName);
+            this.check(templateArgument != null);
             this.match(templateArgument, queryArgument);
         }
 
