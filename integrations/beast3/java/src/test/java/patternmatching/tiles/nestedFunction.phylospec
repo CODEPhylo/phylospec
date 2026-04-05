@@ -1,0 +1,5 @@
+String a = env(variable=env(variable="Hallo"))
+
+// EXPECTED_TILES
+// (AssignmentTile (EnvTile (variable (EnvTile (variable (LiteralTile))))))
+// EXPECTED_TILES

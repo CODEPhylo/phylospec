@@ -15,11 +15,12 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     private final AstNode templateRoot;
     private final VariableResolver templateVariableResolver;
-
     private final Map<String, AstNode> templateVariableMap;
 
     private VariableResolver queryVariableResolver;
     private AstNode currentQueryNode = null;
+
+    private Map<Stmt, String> queryVariableBindings;
 
     public AstTemplateMatcher(String phyloSpecTemplate) {
         List<Token> tokens = new Lexer(phyloSpecTemplate).scanTokens();
@@ -40,6 +41,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     public Map<String, AstNode> match(AstNode query, VariableResolver queryVariableResolver) {
         this.currentQueryNode = query;
         this.queryVariableResolver = queryVariableResolver;
+        this.queryVariableBindings = new HashMap<>();
         try {
             this.match(this.templateRoot);
             return this.templateVariableMap;
@@ -85,8 +87,6 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         if (!(currentQueryNode instanceof Stmt.Draw queryStmt)) {
             throw new MatchingError();
         }
-
-        this.check(stmt.name.equals(queryStmt.name));
 
         currentQueryNode = goQy(queryStmt.type);
         stmt.type.accept(this);
@@ -211,7 +211,19 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             throw new MatchingError();
         }
 
-        this.check(expr.variableName.equals(queryVariable.variableName));
+        String queryVariableName = queryVariable.variableName;
+
+        Stmt queryStmt = this.queryVariableResolver.resolveVariable(expr);
+        if (queryStmt != null) {
+            if (this.queryVariableBindings.containsKey(queryStmt)) {
+                queryVariableName = this.queryVariableBindings.get(queryStmt);
+            } else {
+                queryVariableName = expr.variableName;
+                this.queryVariableBindings.put(queryStmt, expr.variableName);
+            }
+        }
+
+        this.check(expr.variableName.equals(queryVariableName));
 
         return null;
     }
@@ -411,8 +423,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     private AstNode go(AstNode node, VariableResolver variableResolver) {
         if (node instanceof Expr.Variable variable) {
             // we try to pass through the variable
-            AstNode resolved = variableResolver.resolveVariable(variable);
-            return Objects.requireNonNullElse(go(resolved, variableResolver), node);
+            Stmt resolvedStmt = variableResolver.resolveVariable(variable);
+            return Objects.requireNonNullElse(go(resolvedStmt, variableResolver), node);
         }
         if (node instanceof Stmt.Decorated decorated) {
             return go(decorated.statement, variableResolver);

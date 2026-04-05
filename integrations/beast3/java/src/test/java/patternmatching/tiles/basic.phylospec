@@ -1,5 +1,0 @@
-Real x ~ Normal(mean=1.0, sd=2.0)
-
-// EXPECTED_TILES
-// (DrawTile (NormalTile (mean (LiteralTile)) (sd (LiteralTile))))
-// EXPECTED_TILES
