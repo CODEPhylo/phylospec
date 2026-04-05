@@ -1,0 +1,15 @@
+// TEMPLATE
+Real a ~ $dist1
+Real b ~ $dist2
+log(x=(a + b))
+// TEMPLATE
+
+// QUERY
+Real a ~ Exponential(1.0)
+log(a + a)
+// QUERY
+
+// MATCH
+// $dist1 -> (CA Exponential (AA null 1.0))
+// $dist2 -> (CA Exponential (AA null 1.0))
+// MATCH

@@ -21,6 +21,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     private AstNode currentQueryNode = null;
 
     private Map<String, String> currentIndexBindings;
+    private boolean currentCallHasASingleArgument;
 
     public AstTemplateMatcher(String phyloSpecTemplate) {
         List<Token> tokens = new Lexer(phyloSpecTemplate).scanTokens();
@@ -51,6 +52,9 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         this.queryVariableResolver = queryVariableResolver;
         try {
             this.match(this.templateRoot, queryRoot);
+
+            // make sure all every template variable has a distinct AST node attached
+
             return this.templateVariableMap;
         } catch (MatchingError error) {
             return null;
@@ -154,9 +158,6 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             throw new MatchingError();
         }
 
-        // TODO this is wrong
-        this.check(stmt.name.equals(queryStmt.name));
-
         this.match(stmt.type, queryStmt.type);
         this.match(stmt.expression, queryStmt.expression);
 
@@ -240,7 +241,10 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         }
 
         this.check(expr.value.equals(queryLiteral.value));
-        this.check(expr.unit == queryLiteral.unit); // TODO: is this correct?
+
+        if (expr.unit != Unit.IMPLICIT) {
+            throw new RuntimeException("Template has explicit units, which is not supported.");
+        }
 
         return null;
     }
@@ -336,7 +340,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
                 this.match(expr.right, queryBinary.left);
             } catch (MatchingError ignored) {
                 // this also did not work
-                // we re-throw the error of the original order
+                // we re-throw the error caused by the original order
                 throw firstError;
             }
         }
@@ -353,6 +357,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         this.check(expr.functionName.equals(queryCall.functionName));
         this.check(expr.arguments.length == queryCall.arguments.length);
 
+        this.currentCallHasASingleArgument = expr.arguments.length == 1;
+
         for (int i = 0; i < expr.arguments.length; i++) {
             this.match(expr.arguments[i], queryCall.arguments[i]);
         }
@@ -362,6 +368,30 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitAssignedArgument(Expr.AssignedArgument expr) {
+        if (this.currentQueryNode instanceof Expr.DrawnArgument drawnQueryArg) {
+            // in this case, the query is an assigned argument (x~dist) but the template is not
+            // this still works if the template has a variable pointing to a drawn statement
+
+            this.check(expr.name.equals(drawnQueryArg.name));
+
+            if (!(expr.expression instanceof Expr.Variable templateVar)) {
+                throw new MatchingError();
+            }
+
+            AstNode resolvedTemplateStmt = this.potentiallyPassThrough(templateVar, this.templateVariableResolver);
+            if (resolvedTemplateStmt == null) {
+                throw new MatchingError();
+            }
+
+            if (!(resolvedTemplateStmt instanceof Stmt.Draw templateDrawStmt)) {
+                throw new MatchingError();
+            }
+
+            this.match(templateDrawStmt.expression, drawnQueryArg.expression);
+
+            return null;
+        }
+
         if (!(this.currentQueryNode instanceof Expr.AssignedArgument queryArg)) {
             throw new MatchingError();
         }
@@ -374,6 +404,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         if (queryArg.name == null && queryArg.expression instanceof Expr.Variable queryVar) {
             // we assume that the argument name is the name of the passed variable
             this.check(Objects.equals(expr.name, queryVar.variableName));
+        } else if(queryArg.name == null && currentCallHasASingleArgument) {
+            // this is fine
         } else {
             this.check(Objects.equals(expr.name, queryArg.name));
         }
@@ -385,6 +417,33 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitDrawnArgument(Expr.DrawnArgument expr) {
+        if (this.currentQueryNode instanceof Expr.AssignedArgument assignedQueryArg) {
+            // in this case, the query is an assigned argument (x=dist) but the template is a drawn argument (x~dist)
+            // this still works if the query has `dist` defined as a draw
+
+            if (!(assignedQueryArg.expression instanceof Expr.Variable queryVar)) {
+                throw new MatchingError();
+            }
+
+            this.check(
+                    Objects.equals(expr.name, assignedQueryArg.name) ||
+                            assignedQueryArg.name == null && Objects.equals(expr.name, queryVar.variableName)
+            );
+
+            AstNode resolvedQueryStmt = this.potentiallyPassThrough(queryVar, this.queryVariableResolver);
+            if (resolvedQueryStmt == null) {
+                throw new MatchingError();
+            }
+
+            if (!(resolvedQueryStmt instanceof Stmt.Draw queryDrawStmt)) {
+                throw new MatchingError();
+            }
+
+            this.match(expr.expression, queryDrawStmt.expression);
+
+            return null;
+        }
+
         if (!(this.currentQueryNode instanceof Expr.DrawnArgument queryArg)) {
             throw new MatchingError();
         }

@@ -1,13 +1,11 @@
 // TEMPLATE
-Normal(sd=$sd, mean=$mean)
+exp(x=$x)
 // TEMPLATE
 
 // QUERY
-Real sd = 10
-Normal(10.5, sd)
+exp(100)
 // QUERY
 
 // MATCH
-// $sd -> 10
-// $mean -> 10.5
+// $x -> 100
 // MATCH
