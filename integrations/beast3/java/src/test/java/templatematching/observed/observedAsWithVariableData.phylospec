@@ -1,0 +1,13 @@
+// TEMPLATE
+Real x ~ $dist observed as $data
+// TEMPLATE
+
+// QUERY
+Real observations = readData()
+Real x ~ Normal(mean=0.0, sd=1.0) observed as observations
+// QUERY
+
+// MATCH
+// $dist -> (CA Normal (AA mean 0.0) (AA sd 1.0))
+// $data -> (CA readData )
+// MATCH

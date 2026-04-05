@@ -1,0 +1,12 @@
+// TEMPLATE
+@revbayes(x=$x)
+Real a ~ $dist
+// TEMPLATE
+
+// QUERY
+Real a ~ Normal(mean=1.0, sd=2.0)
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH

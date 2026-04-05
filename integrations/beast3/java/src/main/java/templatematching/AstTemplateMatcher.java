@@ -187,7 +187,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         this.currentIndexBindings = new HashMap<>();
 
         for (int i = 0; i < indexed.indices.size(); i++) {
-            String templateIndex = queryIndexed.indices.get(i).variableName;
+            String templateIndex = indexed.indices.get(i).variableName;
             String queryIndex = queryIndexed.indices.get(i).variableName;
             this.currentIndexBindings.put(queryIndex, templateIndex);
         }
@@ -359,8 +359,38 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
         this.currentCallHasASingleArgument = expr.arguments.length == 1;
 
-        for (int i = 0; i < expr.arguments.length; i++) {
-            this.match(expr.arguments[i], queryCall.arguments[i]);
+        if (this.currentCallHasASingleArgument) {
+            // we only have one argument
+            // we can match it directly
+            this.match(expr.arguments[0], queryCall.arguments[0]);
+            return null;
+        }
+
+        // we have multiple arguments
+        // we match them by name
+
+        Map<String, Expr.Argument> templateArguments = new HashMap();
+
+        for (Expr.Argument templateArgument : expr.arguments) {
+            if (templateArgument.name == null) {
+                throw new IllegalArgumentException("Generator argument for '" + expr.functionName + "' with no explicit name in template found. Please specify the argument names in templates.");
+            }
+
+            templateArguments.put(templateArgument.name, templateArgument);
+        }
+
+        // we go through the query arguments and try to match them
+
+        for (Expr.Argument queryArgument : queryCall.arguments) {
+            String queryArgumentName = queryArgument.name;
+            if (queryArgumentName == null && queryArgument.expression instanceof Expr.Variable queryVariable) {
+                queryArgumentName = queryVariable.variableName;
+            }
+
+            this.check(queryArgumentName != null);
+
+            Expr.Argument templateArgument = templateArguments.get(queryArgumentName);
+            this.match(templateArgument, queryArgument);
         }
 
         return null;

@@ -1,0 +1,11 @@
+// TEMPLATE
+[$a, $b, $c]
+// TEMPLATE
+
+// QUERY
+[1.0, 2.0]
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH

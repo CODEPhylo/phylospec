@@ -1,0 +1,12 @@
+// TEMPLATE
+Real x[i] ~ $dist for i in 1:$n
+// TEMPLATE
+
+// QUERY
+Real x[i] ~ Normal(mean=0.0, sd=1.0) for i in 1:10
+// QUERY
+
+// MATCH
+// $dist -> (CA Normal (AA mean 0.0) (AA sd 1.0))
+// $n -> 10
+// MATCH

@@ -1,0 +1,12 @@
+// TEMPLATE
+Normal(mean=log(x=$x), sd=$sd)
+// TEMPLATE
+
+// QUERY
+Normal(mean=log(100), sd=2.0)
+// QUERY
+
+// MATCH
+// $x -> 100
+// $sd -> 2.0
+// MATCH
