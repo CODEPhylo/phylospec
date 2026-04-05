@@ -8,6 +8,6 @@ x + x
 // QUERY
 
 // MATCH
-// $a -> (DR Real x (CA Normal (AA mean 1.0) (AA sd 1.0)))
-// $b -> (DR Real x (CA Normal (AA mean 1.0) (AA sd 1.0)))
+// $a -> x
+// $b -> x
 // MATCH

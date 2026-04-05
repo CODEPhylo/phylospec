@@ -9,5 +9,5 @@ log(x)
 // QUERY
 
 // MATCH
-// $dist1 -> (CA Exponential (AA null 1.0))
+// $dist1 -> dist
 // MATCH

@@ -18,8 +18,8 @@ Alignment alignment ~ PhyloCTMC(
 // QUERY
 
 // MATCH
-// $tree -> (DR Tree tree (CA Yule ))
+// $tree -> tree
 // $qMatrix -> (CA jc69 )
-// $siteRates -> (CA strict )
-// $data -> (CA readNexus )
+// $siteRates -> siteRates
+// $data -> data
 // MATCH

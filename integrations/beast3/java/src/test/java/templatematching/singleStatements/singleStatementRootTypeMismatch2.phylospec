@@ -1,12 +1,11 @@
 // TEMPLATE
-$a + $a
+Real x = $x
 // TEMPLATE
 
 // QUERY
-Real a = random()
-a + a
+10
 // QUERY
 
 // MATCH
-// $a -> a
+// NO MATCH
 // MATCH

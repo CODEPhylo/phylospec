@@ -1,6 +1,6 @@
 Real normal ~ Normal(mean=1.0, sd=2.0)
 Real offset = 10
-Real z = normal + offset
+Real z = offset + normal
 
 // EXPECTED_TILES
 // (StateNodeAssignmentTile (OffsetTile (distribution (NormalTile (mean (LiteralTile)) (sd (LiteralTile)))) (offset (AssignmentTile (LiteralTile)))))

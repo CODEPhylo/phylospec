@@ -9,6 +9,6 @@ Real y ~ Exponential(rate=2.0)
 // QUERY
 
 // MATCH
-// $a -> (DR Real x (CA Normal (AA mean 0.0) (AA sd 1.0)))
-// $b -> (DR Real y (CA Exponential (AA rate 2.0)))
+// $a -> x
+// $b -> y
 // MATCH

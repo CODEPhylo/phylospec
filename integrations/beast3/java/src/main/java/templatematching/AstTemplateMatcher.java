@@ -51,7 +51,16 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     public Map<String, AstNode> match(AstNode queryRoot, VariableResolver queryVariableResolver) {
         this.queryVariableResolver = queryVariableResolver;
         this.templateVariableMap.clear();
+
         try {
+            // the root node needs to be of the same type
+            this.check(
+                    queryRoot instanceof Expr == this.templateRoot instanceof Expr
+            );
+            this.check(
+                    queryRoot instanceof Stmt == this.templateRoot instanceof Stmt
+            );
+
             this.match(this.templateRoot, queryRoot);
             return this.templateVariableMap;
         } catch (MatchingError error) {
@@ -63,6 +72,14 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
      * Sets the query node to the current query node and visits the template node.
      */
     private void match(AstNode template, AstNode query) {
+        // if we have reached a template variable, we directly compare with no passthrough
+
+        if (template instanceof Expr.TemplateVariable templateVariable) {
+            this.currentQueryNode = query;
+            templateVariable.accept(this);
+            return;
+        }
+
         query = this.potentiallyPassThrough(query, this.queryVariableResolver);
         template = this.potentiallyPassThrough(template, templateVariableResolver);
 
@@ -297,7 +314,10 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         // if we have already encountered this template variable, it must have been resolved to the same AST node
 
         AstNode existingResolvedNode = templateVariableMap.get(expr.variableName);
-        if (existingResolvedNode != null && existingResolvedNode != currentQueryNode) {
+        if (
+                existingResolvedNode != null &&
+                        (existingResolvedNode != currentQueryNode && existingResolvedNode instanceof Expr.Variable var1 && currentQueryNode instanceof Expr.Variable var2 && !var1.variableName.equals(var2.variableName))
+        ) {
             // we have already resolved this to something else
             throw new MatchingError();
         }

@@ -7,7 +7,8 @@ drawnBase + offset
 
 // QUERY
 Real a ~ Normal(1.0, sd=2.0)
-a + 100.20
+Real offset = 100.20
+a + offset
 // QUERY
 
 // MATCH

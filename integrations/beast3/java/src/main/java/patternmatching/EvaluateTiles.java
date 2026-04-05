@@ -83,7 +83,21 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
 
         if (variableDefinitionStmt != null) {
             this.consumedStatements.add(variableDefinitionStmt);
-            return variableDefinitionStmt.accept(this);
+
+            // we evaluate the tiles for the definition statement
+
+            Tile<?> bestTile = variableDefinitionStmt.accept(this);
+
+            // we re-use the tiles from the definition statement
+
+            this.evaluatedTiles.put(
+                    expr, this.evaluatedTiles.get(variableDefinitionStmt)
+            );
+            this.bestEvaluatedTiles.put(
+                    expr, this.bestEvaluatedTiles.get(variableDefinitionStmt)
+            );
+
+            return bestTile;
         } else {
             return this.visitNode(expr);
         }

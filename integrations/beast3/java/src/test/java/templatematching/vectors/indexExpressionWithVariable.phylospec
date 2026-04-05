@@ -8,6 +8,6 @@ v[1]
 // QUERY
 
 // MATCH
-// $vec -> (AR 10.0 20.0 30.0)
+// $vec -> v
 // $idx -> 1
 // MATCH

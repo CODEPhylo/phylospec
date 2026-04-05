@@ -9,6 +9,6 @@ Normal(sd, mean)
 // QUERY
 
 // MATCH
-// $sd -> 10
-// $mean -> 10.5
+// $sd -> sd
+// $mean -> mean
 // MATCH
