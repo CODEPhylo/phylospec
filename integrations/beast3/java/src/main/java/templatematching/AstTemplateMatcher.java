@@ -11,15 +11,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/// Matches a PhyloSpec AST query against a PhyloSpec template.
+///
+/// The template is a PhyloSpec snippet that may contain template variables (e.g. `$x`).
+/// A match succeeds if the query AST is structurally equivalent to the template, with
+/// template variables capturing the corresponding query sub-trees.
+///
+/// Usage:
+/// ```
+/// AstTemplateMatcher matcher = new AstTemplateMatcher("Real $x ~ Normal(mean=$mu, sd=$sigma)");
+/// Map<String, AstNode> bindings = matcher.match(queryNode, queryVariableResolver);
+/// // bindings maps "$x" -> ..., "$mu" -> ..., "$sigma" -> ...
+/// ```
 public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     private final AstNode templateRoot;
     private final VariableResolver templateVariableResolver;
+
+    // maps template variable names (e.g. "$x") to the query sub-trees they were bound to
     private final Map<String, AstNode> templateVariableMap;
 
     private VariableResolver queryVariableResolver;
     private AstNode currentQueryNode = null;
 
+    // maps query index variable names to template index variable names during indexed statement matching
     private Map<String, String> currentIndexBindings;
     private boolean currentCallHasASingleArgument;
 
@@ -43,10 +58,10 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     }
 
     /**
-     * Tries to this.match a query with the template. The query is given by the AstNode which should be this.matched
-     * with the root entry point the template and the query variable resolver (to this.match across multiple
+     * Tries to match a query against the template. The query is given by the AstNode which should be matched
+     * with the root entry point of the template and the query variable resolver (to match across multiple
      * statements).
-     * Returns the mapping of template variables to query AstNodes if it is a this.match or null is there is no this.match.
+     * Returns the mapping of template variables to query AstNodes on a match, or null if there is no match.
      */
     public Map<String, AstNode> match(AstNode queryRoot, VariableResolver queryVariableResolver) {
         this.queryVariableResolver = queryVariableResolver;
@@ -69,7 +84,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     }
 
     /**
-     * Sets the query node to the current query node and visits the template node.
+     * Sets the query node to the current query node and visits the template node. Passes through things like
+     * variables or oberved statements if appropriate.
      */
     private void match(AstNode template, AstNode query) {
         // if we have reached a template variable, we directly compare with no passthrough
@@ -114,6 +130,11 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         }
     }
 
+    /**
+     * Transparently passes through nodes that are semantically equivalent to their inner expression:
+     * groupings, variables that resolve to a statement, and assignment statements.
+     * This allows the matcher to compare the underlying values rather than the syntactic wrappers.
+     */
     private AstNode potentiallyPassThrough(AstNode node, VariableResolver variableResolver) {
         // we pass through groupings
 
@@ -314,12 +335,17 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         // if we have already encountered this template variable, it must have been resolved to the same AST node
 
         AstNode existingResolvedNode = templateVariableMap.get(expr.variableName);
-        if (
-                existingResolvedNode != null &&
-                        (existingResolvedNode != currentQueryNode && existingResolvedNode instanceof Expr.Variable var1 && currentQueryNode instanceof Expr.Variable var2 && !var1.variableName.equals(var2.variableName))
-        ) {
-            // we have already resolved this to something else
-            throw new MatchingError();
+        if (existingResolvedNode != null) {
+            // the template variable was already bound; the new node must refer to the same thing.
+            // two variable nodes are considered the same if they have the same name, even if they are different objects.
+            boolean sameNode = existingResolvedNode == currentQueryNode;
+            boolean sameVariable = existingResolvedNode instanceof Expr.Variable var1
+                    && currentQueryNode instanceof Expr.Variable var2
+                    && var1.variableName.equals(var2.variableName);
+
+            if (!sameNode && !sameVariable) {
+                throw new MatchingError();
+            }
         }
 
         templateVariableMap.put(expr.variableName, currentQueryNode);
@@ -387,7 +413,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         // we have multiple arguments
         // we match them by name
 
-        Map<String, Expr.Argument> templateArguments = new HashMap();
+        Map<String, Expr.Argument> templateArguments = new HashMap<>();
 
         for (Expr.Argument templateArgument : expr.arguments) {
             if (templateArgument.name == null) {
