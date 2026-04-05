@@ -1,0 +1,12 @@
+// TEMPLATE
+$x + log(2 * $y)
+// TEMPLATE
+
+// QUERY
+(100 + 2) + log(2 * exp(10))
+// QUERY
+
+// MATCH
+// $x -> 102
+// $y -> (CA exp (AA null 10))
+// MATCH

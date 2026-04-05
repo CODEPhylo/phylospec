@@ -1,0 +1,11 @@
+// TEMPLATE
+$x + log(2 * $y)
+// TEMPLATE
+
+// QUERY
+(100 + 2) + log(3 * exp(10))
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH
