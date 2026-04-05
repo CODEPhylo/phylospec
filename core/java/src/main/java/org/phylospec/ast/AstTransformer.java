@@ -75,6 +75,12 @@ public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> 
     public Stmt visitIndexedStmt(Stmt.Indexed indexed) {
         indexed.statement = indexed.statement.accept(this);
         indexed.ranges.replaceAll(x -> x.accept(this));
+
+        boolean isOldStatement = oldStatements.contains(indexed);
+        if (isOldStatement) {
+            transformedStatements.add(indexed);
+        }
+
         return indexed;
     }
 
@@ -82,6 +88,12 @@ public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> 
     public Stmt visitObservedAsStmt(Stmt.ObservedAs observedAs) {
         observedAs.stmt = observedAs.stmt.accept(this);
         observedAs.observedAs = observedAs.observedAs.accept(this);
+
+        boolean isOldStatement = oldStatements.contains(observedAs);
+        if (isOldStatement) {
+            transformedStatements.add(observedAs);
+        }
+
         return observedAs;
     }
 
@@ -90,6 +102,12 @@ public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> 
         observedBetween.stmt = observedBetween.stmt.accept(this);
         observedBetween.observedFrom = observedBetween.observedFrom.accept(this);
         observedBetween.observedTo = observedBetween.observedTo.accept(this);
+
+        boolean isOldStatement = oldStatements.contains(observedBetween);
+        if (isOldStatement) {
+            transformedStatements.add(observedBetween);
+        }
+
         return observedBetween;
     }
 

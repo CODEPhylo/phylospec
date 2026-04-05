@@ -1,0 +1,25 @@
+// TEMPLATE
+Alignment alignment ~ PhyloCTMC(
+    tree=$tree,
+    qMatrix=$qMatrix,
+    siteRates=$siteRates
+) observed as $data
+// TEMPLATE
+
+// QUERY
+Alignment data = readNexus()
+Tree tree ~ Yule()
+Vector<Rate> siteRates = strict()
+Alignment alignment ~ PhyloCTMC(
+    tree,
+    qMatrix=jc69(),
+    siteRates
+) observed as data
+// QUERY
+
+// MATCH
+// $tree -> (DR Tree tree (CA Yule ))
+// $qMatrix -> (CA jc69 )
+// $siteRates -> (CA strict )
+// $data -> (CA readNexus )
+// MATCH

@@ -1,0 +1,16 @@
+// TEMPLATE
+Distribution<Real> base = $dist
+Real drawnBase ~ base
+Real offset = $offset
+drawnBase + offset
+// TEMPLATE
+
+// QUERY
+Real a ~ Normal(1.0, sd=2.0)
+a + 100.20
+// QUERY
+
+// MATCH
+// $dist -> (CA Normal (AA null 1.0) (AA sd 2.0))
+// $offset -> 100.2
+// MATCH
