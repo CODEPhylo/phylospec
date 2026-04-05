@@ -1,5 +1,5 @@
 // TEMPLATE
-$x + log(2 * $y)
+$x + log(x=2 * $y)
 // TEMPLATE
 
 // QUERY

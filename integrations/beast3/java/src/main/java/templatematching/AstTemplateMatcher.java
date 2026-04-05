@@ -20,170 +20,234 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     private VariableResolver queryVariableResolver;
     private AstNode currentQueryNode = null;
 
-    private Map<Stmt, String> queryVariableBindings;
+    private Map<String, String> currentIndexBindings;
 
     public AstTemplateMatcher(String phyloSpecTemplate) {
         List<Token> tokens = new Lexer(phyloSpecTemplate).scanTokens();
         List<AstNode> statements = new Parser(tokens).parseStmtOrExpr();
 
         // make sure all but the last statement are actual Stmt nodes and not just expressions
+
         for (int i = 0; i < statements.size() - 1; i++) {
             if (!(statements.get(i) instanceof Stmt)) {
                 throw new IllegalArgumentException("The PhyloSpec template contains an expression on the " + (i + 1) + "-th line. Only the last line can contain expressions, all other have to contain complete statements like assignments or draws.");
             }
         }
 
+        // initialize the template variables
+
         this.templateRoot = statements.getLast();
         this.templateVariableResolver = new VariableResolver(statements);
         this.templateVariableMap = new HashMap<>();
     }
 
-    public Map<String, AstNode> match(AstNode query, VariableResolver queryVariableResolver) {
-        this.currentQueryNode = query;
+    /**
+     * Tries to this.match a query with the template. The query is given by the AstNode which should be this.matched
+     * with the root entry point the template and the query variable resolver (to this.match across multiple
+     * statements).
+     * Returns the mapping of template variables to query AstNodes if it is a this.match or null is there is no this.match.
+     */
+    public Map<String, AstNode> match(AstNode queryRoot, VariableResolver queryVariableResolver) {
         this.queryVariableResolver = queryVariableResolver;
-        this.queryVariableBindings = new HashMap<>();
         try {
-            this.match(this.templateRoot);
+            this.match(this.templateRoot, queryRoot);
             return this.templateVariableMap;
         } catch (MatchingError error) {
             return null;
         }
     }
 
+    /**
+     * Sets the query node to the current query node and visits the template node.
+     */
+    private void match(AstNode template, AstNode query) {
+        query = this.potentiallyPassThrough(query, this.queryVariableResolver);
+        template = this.potentiallyPassThrough(template, templateVariableResolver);
+
+        // if the query is an observed statement but the template is not, this is fine, and we pass through the observation
+
+        if (query instanceof Stmt.ObservedAs observed && !(template instanceof Stmt.ObservedAs)) {
+            this.match(template, observed.stmt);
+            return;
+        }
+        if (query instanceof Stmt.ObservedBetween observed && !(template instanceof Stmt.ObservedBetween)) {
+            this.match(template, observed.stmt);
+            return;
+        }
+
+        // if the query is a decorated statement but the template is not, this is fine, and we pass through the observation
+
+        if (query instanceof Stmt.Decorated decorated && !(template instanceof Stmt.Decorated)) {
+            this.match(template, decorated.statement);
+            return;
+        }
+
+        // we are ready to compare the two nodes
+        // set the current query node and visit the template node
+
+        this.currentQueryNode = query;
+
+        switch (template) {
+            case Stmt node -> node.accept(this);
+            case Expr node -> node.accept(this);
+            case AstType node -> node.accept(this);
+            default -> throw new RuntimeException("Unknown type of AST node encountered. This should not happen.");
+        }
+    }
+
+    private AstNode potentiallyPassThrough(AstNode node, VariableResolver variableResolver) {
+        // we pass through groupings
+
+        if (node instanceof Expr.Grouping grouping) {
+            return this.potentiallyPassThrough(grouping.expression, variableResolver);
+        }
+
+        // we pass through variables directly into statements
+
+        if (node instanceof Expr.Variable variable) {
+            Stmt declarationStatement = variableResolver.resolveVariable(variable);
+
+            if (declarationStatement != null) {
+                // we pass through the variable into the statement
+                return this.potentiallyPassThrough(declarationStatement, variableResolver);
+            }
+        }
+
+        // we pass through assignment statements
+
+        if (node instanceof Stmt.Assignment assignment) {
+            return this.potentiallyPassThrough(assignment.expression, variableResolver);
+        }
+
+        return node;
+    }
+
     @Override
     public Void visitDecoratedStmt(Stmt.Decorated stmt) {
-        if (!(currentQueryNode instanceof Stmt.Decorated queryStmt)) {
+        if (!(this.currentQueryNode instanceof Stmt.Decorated queryStmt)) {
             throw new MatchingError();
         }
 
-        currentQueryNode = goQy(queryStmt.decorator);
-        stmt.decorator.accept(this);
-
-        currentQueryNode = goQy(queryStmt.statement);
-        stmt.statement.accept(this);
+        this.match(stmt.decorator, queryStmt.decorator);
+        this.match(stmt.statement, queryStmt.statement);
 
         return null;
     }
 
     @Override
     public Void visitAssignment(Stmt.Assignment stmt) {
-        if (!(currentQueryNode instanceof Stmt.Assignment queryStmt)) {
+        if (!(this.currentQueryNode instanceof Stmt.Assignment queryStmt)) {
             throw new MatchingError();
         }
 
-        this.check(stmt.name.equals(queryStmt.name));
+        // we can ignore the variable name, as we only care about the expression
 
-        currentQueryNode = goQy(queryStmt.type);
-        stmt.type.accept(this);
-
-        currentQueryNode = goQy(queryStmt.expression);
-        stmt.expression.accept(this);
+        this.match(stmt.type, queryStmt.type);
+        this.match(stmt.expression, queryStmt.expression);
 
         return null;
     }
 
     @Override
     public Void visitDraw(Stmt.Draw stmt) {
-        if (!(currentQueryNode instanceof Stmt.Draw queryStmt)) {
+        if (!(this.currentQueryNode instanceof Stmt.Draw queryStmt)) {
             throw new MatchingError();
         }
 
-        currentQueryNode = goQy(queryStmt.type);
-        stmt.type.accept(this);
+        // TODO this is wrong
+        this.check(stmt.name.equals(queryStmt.name));
 
-        currentQueryNode = goQy(queryStmt.expression);
-        stmt.expression.accept(this);
+        this.match(stmt.type, queryStmt.type);
+        this.match(stmt.expression, queryStmt.expression);
 
         return null;
     }
 
     @Override
     public Void visitImport(Stmt.Import stmt) {
-        if (!(currentQueryNode instanceof Stmt.Import queryStmt)) {
-            throw new MatchingError();
-        }
-
-        this.check(stmt.namespace.size() == queryStmt.namespace.size());
-
-        for (int i = 0; i < stmt.namespace.size(); i++) {
-            this.check(stmt.namespace.get(i).equals(queryStmt.namespace.get(i)));
-        }
-
-        return null;
+        // import statements cannot be matched
+        throw new MatchingError();
     }
 
     @Override
     public Void visitIndexedStmt(Stmt.Indexed indexed) {
-        if (!(currentQueryNode instanceof Stmt.Indexed queryIndexed)) {
+        if (!(this.currentQueryNode instanceof Stmt.Indexed queryIndexed)) {
             throw new MatchingError();
         }
 
         this.check(indexed.indices.size() == queryIndexed.indices.size());
         this.check(indexed.ranges.size() == queryIndexed.ranges.size());
 
-        for (int i = 0; i < indexed.indices.size(); i++) {
-            this.check(indexed.indices.get(i).variableName.equals(queryIndexed.indices.get(i).variableName));
+        // we bind the query index variables to the template index variables
+
+        if (this.currentIndexBindings != null) {
+            throw new RuntimeException("Non-null index bindings found. This should not happen.");
         }
+        this.currentIndexBindings = new HashMap<>();
+
+        for (int i = 0; i < indexed.indices.size(); i++) {
+            String templateIndex = queryIndexed.indices.get(i).variableName;
+            String queryIndex = queryIndexed.indices.get(i).variableName;
+            this.currentIndexBindings.put(queryIndex, templateIndex);
+        }
+
+        // match the ranges
 
         for (int i = 0; i < indexed.ranges.size(); i++) {
-            currentQueryNode = goQy(queryIndexed.ranges.get(i));
-            match(indexed.ranges.get(i));
+            this.match(indexed.ranges.get(i), queryIndexed.ranges.get(i));
         }
 
-        currentQueryNode = goQy(queryIndexed.statement);
-        match(indexed.statement);
+        // match the statement
+
+        this.match(indexed.statement, queryIndexed.statement);
+
+        // reset the index bindings
+
+        this.currentIndexBindings = null;
 
         return null;
     }
 
     @Override
     public Void visitObservedAsStmt(Stmt.ObservedAs observedAs) {
-        if (!(currentQueryNode instanceof Stmt.ObservedAs queryObservedAs)) {
+        if (!(this.currentQueryNode instanceof Stmt.ObservedAs queryObservedAs)) {
             throw new MatchingError();
         }
 
-        currentQueryNode = goQy(queryObservedAs.stmt);
-        match(observedAs.stmt);
-
-        currentQueryNode = goQy(queryObservedAs.observedAs);
-        match(observedAs.observedAs);
+        this.match(observedAs.stmt, queryObservedAs.stmt);
+        this.match(observedAs.observedAs, queryObservedAs.observedAs);
 
         return null;
     }
 
     @Override
     public Void visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
-        if (!(currentQueryNode instanceof Stmt.ObservedBetween queryObservedBetween)) {
+        if (!(this.currentQueryNode instanceof Stmt.ObservedBetween queryObservedBetween)) {
             throw new MatchingError();
         }
 
-        currentQueryNode = goQy(queryObservedBetween.stmt);
-        match(observedBetween.stmt);
-
-        currentQueryNode = goQy(queryObservedBetween.observedFrom);
-        match(observedBetween.observedFrom);
-
-        currentQueryNode = goQy(queryObservedBetween.observedTo);
-        match(observedBetween.observedTo);
+        this.match(observedBetween.stmt, queryObservedBetween.stmt);
+        this.match(observedBetween.observedFrom, queryObservedBetween.observedFrom);
+        this.match(observedBetween.observedTo, queryObservedBetween.observedTo);
 
         return null;
     }
 
     @Override
     public Void visitLiteral(Expr.Literal expr) {
-        if (!(currentQueryNode instanceof Expr.Literal queryLiteral)) {
+        if (!(this.currentQueryNode instanceof Expr.Literal queryLiteral)) {
             throw new MatchingError();
         }
 
         this.check(expr.value.equals(queryLiteral.value));
-        this.check(expr.unit == queryLiteral.unit);
+        this.check(expr.unit == queryLiteral.unit); // TODO: is this correct?
 
         return null;
     }
 
     @Override
     public Void visitStringTemplate(Expr.StringTemplate expr) {
-        if (!(currentQueryNode instanceof Expr.StringTemplate queryTemplate)) {
+        if (!(this.currentQueryNode instanceof Expr.StringTemplate queryTemplate)) {
             throw new MatchingError();
         }
 
@@ -194,11 +258,15 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             Expr.StringTemplate.Part queryPart = queryTemplate.parts.get(i);
 
             if (templatePart instanceof Expr.StringTemplate.StringPart(String value)) {
-                this.check(queryPart instanceof Expr.StringTemplate.StringPart(String value1) && value.equals(value1));
+                this.check(
+                        queryPart instanceof Expr.StringTemplate.StringPart(String value1) && value.equals(value1)
+                );
             } else if (templatePart instanceof Expr.StringTemplate.ExpressionPart(Expr.Variable expression)) {
                 this.check(queryPart instanceof Expr.StringTemplate.ExpressionPart);
-                currentQueryNode = goQy(((Expr.StringTemplate.ExpressionPart) queryPart).expression());
-                match(expression);
+                this.match(
+                        expression,
+                        ((Expr.StringTemplate.ExpressionPart) queryPart).expression()
+                );
             }
         }
 
@@ -207,68 +275,78 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitVariable(Expr.Variable expr) {
-        if (!(currentQueryNode instanceof Expr.Variable queryVariable)) {
+        if (!(this.currentQueryNode instanceof Expr.Variable queryVariable)) {
             throw new MatchingError();
         }
 
+        // this is a scoped variable, as we would have passed through global variables
         String queryVariableName = queryVariable.variableName;
+        String boundVariableName = this.currentIndexBindings.get(queryVariableName);
 
-        Stmt queryStmt = this.queryVariableResolver.resolveVariable(expr);
-        if (queryStmt != null) {
-            if (this.queryVariableBindings.containsKey(queryStmt)) {
-                queryVariableName = this.queryVariableBindings.get(queryStmt);
-            } else {
-                queryVariableName = expr.variableName;
-                this.queryVariableBindings.put(queryStmt, expr.variableName);
-            }
-        }
-
-        this.check(expr.variableName.equals(queryVariableName));
+        this.check(expr.variableName.equals(boundVariableName));
 
         return null;
     }
 
     @Override
     public Void visitTemplateVariable(Expr.TemplateVariable expr) {
-        // template variables match any expression and capture the query node
+        // template variables this.match any expression and capture the query node
+
+        // if we have already encountered this template variable, it must have been resolved to the same AST node
+
+        AstNode existingResolvedNode = templateVariableMap.get(expr.variableName);
+        if (existingResolvedNode != null && existingResolvedNode != currentQueryNode) {
+            // we have already resolved this to something else
+            throw new MatchingError();
+        }
+
         templateVariableMap.put(expr.variableName, currentQueryNode);
+
         return null;
     }
 
     @Override
     public Void visitUnary(Expr.Unary expr) {
-        if (!(currentQueryNode instanceof Expr.Unary queryUnary)) {
+        if (!(this.currentQueryNode instanceof Expr.Unary queryUnary)) {
             throw new MatchingError();
         }
 
         this.check(expr.operator == queryUnary.operator);
 
-        currentQueryNode = goQy(queryUnary.right);
-        match(expr.right);
+        this.match(expr.right, queryUnary.right);
 
         return null;
     }
 
     @Override
     public Void visitBinary(Expr.Binary expr) {
-        if (!(currentQueryNode instanceof Expr.Binary queryBinary)) {
+        if (!(this.currentQueryNode instanceof Expr.Binary queryBinary)) {
             throw new MatchingError();
         }
 
         this.check(expr.operator == queryBinary.operator);
 
-        currentQueryNode = goQy(queryBinary.left);
-        match(expr.left);
-
-        currentQueryNode = goQy(queryBinary.right);
-        match(expr.right);
+        try {
+            this.match(expr.left, queryBinary.left);
+            this.match(expr.right, queryBinary.right);
+        } catch (MatchingError firstError) {
+            // this did not work. we swap the operand order and try again
+            try {
+                this.match(expr.left, queryBinary.right);
+                this.match(expr.right, queryBinary.left);
+            } catch (MatchingError ignored) {
+                // this also did not work
+                // we re-throw the error of the original order
+                throw firstError;
+            }
+        }
 
         return null;
     }
 
     @Override
     public Void visitCall(Expr.Call expr) {
-        if (!(currentQueryNode instanceof Expr.Call queryCall)) {
+        if (!(this.currentQueryNode instanceof Expr.Call queryCall)) {
             throw new MatchingError();
         }
 
@@ -276,8 +354,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         this.check(expr.arguments.length == queryCall.arguments.length);
 
         for (int i = 0; i < expr.arguments.length; i++) {
-            currentQueryNode = goQy(queryCall.arguments[i]);
-            match(expr.arguments[i]);
+            this.match(expr.arguments[i], queryCall.arguments[i]);
         }
 
         return null;
@@ -285,55 +362,56 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitAssignedArgument(Expr.AssignedArgument expr) {
-        if (!(currentQueryNode instanceof Expr.AssignedArgument queryArg)) {
+        if (!(this.currentQueryNode instanceof Expr.AssignedArgument queryArg)) {
             throw new MatchingError();
         }
 
-        this.check(Objects.equals(expr.name, queryArg.name));
+        if (expr.name == null) {
+            // we expect arguments in templates to have a name
+            throw new IllegalArgumentException("Generator argument with no explicit name in template found. Please specify the argument names in templates.");
+        }
 
-        currentQueryNode = goQy(queryArg.expression);
-        match(expr.expression);
+        if (queryArg.name == null && queryArg.expression instanceof Expr.Variable queryVar) {
+            // we assume that the argument name is the name of the passed variable
+            this.check(Objects.equals(expr.name, queryVar.variableName));
+        } else {
+            this.check(Objects.equals(expr.name, queryArg.name));
+        }
+
+        this.match(expr.expression, queryArg.expression);
 
         return null;
     }
 
     @Override
     public Void visitDrawnArgument(Expr.DrawnArgument expr) {
-        if (!(currentQueryNode instanceof Expr.DrawnArgument queryArg)) {
+        if (!(this.currentQueryNode instanceof Expr.DrawnArgument queryArg)) {
             throw new MatchingError();
         }
 
         this.check(Objects.equals(expr.name, queryArg.name));
-
-        currentQueryNode = goQy(queryArg.expression);
-        match(expr.expression);
+        this.match(expr.expression, queryArg.expression);
 
         return null;
     }
 
     @Override
     public Void visitGrouping(Expr.Grouping expr) {
-        if (!(currentQueryNode instanceof Expr.Grouping queryGrouping)) {
-            throw new MatchingError();
-        }
-
-        currentQueryNode = goQy(queryGrouping.expression);
-        match(expr.expression);
-
-        return null;
+        // we pass through all groupings
+        // we should never end up here
+        throw new RuntimeException("Visit groupings when matching templates. This should not happen.");
     }
 
     @Override
     public Void visitArray(Expr.Array expr) {
-        if (!(currentQueryNode instanceof Expr.Array queryArray)) {
+        if (!(this.currentQueryNode instanceof Expr.Array queryArray)) {
             throw new MatchingError();
         }
 
         this.check(expr.elements.size() == queryArray.elements.size());
 
         for (int i = 0; i < expr.elements.size(); i++) {
-            currentQueryNode = goQy(queryArray.elements.get(i));
-            match(expr.elements.get(i));
+            this.match(expr.elements.get(i), queryArray.elements.get(i));
         }
 
         return null;
@@ -341,18 +419,16 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitIndex(Expr.Index expr) {
-        if (!(currentQueryNode instanceof Expr.Index queryIndex)) {
+        if (!(this.currentQueryNode instanceof Expr.Index queryIndex)) {
             throw new MatchingError();
         }
 
         this.check(expr.indices.size() == queryIndex.indices.size());
 
-        currentQueryNode = goQy(queryIndex.object);
-        match(expr.object);
+        this.match(expr.object, queryIndex.object);
 
         for (int i = 0; i < expr.indices.size(); i++) {
-            currentQueryNode = goQy(queryIndex.indices.get(i));
-            match(expr.indices.get(i));
+            this.match(expr.indices.get(i), queryIndex.indices.get(i));
         }
 
         return null;
@@ -360,22 +436,19 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitRange(Expr.Range range) {
-        if (!(currentQueryNode instanceof Expr.Range queryRange)) {
+        if (!(this.currentQueryNode instanceof Expr.Range queryRange)) {
             throw new MatchingError();
         }
 
-        currentQueryNode = goQy(queryRange.from);
-        match(range.from);
-
-        currentQueryNode = goQy(queryRange.to);
-        match(range.to);
+        this.match(range.from, queryRange.from);
+        this.match(range.to, queryRange.to);
 
         return null;
     }
 
     @Override
     public Void visitAtomicType(AstType.Atomic expr) {
-        if (!(currentQueryNode instanceof AstType.Atomic queryAtomic)) {
+        if (!(this.currentQueryNode instanceof AstType.Atomic queryAtomic)) {
             throw new MatchingError();
         }
 
@@ -386,7 +459,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitGenericType(AstType.Generic expr) {
-        if (!(currentQueryNode instanceof AstType.Generic queryGeneric)) {
+        if (!(this.currentQueryNode instanceof AstType.Generic queryGeneric)) {
             throw new MatchingError();
         }
 
@@ -394,42 +467,17 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         this.check(expr.typeParameters.length == queryGeneric.typeParameters.length);
 
         for (int i = 0; i < expr.typeParameters.length; i++) {
-            currentQueryNode = goQy(queryGeneric.typeParameters[i]);
-            match(expr.typeParameters[i]);
+            this.match(expr.typeParameters[i], queryGeneric.typeParameters[i]);
         }
 
         return null;
     }
 
+    /**
+     * Checks the predicate and throws a MatchingError if it does not evaluate to true.
+     */
     private void check(boolean predicate) {
         if (!predicate) throw new MatchingError();
-    }
-
-    private void match(AstNode template) {
-        template = this.goTmp(template);
-        if (template instanceof Stmt node) node.accept(this);
-        else if (template instanceof Expr node) node.accept(this);
-        else if (template instanceof AstType node) node.accept(this);
-    }
-
-    private AstNode goQy(AstNode node) {
-        return go(node, this.queryVariableResolver);
-    }
-
-    private AstNode goTmp(AstNode node) {
-        return go(node, this.templateVariableResolver);
-    }
-
-    private AstNode go(AstNode node, VariableResolver variableResolver) {
-        if (node instanceof Expr.Variable variable) {
-            // we try to pass through the variable
-            Stmt resolvedStmt = variableResolver.resolveVariable(variable);
-            return Objects.requireNonNullElse(go(resolvedStmt, variableResolver), node);
-        }
-        if (node instanceof Stmt.Decorated decorated) {
-            return go(decorated.statement, variableResolver);
-        }
-        return node;
     }
 
     private static class MatchingError extends RuntimeException {

@@ -1,0 +1,13 @@
+// TEMPLATE
+100 < ($a + $b)
+// TEMPLATE
+
+// QUERY
+Real c = 100 * 20
+100 < (5 + c)
+// QUERY
+
+// MATCH
+// $a -> 5
+// $b -> (* 100 20)
+// MATCH
