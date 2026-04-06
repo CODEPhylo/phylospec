@@ -1,9 +1,9 @@
 package tiles;
 
+import tiles.functions.*;
 import tiling.Tile;
 import tiles.distributions.NormalTile;
 import tiles.distributions.OffsetTile;
-import tiles.functions.EnvTile;
 import tiles.misc.AssignmentTile;
 import tiles.misc.DrawTile;
 import tiles.misc.LiteralTile;
@@ -22,6 +22,13 @@ public class TileLibrary {
         addTile(new LiteralTile<>());
 
         addTile(new EnvTile());
+        addTile(new LogTile());
+        addTile(new ExpTile());
+        addTile(new SqrtTile());
+        addTile(new LinSpaceTile());
+        addTile(new RangeTile());
+        addTile(new RepeatRealTile());
+        addTile(new RepeatIntTile());
 
         addTile(new OffsetTile());
         addTile(new NormalTile());

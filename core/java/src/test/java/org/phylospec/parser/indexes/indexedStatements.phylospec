@@ -41,7 +41,7 @@ Integer b[a] = a for a in 1:a
 // (AS Real z (IX matrix 1 1))
 // (AS Real zz (IX matrix 1 (- 1)))
 // (AS Integer zzz (IX vector5 1 1))
-// (AS Integer a 1)
+// (AS PositiveInteger a 1)
 // (IS (AS Integer b a) a (R 1 a))
 // EXPECT AST
 

@@ -1,0 +1,10 @@
+PositiveReal a = 100
+Real log = log(a)
+Real log10 = log(x=a, base=10)
+Real log2 = log(x~Exponential(1.0)) // we don't support the log of a random variable
+
+// EXPECTED_TILES
+// (AssignmentTile (LogTile (x (AssignmentTile (LiteralTile)))))
+// (AssignmentTile (LogTile (x (AssignmentTile (LiteralTile))) (base (LiteralTile))))
+// NO_VALID_TILING
+// EXPECTED_TILES

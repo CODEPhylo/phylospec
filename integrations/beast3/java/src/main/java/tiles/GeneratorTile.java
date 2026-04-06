@@ -40,9 +40,6 @@ public abstract class GeneratorTile<T> extends Tile<T> {
             }
         }
 
-        // TODO: handle non-required arguments
-        // TODO: handle first arguments with no name
-
         List<Set<Tile<?>>> compatibleInputTiles = new ArrayList<>();
         Set<String> givenPhyloSpecArgumentNames = new HashSet<>();
         for (Expr.Argument argument : call.arguments) {

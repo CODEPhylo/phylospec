@@ -2,31 +2,30 @@ package tiles.functions;
 
 import tiling.BEASTState;
 import tiling.Tile;
-import tiling.TilingError;
 import tiles.GeneratorTile;
 
-public class LogTile extends GeneratorTile<String> {
+public class LogTile extends GeneratorTile<Double> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "log";
     }
 
-    Input<String> variableInput = new Input<>("x");
+    Input<Double> xInput = new Input<>("x");
+    Input<Integer> basisInput = new Input<>("base", false);
 
     @Override
-    public String applyTile(BEASTState beastState) {
-        String variable = this.variableInput.apply(beastState);
-        String value = System.getenv(variable);
+    public Double applyTile(BEASTState beastState) {
+        Double x = this.xInput.apply(beastState);
+        Integer basis = this.basisInput.apply(beastState);
 
-        if (value == null) {
-            throw new TilingError(
-                    "Environment variable '" + variable + "' is not set.",
-                    "Set the environment variable."
-            );
+        if (basis == null) {
+            // we use the natural logarithm
+            return Math.log(x);
+        } else {
+            // we use the given basis
+            return Math.log(x) / Math.log(basis);
         }
-
-        return value;
     }
 
     @Override

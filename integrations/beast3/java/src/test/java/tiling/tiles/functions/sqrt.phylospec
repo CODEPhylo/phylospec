@@ -1,0 +1,8 @@
+PositiveReal a = 100
+Real sqrt = sqrt(a)
+Real sqrt2 = sqrt(x~Exponential(1.0)) // we don't support the sqrt of a random variable
+
+// EXPECTED_TILES
+// (AssignmentTile (SqrtTile (x (AssignmentTile (LiteralTile)))))
+// NO_VALID_TILING
+// EXPECTED_TILES

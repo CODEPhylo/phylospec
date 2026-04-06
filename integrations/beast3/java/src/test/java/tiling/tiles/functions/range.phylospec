@@ -1,0 +1,11 @@
+Vector<Integer> intervalStartTimes = range(
+    start=20, end=10
+)
+Vector<Integer> intervalStartTimes2 = range(
+    start=20.0, end=10
+)
+
+// EXPECTED_TILES
+// (StateNodeAssignmentTile (RangeTile (start (LiteralTile)) (end (LiteralTile))))
+// NO_VALID_TILING
+// EXPECTED_TILES

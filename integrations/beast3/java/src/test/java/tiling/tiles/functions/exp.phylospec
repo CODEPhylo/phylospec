@@ -1,0 +1,8 @@
+Real a = -100
+Real exp = exp(a)
+Real exp2 = exp(x~Exponential(1.0)) // we don't support the exp of a random variable
+
+// EXPECTED_TILES
+// (AssignmentTile (ExpTile (x (AssignmentTile (LiteralTile)))))
+// NO_VALID_TILING
+// EXPECTED_TILES

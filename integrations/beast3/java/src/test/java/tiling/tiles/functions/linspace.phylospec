@@ -1,0 +1,8 @@
+Int num = 100
+Vector<Real> intervalStartTimes = linspace(
+    start=1.0, end=10.0, num
+)
+
+// EXPECTED_TILES
+// (StateNodeAssignmentTile (LinSpaceTile (start (LiteralTile)) (end (LiteralTile)) (num (AssignmentTile (LiteralTile)))))
+// EXPECTED_TILES

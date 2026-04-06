@@ -105,7 +105,7 @@ public class AstPrinter implements AstVisitor<String, String, String> {
 
     @Override
     public String visitTemplateVariable(Expr.TemplateVariable expr) {
-        return "$" + expr.variableName;
+        return expr.variableName;
     }
 
     @Override
