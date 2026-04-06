@@ -1,0 +1,5 @@
+String a = env(variable=env(variable="Hallo"), useFile=false)
+
+// EXPECTED_TILES
+// NO_VALID_TILING
+// EXPECTED_TILES

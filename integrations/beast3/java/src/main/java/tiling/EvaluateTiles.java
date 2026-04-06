@@ -13,7 +13,6 @@ import java.util.*;
  */
 public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
 
-    private final TypeResolver typeResolver;
     private final List<Tile<?>> tiles;
 
     // memoisation caches: all candidates per node, and the single best candidate per node
@@ -24,9 +23,8 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     // statements that have already been claimed by a tile covering multiple statements
     private final Set<Stmt> consumedStatements;
 
-    public EvaluateTiles(List<Tile<?>> tiles, TypeResolver typeResolver, VariableResolver variableResolver) {
+    public EvaluateTiles(List<Tile<?>> tiles, VariableResolver variableResolver) {
         this.tiles = tiles;
-        this.typeResolver = typeResolver;
         this.variableResolver = variableResolver;
         this.evaluatedTiles = new HashMap<>();
         this.bestEvaluatedTiles = new HashMap<>();
@@ -98,7 +96,7 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         this.evaluatedTiles.putIfAbsent(node, new HashSet<>());
 
         for (Tile<?> tile : this.tiles) {
-            Set<? extends Tile<?>> evaluatedTiles = tile.tryToTile(node, this.evaluatedTiles, this.typeResolver, this.variableResolver);
+            Set<? extends Tile<?>> evaluatedTiles = tile.tryToTile(node, this.evaluatedTiles, this.variableResolver);
 
             this.evaluatedTiles.get(node).addAll(evaluatedTiles);
 

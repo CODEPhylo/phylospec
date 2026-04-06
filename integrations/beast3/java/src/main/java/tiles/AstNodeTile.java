@@ -2,7 +2,6 @@ package tiles;
 
 import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
-import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiling.BEASTState;
 import tiling.Tile;
@@ -17,7 +16,7 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
     public abstract Class<N> getTargetNodeType();
 
     @Override
-    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, TypeResolver typeResolver, VariableResolver variableResolver) {
+    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver) {
         if (!this.getTargetNodeType().isAssignableFrom(node.getClass())){
             // node is not of the expected AstNode type
             // we cannot tile this tile

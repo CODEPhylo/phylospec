@@ -3,7 +3,6 @@ package tiles;
 import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
-import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiling.BEASTState;
 import tiling.Tile;
@@ -18,7 +17,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
     public abstract String getPhyloSpecGeneratorName();
 
     @Override
-    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> inputTiles, TypeResolver typeResolver, VariableResolver variableResolver) {
+    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> inputTiles, VariableResolver variableResolver) {
         if (!(node instanceof Expr.Call call)) return Set.of();
         if (!Objects.equals(call.functionName, this.getPhyloSpecGeneratorName())) return Set.of();
 
@@ -45,11 +44,17 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         // TODO: handle first arguments with no name
 
         List<Set<Tile<?>>> compatibleInputTiles = new ArrayList<>();
+        Set<String> givenPhyloSpecArgumentNames = new HashSet<>();
         for (Expr.Argument argument : call.arguments) {
-            Input<?> argumentInput = expectedInputs.get(argument.name);
+            String argumentName = this.getArgumentName(argument, expectedInputs);
+
+            givenPhyloSpecArgumentNames.add(argumentName);
+            Input<?> argumentInput = expectedInputs.get(argumentName);
 
             if (argumentInput == null) {
-                throw new RuntimeException("Generator has an argument '" + argument.name + "' for which no Input field is defined in the tile.");
+                // Generator has an argument for which no Input field is defined in the tile
+                // we cannot tile
+                return Set.of();
             }
 
             Set<Tile<?>> currentArgumentTiles = inputTiles.get(argument.expression);
@@ -68,6 +73,19 @@ public abstract class GeneratorTile<T> extends Tile<T> {
             }
 
             compatibleInputTiles.add(currentCompatibleInputTiles);
+        }
+
+        // check that we have all required input arguments
+
+        for (String inputName : expectedInputs.keySet()) {
+            Input<?> input = expectedInputs.get(inputName);
+            if (!input.isRequired()) continue;
+
+            if (!givenPhyloSpecArgumentNames.contains(inputName)) {
+                // a required argument is missing
+                // we cannot tile this
+                return Set.of();
+            }
         }
 
         // we have all compatible input tiles
@@ -101,7 +119,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
                     int totalWeight = wiredUpTile.getPriority().getWeight();
 
                     for (int i = 0; i < call.arguments.length; i++) {
-                        String argumentName = call.arguments[i].name;
+                        String argumentName = this.getArgumentName(call.arguments[i], expectedInputs);
                         Tile<?> inputTile = inputs.get(i);
 
                         newTileInputs.get(argumentName).setTile(inputs.get(i));
@@ -115,6 +133,31 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         );
 
         return wiredUpTiles;
+    }
+
+    private String getArgumentName(Expr.Argument argument, Map<String, Input<?>> expectedInputs) {
+        String argumentName = argument.name;
+
+        if (argumentName != null) {
+            return argumentName;
+        }
+
+        List<Input<?>> requiredInputs = expectedInputs.values().stream().filter(Input::isRequired).toList();
+        if (requiredInputs.size() == 1) {
+            // this tile has a single required argument, we use it
+            argumentName = requiredInputs.getFirst().getPhylospecArgumentName();
+        } else if (argument.expression instanceof Expr.Variable var) {
+            // we passed a variable, we try to use its name
+            argumentName = var.variableName;
+        }
+
+        if (argumentName == null) {
+            // we don't know this argument
+            // this should be caught by the type resolver
+            throw new RuntimeException("Unknown argument passed to generator. This should not happen and be caught by teh type resolver.");
+        }
+
+        return argumentName;
     }
 
     @Override
@@ -141,12 +184,18 @@ public abstract class GeneratorTile<T> extends Tile<T> {
 
     public static class Input<T> {
         private final String phylospecArgumentName;
+        private final boolean required;
         private TypeToken<T> typeToken;
 
         private Tile<T> tile;
 
         public Input(String phylospecArgumentName) {
+            this(phylospecArgumentName, true);
+        }
+
+        public Input(String phylospecArgumentName, boolean required) {
             this.phylospecArgumentName = phylospecArgumentName;
+            this.required = required;
         }
 
         // called during reflection-based field scanning in tryToTile to resolve
@@ -176,8 +225,12 @@ public abstract class GeneratorTile<T> extends Tile<T> {
             return this.tile;
         }
 
+        public boolean isRequired() {
+            return this.required;
+        }
+
         public T apply(BEASTState beastState) {
-            return this.tile.applyTile(beastState);
+            return this.tile != null ? this.tile.applyTile(beastState) : null;
         }
     }
 

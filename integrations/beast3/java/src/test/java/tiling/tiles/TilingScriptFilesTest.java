@@ -66,16 +66,13 @@ public class TilingScriptFilesTest {
             statements = new RemoveGroupings().transform(statements);
             statements = new EvaluateLiterals().transform(statements);
 
-            // resolve variables and types
+            // resolve variables
 
             VariableResolver variableResolver = new VariableResolver(statements);
-            ComponentResolver componentResolver = loadComponentResolver();
-            TypeResolver typeResolver = new TypeResolver(componentResolver);
-            typeResolver.visitStatements(statements);
 
             // tile each statement, skipping imports (which have no tile by design)
 
-            EvaluateTiles evaluateTiles = new EvaluateTiles(TileLibrary.getTiles(), typeResolver, variableResolver);
+            EvaluateTiles evaluateTiles = new EvaluateTiles(TileLibrary.getTiles(), variableResolver);
             List<Tile<?>> bestTilings = evaluateTiles.getBestTiling(statements);
 
             List<String> actualTileLines = new ArrayList<>();

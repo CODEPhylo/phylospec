@@ -2,7 +2,6 @@ package tiles;
 
 import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
-import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import templatematching.AstTemplateMatcher;
 import tiling.BEASTState;
@@ -24,7 +23,7 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
     }
 
     @Override
-    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, TypeResolver typeResolver, VariableResolver variableResolver) {
+    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver) {
         Map<String, AstNode> matchedTemplateVariables = this.astTemplateMatcher.match(node, variableResolver);
 
         if (matchedTemplateVariables == null) {

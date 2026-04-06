@@ -1,14 +1,13 @@
 package tiling;
 
 import org.phylospec.ast.AstNode;
-import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 
 import java.util.Map;
 import java.util.Set;
 
 public abstract class Tile<T> {
-    public abstract Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> inputTiles, TypeResolver typeResolver, VariableResolver variableResolver);
+    public abstract Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> inputTiles, VariableResolver variableResolver);
 
     public abstract T applyTile(BEASTState beastState);
 

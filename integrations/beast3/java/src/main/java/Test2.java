@@ -49,7 +49,7 @@ public class Test2 {
 
         // perform tiling
 
-        EvaluateTiles applyTiles = new EvaluateTiles(TileLibrary.getTiles(), typeResolver, variableResolver);
+        EvaluateTiles applyTiles = new EvaluateTiles(TileLibrary.getTiles(), variableResolver);
         BEASTState result = applyTiles.applyBestTiling(statements);
 
         System.out.println(result);
