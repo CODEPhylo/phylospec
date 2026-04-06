@@ -87,13 +87,6 @@ public class TilingScriptFilesTest {
         });
     }
 
-    private boolean isImport(Stmt stmt) {
-        if (stmt instanceof Stmt.Import) return true;
-        if (stmt instanceof Stmt.Decorated) return isImport(((Stmt.Decorated) stmt).statement);
-        if (stmt instanceof Stmt.Indexed) return isImport(((Stmt.Indexed) stmt).statement);
-        return false;
-    }
-
     private List<String> extractExpectedTileLines(List<String> lines) {
         List<String> expected = new ArrayList<>();
 

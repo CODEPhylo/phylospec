@@ -2,12 +2,9 @@ package tiles;
 
 import tiles.functions.*;
 import tiling.Tile;
-import tiles.distributions.NormalTile;
-import tiles.distributions.OffsetTile;
-import tiles.misc.AssignmentTile;
-import tiles.misc.DrawTile;
-import tiles.misc.LiteralTile;
-import tiles.misc.StateNodeAssignmentTile;
+import tiles.distributions.*;
+import tiles.misc.*;
+import tiles.substitutionModels.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +27,20 @@ public class TileLibrary {
         addTile(new RepeatRealTile());
         addTile(new RepeatIntTile());
 
+        addTile(new FromNexusTile());
+        addTile(new ParserTile.Regex());
+        addTile(new ParserTile.Delimiter());
+
         addTile(new OffsetTile());
         addTile(new NormalTile());
+
+        addTile(new JC69Tile());
+        addTile(new K80Tile());
+        addTile(new F81Tile());
+        addTile(new HKYTile());
+        addTile(new GTRTile());
+        addTile(new WAGTile());
+        addTile(new JTTTile());
     }
 
     public static void addTile(Tile<?> tile) {

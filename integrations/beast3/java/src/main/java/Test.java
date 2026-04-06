@@ -2,6 +2,7 @@ import beast.base.inference.*;
 import beast.base.minimal.BeastMain;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
+import beast.base.spec.evolution.substitutionmodel.HKY;
 import beast.base.spec.inference.distribution.Exponential;
 import beast.base.spec.inference.distribution.LogNormal;
 import beast.base.spec.inference.distribution.Normal;
@@ -37,6 +38,10 @@ public class Test {
         RealScalarParam<Real> mean = new RealScalarParam<>();
         mean.set(2.0);
         stateNodes.add(mean);
+
+        HKY hky = new HKY();
+        hky.initByName("kappa", mean);
+        hky.initAndValidate();
 
         state.stateNodeInput.setValue(stateNodes, null);
         mcmc.startStateInput.setValue(state, null);

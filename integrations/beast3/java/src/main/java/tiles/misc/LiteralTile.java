@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class LiteralTile<T> extends AstNodeTile<Object, Expr.Literal> {
+public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal> {
     private final TypeToken<T> typeToken;
     private final T value;
 
@@ -107,6 +107,7 @@ public class LiteralTile<T> extends AstNodeTile<Object, Expr.Literal> {
         return this.value;
     }
 
+    @Override
     public TypeToken<?> getTypeToken() {
         return this.typeToken;
     }
