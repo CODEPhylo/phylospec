@@ -1,7 +1,7 @@
 package tiles.misc;
 
 import org.phylospec.ast.Stmt;
-import patternmatching.*;
+import tiling.*;
 import tiles.AstNodeTile;
 
 public class AssignmentTile extends AstNodeTile<Object, Stmt.Assignment> {

@@ -1,6 +1,6 @@
 package tiles;
 
-import patternmatching.Tile;
+import tiling.Tile;
 import tiles.distributions.NormalTile;
 import tiles.distributions.OffsetTile;
 import tiles.functions.EnvTile;

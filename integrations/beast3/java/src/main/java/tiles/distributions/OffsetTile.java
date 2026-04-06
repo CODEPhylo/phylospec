@@ -5,7 +5,7 @@ import beast.base.spec.inference.distribution.OffsetReal;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
-import patternmatching.*;
+import tiling.*;
 import tiles.MultiAstNodeTile;
 
 public class OffsetTile extends MultiAstNodeTile<RealScalarParam<Real>> {

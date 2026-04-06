@@ -1,4 +1,4 @@
-package patternmatching;
+package tiling;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

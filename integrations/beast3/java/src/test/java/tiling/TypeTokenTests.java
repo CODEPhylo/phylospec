@@ -1,4 +1,4 @@
-package patternmatching;
+package tiling;
 
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.tree.TreeDistribution;

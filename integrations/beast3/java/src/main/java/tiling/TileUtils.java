@@ -1,8 +1,7 @@
-package patternmatching;
+package tiling;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Set;
 
 public class TileUtils {
     public static Type getParametricType(Object object, int index) {

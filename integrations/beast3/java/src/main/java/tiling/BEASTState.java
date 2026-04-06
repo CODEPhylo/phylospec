@@ -1,4 +1,4 @@
-package patternmatching;
+package tiling;
 
 import beast.base.inference.Distribution;
 import beast.base.inference.Operator;

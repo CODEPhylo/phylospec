@@ -6,7 +6,7 @@ import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.operator.ScaleOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
-import patternmatching.*;
+import tiling.*;
 import tiles.GeneratorTile;
 
 import java.util.Set;

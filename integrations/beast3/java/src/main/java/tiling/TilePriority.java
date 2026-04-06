@@ -1,4 +1,4 @@
-package patternmatching;
+package tiling;
 
 public enum TilePriority {
     LOW(4),

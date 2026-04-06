@@ -2,7 +2,7 @@ package tiles.misc;
 
 import beast.base.inference.StateNode;
 import org.phylospec.ast.Stmt;
-import patternmatching.*;
+import tiling.*;
 import tiles.AstNodeTile;
 
 import java.lang.reflect.ParameterizedType;

@@ -8,8 +8,8 @@ import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
-import patternmatching.BEASTState;
-import patternmatching.EvaluateTiles;
+import tiling.BEASTState;
+import tiling.EvaluateTiles;
 import tiles.TileLibrary;
 
 import java.io.IOException;

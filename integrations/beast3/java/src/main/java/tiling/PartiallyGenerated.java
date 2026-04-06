@@ -1,4 +1,4 @@
-package patternmatching;
+package tiling;
 
 import java.util.function.BiFunction;
 

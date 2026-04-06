@@ -2,17 +2,17 @@ package tiles.functions;
 
 import tiling.BEASTState;
 import tiling.Tile;
-import tiles.GeneratorTile;
 import tiling.TilingError;
+import tiles.GeneratorTile;
 
-public class EnvTile extends GeneratorTile<String> {
+public class LogTile extends GeneratorTile<String> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
-        return "env";
+        return "log";
     }
 
-    Input<String> variableInput = new Input<>("variable");
+    Input<String> variableInput = new Input<>("x");
 
     @Override
     public String applyTile(BEASTState beastState) {
@@ -31,7 +31,7 @@ public class EnvTile extends GeneratorTile<String> {
 
     @Override
     protected Tile<?> createInstance() {
-        return new EnvTile();
+        return new LogTile();
     }
 
 }

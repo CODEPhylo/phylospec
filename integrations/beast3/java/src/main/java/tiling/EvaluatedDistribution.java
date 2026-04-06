@@ -1,4 +1,4 @@
-package patternmatching;
+package tiling;
 
 import beast.base.inference.Operator;
 import beast.base.inference.StateNode;

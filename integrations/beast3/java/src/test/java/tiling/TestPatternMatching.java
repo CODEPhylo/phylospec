@@ -1,4 +1,4 @@
-package patternmatching;
+package tiling;
 
 public class TestPatternMatching {
     /**

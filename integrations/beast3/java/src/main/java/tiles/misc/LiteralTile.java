@@ -7,7 +7,7 @@ import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
-import patternmatching.*;
+import tiling.*;
 import tiles.AstNodeTile;
 
 import java.util.HashSet;

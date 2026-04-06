@@ -1,4 +1,4 @@
-package patternmatching;
+package tiling;
 
 import org.phylospec.ast.AstNode;
 import org.phylospec.typeresolver.TypeResolver;
