@@ -12,7 +12,7 @@ import java.lang.reflect.WildcardType;
 
 public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw> {
 
-    TileInput<Stmt.Draw, EvaluatedDistribution<?, ?>> expressionInput = new TileInput<>(expr -> expr.expression);
+    TileInput<Stmt.Draw, EvaluatedDistribution.WithInitialState<?, ?>> expressionInput = new TileInput<>(expr -> expr.expression);
 
     @Override
     public Class<Stmt.Draw> getTargetNodeType() {
@@ -21,17 +21,13 @@ public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw> {
 
     @Override
     public StateNode applyTile(BEASTState beastState) {
-        EvaluatedDistribution<?, ?> evaluatedDistribution = this.expressionInput.apply(beastState);
+        EvaluatedDistribution.WithInitialState<?, ?> evaluatedDistribution = this.expressionInput.apply(beastState);
 
-        // add to state
+        // we let the distribution initialize its state node and add it and potential operators to the BEAST state
+        evaluatedDistribution.initializeAsPriorOnState(beastState);
 
-        beastState.addStateNode(evaluatedDistribution.stateNode());
-        beastState.addDistribution(evaluatedDistribution.stateNode(), evaluatedDistribution.distribution());
-        beastState.addOperators(evaluatedDistribution.operatorSet());
-
-        // return the unwrapped state node
-
-        return evaluatedDistribution.stateNode();
+        // we return the initialized state node
+        return evaluatedDistribution.initialStateNode;
     }
 
     @Override

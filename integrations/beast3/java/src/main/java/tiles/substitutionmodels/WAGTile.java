@@ -1,4 +1,4 @@
-package tiles.substitutionModels;
+package tiles.substitutionmodels;
 
 import beast.base.spec.evolution.substitutionmodel.WAG;
 import beast.base.spec.type.Simplex;

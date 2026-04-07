@@ -586,7 +586,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             throw new MatchingError();
         }
 
-        this.check(expr.name.equals(queryAtomic.name));
+        this.check(expr.name.equals(queryAtomic.name) || expr.name.equals("Any"));
 
         return null;
     }

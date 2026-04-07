@@ -11,7 +11,7 @@ import tiles.GeneratorTile;
 
 import java.util.Set;
 
-public class NormalTile extends GeneratorTile<EvaluatedDistribution<RealScalarParam<Real>, Normal>> {
+public class NormalTile extends GeneratorTile<EvaluatedDistribution.WithInitialState<RealScalarParam<Real>, Normal>> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
@@ -22,7 +22,7 @@ public class NormalTile extends GeneratorTile<EvaluatedDistribution<RealScalarPa
     Input<RealScalar<PositiveReal>> sdInput = new Input<>("sd");
 
     @Override
-    public EvaluatedDistribution<RealScalarParam<Real>, Normal> applyTile(BEASTState beastState) {
+    public EvaluatedDistribution.WithInitialState<RealScalarParam<Real>, Normal> applyTile(BEASTState beastState) {
         RealScalar<Real> mean = this.meanInput.apply(beastState);
         RealScalar<PositiveReal> sd = this.sdInput.apply(beastState);
 
@@ -34,8 +34,8 @@ public class NormalTile extends GeneratorTile<EvaluatedDistribution<RealScalarPa
         operator.parameterInput.setValue(state, null);
         operator.m_pWeight.setValue(1.0, null);
 
-        return new EvaluatedDistribution<>(
-                distribution, state, Set.of(operator)
+        return new EvaluatedDistribution.WithInitialState<>(
+                distribution, state, Set.of(operator), param -> distribution.paramInput.setValue(param, null)
         );
     }
 

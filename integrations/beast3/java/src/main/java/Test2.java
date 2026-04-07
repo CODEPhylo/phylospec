@@ -18,9 +18,20 @@ import java.util.List;
 public class Test2 {
     static void main(String[] args) {
         String source = """
-        Real x ~ Normal(mean=0.1, sd=2.2)
-        Real z = 100.0
-        Real y ~ Normal(mean=x + z, sd=1.0)
+        Alignment data = fromNexus("/Users/ochsneto/Documents/PhyloSpec/beast3/beast-base/src/test/resources/beast.base/examples/nexus/primate-mtDNA.nex")
+        
+        Tree tree ~ Yule(
+            birthRate=1.0, taxa=taxa(data)
+        )
+        
+        Alignment alignment ~ PhyloCTMC(
+          tree,
+          branchRates~StrictClock(rate=1.0, tree=tree),
+          qMatrix=jc69(),
+          siteRates~DiscreteGammaInv(
+            shape=1.0, numCategories=4, numSites=100
+          )
+        ) observed as data
         """;
 
         ComponentResolver componentResolver = loadComponentResolver();

@@ -1,22 +1,26 @@
 package tiles;
 
+import tiles.branchmodels.StrictClockTile;
 import tiles.functions.*;
+import tiles.sitemodels.SiteModelTile;
+import tiles.trees.YuleTile;
 import tiling.Tile;
 import tiles.distributions.*;
 import tiles.misc.*;
-import tiles.substitutionModels.*;
+import tiles.substitutionmodels.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TileLibrary {
-    private static List<Tile<?>> tiles = new ArrayList<>();
+    private final static List<Tile<?>> tiles = new ArrayList<>();
 
     static {
         addTile(new AssignmentTile());
         addTile(new StateNodeAssignmentTile());
         addTile(new DrawTile());
         addTile(new LiteralTile<>());
+        addTile(new ObservedAsTile());
 
         addTile(new EnvTile());
         addTile(new LogTile());
@@ -27,12 +31,18 @@ public class TileLibrary {
         addTile(new RepeatRealTile());
         addTile(new RepeatIntTile());
 
+        addTile(new TaxaTile());
+
         addTile(new FromNexusTile());
         addTile(new ParserTile.Regex());
         addTile(new ParserTile.Delimiter());
 
         addTile(new OffsetTile());
         addTile(new NormalTile());
+
+        addTile(new YuleTile());
+
+        addTile(new StrictClockTile());
 
         addTile(new JC69Tile());
         addTile(new K80Tile());
@@ -41,6 +51,9 @@ public class TileLibrary {
         addTile(new GTRTile());
         addTile(new WAGTile());
         addTile(new JTTTile());
+
+        addTile(new SiteModelTile());
+        addTile(new PhyloCTMCTile());
     }
 
     public static void addTile(Tile<?> tile) {

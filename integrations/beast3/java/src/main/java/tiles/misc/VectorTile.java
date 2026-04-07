@@ -27,11 +27,7 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array> {
 
         List<Set<Tile<?>>> elementTiles = array.elements.stream().map(allInputTiles::get).toList();
 
-        if (elementTiles.stream().allMatch(
-                tileSet -> tileSet.stream().anyMatch(tile -> tile instanceof LiteralTile<Double>)
-        ) {
-
-        }
+        return Set.of();
 
     }
 

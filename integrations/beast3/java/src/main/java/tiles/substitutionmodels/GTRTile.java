@@ -1,4 +1,4 @@
-package tiles.substitutionModels;
+package tiles.substitutionmodels;
 
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;

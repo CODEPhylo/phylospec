@@ -1,0 +1,7 @@
+Real b ~ Normal(mean=2.0, sd=10.0) observed as 100.0
+Real c ~ Normal(mean=2.0, sd=10.0) observed as "hallo"
+
+// EXPECTED_TILES
+// (ObservedAsTile (distribution (NormalTile (mean (LiteralTile)) (sd (LiteralTile)))) (observation (LiteralTile)))
+// NO_VALID_TILING
+// EXPECTED_TILES

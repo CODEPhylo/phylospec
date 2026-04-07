@@ -1,37 +1,38 @@
-package tiles.substitutionModels;
+package tiles.substitutionmodels;
 
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.evolution.substitutionmodel.HKY;
+import beast.base.spec.inference.parameter.SimplexParam;
 import beast.base.spec.type.RealScalar;
-import beast.base.spec.type.Simplex;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
 import tiling.Tile;
 
-public class HKYTile extends GeneratorTile<HKY> {
+public class K80Tile extends GeneratorTile<HKY> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
-        return "hky";
+        return "k80";
     }
 
     Input<RealScalar<PositiveReal>> kappaInput = new Input<>("kappa");
-    Input<Simplex> baseFrequenciesInput = new Input<>("baseFrequencies");
 
     @Override
     public HKY applyTile(BEASTState beastState) {
-        HKY hky = new HKY();
-
         RealScalar<PositiveReal> kappa = this.kappaInput.apply(beastState);
-        Simplex baseFrequenciesInput = this.baseFrequenciesInput.apply(beastState);
-        hky.initByName("kappa", kappa, "frequencies", baseFrequenciesInput);
+
+        // k80 = hky with equal base frequencies
+        SimplexParam equalFreqs = new SimplexParam(new double[]{0.25, 0.25, 0.25, 0.25});
+
+        HKY hky = new HKY();
+        hky.initByName("kappa", kappa, "frequencies", equalFreqs);
 
         return hky;
     }
 
     @Override
     protected Tile<?> createInstance() {
-        return new HKYTile();
+        return new K80Tile();
     }
 
 }

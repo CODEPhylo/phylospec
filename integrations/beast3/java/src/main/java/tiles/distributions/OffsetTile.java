@@ -18,22 +18,22 @@ public class OffsetTile extends MultiAstNodeTile<RealScalarParam<Real>> {
                """;
     }
 
-    TileInput<EvaluatedDistribution<RealScalarParam<Real>, ? extends ScalarDistribution<RealScalar<Real>, Double>>> distributionInput = new TileInput<>(
+    TileInput<EvaluatedDistribution.WithInitialState<RealScalarParam<Real>, ? extends ScalarDistribution<RealScalar<Real>, Double>>> distributionInput = new TileInput<>(
             "$distribution"
     );
     TileInput<Double> offsetInput = new TileInput<>("$offset");
 
     @Override
     public RealScalarParam<Real> applyTile(BEASTState beastState) {
-        EvaluatedDistribution<RealScalarParam<Real>, ? extends ScalarDistribution<RealScalar<Real>, Double>> distribution = this.distributionInput.apply(
+        EvaluatedDistribution.WithInitialState<RealScalarParam<Real>, ? extends ScalarDistribution<RealScalar<Real>, Double>> distribution = this.distributionInput.apply(
                 beastState
         );
         Double offset = this.offsetInput.apply(beastState);
 
-        OffsetReal offsetDistribution = new OffsetReal(distribution.distribution(), offset);
-        beastState.replaceDistribution(distribution.stateNode(), offsetDistribution);
+        OffsetReal offsetDistribution = new OffsetReal(distribution.distribution, offset);
+        beastState.replaceDistribution(distribution.initialStateNode, offsetDistribution);
 
-        return distribution.stateNode();
+        return distribution.initialStateNode;
     }
 
     @Override

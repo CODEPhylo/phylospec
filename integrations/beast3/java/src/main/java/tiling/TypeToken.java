@@ -60,6 +60,16 @@ public abstract class TypeToken<T> {
     private static boolean isAssignable(Type target, Type source) {
         if (target.equals(source)) return true;
 
+        if (target instanceof WildcardType wildcard) {
+            for (Type upper : wildcard.getUpperBounds()) {
+                if (!isAssignable(upper, source)) return false;
+            }
+            for (Type lower : wildcard.getLowerBounds()) {
+                if (!isAssignable(source, lower)) return false;
+            }
+            return true;
+        }
+
         if (target instanceof Class<?> targetClass) {
             if (source instanceof Class<?> sourceClass)
                 return targetClass.isAssignableFrom(sourceClass);
