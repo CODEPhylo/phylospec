@@ -35,10 +35,15 @@ public class Test2 {
         
         Alignment alignment ~ PhyloCTMC(
           tree,
-          branchRates~StrictClock(rate=1.0, tree=tree),
+          branchRates~StrictClock(
+            rate~LogNormal(logMean=1.0, logSd=2.0),
+            tree=tree
+          ),
           qMatrix=jc69(),
           siteRates~DiscreteGammaInv(
-            shape=1.0, numCategories=4, numSites=100
+            shape~LogNormal(logMean=1.0, logSd=2.0),
+            numCategories=4,
+            numSites=100
           )
         ) observed as data
         """;
@@ -89,6 +94,7 @@ public class Test2 {
         // add distribution
 
         CompoundDistribution posterior = new CompoundDistribution();
+        posterior.setID(beastState.getID("posterior"));
         beastState.setInput(posterior, posterior.pDistributions, new ArrayList<>(beastState.distributions.values()));
         beastState.setInput(mcmc, mcmc.posteriorInput, posterior);
 
@@ -103,13 +109,19 @@ public class Test2 {
         // add loggers
 
         List<BEASTObject> loggedObjects = new ArrayList<>();
+        loggedObjects.add(posterior);
         loggedObjects.addAll(beastState.stateNodes.keySet());
-        loggedObjects.addAll(beastState.distributions.values());
 
-        Logger logger = new Logger();
-        beastState.setInput(logger, logger.loggersInput, loggedObjects);
-        beastState.setInput(logger, logger.everyInput, 1000);
-        beastState.setInput(mcmc, mcmc.loggersInput, List.of(logger));
+        Logger screenLogger = new Logger();
+        beastState.setInput(screenLogger, screenLogger.loggersInput, loggedObjects);
+        beastState.setInput(screenLogger, screenLogger.everyInput, 1000);
+
+        Logger fileLogger = new Logger();
+        beastState.setInput(fileLogger, fileLogger.loggersInput, loggedObjects);
+        beastState.setInput(fileLogger, fileLogger.everyInput, 1000);
+        beastState.setInput(fileLogger, fileLogger.fileNameInput, "logs.log");
+
+        beastState.setInput(mcmc, mcmc.loggersInput, List.of(screenLogger, fileLogger));
 
         // run
 

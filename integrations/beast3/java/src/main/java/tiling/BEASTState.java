@@ -67,7 +67,8 @@ public class BEASTState {
         this.stateNodes.put(stateNode, typeToken);
     }
 
-    public void addDistribution(StateNode stateNode, Distribution distribution) {
+    public void addDistribution(StateNode stateNode, Distribution distribution, String id) {
+        distribution.setID(this.getID(id));
         this.addBEASTObject(stateNode);
         this.addBEASTObject(distribution);
         this.distributions.put(stateNode, distribution);

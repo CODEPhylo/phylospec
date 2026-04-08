@@ -22,7 +22,7 @@ public class ObservedAsTile extends MultiAstNodeTile<StateNode> {
         // we register the distribution as a likelihood with the given state node as parameter
 
         evaluatedDistribution.bind(observedStateNode);
-        beastState.addDistribution(observedStateNode, evaluatedDistribution.distribution);
+        beastState.addDistribution(observedStateNode, evaluatedDistribution.distribution, "likelihood");
 
         // we return the observed state
 

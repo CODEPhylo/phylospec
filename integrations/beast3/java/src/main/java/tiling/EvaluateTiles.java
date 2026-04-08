@@ -16,8 +16,8 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     private final List<Tile<?>> tiles;
 
     // memoisation caches: all candidates per node, and the single best candidate per node
-    private final Map<AstNode, Set<Tile<?>>> evaluatedTiles;
-    private final Map<AstNode, Tile<?>> bestEvaluatedTiles;
+    private final IdentityHashMap<AstNode, Set<Tile<?>>> evaluatedTiles;
+    private final IdentityHashMap<AstNode, Tile<?>> bestEvaluatedTiles;
     private final VariableResolver variableResolver;
     private final StochasticityResolver stochasticityResolver;
 
@@ -28,8 +28,8 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         this.tiles = tiles;
         this.variableResolver = variableResolver;
         this.stochasticityResolver = stochasticityResolver;
-        this.evaluatedTiles = new HashMap<>();
-        this.bestEvaluatedTiles = new HashMap<>();
+        this.evaluatedTiles = new IdentityHashMap<>();
+        this.bestEvaluatedTiles = new IdentityHashMap<>();
         this.consumedStatements = new HashSet<>();
     }
 
