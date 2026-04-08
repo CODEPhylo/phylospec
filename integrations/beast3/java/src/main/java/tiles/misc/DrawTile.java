@@ -25,7 +25,7 @@ public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw> {
 
         // we initialize the state node and add it to the BEAST state
         evaluatedDistribution.bind();
-        beastState.addStateNode(evaluatedDistribution.stateNode);
+        beastState.addStateNode(evaluatedDistribution.stateNode, this.getTypeToken());
         beastState.addDistribution(evaluatedDistribution.stateNode, evaluatedDistribution.distribution);
 
         // we return the initialized state node

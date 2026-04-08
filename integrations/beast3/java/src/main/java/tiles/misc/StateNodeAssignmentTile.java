@@ -27,7 +27,7 @@ public class StateNodeAssignmentTile extends AstNodeTile<StateNode, Stmt.Assignm
     @Override
     public StateNode applyTile(BEASTState beastState) {
         StateNode stateNode = this.expressionInput.apply(beastState);
-        beastState.addStateNode(stateNode);
+        beastState.addStateNode(stateNode, this.getTypeToken());
         return stateNode;
     }
 

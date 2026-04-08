@@ -10,13 +10,13 @@ import java.util.*;
 
 public class BEASTState {
 
-    public final Set<StateNode> stateNodes;
+    public final HashMap<StateNode, TypeToken<?>> stateNodes;
     public final HashMap<StateNode, Distribution> distributions;
     public final Set<Operator> operators;
     private final List<BEASTObject> beastObjects;
 
     public BEASTState() {
-        this.stateNodes = new HashSet<>();
+        this.stateNodes = new HashMap<>();
         this.distributions = new HashMap<>();
         this.operators = new HashSet<>();
         this.beastObjects = new ArrayList<>();
@@ -36,9 +36,9 @@ public class BEASTState {
         this.addBEASTObject(value).getOutputs().add(beastObject);
     }
 
-    public void addStateNode(StateNode stateNode) {
+    public void addStateNode(StateNode stateNode, TypeToken<?> typeToken) {
         this.addBEASTObject(stateNode);
-        this.stateNodes.add(stateNode);
+        this.stateNodes.put(stateNode, typeToken);
     }
 
     public void addDistribution(StateNode stateNode, Distribution distribution) {
@@ -47,9 +47,9 @@ public class BEASTState {
         this.distributions.put(stateNode, distribution);
     }
 
-    public void addOperators(Set<Operator> operators) {
-        operators.forEach(this::addBEASTObject);
-        this.operators.addAll(operators);
+    public void addOperator(Operator operator) {
+        this.addBEASTObject(operator);
+        this.operators.add(operator);
     }
 
     public void initializeBEASTObjects() {

@@ -1,7 +1,6 @@
-import beast.base.inference.CompoundDistribution;
-import beast.base.inference.Logger;
-import beast.base.inference.MCMC;
-import beast.base.inference.State;
+import beast.base.core.BEASTObject;
+import beast.base.inference.*;
+import operators.OperatorSelector;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.RemoveGroupings;
@@ -78,12 +77,12 @@ public class Test2 {
         // create MCMC object
 
         MCMC mcmc = new MCMC();
-        beastState.setInput(mcmc, mcmc.chainLengthInput, (long) 10000);
+        beastState.setInput(mcmc, mcmc.chainLengthInput, (long) 100_000);
 
         // add state
 
         State state = new State();
-        beastState.setInput(state, state.stateNodeInput, new ArrayList<>(beastState.stateNodes));
+        beastState.setInput(state, state.stateNodeInput, new ArrayList<>(beastState.stateNodes.keySet()));
         beastState.setInput(mcmc, mcmc.startStateInput, state);
 
         // add distribution
@@ -94,12 +93,20 @@ public class Test2 {
 
         // add operators
 
+        for (StateNode stateNode : beastState.distributions.keySet()) {
+            OperatorSelector.addOperators(stateNode, beastState);
+        }
+
         beastState.setInput(mcmc, mcmc.operatorsInput, new ArrayList<>(beastState.operators));
 
         // add loggers
 
+        List<BEASTObject> loggedObjects = new ArrayList<>();
+        loggedObjects.addAll(beastState.stateNodes.keySet());
+        loggedObjects.addAll(beastState.distributions.values());
+
         Logger logger = new Logger();
-        beastState.setInput(logger, logger.loggersInput, List.of(posterior));
+        beastState.setInput(logger, logger.loggersInput, loggedObjects);
         beastState.setInput(logger, logger.everyInput, 1000);
         beastState.setInput(mcmc, mcmc.loggersInput, List.of(logger));
 
