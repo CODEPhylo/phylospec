@@ -31,7 +31,7 @@ public class OffsetTile extends MultiAstNodeTile<RealScalarParam<Real>> {
         Double offset = this.offsetInput.apply(beastState);
 
         OffsetReal offsetDistribution = new OffsetReal(distribution.distribution, offset);
-        beastState.addStateNode(distribution.stateNode, this.getTypeToken());
+        beastState.addStateNode(distribution.stateNode, this.getTypeToken(), "offset");
         beastState.addDistribution(distribution.stateNode, offsetDistribution);
 
         return distribution.stateNode;

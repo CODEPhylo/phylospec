@@ -63,7 +63,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
                 return Set.of();
             }
 
-            Set<Tile<?>> currentArgumentTiles = inputTiles.get(argument.expression);
+            Set<Tile<?>> currentArgumentTiles = inputTiles.get(argument);
 
             if (currentArgumentTiles == null) {
                 throw new RuntimeException("Argument tiles not found. This should not happen.");

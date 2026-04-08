@@ -14,7 +14,7 @@ public class AssignmentTile extends AstNodeTile<Object, Stmt.Assignment> {
     }
 
     @Override
-    public Object applyTile(BEASTState beastState) {
+    public Object applyTile(BEASTState beastState, Stmt.Assignment node) {
         return this.expressionInput.apply(beastState);
     }
 

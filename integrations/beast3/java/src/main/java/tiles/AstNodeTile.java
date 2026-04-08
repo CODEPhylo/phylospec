@@ -15,7 +15,16 @@ import java.util.*;
 import java.util.function.Function;
 
 public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
+    private N node;
+
     public abstract Class<N> getTargetNodeType();
+
+    @Override
+    protected T applyTile(BEASTState beastState) {
+        return this.applyTile(beastState, this.node);
+    }
+
+    protected abstract T applyTile(BEASTState beastState, N node);
 
     @Override
     public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
@@ -68,7 +77,8 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
         Utils.visitCombinations(
                 compatibleInputTiles,
                 inputs -> {
-                    Tile<?> wiredUpTile = this.createInstance();
+                    AstNodeTile<?, N> wiredUpTile = (AstNodeTile<?, N>) this.createInstance();
+                    wiredUpTile.setNode(narrowedNode);
 
                     // get TileInput fields from the fresh instance in declaration order
 
@@ -99,6 +109,10 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
         );
 
         return wiredUpTiles;
+    }
+
+    private void setNode(N node) {
+        this.node = node;
     }
 
     @Override

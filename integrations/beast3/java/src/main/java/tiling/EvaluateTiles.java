@@ -221,19 +221,21 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     @Override
     public Tile<?> visitCall(Expr.Call expr) {
         for (Expr.Argument argument : expr.arguments) {
-            argument.expression.accept(this);
+            argument.accept(this);
         }
         return this.visitNode(expr);
     }
 
     @Override
     public Tile<?> visitAssignedArgument(Expr.AssignedArgument expr) {
-        return this.visitNode(expr.expression);
+        expr.expression.accept(this);
+        return this.visitNode(expr);
     }
 
     @Override
     public Tile<?> visitDrawnArgument(Expr.DrawnArgument expr) {
-        return this.visitNode(expr.expression);
+        expr.expression.accept(this);
+        return this.visitNode(expr);
     }
 
     @Override

@@ -1,26 +1,29 @@
 package tiles.misc;
 
 import beast.base.inference.StateNode;
-import org.phylospec.ast.Stmt;
-import tiling.*;
+import org.phylospec.ast.Expr;
 import tiles.AstNodeTile;
+import tiling.BEASTState;
+import tiling.BoundDistribution;
+import tiling.Tile;
+import tiling.TypeToken;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 
-public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw> {
+public class DrawnArgumentTile extends AstNodeTile<StateNode, Expr.DrawnArgument> {
 
-    TileInput<Stmt.Draw, BoundDistribution<?, ?>> expressionInput = new TileInput<>(expr -> expr.expression);
+    TileInput<Expr.DrawnArgument, BoundDistribution<?, ?>> expressionInput = new TileInput<>(expr -> expr.expression);
 
     @Override
-    public Class<Stmt.Draw> getTargetNodeType() {
-        return Stmt.Draw.class;
+    public Class<Expr.DrawnArgument> getTargetNodeType() {
+        return Expr.DrawnArgument.class;
     }
 
     @Override
-    public StateNode applyTile(BEASTState beastState, Stmt.Draw node) {
+    public StateNode applyTile(BEASTState beastState, Expr.DrawnArgument node) {
         BoundDistribution<?, ?> evaluatedDistribution = this.expressionInput.apply(beastState);
 
         // we initialize the state node and add it to the BEAST state
@@ -50,7 +53,7 @@ public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw> {
 
     @Override
     protected Tile<?> createInstance() {
-        return new DrawTile();
+        return new DrawnArgumentTile();
     }
 
 }

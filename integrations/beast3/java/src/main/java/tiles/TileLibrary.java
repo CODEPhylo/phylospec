@@ -21,6 +21,8 @@ public class TileLibrary {
         addTile(new DrawTile());
         addTile(new LiteralTile<>());
         addTile(new ObservedAsTile());
+        addTile(new DrawnArgumentTile());
+        addTile(new AssignedArgumentTile());
 
         addTile(new EnvTile());
         addTile(new LogTile());
@@ -40,6 +42,7 @@ public class TileLibrary {
 
         addTile(new OffsetTile());
         addTile(new NormalTile());
+        addTile(new LogNormalTile());
 
         addTile(new YuleTile());
 

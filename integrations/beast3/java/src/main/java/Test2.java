@@ -29,7 +29,8 @@ public class Test2 {
         Alignment data = fromNexus("/Users/ochsneto/Documents/PhyloSpec/beast3/beast-base/src/test/resources/beast.base/examples/nexus/primate-mtDNA.nex")
         
         Tree tree ~ Yule(
-            birthRate=1.0, taxa=taxa(data)
+            birthRate~LogNormal(logMean=1.0, logSd=2.0),
+            taxa=taxa(data)
         )
         
         Alignment alignment ~ PhyloCTMC(
@@ -44,7 +45,7 @@ public class Test2 {
 
         ComponentResolver componentResolver = loadComponentResolver();
 
-         // run lexer
+        // run lexer
 
         List<Token> tokens = new Lexer(source).scanTokens();
 

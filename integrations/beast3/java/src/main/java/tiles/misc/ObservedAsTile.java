@@ -1,8 +1,6 @@
 package tiles.misc;
 
 import beast.base.inference.StateNode;
-import org.phylospec.ast.Stmt;
-import tiles.AstNodeTile;
 import tiles.MultiAstNodeTile;
 import tiling.*;
 
