@@ -10,9 +10,9 @@ import java.util.*;
 
 public class BEASTState {
 
-    private final Set<StateNode> stateNodes;
-    private final HashMap<StateNode, Distribution> distributions;
-    private final Set<Operator> operators;
+    public final Set<StateNode> stateNodes;
+    public final HashMap<StateNode, Distribution> distributions;
+    public final Set<Operator> operators;
     private final List<BEASTObject> beastObjects;
 
     public BEASTState() {

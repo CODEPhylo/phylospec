@@ -2,24 +2,23 @@ package org.phylospec.typeresolver;
 
 import org.phylospec.ast.*;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Resolves the stochasticity of each node of the AST tree: for each node, it is determined if it
  * represents a deterministic or stochastic expression.
- * @deprecated not yet up to date with 03-2026
  */
-@Deprecated
 public class StochasticityResolver implements AstVisitor<Stochasticity, Stochasticity, Stochasticity> {
 
     private final Map<AstNode, Stochasticity> stochasticityMap;
     private final Map<String, Stochasticity> variableStochasticityMap;
 
+    private final Set<String> scopedIndexVariables;
+    
     public StochasticityResolver() {
         this.stochasticityMap = new HashMap<>();
         this.variableStochasticityMap = new HashMap<>();
+        this.scopedIndexVariables = new HashSet<>();
     }
 
     /** Returns the stochasticity of the expression corresponding to the given AST node. */
@@ -52,13 +51,73 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
     }
 
     @Override
+    public Stochasticity visitIndexedStmt(Stmt.Indexed indexed) {
+        for (Expr range : indexed.ranges) {
+            range.accept(this);
+        }
+
+        this.scopedIndexVariables.clear();
+        for (Expr.Variable index : indexed.indices) {
+            this.scopedIndexVariables.add(index.variableName);
+            index.accept(this);
+        }
+
+        Stochasticity expressionStochasticity = indexed.statement.accept(this);
+
+        this.scopedIndexVariables.clear();
+
+        return remember(indexed, expressionStochasticity);
+    }
+
+    @Override
+    public Stochasticity visitObservedAsStmt(Stmt.ObservedAs observedAs) {
+        Stochasticity stmtStochasticity = observedAs.stmt.accept(this);
+        observedAs.observedAs.accept(this);
+        return remember(observedAs, stmtStochasticity);
+    }
+
+    @Override
+    public Stochasticity visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
+        Stochasticity stmtStochasticity = observedBetween.stmt.accept(this);
+        observedBetween.observedFrom.accept(this);
+        observedBetween.observedTo.accept(this);
+        return remember(observedBetween, stmtStochasticity);
+    }
+
+    @Override
     public Stochasticity visitLiteral(Expr.Literal expr) {
         return remember(expr, Stochasticity.CONSTANT);
     }
 
     @Override
+    public Stochasticity visitStringTemplate(Expr.StringTemplate expr) {
+        Stochasticity stochasticity = Stochasticity.CONSTANT;
+
+        for (Expr.StringTemplate.Part part : expr.parts) {
+            if (part instanceof Expr.StringTemplate.ExpressionPart(Expr.Variable expression)) {
+                stochasticity = Stochasticity.merge(
+                        stochasticity, expression.accept(this)
+                );
+            }
+        }
+
+        return remember(expr, stochasticity);
+    }
+
+    @Override
     public Stochasticity visitVariable(Expr.Variable expr) {
-        return remember(expr, variableStochasticityMap.getOrDefault(expr.variableName, Stochasticity.DETERMINISTIC));
+        Stochasticity stochasticity;
+        if (this.scopedIndexVariables.contains(expr.variableName)) {
+            stochasticity = Stochasticity.DETERMINISTIC;
+        } else {
+            stochasticity = variableStochasticityMap.getOrDefault(expr.variableName, Stochasticity.DETERMINISTIC);
+        }
+        return remember(expr, stochasticity);
+    }
+
+    @Override
+    public Stochasticity visitTemplateVariable(Expr.TemplateVariable expr) {
+        return remember(expr, Stochasticity.DETERMINISTIC);
     }
 
     @Override
@@ -89,7 +148,6 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
 
     @Override
     public Stochasticity visitAssignedArgument(Expr.AssignedArgument expr) {
-        expr.expression.accept(this);
         return remember(expr, expr.expression.accept(this));
     }
 
@@ -111,6 +169,25 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
                 Stochasticity.merge(
                         expr.elements.stream().map(x -> x.accept(this)).toList()
                 )
+        );
+    }
+
+    @Override
+    public Stochasticity visitIndex(Expr.Index expr) {
+        Stochasticity stochasticity = expr.object.accept(this);
+
+        for (Expr index : expr.indices) {
+            stochasticity = Stochasticity.merge(stochasticity, index.accept(this));
+        }
+
+        return remember(expr, stochasticity);
+    }
+
+    @Override
+    public Stochasticity visitRange(Expr.Range range) {
+        return remember(
+                range,
+                Stochasticity.merge(range.from.accept(this), range.to.accept(this))
         );
     }
 
