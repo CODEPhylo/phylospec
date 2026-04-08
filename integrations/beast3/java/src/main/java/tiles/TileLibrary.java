@@ -31,7 +31,8 @@ public class TileLibrary {
         addTile(new RepeatRealTile());
         addTile(new RepeatIntTile());
 
-        addTile(new TaxaTile());
+        addTile(new AlignmentTaxaTile());
+        addTile(new TreeTaxaTile());
 
         addTile(new FromNexusTile());
         addTile(new ParserTile.Regex());

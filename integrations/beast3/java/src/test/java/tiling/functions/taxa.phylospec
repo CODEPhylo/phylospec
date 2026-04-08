@@ -1,0 +1,10 @@
+Alignment data = fromNexus("primate-mtDNA.nex")
+Taxa taxa = taxa(data)
+Tree tree ~ Yule(birthRate=1.0, taxa(data))
+Taxa taxa2 = taxa(tree)
+
+
+// EXPECTED_TILES
+// (AssignmentTile (AlignmentTaxaTile (alignment (AssignmentTile (FromNexusTile (file (LiteralTile)))))))
+// (AssignmentTile (TreeTaxaTile (tree (DrawTile (YuleTile (birthRate (LiteralTile)) (taxa (AlignmentTaxaTile (alignment (AssignmentTile (FromNexusTile (file (LiteralTile))))))))))))
+// EXPECTED_TILES
