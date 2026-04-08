@@ -1,4 +1,4 @@
-package tiling.tiles;
+package tiling;
 
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
@@ -10,10 +10,7 @@ import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
-import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
-import tiling.EvaluateTiles;
-import tiling.Tile;
 import tiles.TileLibrary;
 
 import java.io.IOException;
@@ -31,7 +28,7 @@ public class TilingScriptFilesTest {
 
     @TestFactory
     public Iterable<DynamicTest> testAllPsScriptsAgainstExpectedTiles() throws IOException {
-        List<Path> psFiles = findPsFiles(Paths.get("src/test/java/tiling/tiles"));
+        List<Path> psFiles = findPsFiles(Paths.get("src/test/java/tiling"));
         psFiles.sort(Comparator.comparing(Path::toString));
 
         List<DynamicTest> tests = new ArrayList<>();

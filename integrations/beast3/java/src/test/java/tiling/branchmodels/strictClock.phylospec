@@ -1,0 +1,10 @@
+Alignment alignment = fromNexus("primate-mtDNA.nex")
+Taxa taxa = taxa(alignment)
+Tree tree ~ Yule(
+    birthRate=1.0, taxa
+)
+Distribution<Vector<Rate>> dist = StrictClock(rate=1.0, tree)
+
+// EXPECTED_TILES
+// (AssignmentTile (StrictClockTile (rate (LiteralTile)) (tree (DrawTile (YuleTile (birthRate (LiteralTile)) (taxa (StateNodeAssignmentTile (TaxaTile (alignment (StateNodeAssignmentTile (FromNexusTile (file (LiteralTile)))))))))))))
+// EXPECTED_TILES

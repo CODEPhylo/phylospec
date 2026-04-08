@@ -1,9 +1,7 @@
 package tiles.trees;
 
 import beast.base.evolution.alignment.Alignment;
-import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.tree.Tree;
-import beast.base.evolution.tree.coalescent.PopulationFunction;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.evolution.speciation.YuleModel;
 import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
@@ -14,8 +12,6 @@ import tiles.GeneratorTile;
 import tiling.BEASTState;
 import tiling.BoundDistribution;
 import tiling.Tile;
-
-import java.util.Set;
 
 public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>> {
 

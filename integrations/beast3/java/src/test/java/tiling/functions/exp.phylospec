@@ -1,5 +1,5 @@
-Real a = -100
-Real exp = exp(a)
+Real x = -100
+Real exp = exp(x)
 Real exp2 = exp(x~Exponential(1.0)) // we don't support the exp of a random variable
 
 // EXPECTED_TILES

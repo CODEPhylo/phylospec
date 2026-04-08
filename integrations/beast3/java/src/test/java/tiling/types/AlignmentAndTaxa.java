@@ -1,4 +1,4 @@
-package tiling.tiles.types;
+package tiling.types;
 
 public class AlignmentAndTaxa {
 }

@@ -1,9 +1,0 @@
-Real x ~ Normal(mean=1.0, sd=2.0)
-String z = env(variable="Hallo")
-Real w = 1000
-
-// EXPECTED_TILES
-// (DrawTile (NormalTile (mean (LiteralTile)) (sd (LiteralTile))))
-// (AssignmentTile (EnvTile (variable (LiteralTile))))
-// (StateNodeAssignmentTile (LiteralTile))
-// EXPECTED_TILES

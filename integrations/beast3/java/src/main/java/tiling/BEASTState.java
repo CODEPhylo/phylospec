@@ -57,7 +57,9 @@ public class BEASTState {
             beastObject.determindClassOfInputs();
             beastObject.validateInputs();
             beastObject.initAndValidate();
+        }
 
+        for (BEASTObject beastObject : this.beastObjects) {
             if (beastObject instanceof StateNodeInitialiser stateNodeInitialiser) {
                 stateNodeInitialiser.initStateNodes();
             }

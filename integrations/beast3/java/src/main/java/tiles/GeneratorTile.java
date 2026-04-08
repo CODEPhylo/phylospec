@@ -43,7 +43,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         List<Set<Tile<?>>> compatibleInputTiles = new ArrayList<>();
         Set<String> givenPhyloSpecArgumentNames = new HashSet<>();
         for (Expr.Argument argument : call.arguments) {
-            String argumentName = this.getArgumentName(argument, expectedInputs);
+            String argumentName = this.getArgumentName(argument, call.arguments.length, expectedInputs);
 
             givenPhyloSpecArgumentNames.add(argumentName);
             TileInput<?> argumentInput = expectedInputs.get(argumentName);
@@ -116,7 +116,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
                     int totalWeight = wiredUpTile.getPriority().getWeight();
 
                     for (int i = 0; i < call.arguments.length; i++) {
-                        String argumentName = this.getArgumentName(call.arguments[i], expectedInputs);
+                        String argumentName = this.getArgumentName(call.arguments[i], call.arguments.length, expectedInputs);
                         Tile<?> inputTile = inputs.get(i);
 
                         newTileInputs.get(argumentName).setTile(inputs.get(i));
@@ -132,7 +132,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         return wiredUpTiles;
     }
 
-    private String getArgumentName(Expr.Argument argument, Map<String, TileInput<?>> expectedInputs) {
+    private String getArgumentName(Expr.Argument argument, int numPassedArguments, Map<String, TileInput<?>> expectedInputs) {
         String argumentName = argument.name;
 
         if (argumentName != null) {
@@ -140,21 +140,17 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         }
 
         List<TileInput<?>> requiredInputs = expectedInputs.values().stream().filter(TileInput::isRequired).toList();
-        if (requiredInputs.size() == 1) {
-            // this tile has a single required argument, we use it
-            argumentName = requiredInputs.getFirst().getPhylospecArgumentName();
-        } else if (argument.expression instanceof Expr.Variable var) {
-            // we passed a variable, we try to use its name
-            argumentName = var.variableName;
+        if (requiredInputs.size() == 1 && numPassedArguments == 1) {
+            return requiredInputs.getFirst().phylospecArgumentName;
         }
 
-        if (argumentName == null) {
-            // we don't know this argument
-            // this should be caught by the type resolver
-            throw new RuntimeException("Unknown argument passed to generator. This should not happen and be caught by teh type resolver.");
+        if (argument.expression instanceof Expr.Variable var) {
+            // we passed a variable, we use its name
+            return var.variableName;
         }
 
-        return argumentName;
+        // this is the first argument (all other cases are invalid PhyloSpec and would have been caught by the type resolver)
+        return requiredInputs.getFirst().getPhylospecArgumentName();
     }
 
     @Override

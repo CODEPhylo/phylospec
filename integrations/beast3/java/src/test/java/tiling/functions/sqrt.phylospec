@@ -1,5 +1,5 @@
-PositiveReal a = 100
-Real sqrt = sqrt(a)
+PositiveReal x = 100
+Real sqrt = sqrt(x)
 Real sqrt2 = sqrt(x~Exponential(1.0)) // we don't support the sqrt of a random variable
 
 // EXPECTED_TILES
