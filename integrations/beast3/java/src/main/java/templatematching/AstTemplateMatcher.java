@@ -36,7 +36,6 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     // maps query index variable names to template index variable names during indexed statement matching
     private Map<String, String> currentIndexBindings;
-    private boolean currentCallHasASingleArgument;
 
     public AstTemplateMatcher(String phyloSpecTemplate) {
         List<Token> tokens = new Lexer(phyloSpecTemplate).scanTokens();
@@ -401,19 +400,12 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         this.check(expr.functionName.equals(queryCall.functionName));
         this.check(expr.arguments.length == queryCall.arguments.length);
 
-        this.currentCallHasASingleArgument = expr.arguments.length == 1;
+        if (expr.arguments.length == 0) return null;
 
-        if (this.currentCallHasASingleArgument) {
-            // we only have one argument
-            // we can match it directly
-            this.match(expr.arguments[0], queryCall.arguments[0]);
-            return null;
-        }
-
-        // we have multiple arguments
-        // we match them by name
+        // collect the template arguments
 
         Map<String, Expr.Argument> templateArguments = new HashMap<>();
+        String firstArgumentName = expr.arguments[0].name;
 
         for (Expr.Argument templateArgument : expr.arguments) {
             if (templateArgument.name == null) {
@@ -427,8 +419,13 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
         for (Expr.Argument queryArgument : queryCall.arguments) {
             String queryArgumentName = queryArgument.name;
+
             if (queryArgumentName == null && queryArgument.expression instanceof Expr.Variable queryVariable) {
                 queryArgumentName = queryVariable.variableName;
+            }
+
+            if (queryArgumentName == null && queryArgument == queryCall.arguments[0]) {
+                queryArgumentName = firstArgumentName;
             }
 
             this.check(queryArgumentName != null);
@@ -476,14 +473,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             throw new IllegalArgumentException("Generator argument with no explicit name in template found. Please specify the argument names in templates.");
         }
 
-        if (queryArg.name == null && queryArg.expression instanceof Expr.Variable queryVar) {
-            // we assume that the argument name is the name of the passed variable
-            this.check(Objects.equals(expr.name, queryVar.variableName));
-        } else if(queryArg.name == null && currentCallHasASingleArgument) {
-            // this is fine
-        } else {
-            this.check(Objects.equals(expr.name, queryArg.name));
-        }
+        // we don't have to check the argument name as visitCall takes care of that
+        // just check the expression
 
         this.match(expr.expression, queryArg.expression);
 
