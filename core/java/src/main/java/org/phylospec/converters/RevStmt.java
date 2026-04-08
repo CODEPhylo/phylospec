@@ -67,7 +67,7 @@ class RevStmt {
                         case CONSTANT -> " <- ";
                         case DETERMINISTIC -> " := ";
                         case STOCHASTIC -> " ~ ";
-                        case UNDEFINED ->
+                        default ->
                                 throw new RevConverter.RevConversionError("Undefined statement type. This should not happen.");
                     }
             );

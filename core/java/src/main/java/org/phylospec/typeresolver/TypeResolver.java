@@ -695,10 +695,18 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
             if (argument.name != null) {
                 resolvedArguments.put(argument.name, argument.accept(this));
-            } else if (argument.expression instanceof Expr.Variable) {
+            } else if (argument.expression instanceof Expr.Variable variable) {
                 // any argument can drop the name if a variable name is passed with the same name
+                if (resolvedArguments.containsKey(variable.variableName)) {
+                    throw new TypeError(
+                            argument,
+                            "Argument '" + variable.variableName + "' specified multiple times.",
+                            "You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than '" + variable.variableName + "', set it explicitly with '<argument>=" + variable.variableName + "'."
+                    );
+                }
+
                 resolvedArguments.put(
-                        ((Expr.Variable) argument.expression).variableName,
+                        variable.variableName,
                         argument.accept(this)
                 );
 

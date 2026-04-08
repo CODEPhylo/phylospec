@@ -7,6 +7,7 @@ public enum Stochasticity {
     CONSTANT,
     DETERMINISTIC,
     STOCHASTIC,
+    UNOBSERVED_STOCHASTIC,
     UNDEFINED;
 
     public static Stochasticity nonConstant(Stochasticity stochasticity) {
@@ -21,6 +22,7 @@ public enum Stochasticity {
     public static Stochasticity merge(List<Stochasticity> stochasticities) {
         if (stochasticities.contains(Stochasticity.UNDEFINED)) return UNDEFINED;
         if (stochasticities.contains(Stochasticity.STOCHASTIC)) return STOCHASTIC;
+        if (stochasticities.contains(Stochasticity.UNOBSERVED_STOCHASTIC)) return UNOBSERVED_STOCHASTIC;
         if (stochasticities.contains(Stochasticity.DETERMINISTIC)) return DETERMINISTIC;
         return CONSTANT;
     }
