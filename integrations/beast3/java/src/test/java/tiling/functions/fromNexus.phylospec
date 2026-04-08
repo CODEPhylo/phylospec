@@ -6,6 +6,6 @@ Alignment alignment2 = fromNexus(
 )
 
 // EXPECTED_TILES
-// (StateNodeAssignmentTile (FromNexusTile (file (LiteralTile))))
-// (StateNodeAssignmentTile (FromNexusTile (file (LiteralTile)) (age (Delimiter (delimiter (LiteralTile)) (part (LiteralTile)))) (speciesName (Regex (regex (LiteralTile))))))
+// (AssignmentTile (FromNexusTile (file (LiteralTile))))
+// (AssignmentTile (FromNexusTile (file (LiteralTile)) (age (Delimiter (delimiter (LiteralTile)) (part (LiteralTile)))) (speciesName (Regex (regex (LiteralTile))))))
 // EXPECTED_TILES

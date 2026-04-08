@@ -2,8 +2,11 @@ package tiles.misc;
 
 import beast.base.inference.StateNode;
 import org.phylospec.ast.Stmt;
+import org.phylospec.typeresolver.Stochasticity;
 import tiling.*;
 import tiles.AstNodeTile;
+
+import java.util.Set;
 
 public class StateNodeAssignmentTile extends AstNodeTile<StateNode, Stmt.Assignment> {
 
@@ -14,6 +17,11 @@ public class StateNodeAssignmentTile extends AstNodeTile<StateNode, Stmt.Assignm
     @Override
     public Class<Stmt.Assignment> getTargetNodeType() {
         return Stmt.Assignment.class;
+    }
+
+    @Override
+    protected Set<Stochasticity> getPreferredStochasticities() {
+        return Set.of(Stochasticity.STOCHASTIC);
     }
 
     @Override

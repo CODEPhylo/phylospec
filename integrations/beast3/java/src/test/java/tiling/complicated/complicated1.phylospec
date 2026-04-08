@@ -14,5 +14,5 @@ Alignment alignment ~ PhyloCTMC(
 ) observed as data
 
 // EXPECTED_TILES
-// (ObservedAsTile (distribution (PhyloCTMCTile (tree (DrawTile (YuleTile (birthRate (LiteralTile)) (taxa (TaxaTile (alignment (StateNodeAssignmentTile (FromNexusTile (file (LiteralTile)))))))))) (branchRateModel (StrictClockTile (rate (LiteralTile)) (tree (DrawTile (YuleTile (birthRate (LiteralTile)) (taxa (TaxaTile (alignment (StateNodeAssignmentTile (FromNexusTile (file (LiteralTile)))))))))))) (substitutionModel (JC69Tile)) (partialSiteRateModel (SiteModelTile (shape (LiteralTile)) (numCategories (LiteralTile)) (numSites (LiteralTile)))))) (observation (StateNodeAssignmentTile (FromNexusTile (file (LiteralTile))))))
+// (ObservedAsTile (distribution (PhyloCTMCTile (tree (DrawTile (YuleTile (birthRate (LiteralTile)) (taxa (TaxaTile (alignment (AssignmentTile (FromNexusTile (file (LiteralTile)))))))))) (branchRateModel (StrictClockTile (rate (LiteralTile)) (tree (DrawTile (YuleTile (birthRate (LiteralTile)) (taxa (TaxaTile (alignment (AssignmentTile (FromNexusTile (file (LiteralTile)))))))))))) (substitutionModel (JC69Tile)) (partialSiteRateModel (SiteModelTile (shape (LiteralTile)) (numCategories (LiteralTile)) (numSites (LiteralTile)))))) (observation (AssignmentTile (FromNexusTile (file (LiteralTile))))))
 // EXPECTED_TILES

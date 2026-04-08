@@ -6,5 +6,5 @@ Tree tree ~ Yule(
 Distribution<Vector<Rate>> dist = StrictClock(rate=1.0, tree)
 
 // EXPECTED_TILES
-// (AssignmentTile (StrictClockTile (rate (LiteralTile)) (tree (DrawTile (YuleTile (birthRate (LiteralTile)) (taxa (StateNodeAssignmentTile (TaxaTile (alignment (StateNodeAssignmentTile (FromNexusTile (file (LiteralTile)))))))))))))
+// (AssignmentTile (StrictClockTile (rate (LiteralTile)) (tree (DrawTile (YuleTile (birthRate (LiteralTile)) (taxa (AssignmentTile (TaxaTile (alignment (AssignmentTile (FromNexusTile (file (LiteralTile)))))))))))))
 // EXPECTED_TILES

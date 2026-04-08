@@ -6,6 +6,6 @@ Vector<Real> repeatReal = repeat(
 )
 
 // EXPECTED_TILES
-// (StateNodeAssignmentTile (RepeatIntTile (value (LiteralTile)) (num (LiteralTile))))
-// (StateNodeAssignmentTile (RepeatRealTile (value (LiteralTile)) (num (LiteralTile))))
+// (AssignmentTile (RepeatIntTile (value (LiteralTile)) (num (LiteralTile))))
+// (AssignmentTile (RepeatRealTile (value (LiteralTile)) (num (LiteralTile))))
 // EXPECTED_TILES
