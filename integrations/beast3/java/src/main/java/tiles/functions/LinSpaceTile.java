@@ -33,9 +33,4 @@ public class LinSpaceTile extends GeneratorTile<RealVectorParam<Real>> {
         return new RealVectorParam<>(values, Real.INSTANCE);
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new LinSpaceTile();
-    }
-
 }

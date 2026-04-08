@@ -36,8 +36,4 @@ public class NormalTile extends GeneratorTile<BoundDistribution<RealScalarParam<
         );
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new NormalTile();
-    }
 }

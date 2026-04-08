@@ -19,9 +19,4 @@ public class SqrtTile extends GeneratorTile<Double> {
         return Math.sqrt(x);
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new SqrtTile();
-    }
-
 }

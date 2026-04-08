@@ -35,7 +35,13 @@ public abstract class Tile<T> {
         );
     }
 
-    protected abstract Tile<?> createInstance();
+    protected Tile<?> createInstance() {
+        try {
+            return this.getClass().getDeclaredConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("Tile " + getClass().getSimpleName() + " has no public no-arg constructor", e);
+        }
+    }
 
     public TypeToken<?> getTypeToken() {
         java.lang.reflect.Type rawType = TileUtils.getParametricType(this, 0);

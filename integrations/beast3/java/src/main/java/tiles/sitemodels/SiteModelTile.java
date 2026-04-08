@@ -45,9 +45,4 @@ public class SiteModelTile extends GeneratorTile<Partial<SiteModel, Substitution
         });
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new SiteModelTile();
-    }
-
 }

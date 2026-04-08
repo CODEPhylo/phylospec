@@ -29,9 +29,4 @@ public class WAGTile extends GeneratorTile<WAG> {
         return wag;
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new WAGTile();
-    }
-
 }

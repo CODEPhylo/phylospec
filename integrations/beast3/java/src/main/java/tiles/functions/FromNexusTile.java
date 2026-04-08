@@ -41,9 +41,4 @@ public class FromNexusTile extends GeneratorTile<Alignment> {
         return nexusParser.m_alignment;
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new FromNexusTile();
-    }
-
 }

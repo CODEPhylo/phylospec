@@ -29,9 +29,4 @@ public class EnvTile extends GeneratorTile<String> {
         return value;
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new EnvTile();
-    }
-
 }

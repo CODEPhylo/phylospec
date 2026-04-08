@@ -48,8 +48,4 @@ public class PhyloCTMCTile extends MultiAstNodeTile<UnboundDistribution<Alignmen
         );
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new PhyloCTMCTile();
-    }
 }

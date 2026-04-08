@@ -36,9 +36,4 @@ public class StateNodeAssignmentTile extends AstNodeTile<StateNode, Stmt.Assignm
         return expressionInput.getTypeToken();
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new StateNodeAssignmentTile();
-    }
-
 }

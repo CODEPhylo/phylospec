@@ -19,9 +19,4 @@ public class AlignmentTaxaTile extends GeneratorTile<Alignment> {
         return this.alignmentInput.apply(beastState);
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new AlignmentTaxaTile();
-    }
-
 }

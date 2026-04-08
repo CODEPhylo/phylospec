@@ -25,11 +25,6 @@ public class ParserTile {
             return new DelimiterParser(this.delimiterInput.apply(beastState), this.partInput.apply(beastState));
         }
 
-        @Override
-        protected Tile<?> createInstance() {
-            return new ParserTile.Delimiter();
-        }
-
     }
 
     public static class Regex extends GeneratorTile<RegexParser> {
@@ -44,11 +39,6 @@ public class ParserTile {
         @Override
         public RegexParser applyTile(BEASTState beastState) {
             return new RegexParser(this.regexInput.apply(beastState));
-        }
-
-        @Override
-        protected Tile<?> createInstance() {
-            return new ParserTile.Regex();
         }
 
     }

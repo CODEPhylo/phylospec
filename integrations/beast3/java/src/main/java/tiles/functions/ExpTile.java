@@ -19,9 +19,4 @@ public class ExpTile extends GeneratorTile<Double> {
         return Math.exp(variable);
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new ExpTile();
-    }
-
 }

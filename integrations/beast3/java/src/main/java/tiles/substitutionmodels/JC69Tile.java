@@ -17,9 +17,4 @@ public class JC69Tile extends GeneratorTile<JukesCantor> {
         return new JukesCantor();
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new JC69Tile();
-    }
-
 }

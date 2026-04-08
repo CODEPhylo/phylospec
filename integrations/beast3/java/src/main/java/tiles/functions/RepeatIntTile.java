@@ -29,9 +29,4 @@ public class RepeatIntTile extends GeneratorTile<IntVectorParam<Int>> {
         return new IntVectorParam<>(values, Int.INSTANCE);
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new RepeatIntTile();
-    }
-
 }

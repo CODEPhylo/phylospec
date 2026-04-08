@@ -25,9 +25,4 @@ public class AssignedArgumentTile extends AstNodeTile<Object, Expr.AssignedArgum
         return this.expressionInput.getTypeToken();
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new AssignedArgumentTile();
-    }
-
 }

@@ -29,9 +29,4 @@ public class JTTTile extends GeneratorTile<JTT> {
         return jtt;
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new JTTTile();
-    }
-
 }

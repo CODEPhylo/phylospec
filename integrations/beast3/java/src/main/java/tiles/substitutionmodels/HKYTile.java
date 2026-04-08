@@ -29,9 +29,4 @@ public class HKYTile extends GeneratorTile<HKY> {
         return hky;
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new HKYTile();
-    }
-
 }

@@ -28,9 +28,4 @@ public class LogTile extends GeneratorTile<Double> {
         }
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new LogTile();
-    }
-
 }

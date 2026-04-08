@@ -30,9 +30,4 @@ public class K80Tile extends GeneratorTile<HKY> {
         return hky;
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new K80Tile();
-    }
-
 }

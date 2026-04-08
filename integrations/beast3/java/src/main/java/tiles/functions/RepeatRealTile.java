@@ -29,9 +29,4 @@ public class RepeatRealTile extends GeneratorTile<RealVectorParam<Real>> {
         return new RealVectorParam<>(values, Real.INSTANCE);
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new RepeatRealTile();
-    }
-
 }

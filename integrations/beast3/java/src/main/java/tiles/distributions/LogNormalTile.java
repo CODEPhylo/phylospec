@@ -39,8 +39,4 @@ public class LogNormalTile extends GeneratorTile<BoundDistribution<RealScalarPar
         );
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new LogNormalTile();
-    }
 }

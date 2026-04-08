@@ -52,9 +52,4 @@ public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>> 
         );
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new YuleTile();
-    }
-
 }

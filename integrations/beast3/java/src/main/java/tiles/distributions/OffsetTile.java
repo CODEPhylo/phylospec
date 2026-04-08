@@ -37,8 +37,4 @@ public class OffsetTile extends MultiAstNodeTile<RealScalarParam<Real>> {
         return distribution.stateNode;
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new OffsetTile();
-    }
 }

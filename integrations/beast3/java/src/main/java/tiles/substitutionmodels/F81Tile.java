@@ -30,9 +30,4 @@ public class F81Tile extends GeneratorTile<HKY> {
         return hky;
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new F81Tile();
-    }
-
 }

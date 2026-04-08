@@ -51,9 +51,4 @@ public class DrawnArgumentTile extends AstNodeTile<StateNode, Expr.DrawnArgument
         return new TypeToken<StateNode>() {};
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new DrawnArgumentTile();
-    }
-
 }

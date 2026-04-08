@@ -28,9 +28,4 @@ public class StrictClockTile extends GeneratorTile<StrictClockModel> {
         return strictClockModel;
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new StrictClockTile();
-    }
-
 }

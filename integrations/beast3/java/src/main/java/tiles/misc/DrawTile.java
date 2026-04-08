@@ -48,9 +48,4 @@ public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw> {
         return new TypeToken<StateNode>() {};
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new DrawTile();
-    }
-
 }

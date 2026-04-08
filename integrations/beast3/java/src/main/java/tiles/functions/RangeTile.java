@@ -32,9 +32,4 @@ public class RangeTile extends GeneratorTile<IntVectorParam<Int>> {
         return new IntVectorParam<>(values, Int.INSTANCE);
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new RangeTile();
-    }
-
 }

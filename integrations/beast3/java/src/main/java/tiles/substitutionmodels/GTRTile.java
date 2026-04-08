@@ -43,9 +43,4 @@ public class GTRTile extends GeneratorTile<GTR> {
         return gtr;
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new GTRTile();
-    }
-
 }

@@ -28,9 +28,4 @@ public class AssignmentTile extends AstNodeTile<Object, Stmt.Assignment> {
         return expressionInput.getTypeToken();
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new AssignmentTile();
-    }
-
 }

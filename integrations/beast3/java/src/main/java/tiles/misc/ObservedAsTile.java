@@ -34,9 +34,4 @@ public class ObservedAsTile extends MultiAstNodeTile<StateNode> {
         return this.observationInput.getTypeToken();
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new ObservedAsTile();
-    }
-
 }

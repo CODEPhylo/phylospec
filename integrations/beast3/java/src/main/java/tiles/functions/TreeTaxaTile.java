@@ -21,9 +21,4 @@ public class TreeTaxaTile extends GeneratorTile<TaxonSet> {
         return tree.getTaxonset();
     }
 
-    @Override
-    protected Tile<?> createInstance() {
-        return new TreeTaxaTile();
-    }
-
 }
