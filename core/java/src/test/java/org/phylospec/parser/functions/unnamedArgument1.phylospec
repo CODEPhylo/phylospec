@@ -13,6 +13,7 @@ QMatrix b = hky(10)
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Function `LogNormal` takes no argument named `x`.
+// Function `LogNormal` takes the required argument `logMean`.
+// Function `LogNormal` takes the required argument `logMean`.
 // Function `hky` takes the required argument `baseFrequencies`.
 // EXPECT TYPE_ERRORS

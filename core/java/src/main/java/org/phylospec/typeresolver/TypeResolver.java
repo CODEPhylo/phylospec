@@ -688,16 +688,27 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     public Set<ResolvedType> visitCall(Expr.Call expr) {
         // resolve arguments
 
+        /* Rules for argument names:
+         * (1) If an argument name is given, the value is assigned that argument.
+         * If no argument name is given:
+         *      (2) If only one argument is passed, the value is assigned to the single required argument.
+         *      (3) If a variable is passed, the value is assigned the argument with the name of the variable.
+         *      (4) If the value is not a variable, and this is the first given argument, it is assigned the first argument.
+         * (5) If any argument has two values assigned to it, it is an error.
+         */
+
         Map<String, Set<ResolvedType>> resolvedArguments = new HashMap<>();
         String firstArgumentName = null;
         for (int i = 0; i < expr.arguments.length; i++) {
             Expr.Argument argument = expr.arguments[i];
 
             if (argument.name != null) {
+                // rule (1)
                 resolvedArguments.put(argument.name, argument.accept(this));
             } else if (argument.expression instanceof Expr.Variable variable) {
                 // any argument can drop the name if a variable name is passed with the same name
                 if (resolvedArguments.containsKey(variable.variableName)) {
+                    // rule (5)
                     throw new TypeError(
                             argument,
                             "Argument '" + variable.variableName + "' specified multiple times.",
@@ -705,16 +716,20 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                     );
                 }
 
+                // rule (3)
                 resolvedArguments.put(
                         variable.variableName,
                         argument.accept(this)
                 );
 
-                if (i == 0) {
-                    firstArgumentName = ((Expr.Variable) argument.expression).variableName;
+                if (expr.arguments.length == 1) {
+                    // if there is only one argument given, the given value is always assigned
+                    // rule (2)
+                    firstArgumentName = variable.variableName;
                 }
             } else if (i == 0) {
                 // the first argument does not need a name
+                // rule (4)
                 resolvedArguments.put(null, argument.accept(this));
             } else {
                 // we are not in a situation where the argument name can be dropped

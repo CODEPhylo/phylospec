@@ -1,0 +1,13 @@
+PositiveReal a = 10
+Real b = log(a)
+Real c = log(a, base=2)
+
+// EXPECT AST
+// (AS PositiveReal a 10)
+// (AS Real b (CA log (AA null a)))
+// (AS Real c (CA log (AA null a) (AA base 2)))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Function `log` takes the required argument `x`.
+// EXPECT TYPE_ERRORS

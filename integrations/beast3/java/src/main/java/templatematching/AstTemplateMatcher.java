@@ -84,7 +84,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     /**
      * Sets the query node to the current query node and visits the template node. Passes through things like
-     * variables or oberved statements if appropriate.
+     * variables or observed statements if appropriate.
      */
     private void match(AstNode template, AstNode query) {
         // if we have reached a template variable, we directly compare with no passthrough
@@ -401,6 +401,12 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         this.check(expr.arguments.length == queryCall.arguments.length);
 
         if (expr.arguments.length == 0) return null;
+
+        if (expr.arguments.length == 1) {
+            // we directly match the only required argument
+            this.match(expr.arguments[0], queryCall.arguments[0]);
+            return null;
+        }
 
         // collect the template arguments
 
