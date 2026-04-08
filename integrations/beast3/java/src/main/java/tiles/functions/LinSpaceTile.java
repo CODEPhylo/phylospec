@@ -13,9 +13,9 @@ public class LinSpaceTile extends GeneratorTile<RealVectorParam<Real>> {
         return "linspace";
     }
 
-    Input<Double> startInput = new Input<>("start");
-    Input<Double> endInput = new Input<>("end");
-    Input<Integer> numInput = new Input<>("num");
+    TileInput<Double> startInput = new TileInput<>("start");
+    TileInput<Double> endInput = new TileInput<>("end");
+    TileInput<Integer> numInput = new TileInput<>("num");
 
     @Override
     public RealVectorParam<Real> applyTile(BEASTState beastState) {

@@ -11,8 +11,8 @@ public class LogTile extends GeneratorTile<Double> {
         return "log";
     }
 
-    Input<Double> xInput = new Input<>("x");
-    Input<Integer> basisInput = new Input<>("base", false);
+    TileInput<Double> xInput = new TileInput<>("x");
+    TileInput<Integer> basisInput = new TileInput<>("base", false);
 
     @Override
     public Double applyTile(BEASTState beastState) {

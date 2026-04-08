@@ -12,7 +12,7 @@ import java.lang.reflect.WildcardType;
 
 public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw> {
 
-    TileInput<Stmt.Draw, EvaluatedDistribution.WithInitialState<?, ?>> expressionInput = new TileInput<>(expr -> expr.expression);
+    TileInput<Stmt.Draw, BoundDistribution<?, ?>> expressionInput = new TileInput<>(expr -> expr.expression);
 
     @Override
     public Class<Stmt.Draw> getTargetNodeType() {
@@ -21,18 +21,20 @@ public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw> {
 
     @Override
     public StateNode applyTile(BEASTState beastState) {
-        EvaluatedDistribution.WithInitialState<?, ?> evaluatedDistribution = this.expressionInput.apply(beastState);
+        BoundDistribution<?, ?> evaluatedDistribution = this.expressionInput.apply(beastState);
 
-        // we let the distribution initialize its state node and add it and potential operators to the BEAST state
-        evaluatedDistribution.initializeAsPriorOnState(beastState);
+        // we initialize the state node and add it to the BEAST state
+        evaluatedDistribution.bind();
+        beastState.addStateNode(evaluatedDistribution.stateNode);
+        beastState.addDistribution(evaluatedDistribution.stateNode, evaluatedDistribution.distribution);
 
         // we return the initialized state node
-        return evaluatedDistribution.initialStateNode;
+        return evaluatedDistribution.stateNode;
     }
 
     @Override
     public TypeToken<?> getTypeToken() {
-        // we first try to get the state node type from the EvaluatedDistribution input
+        // we first try to get the state node type from the BoundDistribution input
         Type expressionType = this.expressionInput.getTypeToken().getType();
         if (expressionType instanceof ParameterizedType pt) {
             Type typeArg = pt.getActualTypeArguments()[0];

@@ -62,6 +62,7 @@ public class Test2 {
 
         EvaluateTiles applyTiles = new EvaluateTiles(TileLibrary.getTiles(), variableResolver);
         BEASTState result = applyTiles.applyBestTiling(statements);
+        result.initializeBEASTObjects();
 
         System.out.println(result);
     }

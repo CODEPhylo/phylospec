@@ -1,53 +1,51 @@
 package tiles.distributions;
 
 import beast.base.evolution.alignment.Alignment;
-import beast.base.evolution.branchratemodel.BranchRateModel;
 import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.evolution.tree.Tree;
+import beast.base.spec.evolution.branchratemodel.Base;
 import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beast.base.spec.evolution.sitemodel.SiteModel;
 import tiles.MultiAstNodeTile;
-import tiling.BEASTState;
-import tiling.Partial;
-import tiling.Tile;
+import tiling.*;
 
-public class PhyloCTMCTile extends MultiAstNodeTile<Alignment> {
+public class PhyloCTMCTile extends MultiAstNodeTile<UnboundDistribution<Alignment, TreeLikelihood>> {
 
     @Override
     protected String getPhyloSpecTemplate() {
         return """
-               Alignment alignment ~ PhyloCTMC(
+               PhyloCTMC(
                   tree=$tree,
                   branchRates~$branchRateModel,
                   qMatrix=$substitutionModel,
                   siteRates~$partialSiteRateModel
-               ) observed as $data
+               )
                """;
     }
 
     TileInput<Tree> treeInput = new TileInput<>("$tree");
-    TileInput<BranchRateModel> branchRateModelInput = new TileInput<>("$branchRateModel");
+    TileInput<Base> branchRateModelInput = new TileInput<>("$branchRateModel");
     TileInput<SubstitutionModel> substitutionModelInput = new TileInput<>("$substitutionModel");
     TileInput<Partial<SiteModel, SubstitutionModel>> partialSiteRateModel = new TileInput<>("$partialSiteRateModel");
-    TileInput<Alignment> dataInput = new TileInput<>("$data");
 
     @Override
-    public Alignment applyTile(BEASTState beastState) {
+    public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState) {
         Tree tree = this.treeInput.apply(beastState);
-        BranchRateModel branchRateModel = this.branchRateModelInput.apply(beastState);
+        Base branchRateModel = this.branchRateModelInput.apply(beastState);
         SubstitutionModel substitutionModel = this.substitutionModelInput.apply(beastState);
         Partial<SiteModel, SubstitutionModel> partialSiteModel = this.partialSiteRateModel.apply(beastState);
-        Alignment data = this.dataInput.apply(beastState);
+
+        SiteModel siteModel = partialSiteModel.complete(substitutionModel);
 
         TreeLikelihood treeLikelihood = new TreeLikelihood();
-        treeLikelihood.setInputValue("data", data);
-        treeLikelihood.setInputValue("tree", tree);
-        treeLikelihood.setInputValue("siteModel", partialSiteModel.complete(substitutionModel));
-        treeLikelihood.setInputValue("branchRateModel", branchRateModel);
+        beastState.setInput(treeLikelihood, treeLikelihood.treeInput, tree);
+        beastState.setInput(treeLikelihood, treeLikelihood.siteModelInput, siteModel);
+        beastState.setInput(treeLikelihood, treeLikelihood.branchRateModelInput, branchRateModel);
 
-        beastState.addDistribution(null, treeLikelihood);
-
-        return data;
+        return new UnboundDistribution<>(
+                treeLikelihood,
+                data -> beastState.setInput(treeLikelihood, treeLikelihood.dataInput, data)
+        );
     }
 
     @Override

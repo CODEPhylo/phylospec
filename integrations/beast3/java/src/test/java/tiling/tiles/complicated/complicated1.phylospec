@@ -1,0 +1,18 @@
+Alignment data = fromNexus("primate-mtDNA.nex")
+
+Tree tree ~ Yule(
+    birthRate=1.0, taxa=taxa(data)
+)
+
+Alignment alignment ~ PhyloCTMC(
+  tree,
+  branchRates~StrictClock(rate=1.0, tree=tree),
+  qMatrix=jc69(),
+  siteRates~DiscreteGammaInv(
+    shape=1.0, numCategories=4, numSites=100
+  )
+) observed as data
+
+// EXPECTED_TILES
+// (ObservedAsTile (distribution (PhyloCTMCTile (tree (DrawTile (YuleTile (birthRate (LiteralTile)) (taxa (TaxaTile (alignment (StateNodeAssignmentTile (FromNexusTile (file (LiteralTile)))))))))) (branchRateModel (StrictClockTile (rate (LiteralTile)) (tree (DrawTile (YuleTile (birthRate (LiteralTile)) (taxa (TaxaTile (alignment (StateNodeAssignmentTile (FromNexusTile (file (LiteralTile)))))))))))) (substitutionModel (JC69Tile)) (partialSiteRateModel (SiteModelTile (shape (LiteralTile)) (numCategories (LiteralTile)) (numSites (LiteralTile)))))) (observation (StateNodeAssignmentTile (FromNexusTile (file (LiteralTile))))))
+// EXPECTED_TILES

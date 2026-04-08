@@ -17,8 +17,8 @@ public class ParserTile {
             return "parse";
         }
 
-        GeneratorTile.Input<String> delimiterInput = new GeneratorTile.Input<>("delimiter");
-        GeneratorTile.Input<Integer> partInput = new GeneratorTile.Input<>("part");
+        TileInput<String> delimiterInput = new TileInput<>("delimiter");
+        TileInput<Integer> partInput = new TileInput<>("part");
 
         @Override
         public DelimiterParser applyTile(BEASTState beastState) {
@@ -39,7 +39,7 @@ public class ParserTile {
             return "parse";
         }
 
-        GeneratorTile.Input<String> regexInput = new GeneratorTile.Input<>("regex");
+        TileInput<String> regexInput = new TileInput<>("regex");
 
         @Override
         public RegexParser applyTile(BEASTState beastState) {

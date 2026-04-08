@@ -3,39 +3,36 @@ package tiles.distributions;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.Normal;
-import beast.base.spec.inference.operator.ScaleOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import tiling.*;
 import tiles.GeneratorTile;
 
-import java.util.Set;
-
-public class NormalTile extends GeneratorTile<EvaluatedDistribution.WithInitialState<RealScalarParam<Real>, Normal>> {
+public class NormalTile extends GeneratorTile<BoundDistribution<RealScalarParam<Real>, Normal>> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "Normal";
     }
 
-    Input<RealScalar<Real>> meanInput = new Input<>("mean");
-    Input<RealScalar<PositiveReal>> sdInput = new Input<>("sd");
+    TileInput<RealScalar<Real>> meanInput = new TileInput<>("mean");
+    TileInput<RealScalar<PositiveReal>> sdInput = new TileInput<>("sd");
 
     @Override
-    public EvaluatedDistribution.WithInitialState<RealScalarParam<Real>, Normal> applyTile(BEASTState beastState) {
+    public BoundDistribution<RealScalarParam<Real>, Normal> applyTile(BEASTState beastState) {
         RealScalar<Real> mean = this.meanInput.apply(beastState);
         RealScalar<PositiveReal> sd = this.sdInput.apply(beastState);
 
-        RealScalarParam<Real> state = new RealScalarParam<>();
-        Normal distribution = new Normal(state, mean, sd);
+        Normal distribution = new Normal();
+        beastState.setInput(distribution, distribution.meanInput, mean);
+        beastState.setInput(distribution, distribution.sdInput, sd);
 
-        ScaleOperator operator = new ScaleOperator();
-        operator.determindClassOfInputs();
-        operator.parameterInput.setValue(state, null);
-        operator.m_pWeight.setValue(1.0, null);
+        RealScalarParam<Real> defaultState = new RealScalarParam<>();
 
-        return new EvaluatedDistribution.WithInitialState<>(
-                distribution, state, Set.of(operator), param -> distribution.paramInput.setValue(param, null)
+        return new BoundDistribution<>(
+                distribution,
+                defaultState,
+                param -> beastState.setInput(distribution, distribution.paramInput, param)
         );
     }
 

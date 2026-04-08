@@ -15,8 +15,8 @@ public class HKYTile extends GeneratorTile<HKY> {
         return "hky";
     }
 
-    Input<RealScalar<PositiveReal>> kappaInput = new Input<>("kappa");
-    Input<Simplex> baseFrequenciesInput = new Input<>("baseFrequencies");
+    TileInput<RealScalar<PositiveReal>> kappaInput = new TileInput<>("kappa");
+    TileInput<Simplex> baseFrequenciesInput = new TileInput<>("baseFrequencies");
 
     @Override
     public HKY applyTile(BEASTState beastState) {

@@ -13,17 +13,19 @@ public class ObservedAsTile extends MultiAstNodeTile<StateNode> {
         return "Any x ~ $distribution observed as $observation";
     }
 
-    TileInput<EvaluatedDistribution<? extends StateNode, ?>> distributionInput = new TileInput<>("$distribution");
+    TileInput<UnboundDistribution<? extends StateNode, ?>> distributionInput = new TileInput<>("$distribution");
     TileInput<? extends StateNode> observationInput = new TileInput<>("$observation");
 
     @Override
     public StateNode applyTile(BEASTState beastState) {
-        EvaluatedDistribution<? extends StateNode, ?> evaluatedDistribution = this.distributionInput.apply(beastState);
+        UnboundDistribution<? extends StateNode, ?> evaluatedDistribution = this.distributionInput.apply(beastState);
         StateNode observedStateNode = this.observationInput.apply(beastState);
 
-        // we ask the distribution to register itself as a likelihood with the given state node as parameter
+        // we register the distribution as a likelihood with the given state node as parameter
 
-        evaluatedDistribution.initializeAsLikelihoodOfState(observedStateNode, beastState);
+        evaluatedDistribution.bind(observedStateNode);
+        beastState.addStateNode(observedStateNode);
+        beastState.addDistribution(observedStateNode, evaluatedDistribution.distribution);
 
         // we return the observed state
 

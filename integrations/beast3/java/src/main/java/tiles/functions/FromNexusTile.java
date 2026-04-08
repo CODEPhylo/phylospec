@@ -17,9 +17,9 @@ public class FromNexusTile extends GeneratorTile<Alignment> {
         return "fromNexus";
     }
 
-    Input<String> fileInput = new Input<>("file");
-    Input<ParserTile.Parser> ageInput = new Input<>("age", false);
-    Input<ParserTile.Parser> speciesNameInput = new Input<>("speciesName", false);
+    TileInput<String> fileInput = new TileInput<>("file");
+    TileInput<ParserTile.Parser> ageInput = new TileInput<>("age", false);
+    TileInput<ParserTile.Parser> speciesNameInput = new TileInput<>("speciesName", false);
 
     @Override
     public Alignment applyTile(BEASTState beastState) {

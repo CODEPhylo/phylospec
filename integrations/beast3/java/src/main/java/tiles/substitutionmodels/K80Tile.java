@@ -15,7 +15,7 @@ public class K80Tile extends GeneratorTile<HKY> {
         return "k80";
     }
 
-    Input<RealScalar<PositiveReal>> kappaInput = new Input<>("kappa");
+    TileInput<RealScalar<PositiveReal>> kappaInput = new TileInput<>("kappa");
 
     @Override
     public HKY applyTile(BEASTState beastState) {

@@ -12,7 +12,7 @@ public class EnvTile extends GeneratorTile<String> {
         return "env";
     }
 
-    Input<String> variableInput = new Input<>("variable");
+    TileInput<String> variableInput = new TileInput<>("variable");
 
     @Override
     public String applyTile(BEASTState beastState) {

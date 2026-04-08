@@ -13,7 +13,7 @@ public class JTTTile extends GeneratorTile<JTT> {
         return "jtt";
     }
 
-    Input<Simplex> baseFrequenciesInput = new Input<>("baseFrequencies", false);
+    TileInput<Simplex> baseFrequenciesInput = new TileInput<>("baseFrequencies", false);
 
     @Override
     public JTT applyTile(BEASTState beastState) {

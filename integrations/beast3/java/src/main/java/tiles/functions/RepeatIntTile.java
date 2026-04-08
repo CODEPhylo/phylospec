@@ -15,8 +15,8 @@ public class RepeatIntTile extends GeneratorTile<IntVectorParam<Int>> {
         return "repeat";
     }
 
-    Input<Integer> valueInput = new Input<>("value");
-    Input<Integer> numInput = new Input<>("num");
+    TileInput<Integer> valueInput = new TileInput<>("value");
+    TileInput<Integer> numInput = new TileInput<>("num");
 
     @Override
     public IntVectorParam<Int> applyTile(BEASTState beastState) {

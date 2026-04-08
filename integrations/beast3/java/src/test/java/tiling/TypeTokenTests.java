@@ -37,7 +37,7 @@ public class TypeTokenTests {
     @Test
     public void testCovariantTypeIsAssignableFromSubType() {
         assert new TypeToken<List<? extends Object>>() {}.isAssignableFrom(new TypeToken<List<Double>>() {});
-        assert new TypeToken<EvaluatedDistribution<RealScalarParam<beast.base.spec.domain.Real>, ? extends ScalarDistribution<beast.base.spec.type.RealScalar<beast.base.spec.domain.Real>, Double>>>() {}.isAssignableFrom(new TypeToken<EvaluatedDistribution<RealScalarParam<beast.base.spec.domain.Real>, Normal>>() {});
+        assert new TypeToken<UnboundDistribution<RealScalarParam<beast.base.spec.domain.Real>, ? extends ScalarDistribution<beast.base.spec.type.RealScalar<beast.base.spec.domain.Real>, Double>>>() {}.isAssignableFrom(new TypeToken<UnboundDistribution<RealScalarParam<beast.base.spec.domain.Real>, Normal>>() {});
     }
 
     @Test

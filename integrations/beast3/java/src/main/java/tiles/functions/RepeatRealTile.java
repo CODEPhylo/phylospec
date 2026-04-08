@@ -15,8 +15,8 @@ public class RepeatRealTile extends GeneratorTile<RealVectorParam<Real>> {
         return "repeat";
     }
 
-    Input<Double> valueInput = new Input<>("value");
-    Input<Integer> numInput = new Input<>("num");
+    TileInput<Double> valueInput = new TileInput<>("value");
+    TileInput<Integer> numInput = new TileInput<>("num");
 
     @Override
     public RealVectorParam<Real> applyTile(BEASTState beastState) {

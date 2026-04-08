@@ -11,7 +11,7 @@ public class ExpTile extends GeneratorTile<Double> {
         return "exp";
     }
 
-    Input<Double> xInput = new Input<>("x");
+    TileInput<Double> xInput = new TileInput<>("x");
 
     @Override
     public Double applyTile(BEASTState beastState) {

@@ -11,7 +11,7 @@ public class SqrtTile extends GeneratorTile<Double> {
         return "sqrt";
     }
 
-    Input<Double> xInput = new Input<>("x");
+    TileInput<Double> xInput = new TileInput<>("x");
 
     @Override
     public Double applyTile(BEASTState beastState) {

@@ -26,12 +26,12 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         // the expected inputs correspond to the class fields with type GeneratorTile.Input (similar to BEAST inputs)
         // we use reflection to get the expected inputs
 
-        Map<String, Input<?>> expectedInputs = new HashMap<>();
+        Map<String, TileInput<?>> expectedInputs = new HashMap<>();
         for (Field field : this.getClass().getDeclaredFields()) {
-            if (field.getType().equals(Input.class)) {
+            if (field.getType().equals(TileInput.class)) {
                 field.setAccessible(true);
                 try {
-                    Input<?> input = (Input<?>) field.get(this);
+                    TileInput<?> input = (TileInput<?>) field.get(this);
                     input.resolveTypeFromField(field);
                     expectedInputs.put(input.getPhylospecArgumentName(), input);
                 } catch (IllegalAccessException e) {
@@ -46,7 +46,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
             String argumentName = this.getArgumentName(argument, expectedInputs);
 
             givenPhyloSpecArgumentNames.add(argumentName);
-            Input<?> argumentInput = expectedInputs.get(argumentName);
+            TileInput<?> argumentInput = expectedInputs.get(argumentName);
 
             if (argumentInput == null) {
                 // Generator has an argument for which no Input field is defined in the tile
@@ -75,7 +75,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         // check that we have all required input arguments
 
         for (String inputName : expectedInputs.keySet()) {
-            Input<?> input = expectedInputs.get(inputName);
+            TileInput<?> input = expectedInputs.get(inputName);
             if (!input.isRequired()) continue;
 
             if (!givenPhyloSpecArgumentNames.contains(inputName)) {
@@ -98,12 +98,12 @@ public abstract class GeneratorTile<T> extends Tile<T> {
 
                     // get Input fields from the new instance, keyed by argument name
 
-                    Map<String, Input<?>> newTileInputs = new HashMap<>();
+                    Map<String, TileInput<?>> newTileInputs = new HashMap<>();
                     for (Field field : wiredUpTile.getClass().getDeclaredFields()) {
-                        if (field.getType().equals(Input.class)) {
+                        if (field.getType().equals(TileInput.class)) {
                             field.setAccessible(true);
                             try {
-                                Input<?> input = (Input<?>) field.get(wiredUpTile);
+                                TileInput<?> input = (TileInput<?>) field.get(wiredUpTile);
                                 newTileInputs.put(input.getPhylospecArgumentName(), input);
                             } catch (IllegalAccessException e) {
                                 throw new RuntimeException(e);
@@ -132,14 +132,14 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         return wiredUpTiles;
     }
 
-    private String getArgumentName(Expr.Argument argument, Map<String, Input<?>> expectedInputs) {
+    private String getArgumentName(Expr.Argument argument, Map<String, TileInput<?>> expectedInputs) {
         String argumentName = argument.name;
 
         if (argumentName != null) {
             return argumentName;
         }
 
-        List<Input<?>> requiredInputs = expectedInputs.values().stream().filter(Input::isRequired).toList();
+        List<TileInput<?>> requiredInputs = expectedInputs.values().stream().filter(TileInput::isRequired).toList();
         if (requiredInputs.size() == 1) {
             // this tile has a single required argument, we use it
             argumentName = requiredInputs.getFirst().getPhylospecArgumentName();
@@ -162,10 +162,10 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         StringBuilder sb = new StringBuilder();
         sb.append("(").append(getClass().getSimpleName());
         for (Field field : getClass().getDeclaredFields()) {
-            if (field.getType().equals(Input.class)) {
+            if (field.getType().equals(TileInput.class)) {
                 field.setAccessible(true);
                 try {
-                    Input<?> input = (Input<?>) field.get(this);
+                    TileInput<?> input = (TileInput<?>) field.get(this);
                     Tile<?> child = input.getTile();
                     if (child != null) {
                         sb.append(" (").append(input.getPhylospecArgumentName()).append(" ").append(child).append(")");
@@ -179,18 +179,18 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         return sb.toString();
     }
 
-    public static class Input<T> {
+    public static class TileInput<T> {
         private final String phylospecArgumentName;
         private final boolean required;
         private TypeToken<T> typeToken;
 
         private Tile<T> tile;
 
-        public Input(String phylospecArgumentName) {
+        public TileInput(String phylospecArgumentName) {
             this(phylospecArgumentName, true);
         }
 
-        public Input(String phylospecArgumentName, boolean required) {
+        public TileInput(String phylospecArgumentName, boolean required) {
             this.phylospecArgumentName = phylospecArgumentName;
             this.required = required;
         }

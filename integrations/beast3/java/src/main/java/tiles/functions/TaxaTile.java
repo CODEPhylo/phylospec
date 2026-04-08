@@ -6,19 +6,18 @@ import tiles.GeneratorTile;
 import tiling.BEASTState;
 import tiling.Tile;
 
-public class TaxaTile extends GeneratorTile<TaxonSet> {
+public class TaxaTile extends GeneratorTile<Alignment> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "taxa";
     }
 
-    Input<Alignment> alignmentInput = new Input<>("alignment");
+    TileInput<Alignment> alignmentInput = new TileInput<>("alignment");
 
     @Override
-    public TaxonSet applyTile(BEASTState beastState) {
-        Alignment alignment = this.alignmentInput.apply(beastState);
-        return alignment.taxonSetInput.get();
+    public Alignment applyTile(BEASTState beastState) {
+        return this.alignmentInput.apply(beastState);
     }
 
     @Override

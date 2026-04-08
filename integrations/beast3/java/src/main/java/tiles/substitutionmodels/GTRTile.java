@@ -18,8 +18,8 @@ public class GTRTile extends GeneratorTile<GTR> {
     }
 
     // rates in order: AC, AG, AT, CG, CT, GT
-    Input<RealVector<Real>> rateMatrixInput = new Input<>("rateMatrix");
-    Input<Simplex> baseFrequenciesInput = new Input<>("baseFrequencies");
+    TileInput<RealVector<Real>> rateMatrixInput = new TileInput<>("rateMatrix");
+    TileInput<Simplex> baseFrequenciesInput = new TileInput<>("baseFrequencies");
 
     @Override
     public GTR applyTile(BEASTState beastState) {

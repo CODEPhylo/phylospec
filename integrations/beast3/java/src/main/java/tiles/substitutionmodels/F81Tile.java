@@ -15,7 +15,7 @@ public class F81Tile extends GeneratorTile<HKY> {
         return "f81";
     }
 
-    Input<Simplex> baseFrequenciesInput = new Input<>("baseFrequencies");
+    TileInput<Simplex> baseFrequenciesInput = new TileInput<>("baseFrequencies");
 
     @Override
     public HKY applyTile(BEASTState beastState) {

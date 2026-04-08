@@ -13,8 +13,8 @@ public class RangeTile extends GeneratorTile<IntVectorParam<Int>> {
         return "range";
     }
 
-    Input<Integer> startInput = new Input<>("start");
-    Input<Integer> endInput = new Input<>("end");
+    TileInput<Integer> startInput = new TileInput<>("start");
+    TileInput<Integer> endInput = new TileInput<>("end");
 
     @Override
     public IntVectorParam<Int> applyTile(BEASTState beastState) {

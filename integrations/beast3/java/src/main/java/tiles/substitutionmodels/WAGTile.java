@@ -13,7 +13,7 @@ public class WAGTile extends GeneratorTile<WAG> {
         return "wag";
     }
 
-    Input<Simplex> baseFrequenciesInput = new Input<>("baseFrequencies", false);
+    TileInput<Simplex> baseFrequenciesInput = new TileInput<>("baseFrequencies", false);
 
     @Override
     public WAG applyTile(BEASTState beastState) {
