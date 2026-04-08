@@ -10,6 +10,7 @@ import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
+import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiles.TileLibrary;
 
@@ -63,13 +64,16 @@ public class TilingScriptFilesTest {
             statements = new RemoveGroupings().transform(statements);
             statements = new EvaluateLiterals().transform(statements);
 
-            // resolve variables
+            // resolve variables and stochasticity
 
             VariableResolver variableResolver = new VariableResolver(statements);
 
+            StochasticityResolver stochasticityResolver = new StochasticityResolver();
+            stochasticityResolver.visitStatements(statements);
+
             // tile each statement, skipping imports (which have no tile by design)
 
-            EvaluateTiles evaluateTiles = new EvaluateTiles(TileLibrary.getTiles(), variableResolver);
+            EvaluateTiles evaluateTiles = new EvaluateTiles(TileLibrary.getTiles(), variableResolver, stochasticityResolver);
             List<Tile<?>> bestTilings = evaluateTiles.getBestTiling(statements);
 
             List<String> actualTileLines = new ArrayList<>();

@@ -5,6 +5,7 @@ import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
+import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiling.*;
 import tiles.AstNodeTile;
@@ -32,7 +33,8 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal> {
         return Expr.Literal.class;
     }
 
-    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver) {
+    @Override
+    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
         if (!(node instanceof Expr.Literal literal)) return Set.of();
 
         // depending on the actual literal, we return different tiles

@@ -3,6 +3,8 @@ package tiles;
 import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
+import org.phylospec.typeresolver.Stochasticity;
+import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiling.BEASTState;
 import tiling.Tile;
@@ -17,11 +19,18 @@ public abstract class GeneratorTile<T> extends Tile<T> {
     public abstract String getPhyloSpecGeneratorName();
 
     @Override
-    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> inputTiles, VariableResolver variableResolver) {
+    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> inputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
         if (!(node instanceof Expr.Call call)) return Set.of();
         if (!Objects.equals(call.functionName, this.getPhyloSpecGeneratorName())) return Set.of();
 
-        // the generator has the right name
+        // check the stochasticity
+
+        Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
+        if (!this.getPreferredStochasticities().contains(stochasticity)) {
+            return Set.of();
+        }
+
+        // the generator has the right name and stochasticity
 
         // the expected inputs correspond to the class fields with type GeneratorTile.Input (similar to BEAST inputs)
         // we use reflection to get the expected inputs
@@ -223,7 +232,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         }
 
         public T apply(BEASTState beastState) {
-            return this.tile != null ? this.tile.applyTile(beastState) : null;
+            return this.tile != null ? this.tile.apply(beastState) : null;
         }
     }
 

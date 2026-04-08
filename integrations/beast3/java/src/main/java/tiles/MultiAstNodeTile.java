@@ -2,6 +2,8 @@ package tiles;
 
 import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
+import org.phylospec.typeresolver.Stochasticity;
+import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import templatematching.AstTemplateMatcher;
 import tiling.BEASTState;
@@ -23,21 +25,33 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
     }
 
     @Override
-    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver) {
+    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
+        // try to match the template
+
         Map<String, AstNode> matchedTemplateVariables = this.astTemplateMatcher.match(node, variableResolver);
 
         if (matchedTemplateVariables == null) {
             return Set.of();
         }
 
-        // collect TileInput fields from this template in declaration order
-        List<TileInput<?>> tileInputs = getInputs(this);
+        // check the stochasticity
 
+        Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
+        if (!this.getPreferredStochasticities().contains(stochasticity)) {
+            return Set.of();
+        }
+
+        // the node matches the template and has the right stochasticity
+
+        // collect TileInput fields from this template in declaration order
+
+        List<TileInput<?>> tileInputs = this.getInputs(this);
         if (tileInputs.size() != matchedTemplateVariables.size()) {
             return Set.of();
         }
 
         // build ordered list of compatible tiles per input
+
         List<String> orderedVars = new ArrayList<>();
         List<Set<Tile<?>>> compatibleInputTiles = new ArrayList<>();
         for (TileInput<?> tileInput : tileInputs) {
@@ -52,6 +66,7 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
         }
 
         // for each combination, create a freshly wired up tile
+
         Set<Tile<?>> wiredUpTiles = new HashSet<>();
         Utils.visitCombinations(
                 compatibleInputTiles,
@@ -60,7 +75,7 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
 
                     // get TileInput fields from fresh instance, keyed by template variable
                     Map<String, TileInput<?>> freshInputsByVar = new HashMap<>();
-                    for (TileInput<?> freshInput : getInputs(wiredUpTile)) {
+                    for (TileInput<?> freshInput : this.getInputs(wiredUpTile)) {
                         freshInputsByVar.put(freshInput.templateVariable, freshInput);
                     }
 
@@ -170,7 +185,7 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
         }
 
         public O apply(BEASTState beastState) {
-            return this.tile.applyTile(beastState);
+            return this.tile.apply(beastState);
         }
 
         public TypeToken<?> getTypeToken() {

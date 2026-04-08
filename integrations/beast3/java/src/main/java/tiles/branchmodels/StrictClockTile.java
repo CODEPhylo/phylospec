@@ -16,7 +16,7 @@ public class StrictClockTile extends GeneratorTile<StrictClockModel> {
     }
 
     TileInput<RealScalar<PositiveReal>> rateInput = new TileInput<>("rate");
-    TileInput<Tree> treeInput = new TileInput<>("tree", false);
+    TileInput<Tree> treeInput = new TileInput<>("tree");
 
     @Override
     public StrictClockModel applyTile(BEASTState beastState) {

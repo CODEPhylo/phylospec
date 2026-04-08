@@ -2,6 +2,8 @@ package tiles;
 
 import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
+import org.phylospec.typeresolver.Stochasticity;
+import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiling.BEASTState;
 import tiling.Tile;
@@ -16,14 +18,21 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
     public abstract Class<N> getTargetNodeType();
 
     @Override
-    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver) {
+    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
         if (!this.getTargetNodeType().isAssignableFrom(node.getClass())){
             // node is not of the expected AstNode type
             // we cannot tile this tile
             return Set.of();
         }
 
-        // the node has the right type
+        // check the stochasticity
+
+        Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
+        if (!this.getPreferredStochasticities().contains(stochasticity)) {
+            return Set.of();
+        }
+
+        // the node has the right type and stochasticity
 
         N narrowedNode = (N) node;
 
@@ -157,7 +166,7 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
         }
 
         public O apply(BEASTState beastState) {
-            return this.tile.applyTile(beastState);
+            return this.tile.apply(beastState);
         }
 
         public TypeToken<?> getTypeToken() {

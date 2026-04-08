@@ -23,7 +23,7 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
 
     /** Returns the stochasticity of the expression corresponding to the given AST node. */
     public Stochasticity getStochasticity(AstNode node) {
-        return  stochasticityMap.get(node);
+        return Objects.requireNonNullElse(stochasticityMap.get(node), Stochasticity.UNDEFINED);
     }
 
     @Override

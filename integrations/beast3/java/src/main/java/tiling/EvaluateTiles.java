@@ -1,7 +1,7 @@
 package tiling;
 
 import org.phylospec.ast.*;
-import org.phylospec.typeresolver.TypeResolver;
+import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 
 import java.util.*;
@@ -19,13 +19,15 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     private final Map<AstNode, Set<Tile<?>>> evaluatedTiles;
     private final Map<AstNode, Tile<?>> bestEvaluatedTiles;
     private final VariableResolver variableResolver;
+    private final StochasticityResolver stochasticityResolver;
 
     // statements that have already been claimed by a tile covering multiple statements
     private final Set<Stmt> consumedStatements;
 
-    public EvaluateTiles(List<Tile<?>> tiles, VariableResolver variableResolver) {
+    public EvaluateTiles(List<Tile<?>> tiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
         this.tiles = tiles;
         this.variableResolver = variableResolver;
+        this.stochasticityResolver = stochasticityResolver;
         this.evaluatedTiles = new HashMap<>();
         this.bestEvaluatedTiles = new HashMap<>();
         this.consumedStatements = new HashSet<>();
@@ -44,7 +46,7 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
 
         List<Tile<?>> bestTiles = new ArrayList<>();
 
-        for (int i = statements.size() - 1; i >= 0 ; i--) {
+        for (int i = statements.size() - 1; i >= 0; i--) {
             Stmt stmt = statements.get(i);
 
             if (this.consumedStatements.contains(stmt)) continue;
@@ -69,7 +71,7 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         BEASTState beastState = new BEASTState();
 
         for (Tile<?> bestTiling : bestTilingComposition) {
-            bestTiling.applyTile(beastState);
+            bestTiling.apply(beastState);
         }
 
         return beastState;
@@ -96,7 +98,9 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         this.evaluatedTiles.putIfAbsent(node, new HashSet<>());
 
         for (Tile<?> tile : this.tiles) {
-            Set<? extends Tile<?>> evaluatedTiles = tile.tryToTile(node, this.evaluatedTiles, this.variableResolver);
+            Set<? extends Tile<?>> evaluatedTiles = tile.tryToTile(
+                    node, this.evaluatedTiles, this.variableResolver, this.stochasticityResolver
+            );
 
             this.evaluatedTiles.get(node).addAll(evaluatedTiles);
 

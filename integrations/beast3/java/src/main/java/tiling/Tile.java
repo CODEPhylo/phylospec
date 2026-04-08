@@ -1,18 +1,38 @@
 package tiling;
 
 import org.phylospec.ast.AstNode;
+import org.phylospec.typeresolver.Stochasticity;
+import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 
 import java.util.Map;
 import java.util.Set;
 
 public abstract class Tile<T> {
-    public abstract Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> inputTiles, VariableResolver variableResolver);
+    public abstract Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> inputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver);
 
-    public abstract T applyTile(BEASTState beastState);
+    private T result = null;
+    public T apply(BEASTState beastState) {
+        if (this.result == null) {
+            this.result = this.applyTile(beastState);
+        }
+        return this.result;
+    }
+
+    protected abstract T applyTile(BEASTState beastState);
 
     public TilePriority getPriority() {
         return TilePriority.DEFAULT;
+    }
+
+    protected Set<Stochasticity> getPreferredStochasticities() {
+        return Set.of(
+                Stochasticity.CONSTANT,
+                Stochasticity.DETERMINISTIC,
+                Stochasticity.STOCHASTIC,
+                Stochasticity.UNOBSERVED_STOCHASTIC,
+                Stochasticity.UNDEFINED
+        );
     }
 
     protected abstract Tile<?> createInstance();

@@ -1,3 +1,7 @@
+import beast.base.inference.CompoundDistribution;
+import beast.base.inference.Logger;
+import beast.base.inference.MCMC;
+import beast.base.inference.State;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.RemoveGroupings;
@@ -6,13 +10,18 @@ import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
+import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
+import org.xml.sax.SAXException;
 import tiling.BEASTState;
 import tiling.EvaluateTiles;
 import tiles.TileLibrary;
 
+import javax.print.StreamPrintService;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Test2 {
@@ -58,13 +67,54 @@ public class Test2 {
         TypeResolver typeResolver = new TypeResolver(componentResolver);
         typeResolver.visitStatements(statements);
 
+        StochasticityResolver stochasticityResolver = new StochasticityResolver();
+        stochasticityResolver.visitStatements(statements);
+
         // perform tiling
 
-        EvaluateTiles applyTiles = new EvaluateTiles(TileLibrary.getTiles(), variableResolver);
-        BEASTState result = applyTiles.applyBestTiling(statements);
-        result.initializeBEASTObjects();
+        EvaluateTiles applyTiles = new EvaluateTiles(TileLibrary.getTiles(), variableResolver, stochasticityResolver);
+        BEASTState beastState = applyTiles.applyBestTiling(statements);
 
-        System.out.println(result);
+        // create MCMC object
+
+        MCMC mcmc = new MCMC();
+        beastState.setInput(mcmc, mcmc.chainLengthInput, (long) 10000);
+
+        // add state
+
+        State state = new State();
+        beastState.setInput(state, state.stateNodeInput, new ArrayList<>(beastState.stateNodes));
+        beastState.setInput(mcmc, mcmc.startStateInput, state);
+
+        // add distribution
+
+        CompoundDistribution posterior = new CompoundDistribution();
+        beastState.setInput(posterior, posterior.pDistributions, new ArrayList<>(beastState.distributions.values()));
+        beastState.setInput(mcmc, mcmc.posteriorInput, posterior);
+
+        // add operators
+
+        beastState.setInput(mcmc, mcmc.operatorsInput, new ArrayList<>(beastState.operators));
+
+        // add loggers
+
+        Logger logger = new Logger();
+        beastState.setInput(logger, logger.loggersInput, List.of(posterior));
+        beastState.setInput(logger, logger.everyInput, 1000);
+        beastState.setInput(mcmc, mcmc.loggersInput, List.of(logger));
+
+        // run
+
+        beastState.initializeBEASTObjects();
+        try {
+            mcmc.run();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (SAXException e) {
+            throw new RuntimeException(e);
+        } catch (ParserConfigurationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static ComponentResolver loadComponentResolver() {
