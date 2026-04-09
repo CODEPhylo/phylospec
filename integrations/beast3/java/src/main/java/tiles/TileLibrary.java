@@ -44,6 +44,8 @@ public class TileLibrary {
         addTile(new NumTile());
         addTile(new NumRowsTile());
         addTile(new NumColsTile());
+        addTile(new RootAgeTile());
+        addTile(new TaxonAgeTile());
 
         addTile(new FromNexusTile());
         addTile(new FromTreeTile());
@@ -57,6 +59,13 @@ public class TileLibrary {
         addTile(new NormalTile());
         addTile(new LogNormalTile());
         addTile(new LogNormalRealSpaceTile());
+        addTile(new BetaTile());
+        addTile(new CauchyTile());
+        addTile(new DiscreteUniformTile());
+        addTile(new ExponentialTile());
+        addTile(new GammaTile());
+        addTile(new PoissonTile());
+        addTile(new UniformTile());
 
         addTile(new YuleTile());
 
