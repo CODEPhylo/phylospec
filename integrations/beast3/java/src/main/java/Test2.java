@@ -11,14 +11,10 @@ public class Test2 {
             end=200
         )
         
-        Tree tree ~ Yule(
-            birthRate~LogNormal(logMean=1.0, logSd=2.0),
+        Tree tree ~ Coalescent(
+            populationSize=exponentialPopulationFunction(populationSize=100, growthRate=1.0),
             taxa=taxa(filtered)
         )
-        
-        Integer n = numBranches(tree)
-        Integer m = numTaxa(data)
-        Age a = rootAge(tree)
         
         Alignment alignment ~ PhyloCTMC(
           tree,

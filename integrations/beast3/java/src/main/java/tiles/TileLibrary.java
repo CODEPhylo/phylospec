@@ -68,6 +68,11 @@ public class TileLibrary {
         addTile(new UniformTile());
 
         addTile(new YuleTile());
+        addTile(new BirthDeathTile());
+        addTile(new ConstantCoalescentTile());
+        addTile(new CoalescentTile());
+        addTile(new ConstantPopulationTile());
+        addTile(new ExponentialPopulationTile());
 
         addTile(new StrictClockTile());
         addTile(new RelaxedClockTile());

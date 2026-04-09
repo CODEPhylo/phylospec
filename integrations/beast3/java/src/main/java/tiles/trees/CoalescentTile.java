@@ -1,0 +1,60 @@
+package tiles.trees;
+
+import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.coalescent.Coalescent;
+import beast.base.evolution.tree.coalescent.PopulationFunction;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.UnitInterval;
+import beast.base.spec.evolution.speciation.BirthDeathGernhard08Model;
+import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+import beast.base.spec.evolution.tree.coalescent.RandomTree;
+import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.type.RealScalar;
+import tiles.GeneratorTile;
+import tiles.input.DecoratedAlignment;
+import tiling.BEASTState;
+import tiling.BoundDistribution;
+
+public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coalescent>> {
+
+    @Override
+    public String getPhyloSpecGeneratorName() {
+        return "Coalescent";
+    }
+
+    TileInput<PopulationFunction> populationSizeInput = new TileInput<>("populationSize");
+    TileInput<DecoratedAlignment> taxaInput = new TileInput<>("taxa", true);
+
+    @Override
+    public BoundDistribution<Tree, Coalescent> applyTile(BEASTState beastState) {
+        PopulationFunction populationSize = this.populationSizeInput.apply(beastState);
+        DecoratedAlignment taxaAlignment = this.taxaInput.apply(beastState);
+
+        // initialize initial state
+
+        ConstantPopulation populationFunction = new ConstantPopulation();
+        beastState.setInput(populationFunction, populationFunction.popSizeParameter, new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+
+        RandomTree defaultState = new RandomTree();
+        beastState.setInput(defaultState, defaultState.taxaInput, taxaAlignment.alignment());
+        beastState.setInput(defaultState, defaultState.populationFunctionInput, populationFunction);
+
+        // set tip dates if provided
+
+        if (taxaAlignment.ages() != null) {
+            defaultState.setDateTrait(taxaAlignment.ages());
+        }
+
+        // initialize Coalescent
+
+        Coalescent model = new Coalescent();
+        beastState.setInput(model, model.popSizeInput, populationSize);
+
+        return new BoundDistribution<>(
+                model,
+                defaultState,
+                tree -> beastState.setInput(model, model.treeInput, tree)
+        );
+    }
+
+}
