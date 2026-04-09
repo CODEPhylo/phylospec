@@ -44,6 +44,13 @@ public class BEASTState {
     private BEASTObject addBEASTObject(Object object) {
         BEASTObject beastObject = BEASTObjectStore.INSTANCE.getBEASTObject(object);
         this.beastObjects.add(beastObject);
+
+        try {
+            beastObject.initAndValidate();
+        } catch (Exception e) {
+            // we cannot initiate it so far
+        }
+
         return beastObject;
     }
 

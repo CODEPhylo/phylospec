@@ -37,6 +37,13 @@ public class TileLibrary {
 
         addTile(new AlignmentTaxaTile());
         addTile(new TreeTaxaTile());
+        addTile(new NumBranchesTile());
+        addTile(new NumAlignmentTaxaTile());
+        addTile(new NumTreeTaxaTile());
+        addTile(new NumSitesTile());
+        addTile(new NumTile());
+        addTile(new NumRowsTile());
+        addTile(new NumColsTile());
 
         addTile(new FromNexusTile());
         addTile(new FromTreeTile());

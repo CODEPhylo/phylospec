@@ -25,9 +25,9 @@ public class SubsetTile extends GeneratorTile<DecoratedAlignment> {
 
         String filterString  = "";
         filterString += start == null ? "1" : start;
-        filterString += ":";
+        filterString += "-";
         filterString += end == null ? "" : end;
-        filterString += codonPosition == null ? "" : (":" + codonPosition);
+        filterString += codonPosition == null ? "" : ("/" + codonPosition);
 
         FilteredAlignment filteredAlignment = new FilteredAlignment();
         beastState.setInput(filteredAlignment, filteredAlignment.alignmentInput, alignment.alignment());

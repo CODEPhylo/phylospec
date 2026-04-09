@@ -16,6 +16,9 @@ public class Test2 {
             taxa=taxa(filtered)
         )
         
+        Integer n = numBranches(tree)
+        Integer m = numTaxa(data)
+        
         Alignment alignment ~ PhyloCTMC(
           tree,
           branchRates~RelaxedClock(
