@@ -1,4 +1,4 @@
-package tiles.misc;
+package tiles.observations;
 
 import beast.base.inference.StateNode;
 import tiles.MultiAstNodeTile;

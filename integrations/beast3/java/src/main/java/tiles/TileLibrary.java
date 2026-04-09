@@ -3,6 +3,7 @@ package tiles;
 import tiles.branchmodels.*;
 import tiles.functions.*;
 import tiles.input.*;
+import tiles.observations.*;
 import tiles.sitemodels.*;
 import tiles.trees.*;
 import tiling.Tile;
@@ -23,8 +24,10 @@ public class TileLibrary {
         addTile(new LiteralTile<>());
         addTile(new DrawnArgumentTile());
         addTile(new AssignedArgumentTile());
+
         addTile(new ObservedAsTile());
         addTile(new ObservedAsAlignmentTile());
+        addTile(new RootObservedBetweenTile());
 
         addTile(new EnvTile());
         addTile(new LogTile());

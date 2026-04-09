@@ -1,4 +1,4 @@
-package tiles.misc;
+package tiles.observations;
 
 import beast.base.evolution.alignment.Alignment;
 import beast.base.inference.StateNode;
