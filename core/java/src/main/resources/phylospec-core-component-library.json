@@ -689,36 +689,19 @@
             "name": "start",
             "type": "PositiveInteger",
             "description": "Starting site position",
-            "required": true
+            "required": false
           },
           {
             "name": "end",
             "type": "PositiveInteger",
             "description": "Ending site position (inclusive)",
-            "required": true
-          }
-        ]
-      },
-      {
-        "name": "codonPosition",
-        "generatedType": "Alignment<T>",
-        "namespace": "phylospec.functions.alignment",
-        "description": "Extract sites at a specific codon position from a coding sequence alignment",
-        "typeParameters": [
-          "T"
-        ],
-        "arguments": [
-          {
-            "name": "alignment",
-            "type": "Alignment<T>",
-            "description": "Input coding sequence alignment",
-            "required": true
+            "required": false
           },
           {
-            "name": "position",
+            "name": "codonPosition",
             "type": "PositiveInteger",
             "description": "Codon position to extract (1, 2, or 3)",
-            "required": true
+            "required": false
           }
         ]
       },

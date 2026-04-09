@@ -3,15 +3,17 @@ public class Test2 {
     static void main(String[] args) {
         String source = """
         Alignment data = fromNexus(
-            "/Users/ochsneto/Documents/PhyloSpec/phylospec/integrations/beast3/java/src/test/java/resources/bdmm.nex",
-            age=parse(delimiter="_", part=4)
+            "/Users/ochsneto/Documents/PhyloSpec/beast3/beast-base/src/test/resources/beast.base/examples/nexus/primate-mtDNA.nex"
         )
-        
-        Tree initial = fromTree("/Users/ochsneto/Documents/BDMM/BDMM-Flow-Supplementary/beast_benchmarks/H3N2/results/bdmm-flow.15.trees")
+        Alignment filtered = subset(
+            alignment=data,
+            start=100,
+            end=200
+        )
         
         Tree tree ~ Yule(
             birthRate~LogNormal(logMean=1.0, logSd=2.0),
-            taxa=taxa(data)
+            taxa=taxa(filtered)
         )
         
         Alignment alignment ~ PhyloCTMC(
@@ -27,7 +29,7 @@ public class Test2 {
             numCategories=4,
             numSites=100
           )
-        ) observed as data
+        ) observed as filtered
         """;
 
         PhyloSpecRunner parser = new PhyloSpecRunner(source);

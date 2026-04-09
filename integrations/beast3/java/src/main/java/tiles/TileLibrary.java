@@ -1,13 +1,10 @@
 package tiles;
 
-import tiles.branchmodels.RelaxedClockTile;
-import tiles.branchmodels.StrictClockTile;
+import tiles.branchmodels.*;
 import tiles.functions.*;
-import tiles.input.FromNexusTile;
-import tiles.input.FromTreeTile;
-import tiles.input.ParserTile;
-import tiles.sitemodels.SiteModelTile;
-import tiles.trees.YuleTile;
+import tiles.input.*;
+import tiles.sitemodels.*;
+import tiles.trees.*;
 import tiling.Tile;
 import tiles.distributions.*;
 import tiles.misc.*;
@@ -43,8 +40,11 @@ public class TileLibrary {
 
         addTile(new FromNexusTile());
         addTile(new FromTreeTile());
+        addTile(new FromNewickTile());
         addTile(new ParserTile.Regex());
         addTile(new ParserTile.Delimiter());
+
+        addTile(new SubsetTile());
 
         addTile(new OffsetTile());
         addTile(new NormalTile());
