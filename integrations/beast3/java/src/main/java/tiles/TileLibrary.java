@@ -3,6 +3,8 @@ package tiles;
 import tiles.branchmodels.RelaxedClockTile;
 import tiles.branchmodels.StrictClockTile;
 import tiles.functions.*;
+import tiles.input.FromNexusTile;
+import tiles.input.ParserTile;
 import tiles.sitemodels.SiteModelTile;
 import tiles.trees.YuleTile;
 import tiling.Tile;
@@ -21,9 +23,10 @@ public class TileLibrary {
         addTile(new StateNodeAssignmentTile());
         addTile(new DrawTile());
         addTile(new LiteralTile<>());
-        addTile(new ObservedAsTile());
         addTile(new DrawnArgumentTile());
         addTile(new AssignedArgumentTile());
+        addTile(new ObservedAsTile());
+        addTile(new ObservedAsAlignmentTile());
 
         addTile(new EnvTile());
         addTile(new LogTile());

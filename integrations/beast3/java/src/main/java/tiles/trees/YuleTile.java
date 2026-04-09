@@ -1,6 +1,5 @@
 package tiles.trees;
 
-import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.tree.Tree;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.evolution.speciation.YuleModel;
@@ -9,6 +8,7 @@ import beast.base.spec.evolution.tree.coalescent.RandomTree;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
+import tiles.input.DecoratedAlignment;
 import tiling.BEASTState;
 import tiling.BoundDistribution;
 
@@ -20,14 +20,14 @@ public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>> 
     }
 
     TileInput<RealScalar<? extends PositiveReal>> birthRateInput = new TileInput<>("birthRate");
-    TileInput<Alignment> taxaInput = new TileInput<>("taxa", true);
+    TileInput<DecoratedAlignment> taxaInput = new TileInput<>("taxa", true);
     TileInput<RealScalar<? extends PositiveReal>> rootAgeInput = new TileInput<>("rootAge", false);
 
     @Override
     public BoundDistribution<Tree, YuleModel> applyTile(BEASTState beastState) {
         RealScalar<? extends PositiveReal> birthRate = this.birthRateInput.apply(beastState);
         RealScalar<? extends PositiveReal> rootAge = this.rootAgeInput.apply(beastState);
-        Alignment taxaAlignment = this.taxaInput.apply(beastState);
+        DecoratedAlignment taxaAlignment = this.taxaInput.apply(beastState);
 
         // initialize initial state
 
@@ -35,8 +35,14 @@ public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>> 
         beastState.setInput(populationFunction, populationFunction.popSizeParameter, new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
 
         RandomTree defaultState = new RandomTree();
-        beastState.setInput(defaultState, defaultState.taxaInput, taxaAlignment);
+        beastState.setInput(defaultState, defaultState.taxaInput, taxaAlignment.alignment());
         beastState.setInput(defaultState, defaultState.populationFunctionInput, populationFunction);
+
+        // set tip dates if provided
+
+        if (taxaAlignment.ages() != null) {
+            defaultState.setDateTrait(taxaAlignment.ages());
+        }
 
         // initialize Yule
 

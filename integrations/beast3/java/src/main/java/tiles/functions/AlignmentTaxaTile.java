@@ -1,21 +1,20 @@
 package tiles.functions;
 
-import beast.base.evolution.alignment.Alignment;
 import tiles.GeneratorTile;
+import tiles.input.DecoratedAlignment;
 import tiling.BEASTState;
-import tiling.Tile;
 
-public class AlignmentTaxaTile extends GeneratorTile<Alignment> {
+public class AlignmentTaxaTile extends GeneratorTile<DecoratedAlignment> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "taxa";
     }
 
-    TileInput<Alignment> alignmentInput = new TileInput<>("alignment");
+    TileInput<DecoratedAlignment> alignmentInput = new TileInput<>("alignment");
 
     @Override
-    public Alignment applyTile(BEASTState beastState) {
+    public DecoratedAlignment applyTile(BEASTState beastState) {
         return this.alignmentInput.apply(beastState);
     }
 

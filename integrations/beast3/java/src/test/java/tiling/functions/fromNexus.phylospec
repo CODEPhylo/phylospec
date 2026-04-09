@@ -1,11 +1,10 @@
 Alignment alignment1 = fromNexus("hallo.nex")
 Alignment alignment2 = fromNexus(
     file="hallo.nex",
-    age=parse(delimiter=",", part=1),
-    speciesName=parse(regex="\\."),
+    age=parse(delimiter=",", part=1)
 )
 
 // EXPECTED_TILES
 // (AssignmentTile (FromNexusTile (file (AssignedArgumentTile (LiteralTile)))))
-// (AssignmentTile (FromNexusTile (file (AssignedArgumentTile (LiteralTile))) (age (AssignedArgumentTile (Delimiter (delimiter (AssignedArgumentTile (LiteralTile))) (part (AssignedArgumentTile (LiteralTile)))))) (speciesName (AssignedArgumentTile (Regex (regex (AssignedArgumentTile (LiteralTile))))))))
+// (AssignmentTile (FromNexusTile (file (AssignedArgumentTile (LiteralTile))) (age (AssignedArgumentTile (Delimiter (delimiter (AssignedArgumentTile (LiteralTile))) (part (AssignedArgumentTile (LiteralTile))))))))
 // EXPECTED_TILES

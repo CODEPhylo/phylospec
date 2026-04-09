@@ -1,8 +1,7 @@
-package tiles.functions;
+package tiles.input;
 
 import tiles.GeneratorTile;
 import tiling.BEASTState;
-import tiling.Tile;
 import tiling.TilingError;
 
 import java.util.regex.Matcher;
@@ -59,7 +58,7 @@ public class ParserTile {
 
         @Override
         public String parse(String raw) {
-            return raw.split(Pattern.quote(this.delimiter))[this.part];
+            return raw.split(Pattern.quote(this.delimiter))[this.part - 1];
         }
 
     }

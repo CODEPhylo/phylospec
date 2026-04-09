@@ -2,7 +2,10 @@ public class Test2 {
 
     static void main(String[] args) {
         String source = """
-        Alignment data = fromNexus("/Users/ochsneto/Documents/PhyloSpec/beast3/beast-base/src/test/resources/beast.base/examples/nexus/primate-mtDNA.nex")
+        Alignment data = fromNexus(
+            "/Users/ochsneto/Documents/PhyloSpec/phylospec/integrations/beast3/java/src/test/java/resources/bdmm.nex",
+            age=parse(delimiter="_", part=4)
+        )
         
         Tree tree ~ Yule(
             birthRate~LogNormal(logMean=1.0, logSd=2.0),

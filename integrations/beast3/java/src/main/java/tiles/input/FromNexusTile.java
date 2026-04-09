@@ -1,0 +1,65 @@
+package tiles.input;
+
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.alignment.TaxonSet;
+import beast.base.evolution.tree.TraitSet;
+import beast.base.parser.NexusParser;
+import tiles.GeneratorTile;
+import tiling.BEASTState;
+import tiling.TilingError;
+
+import java.io.File;
+import java.io.IOException;
+
+public class FromNexusTile extends GeneratorTile<DecoratedAlignment> {
+
+    @Override
+    public String getPhyloSpecGeneratorName() {
+        return "fromNexus";
+    }
+
+    TileInput<String> fileInput = new TileInput<>("file");
+    TileInput<ParserTile.Parser> ageInput = new TileInput<>("age", false);
+
+    @Override
+    public DecoratedAlignment applyTile(BEASTState beastState) {
+        String path = this.fileInput.apply(beastState);
+        File file = new File(path);
+
+        NexusParser nexusParser = new NexusParser();
+        try {
+            nexusParser.parseFile(file);
+        } catch (IOException e) {
+            throw new TilingError(
+                    "File not found.",
+                    "'" + path + "' could not be found. Does it exist? Select a valid file path."
+            );
+        }
+
+        Alignment alignment = nexusParser.m_alignment;
+        TaxonSet taxonSet = new TaxonSet(alignment);
+        beastState.setInput(taxonSet, taxonSet.alignmentInput, alignment);
+
+        // build age trait set if needed
+
+        TraitSet ageTraitSet = null;
+        ParserTile.Parser ageParser = this.ageInput.apply(beastState);
+        if (ageParser != null) {
+            ageTraitSet = new TraitSet();
+
+            StringBuilder traits = new StringBuilder();
+            for (String taxon : alignment.getTaxaNames()) {
+                traits.append(taxon).append("=").append(ageParser.parse(taxon)).append(",");
+            }
+
+            beastState.setInput(ageTraitSet, ageTraitSet.traitNameInput, "age");
+            beastState.setInput(ageTraitSet, ageTraitSet.taxaInput, taxonSet);
+            beastState.setInput(ageTraitSet, ageTraitSet.traitsInput, traits.toString());
+
+            ageTraitSet.initAndValidate();
+        }
+
+        return new DecoratedAlignment(alignment, taxonSet, ageTraitSet);
+    }
+
+}
