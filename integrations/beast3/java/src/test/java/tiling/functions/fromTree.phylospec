@@ -1,0 +1,6 @@
+String file = "Hallo.newick"
+Tree tree = fromTree(file)
+
+// EXPECTED_TILES
+// (AssignmentTile (FromTreeTile (file (AssignedArgumentTile (AssignmentTile (LiteralTile))))))
+// EXPECTED_TILES

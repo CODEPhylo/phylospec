@@ -7,6 +7,8 @@ public class Test2 {
             age=parse(delimiter="_", part=4)
         )
         
+        Tree initial = fromTree("/Users/ochsneto/Documents/BDMM/BDMM-Flow-Supplementary/beast_benchmarks/H3N2/results/bdmm-flow.15.trees")
+        
         Tree tree ~ Yule(
             birthRate~LogNormal(logMean=1.0, logSd=2.0),
             taxa=taxa(data)

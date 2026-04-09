@@ -4,6 +4,7 @@ import tiles.branchmodels.RelaxedClockTile;
 import tiles.branchmodels.StrictClockTile;
 import tiles.functions.*;
 import tiles.input.FromNexusTile;
+import tiles.input.FromTreeTile;
 import tiles.input.ParserTile;
 import tiles.sitemodels.SiteModelTile;
 import tiles.trees.YuleTile;
@@ -41,6 +42,7 @@ public class TileLibrary {
         addTile(new TreeTaxaTile());
 
         addTile(new FromNexusTile());
+        addTile(new FromTreeTile());
         addTile(new ParserTile.Regex());
         addTile(new ParserTile.Delimiter());
 
