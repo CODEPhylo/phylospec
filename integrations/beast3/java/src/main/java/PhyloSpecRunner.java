@@ -77,31 +77,22 @@ public class PhyloSpecRunner implements ErrorEventListener {
         EvaluateTiles applyTiles = new EvaluateTiles(TileLibrary.getTiles(), variableResolver, stochasticityResolver);
         BEASTState beastState = applyTiles.applyBestTiling(statements);
 
-        // create MCMC object
-
-        MCMC mcmc = new MCMC();
-        beastState.setInput(mcmc, mcmc.chainLengthInput, (long) 100_000);
-
         // add state
 
         State state = new State();
         beastState.setInput(state, state.stateNodeInput, new ArrayList<>(beastState.stateNodes.keySet()));
-        beastState.setInput(mcmc, mcmc.startStateInput, state);
 
         // add distribution
 
         CompoundDistribution posterior = new CompoundDistribution();
         posterior.setID(beastState.getID("posterior"));
         beastState.setInput(posterior, posterior.pDistributions, new ArrayList<>(beastState.distributions.values()));
-        beastState.setInput(mcmc, mcmc.posteriorInput, posterior);
 
         // add operators
 
-        for (StateNode stateNode : beastState.distributions.keySet()) {
-            OperatorSelector.addOperators(stateNode, beastState);
+        for (StateNode stateNode : beastState.stateNodes.keySet()) {
+            OperatorSelector.addDefaultOperators(stateNode, beastState);
         }
-
-        beastState.setInput(mcmc, mcmc.operatorsInput, new ArrayList<>(beastState.operators));
 
         // add loggers
 
@@ -118,11 +109,19 @@ public class PhyloSpecRunner implements ErrorEventListener {
         beastState.setInput(fileLogger, fileLogger.everyInput, 1000);
         beastState.setInput(fileLogger, fileLogger.fileNameInput, "logs.log");
 
+        // create MCMC object
+
+        MCMC mcmc = new MCMC();
+        beastState.setInput(mcmc, mcmc.chainLengthInput, (long) 100_000);
+        beastState.setInput(mcmc, mcmc.startStateInput, state);
+        beastState.setInput(mcmc, mcmc.posteriorInput, posterior);
+        beastState.setInput(mcmc, mcmc.operatorsInput, new ArrayList<>(beastState.operators.keySet()));
         beastState.setInput(mcmc, mcmc.loggersInput, List.of(screenLogger, fileLogger));
 
         // run
 
         beastState.initializeBEASTObjects();
+
         try {
             mcmc.run();
         } catch (IOException e) {

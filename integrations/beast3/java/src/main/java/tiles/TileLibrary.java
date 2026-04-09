@@ -1,5 +1,6 @@
 package tiles;
 
+import tiles.branchmodels.RelaxedClockTile;
 import tiles.branchmodels.StrictClockTile;
 import tiles.functions.*;
 import tiles.sitemodels.SiteModelTile;
@@ -43,10 +44,12 @@ public class TileLibrary {
         addTile(new OffsetTile());
         addTile(new NormalTile());
         addTile(new LogNormalTile());
+        addTile(new LogNormalRealSpaceTile());
 
         addTile(new YuleTile());
 
         addTile(new StrictClockTile());
+        addTile(new RelaxedClockTile());
 
         addTile(new JC69Tile());
         addTile(new K80Tile());

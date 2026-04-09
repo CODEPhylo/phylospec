@@ -8,15 +8,18 @@ import beast.base.evolution.tree.Tree;
 import beast.base.inference.StateNode;
 import beast.base.spec.evolution.operator.ScaleTreeOperator;
 import beast.base.spec.inference.operator.BitFlipOperator;
+import beast.base.spec.inference.operator.IntRandomWalkOperator;
 import beast.base.spec.inference.operator.ScaleOperator;
+import beast.base.spec.inference.operator.SwapOperator;
 import beast.base.spec.inference.parameter.BoolVectorParam;
+import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import tiling.BEASTState;
 
 public class OperatorSelector {
 
-    public static <T extends StateNode> void addOperators(T stateNode, BEASTState beastState) {
+    public static void addDefaultOperators(StateNode stateNode, BEASTState beastState) {
         if (stateNode instanceof Tree tree) {
             ScaleTreeOperator scaleTreeOperator = new ScaleTreeOperator();
             beastState.setInput(scaleTreeOperator, scaleTreeOperator.treeInput, tree);
@@ -52,16 +55,16 @@ public class OperatorSelector {
             beastState.addOperator(wilsonBaldingOperator, stateNode);
         }
 
-        if (stateNode instanceof RealScalarParam<?> scalable) {
+        if (stateNode instanceof RealScalarParam<?> realScalar) {
             ScaleOperator scaleOperator = new ScaleOperator();
-            beastState.setInput(scaleOperator, scaleOperator.parameterInput, scalable);
+            beastState.setInput(scaleOperator, scaleOperator.parameterInput, realScalar);
             beastState.setInput(scaleOperator, scaleOperator.m_pWeight, 5.0);
             beastState.addOperator(scaleOperator, stateNode);
         }
 
-        if (stateNode instanceof RealVectorParam<?> scalable) {
+        if (stateNode instanceof RealVectorParam<?> realVector) {
             ScaleOperator scaleOperator = new ScaleOperator();
-            beastState.setInput(scaleOperator, scaleOperator.parameterInput, scalable);
+            beastState.setInput(scaleOperator, scaleOperator.parameterInput, realVector);
             beastState.setInput(scaleOperator, scaleOperator.m_pWeight, 5.0);
             beastState.addOperator(scaleOperator, stateNode);
         }
@@ -71,6 +74,19 @@ public class OperatorSelector {
             beastState.setInput(bitFlipOperator, bitFlipOperator.parameterInput, bool);
             beastState.setInput(bitFlipOperator, bitFlipOperator.m_pWeight, 5.0);
             beastState.addOperator(bitFlipOperator, stateNode);
+        }
+
+        if (stateNode instanceof IntVectorParam<?> intVector) {
+            IntRandomWalkOperator intRandomWalkOperator = new IntRandomWalkOperator();
+            beastState.setInput(intRandomWalkOperator, intRandomWalkOperator.parameterInput, intVector);
+            beastState.setInput(intRandomWalkOperator, intRandomWalkOperator.windowSizeInput, 1);
+            beastState.setInput(intRandomWalkOperator, intRandomWalkOperator.m_pWeight, 10.0);
+            beastState.addOperator(intRandomWalkOperator, stateNode);
+
+            SwapOperator swapOperator = new SwapOperator();
+            swapOperator.intparameterInput.setValue(intVector, swapOperator);
+            beastState.setInput(swapOperator, swapOperator.m_pWeight, 10.0);
+            beastState.addOperator(swapOperator, stateNode);
         }
 
     }

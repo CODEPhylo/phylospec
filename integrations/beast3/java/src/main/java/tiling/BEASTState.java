@@ -12,7 +12,7 @@ public class BEASTState {
 
     public final HashMap<StateNode, TypeToken<?>> stateNodes;
     public final HashMap<StateNode, Distribution> distributions;
-    public final Set<Operator> operators;
+    public final HashMap<Operator, Set<StateNode>> operators;
     private final List<BEASTObject> beastObjects;
 
     private final Set<String> ids;
@@ -20,7 +20,7 @@ public class BEASTState {
     public BEASTState() {
         this.stateNodes = new HashMap<>();
         this.distributions = new HashMap<>();
-        this.operators = new HashSet<>();
+        this.operators = new HashMap<>();
         this.beastObjects = new ArrayList<>();
         this.ids = new HashSet<>();
     }
@@ -57,8 +57,8 @@ public class BEASTState {
         }
 
         // add beast object to outputs of input
-        this.addBEASTObject(beastObject);
         this.addBEASTObject(value).getOutputs().add(beastObject);
+        this.addBEASTObject(beastObject);
     }
 
     public void addStateNode(StateNode stateNode, TypeToken<?> typeToken, String id) {
@@ -75,20 +75,36 @@ public class BEASTState {
     }
 
     public void addOperator(Operator operator, StateNode stateNode) {
+        this.addOperator(operator, Set.of(stateNode));
+    }
+
+    public void addOperator(Operator operator, Set<StateNode> stateNodes) {
         // set id
         if (operator.getID() == null) {
-            operator.setID(this.getID(stateNode.getID() + "_operator"));
+            StringBuilder id = new StringBuilder();
+            for (StateNode stateNode : stateNodes) {
+                id.append(stateNode.getID()).append("_");
+            }
+            id.append("operator");
+            operator.setID(id.toString());
         }
 
         this.addBEASTObject(operator);
-        this.operators.add(operator);
+        this.operators.put(operator, stateNodes);
     }
 
     public void initializeBEASTObjects() {
-        for (BEASTObject beastObject : this.beastObjects) {
+       for (int i = 0; i < this.beastObjects.size(); i++) {
+            BEASTObject beastObject = this.beastObjects.get(i);
+            // if (i != lastOccurrences.get(beastObject)) continue;
+
             beastObject.determindClassOfInputs();
             beastObject.validateInputs();
-            beastObject.initAndValidate();
+            try {
+                beastObject.initAndValidate();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
 
         for (BEASTObject beastObject : this.beastObjects) {

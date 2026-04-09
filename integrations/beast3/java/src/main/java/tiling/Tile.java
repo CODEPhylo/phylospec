@@ -25,7 +25,7 @@ public abstract class Tile<T> {
         return TilePriority.DEFAULT;
     }
 
-    protected Set<Stochasticity> getPreferredStochasticities() {
+    protected Set<Stochasticity> getCompatibleStochasticities() {
         return Set.of(
                 Stochasticity.CONSTANT,
                 Stochasticity.DETERMINISTIC,

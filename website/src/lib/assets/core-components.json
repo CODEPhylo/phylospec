@@ -1817,8 +1817,14 @@
                     {
                         "name": "base",
                         "type": "Distribution<Rate>",
-                        "description": "The distribution to draw branch-wise rates from",
+                        "description": "The distribution with mean 1.0 to draw branch-wise rates from",
                         "required": true
+                    },
+                    {
+                      "name": "clockRate",
+                      "type": "Rate",
+                      "description": "The distribution to draw the mean clock rate from",
+                      "required": true
                     },
                     {
                         "name": "tree",

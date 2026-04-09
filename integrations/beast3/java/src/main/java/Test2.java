@@ -11,8 +11,9 @@ public class Test2 {
         
         Alignment alignment ~ PhyloCTMC(
           tree,
-          branchRates~StrictClock(
-            rate~LogNormal(logMean=1.0, logSd=2.0),
+          branchRates~RelaxedClock(
+            base=LogNormal(mean=1.0, logSd=2.0),
+            clockRate~LogNormal(logMean=1.0, logSd=2.0),
             tree=tree
           ),
           qMatrix=jc69(),

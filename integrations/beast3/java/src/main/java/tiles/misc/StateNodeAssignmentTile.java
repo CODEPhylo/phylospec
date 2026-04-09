@@ -20,7 +20,7 @@ public class StateNodeAssignmentTile extends AstNodeTile<StateNode, Stmt.Assignm
     }
 
     @Override
-    protected Set<Stochasticity> getPreferredStochasticities() {
+    protected Set<Stochasticity> getCompatibleStochasticities() {
         return Set.of(Stochasticity.STOCHASTIC);
     }
 

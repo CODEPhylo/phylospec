@@ -37,7 +37,7 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
         // check the stochasticity
 
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
-        if (!this.getPreferredStochasticities().contains(stochasticity)) {
+        if (!this.getCompatibleStochasticities().contains(stochasticity)) {
             return Set.of();
         }
 

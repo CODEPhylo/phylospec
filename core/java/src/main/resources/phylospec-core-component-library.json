@@ -1108,6 +1108,26 @@
         ]
       },
       {
+        "name": "LogNormal",
+        "generatedType": "Distribution<PositiveReal>",
+        "namespace": "phylospec.distributions",
+        "description": "Log-normal distribution for positive real values",
+        "arguments": [
+          {
+            "name": "mean",
+            "type": "PositiveReal",
+            "description": "Mean of the distribution in real space",
+            "required": true
+          },
+          {
+            "name": "logSd",
+            "type": "PositiveReal",
+            "description": "Standard deviation in log space",
+            "required": true
+          }
+        ]
+      },
+      {
         "name": "Gamma",
         "generatedType": "Distribution<PositiveReal>",
         "namespace": "phylospec.distributions",
@@ -1851,7 +1871,13 @@
           {
             "name": "base",
             "type": "Distribution<Rate>",
-            "description": "The distribution to draw branch-wise rates from",
+            "description": "The distribution with mean 1.0 to draw branch-wise rates from",
+            "required": true
+          },
+          {
+            "name": "clockRate",
+            "type": "Rate",
+            "description": "The distribution to draw the mean clock rate from",
             "required": true
           },
           {
