@@ -6,6 +6,6 @@ Vector<Integer> intervalStartTimes2 = range(
 )
 
 // EXPECTED_TILES
-// (AssignmentTile (RangeTile (start (LiteralTile)) (end (LiteralTile))))
+// (AssignmentTile (RangeTile (start (AssignedArgumentTile (LiteralTile))) (end (AssignedArgumentTile (LiteralTile)))))
 // NO_VALID_TILING
 // EXPECTED_TILES

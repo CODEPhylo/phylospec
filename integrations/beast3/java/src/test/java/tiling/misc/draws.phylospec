@@ -4,6 +4,6 @@ Real c ~ Normal(mean=1.0, sd=2.0)
 Real d ~ Normal(mean=a, sd=c)
 
 // EXPECTED_TILES
-// (DrawTile (NormalTile (mean (DrawTile (NormalTile (mean (LiteralTile)) (sd (LiteralTile))))) (sd (LiteralTile))))
+// (DrawTile (NormalTile (mean (AssignedArgumentTile (DrawTile (NormalTile (mean (AssignedArgumentTile (LiteralTile))) (sd (AssignedArgumentTile (LiteralTile))))))) (sd (AssignedArgumentTile (LiteralTile)))))
 // NO_VALID_TILING
 // EXPECTED_TILES

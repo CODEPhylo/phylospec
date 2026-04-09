@@ -11,7 +11,6 @@ import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
 import tiling.BoundDistribution;
-import tiling.Tile;
 
 public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>> {
 

@@ -3,5 +3,5 @@ Tree tree ~ Yule(birthRate=1.0, taxa=taxa(data))
 Tree tree2 = tree
 
 // EXPECTED_TILES
-// (StateNodeAssignmentTile (DrawTile (YuleTile (birthRate (LiteralTile)) (taxa (AlignmentTaxaTile (alignment (AssignmentTile (FromNexusTile (file (LiteralTile))))))))))
+// (StateNodeAssignmentTile (DrawTile (YuleTile (birthRate (AssignedArgumentTile (LiteralTile))) (taxa (AssignedArgumentTile (AlignmentTaxaTile (alignment (AssignedArgumentTile (AssignmentTile (FromNexusTile (file (AssignedArgumentTile (LiteralTile)))))))))))))
 // EXPECTED_TILES

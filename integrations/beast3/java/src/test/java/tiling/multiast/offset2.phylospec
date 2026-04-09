@@ -3,5 +3,5 @@ Real offset = 10
 Real z = normal + offset
 
 // EXPECTED_TILES
-// (StateNodeAssignmentTile (OffsetTile (distribution (NormalTile (mean (LiteralTile)) (sd (LiteralTile)))) (offset (AssignmentTile (LiteralTile)))))
+// (StateNodeAssignmentTile (OffsetTile (distribution (NormalTile (mean (AssignedArgumentTile (LiteralTile))) (sd (AssignedArgumentTile (LiteralTile))))) (offset (AssignmentTile (LiteralTile)))))
 // EXPECTED_TILES

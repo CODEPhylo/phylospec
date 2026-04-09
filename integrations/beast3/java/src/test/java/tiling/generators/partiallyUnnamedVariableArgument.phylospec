@@ -2,5 +2,5 @@ Real mean = 0.0
 Real a ~ Normal(sd=2.0, mean)
 
 // EXPECTED_TILES
-// (DrawTile (NormalTile (mean (AssignmentTile (LiteralTile))) (sd (LiteralTile))))
+// (DrawTile (NormalTile (mean (AssignedArgumentTile (AssignmentTile (LiteralTile)))) (sd (AssignedArgumentTile (LiteralTile)))))
 // EXPECTED_TILES

@@ -6,7 +6,6 @@ import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.Simplex;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
-import tiling.Tile;
 
 public class HKYTile extends GeneratorTile<HKY> {
 

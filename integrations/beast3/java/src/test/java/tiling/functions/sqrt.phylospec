@@ -3,6 +3,6 @@ Real sqrt = sqrt(x)
 Real sqrt2 = sqrt(x~Exponential(1.0)) // we don't support the sqrt of a random variable
 
 // EXPECTED_TILES
-// (AssignmentTile (SqrtTile (x (AssignmentTile (LiteralTile)))))
+// (AssignmentTile (SqrtTile (x (AssignedArgumentTile (AssignmentTile (LiteralTile))))))
 // NO_VALID_TILING
 // EXPECTED_TILES

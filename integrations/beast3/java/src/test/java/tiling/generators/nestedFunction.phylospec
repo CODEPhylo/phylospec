@@ -1,5 +1,5 @@
 String a = env(variable=env(variable="Hallo"))
 
 // EXPECTED_TILES
-// (AssignmentTile (EnvTile (variable (EnvTile (variable (LiteralTile))))))
+// (AssignmentTile (EnvTile (variable (AssignedArgumentTile (EnvTile (variable (AssignedArgumentTile (LiteralTile))))))))
 // EXPECTED_TILES
