@@ -1,24 +1,35 @@
 package tiles.functions;
 
+import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
 
-public class MRCATile extends GeneratorTile<RealScalarParam<PositiveReal>> {
+public class TaxonAgeTile extends GeneratorTile<RealScalarParam<PositiveReal>> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
-        return "mrca";
+        return "age";
     }
 
+    TileInput<String> nodeInput = new TileInput<>("node");
     TileInput<Tree> treeInput = new TileInput<>("tree");
 
     @Override
     public RealScalarParam<PositiveReal> applyTile(BEASTState beastState) {
+        String nodeName = this.nodeInput.apply(beastState);
         Tree tree = this.treeInput.apply(beastState);
-        return new RealScalarParam<>(tree.getRoot().getHeight(), PositiveReal.INSTANCE);
+
+        for (Node node : tree.getNodesAsArray()) {
+            String taxonId = tree.getTaxonId(node);
+            if (taxonId != null && taxonId.equals(nodeName)) {
+                return new RealScalarParam<>(node.getHeight(), PositiveReal.INSTANCE);
+            }
+        }
+
+        throw new RuntimeException("No node with the label '" + nodeName + "' found.");
     }
 
 }

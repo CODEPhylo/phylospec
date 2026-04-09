@@ -6,18 +6,25 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
 
-public class RootAgeTile extends GeneratorTile<RealScalarParam<PositiveReal>> {
+import java.util.List;
+
+public class MRCATile extends GeneratorTile<RealScalarParam<PositiveReal>> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
-        return "rootAge";
+        return "mrca";
     }
 
     TileInput<Tree> treeInput = new TileInput<>("tree");
+    TileInput<List<String>> cladeInput = new TileInput<>("clade");
 
     @Override
     public RealScalarParam<PositiveReal> applyTile(BEASTState beastState) {
         Tree tree = this.treeInput.apply(beastState);
+        List<String> clade = this.cladeInput.apply(beastState);
+
+        // TODO
+
         return new RealScalarParam<>(tree.getRoot().getHeight(), PositiveReal.INSTANCE);
     }
 

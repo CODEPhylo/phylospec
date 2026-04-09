@@ -18,6 +18,7 @@ public class Test2 {
         
         Integer n = numBranches(tree)
         Integer m = numTaxa(data)
+        Age a = rootAge(tree)
         
         Alignment alignment ~ PhyloCTMC(
           tree,
