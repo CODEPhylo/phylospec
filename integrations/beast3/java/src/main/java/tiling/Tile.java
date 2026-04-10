@@ -9,22 +9,18 @@ import java.util.Map;
 import java.util.Set;
 
 public abstract class Tile<T> {
-    public abstract Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> inputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver);
+    /* methods to find a tiling */
 
-    private T result = null;
-    public T apply(BEASTState beastState) {
-        if (this.result == null) {
-            this.result = this.applyTile(beastState);
-        }
-        return this.result;
-    }
-
-    protected abstract T applyTile(BEASTState beastState);
-
+    /**
+     * Returns the default priority of these tiles. Can be overridden by custom tiles.
+     */
     public TilePriority getPriority() {
         return TilePriority.DEFAULT;
     }
 
+    /**
+     * Returns the different stochasticity levels which the root of the AST subgraph covered by the tile can have.
+     */
     protected Set<Stochasticity> getCompatibleStochasticities() {
         return Set.of(
                 Stochasticity.CONSTANT,
@@ -35,14 +31,11 @@ public abstract class Tile<T> {
         );
     }
 
-    protected Tile<?> createInstance() {
-        try {
-            return this.getClass().getDeclaredConstructor().newInstance();
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException("Tile " + getClass().getSimpleName() + " has no public no-arg constructor", e);
-        }
-    }
-
+    /**
+     * Returns the {@code TypeToken<?>} produced when by a successful application of this tile.
+     * By default, this returns the type parameter {@code T} of {@code Tile<T>}. If this cannot be
+     * determined at compile-time, a custom tile has to override this method.
+     */
     public TypeToken<?> getTypeToken() {
         java.lang.reflect.Type rawType = TileUtils.getParametricType(this, 0);
         if (rawType == null) {
@@ -50,6 +43,35 @@ public abstract class Tile<T> {
         }
         return TypeToken.of(rawType);
     }
+
+    /**
+     * Tries to tile this tile to the AST subgraph starting with 'node'. Has to be overridden by custom tiles.
+     */
+    public abstract Set<Tile<?>> tryToTile(
+            AstNode node, Map<AstNode,
+            Set<Tile<?>>> inputTiles,
+            VariableResolver variableResolver,
+            StochasticityResolver stochasticityResolver
+    );
+
+    /** methods to apply a tiling */
+
+    private T result = null;
+
+    /**
+     * Applies the tile. Memoization is used to not apply the same tile twice.
+     */
+    public T apply(BEASTState beastState) {
+        if (this.result == null) {
+            this.result = this.applyTile(beastState);
+        }
+        return this.result;
+    }
+
+    /**
+     * Applies the tile. This method should be overridden by custom tiles.
+     */
+    protected abstract T applyTile(BEASTState beastState);
 
     /** tiling weight */
 
@@ -61,5 +83,18 @@ public abstract class Tile<T> {
 
     public void setWeight(int weight) {
         this.weight = weight;
+    }
+
+    /* helper */
+
+    /**
+     * Creates a new instance of this tile.
+     */
+    protected Tile<?> createInstance() {
+        try {
+            return this.getClass().getDeclaredConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("Tile " + getClass().getSimpleName() + " has no public no-arg constructor", e);
+        }
     }
 }
