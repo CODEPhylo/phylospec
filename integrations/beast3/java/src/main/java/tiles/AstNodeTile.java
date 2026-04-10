@@ -12,6 +12,10 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Function;
 
+/**
+ * This class represents tiles that cover a single AstNode of type N. Extend this class for custom tiles.
+ * Use AstNodeTileInput fields to specify the tile inputs (similar to BEAST inputs).
+ */
 public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
     private N node;
 

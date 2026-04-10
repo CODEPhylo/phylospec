@@ -12,6 +12,10 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * This class represents tiles that cover a single generator call. Extend this class for custom tiles.
+ * Use GeneratorTileInput fields to specify the tile inputs (similar to BEAST inputs).
+ */
 public abstract class GeneratorTile<T> extends Tile<T> {
 
     public abstract String getPhyloSpecGeneratorName();

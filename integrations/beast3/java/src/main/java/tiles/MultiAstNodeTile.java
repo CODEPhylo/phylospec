@@ -11,6 +11,11 @@ import tiling.TileInput;
 import java.lang.reflect.Field;
 import java.util.*;
 
+/**
+ * This class represents tiles that cover multiple AstNodes. Extend this class for custom tiles and specify a
+ * PhyloSpec template used to match the AST subgraph.
+ * Use MultiAstNodeTileInput fields to specify the tile inputs (similar to BEAST inputs).
+ */
 public abstract class MultiAstNodeTile<T> extends Tile<T> {
 
     protected abstract String getPhyloSpecTemplate();
