@@ -48,12 +48,12 @@ public abstract class Tile<T> {
     /**
      * Tries to tile this tile to the AST subgraph starting with 'node'. Has to be overridden by custom tiles.
      */
-    public abstract TilingAttempt tryToTile(
+    public abstract Set<Tile<?>> tryToTile(
             AstNode node, Map<AstNode,
             Set<Tile<?>>> inputTiles,
             VariableResolver variableResolver,
             StochasticityResolver stochasticityResolver
-    );
+    ) throws FailedTilingAttempt;
 
     /**
      * Returns the {@code TileInput<?>} fields of this tile using reflection.
@@ -78,7 +78,7 @@ public abstract class Tile<T> {
     /**
      * Creates wired up fresh tiles for the given inputs and their compatible input tiles.
      */
-    protected TilingAttempt.Matched getWiredUpTiles(
+    protected Set<Tile<?>> getWiredUpTiles(
             List<TileInput<?>> tileInputs,
             List<Set<Tile<?>>> compatibleInputTiles
     ) {
@@ -114,7 +114,7 @@ public abstract class Tile<T> {
                 }
         );
 
-        return new TilingAttempt.Matched(wiredUpTiles);
+        return wiredUpTiles;
     }
 
     /** methods to apply a tiling */

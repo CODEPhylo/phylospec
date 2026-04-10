@@ -1,5 +1,5 @@
 String a = env(variable=env(variable="Hallo"), useFile=false)
 
 // EXPECTED_TILES
-// NO_VALID_TILING
+// Unsupported operation. You cannot pass a value to the 'useFile' argument to run this in BEAST.
 // EXPECTED_TILES

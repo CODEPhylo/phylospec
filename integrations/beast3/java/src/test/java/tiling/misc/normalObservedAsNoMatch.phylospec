@@ -1,0 +1,5 @@
+Real c ~ Normal(mean=2.0, sd=10.0) observed as "hallo"
+
+// EXPECTED_TILES
+// Unsupported operation. BEAST cannot deal with the value you provided for the observation.
+// EXPECTED_TILES

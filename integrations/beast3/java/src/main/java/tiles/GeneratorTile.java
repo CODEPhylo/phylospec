@@ -5,9 +5,9 @@ import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
+import tiling.FailedTilingAttempt;
 import tiling.Tile;
 import tiling.TileInput;
-import tiling.TilingAttempt;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -22,20 +22,25 @@ public abstract class GeneratorTile<T> extends Tile<T> {
     public abstract String getPhyloSpecGeneratorName();
 
     @Override
-    public TilingAttempt tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> inputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
-        if (!(node instanceof Expr.Call call)) return new TilingAttempt.Irrelevant();
-        if (!Objects.equals(call.functionName, this.getPhyloSpecGeneratorName())) return new TilingAttempt.Irrelevant();
+    public Set<Tile<?>> tryToTile(
+            AstNode node,
+            Map<AstNode, Set<Tile<?>>> inputTiles,
+            VariableResolver variableResolver,
+            StochasticityResolver stochasticityResolver
+    ) throws FailedTilingAttempt {
+        if (!(node instanceof Expr.Call call)) throw new FailedTilingAttempt.Irrelevant();
+        if (!Objects.equals(call.functionName, this.getPhyloSpecGeneratorName())) throw new FailedTilingAttempt.Irrelevant();
 
         // check the stochasticity
 
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
         if (!this.getCompatibleStochasticities().contains(stochasticity)) {
             if (this.getCompatibleStochasticities().equals(Set.of(Stochasticity.STOCHASTIC))) {
-                return new TilingAttempt.Rejected(
+                throw new FailedTilingAttempt.Rejected(
                         "BEAST expects a random variable here, but you provided a deterministic statement."
                 );
             } else {
-                return new TilingAttempt.Rejected(
+                throw new FailedTilingAttempt.Rejected(
                         "BEAST cannot handle a " + stochasticity.toString() + " here."
                 );
             }
@@ -63,8 +68,9 @@ public abstract class GeneratorTile<T> extends Tile<T> {
             if (argumentInput == null) {
                 // Generator has an argument for which no Input field is defined in the tile
                 // we cannot tile
-                return new TilingAttempt.Rejected(
-                        "You need to provide a value for the '" + argumentName + "' argument to run this in BEAST."
+                throw new FailedTilingAttempt.RejectedBoundary(
+                        "You cannot pass a value to the '" + argumentName + "' argument to run this in BEAST.",
+                        argument
                 );
             }
 
@@ -73,8 +79,9 @@ public abstract class GeneratorTile<T> extends Tile<T> {
             Set<Tile<?>> currentCompatibleInputTiles = argumentInput.getCompatibleInputTiles(argument, inputTiles);
 
             if (currentCompatibleInputTiles.isEmpty()) {
-                return new TilingAttempt.Rejected(
-                        "BEAST cannot deal with the value you provided for the '" + argumentName + "' argument for '" + this.getPhyloSpecGeneratorName() + "'."
+                throw new FailedTilingAttempt.RejectedBoundary(
+                        "BEAST cannot deal with the value you provided for the '" + argumentName + "' argument for '" + this.getPhyloSpecGeneratorName() + "'.",
+                        argument
                 );
             }
 
@@ -91,7 +98,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
             if (!givenPhyloSpecArgumentNames.contains(inputName)) {
                 // a required argument is missing
                 // we cannot tile this
-                return new TilingAttempt.Rejected(
+                throw new FailedTilingAttempt.Rejected(
                         "BEAST expects you to provide a value for the '" + input.getKey() + "' argument."
                 );
             }

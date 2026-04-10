@@ -24,6 +24,12 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     // statements that have already been claimed by a tile covering multiple statements
     private final Set<Stmt> consumedStatements;
 
+    // best failure per node (RejectedBoundary > Rejected > RejectedCascade, Irrelevant ignored)
+    private final IdentityHashMap<AstNode, FailedTilingAttempt> bestFailures;
+
+    // all nodes that failed to tile, recorded in visit order (children before parents)
+    private final List<AstNode> failedNodesInVisitOrder;
+
     public EvaluateTiles(List<Tile<?>> tiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
         this.tiles = tiles;
         this.variableResolver = variableResolver;
@@ -31,6 +37,8 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         this.evaluatedTiles = new IdentityHashMap<>();
         this.bestEvaluatedTiles = new IdentityHashMap<>();
         this.consumedStatements = new HashSet<>();
+        this.bestFailures = new IdentityHashMap<>();
+        this.failedNodesInVisitOrder = new ArrayList<>();
     }
 
     /**
@@ -51,7 +59,20 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
 
             if (this.consumedStatements.contains(stmt)) continue;
 
+            // snapshot the failure list before visiting so we can scope the search to this statement
+            int failedCountBefore = this.failedNodesInVisitOrder.size();
             Tile<?> bestTile = stmt.accept(this);
+
+            if (bestTile == null) {
+                FailedTilingAttempt deepest = this.findDeepestFailure(failedCountBefore);
+                String reason = switch (deepest) {
+                    case FailedTilingAttempt.Rejected r -> r.getReason();
+                    case FailedTilingAttempt.RejectedBoundary rb -> rb.getReason();
+                    case null, default -> "BEAST has no tile that can handle this statement.";
+                };
+                throw new TilingError("Unsupported operation.", reason);
+            }
+
             bestTiles.addFirst(bestTile);
         }
 
@@ -83,9 +104,8 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
      * Finds the best tile for {@code node} by asking every registered tile to attempt a match,
      * then returning the one with the lowest weight. Results are memoised so the same node is
      * never evaluated twice.
-     *
-     * @param node the AST node to tile
-     * @return the lowest-weight tile that matched, or {@code null} if no tile matched
+     * When no tile matches, the highest-priority failure is stored in {@link #bestFailures} for
+     * later root-cause analysis.
      */
     private Tile<?> visitNode(AstNode node) {
         if (this.bestEvaluatedTiles.containsKey(node)) {
@@ -97,25 +117,65 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
 
         this.evaluatedTiles.putIfAbsent(node, new HashSet<>());
 
+        // we track the best failure seen across all tiles for this node
+
+        FailedTilingAttempt.RejectedBoundary bestBoundary = null;
+        FailedTilingAttempt.Rejected bestRejected = null;
+        FailedTilingAttempt.RejectedCascade bestCascade = null;
+
         for (Tile<?> tile : this.tiles) {
-            TilingAttempt attempt = tile.tryToTile(
-                    node, this.evaluatedTiles, this.variableResolver, this.stochasticityResolver
-            );
+            Set<Tile<?>> evaluatedTiles;
+            try {
+                evaluatedTiles = tile.tryToTile(
+                        node, this.evaluatedTiles, this.variableResolver, this.stochasticityResolver
+                );
+            } catch (FailedTilingAttempt.Irrelevant e) {
+                continue;
+            } catch (FailedTilingAttempt e) {
+                if (e instanceof FailedTilingAttempt.RejectedBoundary rb && bestBoundary == null) bestBoundary = rb;
+                else if (e instanceof FailedTilingAttempt.Rejected r && bestRejected == null) bestRejected = r;
+                else if (e instanceof FailedTilingAttempt.RejectedCascade rc && bestCascade == null) bestCascade = rc;
+                continue;
+            }
 
-            if (attempt instanceof TilingAttempt.Matched(Set<Tile<?>> evaluatedTiles)) {
-                this.evaluatedTiles.get(node).addAll(evaluatedTiles);
+            this.evaluatedTiles.get(node).addAll(evaluatedTiles);
 
-                for (Tile<?> evaluatedTile : evaluatedTiles) {
-                    if (evaluatedTile.getWeight() < lowestWeight) {
-                        lowestWeight = evaluatedTile.getWeight();
-                        bestEvaluatedTile = evaluatedTile;
-                    }
+            for (Tile<?> evaluatedTile : evaluatedTiles) {
+                if (evaluatedTile.getWeight() < lowestWeight) {
+                    lowestWeight = evaluatedTile.getWeight();
+                    bestEvaluatedTile = evaluatedTile;
                 }
             }
         }
 
+        if (bestEvaluatedTile == null) {
+            // record in visit order so findDeepestFailure can scan children-first
+            this.failedNodesInVisitOrder.add(node);
+
+            // store highest-priority failure for the scan to inspect
+            if (bestBoundary != null) this.bestFailures.put(node, bestBoundary);
+            else if (bestRejected != null) this.bestFailures.put(node, bestRejected);
+            else if (bestCascade != null) this.bestFailures.put(node, bestCascade);
+        }
+
         this.bestEvaluatedTiles.put(node, bestEvaluatedTile);
         return bestEvaluatedTile;
+    }
+
+    /**
+     * Scans failed nodes recorded since {@code fromIndex} in visit order (children before parents)
+     * and returns the first one that carries a {@code Rejected} or {@code RejectedBoundary}.
+     * Because children are visited before parents, the first match is the deepest actionable
+     * failure — everything above it failed only as a cascade consequence.
+     */
+    private FailedTilingAttempt findDeepestFailure(int fromIndex) {
+        for (int i = fromIndex; i < this.failedNodesInVisitOrder.size(); i++) {
+            FailedTilingAttempt failure = this.bestFailures.get(this.failedNodesInVisitOrder.get(i));
+            if (failure instanceof FailedTilingAttempt.Rejected || failure instanceof FailedTilingAttempt.RejectedBoundary) {
+                return failure;
+            }
+        }
+        return null;
     }
 
     /* visitor methods */

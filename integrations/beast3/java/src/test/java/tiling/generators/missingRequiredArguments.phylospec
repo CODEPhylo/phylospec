@@ -1,5 +1,5 @@
 String a = env(variable=env(variableName="Hallo"))
 
 // EXPECTED_TILES
-// NO_VALID_TILING
+// Unsupported operation. You cannot pass a value to the 'variableName' argument to run this in BEAST.
 // EXPECTED_TILES

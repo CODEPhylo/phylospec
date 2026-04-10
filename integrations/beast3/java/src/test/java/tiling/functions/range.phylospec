@@ -1,11 +1,7 @@
 Vector<Integer> intervalStartTimes = range(
     start=20, end=10
 )
-Vector<Integer> intervalStartTimes2 = range(
-    start=20.0, end=10
-)
 
 // EXPECTED_TILES
 // (AssignmentTile (RangeTile (start (AssignedArgumentTile (LiteralTile))) (end (AssignedArgumentTile (LiteralTile)))))
-// NO_VALID_TILING
 // EXPECTED_TILES

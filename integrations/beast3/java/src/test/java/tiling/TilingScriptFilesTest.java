@@ -73,12 +73,17 @@ public class TilingScriptFilesTest {
 
             // tile each statement, skipping imports (which have no tile by design)
 
-            EvaluateTiles evaluateTiles = new EvaluateTiles(TileLibrary.getTiles(), variableResolver, stochasticityResolver);
-            List<Tile<?>> bestTilings = evaluateTiles.getBestTiling(statements);
-
             List<String> actualTileLines = new ArrayList<>();
-            for (Tile<?> bestTiling : bestTilings) {
-                actualTileLines.add(bestTiling != null ? bestTiling.toString() : "NO_VALID_TILING");
+
+            EvaluateTiles evaluateTiles = new EvaluateTiles(TileLibrary.getTiles(), variableResolver, stochasticityResolver);
+            List<Tile<?>> bestTilings = null;
+            try {
+                bestTilings = evaluateTiles.getBestTiling(statements);
+                for (Tile<?> bestTiling : bestTilings) {
+                    actualTileLines.add(bestTiling != null ? bestTiling.toString() : "NO_VALID_TILING");
+                }
+            } catch (TilingError e) {
+                actualTileLines.add(e.getMessage());
             }
 
             assertEquals(expectedTileLines.size(), actualTileLines.size(), "Wrong number of tile lines for: " + psPath);

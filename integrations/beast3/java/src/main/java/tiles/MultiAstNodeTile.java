@@ -5,9 +5,9 @@ import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import templatematching.AstTemplateMatcher;
+import tiling.FailedTilingAttempt;
 import tiling.Tile;
 import tiling.TileInput;
-import tiling.TilingAttempt;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -28,12 +28,17 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
     }
 
     @Override
-    public TilingAttempt tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
+    public Set<Tile<?>> tryToTile(
+            AstNode node,
+            Map<AstNode, Set<Tile<?>>> allInputTiles,
+            VariableResolver variableResolver,
+            StochasticityResolver stochasticityResolver
+    ) throws FailedTilingAttempt {
         // try to match the template
 
         Map<String, AstNode> matchedTemplateVariables = this.astTemplateMatcher.match(node, variableResolver);
         if (matchedTemplateVariables == null) {
-            return new TilingAttempt.Irrelevant();
+            throw new FailedTilingAttempt.Irrelevant();
         }
 
         // check the stochasticity
@@ -41,11 +46,11 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
         if (!this.getCompatibleStochasticities().contains(stochasticity)) {
             if (this.getCompatibleStochasticities().equals(Set.of(Stochasticity.STOCHASTIC))) {
-                return new TilingAttempt.Rejected(
+                throw new FailedTilingAttempt.Rejected(
                         "BEAST expects a random variable here, but you provided a deterministic statement."
                 );
             } else {
-                return new TilingAttempt.Rejected(
+                throw new FailedTilingAttempt.Rejected(
                         "BEAST cannot handle a " + stochasticity.toString() + " here."
                 );
             }
@@ -63,8 +68,9 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
 
             Set<Tile<?>> compatible = tileInput.getCompatibleInputTiles(inputAstNode, allInputTiles);
             if (compatible.isEmpty()) {
-                return new TilingAttempt.Rejected(
-                        "BEAST cannot deal with the value you provided for the " + tileInput.getKey().replace("$", "") + "."
+                throw new FailedTilingAttempt.RejectedBoundary(
+                        "BEAST cannot deal with the value you provided for the " + tileInput.getKey().replace("$", "") + ".",
+                        inputAstNode
                 );
             }
 

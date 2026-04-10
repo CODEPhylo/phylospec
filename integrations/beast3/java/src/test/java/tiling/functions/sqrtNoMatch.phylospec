@@ -1,0 +1,5 @@
+Real sqrt2 = sqrt(x~Exponential(1.0)) // we don't support the sqrt of a random variable
+
+// EXPECTED_TILES
+// Unsupported operation. BEAST cannot deal with the value you provided for the 'x' argument for 'sqrt'.
+// EXPECTED_TILES

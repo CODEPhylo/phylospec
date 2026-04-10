@@ -46,8 +46,13 @@ public abstract class TileInput<T> {
     /**
      * Returns the tiles rooted at 'inputAstNode' which have types compatible with this input.
      */
-    public Set<Tile<?>> getCompatibleInputTiles(AstNode inputAstNode, Map<AstNode, Set<Tile<?>>> possibleInputTiles) {
+    public Set<Tile<?>> getCompatibleInputTiles(AstNode inputAstNode, Map<AstNode, Set<Tile<?>>> possibleInputTiles) throws FailedTilingAttempt.RejectedCascade {
         Set<Tile<?>> potentialInputs = possibleInputTiles.get(inputAstNode);
+
+        if (potentialInputs.isEmpty()) {
+            throw new FailedTilingAttempt.RejectedCascade(inputAstNode);
+        }
+
         TypeToken<?> expectedTypeToken = this.getTypeToken();
 
         Set<Tile<?>> compatibleInputs = new HashSet<>();

@@ -5,9 +5,9 @@ import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiling.BEASTState;
+import tiling.FailedTilingAttempt;
 import tiling.Tile;
 import tiling.TileInput;
-import tiling.TilingAttempt;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -30,11 +30,16 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
     protected abstract T applyTile(BEASTState beastState, N node);
 
     @Override
-    public TilingAttempt tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
+    public Set<Tile<?>> tryToTile(
+            AstNode node,
+            Map<AstNode, Set<Tile<?>>> allInputTiles,
+            VariableResolver variableResolver,
+            StochasticityResolver stochasticityResolver
+    ) throws FailedTilingAttempt {
         if (!this.getTargetNodeType().isAssignableFrom(node.getClass())) {
             // node is not of the expected AstNode type
             // we cannot tile this tile
-            return new TilingAttempt.Irrelevant();
+            throw new FailedTilingAttempt.Irrelevant();
         }
 
         // check the stochasticity
@@ -42,11 +47,11 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
         if (!this.getCompatibleStochasticities().contains(stochasticity)) {
             if (this.getCompatibleStochasticities().equals(Set.of(Stochasticity.STOCHASTIC))) {
-                return new TilingAttempt.Rejected(
+                throw new FailedTilingAttempt.Rejected(
                         "BEAST expects a random variable here, but you provided a deterministic statement."
                 );
             } else {
-                return new TilingAttempt.Rejected(
+                throw new FailedTilingAttempt.Rejected(
                         "BEAST cannot handle a " + stochasticity.toString() + " here."
                 );
             }
@@ -64,7 +69,7 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
             Set<Tile<?>> compatibleInputs = tileInput.getCompatibleInputTiles(node, allInputTiles);
 
             if (compatibleInputs.isEmpty()) {
-                return new TilingAttempt.Rejected("BEAST cannot handle this operation.");
+                throw new FailedTilingAttempt.Rejected("BEAST cannot handle this operation.");
             }
 
             compatibleInputTiles.add(compatibleInputs);
@@ -72,9 +77,9 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
 
         // we now look at every combination of the inputs and create a freshly wired up tile
 
-        TilingAttempt.Matched wiredUpTiles = this.getWiredUpTiles(expectedInputs, compatibleInputTiles);
+        Set<Tile<?>> wiredUpTiles = this.getWiredUpTiles(expectedInputs, compatibleInputTiles);
 
-        for (Tile<?> wiredUpTile : wiredUpTiles.tiles()) {
+        for (Tile<?> wiredUpTile : wiredUpTiles) {
             ((AstNodeTile<?, N>) wiredUpTile).setNode((N) node);
         }
 
@@ -119,7 +124,7 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
         }
 
         @Override
-        public Set<Tile<?>> getCompatibleInputTiles(AstNode astNode, Map<AstNode, Set<Tile<?>>> inputTiles) {
+        public Set<Tile<?>> getCompatibleInputTiles(AstNode astNode, Map<AstNode, Set<Tile<?>>> inputTiles) throws FailedTilingAttempt.RejectedCascade {
             AstNode inputAstNode = this.getter.apply((N) astNode);
             return super.getCompatibleInputTiles(inputAstNode, inputTiles);
         }
@@ -128,5 +133,6 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
         public String getKey() {
             return this.key;
         }
+
     }
 }
