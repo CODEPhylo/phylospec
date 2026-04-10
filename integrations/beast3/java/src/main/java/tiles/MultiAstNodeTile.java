@@ -169,6 +169,7 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
                     compatible.add(candidate);
                 }
             }
+
             return compatible;
         }
 

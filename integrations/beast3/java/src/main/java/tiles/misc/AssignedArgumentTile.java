@@ -3,12 +3,11 @@ package tiles.misc;
 import org.phylospec.ast.Expr;
 import tiles.AstNodeTile;
 import tiling.BEASTState;
-import tiling.Tile;
 import tiling.TypeToken;
 
 public class AssignedArgumentTile extends AstNodeTile<Object, Expr.AssignedArgument> {
 
-    TileInput<Expr.AssignedArgument, Object> expressionInput = new TileInput<>(expr -> expr.expression);
+    TileInput<Object, Expr.AssignedArgument> expressionInput = new TileInput<>("expression", expr -> expr.expression);
 
     @Override
     public Class<Expr.AssignedArgument> getTargetNodeType() {
