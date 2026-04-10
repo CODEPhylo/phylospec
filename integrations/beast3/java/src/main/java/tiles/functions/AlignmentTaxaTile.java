@@ -11,7 +11,7 @@ public class AlignmentTaxaTile extends GeneratorTile<DecoratedAlignment> {
         return "taxa";
     }
 
-    TileInput<DecoratedAlignment> alignmentInput = new TileInput<>("alignment");
+    GeneratorTileInput<DecoratedAlignment> alignmentInput = new GeneratorTileInput<>("alignment");
 
     @Override
     public DecoratedAlignment applyTile(BEASTState beastState) {

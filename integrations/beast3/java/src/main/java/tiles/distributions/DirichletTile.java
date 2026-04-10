@@ -17,7 +17,7 @@ public class DirichletTile extends GeneratorTile<BoundDistribution<SimplexParam,
         return "Dirichlet";
     }
 
-    TileInput<RealVector<PositiveReal>> concentrationInput = new TileInput<>("concentration");
+    GeneratorTileInput<RealVector<PositiveReal>> concentrationInput = new GeneratorTileInput<>("concentration");
 
     @Override
     public BoundDistribution<SimplexParam, Dirichlet> applyTile(BEASTState beastState) {

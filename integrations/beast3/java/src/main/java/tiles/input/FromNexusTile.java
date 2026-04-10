@@ -18,9 +18,9 @@ public class FromNexusTile extends GeneratorTile<DecoratedAlignment> {
         return "fromNexus";
     }
 
-    TileInput<String> fileInput = new TileInput<>("file");
-    TileInput<ParserTile.Parser> ageInput = new TileInput<>("age", false);
-    TileInput<ParserTile.Parser> dateInput = new TileInput<>("date", false);
+    GeneratorTileInput<String> fileInput = new GeneratorTileInput<>("file");
+    GeneratorTileInput<ParserTile.Parser> ageInput = new GeneratorTileInput<>("age", false);
+    GeneratorTileInput<ParserTile.Parser> dateInput = new GeneratorTileInput<>("date", false);
 
     @Override
     public DecoratedAlignment applyTile(BEASTState beastState) {

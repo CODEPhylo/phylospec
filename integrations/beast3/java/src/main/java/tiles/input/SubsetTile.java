@@ -11,10 +11,10 @@ public class SubsetTile extends GeneratorTile<DecoratedAlignment> {
         return "subset";
     }
 
-    TileInput<DecoratedAlignment> alignmentInput = new TileInput<>("alignment");
-    TileInput<Integer> startInput = new TileInput<>("start", false);
-    TileInput<Integer> endInput = new TileInput<>("end", false);
-    TileInput<Integer> codonPositionInput = new TileInput<>("codonPosition", false);
+    GeneratorTileInput<DecoratedAlignment> alignmentInput = new GeneratorTileInput<>("alignment");
+    GeneratorTileInput<Integer> startInput = new GeneratorTileInput<>("start", false);
+    GeneratorTileInput<Integer> endInput = new GeneratorTileInput<>("end", false);
+    GeneratorTileInput<Integer> codonPositionInput = new GeneratorTileInput<>("codonPosition", false);
 
     @Override
     public DecoratedAlignment applyTile(BEASTState beastState) {

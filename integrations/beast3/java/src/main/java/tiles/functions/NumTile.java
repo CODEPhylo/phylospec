@@ -11,7 +11,7 @@ public class NumTile extends GeneratorTile<Integer> {
         return "num";
     }
 
-    TileInput<Vector<?, ?>> vectorInput = new TileInput<>("vector");
+    GeneratorTileInput<Vector<?, ?>> vectorInput = new GeneratorTileInput<>("vector");
 
     @Override
     public Integer applyTile(BEASTState beastState) {

@@ -15,8 +15,8 @@ public class NormalTile extends GeneratorTile<BoundDistribution<RealScalarParam<
         return "Normal";
     }
 
-    TileInput<RealScalar<Real>> meanInput = new TileInput<>("mean");
-    TileInput<RealScalar<PositiveReal>> sdInput = new TileInput<>("sd");
+    GeneratorTileInput<RealScalar<Real>> meanInput = new GeneratorTileInput<>("mean");
+    GeneratorTileInput<RealScalar<PositiveReal>> sdInput = new GeneratorTileInput<>("sd");
 
     @Override
     public BoundDistribution<RealScalarParam<Real>, Normal> applyTile(BEASTState beastState) {

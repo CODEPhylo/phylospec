@@ -4,7 +4,6 @@ import beast.base.spec.evolution.substitutionmodel.WAG;
 import beast.base.spec.type.Simplex;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
-import tiling.Tile;
 
 public class WAGTile extends GeneratorTile<WAG> {
 
@@ -13,7 +12,7 @@ public class WAGTile extends GeneratorTile<WAG> {
         return "wag";
     }
 
-    TileInput<Simplex> baseFrequenciesInput = new TileInput<>("baseFrequencies", false);
+    GeneratorTileInput<Simplex> baseFrequenciesInput = new GeneratorTileInput<>("baseFrequencies", false);
 
     @Override
     public WAG applyTile(BEASTState beastState) {

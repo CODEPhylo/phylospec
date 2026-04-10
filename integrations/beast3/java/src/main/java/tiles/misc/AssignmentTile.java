@@ -6,7 +6,7 @@ import tiles.AstNodeTile;
 
 public class AssignmentTile extends AstNodeTile<Object, Stmt.Assignment> {
 
-    TileInput<Object, Stmt.Assignment> expressionInput = new TileInput<>(
+    AstNodeTileInput<Object, Stmt.Assignment> expressionInput = new AstNodeTileInput<>(
             "expression", expr -> expr.expression
     );
 

@@ -6,6 +6,7 @@ import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiling.BEASTState;
 import tiling.Tile;
+import tiling.TileInput;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -41,12 +42,12 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
         // the inputs correspond to the class fields with type GeneratorTile.Input (similar to BEAST inputs)
         // we use reflection to get the expected inputs
 
-        List<tiling.TileInput<?>> tileInputs = this.getTileInputs();
+        List<TileInput<?>> expectedInputs = this.getTileInputs();
 
         // for every specified TileInput, we collect the compatible tiles
 
         List<Set<Tile<?>>> compatibleInputTiles = new ArrayList<>();
-        for (tiling.TileInput<?> tileInput : tileInputs) {
+        for (TileInput<?> tileInput : expectedInputs) {
             compatibleInputTiles.add(
                     tileInput.getCompatibleInputTiles(node, allInputTiles)
             );
@@ -54,7 +55,7 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
 
         // we now look at every combination of the inputs and create a freshly wired up tile
 
-        Set<Tile<?>> wiredUpTiles = this.getWiredUpTiles(tileInputs, compatibleInputTiles);
+        Set<Tile<?>> wiredUpTiles = this.getWiredUpTiles(expectedInputs, compatibleInputTiles);
         for (Tile<?> wiredUpTile : wiredUpTiles) {
             ((AstNodeTile<?, N>) wiredUpTile).setNode((N) node);
         }
@@ -71,10 +72,10 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
         StringBuilder sb = new StringBuilder();
         sb.append("(").append(getClass().getSimpleName());
         for (Field field : getClass().getDeclaredFields()) {
-            if (field.getType().equals(TileInput.class)) {
+            if (field.getType().equals(AstNodeTileInput.class)) {
                 field.setAccessible(true);
                 try {
-                    TileInput<?, ?> input = (TileInput<?, ?>) field.get(this);
+                    AstNodeTileInput<?, ?> input = (AstNodeTileInput<?, ?>) field.get(this);
                     Tile<?> child = input.getTile();
                     if (child != null) {
                         sb.append(" ").append(child);
@@ -88,12 +89,12 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
         return sb.toString();
     }
 
-    public static class TileInput<O, N extends AstNode> extends tiling.TileInput<O> {
+    public static class AstNodeTileInput<O, N extends AstNode> extends TileInput<O> {
 
         private final String key;
         private final Function<N, AstNode> getter;
 
-        public TileInput(String key, Function<N, AstNode> getter) {
+        public AstNodeTileInput(String key, Function<N, AstNode> getter) {
             super(true);
             this.key = key;
             this.getter = getter;

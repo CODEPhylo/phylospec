@@ -14,8 +14,8 @@ public class TaxonAgeTile extends GeneratorTile<RealScalarParam<PositiveReal>> {
         return "age";
     }
 
-    TileInput<String> nodeInput = new TileInput<>("node");
-    TileInput<Tree> treeInput = new TileInput<>("tree");
+    GeneratorTileInput<String> nodeInput = new GeneratorTileInput<>("node");
+    GeneratorTileInput<Tree> treeInput = new GeneratorTileInput<>("tree");
 
     @Override
     public RealScalarParam<PositiveReal> applyTile(BEASTState beastState) {

@@ -1,7 +1,6 @@
 package tiles.functions;
 
 import tiling.BEASTState;
-import tiling.Tile;
 import tiles.GeneratorTile;
 import tiling.TilingError;
 
@@ -12,7 +11,7 @@ public class EnvTile extends GeneratorTile<String> {
         return "env";
     }
 
-    TileInput<String> variableInput = new TileInput<>("variable");
+    GeneratorTileInput<String> variableInput = new GeneratorTileInput<>("variable");
 
     @Override
     public String applyTile(BEASTState beastState) {

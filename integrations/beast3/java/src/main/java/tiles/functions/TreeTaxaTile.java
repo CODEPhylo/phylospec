@@ -4,7 +4,6 @@ import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.tree.Tree;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
-import tiling.Tile;
 
 public class TreeTaxaTile extends GeneratorTile<TaxonSet> {
 
@@ -13,7 +12,7 @@ public class TreeTaxaTile extends GeneratorTile<TaxonSet> {
         return "taxa";
     }
 
-    TileInput<Tree> treeInput = new TileInput<>("tree");
+    GeneratorTileInput<Tree> treeInput = new GeneratorTileInput<>("tree");
 
     @Override
     public TaxonSet applyTile(BEASTState beastState) {

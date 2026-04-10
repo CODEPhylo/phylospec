@@ -11,7 +11,7 @@ public class NumTreeTaxaTile extends GeneratorTile<Integer> {
         return "numTaxa";
     }
 
-    TileInput<Tree> treeInput = new TileInput<>("tree");
+    GeneratorTileInput<Tree> treeInput = new GeneratorTileInput<>("tree");
 
     @Override
     public Integer applyTile(BEASTState beastState) {

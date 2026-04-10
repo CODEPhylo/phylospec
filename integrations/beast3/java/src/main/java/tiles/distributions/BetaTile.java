@@ -16,8 +16,8 @@ public class BetaTile extends GeneratorTile<BoundDistribution<RealScalarParam<Un
         return "Beta";
     }
 
-    TileInput<RealScalar<PositiveReal>> alphaInput = new TileInput<>("alpha");
-    TileInput<RealScalar<PositiveReal>> betaInput = new TileInput<>("beta");
+    GeneratorTileInput<RealScalar<PositiveReal>> alphaInput = new GeneratorTileInput<>("alpha");
+    GeneratorTileInput<RealScalar<PositiveReal>> betaInput = new GeneratorTileInput<>("beta");
 
     @Override
     public BoundDistribution<RealScalarParam<UnitInterval>, Beta> applyTile(BEASTState beastState) {

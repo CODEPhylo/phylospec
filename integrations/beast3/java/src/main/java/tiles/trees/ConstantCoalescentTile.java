@@ -19,8 +19,8 @@ public class ConstantCoalescentTile extends GeneratorTile<BoundDistribution<Tree
         return "Coalescent";
     }
 
-    TileInput<RealScalar<? extends PositiveReal>> populationSizeInput = new TileInput<>("populationSize");
-    TileInput<DecoratedAlignment> taxaInput = new TileInput<>("taxa", true);
+    GeneratorTileInput<RealScalar<? extends PositiveReal>> populationSizeInput = new GeneratorTileInput<>("populationSize");
+    GeneratorTileInput<DecoratedAlignment> taxaInput = new GeneratorTileInput<>("taxa", true);
 
     @Override
     public BoundDistribution<Tree, Coalescent> applyTile(BEASTState beastState) {

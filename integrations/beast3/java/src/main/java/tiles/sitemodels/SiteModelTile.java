@@ -9,7 +9,6 @@ import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
 import tiling.Partial;
-import tiling.Tile;
 
 import java.util.Objects;
 
@@ -20,10 +19,10 @@ public class SiteModelTile extends GeneratorTile<Partial<SiteModel, Substitution
         return "DiscreteGammaInv";
     }
 
-    TileInput<RealScalar<PositiveReal>> shapeInput = new TileInput<>("shape");
-    TileInput<Integer> numCategoriesInput = new TileInput<>("numCategories");
-    TileInput<RealScalar<UnitInterval>> invariantProportionInput = new TileInput<>("invariantProportion", false);
-    TileInput<IntScalar<NonNegativeInt>> numSitesInput = new TileInput<>("numSites");
+    GeneratorTileInput<RealScalar<PositiveReal>> shapeInput = new GeneratorTileInput<>("shape");
+    GeneratorTileInput<Integer> numCategoriesInput = new GeneratorTileInput<>("numCategories");
+    GeneratorTileInput<RealScalar<UnitInterval>> invariantProportionInput = new GeneratorTileInput<>("invariantProportion", false);
+    GeneratorTileInput<IntScalar<NonNegativeInt>> numSitesInput = new GeneratorTileInput<>("numSites");
 
     @Override
     public Partial<SiteModel, SubstitutionModel> applyTile(BEASTState beastState) {

@@ -1,7 +1,6 @@
 package tiles.functions;
 
 import tiling.BEASTState;
-import tiling.Tile;
 import tiles.GeneratorTile;
 
 public class LogTile extends GeneratorTile<Double> {
@@ -11,8 +10,8 @@ public class LogTile extends GeneratorTile<Double> {
         return "log";
     }
 
-    TileInput<Double> xInput = new TileInput<>("x");
-    TileInput<Integer> basisInput = new TileInput<>("base", false);
+    GeneratorTileInput<Double> xInput = new GeneratorTileInput<>("x");
+    GeneratorTileInput<Integer> basisInput = new GeneratorTileInput<>("base", false);
 
     @Override
     public Double applyTile(BEASTState beastState) {

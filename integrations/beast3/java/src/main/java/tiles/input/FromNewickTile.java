@@ -12,7 +12,7 @@ public class FromNewickTile extends GeneratorTile<Tree> {
         return "fromNewick";
     }
 
-    TileInput<String> newickStringInput = new TileInput<>("newickString");
+    GeneratorTileInput<String> newickStringInput = new GeneratorTileInput<>("newickString");
 
     @Override
     public Tree applyTile(BEASTState beastState) {

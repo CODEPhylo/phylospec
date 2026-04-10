@@ -11,7 +11,7 @@ public class NumAlignmentTaxaTile extends GeneratorTile<Integer> {
         return "numTaxa";
     }
 
-    TileInput<DecoratedAlignment> alignmentInput = new TileInput<>("alignment");
+    GeneratorTileInput<DecoratedAlignment> alignmentInput = new GeneratorTileInput<>("alignment");
 
     @Override
     public Integer applyTile(BEASTState beastState) {

@@ -10,7 +10,7 @@ import java.util.Set;
 
 public class StateNodeAssignmentTile extends AstNodeTile<StateNode, Stmt.Assignment> {
 
-    TileInput<StateNode, Stmt.Assignment> expressionInput = new TileInput<>(
+    AstNodeTileInput<StateNode, Stmt.Assignment> expressionInput = new AstNodeTileInput<>(
             "expression", expr -> expr.expression
     );
 

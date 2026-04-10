@@ -19,9 +19,9 @@ public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>> 
         return "Yule";
     }
 
-    TileInput<RealScalar<? extends PositiveReal>> birthRateInput = new TileInput<>("birthRate");
-    TileInput<DecoratedAlignment> taxaInput = new TileInput<>("taxa", true);
-    TileInput<RealScalar<? extends PositiveReal>> rootAgeInput = new TileInput<>("rootAge", false);
+    GeneratorTileInput<RealScalar<? extends PositiveReal>> birthRateInput = new GeneratorTileInput<>("birthRate");
+    GeneratorTileInput<DecoratedAlignment> taxaInput = new GeneratorTileInput<>("taxa", true);
+    GeneratorTileInput<RealScalar<? extends PositiveReal>> rootAgeInput = new GeneratorTileInput<>("rootAge", false);
 
     @Override
     public BoundDistribution<Tree, YuleModel> applyTile(BEASTState beastState) {

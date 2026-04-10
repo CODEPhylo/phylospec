@@ -15,8 +15,8 @@ public class UniformTile extends GeneratorTile<BoundDistribution<RealScalarParam
         return "Uniform";
     }
 
-    TileInput<RealScalar<Real>> lowerInput = new TileInput<>("lower");
-    TileInput<RealScalar<Real>> upperInput = new TileInput<>("upper");
+    GeneratorTileInput<RealScalar<Real>> lowerInput = new GeneratorTileInput<>("lower");
+    GeneratorTileInput<RealScalar<Real>> upperInput = new GeneratorTileInput<>("upper");
 
     @Override
     public BoundDistribution<RealScalarParam<Real>, Uniform> applyTile(BEASTState beastState) {

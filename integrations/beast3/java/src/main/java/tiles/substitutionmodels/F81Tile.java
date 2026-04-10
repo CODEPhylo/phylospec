@@ -6,7 +6,6 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.Simplex;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
-import tiling.Tile;
 
 public class F81Tile extends GeneratorTile<HKY> {
 
@@ -15,7 +14,7 @@ public class F81Tile extends GeneratorTile<HKY> {
         return "f81";
     }
 
-    TileInput<Simplex> baseFrequenciesInput = new TileInput<>("baseFrequencies");
+    GeneratorTileInput<Simplex> baseFrequenciesInput = new GeneratorTileInput<>("baseFrequencies");
 
     @Override
     public HKY applyTile(BEASTState beastState) {

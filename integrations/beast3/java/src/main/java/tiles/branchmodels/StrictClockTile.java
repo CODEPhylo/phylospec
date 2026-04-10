@@ -6,7 +6,6 @@ import beast.base.spec.evolution.branchratemodel.StrictClockModel;
 import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
-import tiling.Tile;
 
 public class StrictClockTile extends GeneratorTile<StrictClockModel> {
 
@@ -15,8 +14,8 @@ public class StrictClockTile extends GeneratorTile<StrictClockModel> {
         return "StrictClock";
     }
 
-    TileInput<RealScalar<PositiveReal>> rateInput = new TileInput<>("rate");
-    TileInput<Tree> treeInput = new TileInput<>("tree");
+    GeneratorTileInput<RealScalar<PositiveReal>> rateInput = new GeneratorTileInput<>("rate");
+    GeneratorTileInput<Tree> treeInput = new GeneratorTileInput<>("tree");
 
     @Override
     public StrictClockModel applyTile(BEASTState beastState) {

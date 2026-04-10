@@ -15,8 +15,8 @@ public class MRCATile extends GeneratorTile<RealScalarParam<PositiveReal>> {
         return "mrca";
     }
 
-    TileInput<Tree> treeInput = new TileInput<>("tree");
-    TileInput<List<String>> cladeInput = new TileInput<>("clade");
+    GeneratorTileInput<Tree> treeInput = new GeneratorTileInput<>("tree");
+    GeneratorTileInput<List<String>> cladeInput = new GeneratorTileInput<>("clade");
 
     @Override
     public RealScalarParam<PositiveReal> applyTile(BEASTState beastState) {

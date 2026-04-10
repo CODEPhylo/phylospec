@@ -2,7 +2,6 @@ package tiles.functions;
 
 import tiles.GeneratorTile;
 import tiling.BEASTState;
-import tiling.Tile;
 
 public class SqrtTile extends GeneratorTile<Double> {
 
@@ -11,7 +10,7 @@ public class SqrtTile extends GeneratorTile<Double> {
         return "sqrt";
     }
 
-    TileInput<Double> xInput = new TileInput<>("x");
+    GeneratorTileInput<Double> xInput = new GeneratorTileInput<>("x");
 
     @Override
     public Double applyTile(BEASTState beastState) {

@@ -4,7 +4,6 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
-import tiling.Tile;
 
 import java.util.Arrays;
 
@@ -15,8 +14,8 @@ public class RepeatRealTile extends GeneratorTile<RealVectorParam<Real>> {
         return "repeat";
     }
 
-    TileInput<Double> valueInput = new TileInput<>("value");
-    TileInput<Integer> numInput = new TileInput<>("num");
+    GeneratorTileInput<Double> valueInput = new GeneratorTileInput<>("value");
+    GeneratorTileInput<Integer> numInput = new GeneratorTileInput<>("num");
 
     @Override
     public RealVectorParam<Real> applyTile(BEASTState beastState) {

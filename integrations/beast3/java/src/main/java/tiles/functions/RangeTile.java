@@ -4,7 +4,6 @@ import beast.base.spec.domain.Int;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
-import tiling.Tile;
 
 public class RangeTile extends GeneratorTile<IntVectorParam<Int>> {
 
@@ -13,8 +12,8 @@ public class RangeTile extends GeneratorTile<IntVectorParam<Int>> {
         return "range";
     }
 
-    TileInput<Integer> startInput = new TileInput<>("start");
-    TileInput<Integer> endInput = new TileInput<>("end");
+    GeneratorTileInput<Integer> startInput = new GeneratorTileInput<>("start");
+    GeneratorTileInput<Integer> endInput = new GeneratorTileInput<>("end");
 
     @Override
     public IntVectorParam<Int> applyTile(BEASTState beastState) {

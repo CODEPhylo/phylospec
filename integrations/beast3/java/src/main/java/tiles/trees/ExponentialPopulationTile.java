@@ -14,8 +14,8 @@ public class ExponentialPopulationTile extends GeneratorTile<PopulationFunction>
         return "exponentialPopulationFunction";
     }
 
-    TileInput<RealScalar<? extends PositiveReal>> populationSizeInput = new TileInput<>("populationSize");
-    TileInput<RealScalar<? extends PositiveReal>> growthRateInput = new TileInput<>("growthRate");
+    GeneratorTileInput<RealScalar<? extends PositiveReal>> populationSizeInput = new GeneratorTileInput<>("populationSize");
+    GeneratorTileInput<RealScalar<? extends PositiveReal>> growthRateInput = new GeneratorTileInput<>("growthRate");
 
     @Override
     public PopulationFunction applyTile(BEASTState beastState) {

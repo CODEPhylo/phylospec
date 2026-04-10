@@ -7,7 +7,7 @@ import tiling.TypeToken;
 
 public class AssignedArgumentTile extends AstNodeTile<Object, Expr.AssignedArgument> {
 
-    TileInput<Object, Expr.AssignedArgument> expressionInput = new TileInput<>("expression", expr -> expr.expression);
+    AstNodeTileInput<Object, Expr.AssignedArgument> expressionInput = new AstNodeTileInput<>("expression", expr -> expr.expression);
 
     @Override
     public Class<Expr.AssignedArgument> getTargetNodeType() {

@@ -15,8 +15,8 @@ public class GammaTile extends GeneratorTile<BoundDistribution<RealScalarParam<P
         return "Gamma";
     }
 
-    TileInput<RealScalar<PositiveReal>> shapeInput = new TileInput<>("shape");
-    TileInput<RealScalar<PositiveReal>> rateInput = new TileInput<>("rate");
+    GeneratorTileInput<RealScalar<PositiveReal>> shapeInput = new GeneratorTileInput<>("shape");
+    GeneratorTileInput<RealScalar<PositiveReal>> rateInput = new GeneratorTileInput<>("rate");
 
     @Override
     public BoundDistribution<RealScalarParam<PositiveReal>, Gamma> applyTile(BEASTState beastState) {

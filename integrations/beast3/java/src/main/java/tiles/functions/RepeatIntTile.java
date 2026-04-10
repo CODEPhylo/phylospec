@@ -4,7 +4,6 @@ import beast.base.spec.domain.Int;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
-import tiling.Tile;
 
 import java.util.Arrays;
 
@@ -15,8 +14,8 @@ public class RepeatIntTile extends GeneratorTile<IntVectorParam<Int>> {
         return "repeat";
     }
 
-    TileInput<Integer> valueInput = new TileInput<>("value");
-    TileInput<Integer> numInput = new TileInput<>("num");
+    GeneratorTileInput<Integer> valueInput = new GeneratorTileInput<>("value");
+    GeneratorTileInput<Integer> numInput = new GeneratorTileInput<>("num");
 
     @Override
     public IntVectorParam<Int> applyTile(BEASTState beastState) {

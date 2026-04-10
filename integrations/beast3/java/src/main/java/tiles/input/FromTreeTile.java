@@ -20,7 +20,7 @@ public class FromTreeTile extends GeneratorTile<Tree> {
         return "fromTree";
     }
 
-    TileInput<String> fileInput = new TileInput<>("file");
+    GeneratorTileInput<String> fileInput = new GeneratorTileInput<>("file");
 
     @Override
     public Tree applyTile(BEASTState beastState) {

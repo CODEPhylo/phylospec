@@ -4,7 +4,6 @@ import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.distribution.Exponential;
 import beast.base.spec.inference.parameter.RealScalarParam;
-import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
 import tiling.BoundDistribution;
@@ -16,7 +15,7 @@ public class ExponentialTile extends GeneratorTile<BoundDistribution<RealScalarP
         return "Exponential";
     }
 
-    TileInput<Double> rateInput = new TileInput<>("rate");
+    GeneratorTileInput<Double> rateInput = new GeneratorTileInput<>("rate");
 
     @Override
     public BoundDistribution<RealScalarParam<NonNegativeReal>, Exponential> applyTile(BEASTState beastState) {

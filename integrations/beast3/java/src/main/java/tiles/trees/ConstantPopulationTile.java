@@ -14,7 +14,7 @@ public class ConstantPopulationTile extends GeneratorTile<PopulationFunction> {
         return "constantPopulationFunction";
     }
 
-    TileInput<RealScalar<? extends PositiveReal>> populationSizeInput = new TileInput<>("populationSize");
+    GeneratorTileInput<RealScalar<? extends PositiveReal>> populationSizeInput = new GeneratorTileInput<>("populationSize");
 
     @Override
     public PopulationFunction applyTile(BEASTState beastState) {

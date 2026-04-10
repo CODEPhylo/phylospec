@@ -4,12 +4,9 @@ import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.coalescent.Coalescent;
 import beast.base.evolution.tree.coalescent.PopulationFunction;
 import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.domain.UnitInterval;
-import beast.base.spec.evolution.speciation.BirthDeathGernhard08Model;
 import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
 import beast.base.spec.evolution.tree.coalescent.RandomTree;
 import beast.base.spec.inference.parameter.RealScalarParam;
-import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
 import tiling.BEASTState;
@@ -22,8 +19,8 @@ public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coales
         return "Coalescent";
     }
 
-    TileInput<PopulationFunction> populationSizeInput = new TileInput<>("populationSize");
-    TileInput<DecoratedAlignment> taxaInput = new TileInput<>("taxa", true);
+    GeneratorTileInput<PopulationFunction> populationSizeInput = new GeneratorTileInput<>("populationSize");
+    GeneratorTileInput<DecoratedAlignment> taxaInput = new GeneratorTileInput<>("taxa", true);
 
     @Override
     public BoundDistribution<Tree, Coalescent> applyTile(BEASTState beastState) {

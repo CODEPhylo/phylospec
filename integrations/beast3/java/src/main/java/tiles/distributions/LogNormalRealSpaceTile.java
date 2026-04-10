@@ -16,8 +16,8 @@ public class LogNormalRealSpaceTile extends GeneratorTile<BoundDistribution<Real
         return "LogNormal";
     }
 
-    TileInput<RealScalar<Real>> meanInput = new TileInput<>("mean");
-    TileInput<RealScalar<PositiveReal>> logSdInput = new TileInput<>("logSd");
+    GeneratorTileInput<RealScalar<Real>> meanInput = new GeneratorTileInput<>("mean");
+    GeneratorTileInput<RealScalar<PositiveReal>> logSdInput = new GeneratorTileInput<>("logSd");
 
     @Override
     public BoundDistribution<RealScalarParam<PositiveReal>, LogNormal> applyTile(BEASTState beastState) {

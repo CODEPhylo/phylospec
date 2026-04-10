@@ -15,8 +15,8 @@ public class DiscreteUniformTile extends GeneratorTile<BoundDistribution<IntScal
         return "DiscreteUniform";
     }
 
-    TileInput<IntScalar<Int>> lowerInput = new TileInput<>("lower");
-    TileInput<IntScalar<Int>> upperInput = new TileInput<>("upper");
+    GeneratorTileInput<IntScalar<Int>> lowerInput = new GeneratorTileInput<>("lower");
+    GeneratorTileInput<IntScalar<Int>> upperInput = new GeneratorTileInput<>("upper");
 
     @Override
     public BoundDistribution<IntScalarParam<Int>, IntUniform> applyTile(BEASTState beastState) {

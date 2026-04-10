@@ -1,11 +1,9 @@
 package tiles.trees;
 
 import beast.base.evolution.tree.Tree;
-import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.evolution.speciation.BirthDeathGernhard08Model;
-import beast.base.spec.evolution.speciation.YuleModel;
 import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
 import beast.base.spec.evolution.tree.coalescent.RandomTree;
 import beast.base.spec.inference.parameter.RealScalarParam;
@@ -22,11 +20,11 @@ public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthD
         return "BirthDeath";
     }
 
-    TileInput<RealScalar<? extends PositiveReal>> diversificationRateInput = new TileInput<>("diversificationRate");
-    TileInput<RealScalar<? extends PositiveReal>> turnoverInput = new TileInput<>("turnover");
-    TileInput<RealScalar<UnitInterval>> samplingProbabilityInput = new TileInput<>("samplingProbability", false);
-    TileInput<DecoratedAlignment> taxaInput = new TileInput<>("taxa", true);
-    TileInput<RealScalar<? extends PositiveReal>> rootAgeInput = new TileInput<>("rootAge", false);
+    GeneratorTileInput<RealScalar<? extends PositiveReal>> diversificationRateInput = new GeneratorTileInput<>("diversificationRate");
+    GeneratorTileInput<RealScalar<? extends PositiveReal>> turnoverInput = new GeneratorTileInput<>("turnover");
+    GeneratorTileInput<RealScalar<UnitInterval>> samplingProbabilityInput = new GeneratorTileInput<>("samplingProbability", false);
+    GeneratorTileInput<DecoratedAlignment> taxaInput = new GeneratorTileInput<>("taxa", true);
+    GeneratorTileInput<RealScalar<? extends PositiveReal>> rootAgeInput = new GeneratorTileInput<>("rootAge", false);
 
     @Override
     public BoundDistribution<Tree, BirthDeathGernhard08Model> applyTile(BEASTState beastState) {

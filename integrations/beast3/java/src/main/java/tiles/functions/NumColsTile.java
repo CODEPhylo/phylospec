@@ -11,7 +11,7 @@ public class NumColsTile extends GeneratorTile<Integer> {
         return "numCols";
     }
 
-    TileInput<Tensor<?, ?>> matrixInput = new TileInput<>("matrix");
+    GeneratorTileInput<Tensor<?, ?>> matrixInput = new GeneratorTileInput<>("matrix");
 
     @Override
     public Integer applyTile(BEASTState beastState) {

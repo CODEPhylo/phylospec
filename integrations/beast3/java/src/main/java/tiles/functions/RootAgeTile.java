@@ -13,7 +13,7 @@ public class RootAgeTile extends GeneratorTile<RealScalarParam<PositiveReal>> {
         return "rootAge";
     }
 
-    TileInput<Tree> treeInput = new TileInput<>("tree");
+    GeneratorTileInput<Tree> treeInput = new GeneratorTileInput<>("tree");
 
     @Override
     public RealScalarParam<PositiveReal> applyTile(BEASTState beastState) {

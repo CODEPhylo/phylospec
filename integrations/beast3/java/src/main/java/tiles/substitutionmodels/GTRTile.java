@@ -8,7 +8,6 @@ import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Simplex;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
-import tiling.Tile;
 
 public class GTRTile extends GeneratorTile<GTR> {
 
@@ -18,8 +17,8 @@ public class GTRTile extends GeneratorTile<GTR> {
     }
 
     // rates in order: AC, AG, AT, CG, CT, GT
-    TileInput<RealVector<Real>> rateMatrixInput = new TileInput<>("rateMatrix");
-    TileInput<Simplex> baseFrequenciesInput = new TileInput<>("baseFrequencies");
+    GeneratorTileInput<RealVector<Real>> rateMatrixInput = new GeneratorTileInput<>("rateMatrix");
+    GeneratorTileInput<Simplex> baseFrequenciesInput = new GeneratorTileInput<>("baseFrequencies");
 
     @Override
     public GTR applyTile(BEASTState beastState) {

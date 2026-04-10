@@ -16,7 +16,7 @@ public class PoissonTile extends GeneratorTile<BoundDistribution<IntScalarParam<
         return "Poisson";
     }
 
-    TileInput<RealScalar<NonNegativeReal>> rateInput = new TileInput<>("rate");
+    GeneratorTileInput<RealScalar<NonNegativeReal>> rateInput = new GeneratorTileInput<>("rate");
 
     @Override
     public BoundDistribution<IntScalarParam<NonNegativeInt>, Poisson> applyTile(BEASTState beastState) {

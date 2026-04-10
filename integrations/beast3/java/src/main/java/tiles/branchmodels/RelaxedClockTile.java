@@ -21,11 +21,11 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel> {
         return "RelaxedClock";
     }
 
-    TileInput<RealScalarParam<PositiveReal>> clockRateInput = new TileInput<>("clockRate");
-    TileInput<BoundDistribution<? extends RealScalarParam<? extends PositiveReal>, ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>>> baseInput = new TileInput<>(
+    GeneratorTileInput<RealScalarParam<PositiveReal>> clockRateInput = new GeneratorTileInput<>("clockRate");
+    GeneratorTileInput<BoundDistribution<? extends RealScalarParam<? extends PositiveReal>, ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>>> baseInput = new GeneratorTileInput<>(
             "base"
     );
-    TileInput<Tree> treeInput = new TileInput<>("tree");
+    GeneratorTileInput<Tree> treeInput = new GeneratorTileInput<>("tree");
 
     @Override
     protected UCRelaxedClockModel applyTile(BEASTState beastState) {

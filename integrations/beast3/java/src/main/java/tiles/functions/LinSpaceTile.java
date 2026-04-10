@@ -4,7 +4,6 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
-import tiling.Tile;
 
 public class LinSpaceTile extends GeneratorTile<RealVectorParam<Real>> {
 
@@ -13,9 +12,9 @@ public class LinSpaceTile extends GeneratorTile<RealVectorParam<Real>> {
         return "linspace";
     }
 
-    TileInput<Double> startInput = new TileInput<>("start");
-    TileInput<Double> endInput = new TileInput<>("end");
-    TileInput<Integer> numInput = new TileInput<>("num");
+    GeneratorTileInput<Double> startInput = new GeneratorTileInput<>("start");
+    GeneratorTileInput<Double> endInput = new GeneratorTileInput<>("end");
+    GeneratorTileInput<Integer> numInput = new GeneratorTileInput<>("num");
 
     @Override
     public RealVectorParam<Real> applyTile(BEASTState beastState) {

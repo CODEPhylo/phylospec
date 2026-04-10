@@ -12,7 +12,7 @@ import java.lang.reflect.WildcardType;
 
 public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw> {
 
-    TileInput<BoundDistribution<?, ?>, Stmt.Draw> expressionInput = new TileInput<>(
+    AstNodeTileInput<BoundDistribution<?, ?>, Stmt.Draw> expressionInput = new AstNodeTileInput<>(
             "expression", expr -> expr.expression
     );
 

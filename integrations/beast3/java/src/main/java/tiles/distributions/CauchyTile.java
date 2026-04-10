@@ -16,8 +16,8 @@ public class CauchyTile extends GeneratorTile<BoundDistribution<RealScalarParam<
         return "Cauchy";
     }
 
-    TileInput<RealScalar<Real>> locationInput = new TileInput<>("location");
-    TileInput<RealScalar<PositiveReal>> scaleInput = new TileInput<>("scale");
+    GeneratorTileInput<RealScalar<Real>> locationInput = new GeneratorTileInput<>("location");
+    GeneratorTileInput<RealScalar<PositiveReal>> scaleInput = new GeneratorTileInput<>("scale");
 
     @Override
     public BoundDistribution<RealScalarParam<Real>, Cauchy> applyTile(BEASTState beastState) {

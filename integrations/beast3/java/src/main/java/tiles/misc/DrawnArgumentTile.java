@@ -5,7 +5,6 @@ import org.phylospec.ast.Expr;
 import tiles.AstNodeTile;
 import tiling.BEASTState;
 import tiling.BoundDistribution;
-import tiling.Tile;
 import tiling.TypeToken;
 
 import java.lang.reflect.ParameterizedType;
@@ -15,7 +14,7 @@ import java.lang.reflect.WildcardType;
 
 public class DrawnArgumentTile extends AstNodeTile<StateNode, Expr.DrawnArgument> {
 
-    TileInput<BoundDistribution<?, ?>, Expr.DrawnArgument> expressionInput = new TileInput<>(
+    AstNodeTileInput<BoundDistribution<?, ?>, Expr.DrawnArgument> expressionInput = new AstNodeTileInput<>(
             "expression", expr -> expr.expression
     );
 

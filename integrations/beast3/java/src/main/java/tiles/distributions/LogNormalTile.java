@@ -3,13 +3,11 @@ package tiles.distributions;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.LogNormal;
-import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
 import tiling.BoundDistribution;
-import tiling.Tile;
 
 public class LogNormalTile extends GeneratorTile<BoundDistribution<RealScalarParam<PositiveReal>, LogNormal>> {
 
@@ -18,8 +16,8 @@ public class LogNormalTile extends GeneratorTile<BoundDistribution<RealScalarPar
         return "LogNormal";
     }
 
-    TileInput<RealScalar<Real>> logMeanInput = new TileInput<>("logMean");
-    TileInput<RealScalar<PositiveReal>> logSdInput = new TileInput<>("logSd");
+    GeneratorTileInput<RealScalar<Real>> logMeanInput = new GeneratorTileInput<>("logMean");
+    GeneratorTileInput<RealScalar<PositiveReal>> logSdInput = new GeneratorTileInput<>("logSd");
 
     @Override
     public BoundDistribution<RealScalarParam<PositiveReal>, LogNormal> applyTile(BEASTState beastState) {
