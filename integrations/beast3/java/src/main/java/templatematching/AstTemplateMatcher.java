@@ -319,6 +319,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         }
 
         // this is a scoped variable, as we would have passed through global variables
+
         String queryVariableName = queryVariable.variableName;
         String boundVariableName = this.currentIndexBindings.get(queryVariableName);
 
@@ -337,6 +338,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         if (existingResolvedNode != null) {
             // the template variable was already bound; the new node must refer to the same thing.
             // two variable nodes are considered the same if they have the same name, even if they are different objects.
+
             boolean sameNode = existingResolvedNode == currentQueryNode;
             boolean sameVariable = existingResolvedNode instanceof Expr.Variable var1
                     && currentQueryNode instanceof Expr.Variable var2
@@ -378,6 +380,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             this.match(expr.right, queryBinary.right);
         } catch (MatchingError firstError) {
             // this did not work. we swap the operand order and try again
+
             try {
                 this.match(expr.left, queryBinary.right);
                 this.match(expr.right, queryBinary.left);

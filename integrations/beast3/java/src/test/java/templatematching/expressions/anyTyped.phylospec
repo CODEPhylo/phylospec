@@ -1,0 +1,11 @@
+// TEMPLATE
+Any x = $x
+// TEMPLATE
+
+// QUERY
+String a = "100"
+// QUERY
+
+// MATCH
+// $x -> "100"
+// MATCH
