@@ -98,16 +98,18 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         this.evaluatedTiles.putIfAbsent(node, new HashSet<>());
 
         for (Tile<?> tile : this.tiles) {
-            Set<? extends Tile<?>> evaluatedTiles = tile.tryToTile(
+            TilingAttempt attempt = tile.tryToTile(
                     node, this.evaluatedTiles, this.variableResolver, this.stochasticityResolver
             );
 
-            this.evaluatedTiles.get(node).addAll(evaluatedTiles);
+            if (attempt instanceof TilingAttempt.Matched(Set<Tile<?>> evaluatedTiles)) {
+                this.evaluatedTiles.get(node).addAll(evaluatedTiles);
 
-            for (Tile<?> evaluatedTile : evaluatedTiles) {
-                if (evaluatedTile.getWeight() < lowestWeight) {
-                    lowestWeight = evaluatedTile.getWeight();
-                    bestEvaluatedTile = evaluatedTile;
+                for (Tile<?> evaluatedTile : evaluatedTiles) {
+                    if (evaluatedTile.getWeight() < lowestWeight) {
+                        lowestWeight = evaluatedTile.getWeight();
+                        bestEvaluatedTile = evaluatedTile;
+                    }
                 }
             }
         }

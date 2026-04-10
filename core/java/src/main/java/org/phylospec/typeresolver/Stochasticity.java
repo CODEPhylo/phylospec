@@ -26,4 +26,16 @@ public enum Stochasticity {
         if (stochasticities.contains(Stochasticity.DETERMINISTIC)) return DETERMINISTIC;
         return CONSTANT;
     }
+
+
+    @Override
+    public String toString() {
+        return switch (this) {
+            case CONSTANT -> "constant";
+            case DETERMINISTIC -> "deterministic value";
+            case STOCHASTIC -> "random variable";
+            case UNOBSERVED_STOCHASTIC -> "unobserved random variable";
+            case UNDEFINED -> "undefined value";
+        };
+    }
 }

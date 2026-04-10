@@ -4,7 +4,6 @@ import java.util.Set;
 
 /**
  * Result of one tile's attempt to match an AST node.
- *
  * Three outcomes are possible:
  *   - Irrelevant: the tile does not handle this node type or generator name at all.
  *                 These are silently skipped and excluded from diagnostic output.
@@ -21,4 +20,5 @@ public sealed interface TilingAttempt permits TilingAttempt.Irrelevant, TilingAt
     static TilingAttempt irrelevant() { return new Irrelevant(); }
     static TilingAttempt rejected(String reason) { return new Rejected(reason); }
     static TilingAttempt matched(Set<Tile<?>> tiles) { return new Matched(tiles); }
+
 }

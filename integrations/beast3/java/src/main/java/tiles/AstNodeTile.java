@@ -7,6 +7,7 @@ import org.phylospec.typeresolver.VariableResolver;
 import tiling.BEASTState;
 import tiling.Tile;
 import tiling.TileInput;
+import tiling.TilingAttempt;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -29,18 +30,26 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
     protected abstract T applyTile(BEASTState beastState, N node);
 
     @Override
-    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
-        if (!this.getTargetNodeType().isAssignableFrom(node.getClass())){
+    public TilingAttempt tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
+        if (!this.getTargetNodeType().isAssignableFrom(node.getClass())) {
             // node is not of the expected AstNode type
             // we cannot tile this tile
-            return Set.of();
+            return new TilingAttempt.Irrelevant();
         }
 
         // check the stochasticity
 
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
         if (!this.getCompatibleStochasticities().contains(stochasticity)) {
-            return Set.of();
+            if (this.getCompatibleStochasticities().equals(Set.of(Stochasticity.STOCHASTIC))) {
+                return new TilingAttempt.Rejected(
+                        "BEAST expects a random variable here, but you provided a deterministic statement."
+                );
+            } else {
+                return new TilingAttempt.Rejected(
+                        "BEAST cannot handle a " + stochasticity.toString() + " here."
+                );
+            }
         }
 
         // the inputs correspond to the class fields with type GeneratorTile.Input (similar to BEAST inputs)
@@ -52,15 +61,20 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
 
         List<Set<Tile<?>>> compatibleInputTiles = new ArrayList<>();
         for (TileInput<?> tileInput : expectedInputs) {
-            compatibleInputTiles.add(
-                    tileInput.getCompatibleInputTiles(node, allInputTiles)
-            );
+            Set<Tile<?>> compatibleInputs = tileInput.getCompatibleInputTiles(node, allInputTiles);
+
+            if (compatibleInputs.isEmpty()) {
+                return new TilingAttempt.Rejected("BEAST cannot handle this operation.");
+            }
+
+            compatibleInputTiles.add(compatibleInputs);
         }
 
         // we now look at every combination of the inputs and create a freshly wired up tile
 
-        Set<Tile<?>> wiredUpTiles = this.getWiredUpTiles(expectedInputs, compatibleInputTiles);
-        for (Tile<?> wiredUpTile : wiredUpTiles) {
+        TilingAttempt.Matched wiredUpTiles = this.getWiredUpTiles(expectedInputs, compatibleInputTiles);
+
+        for (Tile<?> wiredUpTile : wiredUpTiles.tiles()) {
             ((AstNodeTile<?, N>) wiredUpTile).setNode((N) node);
         }
 

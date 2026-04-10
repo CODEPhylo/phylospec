@@ -7,6 +7,7 @@ import org.phylospec.typeresolver.VariableResolver;
 import templatematching.AstTemplateMatcher;
 import tiling.Tile;
 import tiling.TileInput;
+import tiling.TilingAttempt;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -27,19 +28,27 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
     }
 
     @Override
-    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
+    public TilingAttempt tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
         // try to match the template
 
         Map<String, AstNode> matchedTemplateVariables = this.astTemplateMatcher.match(node, variableResolver);
         if (matchedTemplateVariables == null) {
-            return Set.of();
+            return new TilingAttempt.Irrelevant();
         }
 
         // check the stochasticity
 
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
         if (!this.getCompatibleStochasticities().contains(stochasticity)) {
-            return Set.of();
+            if (this.getCompatibleStochasticities().equals(Set.of(Stochasticity.STOCHASTIC))) {
+                return new TilingAttempt.Rejected(
+                        "BEAST expects a random variable here, but you provided a deterministic statement."
+                );
+            } else {
+                return new TilingAttempt.Rejected(
+                        "BEAST cannot handle a " + stochasticity.toString() + " here."
+                );
+            }
         }
 
         // collect TileInput fields from this template in declaration order
@@ -51,10 +60,13 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
         List<Set<Tile<?>>> compatibleInputTiles = new ArrayList<>();
         for (TileInput<?> tileInput : tileInputs) {
             AstNode inputAstNode = matchedTemplateVariables.get(tileInput.getKey());
-            if (inputAstNode == null) return Set.of();
 
             Set<Tile<?>> compatible = tileInput.getCompatibleInputTiles(inputAstNode, allInputTiles);
-            if (compatible.isEmpty()) return Set.of();
+            if (compatible.isEmpty()) {
+                return new TilingAttempt.Rejected(
+                        "BEAST cannot deal with the value you provided for the " + tileInput.getKey().replace("$", "") + "."
+                );
+            }
 
             compatibleInputTiles.add(compatible);
         }

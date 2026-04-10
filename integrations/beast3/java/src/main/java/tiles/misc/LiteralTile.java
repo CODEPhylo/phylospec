@@ -34,14 +34,16 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal> {
     }
 
     @Override
-    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
-        if (!(node instanceof Expr.Literal literal)) return Set.of();
+    public TilingAttempt tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
+        if (!(node instanceof Expr.Literal literal)) return new TilingAttempt.Irrelevant();
 
         // depending on the actual literal, we return different tiles
 
         if (literal.value instanceof String string) {
-            return Set.of(new LiteralTile<String>(new TypeToken<String>() {
-            }, string));
+            return new TilingAttempt.Matched(
+                    Set.of(new LiteralTile<String>(new TypeToken<String>() {
+                    }, string))
+            );
         }
 
         if (literal.value instanceof Integer number) {
@@ -71,7 +73,7 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal> {
                 }, new RealScalarParam<>(number.doubleValue(), PositiveReal.INSTANCE)));
             }
 
-            return tiles;
+            return new TilingAttempt.Matched(tiles);
         }
 
         if (literal.value instanceof Double number) {
@@ -98,10 +100,10 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal> {
                 }, new RealScalarParam<>(number, UnitInterval.INSTANCE)));
             }
 
-            return tiles;
+            return new TilingAttempt.Matched(tiles);
         }
 
-        return Set.of();
+        return new TilingAttempt.Irrelevant();
     }
 
     @Override
