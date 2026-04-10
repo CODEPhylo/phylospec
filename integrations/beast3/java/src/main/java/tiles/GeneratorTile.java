@@ -1,6 +1,5 @@
 package tiles;
 
-import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;

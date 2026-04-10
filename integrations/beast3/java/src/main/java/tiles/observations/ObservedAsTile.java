@@ -11,8 +11,8 @@ public class ObservedAsTile extends MultiAstNodeTile<StateNode> {
         return "Any x ~ $distribution observed as $observation";
     }
 
-    TileInput<UnboundDistribution<? extends StateNode, ?>> distributionInput = new TileInput<>("$distribution");
-    TileInput<? extends StateNode> observationInput = new TileInput<>("$observation");
+    MultiAstNodeTileInput<UnboundDistribution<? extends StateNode, ?>> distributionInput = new MultiAstNodeTileInput<>("$distribution");
+    MultiAstNodeTileInput<? extends StateNode> observationInput = new MultiAstNodeTileInput<>("$observation");
 
     @Override
     public StateNode applyTile(BEASTState beastState) {

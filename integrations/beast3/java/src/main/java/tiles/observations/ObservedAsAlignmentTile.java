@@ -15,8 +15,8 @@ public class ObservedAsAlignmentTile extends MultiAstNodeTile<Alignment> {
         return "Any x ~ $distribution observed as $observation";
     }
 
-    TileInput<UnboundDistribution<? extends StateNode, ?>> distributionInput = new TileInput<>("$distribution");
-    TileInput<DecoratedAlignment> observationInput = new TileInput<>("$observation");
+    MultiAstNodeTileInput<UnboundDistribution<? extends StateNode, ?>> distributionInput = new MultiAstNodeTileInput<>("$distribution");
+    MultiAstNodeTileInput<DecoratedAlignment> observationInput = new MultiAstNodeTileInput<>("$observation");
 
     @Override
     public Alignment applyTile(BEASTState beastState) {

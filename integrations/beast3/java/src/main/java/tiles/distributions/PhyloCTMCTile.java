@@ -23,10 +23,10 @@ public class PhyloCTMCTile extends MultiAstNodeTile<UnboundDistribution<Alignmen
                """;
     }
 
-    TileInput<Tree> treeInput = new TileInput<>("$tree");
-    TileInput<Base> branchRateModelInput = new TileInput<>("$branchRateModel");
-    TileInput<SubstitutionModel> substitutionModelInput = new TileInput<>("$substitutionModel");
-    TileInput<Partial<SiteModel, SubstitutionModel>> partialSiteRateModel = new TileInput<>("$partialSiteRateModel");
+    MultiAstNodeTileInput<Tree> treeInput = new MultiAstNodeTileInput<>("$tree");
+    MultiAstNodeTileInput<Base> branchRateModelInput = new MultiAstNodeTileInput<>("$branchRateModel");
+    MultiAstNodeTileInput<SubstitutionModel> substitutionModelInput = new MultiAstNodeTileInput<>("$substitutionModel");
+    MultiAstNodeTileInput<Partial<SiteModel, SubstitutionModel>> partialSiteRateModel = new MultiAstNodeTileInput<>("$partialSiteRateModel");
 
     @Override
     public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState) {

@@ -16,9 +16,9 @@ public class RootObservedBetweenTile extends MultiAstNodeTile<RealScalarParam<Po
         return "Any x = rootAge(tree=$tree) observed between [$from, $to]";
     }
 
-    TileInput<Tree> treeInput = new TileInput<>("$tree");
-    TileInput<RealScalarParam<Real>> fromInput = new TileInput<>("$from");
-    TileInput<RealScalarParam<Real>> toInput = new TileInput<>("$to");
+    MultiAstNodeTileInput<Tree> treeInput = new MultiAstNodeTileInput<>("$tree");
+    MultiAstNodeTileInput<RealScalarParam<Real>> fromInput = new MultiAstNodeTileInput<>("$from");
+    MultiAstNodeTileInput<RealScalarParam<Real>> toInput = new MultiAstNodeTileInput<>("$to");
 
     @Override
     public RealScalarParam<PositiveReal> applyTile(BEASTState beastState) {
