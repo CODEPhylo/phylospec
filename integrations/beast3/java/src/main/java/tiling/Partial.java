@@ -1,18 +1,15 @@
 package tiling;
 
-import java.util.function.Function;
 import java.util.function.BiFunction;
 
-public class Partial<T, M> {
-    protected final T partiallyGeneratedObject;
-    protected final BiFunction<T, M, T> completeFunc;
-
-    public Partial(T partiallyGeneratedObject, BiFunction<T, M, T> completeFunc) {
-        this.partiallyGeneratedObject = partiallyGeneratedObject;
-        this.completeFunc = completeFunc;
-    }
+/**
+ * This class can be used to wrap an incomplete object. The object can be completed lazily after instantiation
+ * using the given completion function.
+ */
+public record Partial<T, M>(T partiallyGeneratedObject, BiFunction<T, M, T> completeFunc) {
 
     public T complete(M missingPart) {
         return this.completeFunc.apply(this.partiallyGeneratedObject, missingPart);
     }
+
 }
