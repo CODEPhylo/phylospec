@@ -64,13 +64,7 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
             Tile<?> bestTile = stmt.accept(this);
 
             if (bestTile == null) {
-                FailedTilingAttempt deepest = this.findDeepestFailure(failedCountBefore);
-                String reason = switch (deepest) {
-                    case FailedTilingAttempt.Rejected r -> r.getReason();
-                    case FailedTilingAttempt.RejectedBoundary rb -> rb.getReason();
-                    case null, default -> "BEAST has no tile that can handle this statement.";
-                };
-                throw new TilingError("Unsupported operation.", reason);
+                this.throwDeepestFailure(failedCountBefore);
             }
 
             bestTiles.addFirst(bestTile);
@@ -81,10 +75,10 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
 
     /**
      * Computes the best tiling for the given statements and applies each tile in order,
-     * building up a {@link BEASTState} that represents the fully-generated BEAST model.
+     * building up a {@link BEASTState} that represents the fully-generated BEAST 2.8 model.
      *
      * @param stmts the top-level statements to tile and apply
-     * @return the accumulated BEAST model state after all tiles have been applied
+     * @return the accumulated BEAST 2.8 model state after all tiles have been applied
      */
     public BEASTState applyBestTiling(List<Stmt> stmts) {
         List<Tile<?>> bestTilingComposition = this.getBestTiling(stmts);
@@ -168,11 +162,17 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
      * Because children are visited before parents, the first match is the deepest actionable
      * failure — everything above it failed only as a cascade consequence.
      */
-    private FailedTilingAttempt findDeepestFailure(int fromIndex) {
+    private FailedTilingAttempt throwDeepestFailure(int fromIndex) {
         for (int i = fromIndex; i < this.failedNodesInVisitOrder.size(); i++) {
-            FailedTilingAttempt failure = this.bestFailures.get(this.failedNodesInVisitOrder.get(i));
-            if (failure instanceof FailedTilingAttempt.Rejected || failure instanceof FailedTilingAttempt.RejectedBoundary) {
-                return failure;
+            AstNode failedNode = this.failedNodesInVisitOrder.get(i);
+            FailedTilingAttempt failure = this.bestFailures.get(failedNode);
+            if (i == this.failedNodesInVisitOrder.size() - 1 || failure instanceof FailedTilingAttempt.Rejected || failure instanceof FailedTilingAttempt.RejectedBoundary) {
+                String reason = switch (failure) {
+                    case FailedTilingAttempt.Rejected r -> r.getReason();
+                    case FailedTilingAttempt.RejectedBoundary rb -> rb.getReason();
+                    case null, default -> "BEAST 2.8 does not support this operation.";
+                };
+                throw new TilingError(failedNode, "Unsupported operation.", reason);
             }
         }
         return null;

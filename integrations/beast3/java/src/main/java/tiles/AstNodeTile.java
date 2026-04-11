@@ -15,7 +15,7 @@ import java.util.function.Function;
 
 /**
  * This class represents tiles that cover a single AstNode of type N. Extend this class for custom tiles.
- * Use AstNodeTileInput fields to specify the tile inputs (similar to BEAST inputs).
+ * Use AstNodeTileInput fields to specify the tile inputs (similar to BEAST 2.8 inputs).
  */
 public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
     private N node;
@@ -48,16 +48,16 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
         if (!this.getCompatibleStochasticities().contains(stochasticity)) {
             if (this.getCompatibleStochasticities().equals(Set.of(Stochasticity.STOCHASTIC))) {
                 throw new FailedTilingAttempt.Rejected(
-                        "BEAST expects a random variable here, but you provided a deterministic statement."
+                        "BEAST 2.8 expects a random variable here, but you provided a deterministic statement."
                 );
             } else {
                 throw new FailedTilingAttempt.Rejected(
-                        "BEAST cannot handle a " + stochasticity.toString() + " here."
+                        "BEAST 2.8 cannot handle a " + stochasticity.toString() + " here."
                 );
             }
         }
 
-        // the inputs correspond to the class fields with type GeneratorTile.Input (similar to BEAST inputs)
+        // the inputs correspond to the class fields with type GeneratorTile.Input (similar to BEAST 2.8 inputs)
         // we use reflection to get the expected inputs
 
         List<TileInput<?>> expectedInputs = this.getTileInputs();
@@ -69,7 +69,7 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
             Set<Tile<?>> compatibleInputs = tileInput.getCompatibleInputTiles(node, allInputTiles);
 
             if (compatibleInputs.isEmpty()) {
-                throw new FailedTilingAttempt.Rejected("BEAST cannot handle this operation.");
+                throw new FailedTilingAttempt.Rejected("BEAST 2.8 cannot handle this operation.");
             }
 
             compatibleInputTiles.add(compatibleInputs);

@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 /**
  * This class represents tiles that cover a single generator call. Extend this class for custom tiles.
- * Use GeneratorTileInput fields to specify the tile inputs (similar to BEAST inputs).
+ * Use GeneratorTileInput fields to specify the tile inputs (similar to BEAST 2.8 inputs).
  */
 public abstract class GeneratorTile<T> extends Tile<T> {
 
@@ -37,18 +37,18 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         if (!this.getCompatibleStochasticities().contains(stochasticity)) {
             if (this.getCompatibleStochasticities().equals(Set.of(Stochasticity.STOCHASTIC))) {
                 throw new FailedTilingAttempt.Rejected(
-                        "BEAST expects a random variable here, but you provided a deterministic statement."
+                        "BEAST 2.8 expects a random variable here, but you provided a deterministic statement."
                 );
             } else {
                 throw new FailedTilingAttempt.Rejected(
-                        "BEAST cannot handle a " + stochasticity.toString() + " here."
+                        "BEAST 2.8 cannot handle a " + stochasticity.toString() + " here."
                 );
             }
         }
 
         // the generator has the right name and stochasticity
 
-        // the expected inputs correspond to the class fields with type GeneratorTile.Input (similar to BEAST inputs)
+        // the expected inputs correspond to the class fields with type GeneratorTile.Input (similar to BEAST 2.8 inputs)
         // we use reflection to get the expected inputs
 
         List<TileInput<?>> expectedInputs = this.getTileInputs();
@@ -74,13 +74,13 @@ public abstract class GeneratorTile<T> extends Tile<T> {
                 );
             }
 
-            // for each argument tile, we check if its generated BEAST type is compatible with this input
+            // for each argument tile, we check if its generated BEAST 2.8 type is compatible with this input
 
             Set<Tile<?>> currentCompatibleInputTiles = argumentInput.getCompatibleInputTiles(argument, inputTiles);
 
             if (currentCompatibleInputTiles.isEmpty()) {
                 throw new FailedTilingAttempt.RejectedBoundary(
-                        "BEAST cannot deal with the value you provided for the '" + argumentName + "' argument for '" + this.getPhyloSpecGeneratorName() + "'.",
+                        "BEAST 2.8 cannot deal with the value you provided for the '" + argumentName + "' argument for '" + this.getPhyloSpecGeneratorName() + "'.",
                         argument
                 );
             }
@@ -99,7 +99,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
                 // a required argument is missing
                 // we cannot tile this
                 throw new FailedTilingAttempt.Rejected(
-                        "BEAST expects you to provide a value for the '" + input.getKey() + "' argument."
+                        "BEAST 2.8 expects you to provide a value for the '" + input.getKey() + "' argument."
                 );
             }
         }

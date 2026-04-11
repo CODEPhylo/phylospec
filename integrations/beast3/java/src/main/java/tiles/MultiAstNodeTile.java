@@ -15,7 +15,7 @@ import java.util.*;
 /**
  * This class represents tiles that cover multiple AstNodes. Extend this class for custom tiles and specify a
  * PhyloSpec template used to match the AST subgraph.
- * Use MultiAstNodeTileInput fields to specify the tile inputs (similar to BEAST inputs).
+ * Use MultiAstNodeTileInput fields to specify the tile inputs (similar to BEAST 2.8 inputs).
  */
 public abstract class MultiAstNodeTile<T> extends Tile<T> {
 
@@ -47,11 +47,11 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
         if (!this.getCompatibleStochasticities().contains(stochasticity)) {
             if (this.getCompatibleStochasticities().equals(Set.of(Stochasticity.STOCHASTIC))) {
                 throw new FailedTilingAttempt.Rejected(
-                        "BEAST expects a random variable here, but you provided a deterministic statement."
+                        "BEAST 2.8 expects a random variable here, but you provided a deterministic statement."
                 );
             } else {
                 throw new FailedTilingAttempt.Rejected(
-                        "BEAST cannot handle a " + stochasticity.toString() + " here."
+                        "BEAST 2.8 cannot handle a " + stochasticity.toString() + " here."
                 );
             }
         }
@@ -69,7 +69,7 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
             Set<Tile<?>> compatible = tileInput.getCompatibleInputTiles(inputAstNode, allInputTiles);
             if (compatible.isEmpty()) {
                 throw new FailedTilingAttempt.RejectedBoundary(
-                        "BEAST cannot deal with the value you provided for the " + tileInput.getKey().replace("$", "") + ".",
+                        "BEAST 2.8 cannot deal with the value you provided for the " + tileInput.getKey().replace("$", "") + ".",
                         inputAstNode
                 );
             }

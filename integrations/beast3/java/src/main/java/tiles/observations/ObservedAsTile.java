@@ -1,8 +1,11 @@
 package tiles.observations;
 
 import beast.base.inference.StateNode;
+import org.phylospec.typeresolver.Stochasticity;
 import tiles.MultiAstNodeTile;
 import tiling.*;
+
+import java.util.Set;
 
 public class ObservedAsTile extends MultiAstNodeTile<StateNode> {
 

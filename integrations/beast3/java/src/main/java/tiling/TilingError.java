@@ -1,6 +1,8 @@
 package tiling;
 
 import org.phylospec.ast.AstNode;
+import org.phylospec.errors.Error;
+import org.phylospec.lexer.Range;
 
 public class TilingError extends RuntimeException {
     private final AstNode node;
@@ -18,4 +20,11 @@ public class TilingError extends RuntimeException {
         this.hint = hint;
     }
 
+    public AstNode getAstNode() {
+        return node;
+    }
+
+    public Error toError(Range range) {
+        return new Error(range, this.description, this.hint);
+    }
 }

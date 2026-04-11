@@ -20,6 +20,7 @@ import org.xml.sax.SAXException;
 import tiles.TileLibrary;
 import tiling.BEASTState;
 import tiling.EvaluateTiles;
+import tiling.TilingError;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
@@ -75,7 +76,13 @@ public class PhyloSpecRunner implements ErrorEventListener {
         // perform tiling
 
         EvaluateTiles applyTiles = new EvaluateTiles(TileLibrary.getTiles(), variableResolver, stochasticityResolver);
-        BEASTState beastState = applyTiles.applyBestTiling(statements);
+        BEASTState beastState = null;
+        try {
+            beastState = applyTiles.applyBestTiling(statements);
+        } catch (TilingError error) {
+            Range range = parser.getRangeForAstNode(error.getAstNode());
+            this.errorDetected(error.toError(range));
+        }
 
         // add state
 

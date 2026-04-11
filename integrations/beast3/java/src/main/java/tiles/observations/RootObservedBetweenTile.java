@@ -6,8 +6,11 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.evolution.tree.MRCAPrior;
 import beast.base.spec.inference.distribution.Uniform;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import org.phylospec.typeresolver.Stochasticity;
 import tiles.MultiAstNodeTile;
 import tiling.BEASTState;
+
+import java.util.Set;
 
 public class RootObservedBetweenTile extends MultiAstNodeTile<RealScalarParam<PositiveReal>> {
 
