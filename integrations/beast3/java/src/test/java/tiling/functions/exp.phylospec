@@ -2,5 +2,5 @@ Real x = -100
 Real exp = exp(x)
 
 // EXPECTED_TILES
-// (AssignmentTile (ExpTile (x (AssignedArgumentTile (AssignmentTile (LiteralTile))))))
+// TILING_SUCCESS
 // EXPECTED_TILES

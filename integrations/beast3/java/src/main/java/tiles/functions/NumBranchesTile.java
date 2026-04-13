@@ -1,10 +1,12 @@
 package tiles.functions;
 
 import beast.base.evolution.tree.Tree;
+import beast.base.spec.domain.NonNegativeInt;
+import beast.base.spec.inference.parameter.IntScalarParam;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
 
-public class NumBranchesTile extends GeneratorTile<Integer> {
+public class NumBranchesTile extends GeneratorTile<IntScalarParam<NonNegativeInt>> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
@@ -14,9 +16,9 @@ public class NumBranchesTile extends GeneratorTile<Integer> {
     GeneratorTileInput<Tree> treeInput = new GeneratorTileInput<>("tree");
 
     @Override
-    public Integer applyTile(BEASTState beastState) {
+    public IntScalarParam<NonNegativeInt> applyTile(BEASTState beastState) {
         Tree tree = this.treeInput.apply(beastState);
-        return tree.getNodeCount() - 1;
+        return new IntScalarParam<>(tree.getNodeCount() - 1, NonNegativeInt.INSTANCE);
     }
 
 }

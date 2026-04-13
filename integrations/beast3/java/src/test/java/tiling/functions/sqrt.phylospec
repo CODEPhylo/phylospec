@@ -2,5 +2,5 @@ PositiveReal x = 100
 Real sqrt = sqrt(x)
 
 // EXPECTED_TILES
-// (AssignmentTile (SqrtTile (x (AssignedArgumentTile (AssignmentTile (LiteralTile))))))
+// TILING_SUCCESS
 // EXPECTED_TILES

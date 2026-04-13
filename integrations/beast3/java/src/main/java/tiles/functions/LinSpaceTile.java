@@ -1,9 +1,15 @@
 package tiles.functions;
 
+import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.domain.Real;
+import beast.base.spec.inference.parameter.IntScalarParam;
+import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
+import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
+
+import java.util.Set;
 
 public class LinSpaceTile extends GeneratorTile<RealVectorParam<Real>> {
 
@@ -12,15 +18,21 @@ public class LinSpaceTile extends GeneratorTile<RealVectorParam<Real>> {
         return "linspace";
     }
 
-    GeneratorTileInput<Double> startInput = new GeneratorTileInput<>("start");
-    GeneratorTileInput<Double> endInput = new GeneratorTileInput<>("end");
-    GeneratorTileInput<Integer> numInput = new GeneratorTileInput<>("num");
+    GeneratorTileInput<RealScalarParam<? extends Real>> startInput = new GeneratorTileInput<>(
+            "start", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
+    GeneratorTileInput<RealScalarParam<? extends Real>> endInput = new GeneratorTileInput<>(
+            "end", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
+    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>> numInput = new GeneratorTileInput<>(
+            "num", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
 
     @Override
     public RealVectorParam<Real> applyTile(BEASTState beastState) {
-        Double start = this.startInput.apply(beastState);
-        Double end = this.endInput.apply(beastState);
-        Integer num = this.numInput.apply(beastState);
+        double start = this.startInput.apply(beastState).get();
+        double end = this.endInput.apply(beastState).get();
+        int num = this.numInput.apply(beastState).get();
 
         double[] values = new double[num];
         double gap = (end - start) / (num - 1);

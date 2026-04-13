@@ -1,0 +1,6 @@
+Real x = -100.0
+Real sqrt2 = sqrt(x)
+
+// EXPECTED_TILES
+// Unsupported operation. BEAST 2.8 cannot deal with the value you provided for the 'x' argument for 'sqrt'.
+// EXPECTED_TILES

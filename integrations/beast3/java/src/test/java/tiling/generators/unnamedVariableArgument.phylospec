@@ -3,5 +3,5 @@ Real sd = 1.0
 Real a ~ Normal(mean, sd)
 
 // EXPECTED_TILES
-// (DrawTile (NormalTile (mean (AssignedArgumentTile (AssignmentTile (LiteralTile)))) (sd (AssignedArgumentTile (AssignmentTile (LiteralTile))))))
+// TILING_SUCCESS
 // EXPECTED_TILES

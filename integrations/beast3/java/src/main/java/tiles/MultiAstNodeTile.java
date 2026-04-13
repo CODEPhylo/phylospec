@@ -45,15 +45,9 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
 
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
         if (!this.getCompatibleStochasticities().contains(stochasticity)) {
-            if (this.getCompatibleStochasticities().equals(Set.of(Stochasticity.STOCHASTIC))) {
-                throw new FailedTilingAttempt.Rejected(
-                        "BEAST 2.8 expects a random variable here, but you provided a deterministic statement."
-                );
-            } else {
-                throw new FailedTilingAttempt.Rejected(
-                        "BEAST 2.8 cannot handle a " + stochasticity.toString() + " here."
-                );
-            }
+            throw new FailedTilingAttempt.Rejected(
+                    Stochasticity.getErrorMessage("BEAST 2.8", stochasticity, this.getCompatibleStochasticities())
+            );
         }
 
         // collect TileInput fields from this template in declaration order
@@ -66,7 +60,7 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
         for (TileInput<?> tileInput : tileInputs) {
             AstNode inputAstNode = matchedTemplateVariables.get(tileInput.getKey());
 
-            Set<Tile<?>> compatible = tileInput.getCompatibleInputTiles(inputAstNode, allInputTiles);
+            Set<Tile<?>> compatible = tileInput.getCompatibleInputTiles(inputAstNode, allInputTiles, stochasticityResolver);
             if (compatible.isEmpty()) {
                 throw new FailedTilingAttempt.RejectedBoundary(
                         "BEAST 2.8 cannot deal with the value you provided for the " + tileInput.getKey().replace("$", "") + ".",
@@ -109,7 +103,11 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
         private final String templateVariable;
 
         public MultiAstNodeTileInput(String templateVariable) {
-            super(true);
+            this(templateVariable, EnumSet.allOf(Stochasticity.class));
+        }
+
+        public MultiAstNodeTileInput(String templateVariable, Set<Stochasticity> acceptedStochasticities) {
+            super(true, acceptedStochasticities);
             if (!templateVariable.startsWith("$")) {
                 throw new RuntimeException("Invalid template variable '" + templateVariable + "'. A template variable has to start with a dollar sign (e.g. '$" + templateVariable + "'.");
             }

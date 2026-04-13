@@ -1,0 +1,7 @@
+Tree tree = fromNewick("")
+Real age = rootAge(tree)
+Real x = exp(age)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

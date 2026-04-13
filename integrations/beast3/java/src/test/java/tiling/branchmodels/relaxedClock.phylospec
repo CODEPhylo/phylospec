@@ -10,5 +10,5 @@ Distribution<Vector<Rate>> dist = RelaxedClock(
 )
 
 // EXPECTED_TILES
-// (AssignmentTile (RelaxedClockTile (clockRate (AssignedArgumentTile (LiteralTile))) (base (AssignedArgumentTile (LogNormalRealSpaceTile (mean (AssignedArgumentTile (LiteralTile))) (logSd (AssignedArgumentTile (LiteralTile)))))) (tree (AssignedArgumentTile (DrawTile (YuleTile (birthRate (AssignedArgumentTile (LiteralTile))) (taxa (AssignedArgumentTile (AssignmentTile (AlignmentTaxaTile (alignment (AssignedArgumentTile (AssignmentTile (FromNexusTile (file (AssignedArgumentTile (LiteralTile)))))))))))))))))
+// TILING_SUCCESS
 // EXPECTED_TILES

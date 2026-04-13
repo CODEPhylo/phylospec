@@ -46,15 +46,9 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
 
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
         if (!this.getCompatibleStochasticities().contains(stochasticity)) {
-            if (this.getCompatibleStochasticities().equals(Set.of(Stochasticity.STOCHASTIC))) {
-                throw new FailedTilingAttempt.Rejected(
-                        "BEAST 2.8 expects a random variable here, but you provided a deterministic statement."
-                );
-            } else {
-                throw new FailedTilingAttempt.Rejected(
-                        "BEAST 2.8 cannot handle a " + stochasticity.toString() + " here."
-                );
-            }
+            throw new FailedTilingAttempt.Rejected(
+                    Stochasticity.getErrorMessage("BEAST 2.8", stochasticity, this.getCompatibleStochasticities())
+            );
         }
 
         // the inputs correspond to the class fields with type GeneratorTile.Input (similar to BEAST 2.8 inputs)
@@ -66,7 +60,7 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
 
         List<Set<Tile<?>>> compatibleInputTiles = new ArrayList<>();
         for (TileInput<?> tileInput : expectedInputs) {
-            Set<Tile<?>> compatibleInputs = tileInput.getCompatibleInputTiles(node, allInputTiles);
+            Set<Tile<?>> compatibleInputs = tileInput.getCompatibleInputTiles(node, allInputTiles, stochasticityResolver);
 
             if (compatibleInputs.isEmpty()) {
                 throw new FailedTilingAttempt.Rejected("BEAST 2.8 cannot handle this operation.");
@@ -118,15 +112,19 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
         private final Function<N, AstNode> getter;
 
         public AstNodeTileInput(String key, Function<N, AstNode> getter) {
-            super(true);
+            this(key, getter, EnumSet.allOf(Stochasticity.class));
+        }
+
+        public AstNodeTileInput(String key, Function<N, AstNode> getter, Set<Stochasticity> acceptedStochasticities) {
+            super(true, acceptedStochasticities);
             this.key = key;
             this.getter = getter;
         }
 
         @Override
-        public Set<Tile<?>> getCompatibleInputTiles(AstNode astNode, Map<AstNode, Set<Tile<?>>> inputTiles) throws FailedTilingAttempt.RejectedCascade {
+        public Set<Tile<?>> getCompatibleInputTiles(AstNode astNode, Map<AstNode, Set<Tile<?>>> inputTiles, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt.RejectedCascade, FailedTilingAttempt.RejectedBoundary {
             AstNode inputAstNode = this.getter.apply((N) astNode);
-            return super.getCompatibleInputTiles(inputAstNode, inputTiles);
+            return super.getCompatibleInputTiles(inputAstNode, inputTiles, stochasticityResolver);
         }
 
         @Override

@@ -6,6 +6,6 @@ Vector<Real> repeatReal = repeat(
 )
 
 // EXPECTED_TILES
-// (AssignmentTile (RepeatIntTile (value (AssignedArgumentTile (LiteralTile))) (num (AssignedArgumentTile (LiteralTile)))))
-// (AssignmentTile (RepeatRealTile (value (AssignedArgumentTile (LiteralTile))) (num (AssignedArgumentTile (LiteralTile)))))
+// TILING_SUCCESS
+// TILING_SUCCESS
 // EXPECTED_TILES

@@ -1,0 +1,6 @@
+Alignment data = fromNexus("primate-mtDNA.nex")
+Tree tree ~ BirthDeath(diversificationRate=1.0, turnover=0.5, taxa=taxa(data))
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

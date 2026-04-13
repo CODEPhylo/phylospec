@@ -5,6 +5,6 @@ Alignment alignment2 = fromNexus(
 )
 
 // EXPECTED_TILES
-// (AssignmentTile (FromNexusTile (file (AssignedArgumentTile (LiteralTile)))))
-// (AssignmentTile (FromNexusTile (file (AssignedArgumentTile (LiteralTile))) (age (AssignedArgumentTile (Delimiter (delimiter (AssignedArgumentTile (LiteralTile))) (part (AssignedArgumentTile (LiteralTile))))))))
+// TILING_SUCCESS
+// TILING_SUCCESS
 // EXPECTED_TILES

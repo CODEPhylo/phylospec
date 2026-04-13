@@ -1,8 +1,11 @@
 package tiles.functions;
 
+import org.phylospec.typeresolver.Stochasticity;
 import tiling.BEASTState;
 import tiles.GeneratorTile;
 import tiling.TilingError;
+
+import java.util.Set;
 
 public class EnvTile extends GeneratorTile<String> {
 
@@ -11,7 +14,9 @@ public class EnvTile extends GeneratorTile<String> {
         return "env";
     }
 
-    GeneratorTileInput<String> variableInput = new GeneratorTileInput<>("variable");
+    GeneratorTileInput<String> variableInput = new GeneratorTileInput<>(
+            "variable", true, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
 
     @Override
     public String applyTile(BEASTState beastState) {

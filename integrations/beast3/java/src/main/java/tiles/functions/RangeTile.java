@@ -1,9 +1,13 @@
 package tiles.functions;
 
 import beast.base.spec.domain.Int;
+import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
+import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
+
+import java.util.Set;
 
 public class RangeTile extends GeneratorTile<IntVectorParam<Int>> {
 
@@ -12,13 +16,17 @@ public class RangeTile extends GeneratorTile<IntVectorParam<Int>> {
         return "range";
     }
 
-    GeneratorTileInput<Integer> startInput = new GeneratorTileInput<>("start");
-    GeneratorTileInput<Integer> endInput = new GeneratorTileInput<>("end");
+    GeneratorTileInput<IntScalarParam<? extends Int>> startInput = new GeneratorTileInput<>(
+            "start", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
+    GeneratorTileInput<IntScalarParam<? extends Int>> endInput = new GeneratorTileInput<>(
+            "end", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
 
     @Override
     public IntVectorParam<Int> applyTile(BEASTState beastState) {
-        Integer start = this.startInput.apply(beastState);
-        Integer end = this.endInput.apply(beastState);
+        int start = this.startInput.apply(beastState).get();
+        int end = this.endInput.apply(beastState).get();
         int num = Math.abs(end - start);
 
         int[] values = new int[num];

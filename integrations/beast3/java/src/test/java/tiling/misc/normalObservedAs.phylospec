@@ -1,5 +1,5 @@
 Real b ~ Normal(mean=2.0, sd=10.0) observed as 100.0
 
 // EXPECTED_TILES
-// (ObservedAsTile (distribution (NormalTile (mean (AssignedArgumentTile (LiteralTile))) (sd (AssignedArgumentTile (LiteralTile))))) (observation (LiteralTile)))
+// TILING_SUCCESS
 // EXPECTED_TILES

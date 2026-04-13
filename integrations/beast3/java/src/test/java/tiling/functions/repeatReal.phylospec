@@ -1,0 +1,6 @@
+// repeat with a Real value resolves to RepeatRealTile (not RepeatIntTile)
+Vector<Real> v = repeat(value=2.5, num=3)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

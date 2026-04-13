@@ -1,0 +1,8 @@
+// three draws chained through variable references produce a single top-level tile
+Real a ~ Normal(mean=1.0, sd=2.0)
+Real b ~ Normal(mean=a, sd=2.0)
+Real c ~ Normal(mean=b, sd=2.0)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

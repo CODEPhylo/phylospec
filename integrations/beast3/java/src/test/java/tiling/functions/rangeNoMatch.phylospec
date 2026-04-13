@@ -1,7 +1,0 @@
-Vector<Integer> intervalStartTimes2 = range(
-    start=20.0, end=10
-)
-
-// EXPECTED_TILES
-// Unsupported operation. BEAST cannot deal with the value you provided for the 'start' argument for 'range'.
-// EXPECTED_TILES

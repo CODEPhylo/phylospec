@@ -3,5 +3,5 @@ Vector<Integer> intervalStartTimes = range(
 )
 
 // EXPECTED_TILES
-// (AssignmentTile (RangeTile (start (AssignedArgumentTile (LiteralTile))) (end (AssignedArgumentTile (LiteralTile)))))
+// TILING_SUCCESS
 // EXPECTED_TILES

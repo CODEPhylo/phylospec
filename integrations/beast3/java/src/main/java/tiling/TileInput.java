@@ -2,9 +2,12 @@ package tiling;
 
 
 import org.phylospec.ast.AstNode;
+import org.phylospec.typeresolver.Stochasticity;
+import org.phylospec.typeresolver.StochasticityResolver;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -15,12 +18,14 @@ import java.util.Set;
  */
 public abstract class TileInput<T> {
     private final boolean required;
+    private final Set<Stochasticity> acceptedStochasticities;
 
     private TypeToken<T> typeToken;
     private Tile<T> tile;
 
-    public TileInput(boolean required) {
+    public TileInput(boolean required, Set<Stochasticity> acceptedStochasticities) {
         this.required = required;
+        this.acceptedStochasticities = acceptedStochasticities;
     }
 
     /**
@@ -45,8 +50,18 @@ public abstract class TileInput<T> {
 
     /**
      * Returns the tiles rooted at 'inputAstNode' which have types compatible with this input.
+     * Also checks that the stochasticity of 'inputAstNode' is accepted by this input.
      */
-    public Set<Tile<?>> getCompatibleInputTiles(AstNode inputAstNode, Map<AstNode, Set<Tile<?>>> possibleInputTiles) throws FailedTilingAttempt.RejectedCascade {
+    public Set<Tile<?>> getCompatibleInputTiles(AstNode inputAstNode, Map<AstNode, Set<Tile<?>>> possibleInputTiles, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt.RejectedCascade, FailedTilingAttempt.RejectedBoundary {
+        // check the stochasticity of the input node
+        Stochasticity stochasticity = stochasticityResolver.getStochasticity(inputAstNode);
+        if (!this.acceptedStochasticities.contains(stochasticity)) {
+            throw new FailedTilingAttempt.RejectedBoundary(
+                    Stochasticity.getErrorMessage("BEAST 2.8", this.getKey(), stochasticity, this.acceptedStochasticities),
+                    inputAstNode
+            );
+        }
+
         Set<Tile<?>> potentialInputs = possibleInputTiles.get(inputAstNode);
 
         if (potentialInputs.isEmpty()) {

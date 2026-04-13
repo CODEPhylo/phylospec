@@ -1,0 +1,6 @@
+Alignment data = fromNexus("primate-mtDNA.nex")
+Tree tree ~ Coalescent(populationSize=1.0, taxa=taxa(data))
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

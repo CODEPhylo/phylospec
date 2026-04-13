@@ -41,8 +41,8 @@ public class TileLibrary {
         addTile(new AlignmentTaxaTile());
         addTile(new TreeTaxaTile());
         addTile(new NumBranchesTile());
-        addTile(new NumAlignmentTaxaTile());
-        addTile(new NumTreeTaxaTile());
+        addTile(new NumTaxaAlignmentTile());
+        addTile(new NumTaxaTreeTile());
         addTile(new NumSitesTile());
         addTile(new NumTile());
         addTile(new NumRowsTile());
@@ -69,6 +69,7 @@ public class TileLibrary {
         addTile(new GammaTile());
         addTile(new PoissonTile());
         addTile(new UniformTile());
+        addTile(new DirichletTile());
 
         addTile(new YuleTile());
         addTile(new BirthDeathTile());

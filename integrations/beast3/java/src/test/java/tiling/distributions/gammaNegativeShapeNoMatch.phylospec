@@ -1,0 +1,6 @@
+Real c = -1.0
+Real x ~ Gamma(shape=c, rate=1.0)
+
+// EXPECTED_TILES
+// Unsupported operation. BEAST 2.8 cannot deal with the value you provided for the 'shape' argument for 'Gamma'.
+// EXPECTED_TILES

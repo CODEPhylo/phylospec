@@ -5,6 +5,6 @@ Taxa taxa2 = taxa(tree)
 
 
 // EXPECTED_TILES
-// (AssignmentTile (AlignmentTaxaTile (alignment (AssignedArgumentTile (AssignmentTile (FromNexusTile (file (AssignedArgumentTile (LiteralTile)))))))))
-// (AssignmentTile (TreeTaxaTile (tree (AssignedArgumentTile (DrawTile (YuleTile (birthRate (AssignedArgumentTile (LiteralTile))) (taxa (AssignedArgumentTile (AlignmentTaxaTile (alignment (AssignedArgumentTile (AssignmentTile (FromNexusTile (file (AssignedArgumentTile (LiteralTile))))))))))))))))
+// TILING_SUCCESS
+// TILING_SUCCESS
 // EXPECTED_TILES

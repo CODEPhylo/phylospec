@@ -1,0 +1,7 @@
+// log with optional base argument (log base 2)
+Real x = 8.0
+Real y = log(x, base=2)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

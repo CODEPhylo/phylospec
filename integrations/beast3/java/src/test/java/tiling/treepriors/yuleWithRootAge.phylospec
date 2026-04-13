@@ -1,0 +1,8 @@
+// Yule with optional rootAge argument
+Real rootAge ~ Exponential(rate=1.0)
+Alignment data = fromNexus("primate-mtDNA.nex")
+Tree tree ~ Yule(birthRate=1.0, rootAge=rootAge, taxa=taxa(data))
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

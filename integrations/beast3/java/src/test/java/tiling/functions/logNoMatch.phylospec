@@ -1,5 +1,5 @@
-Real log2 = log(x~Exponential(1.0)) // we don't support the log of a random variable
+Real log2 = log(x~Exponential(1.0))
 
 // EXPECTED_TILES
-// Unsupported operation. BEAST cannot deal with the value you provided for the 'x' argument for 'log'.
+// Unsupported operation. BEAST 2.8 does not support a random variable for 'x'.
 // EXPECTED_TILES

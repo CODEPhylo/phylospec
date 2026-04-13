@@ -1,0 +1,10 @@
+Alignment data = fromNexus("primate-mtDNA.nex")
+Tree tree ~ Yule(birthRate=1.0, taxa=taxa(data))
+
+Integer numBranches = numBranches(tree)
+
+Vector<Integer> range = range(0, end=numBranches)
+
+// EXPECTED_TILES
+// Unsupported operation. BEAST 2.8 does not support a random variable for 'end'.
+// EXPECTED_TILES

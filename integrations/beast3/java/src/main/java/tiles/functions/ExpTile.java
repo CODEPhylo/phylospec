@@ -1,21 +1,29 @@
 package tiles.functions;
 
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.Real;
+import beast.base.spec.inference.parameter.RealScalarParam;
+import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
 
-public class ExpTile extends GeneratorTile<Double> {
+import java.util.Set;
+
+public class ExpTile extends GeneratorTile<RealScalarParam<PositiveReal>> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "exp";
     }
 
-    GeneratorTileInput<Double> xInput = new GeneratorTileInput<>("x");
+    GeneratorTileInput<RealScalarParam<? extends Real>> xInput = new GeneratorTileInput<>(
+            "x", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
 
     @Override
-    public Double applyTile(BEASTState beastState) {
-        Double variable = this.xInput.apply(beastState);
-        return Math.exp(variable);
+    public RealScalarParam<PositiveReal> applyTile(BEASTState beastState) {
+        RealScalarParam<? extends Real> variable = this.xInput.apply(beastState);
+        return new RealScalarParam<>(Math.exp(variable.get()), PositiveReal.INSTANCE);
     }
 
 }

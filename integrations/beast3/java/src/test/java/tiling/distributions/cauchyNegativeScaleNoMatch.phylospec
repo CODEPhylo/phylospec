@@ -1,0 +1,6 @@
+Real c = -1.0
+Real x ~ Cauchy(location=0.0, scale=c)
+
+// EXPECTED_TILES
+// Unsupported operation. BEAST 2.8 cannot deal with the value you provided for the 'scale' argument for 'Cauchy'.
+// EXPECTED_TILES

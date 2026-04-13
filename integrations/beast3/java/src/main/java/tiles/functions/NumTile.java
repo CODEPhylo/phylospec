@@ -1,22 +1,27 @@
 package tiles.functions;
 
+import beast.base.spec.domain.NonNegativeInt;
+import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.Vector;
+import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
 
-public class NumTile extends GeneratorTile<Integer> {
+import java.util.Set;
+
+public class NumTile extends GeneratorTile<IntScalarParam<NonNegativeInt>> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "num";
     }
 
-    GeneratorTileInput<Vector<?, ?>> vectorInput = new GeneratorTileInput<>("vector");
+    GeneratorTileInput<? extends Vector<?, ?>> vectorInput = new GeneratorTileInput<>("vector");
 
     @Override
-    public Integer applyTile(BEASTState beastState) {
+    public IntScalarParam<NonNegativeInt> applyTile(BEASTState beastState) {
         Vector<?, ?> vector = this.vectorInput.apply(beastState);
-        return vector.shape()[0];
+        return new IntScalarParam<>(vector.shape()[0], NonNegativeInt.INSTANCE);
     }
 
 }

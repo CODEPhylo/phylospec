@@ -1,0 +1,8 @@
+Int num ~ PoissonTile(rate=20.0)
+Vector<Real> intervalStartTimes = linspace(
+    start=1.0, end=10.0, num
+)
+
+// EXPECTED_TILES
+// Unsupported operation. BEAST 2.8 does not support a random variable for 'num'.
+// EXPECTED_TILES

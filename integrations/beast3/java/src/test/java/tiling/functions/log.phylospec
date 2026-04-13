@@ -3,6 +3,6 @@ Real log = log(x=a)
 Real log10 = log(x=a, base=10)
 
 // EXPECTED_TILES
-// (AssignmentTile (LogTile (x (AssignedArgumentTile (AssignmentTile (LiteralTile))))))
-// (AssignmentTile (LogTile (x (AssignedArgumentTile (AssignmentTile (LiteralTile)))) (base (AssignedArgumentTile (LiteralTile)))))
+// TILING_SUCCESS
+// TILING_SUCCESS
 // EXPECTED_TILES

@@ -1,5 +1,5 @@
 String a = env(variable=env(variable="Hallo"))
 
 // EXPECTED_TILES
-// (AssignmentTile (EnvTile (variable (AssignedArgumentTile (EnvTile (variable (AssignedArgumentTile (LiteralTile))))))))
+// TILING_SUCCESS
 // EXPECTED_TILES

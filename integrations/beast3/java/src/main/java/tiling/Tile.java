@@ -23,13 +23,7 @@ public abstract class Tile<T> {
      * Returns the different stochasticity levels which the root of the AST subgraph covered by the tile can have.
      */
     protected Set<Stochasticity> getCompatibleStochasticities() {
-        return Set.of(
-                Stochasticity.CONSTANT,
-                Stochasticity.DETERMINISTIC,
-                Stochasticity.STOCHASTIC,
-                Stochasticity.UNOBSERVED_STOCHASTIC,
-                Stochasticity.UNDEFINED
-        );
+        return EnumSet.allOf(Stochasticity.class);
     }
 
     /**

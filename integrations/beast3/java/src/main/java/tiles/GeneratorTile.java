@@ -35,15 +35,9 @@ public abstract class GeneratorTile<T> extends Tile<T> {
 
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
         if (!this.getCompatibleStochasticities().contains(stochasticity)) {
-            if (this.getCompatibleStochasticities().equals(Set.of(Stochasticity.STOCHASTIC))) {
-                throw new FailedTilingAttempt.Rejected(
-                        "BEAST 2.8 expects a random variable here, but you provided a deterministic statement."
-                );
-            } else {
-                throw new FailedTilingAttempt.Rejected(
-                        "BEAST 2.8 cannot handle a " + stochasticity.toString() + " here."
-                );
-            }
+            throw new FailedTilingAttempt.Rejected(
+                    Stochasticity.getErrorMessage("BEAST 2.8", stochasticity, this.getCompatibleStochasticities())
+            );
         }
 
         // the generator has the right name and stochasticity
@@ -76,7 +70,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
 
             // for each argument tile, we check if its generated BEAST 2.8 type is compatible with this input
 
-            Set<Tile<?>> currentCompatibleInputTiles = argumentInput.getCompatibleInputTiles(argument, inputTiles);
+            Set<Tile<?>> currentCompatibleInputTiles = argumentInput.getCompatibleInputTiles(argument, inputTiles, stochasticityResolver);
 
             if (currentCompatibleInputTiles.isEmpty()) {
                 throw new FailedTilingAttempt.RejectedBoundary(
@@ -161,7 +155,15 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         }
 
         public GeneratorTileInput(String phylospecArgumentName, boolean required) {
-            super(required);
+            this(phylospecArgumentName, required, EnumSet.allOf(Stochasticity.class));
+        }
+
+        public GeneratorTileInput(String phylospecArgumentName, Set<Stochasticity> acceptedStochasticities) {
+            this(phylospecArgumentName, true, acceptedStochasticities);
+        }
+
+        public GeneratorTileInput(String phylospecArgumentName, boolean required, Set<Stochasticity> acceptedStochasticities) {
+            super(required, acceptedStochasticities);
             this.phylospecArgumentName = phylospecArgumentName;
         }
 

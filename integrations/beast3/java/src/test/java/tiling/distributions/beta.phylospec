@@ -1,0 +1,5 @@
+Real x ~ Beta(alpha=2.0, beta=5.0)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

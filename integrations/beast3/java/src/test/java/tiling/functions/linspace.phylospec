@@ -4,5 +4,5 @@ Vector<Real> intervalStartTimes = linspace(
 )
 
 // EXPECTED_TILES
-// (AssignmentTile (LinSpaceTile (start (AssignedArgumentTile (LiteralTile))) (end (AssignedArgumentTile (LiteralTile))) (num (AssignedArgumentTile (AssignmentTile (LiteralTile))))))
+// TILING_SUCCESS
 // EXPECTED_TILES

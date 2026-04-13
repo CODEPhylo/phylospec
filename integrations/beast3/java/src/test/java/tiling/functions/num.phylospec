@@ -7,8 +7,8 @@ Integer w = numTaxa(data)
 Integer k = numSites(data)
 
 // EXPECTED_TILES
-// (AssignmentTile (NumBranchesTile (tree (AssignedArgumentTile (DrawTile (YuleTile (birthRate (AssignedArgumentTile (LiteralTile))) (taxa (AssignedArgumentTile (AlignmentTaxaTile (alignment (AssignedArgumentTile (AssignmentTile (FromNexusTile (file (AssignedArgumentTile (LiteralTile))))))))))))))))
-// (AssignmentTile (NumTreeTaxaTile (tree (AssignedArgumentTile (DrawTile (YuleTile (birthRate (AssignedArgumentTile (LiteralTile))) (taxa (AssignedArgumentTile (AlignmentTaxaTile (alignment (AssignedArgumentTile (AssignmentTile (FromNexusTile (file (AssignedArgumentTile (LiteralTile))))))))))))))))
-// (AssignmentTile (NumAlignmentTaxaTile (alignment (AssignedArgumentTile (AssignmentTile (FromNexusTile (file (AssignedArgumentTile (LiteralTile)))))))))
-// (AssignmentTile (NumSitesTile (alignment (AssignedArgumentTile (AssignmentTile (FromNexusTile (file (AssignedArgumentTile (LiteralTile)))))))))
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
 // EXPECTED_TILES

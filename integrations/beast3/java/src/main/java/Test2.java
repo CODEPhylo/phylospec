@@ -31,7 +31,7 @@ public class Test2 {
           )
         ) observed as filtered
         
-        Age root[i] = rootAge(tree) observed between [0.01, 3.0] for i in 1:2
+        Age root = rootAge(tree) observed between [0.01, 3.0]
         """;
 
         PhyloSpecRunner parser = new PhyloSpecRunner(source);
