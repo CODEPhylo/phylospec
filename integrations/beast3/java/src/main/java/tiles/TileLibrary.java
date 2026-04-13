@@ -79,6 +79,7 @@ public class TileLibrary {
         addTile(new ExponentialPopulationTile());
 
         addTile(new StrictClockTile());
+        addTile(new ManualStrictClockTile());
         addTile(new RelaxedClockTile());
 
         addTile(new JC69Tile());
@@ -91,6 +92,8 @@ public class TileLibrary {
 
         addTile(new SiteModelTile());
         addTile(new PhyloCTMCTile());
+        addTile(new PhyloCTMCNoRatesTile());
+        addTile(new PhyloCTMCAssignedBranchRatesTile());
     }
 
     public static void addTile(Tile<?> tile) {

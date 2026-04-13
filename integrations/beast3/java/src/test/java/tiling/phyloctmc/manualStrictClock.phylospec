@@ -1,0 +1,16 @@
+Alignment data = fromNexus("primate-mtDNA.nex")
+Tree tree ~ Yule(birthRate=1.0, taxa=taxa(data))
+
+Integer numBranches = numBranches(tree)
+Rate branchRates[i] = 2.0 for i in 1:numBranches
+
+Alignment alignment ~ PhyloCTMC(
+  tree,
+  branchRates,
+  qMatrix=jc69(),
+  siteRates~DiscreteGammaInv(shape=1.0, numCategories=4, numSites=100)
+) observed as data
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

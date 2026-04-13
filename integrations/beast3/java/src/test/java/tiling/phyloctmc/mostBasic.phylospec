@@ -1,0 +1,13 @@
+Alignment data = fromNexus("primate-mtDNA.nex")
+Tree tree ~ Yule(
+    birthRate=1.0, taxa=taxa(data)
+)
+QMatrix qMatrix = jc69()
+
+Alignment alignment ~ PhyloCTMC(
+  tree, qMatrix
+) observed as data
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
