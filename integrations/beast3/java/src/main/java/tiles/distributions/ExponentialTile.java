@@ -4,9 +4,12 @@ import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.distribution.Exponential;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
 import tiling.BoundDistribution;
+
+import java.util.Set;
 
 public class ExponentialTile extends GeneratorTile<BoundDistribution<RealScalarParam<NonNegativeReal>, Exponential>> {
 
@@ -15,12 +18,17 @@ public class ExponentialTile extends GeneratorTile<BoundDistribution<RealScalarP
         return "Exponential";
     }
 
-    GeneratorTileInput<Double> rateInput = new GeneratorTileInput<>("rate");
+    GeneratorTileInput<RealScalarParam<PositiveReal>> rateInput = new GeneratorTileInput<>(
+            "rate",
+            // PhyloSpec uses a rate parameterization, but BEAST uses a mean parameterization
+            // this means that we have to transform the input, which would have an influence on the density of a RV
+            Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
 
     @Override
     public BoundDistribution<RealScalarParam<NonNegativeReal>, Exponential> applyTile(BEASTState beastState) {
-        Double rate = this.rateInput.apply(beastState);
-        RealScalarParam<PositiveReal> mean = new RealScalarParam<>(1.0 / rate, PositiveReal.INSTANCE);
+        RealScalarParam<PositiveReal> rate = this.rateInput.apply(beastState);
+        RealScalarParam<PositiveReal> mean = new RealScalarParam<>(1.0 / rate.get(), PositiveReal.INSTANCE);
 
         Exponential distribution = new Exponential();
         beastState.setInput(distribution, distribution.meanInput, mean);
