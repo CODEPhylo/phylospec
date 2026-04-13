@@ -101,7 +101,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         // we have all compatible input tiles
         // we now look at every possible input combination and create a new tile object correctly wired up
 
-        return this.getWiredUpTiles(usedInputs, compatibleInputTiles);
+        return this.getWiredUpTiles(usedInputs, compatibleInputTiles, node);
     }
 
     private String getArgumentName(Expr.Argument argument, int numPassedArguments, Map<String, TileInput<?>> expectedInputs) {

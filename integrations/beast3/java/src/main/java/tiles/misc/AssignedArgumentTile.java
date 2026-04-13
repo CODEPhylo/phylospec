@@ -15,7 +15,7 @@ public class AssignedArgumentTile extends AstNodeTile<Object, Expr.AssignedArgum
     }
 
     @Override
-    public Object applyTile(BEASTState beastState, Expr.AssignedArgument node) {
+    public Object applyTile(BEASTState beastState) {
         return this.expressionInput.apply(beastState);
     }
 

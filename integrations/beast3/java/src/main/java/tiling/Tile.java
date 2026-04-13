@@ -74,7 +74,8 @@ public abstract class Tile<T> {
      */
     protected Set<Tile<?>> getWiredUpTiles(
             List<TileInput<?>> tileInputs,
-            List<Set<Tile<?>>> compatibleInputTiles
+            List<Set<Tile<?>>> compatibleInputTiles,
+            AstNode rootNode
     ) {
         Set<Tile<?>> wiredUpTiles = new HashSet<>();
 
@@ -104,6 +105,8 @@ public abstract class Tile<T> {
                     }
 
                     wiredUpTile.setWeight(totalWeight);
+                    wiredUpTile.setRootNode(rootNode);
+
                     wiredUpTiles.add(wiredUpTile);
                 }
         );
@@ -130,7 +133,19 @@ public abstract class Tile<T> {
      */
     protected abstract T applyTile(BEASTState beastState);
 
-    /** tiling weight */
+    /* root node of an applied tile */
+
+    protected AstNode rootNode;
+
+    protected AstNode getRootNode() {
+        return this.rootNode;
+    }
+
+    protected void setRootNode(AstNode node) {
+        this.rootNode = node;
+    }
+
+    /* tiling weight */
 
     private int weight = 0;
 

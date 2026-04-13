@@ -22,13 +22,13 @@ public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw> {
     }
 
     @Override
-    public StateNode applyTile(BEASTState beastState, Stmt.Draw node) {
+    public StateNode applyTile(BEASTState beastState) {
         BoundDistribution<?, ?> evaluatedDistribution = this.expressionInput.apply(beastState);
 
         // we initialize the state node and add it to the BEAST state
         evaluatedDistribution.bind();
-        beastState.addStateNode(evaluatedDistribution.stateNode, this.getTypeToken(), node.name);
-        beastState.addDistribution(evaluatedDistribution.stateNode, evaluatedDistribution.distribution, node.name + "_prior");
+        beastState.addStateNode(evaluatedDistribution.stateNode, this.getTypeToken(), this.getRootNode().name);
+        beastState.addDistribution(evaluatedDistribution.stateNode, evaluatedDistribution.distribution, this.getRootNode().name + "_prior");
 
         // we return the initialized state node
         return evaluatedDistribution.stateNode;

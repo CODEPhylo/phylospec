@@ -72,7 +72,7 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
         }
 
         // for each combination, create a freshly wired up tile
-        return this.getWiredUpTiles(tileInputs, compatibleInputTiles);
+        return this.getWiredUpTiles(tileInputs, compatibleInputTiles, node);
     }
 
     @Override

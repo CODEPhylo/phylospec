@@ -18,16 +18,7 @@ import java.util.function.Function;
  * Use AstNodeTileInput fields to specify the tile inputs (similar to BEAST 2.8 inputs).
  */
 public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
-    private N node;
-
     public abstract Class<N> getTargetNodeType();
-
-    @Override
-    protected T applyTile(BEASTState beastState) {
-        return this.applyTile(beastState, this.node);
-    }
-
-    protected abstract T applyTile(BEASTState beastState, N node);
 
     @Override
     public Set<Tile<?>> tryToTile(
@@ -71,17 +62,12 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
 
         // we now look at every combination of the inputs and create a freshly wired up tile
 
-        Set<Tile<?>> wiredUpTiles = this.getWiredUpTiles(expectedInputs, compatibleInputTiles);
-
-        for (Tile<?> wiredUpTile : wiredUpTiles) {
-            ((AstNodeTile<?, N>) wiredUpTile).setNode((N) node);
-        }
-
-        return wiredUpTiles;
+        return this.getWiredUpTiles(expectedInputs, compatibleInputTiles, node);
     }
 
-    private void setNode(N node) {
-        this.node = node;
+    @Override
+    protected N getRootNode() {
+        return (N) super.getRootNode();
     }
 
     @Override

@@ -20,6 +20,7 @@ public class StrictClockTile extends GeneratorTile<StrictClockModel> {
     @Override
     public StrictClockModel applyTile(BEASTState beastState) {
         RealScalar<PositiveReal> rate = this.rateInput.apply(beastState);
+        this.treeInput.apply(beastState);
 
         StrictClockModel strictClockModel = new StrictClockModel();
         beastState.setInput(strictClockModel, strictClockModel.meanRateInput, rate);
