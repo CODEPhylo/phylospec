@@ -7,7 +7,7 @@ import org.phylospec.lexer.Range;
 import java.util.List;
 
 public class TilingError extends RuntimeException {
-    private final AstNode node;
+    private AstNode node;
     private final String description;
     private final String hint;
     private final List<String> examples;
@@ -34,5 +34,9 @@ public class TilingError extends RuntimeException {
 
     public Error toError(Range range) {
         return new Error(range, this.description, this.hint, this.examples);
+    }
+
+    public void setAstNode(AstNode node) {
+        this.node = node;
     }
 }

@@ -41,7 +41,7 @@ public class FromNexusTile extends GeneratorTile<DecoratedAlignment> {
         TaxonSet taxonSet = new TaxonSet(alignment);
         beastState.setInput(taxonSet, taxonSet.alignmentInput, alignment);
 
-        // build age trait set if needed
+        // build age and date trait set if needed
 
         ParserTile.Parser ageParser = this.ageInput.apply(beastState);
         ParserTile.Parser dateParser = this.dateInput.apply(beastState);

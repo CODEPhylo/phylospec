@@ -123,7 +123,16 @@ public abstract class Tile<T> {
      */
     public T apply(BEASTState beastState) {
         if (this.result == null) {
-            this.result = this.applyTile(beastState);
+            try {
+                this.result = this.applyTile(beastState);
+            } catch (TilingError tilingError) {
+                // attach node if needed
+                if (tilingError.getAstNode() == null) {
+                    tilingError.setAstNode(this.getRootNode());
+                }
+                // rethrow the error
+                throw tilingError;
+            }
         }
         return this.result;
     }
