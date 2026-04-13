@@ -6,10 +6,7 @@ import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.VariableResolver;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /// Matches a PhyloSpec AST query against a PhyloSpec template.
 ///
@@ -355,6 +352,32 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     }
 
     @Override
+    public Void visitOptionalTemplateVariable(Expr.OptionalTemplateVariable expr) {
+        // optional template variables this.match any expression and capture the query node
+
+        // if we have already encountered this template variable, it must have been resolved to the same AST node
+
+        AstNode existingResolvedNode = templateVariableMap.get(expr.variableName);
+        if (existingResolvedNode != null) {
+            // the template variable was already bound; the new node must refer to the same thing.
+            // two variable nodes are considered the same if they have the same name, even if they are different objects.
+
+            boolean sameNode = existingResolvedNode == currentQueryNode;
+            boolean sameVariable = existingResolvedNode instanceof Expr.Variable var1
+                    && currentQueryNode instanceof Expr.Variable var2
+                    && var1.variableName.equals(var2.variableName);
+
+            if (!sameNode && !sameVariable) {
+                throw new MatchingError();
+            }
+        }
+
+        templateVariableMap.put(expr.variableName, currentQueryNode);
+
+        return null;
+    }
+
+    @Override
     public Void visitUnary(Expr.Unary expr) {
         if (!(this.currentQueryNode instanceof Expr.Unary queryUnary)) {
             throw new MatchingError();
@@ -401,11 +424,11 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         }
 
         this.check(expr.functionName.equals(queryCall.functionName));
-        this.check(expr.arguments.length == queryCall.arguments.length);
+        this.check(queryCall.arguments.length <= expr.arguments.length);
 
-        if (expr.arguments.length == 0) return null;
+        if (expr.arguments.length == 0 && queryCall.arguments.length == 0) return null;
 
-        if (expr.arguments.length == 1) {
+        if (expr.arguments.length == 1 && queryCall.arguments.length == 1) {
             // we directly match the only required argument
             this.match(expr.arguments[0], queryCall.arguments[0]);
             return null;
@@ -426,6 +449,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
         // we go through the query arguments and try to match them
 
+        Set<String> matchedTemplateArgumentNames = new HashSet<>();
         for (Expr.Argument queryArgument : queryCall.arguments) {
             String queryArgumentName = queryArgument.name;
 
@@ -442,6 +466,21 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             Expr.Argument templateArgument = templateArguments.get(queryArgumentName);
             this.check(templateArgument != null);
             this.match(templateArgument, queryArgument);
+
+            matchedTemplateArgumentNames.add(templateArgument.name);
+        }
+
+        // make sure that we have matched all non-optional template arguments
+
+        for (Expr.Argument templateArgument : templateArguments.values()) {
+            if (matchedTemplateArgumentNames.contains(templateArgument.name)) continue;
+
+            // we don't have this template argument
+            // this is only fine if it corresponds to an optional template variable
+            if (templateArgument.expression instanceof Expr.OptionalTemplateVariable) continue;
+
+            // this is not fine
+            this.check(false);
         }
 
         return null;

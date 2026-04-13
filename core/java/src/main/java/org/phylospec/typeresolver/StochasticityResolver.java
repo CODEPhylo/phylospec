@@ -121,6 +121,11 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
     }
 
     @Override
+    public Stochasticity visitOptionalTemplateVariable(Expr.OptionalTemplateVariable expr) {
+        return remember(expr, Stochasticity.DETERMINISTIC);
+    }
+
+    @Override
     public Stochasticity visitUnary(Expr.Unary expr) {
         return remember(expr, expr.right.accept(this));
     }

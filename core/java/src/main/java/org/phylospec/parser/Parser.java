@@ -764,6 +764,15 @@ public class Parser {
             return remember(new Expr.TemplateVariable("$" + variableName));
         }
 
+        if (match(TokenType.DOLLAR_DOLLAR) && peek().type == TokenType.IDENTIFIER) {
+            // this is an optional template variable ($$varName)
+
+            // consume the identifier
+            String variableName = advance().lexeme;
+
+            return remember(new Expr.OptionalTemplateVariable("$$" + variableName));
+        }
+
         throw new Error(peek().range, "Invalid expression.", "Something is missing.");
     }
 

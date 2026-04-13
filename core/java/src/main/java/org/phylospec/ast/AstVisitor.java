@@ -77,6 +77,10 @@ public interface AstVisitor<S, E, T> {
         return null;
     }
 
+    default E visitOptionalTemplateVariable(Expr.OptionalTemplateVariable expr) {
+        return null;
+    }
+
     default E visitUnary(Expr.Unary expr) {
         expr.right.accept(this);
         return null;

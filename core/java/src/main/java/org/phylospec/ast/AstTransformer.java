@@ -141,6 +141,11 @@ public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> 
     }
 
     @Override
+    public Expr visitOptionalTemplateVariable(Expr.OptionalTemplateVariable expr) {
+        return expr;
+    }
+
+    @Override
     public Expr visitUnary(Expr.Unary expr) {
         expr.right = expr.right.accept(this);
         return expr;

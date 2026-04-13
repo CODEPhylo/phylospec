@@ -109,6 +109,11 @@ public class AstPrinter implements AstVisitor<String, String, String> {
     }
 
     @Override
+    public String visitOptionalTemplateVariable(Expr.OptionalTemplateVariable expr) {
+        return expr.variableName;
+    }
+
+    @Override
     public String visitUnary(Expr.Unary expr) {
         return "(" + TokenType.getLexeme(expr.operator) + " " + expr.right.accept(this) + ")";
     }
