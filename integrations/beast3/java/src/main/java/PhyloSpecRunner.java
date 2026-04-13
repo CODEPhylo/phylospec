@@ -1,6 +1,7 @@
 import beast.base.core.BEASTObject;
 import beast.base.inference.*;
 import operators.OperatorSelector;
+import operators.OperatorTileLibrary;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.RemoveGroupings;
@@ -75,7 +76,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // perform tiling
 
-        EvaluateTiles applyTiles = new EvaluateTiles(TileLibrary.getTiles(), variableResolver, stochasticityResolver);
+        EvaluateTiles applyTiles = new EvaluateTiles(TileLibrary.getTiles(), OperatorTileLibrary.getTiles(), variableResolver, stochasticityResolver);
         BEASTState beastState = null;
         try {
             beastState = applyTiles.applyBestTiling(statements);

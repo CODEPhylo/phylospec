@@ -14,10 +14,12 @@ import java.util.*;
 public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
 
     private final List<Tile<?>> tiles;
+    private final List<Tile<?>> operatorTiles;
 
     // memoisation caches: all candidates per node, and the single best candidate per node
     private final IdentityHashMap<AstNode, Set<Tile<?>>> evaluatedTiles;
     private final IdentityHashMap<AstNode, Tile<?>> bestEvaluatedTiles;
+    private final List<Tile<?>> matchedOperatorTiles;
     private final VariableResolver variableResolver;
     private final StochasticityResolver stochasticityResolver;
 
@@ -30,8 +32,9 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     // all nodes that failed to tile, recorded in visit order (children before parents)
     private final List<AstNode> failedNodesInVisitOrder;
 
-    public EvaluateTiles(List<Tile<?>> tiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
+    public EvaluateTiles(List<Tile<?>> tiles, List<Tile<?>> operatorTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
         this.tiles = tiles;
+        this.operatorTiles = operatorTiles;
         this.variableResolver = variableResolver;
         this.stochasticityResolver = stochasticityResolver;
         this.evaluatedTiles = new IdentityHashMap<>();
@@ -39,6 +42,7 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         this.consumedStatements = new HashSet<>();
         this.bestFailures = new IdentityHashMap<>();
         this.failedNodesInVisitOrder = new ArrayList<>();
+        matchedOperatorTiles = new ArrayList<>();
     }
 
     /**
@@ -87,6 +91,12 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
 
         for (Tile<?> bestTiling : bestTilingComposition) {
             bestTiling.apply(beastState);
+        }
+
+        // perform operator tiling
+
+        for (Tile<?> operatorTile : this.matchedOperatorTiles) {
+            operatorTile.applyTile(beastState);
         }
 
         return beastState;
@@ -153,6 +163,21 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         }
 
         this.bestEvaluatedTiles.put(node, bestEvaluatedTile);
+
+        // match operator tiles
+
+        for (Tile<?> operatorTile : this.operatorTiles) {
+            try {
+                this.matchedOperatorTiles.addAll(
+                    operatorTile.tryToTile(
+                            node, this.evaluatedTiles, this.variableResolver, this.stochasticityResolver
+                    )
+                );
+            } catch (FailedTilingAttempt ignored) {
+                continue;
+            }
+        }
+
         return bestEvaluatedTile;
     }
 

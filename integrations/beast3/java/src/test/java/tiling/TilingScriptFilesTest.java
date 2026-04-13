@@ -1,5 +1,6 @@
 package tiling;
 
+import operators.OperatorTileLibrary;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.phylospec.ast.Stmt;
@@ -75,7 +76,7 @@ public class TilingScriptFilesTest {
 
             List<String> actualTileLines = new ArrayList<>();
 
-            EvaluateTiles evaluateTiles = new EvaluateTiles(TileLibrary.getTiles(), variableResolver, stochasticityResolver);
+            EvaluateTiles evaluateTiles = new EvaluateTiles(TileLibrary.getTiles(), OperatorTileLibrary.getTiles(), variableResolver, stochasticityResolver);
             List<Tile<?>> bestTilings = null;
             try {
                 bestTilings = evaluateTiles.getBestTiling(statements);

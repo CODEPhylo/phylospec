@@ -11,8 +11,8 @@ public class Test2 {
             end=200
         )
         
-        Tree tree ~ Coalescent(
-            populationSize=exponentialPopulationFunction(populationSize=100, growthRate=1.0),
+        Tree tree ~ Yule(
+            birthRate=2.0,
             taxa=taxa(filtered)
         )
         
