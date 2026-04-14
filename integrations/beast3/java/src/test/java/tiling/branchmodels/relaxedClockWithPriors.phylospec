@@ -1,4 +1,4 @@
-Alignment alignment = fromNexus("primate-mtDNA.nex")
+Alignment alignment = fromNexus("src/test/java/resources/primate-mtDNA.nex")
 Taxa taxa = taxa(alignment)
 Tree tree ~ Yule(
     birthRate=1.0, taxa
@@ -19,3 +19,7 @@ Distribution<Vector<Rate>> dist = RelaxedClock(
 // TILING_SUCCESS
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED_APPLICATION_ERRORS
+// Base distribution used for the relaxed clock should have a mean of 1.0. You use a distribution with mean 0.5. Use a distribution with mean 1.0.
+// EXPECTED_APPLICATION_ERRORS

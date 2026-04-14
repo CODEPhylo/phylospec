@@ -37,7 +37,7 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel> {
         if (1E-6 < Math.abs(base.distribution.getMean() - 1.0)) {
             throw new TilingError(
                     this.getRootNode(),
-                    "Base distribution used for the relaxed clock should have a mean of 1.0.",
+                    "Base distribution used for the relaxed clock should have a mean of 1.0. You use a distribution with mean " + base.distribution.getMean() + ".",
                     "Use a distribution with mean 1.0.",
                     List.of("LogNormal(mean=1.0, logSd=0.1)")
             );

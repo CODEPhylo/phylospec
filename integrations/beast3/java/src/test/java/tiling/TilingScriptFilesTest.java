@@ -16,6 +16,8 @@ import org.phylospec.typeresolver.VariableResolver;
 import tiles.TileLibrary;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TilingScriptFilesTest {
 
@@ -51,7 +54,7 @@ public class TilingScriptFilesTest {
 
     private DynamicTest assertScriptMatchesExpectedTiles(Path psPath) throws IOException {
         List<String> lines = Files.readAllLines(psPath, StandardCharsets.UTF_8);
-        List<String> expectedTileLines = extractExpectedTileLines(lines);
+        List<String> expectedTileLines = extractExpectedBlockLines(lines, "EXPECTED_TILES");
         String source = String.join("\n", lines);
 
         return DynamicTest.dynamicTest(psPath.getFileName().toString(), () -> {
@@ -95,15 +98,41 @@ public class TilingScriptFilesTest {
                     assertEquals(expected, actual, "Tile mismatch at index " + i + " for: " + psPath);
                 }
             }
+
+            // apply tiles if tiling succeeded and compare application errors
+
+            List<String> expectedApplicationErrorLines = extractExpectedBlockLines(lines, "EXPECTED_APPLICATION_ERRORS");
+            List<String> actualApplicationErrorLines = new ArrayList<>();
+
+            boolean tilingSucceeded = bestTilings != null && bestTilings.stream().noneMatch(t -> t == null);
+            if (tilingSucceeded) {
+                PrintStream original = System.out;
+                System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+                try {
+                    BEASTState beastState = new BEASTState();
+                    for (Tile<?> tile : bestTilings) {
+                        tile.apply(beastState);
+                    }
+                } catch (TilingError e) {
+                    actualApplicationErrorLines.add(e.getMessage());
+                } finally {
+                    System.setOut(original);
+                }
+            }
+
+            assertEquals(expectedApplicationErrorLines.size(), actualApplicationErrorLines.size(), "Wrong number of application error lines for: " + psPath);
+            for (int i = 0; i < expectedApplicationErrorLines.size(); i++) {
+                assertEquals(expectedApplicationErrorLines.get(i).trim(), actualApplicationErrorLines.get(i).trim(), "Application error mismatch at index " + i + " for: " + psPath);
+            }
         });
     }
 
-    private List<String> extractExpectedTileLines(List<String> lines) {
+    private List<String> extractExpectedBlockLines(List<String> lines, String blockTag) {
         List<String> expected = new ArrayList<>();
 
         int expectStart = -1;
         for (int i = 0; i < lines.size(); i++) {
-            if (lines.get(i).trim().startsWith("// EXPECTED_TILES")) {
+            if (lines.get(i).trim().startsWith("// " + blockTag)) {
                 expectStart = i + 1;
                 break;
             }
@@ -113,7 +142,7 @@ public class TilingScriptFilesTest {
 
         int expectEnd = lines.size();
         for (int i = expectStart; i < lines.size(); i++) {
-            if (lines.get(i).trim().startsWith("// EXPECTED_TILES")) {
+            if (lines.get(i).trim().startsWith("// " + blockTag)) {
                 expectEnd = i;
                 break;
             }

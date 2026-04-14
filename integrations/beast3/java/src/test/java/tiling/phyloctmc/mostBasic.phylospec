@@ -1,4 +1,4 @@
-Alignment data = fromNexus("primate-mtDNA.nex")
+Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
 Tree tree ~ Yule(
     birthRate=1.0, taxa=taxa(data)
 )

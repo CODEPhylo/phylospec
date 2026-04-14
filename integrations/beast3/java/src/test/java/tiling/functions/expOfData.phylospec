@@ -1,4 +1,4 @@
-Tree tree = fromNewick("")
+Tree tree = fromNewick("((A, B) C)")
 Real age = rootAge(tree)
 Real x = exp(age)
 

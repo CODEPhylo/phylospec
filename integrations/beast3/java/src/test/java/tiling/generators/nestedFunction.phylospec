@@ -3,3 +3,7 @@ String a = env(variable=env(variable="Hallo"))
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED_APPLICATION_ERRORS
+// Environment variable 'Hallo' is not set. Set the environment variable.
+// EXPECTED_APPLICATION_ERRORS

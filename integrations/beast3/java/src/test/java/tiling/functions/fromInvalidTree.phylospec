@@ -1,4 +1,4 @@
-String file = "src/test/java/resources/valid.newick"
+String file = "src/test/java/resources/invalid.newick"
 Tree tree = fromTree(file)
 
 // EXPECTED_TILES
