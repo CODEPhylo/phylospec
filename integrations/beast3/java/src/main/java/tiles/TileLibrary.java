@@ -92,7 +92,6 @@ public class TileLibrary {
 
         addTile(new SiteModelTile());
         addTile(new PhyloCTMCTile());
-        addTile(new PhyloCTMCNoRatesTile());
         addTile(new PhyloCTMCAssignedBranchRatesTile());
     }
 

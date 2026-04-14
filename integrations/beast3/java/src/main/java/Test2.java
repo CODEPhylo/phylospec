@@ -12,17 +12,12 @@ public class Test2 {
         )
         
         Tree tree ~ Yule(
-            birthRate=2.0,
+            birthRate~LogNormal(mean=1.0, logSd=2.0),
             taxa=taxa(filtered)
         )
         
         Alignment alignment ~ PhyloCTMC(
           tree,
-          branchRates~RelaxedClock(
-            base=LogNormal(mean=1.0, logSd=2.0),
-            clockRate~LogNormal(logMean=1.0, logSd=2.0),
-            tree=tree
-          ),
           qMatrix=jc69(),
           siteRates~DiscreteGammaInv(
             shape~LogNormal(logMean=1.0, logSd=2.0),

@@ -3,9 +3,12 @@ package tiles.distributions;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.evolution.tree.Tree;
+import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.evolution.branchratemodel.Base;
+import beast.base.spec.evolution.branchratemodel.StrictClockModel;
 import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beast.base.spec.evolution.sitemodel.SiteModel;
+import beast.base.spec.inference.parameter.RealScalarParam;
 import tiles.MultiAstNodeTile;
 import tiling.*;
 
@@ -16,26 +19,43 @@ public class PhyloCTMCTile extends MultiAstNodeTile<UnboundDistribution<Alignmen
         return """
                PhyloCTMC(
                   tree=$tree,
-                  branchRates~$branchRateModel,
                   qMatrix=$substitutionModel,
-                  siteRates~$partialSiteRateModel
+                  branchRates~$$branchRateModel,
+                  siteRates~$$partialSiteRateModel
                )
                """;
     }
 
     MultiAstNodeTileInput<Tree> treeInput = new MultiAstNodeTileInput<>("$tree");
-    MultiAstNodeTileInput<Base> branchRateModelInput = new MultiAstNodeTileInput<>("$branchRateModel");
-    MultiAstNodeTileInput<SubstitutionModel> substitutionModelInput = new MultiAstNodeTileInput<>("$substitutionModel");
-    MultiAstNodeTileInput<Partial<SiteModel, SubstitutionModel>> partialSiteRateModel = new MultiAstNodeTileInput<>("$partialSiteRateModel");
+    MultiAstNodeTileInput<SubstitutionModel> substitutionModelInput = new MultiAstNodeTileInput<>("$substitutionModel", true);
+    MultiAstNodeTileInput<Base> branchRateModelInput = new MultiAstNodeTileInput<>("$$branchRateModel", false);
+    MultiAstNodeTileInput<Partial<SiteModel, SubstitutionModel>> partialSiteRateModel = new MultiAstNodeTileInput<>("$$partialSiteRateModel", false);
 
     @Override
     public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState) {
         Tree tree = this.treeInput.apply(beastState);
-        Base branchRateModel = this.branchRateModelInput.apply(beastState);
         SubstitutionModel substitutionModel = this.substitutionModelInput.apply(beastState);
+        Base branchRateModel = this.branchRateModelInput.apply(beastState);
         Partial<SiteModel, SubstitutionModel> partialSiteModel = this.partialSiteRateModel.apply(beastState);
 
-        SiteModel siteModel = partialSiteModel.complete(substitutionModel);
+        // initialize clock model
+
+        if (branchRateModel == null) {
+            branchRateModel = new StrictClockModel();
+            beastState.setInput(branchRateModel, branchRateModel.meanRateInput, new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+        }
+
+        // initialize site model
+
+        SiteModel siteModel;
+        if (partialSiteModel != null) {
+            siteModel = partialSiteModel.complete(substitutionModel);
+        } else {
+            siteModel = new SiteModel();
+            beastState.setInput(siteModel, siteModel.substModelInput, substitutionModel);
+        }
+
+        // initialize tree likelihood
 
         TreeLikelihood treeLikelihood = new TreeLikelihood();
         beastState.setInput(treeLikelihood, treeLikelihood.treeInput, tree);

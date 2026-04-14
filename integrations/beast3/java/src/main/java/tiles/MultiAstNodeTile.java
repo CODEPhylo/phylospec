@@ -56,9 +56,20 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
 
         // build ordered list of compatible tiles per input
 
+        List<TileInput<?>> usedInputs = new ArrayList<>();
         List<Set<Tile<?>>> compatibleInputTiles = new ArrayList<>();
         for (TileInput<?> tileInput : tileInputs) {
             AstNode inputAstNode = matchedTemplateVariables.get(tileInput.getKey());
+
+            if (inputAstNode == null) {
+                if (!tileInput.isRequired()) {
+                    continue;
+                } else {
+                    throw new FailedTilingAttempt.Rejected(
+                            "BEAST 2.8 expects you to provide a value for '" + tileInput.getKey() + "'."
+                    );
+                }
+            }
 
             Set<Tile<?>> compatible = tileInput.getCompatibleInputTiles(inputAstNode, allInputTiles, stochasticityResolver);
             if (compatible.isEmpty()) {
@@ -69,10 +80,11 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
             }
 
             compatibleInputTiles.add(compatible);
+            usedInputs.add(tileInput);
         }
 
         // for each combination, create a freshly wired up tile
-        return this.getWiredUpTiles(tileInputs, compatibleInputTiles, node);
+        return this.getWiredUpTiles(usedInputs, compatibleInputTiles, node);
     }
 
     @Override
@@ -103,13 +115,24 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
         private final String templateVariable;
 
         public MultiAstNodeTileInput(String templateVariable) {
-            this(templateVariable, EnumSet.allOf(Stochasticity.class));
+            this(templateVariable, true, EnumSet.allOf(Stochasticity.class));
+        }
+
+        public MultiAstNodeTileInput(String templateVariable, boolean required) {
+            this(templateVariable, required, EnumSet.allOf(Stochasticity.class));
         }
 
         public MultiAstNodeTileInput(String templateVariable, Set<Stochasticity> acceptedStochasticities) {
-            super(true, acceptedStochasticities);
+            this(templateVariable, true, acceptedStochasticities);
+        }
+
+        public MultiAstNodeTileInput(String templateVariable, boolean required, Set<Stochasticity> acceptedStochasticities) {
+            super(required, acceptedStochasticities);
             if (!templateVariable.startsWith("$")) {
                 throw new RuntimeException("Invalid template variable '" + templateVariable + "'. A template variable has to start with a dollar sign (e.g. '$" + templateVariable + "'.");
+            }
+            if (!this.isRequired() && !templateVariable.startsWith("$$")) {
+                throw new RuntimeException("Invalid template variable '" + templateVariable + "'. An optional template variable has to start with two dollar signs.");
             }
             this.templateVariable = templateVariable;
         }

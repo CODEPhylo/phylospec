@@ -1,7 +1,7 @@
 package operators;
 
 import beast.base.evolution.tree.Tree;
-import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.evolution.branchratemodel.Base;
 import beast.base.spec.evolution.operator.UpDownOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
@@ -18,24 +18,24 @@ public class BranchRateTreeUpDownOperatorTile extends MultiAstNodeTile<Void> {
         return """
                 Any alignment ~ PhyloCTMC(
                     tree=$tree,
-                    qMatrix=$qMatrix,
+                    qMatrix=$$qMatrix,
                     branchRates~$branchRates,
-                    siteRates~$siteRates
+                    siteRates~$$siteRates
                 )
                 """;
     }
 
     MultiAstNodeTileInput<Tree> treeInput = new MultiAstNodeTileInput<>("$tree");
     MultiAstNodeTileInput<Base> branchRateModelInput = new MultiAstNodeTileInput<>("$branchRates");
-    MultiAstNodeTileInput<?> substitutionModelInput = new MultiAstNodeTileInput<>("$qMatrix");
-    MultiAstNodeTileInput<?> partialSiteRateModel = new MultiAstNodeTileInput<>("$siteRates");
+    MultiAstNodeTileInput<?> substitutionModelInput = new MultiAstNodeTileInput<>("$$qMatrix", false);
+    MultiAstNodeTileInput<?> partialSiteRateModel = new MultiAstNodeTileInput<>("$$siteRates", false);
 
     @Override
     protected Void applyTile(BEASTState beastState) {
         Tree tree = this.treeInput.apply(beastState);
         Base branchRateModel = this.branchRateModelInput.apply(beastState);
 
-        if (!(branchRateModel.meanRateInput.get() instanceof RealScalarParam<PositiveReal> clockRate)) {
+        if (!(branchRateModel.meanRateInput.get() instanceof RealScalarParam<? extends NonNegativeReal> clockRate)) {
             return null;
         }
 
