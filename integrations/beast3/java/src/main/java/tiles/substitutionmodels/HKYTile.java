@@ -1,6 +1,7 @@
 package tiles.substitutionmodels;
 
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.evolution.substitutionmodel.Frequencies;
 import beast.base.spec.evolution.substitutionmodel.HKY;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.Simplex;
@@ -19,11 +20,19 @@ public class HKYTile extends GeneratorTile<HKY> {
 
     @Override
     public HKY applyTile(BEASTState beastState) {
-        HKY hky = new HKY();
-
         RealScalar<PositiveReal> kappa = this.kappaInput.apply(beastState);
-        Simplex baseFrequenciesInput = this.baseFrequenciesInput.apply(beastState);
-        hky.initByName("kappa", kappa, "frequencies", baseFrequenciesInput);
+        Simplex baseFrequencies = this.baseFrequenciesInput.apply(beastState);
+
+        // initialize frequencies
+
+        Frequencies frequencies = new Frequencies();
+        beastState.setInput(frequencies, frequencies.frequenciesInput, baseFrequencies);
+
+        // initialize HKY
+
+        HKY hky = new HKY();
+        beastState.setInput(hky, hky.kappaInput, kappa);
+        beastState.setInput(hky, hky.frequenciesInput, frequencies);
 
         return hky;
     }

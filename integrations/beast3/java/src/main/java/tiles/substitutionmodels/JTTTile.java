@@ -1,5 +1,6 @@
 package tiles.substitutionmodels;
 
+import beast.base.spec.evolution.substitutionmodel.Frequencies;
 import beast.base.spec.evolution.substitutionmodel.JTT;
 import beast.base.spec.type.Simplex;
 import tiles.GeneratorTile;
@@ -20,7 +21,13 @@ public class JTTTile extends GeneratorTile<JTT> {
 
         JTT jtt = new JTT();
         if (baseFrequencies != null) {
-            jtt.initByName("frequencies", baseFrequencies);
+
+            // initialize frequencies
+
+            Frequencies frequencies = new Frequencies();
+            beastState.setInput(frequencies, frequencies.frequenciesInput, baseFrequencies);
+            beastState.setInput(jtt, jtt.frequenciesInput, frequencies);
+
         } else {
             jtt.initAndValidate();
         }

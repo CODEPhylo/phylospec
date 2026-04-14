@@ -1,5 +1,6 @@
 package tiles.substitutionmodels;
 
+import beast.base.spec.evolution.substitutionmodel.Frequencies;
 import beast.base.spec.evolution.substitutionmodel.WAG;
 import beast.base.spec.type.Simplex;
 import tiles.GeneratorTile;
@@ -20,7 +21,13 @@ public class WAGTile extends GeneratorTile<WAG> {
 
         WAG wag = new WAG();
         if (baseFrequencies != null) {
-            wag.initByName("frequencies", baseFrequencies);
+
+            // initialize frequencies
+
+            Frequencies frequencies = new Frequencies();
+            beastState.setInput(frequencies, frequencies.frequenciesInput, baseFrequencies);
+            beastState.setInput(wag, wag.frequenciesInput, frequencies);
+
         } else {
             wag.initAndValidate();
         }

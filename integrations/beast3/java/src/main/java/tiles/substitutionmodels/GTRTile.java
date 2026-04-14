@@ -1,11 +1,9 @@
 package tiles.substitutionmodels;
 
 import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.domain.Real;
+import beast.base.spec.evolution.substitutionmodel.Frequencies;
 import beast.base.spec.evolution.substitutionmodel.GTR;
-import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
-import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Simplex;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
@@ -35,12 +33,21 @@ public class GTRTile extends GeneratorTile<GTR> {
         RealScalar<PositiveReal> rateGT = this.rateGTInput.apply(beastState);
         Simplex baseFrequencies = this.baseFrequenciesInput.apply(beastState);
 
+        // initialize frequencies
+
+        Frequencies frequencies = new Frequencies();
+        beastState.setInput(frequencies, frequencies.frequenciesInput, baseFrequencies);
+
+        // initialize GTR
+
         GTR gtr = new GTR();
-        gtr.initByName(
-                "rateAC", rateAC, "rateAG", rateAG, "rateAT", rateAT,
-                "rateCG", rateCG, "rateCT", rateCT, "rateGT", rateGT,
-                "frequencies", baseFrequencies
-        );
+        beastState.setInput(gtr, gtr.rateACInput, rateAC);
+        beastState.setInput(gtr, gtr.rateAGInput, rateAG);
+        beastState.setInput(gtr, gtr.rateATInput, rateAT);
+        beastState.setInput(gtr, gtr.rateCGInput, rateCG);
+        beastState.setInput(gtr, gtr.rateCTInput, rateCT);
+        beastState.setInput(gtr, gtr.rateGTInput, rateGT);
+        beastState.setInput(gtr, gtr.frequenciesInput, frequencies);
 
         return gtr;
     }

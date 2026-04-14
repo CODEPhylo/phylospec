@@ -1,6 +1,7 @@
 package tiles.substitutionmodels;
 
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.evolution.substitutionmodel.Frequencies;
 import beast.base.spec.evolution.substitutionmodel.HKY;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.Simplex;
@@ -23,8 +24,16 @@ public class F81Tile extends GeneratorTile<HKY> {
         // f81 = hky with kappa = 1 (equal transition/transversion rates)
         RealScalarParam<PositiveReal> kappaOne = new RealScalarParam<>(1.0, PositiveReal.INSTANCE);
 
+        // initialize frequencies
+
+        Frequencies frequencies = new Frequencies();
+        beastState.setInput(frequencies, frequencies.frequenciesInput, baseFrequencies);
+
+        // initialize HKY
+
         HKY hky = new HKY();
-        hky.initByName("kappa", kappaOne, "frequencies", baseFrequencies);
+        beastState.setInput(hky, hky.kappaInput, kappaOne);
+        beastState.setInput(hky, hky.frequenciesInput, frequencies);
 
         return hky;
     }
