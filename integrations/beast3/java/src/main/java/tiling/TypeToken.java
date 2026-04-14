@@ -57,6 +57,18 @@ public abstract class TypeToken<T> {
         return isAssignable(type, other.type);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TypeToken<?> other)) return false;
+        return type.equals(other.type);
+    }
+
+    @Override
+    public int hashCode() {
+        return type.hashCode();
+    }
+
     private static boolean isAssignable(Type target, Type source) {
         if (target.equals(source)) return true;
 

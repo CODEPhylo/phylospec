@@ -22,6 +22,7 @@ public class TileLibrary {
         addTile(new StateNodeAssignmentTile());
         addTile(new DrawTile());
         addTile(new LiteralTile<>());
+        addTile(new VectorTile<>());
         addTile(new DrawnArgumentTile());
         addTile(new AssignedArgumentTile());
 

@@ -12,7 +12,8 @@ Alignment alignment ~ PhyloCTMC(
     numCategories=4,
     numSites=numSites(data)
   )
-) observed as data
+)
+Alignment alignment2 = alignment observed as data
 
 // EXPECTED_TILES
 // TILING_SUCCESS

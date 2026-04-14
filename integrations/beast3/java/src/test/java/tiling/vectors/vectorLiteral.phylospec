@@ -1,0 +1,12 @@
+Vector<Real> concentration = [1.0, 3.0]
+Vector<Real> c ~ Dirichlet(concentration)
+Vector<Integer> b = [
+    10,
+    200,
+    1630
+]
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES
