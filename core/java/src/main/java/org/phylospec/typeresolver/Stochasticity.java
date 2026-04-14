@@ -42,14 +42,14 @@ public enum Stochasticity {
 
     public static String getErrorMessage(String engine, String valueName, Stochasticity stochasticity, Set<Stochasticity> expectedStochasticities) {
         if (expectedStochasticities.size() == 1) {
-            return engine + " expects a " + expectedStochasticities.iterator().next().toString() + " for '" + valueName + "', but you use a '" + stochasticity + "'.";
+            return engine + " expects a " + expectedStochasticities.iterator().next().toString() + " for '" + valueName + "', but you use a " + stochasticity + ".";
         }
         return "BEAST 2.8 does not support a " + stochasticity.toString() + " for '" + valueName + "'.";
     }
 
     public static String getErrorMessage(String engine, Stochasticity stochasticity, Set<Stochasticity> expectedStochasticities) {
         if (expectedStochasticities.size() == 1) {
-            return engine + " expects a " + expectedStochasticities.iterator().next().toString() + " here, but you use a '" + stochasticity + "'.";
+            return engine + " expects a " + expectedStochasticities.iterator().next().toString() + " here, but you use a " + stochasticity + ".";
         }
         return "BEAST 2.8 does not support a " + stochasticity.toString() + " here.";
     }
