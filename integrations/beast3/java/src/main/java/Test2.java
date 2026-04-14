@@ -7,22 +7,20 @@ public class Test2 {
         )
         Alignment filtered = subset(
             alignment=data,
-            start=100,
-            end=200
+            start=10,
+            end=898
         )
         
-        Tree tree = fromNewick("(df")
+        Tree tree ~ Yule(
+            birthRate~LogNormal(mean=1.0, logSd=2.0),
+            taxa=taxa(filtered)
+        )
         
         Alignment alignment ~ PhyloCTMC(
           tree,
           qMatrix=hky(
             kappa=1.5,
             baseFrequencies=[0.25, 0.25, 0.25, 0.25]
-          ),
-          siteRates~DiscreteGammaInv(
-            shape~LogNormal(logMean=1.0, logSd=2.0),
-            numCategories=4,
-            numSites=100
           )
         ) observed as filtered
         

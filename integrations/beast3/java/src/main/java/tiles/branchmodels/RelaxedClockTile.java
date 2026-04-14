@@ -34,6 +34,7 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel> {
 
         // make sure that the distribution has mean rate 1.0
 
+        beastState.initBEASTObject(base.distribution);
         if (1E-6 < Math.abs(base.distribution.getMean() - 1.0)) {
             throw new TilingError(
                     this.getRootNode(),

@@ -6,8 +6,6 @@ import beast.base.inference.Operator;
 import beast.base.inference.StateNode;
 import beast.base.inference.StateNodeInitialiser;
 
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.*;
 
 public class BEASTState {
@@ -16,6 +14,7 @@ public class BEASTState {
     public final HashMap<StateNode, Distribution> distributions;
     public final HashMap<Operator, Set<StateNode>> operators;
     private final List<BEASTObject> beastObjects;
+    private final Set<BEASTObject> initializedBeastObjects;
 
     private final Set<String> ids;
 
@@ -25,6 +24,7 @@ public class BEASTState {
         this.operators = new HashMap<>();
         this.beastObjects = new ArrayList<>();
         this.ids = new HashSet<>();
+        initializedBeastObjects = new HashSet<>();
     }
 
     public String getID(String id) {
@@ -43,24 +43,20 @@ public class BEASTState {
         return id;
     }
 
+    public void initBEASTObject(Object object) {
+        BEASTObject beastObject = BEASTObjectStore.INSTANCE.getBEASTObject(object);
+
+        if (this.initializedBeastObjects.contains(beastObject)) return;
+
+        beastObject.determindClassOfInputs();
+        beastObject.validateInputs();
+        beastObject.initAndValidate();
+        this.initializedBeastObjects.add(beastObject);
+    }
+
     private BEASTObject addBEASTObject(Object object) {
         BEASTObject beastObject = BEASTObjectStore.INSTANCE.getBEASTObject(object);
         this.beastObjects.add(beastObject);
-
-        // capture any errors. we will properly initialize everything again later
-        PrintStream originalOut = System.out;
-        PrintStream originalErr = System.err;
-        System.setOut(new PrintStream(OutputStream.nullOutputStream()));
-        System.setErr(new PrintStream(OutputStream.nullOutputStream()));
-        try {
-            beastObject.initAndValidate();
-        } catch (Exception e) {
-            // we cannot initiate it so far
-        } finally {
-            System.setOut(originalOut);
-            System.setErr(originalErr);
-        }
-
         return beastObject;
     }
 
@@ -76,6 +72,9 @@ public class BEASTState {
         // add beast object to outputs of input
         this.addBEASTObject(value).getOutputs().add(beastObject);
         this.addBEASTObject(beastObject);
+
+        // initialize the input
+        this.initBEASTObject(value);
     }
 
     public void addStateNode(StateNode stateNode, TypeToken<?> typeToken, String id) {
@@ -111,17 +110,8 @@ public class BEASTState {
     }
 
     public void initializeBEASTObjects() {
-       for (int i = 0; i < this.beastObjects.size(); i++) {
-            BEASTObject beastObject = this.beastObjects.get(i);
-            // if (i != lastOccurrences.get(beastObject)) continue;
-
-            beastObject.determindClassOfInputs();
-            beastObject.validateInputs();
-            try {
-                beastObject.initAndValidate();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        for (BEASTObject object : this.beastObjects) {
+            this.initBEASTObject(object);
         }
 
         for (BEASTObject beastObject : this.beastObjects) {

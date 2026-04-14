@@ -19,16 +19,16 @@ public class SiteModelTile extends GeneratorTile<Partial<SiteModel, Substitution
         return "DiscreteGammaInv";
     }
 
-    GeneratorTileInput<RealScalar<PositiveReal>> shapeInput = new GeneratorTileInput<>("shape");
+    GeneratorTileInput<RealScalarParam<PositiveReal>> shapeInput = new GeneratorTileInput<>("shape");
     GeneratorTileInput<Integer> numCategoriesInput = new GeneratorTileInput<>("numCategories");
-    GeneratorTileInput<RealScalar<UnitInterval>> invariantProportionInput = new GeneratorTileInput<>("invariantProportion", false);
+    GeneratorTileInput<RealScalarParam<UnitInterval>> invariantProportionInput = new GeneratorTileInput<>("invariantProportion", false);
     GeneratorTileInput<IntScalar<NonNegativeInt>> numSitesInput = new GeneratorTileInput<>("numSites");
 
     @Override
     public Partial<SiteModel, SubstitutionModel> applyTile(BEASTState beastState) {
-        RealScalar<PositiveReal> shape = this.shapeInput.apply(beastState);
+        RealScalarParam<PositiveReal> shape = this.shapeInput.apply(beastState);
         Integer numCategories = this.numCategoriesInput.apply(beastState);
-        RealScalar<UnitInterval> invariantProportion = Objects.requireNonNullElse(
+        RealScalarParam<UnitInterval> invariantProportion = Objects.requireNonNullElse(
                 invariantProportionInput.apply(beastState), new RealScalarParam<>(0.0, UnitInterval.INSTANCE)
         );
         this.numSitesInput.apply(beastState);

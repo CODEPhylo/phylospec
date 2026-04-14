@@ -3,6 +3,7 @@ package tiles.input;
 import beast.base.spec.evolution.alignment.FilteredAlignment;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
+import tiling.TilingError;
 
 public class SubsetTile extends GeneratorTile<DecoratedAlignment> {
 
@@ -22,6 +23,25 @@ public class SubsetTile extends GeneratorTile<DecoratedAlignment> {
         Integer start = this.startInput.apply(beastState);
         Integer end = this.endInput.apply(beastState);
         Integer codonPosition = this.codonPositionInput.apply(beastState);
+
+        if (start != null && end != null && end < start) {
+            throw new TilingError(
+                    "Your start index is bigger than your end index.",
+                    "Choose a start index which is smaller than the end index."
+            );
+        }
+        if (start != null && alignment.alignment().getSiteCount() < start) {
+            throw new TilingError(
+                    "Your start index is bigger than the total number of sites.",
+                    "Choose a start index which is smaller than the total number of sites " + alignment.alignment().getSiteCount() + "."
+            );
+        }
+        if (end != null && alignment.alignment().getSiteCount() < end) {
+            throw new TilingError(
+                    "Your end index is bigger than the total number of sites.",
+                    "Choose a end index which is smaller than the total number of sites (" + alignment.alignment().getSiteCount() + ")."
+            );
+        }
 
         String filterString  = "";
         filterString += start == null ? "1" : start;

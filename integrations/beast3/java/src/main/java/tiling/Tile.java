@@ -139,8 +139,8 @@ public abstract class Tile<T> {
                         e
                 );
             }
-
         }
+
         return this.result;
     }
 
