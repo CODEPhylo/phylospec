@@ -1,9 +1,11 @@
 package tiles.input;
 
+import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
 import tiling.TilingError;
 
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,8 +18,12 @@ public class ParserTile {
             return "parse";
         }
 
-        GeneratorTileInput<String> delimiterInput = new GeneratorTileInput<>("delimiter");
-        GeneratorTileInput<Integer> partInput = new GeneratorTileInput<>("part");
+        GeneratorTileInput<String> delimiterInput = new GeneratorTileInput<>(
+                "delimiter", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+        );
+        GeneratorTileInput<Integer> partInput = new GeneratorTileInput<>(
+                "part", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+        );
 
         @Override
         public DelimiterParser applyTile(BEASTState beastState) {

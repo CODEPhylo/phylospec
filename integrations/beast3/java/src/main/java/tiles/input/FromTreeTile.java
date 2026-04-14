@@ -3,6 +3,7 @@ package tiles.input;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeParser;
 import beast.base.parser.NexusParser;
+import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
 import tiling.TilingError;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 
 public class FromTreeTile extends GeneratorTile<Tree> {
 
@@ -20,7 +22,9 @@ public class FromTreeTile extends GeneratorTile<Tree> {
         return "fromTree";
     }
 
-    GeneratorTileInput<String> fileInput = new GeneratorTileInput<>("file");
+    GeneratorTileInput<String> fileInput = new GeneratorTileInput<>(
+            "file", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
 
     @Override
     public Tree applyTile(BEASTState beastState) {

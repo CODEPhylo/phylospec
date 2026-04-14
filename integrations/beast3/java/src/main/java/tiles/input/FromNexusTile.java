@@ -4,12 +4,14 @@ import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.tree.TraitSet;
 import beast.base.parser.NexusParser;
+import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
 import tiling.TilingError;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Set;
 
 public class FromNexusTile extends GeneratorTile<DecoratedAlignment> {
 
@@ -18,7 +20,9 @@ public class FromNexusTile extends GeneratorTile<DecoratedAlignment> {
         return "fromNexus";
     }
 
-    GeneratorTileInput<String> fileInput = new GeneratorTileInput<>("file");
+    GeneratorTileInput<String> fileInput = new GeneratorTileInput<>(
+            "file", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
     GeneratorTileInput<ParserTile.Parser> ageInput = new GeneratorTileInput<>("age", false);
     GeneratorTileInput<ParserTile.Parser> dateInput = new GeneratorTileInput<>("date", false);
 

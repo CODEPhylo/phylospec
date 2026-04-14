@@ -1,9 +1,12 @@
 package tiles.input;
 
 import beast.base.spec.evolution.alignment.FilteredAlignment;
+import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
 import tiling.TilingError;
+
+import java.util.Set;
 
 public class SubsetTile extends GeneratorTile<DecoratedAlignment> {
 
@@ -13,9 +16,15 @@ public class SubsetTile extends GeneratorTile<DecoratedAlignment> {
     }
 
     GeneratorTileInput<DecoratedAlignment> alignmentInput = new GeneratorTileInput<>("alignment");
-    GeneratorTileInput<Integer> startInput = new GeneratorTileInput<>("start", false);
-    GeneratorTileInput<Integer> endInput = new GeneratorTileInput<>("end", false);
-    GeneratorTileInput<Integer> codonPositionInput = new GeneratorTileInput<>("codonPosition", false);
+    GeneratorTileInput<Integer> startInput = new GeneratorTileInput<>(
+            "start", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
+    GeneratorTileInput<Integer> endInput = new GeneratorTileInput<>(
+            "end", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
+    GeneratorTileInput<Integer> codonPositionInput = new GeneratorTileInput<>(
+            "codonPosition", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
 
     @Override
     public DecoratedAlignment applyTile(BEASTState beastState) {
