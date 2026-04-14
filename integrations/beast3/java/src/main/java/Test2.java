@@ -11,10 +11,7 @@ public class Test2 {
             end=200
         )
         
-        Tree tree ~ Yule(
-            birthRate~LogNormal(mean=1.0, logSd=2.0),
-            taxa=taxa(filtered)
-        )
+        Tree tree = fromNewick("(df")
         
         Alignment alignment ~ PhyloCTMC(
           tree,

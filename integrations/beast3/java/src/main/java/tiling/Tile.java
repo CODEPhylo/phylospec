@@ -132,7 +132,14 @@ public abstract class Tile<T> {
                 }
                 // rethrow the error
                 throw tilingError;
+            } catch (Exception e) {
+                // we wrap the exception into a tiling error
+                throw new TileApplicationError(
+                        "Creating the BEAST 2.8 objects did not work.",
+                        e
+                );
             }
+
         }
         return this.result;
     }

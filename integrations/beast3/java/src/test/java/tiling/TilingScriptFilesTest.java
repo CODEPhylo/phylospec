@@ -122,7 +122,7 @@ public class TilingScriptFilesTest {
 
             assertEquals(expectedApplicationErrorLines.size(), actualApplicationErrorLines.size(), "Wrong number of application error lines for: " + psPath);
             for (int i = 0; i < expectedApplicationErrorLines.size(); i++) {
-                assertEquals(expectedApplicationErrorLines.get(i).trim(), actualApplicationErrorLines.get(i).trim(), "Application error mismatch at index " + i + " for: " + psPath);
+                assertEquals(expectedApplicationErrorLines.get(i).trim(), actualApplicationErrorLines.get(i).trim().lines().findFirst().orElseThrow(), "Application error mismatch at index " + i + " for: " + psPath);
             }
         });
     }

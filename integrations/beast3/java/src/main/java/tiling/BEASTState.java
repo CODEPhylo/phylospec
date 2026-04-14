@@ -6,6 +6,8 @@ import beast.base.inference.Operator;
 import beast.base.inference.StateNode;
 import beast.base.inference.StateNodeInitialiser;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.*;
 
 public class BEASTState {
@@ -45,10 +47,18 @@ public class BEASTState {
         BEASTObject beastObject = BEASTObjectStore.INSTANCE.getBEASTObject(object);
         this.beastObjects.add(beastObject);
 
+        // capture any errors. we will properly initialize everything again later
+        PrintStream originalOut = System.out;
+        PrintStream originalErr = System.err;
+        System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+        System.setErr(new PrintStream(OutputStream.nullOutputStream()));
         try {
             beastObject.initAndValidate();
         } catch (Exception e) {
             // we cannot initiate it so far
+        } finally {
+            System.setOut(originalOut);
+            System.setErr(originalErr);
         }
 
         return beastObject;
