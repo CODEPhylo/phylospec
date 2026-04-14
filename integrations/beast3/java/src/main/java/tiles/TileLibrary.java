@@ -49,8 +49,6 @@ public class TileLibrary {
         addTile(new NumTile());
         addTile(new NumRowsTile());
         addTile(new NumColsTile());
-        addTile(new RootAgeTile());
-        addTile(new TaxonAgeTile());
 
         addTile(new FromNexusTile());
         addTile(new FromTreeTile());

@@ -8,6 +8,7 @@ import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.spec.inference.parameter.SimplexParam;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
+import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiles.GeneratorTile;
@@ -29,8 +30,12 @@ public class RepeatSimplexTile extends GeneratorTile<SimplexParam> {
         return "repeat";
     }
 
-    GeneratorTileInput<RealScalarParam<? extends Real>> valueInput = new GeneratorTileInput<>("value");
-    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>> numInput = new GeneratorTileInput<>("num");
+    GeneratorTileInput<RealScalarParam<? extends Real>> valueInput = new GeneratorTileInput<>(
+            "value", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
+    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>> numInput = new GeneratorTileInput<>(
+            "num", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
 
     @Override
     public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> inputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {

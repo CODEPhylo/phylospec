@@ -11,14 +11,12 @@ QMatrix hky = hky(
 )
 QMatrix wag = wag(
     baseFrequencies~Dirichlet(repeat(
-        value~LogNormal(mean=0.5, logSd=0.01), num=4)
+        value=2.0, num=4)
     ),
 )
 QMatrix wag2 = wag()
 QMatrix jtt = jtt(
-    baseFrequencies~Dirichlet(repeat(
-        value~LogNormal(mean=0.5, logSd=0.01), num=4)
-    ),
+    baseFrequencies~Dirichlet(repeat(2, num=4))
 )
 QMatrix jtt2 = jtt()
 QMatrix gtr = gtr(

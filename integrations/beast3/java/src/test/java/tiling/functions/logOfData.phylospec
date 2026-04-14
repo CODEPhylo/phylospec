@@ -1,7 +1,0 @@
-Tree tree = fromNewick("((A, B), C)")
-Real age = rootAge(tree)
-Real log = log(age)
-
-// EXPECTED_TILES
-// TILING_SUCCESS
-// EXPECTED_TILES

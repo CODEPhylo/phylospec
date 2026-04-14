@@ -132,11 +132,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         try {
             mcmc.run();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (SAXException e) {
-            throw new RuntimeException(e);
-        } catch (ParserConfigurationException e) {
+        } catch (IOException | SAXException | ParserConfigurationException e) {
             throw new RuntimeException(e);
         }
     }

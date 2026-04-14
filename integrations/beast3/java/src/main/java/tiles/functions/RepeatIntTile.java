@@ -4,12 +4,14 @@ import beast.base.spec.domain.Int;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
+import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
 import tiling.TypeToken;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
+import java.util.Set;
 
 public class RepeatIntTile extends GeneratorTile<IntVectorParam<Int>> {
 
@@ -18,8 +20,13 @@ public class RepeatIntTile extends GeneratorTile<IntVectorParam<Int>> {
         return "repeat";
     }
 
-    GeneratorTileInput<IntScalarParam<? extends Int>> valueInput = new GeneratorTileInput<>("value");
-    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>> numInput = new GeneratorTileInput<>("num");
+    GeneratorTileInput<IntScalarParam<? extends Int>> valueInput = new GeneratorTileInput<>(
+            "value", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
+    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>> numInput = new GeneratorTileInput<>(
+            "num",
+            Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
 
     @Override
     public TypeToken<?> getTypeToken() {

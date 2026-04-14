@@ -16,7 +16,10 @@ public class NumTile extends GeneratorTile<IntScalarParam<NonNegativeInt>> {
         return "num";
     }
 
-    GeneratorTileInput<? extends Vector<?, ?>> vectorInput = new GeneratorTileInput<>("vector");
+    GeneratorTileInput<? extends Vector<?, ?>> vectorInput = new GeneratorTileInput<>(
+            "vector",
+            Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+    );
 
     @Override
     public IntScalarParam<NonNegativeInt> applyTile(BEASTState beastState) {

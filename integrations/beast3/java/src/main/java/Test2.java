@@ -16,10 +16,11 @@ public class Test2 {
             taxa=taxa(filtered)
         )
         
+        PositiveReal kappa ~ LogNormal(mean=1, logSd=1.0)
         Alignment alignment ~ PhyloCTMC(
           tree,
           qMatrix=hky(
-            kappa=1.5,
+            kappa=kappa + 0.1,
             baseFrequencies=[0.25, 0.25, 0.25, 0.25]
           )
         ) observed as filtered
