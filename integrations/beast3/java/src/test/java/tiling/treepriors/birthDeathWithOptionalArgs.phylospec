@@ -1,4 +1,3 @@
-// BirthDeath with optional samplingProbability and rootAge arguments
 Real samplingProb ~ Beta(alpha=1.0, beta=1.0)
 Real rootAge ~ LogNormal(mean=1.0, logSd=1.0)
 Alignment data = fromNexus("primate-mtDNA.nex")
