@@ -20,7 +20,7 @@ public class PhyloCTMCAssignedBranchRatesTile extends MultiAstNodeTile<UnboundDi
                   tree=$tree,
                   branchRates=$branchRateModel,
                   qMatrix=$substitutionModel,
-                  siteRates~$partialSiteRateModel
+                  siteRates~$$partialSiteRateModel
                )
                """;
     }

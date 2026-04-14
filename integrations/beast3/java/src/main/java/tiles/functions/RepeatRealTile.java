@@ -9,6 +9,7 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import tiles.GeneratorTile;
 import tiling.BEASTState;
+import tiling.TypeToken;
 
 import java.util.Arrays;
 
@@ -33,4 +34,15 @@ public class RepeatRealTile extends GeneratorTile<RealVectorParam<Real>> {
         return new RealVectorParam<>(values, Real.INSTANCE);
     }
 
+    @Override
+    public TypeToken<?> getTypeToken() {
+        // extract the domain type arg from RealScalarParam<D> to produce RealVectorParam<D>
+        TypeToken<?> valueType = this.valueInput.getTypeToken();
+        if (valueType != null && valueType.getType() instanceof java.lang.reflect.ParameterizedType pt) {
+            return TypeToken.parameterized(RealVectorParam.class, pt.getActualTypeArguments()[0]);
+        }
+
+        // we return the basic vector type
+        return super.getTypeToken();
+    }
 }

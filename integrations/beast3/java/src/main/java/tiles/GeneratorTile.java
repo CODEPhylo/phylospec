@@ -29,7 +29,8 @@ public abstract class GeneratorTile<T> extends Tile<T> {
             StochasticityResolver stochasticityResolver
     ) throws FailedTilingAttempt {
         if (!(node instanceof Expr.Call call)) throw new FailedTilingAttempt.Irrelevant();
-        if (!Objects.equals(call.functionName, this.getPhyloSpecGeneratorName())) throw new FailedTilingAttempt.Irrelevant();
+        if (!Objects.equals(call.functionName, this.getPhyloSpecGeneratorName()))
+            throw new FailedTilingAttempt.Irrelevant();
 
         // check the stochasticity
 
@@ -54,7 +55,7 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         List<TileInput<?>> usedInputs = new ArrayList<>();
         Set<String> givenPhyloSpecArgumentNames = new HashSet<>();
         for (Expr.Argument argument : call.arguments) {
-            String argumentName = this.getArgumentName(argument, call.arguments.length, expectedInputsByArgument);
+            String argumentName = this.getArgumentName(argument, call.arguments.length, expectedInputs);
 
             givenPhyloSpecArgumentNames.add(argumentName);
             TileInput<?> argumentInput = expectedInputsByArgument.get(argumentName);
@@ -104,14 +105,14 @@ public abstract class GeneratorTile<T> extends Tile<T> {
         return this.getWiredUpTiles(usedInputs, compatibleInputTiles, node);
     }
 
-    private String getArgumentName(Expr.Argument argument, int numPassedArguments, Map<String, TileInput<?>> expectedInputs) {
+    private String getArgumentName(Expr.Argument argument, int numPassedArguments, List<TileInput<?>> expectedInputs) {
         String argumentName = argument.name;
 
         if (argumentName != null) {
             return argumentName;
         }
 
-        List<TileInput<?>> requiredInputs = expectedInputs.values().stream().filter(TileInput::isRequired).toList();
+        List<TileInput<?>> requiredInputs = expectedInputs.stream().filter(TileInput::isRequired).toList();
         if (requiredInputs.size() == 1 && numPassedArguments == 1) {
             return requiredInputs.getFirst().getKey();
         }
