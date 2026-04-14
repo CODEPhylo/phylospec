@@ -1,6 +1,6 @@
 Alignment data = fromNexus("primate-mtDNA.nex")
 Taxa taxa = taxa(data)
-Tree tree ~ Yule(birthRate=1.0, taxa(data))
+Tree tree ~ Yule(birthRate=1.0, taxa=taxa(data))
 Taxa taxa2 = taxa(tree)
 
 

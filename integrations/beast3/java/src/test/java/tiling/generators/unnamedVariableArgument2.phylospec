@@ -1,6 +1,5 @@
-Real mean = 0.0
-Real sd = 1.0
-Real a ~ Normal(mean, sd)
+Real a = 10
+Real b = log(a)
 
 // EXPECTED_TILES
 // TILING_SUCCESS

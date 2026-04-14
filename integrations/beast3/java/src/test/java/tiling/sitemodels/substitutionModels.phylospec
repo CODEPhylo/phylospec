@@ -1,0 +1,35 @@
+QMatrix jc = jc69()
+QMatrix k80 = k80(
+    kappa~Gamma(shape=0.5, rate=1.0)
+)
+QMatrix f81 = f81(
+    baseFrequencies=repeat(0.25, num=4)
+)
+QMatrix hky = hky(
+    kappa~LogNormal(mean=0.5, logSd=0.01),
+    baseFrequencies~Dirichlet(repeat(1.0, num=4)),
+)
+QMatrix wag = wag(
+    baseFrequencies~Dirichlet(repeat(
+        value~LogNormal(mean=0.5, logSd=0.01), num=4)
+    ),
+)
+QMatrix jtt = jtt(
+    baseFrequencies~Dirichlet(repeat(
+        value~LogNormal(mean=0.5, logSd=0.01), num=4)
+    ),
+)
+QMatrix gtr = gtr(
+    rateAC=2.0, rateAG=1.0, rateAT=2.0, rateCG=1.0, rateCT=2.0, rateGT=5.0,
+    baseFrequencies~Dirichlet(repeat(1.0, num=4)),
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES

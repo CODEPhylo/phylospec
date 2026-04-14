@@ -37,6 +37,7 @@ public class TileLibrary {
         addTile(new RangeTile());
         addTile(new RepeatRealTile());
         addTile(new RepeatIntTile());
+        addTile(new RepeatSimplexTile());
 
         addTile(new AlignmentTaxaTile());
         addTile(new TreeTaxaTile());

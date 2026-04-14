@@ -1966,9 +1966,39 @@
         "description": "General Time-Reversible model",
         "arguments": [
           {
-            "name": "rateMatrix",
-            "type": "Vector<Real>",
-            "description": "Relative rate parameters",
+            "name": "rateAC",
+            "type": "Rate",
+            "description": "Substitution rate for A to C",
+            "required": true
+          },
+          {
+            "name": "rateAG",
+            "type": "Rate",
+            "description": "Substitution rate for A to G",
+            "required": true
+          },
+          {
+            "name": "rateAT",
+            "type": "Rate",
+            "description": "Substitution rate for A to T",
+            "required": true
+          },
+          {
+            "name": "rateCG",
+            "type": "Rate",
+            "description": "Substitution rate for C to G",
+            "required": true
+          },
+          {
+            "name": "rateCT",
+            "type": "Rate",
+            "description": "Substitution rate for C to T",
+            "required": true
+          },
+          {
+            "name": "rateGT",
+            "type": "Rate",
+            "description": "Substitution rate for G to T",
             "required": true
           },
           {

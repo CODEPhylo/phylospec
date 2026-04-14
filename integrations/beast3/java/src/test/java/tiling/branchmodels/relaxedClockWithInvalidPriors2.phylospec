@@ -5,12 +5,11 @@ Tree tree ~ Yule(
 )
 
 Distribution<Vector<Rate>> dist = RelaxedClock(
-    clockRate~Normal(shape=1.0, rate=2.0),
+    clockRate~Normal(mean=1.0, sd=2.0),
     base=LogNormal(mean=1.0, logSd=2.0),
     tree
 )
 
 // EXPECTED_TILES
-// TILING_SUCCESS
-// TILING_SUCCESS
+// Unsupported operation. BEAST 2.8 cannot deal with the value you provided for the 'clockRate' argument for 'RelaxedClock'.
 // EXPECTED_TILES

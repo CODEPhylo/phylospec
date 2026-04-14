@@ -3,8 +3,16 @@ Taxa taxa = taxa(alignment)
 Tree tree ~ Yule(
     birthRate=1.0, taxa
 )
-Distribution<Vector<Rate>> dist = StrictClock(rate=1.0, tree)
+Distribution<Vector<Rate>> dist = StrictClock(
+    rate~LogNormal(logMean=1, logSd=2.0),
+    tree
+)
+Distribution<Vector<Rate>> dist = StrictClock(
+    rate~Gamma(shape=1.0, rate=2.0),
+    tree
+)
 
 // EXPECTED_TILES
+// TILING_SUCCESS
 // TILING_SUCCESS
 // EXPECTED_TILES

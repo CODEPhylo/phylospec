@@ -66,7 +66,7 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
     }
 
     @Override
-    protected N getRootNode() {
+    public N getRootNode() {
         return (N) super.getRootNode();
     }
 
