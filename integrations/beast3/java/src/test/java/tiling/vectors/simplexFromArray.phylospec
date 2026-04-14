@@ -1,0 +1,7 @@
+// all four elements are in (0,1) and sum to exactly 1.0, so VectorTile also produces
+// a SimplexParam tile; f81 requires Simplex for baseFrequencies, so tiling succeeds
+QMatrix model = f81(baseFrequencies=[0.25, 0.25, 0.25, 0.25])
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

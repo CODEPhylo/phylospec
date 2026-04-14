@@ -1,4 +1,4 @@
-Simplex simplex ~ Dirichlet(concentration=linspace(start=0.5, end=2.0, num=4))
+Simplex simplex ~ Dirichlet(concentration=repeat(value=2.0, num=4))
 Int a = num(vector=simplex)
 
 // EXPECTED_TILES

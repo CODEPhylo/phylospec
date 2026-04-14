@@ -1,0 +1,6 @@
+// range with start == end produces an empty integer vector (num = |end - start| = 0)
+Vector<Integer> x = range(start=5, end=5)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
