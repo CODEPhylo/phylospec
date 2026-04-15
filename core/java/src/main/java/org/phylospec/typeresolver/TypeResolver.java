@@ -115,11 +115,14 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
     @Override
     public Set<ResolvedType> visitDecoratedStmt(Stmt.Decorated stmt) {
+        if (this.ignoreStmt(stmt)) return Set.of();
         return remember(stmt, stmt.statement.accept(this));
     }
 
     @Override
     public Set<ResolvedType> visitAssignment(Stmt.Assignment stmt) {
+        if (this.ignoreStmt(stmt)) return Set.of();
+
         Set<ResolvedType> resolvedVariableTypeSet = stmt.type.accept(this);
 
         Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
@@ -167,6 +170,8 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
     @Override
     public Set<ResolvedType> visitDraw(Stmt.Draw stmt) {
+        if (this.ignoreStmt(stmt)) return Set.of();
+
         Set<ResolvedType> resolvedVariableTypeSet = stmt.type.accept(this);
 
         Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
@@ -245,6 +250,8 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
     @Override
     public Set<ResolvedType> visitIndexedStmt(Stmt.Indexed indexed) {
+        if (this.ignoreStmt(indexed)) return Set.of();
+
         if (indexed.indices.size() != indexed.ranges.size()) {
             throw new TypeError(
                     indexed,
@@ -340,6 +347,8 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
     @Override
     public Set<ResolvedType> visitObservedAsStmt(Stmt.ObservedAs observedAs) {
+        if (this.ignoreStmt(observedAs)) return Set.of();
+
         Set<ResolvedType> observationTypeSet = observedAs.observedAs.accept(this);
         Set<ResolvedType> generatedDistributionTypeSet = observedAs.stmt.accept(this);
 
@@ -386,6 +395,8 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
     @Override
     public Set<ResolvedType> visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
+        if (this.ignoreStmt(observedBetween)) return Set.of();
+
         Set<ResolvedType> observationFromTypeSet = observedBetween.observedFrom.accept(this);
         Set<ResolvedType> observationToTypeSet = observedBetween.observedTo.accept(this);
 
@@ -1001,6 +1012,14 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         Set<ResolvedType> resolvedType = ResolvedType.fromString(expr.name, typeParameters, componentResolver, true);
         return remember(expr, resolvedType);
+    }
+
+    /**
+     * Check if the type resolver ignores the statement because it is in a custom block.
+     */
+    private boolean ignoreStmt(Stmt stmt) {
+        Set<Stmt.Block> blocksConsidered = Set.of(Stmt.Block.NO_BLOCK, Stmt.Block.MODEL, Stmt.Block.DATA);
+        return (!blocksConsidered.contains(stmt.block));
     }
 
     /**
