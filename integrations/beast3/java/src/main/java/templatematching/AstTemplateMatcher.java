@@ -23,6 +23,7 @@ import java.util.*;
 public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     private final AstNode templateRoot;
+    private Stmt.Block templateBlock = Stmt.Block.NO_BLOCK;
     private final VariableResolver templateVariableResolver;
 
     // maps template variable names (e.g. "$x") to the query sub-trees they were bound to
@@ -38,11 +39,21 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         List<Token> tokens = new Lexer(phyloSpecTemplate).scanTokens();
         List<AstNode> statements = new Parser(tokens).parseStmtOrExpr();
 
+        // initialize the template block
+
+        if (statements.getFirst() instanceof Stmt stmt) {
+            this.templateBlock = stmt.block;
+        }
+
         // make sure all but the last statement are actual Stmt nodes and not just expressions
 
         for (int i = 0; i < statements.size() - 1; i++) {
-            if (!(statements.get(i) instanceof Stmt)) {
+            if (!(statements.get(i) instanceof Stmt stmt)) {
                 throw new IllegalArgumentException("The PhyloSpec template contains an expression on the " + (i + 1) + "-th line. Only the last line can contain expressions, all other have to contain complete statements like assignments or draws.");
+            }
+
+            if (this.templateBlock != stmt.block) {
+                throw new IllegalArgumentException("The PhyloSpec template spans multiple blocks. This is not supported.");
             }
         }
 
@@ -71,6 +82,10 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             this.check(
                     queryRoot instanceof Stmt == this.templateRoot instanceof Stmt
             );
+
+            // if the root is a statement, check its block
+            // we don't check the block of any referenced statements for simplicity
+            if (queryRoot instanceof Stmt queryStmt) this.matchBlock(queryStmt);
 
             this.match(this.templateRoot, queryRoot);
             return this.templateVariableMap;
@@ -156,6 +171,18 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         }
 
         return node;
+    }
+
+    private void matchBlock(Stmt queryStmt) {
+        // we treat no block, the data block, and the model block as exchangeable
+
+        Set<Stmt.Block> exchangeableBlocks = Set.of(Stmt.Block.NO_BLOCK, Stmt.Block.DATA, Stmt.Block.MODEL);
+        this.check(exchangeableBlocks.contains(this.templateBlock) == exchangeableBlocks.contains(queryStmt.block));
+
+        if (!exchangeableBlocks.contains(this.templateBlock)) {
+            // both of the statements are in a special block, let's ensure they are the same
+            this.check(this.templateBlock == queryStmt.block);
+        }
     }
 
     @Override
