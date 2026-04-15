@@ -6,22 +6,19 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.evolution.tree.MRCAPrior;
 import beast.base.spec.inference.distribution.Uniform;
 import beast.base.spec.inference.parameter.RealScalarParam;
-import org.phylospec.typeresolver.Stochasticity;
-import tiles.MultiAstNodeTile;
+import tiles.TemplateTile;
 import tiling.BEASTState;
 
-import java.util.Set;
-
-public class RootObservedBetweenTile extends MultiAstNodeTile<RealScalarParam<PositiveReal>> {
+public class RootObservedBetweenTile extends TemplateTile<RealScalarParam<PositiveReal>> {
 
     @Override
     protected String getPhyloSpecTemplate() {
         return "Any x = rootAge(tree=$tree) observed between [$from, $to]";
     }
 
-    MultiAstNodeTileInput<Tree> treeInput = new MultiAstNodeTileInput<>("$tree");
-    MultiAstNodeTileInput<RealScalarParam<Real>> fromInput = new MultiAstNodeTileInput<>("$from");
-    MultiAstNodeTileInput<RealScalarParam<Real>> toInput = new MultiAstNodeTileInput<>("$to");
+    TemplateTileInput<Tree> treeInput = new TemplateTileInput<>("$tree");
+    TemplateTileInput<RealScalarParam<Real>> fromInput = new TemplateTileInput<>("$from");
+    TemplateTileInput<RealScalarParam<Real>> toInput = new TemplateTileInput<>("$to");
 
     @Override
     public RealScalarParam<PositiveReal> applyTile(BEASTState beastState) {

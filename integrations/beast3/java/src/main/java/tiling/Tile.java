@@ -157,7 +157,7 @@ public abstract class Tile<T> {
         return this.rootNode;
     }
 
-    protected void setRootNode(AstNode node) {
+    public void setRootNode(AstNode node) {
         this.rootNode = node;
     }
 

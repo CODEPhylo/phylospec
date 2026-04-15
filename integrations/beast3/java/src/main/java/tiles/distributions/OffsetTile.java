@@ -6,9 +6,9 @@ import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import tiling.*;
-import tiles.MultiAstNodeTile;
+import tiles.TemplateTile;
 
-public class OffsetTile extends MultiAstNodeTile<RealScalarParam<Real>> {
+public class OffsetTile extends TemplateTile<RealScalarParam<Real>> {
 
     @Override
     protected String getPhyloSpecTemplate() {
@@ -18,10 +18,10 @@ public class OffsetTile extends MultiAstNodeTile<RealScalarParam<Real>> {
                """;
     }
 
-    MultiAstNodeTileInput<BoundDistribution<RealScalarParam<Real>, ? extends ScalarDistribution<RealScalar<Real>, Double>>> distributionInput = new MultiAstNodeTileInput<>(
+    TemplateTileInput<BoundDistribution<RealScalarParam<Real>, ? extends ScalarDistribution<RealScalar<Real>, Double>>> distributionInput = new TemplateTileInput<>(
             "$distribution"
     );
-    MultiAstNodeTileInput<Double> offsetInput = new MultiAstNodeTileInput<>("$offset");
+    TemplateTileInput<Double> offsetInput = new TemplateTileInput<>("$offset");
 
     @Override
     public RealScalarParam<Real> applyTile(BEASTState beastState) {

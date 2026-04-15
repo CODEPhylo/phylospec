@@ -3,6 +3,7 @@ package tiles;
 import tiles.branchmodels.*;
 import tiles.functions.*;
 import tiles.input.*;
+import tiles.mcmc.*;
 import tiles.observations.*;
 import tiles.sitemodels.*;
 import tiles.trees.*;
@@ -23,6 +24,7 @@ public class TileLibrary {
         addTile(new DrawTile());
         addTile(new LiteralTile<>());
         addTile(new VectorTile<>());
+        addTile(new ListVectorTile<>());
         addTile(new DrawnArgumentTile());
         addTile(new AssignedArgumentTile());
 
@@ -93,6 +95,11 @@ public class TileLibrary {
         addTile(new SiteModelTile());
         addTile(new PhyloCTMCTile());
         addTile(new PhyloCTMCAssignedBranchRatesTile());
+
+        addTile(new ChainLengthTile());
+        addTile(new ScreenLoggerTile());
+        addTile(new FileLoggerTile());
+        addTile(new TreeLoggerTile());
     }
 
     public static void addTile(Tile<?> tile) {

@@ -11,8 +11,9 @@ public class Test2 {
             end=898
         )
         
+        PositiveReal birthRate ~ LogNormal(mean=1.0, logSd=2.0)
         Tree tree ~ Yule(
-            birthRate~LogNormal(mean=1.0, logSd=2.0),
+            birthRate,
             taxa=taxa(filtered)
         )
         
@@ -20,16 +21,34 @@ public class Test2 {
         Alignment alignment ~ PhyloCTMC(
           tree,
           qMatrix=hky(
-            kappa=kappa + 0.1,
+            kappa=kappa,
             baseFrequencies=[0.25, 0.25, 0.25, 0.25]
           )
         ) observed as filtered
         
         Age root = rootAge(tree) observed between [0.01, 3.0]
+        
+        mcmc {
+            Integer chainLength = 10000
+            Logger screenLogger = screenLogger(
+                logEvery=100,
+                parameters=[kappa]
+            )
+            Logger fileLogger = fileLogger(
+                logEvery=100,
+                fileName="test.log",
+                parameters=[kappa, birthRate]
+            )
+            Logger treeLogger = treeLogger(
+                logEvery=100,
+                fileName="test.trees",
+                trees=[tree]
+            )
+        }
         """;
 
         PhyloSpecRunner parser = new PhyloSpecRunner(source);
-        parser.runPhyloSpec();
+        parser.runPhyloSpec("Test2");
     }
 
 }

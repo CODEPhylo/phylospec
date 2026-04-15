@@ -2,21 +2,21 @@ package tiles.observations;
 
 import beast.base.evolution.alignment.Alignment;
 import beast.base.inference.StateNode;
-import tiles.MultiAstNodeTile;
+import tiles.TemplateTile;
 import tiles.input.DecoratedAlignment;
 import tiling.BEASTState;
 import tiling.TypeToken;
 import tiling.UnboundDistribution;
 
-public class ObservedAsAlignmentTile extends MultiAstNodeTile<Alignment> {
+public class ObservedAsAlignmentTile extends TemplateTile<Alignment> {
 
     @Override
     protected String getPhyloSpecTemplate() {
         return "Any x ~ $distribution observed as $observation";
     }
 
-    MultiAstNodeTileInput<UnboundDistribution<? extends StateNode, ?>> distributionInput = new MultiAstNodeTileInput<>("$distribution");
-    MultiAstNodeTileInput<DecoratedAlignment> observationInput = new MultiAstNodeTileInput<>("$observation");
+    TemplateTileInput<UnboundDistribution<? extends StateNode, ?>> distributionInput = new TemplateTileInput<>("$distribution");
+    TemplateTileInput<DecoratedAlignment> observationInput = new TemplateTileInput<>("$observation");
 
     @Override
     public Alignment applyTile(BEASTState beastState) {

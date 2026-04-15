@@ -16,6 +16,9 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     private final List<Tile<?>> tiles;
     private final List<Tile<?>> operatorTiles;
 
+    private List<Stmt> queryStatements;
+    private List<Tile<?>> bestTiles;
+
     // memoisation caches: all candidates per node, and the single best candidate per node
     private final IdentityHashMap<AstNode, Set<Tile<?>>> evaluatedTiles;
     private final IdentityHashMap<AstNode, Tile<?>> bestEvaluatedTiles;
@@ -42,7 +45,7 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         this.consumedStatements = new HashSet<>();
         this.bestFailures = new IdentityHashMap<>();
         this.failedNodesInVisitOrder = new ArrayList<>();
-        matchedOperatorTiles = new ArrayList<>();
+        this.matchedOperatorTiles = new ArrayList<>();
     }
 
     /**
@@ -54,6 +57,8 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
      * @return one best tile per unconsumed statement, in source order
      */
     public List<Tile<?>> getBestTiling(List<Stmt> statements) {
+        this.queryStatements = statements;
+
         // we start with the last statements and go backwards
 
         List<Tile<?>> bestTiles = new ArrayList<>();
@@ -74,22 +79,18 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
             bestTiles.addFirst(bestTile);
         }
 
+        this.bestTiles = bestTiles;
         return bestTiles;
     }
 
     /**
-     * Computes the best tiling for the given statements and applies each tile in order,
+     * Computes the best tiling and applies each tile in order,
      * building up a {@link BEASTState} that represents the fully-generated BEAST 2.8 model.
      *
-     * @param stmts the top-level statements to tile and apply
      * @return the accumulated BEAST 2.8 model state after all tiles have been applied
      */
-    public BEASTState applyBestTiling(List<Stmt> stmts) {
-        List<Tile<?>> bestTilingComposition = this.getBestTiling(stmts);
-
-        BEASTState beastState = new BEASTState();
-
-        for (Tile<?> bestTiling : bestTilingComposition) {
+    public BEASTState applyBestTiling(BEASTState beastState) {
+        for (Tile<?> bestTiling : this.bestTiles) {
             bestTiling.apply(beastState);
         }
 

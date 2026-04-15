@@ -5,13 +5,13 @@ import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.evolution.branchratemodel.Base;
 import beast.base.spec.evolution.operator.UpDownOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
-import tiles.MultiAstNodeTile;
+import tiles.TemplateTile;
 import tiling.BEASTState;
 
 import java.util.List;
 import java.util.Set;
 
-public class BranchRateTreeUpDownOperatorTile extends MultiAstNodeTile<Void> {
+public class BranchRateTreeUpDownOperatorTile extends TemplateTile<Void> {
 
     @Override
     protected String getPhyloSpecTemplate() {
@@ -25,10 +25,10 @@ public class BranchRateTreeUpDownOperatorTile extends MultiAstNodeTile<Void> {
                 """;
     }
 
-    MultiAstNodeTileInput<Tree> treeInput = new MultiAstNodeTileInput<>("$tree");
-    MultiAstNodeTileInput<Base> branchRateModelInput = new MultiAstNodeTileInput<>("$branchRates");
-    MultiAstNodeTileInput<?> substitutionModelInput = new MultiAstNodeTileInput<>("$$qMatrix", false);
-    MultiAstNodeTileInput<?> partialSiteRateModel = new MultiAstNodeTileInput<>("$$siteRates", false);
+    TemplateTileInput<Tree> treeInput = new TemplateTileInput<>("$tree");
+    TemplateTileInput<Base> branchRateModelInput = new TemplateTileInput<>("$branchRates");
+    TemplateTileInput<?> substitutionModelInput = new TemplateTileInput<>("$$qMatrix", false);
+    TemplateTileInput<?> partialSiteRateModel = new TemplateTileInput<>("$$siteRates", false);
 
     @Override
     protected Void applyTile(BEASTState beastState) {

@@ -1,14 +1,14 @@
 package tiling;
 
 import beast.base.core.*;
-import beast.base.inference.Distribution;
-import beast.base.inference.Operator;
-import beast.base.inference.StateNode;
-import beast.base.inference.StateNodeInitialiser;
+import beast.base.evolution.tree.Tree;
+import beast.base.inference.*;
 
 import java.util.*;
 
 public class BEASTState {
+
+    private final String runName;
 
     public final HashMap<StateNode, TypeToken<?>> stateNodes;
     public final HashMap<StateNode, Distribution> distributions;
@@ -16,15 +16,24 @@ public class BEASTState {
     private final List<BEASTObject> beastObjects;
     private final Set<BEASTObject> initializedBeastObjects;
 
+    public long chainLength = 10_00_000;
+    public final List<Logger> screenLoggers;
+    public final List<Logger> fileLoggers;
+    public final List<Logger> treeLoggers;
+
     private final Set<String> ids;
 
-    public BEASTState() {
+    public BEASTState(String runName) {
+        this.runName = runName;
         this.stateNodes = new HashMap<>();
         this.distributions = new HashMap<>();
         this.operators = new HashMap<>();
         this.beastObjects = new ArrayList<>();
         this.ids = new HashSet<>();
-        initializedBeastObjects = new HashSet<>();
+        this.initializedBeastObjects = new HashSet<>();
+        this.screenLoggers = new ArrayList<>();
+        this.fileLoggers = new ArrayList<>();
+        this.treeLoggers = new ArrayList<>();
     }
 
     public String getID(String id) {
@@ -54,7 +63,7 @@ public class BEASTState {
         this.initializedBeastObjects.add(beastObject);
     }
 
-    private BEASTObject addBEASTObject(Object object) {
+    public BEASTObject addBEASTObject(Object object) {
         BEASTObject beastObject = BEASTObjectStore.INSTANCE.getBEASTObject(object);
         this.beastObjects.add(beastObject);
         return beastObject;
@@ -107,6 +116,77 @@ public class BEASTState {
 
         this.addBEASTObject(operator);
         this.operators.put(operator, stateNodes);
+    }
+
+    public List<BEASTObject> getLoggableObjects() {
+        List<BEASTObject> loggables = new ArrayList<>();
+
+        for (BEASTObject object : this.stateNodes.keySet()) {
+            if (object.getID() != null && object instanceof Loggable && !(object instanceof Tree)) {
+                loggables.add(object);
+            }
+        }
+
+        return loggables;
+    }
+
+    public List<BEASTObject> getLoggableTrees() {
+        List<BEASTObject> loggables = new ArrayList<>();
+
+        for (BEASTObject object : this.stateNodes.keySet()) {
+            if (object.getID() != null && object instanceof Tree) {
+                loggables.add(object);
+            }
+        }
+
+        return loggables;
+    }
+
+    public void addScreenLogger(Logger logger) {
+        this.screenLoggers.add(logger);
+    }
+    public void addFileLogger(Logger logger) {
+        this.fileLoggers.add(logger);
+    }
+    public void addTreeLogger(Logger logger) {
+        this.treeLoggers.add(logger);
+    }
+
+    public List<Logger> getLoggers() {
+        List<Logger> loggers = new ArrayList<>();
+        loggers.addAll(this.screenLoggers);
+        loggers.addAll(this.fileLoggers);
+        loggers.addAll(this.treeLoggers);
+        return loggers;
+    }
+
+    public void addMissingLoggers() {
+        List<BEASTObject> loggableObjects = this.getLoggableObjects();
+
+        if (!loggableObjects.isEmpty() && this.screenLoggers.isEmpty()) {
+            Logger screenLogger = new Logger();
+            this.setInput(screenLogger, screenLogger.everyInput, 1000);
+            this.setInput(screenLogger, screenLogger.loggersInput, loggableObjects);
+            this.addScreenLogger(screenLogger);
+        }
+        if (!loggableObjects.isEmpty() && this.fileLoggers.isEmpty()) {
+            Logger fileLogger = new Logger();
+            this.setInput(fileLogger, fileLogger.fileNameInput, this.runName + ".log");
+            this.setInput(fileLogger, fileLogger.everyInput, 1000);
+            this.setInput(fileLogger, fileLogger.loggersInput, loggableObjects);
+            this.addScreenLogger(fileLogger);
+        }
+
+        List<BEASTObject> loggableTrees = this.getLoggableTrees();
+
+        if (!loggableTrees.isEmpty() && this.treeLoggers.isEmpty()) {
+            Logger treeLogger = new Logger();
+            this.setInput(treeLogger, treeLogger.modeInput, Logger.LOGMODE.tree);
+            this.setInput(treeLogger, treeLogger.fileNameInput, this.runName + ".trees");
+            this.setInput(treeLogger, treeLogger.everyInput, 1000);
+            this.setInput(treeLogger, treeLogger.loggersInput, loggableTrees);
+            this.addScreenLogger(treeLogger);
+        }
     }
 
     public void initializeBEASTObjects() {

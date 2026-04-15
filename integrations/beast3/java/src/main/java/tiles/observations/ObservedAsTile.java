@@ -1,21 +1,18 @@
 package tiles.observations;
 
 import beast.base.inference.StateNode;
-import org.phylospec.typeresolver.Stochasticity;
-import tiles.MultiAstNodeTile;
+import tiles.TemplateTile;
 import tiling.*;
 
-import java.util.Set;
-
-public class ObservedAsTile extends MultiAstNodeTile<StateNode> {
+public class ObservedAsTile extends TemplateTile<StateNode> {
 
     @Override
     protected String getPhyloSpecTemplate() {
         return "Any x ~ $distribution observed as $observation";
     }
 
-    MultiAstNodeTileInput<UnboundDistribution<? extends StateNode, ?>> distributionInput = new MultiAstNodeTileInput<>("$distribution");
-    MultiAstNodeTileInput<? extends StateNode> observationInput = new MultiAstNodeTileInput<>("$observation");
+    TemplateTileInput<UnboundDistribution<? extends StateNode, ?>> distributionInput = new TemplateTileInput<>("$distribution");
+    TemplateTileInput<? extends StateNode> observationInput = new TemplateTileInput<>("$observation");
 
     @Override
     public StateNode applyTile(BEASTState beastState) {

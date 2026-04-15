@@ -6,12 +6,12 @@ import beast.base.evolution.tree.Tree;
 import beast.base.spec.evolution.branchratemodel.Base;
 import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beast.base.spec.evolution.sitemodel.SiteModel;
-import tiles.MultiAstNodeTile;
+import tiles.TemplateTile;
 import tiling.BEASTState;
 import tiling.Partial;
 import tiling.UnboundDistribution;
 
-public class PhyloCTMCAssignedBranchRatesTile extends MultiAstNodeTile<UnboundDistribution<Alignment, TreeLikelihood>> {
+public class PhyloCTMCAssignedBranchRatesTile extends TemplateTile<UnboundDistribution<Alignment, TreeLikelihood>> {
 
     @Override
     protected String getPhyloSpecTemplate() {
@@ -25,10 +25,10 @@ public class PhyloCTMCAssignedBranchRatesTile extends MultiAstNodeTile<UnboundDi
                """;
     }
 
-    MultiAstNodeTileInput<Tree> treeInput = new MultiAstNodeTileInput<>("$tree");
-    MultiAstNodeTileInput<Base> branchRateModelInput = new MultiAstNodeTileInput<>("$branchRateModel");
-    MultiAstNodeTileInput<SubstitutionModel> substitutionModelInput = new MultiAstNodeTileInput<>("$substitutionModel");
-    MultiAstNodeTileInput<Partial<SiteModel, SubstitutionModel>> partialSiteRateModel = new MultiAstNodeTileInput<>("$partialSiteRateModel");
+    TemplateTileInput<Tree> treeInput = new TemplateTileInput<>("$tree");
+    TemplateTileInput<Base> branchRateModelInput = new TemplateTileInput<>("$branchRateModel");
+    TemplateTileInput<SubstitutionModel> substitutionModelInput = new TemplateTileInput<>("$substitutionModel");
+    TemplateTileInput<Partial<SiteModel, SubstitutionModel>> partialSiteRateModel = new TemplateTileInput<>("$partialSiteRateModel");
 
     @Override
     public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState) {

@@ -15,15 +15,15 @@ import java.util.*;
 /**
  * This class represents tiles that cover multiple AstNodes. Extend this class for custom tiles and specify a
  * PhyloSpec template used to match the AST subgraph.
- * Use MultiAstNodeTileInput fields to specify the tile inputs (similar to BEAST 2.8 inputs).
+ * Use TemplateTileInput fields to specify the tile inputs (similar to BEAST 2.8 inputs).
  */
-public abstract class MultiAstNodeTile<T> extends Tile<T> {
+public abstract class TemplateTile<T> extends Tile<T> {
 
     protected abstract String getPhyloSpecTemplate();
 
     private final AstTemplateMatcher astTemplateMatcher;
 
-    public MultiAstNodeTile() {
+    public TemplateTile() {
         this.astTemplateMatcher = new AstTemplateMatcher(this.getPhyloSpecTemplate());
     }
 
@@ -92,10 +92,10 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
         StringBuilder sb = new StringBuilder();
         sb.append("(").append(getClass().getSimpleName());
         for (Field field : getClass().getDeclaredFields()) {
-            if (field.getType().equals(MultiAstNodeTileInput.class)) {
+            if (field.getType().equals(TemplateTileInput.class)) {
                 field.setAccessible(true);
                 try {
-                    MultiAstNodeTileInput<?> input = (MultiAstNodeTileInput<?>) field.get(this);
+                    TemplateTileInput<?> input = (TemplateTileInput<?>) field.get(this);
                     Tile<?> child = input.getTile();
                     if (child != null) {
                         // strip leading $ from template variable name
@@ -111,22 +111,22 @@ public abstract class MultiAstNodeTile<T> extends Tile<T> {
         return sb.toString();
     }
 
-    public static class MultiAstNodeTileInput<O> extends TileInput<O> {
+    public static class TemplateTileInput<O> extends TileInput<O> {
         private final String templateVariable;
 
-        public MultiAstNodeTileInput(String templateVariable) {
+        public TemplateTileInput(String templateVariable) {
             this(templateVariable, true, EnumSet.allOf(Stochasticity.class));
         }
 
-        public MultiAstNodeTileInput(String templateVariable, boolean required) {
+        public TemplateTileInput(String templateVariable, boolean required) {
             this(templateVariable, required, EnumSet.allOf(Stochasticity.class));
         }
 
-        public MultiAstNodeTileInput(String templateVariable, Set<Stochasticity> acceptedStochasticities) {
+        public TemplateTileInput(String templateVariable, Set<Stochasticity> acceptedStochasticities) {
             this(templateVariable, true, acceptedStochasticities);
         }
 
-        public MultiAstNodeTileInput(String templateVariable, boolean required, Set<Stochasticity> acceptedStochasticities) {
+        public TemplateTileInput(String templateVariable, boolean required, Set<Stochasticity> acceptedStochasticities) {
             super(required, acceptedStochasticities);
             if (!templateVariable.startsWith("$")) {
                 throw new RuntimeException("Invalid template variable '" + templateVariable + "'. A template variable has to start with a dollar sign (e.g. '$" + templateVariable + "'.");
