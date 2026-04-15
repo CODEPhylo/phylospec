@@ -6,7 +6,7 @@ import beast.base.spec.inference.distribution.Poisson;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 public class PoissonTile extends GeneratorTile<BoundDistribution<IntScalarParam<NonNegativeInt>, Poisson>> {

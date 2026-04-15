@@ -74,7 +74,7 @@ public abstract class TemplateTile<T> extends Tile<T> {
             Set<Tile<?>> compatible = tileInput.getCompatibleInputTiles(inputAstNode, allInputTiles, stochasticityResolver);
             if (compatible.isEmpty()) {
                 throw new FailedTilingAttempt.RejectedBoundary(
-                        "BEAST 2.8 cannot deal with the value you provided for the " + tileInput.getKey().replace("$", "") + ".",
+                        "BEAST 2.8 cannot deal with the value you provided for " + tileInput.getKey().replace("$", "") + ".",
                         inputAstNode
                 );
             }

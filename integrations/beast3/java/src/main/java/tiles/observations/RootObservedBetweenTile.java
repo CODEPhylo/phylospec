@@ -7,7 +7,7 @@ import beast.base.spec.evolution.tree.MRCAPrior;
 import beast.base.spec.inference.distribution.Uniform;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import tiles.TemplateTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 public class RootObservedBetweenTile extends TemplateTile<RealScalarParam<PositiveReal>> {
 

@@ -4,7 +4,7 @@ import beast.base.evolution.alignment.Alignment;
 import beast.base.inference.StateNode;
 import tiles.TemplateTile;
 import tiles.input.DecoratedAlignment;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.TypeToken;
 import tiling.UnboundDistribution;
 

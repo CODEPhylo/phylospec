@@ -3,6 +3,7 @@ package tiles.misc;
 import beast.base.spec.domain.*;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beastconfig.BEASTState;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.StochasticityResolver;

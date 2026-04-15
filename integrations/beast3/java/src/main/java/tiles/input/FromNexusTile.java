@@ -6,7 +6,7 @@ import beast.base.evolution.tree.TraitSet;
 import beast.base.parser.NexusParser;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.TilingError;
 
 import java.io.File;

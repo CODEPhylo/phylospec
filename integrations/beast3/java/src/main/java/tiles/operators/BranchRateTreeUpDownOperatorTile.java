@@ -1,4 +1,4 @@
-package operators;
+package tiles.operators;
 
 import beast.base.evolution.tree.Tree;
 import beast.base.spec.domain.NonNegativeReal;
@@ -6,7 +6,7 @@ import beast.base.spec.evolution.branchratemodel.Base;
 import beast.base.spec.evolution.operator.UpDownOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import tiles.TemplateTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 import java.util.List;
 import java.util.Set;

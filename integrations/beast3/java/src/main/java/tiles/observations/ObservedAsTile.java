@@ -1,6 +1,7 @@
 package tiles.observations;
 
 import beast.base.inference.StateNode;
+import beastconfig.BEASTState;
 import tiles.TemplateTile;
 import tiling.*;
 

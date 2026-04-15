@@ -6,7 +6,7 @@ import beast.base.spec.evolution.substitutionmodel.HKY;
 import beast.base.spec.inference.parameter.SimplexParam;
 import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 public class K80Tile extends GeneratorTile<HKY> {
 

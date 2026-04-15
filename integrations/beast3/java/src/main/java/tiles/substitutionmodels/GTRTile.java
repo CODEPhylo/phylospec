@@ -6,7 +6,7 @@ import beast.base.spec.evolution.substitutionmodel.GTR;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.Simplex;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 public class GTRTile extends GeneratorTile<GTR> {
 

@@ -10,7 +10,7 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthDeathGernhard08Model>> {

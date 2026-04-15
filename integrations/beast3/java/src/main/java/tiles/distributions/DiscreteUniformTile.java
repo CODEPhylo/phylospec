@@ -5,7 +5,7 @@ import beast.base.spec.inference.distribution.IntUniform;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.IntScalar;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 public class DiscreteUniformTile extends GeneratorTile<BoundDistribution<IntScalarParam<Int>, IntUniform>> {

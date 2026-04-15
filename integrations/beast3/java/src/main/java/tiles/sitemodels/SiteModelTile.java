@@ -5,9 +5,8 @@ import beast.base.spec.domain.*;
 import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.IntScalar;
-import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.Partial;
 
 import java.util.Objects;

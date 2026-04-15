@@ -3,7 +3,7 @@ package tiles.misc;
 import beast.base.inference.StateNode;
 import org.phylospec.ast.Expr;
 import tiles.AstNodeTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 import tiling.TypeToken;
 

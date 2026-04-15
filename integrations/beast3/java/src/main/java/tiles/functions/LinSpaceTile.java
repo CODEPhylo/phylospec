@@ -7,7 +7,7 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 import java.util.Set;
 

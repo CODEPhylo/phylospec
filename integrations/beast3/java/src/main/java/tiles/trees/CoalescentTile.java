@@ -9,7 +9,7 @@ import beast.base.spec.evolution.tree.coalescent.RandomTree;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coalescent>> {

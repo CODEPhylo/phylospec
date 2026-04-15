@@ -2,9 +2,10 @@ package tiles.mcmc;
 
 import beast.base.core.BEASTObject;
 import beast.base.inference.Logger;
+import beastconfig.LoggerSelector;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.TemplateTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 import java.util.List;
 import java.util.Set;
@@ -40,7 +41,7 @@ public class TreeLoggerTile extends TemplateTile<Void> {
         List<BEASTObject> parameters = this.treesInput.apply(beastState);
 
         if (parameters == null) {
-            parameters = beastState.getLoggableTrees();
+            parameters = LoggerSelector.getLoggableTrees(beastState);
         }
 
         Logger logger = new Logger();
@@ -48,7 +49,7 @@ public class TreeLoggerTile extends TemplateTile<Void> {
         beastState.setInput(logger, logger.modeInput, Logger.LOGMODE.tree);
         beastState.setInput(logger, logger.fileNameInput, fileName);
         beastState.setInput(logger, logger.loggersInput, parameters);
-        beastState.addScreenLogger(logger);
+        beastState.addTreeLogger(logger);
         
         return null;
     }

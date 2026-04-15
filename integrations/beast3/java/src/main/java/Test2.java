@@ -24,26 +24,13 @@ public class Test2 {
             kappa=kappa,
             baseFrequencies=[0.25, 0.25, 0.25, 0.25]
           )
-        ) observed as filtered
+        )
+        Alignment a = alignment observed as filtered
         
         Age root = rootAge(tree) observed between [0.01, 3.0]
         
         mcmc {
             Integer chainLength = 10000
-            Logger screenLogger = screenLogger(
-                logEvery=100,
-                parameters=[kappa]
-            )
-            Logger fileLogger = fileLogger(
-                logEvery=100,
-                fileName="test.log",
-                parameters=[kappa, birthRate]
-            )
-            Logger treeLogger = treeLogger(
-                logEvery=100,
-                fileName="test.trees",
-                trees=[tree]
-            )
         }
         """;
 

@@ -1,4 +1,4 @@
-package operators;
+package beastconfig;
 
 import beast.base.evolution.operator.Exchange;
 import beast.base.evolution.operator.WilsonBalding;
@@ -15,10 +15,12 @@ import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
-import tiling.BEASTState;
 
 public class OperatorSelector {
 
+    /**
+     * Adds the default operators for the given state node.
+     */
     public static void addDefaultOperators(StateNode stateNode, BEASTState beastState) {
         if (stateNode instanceof Tree tree) {
             ScaleTreeOperator scaleTreeOperator = new ScaleTreeOperator();

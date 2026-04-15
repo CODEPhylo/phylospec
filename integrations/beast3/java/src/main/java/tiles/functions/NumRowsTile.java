@@ -4,7 +4,7 @@ import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.Tensor;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 public class NumRowsTile extends GeneratorTile<IntScalarParam<NonNegativeInt>> {
 

@@ -4,7 +4,7 @@ import beast.base.evolution.tree.Tree;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 public class NumBranchesTile extends GeneratorTile<IntScalarParam<NonNegativeInt>> {
 

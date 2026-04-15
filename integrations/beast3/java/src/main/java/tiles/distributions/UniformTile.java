@@ -5,7 +5,7 @@ import beast.base.spec.inference.distribution.Uniform;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 public class UniformTile extends GeneratorTile<BoundDistribution<RealScalarParam<Real>, Uniform>> {

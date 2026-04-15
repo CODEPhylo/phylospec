@@ -1,7 +1,7 @@
-import beast.base.core.BEASTObject;
 import beast.base.inference.*;
-import operators.OperatorSelector;
-import operators.OperatorTileLibrary;
+import beastconfig.LoggerSelector;
+import beastconfig.OperatorSelector;
+import tiles.OperatorTileLibrary;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.RemoveGroupings;
@@ -19,7 +19,7 @@ import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import org.xml.sax.SAXException;
 import tiles.TileLibrary;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.EvaluateTiles;
 import tiling.TilingError;
 
@@ -105,7 +105,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // add loggers
 
-        beastState.addMissingLoggers();
+        LoggerSelector.addMissingLoggers(beastState);
 
         // create MCMC object
 

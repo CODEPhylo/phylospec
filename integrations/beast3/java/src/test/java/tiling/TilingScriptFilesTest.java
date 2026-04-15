@@ -1,6 +1,7 @@
 package tiling;
 
-import operators.OperatorTileLibrary;
+import beastconfig.BEASTState;
+import tiles.OperatorTileLibrary;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.phylospec.ast.Stmt;

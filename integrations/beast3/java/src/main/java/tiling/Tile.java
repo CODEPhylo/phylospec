@@ -1,5 +1,6 @@
 package tiling;
 
+import beastconfig.BEASTState;
 import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
 import org.phylospec.typeresolver.Stochasticity;
@@ -135,6 +136,7 @@ public abstract class Tile<T> {
             } catch (Exception e) {
                 // we wrap the exception into a tiling error
                 throw new TileApplicationError(
+                        this.getRootNode(),
                         "Creating the BEAST 2.8 objects did not work.",
                         e
                 );

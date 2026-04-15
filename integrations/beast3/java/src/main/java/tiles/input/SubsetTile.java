@@ -3,7 +3,7 @@ package tiles.input;
 import beast.base.spec.evolution.alignment.FilteredAlignment;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.TilingError;
 
 import java.util.Set;

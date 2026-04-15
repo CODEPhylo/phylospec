@@ -6,7 +6,7 @@ import beast.base.spec.inference.distribution.Exponential;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 import java.util.Set;

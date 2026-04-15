@@ -4,7 +4,6 @@ import org.phylospec.ast.AstNode;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
-import tiling.BEASTState;
 import tiling.FailedTilingAttempt;
 import tiling.Tile;
 import tiling.TileInput;

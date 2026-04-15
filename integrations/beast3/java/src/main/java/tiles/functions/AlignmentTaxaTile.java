@@ -2,7 +2,7 @@ package tiles.functions;
 
 import tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 public class AlignmentTaxaTile extends GeneratorTile<DecoratedAlignment> {
 

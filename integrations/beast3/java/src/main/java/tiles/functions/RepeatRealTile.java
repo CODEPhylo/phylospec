@@ -1,15 +1,13 @@
 package tiles.functions;
 
-import beast.base.spec.domain.Int;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.IntScalarParam;
-import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.TypeToken;
 
 import java.util.Arrays;

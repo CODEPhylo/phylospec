@@ -4,7 +4,7 @@ import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeParser;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 import java.util.Set;
 

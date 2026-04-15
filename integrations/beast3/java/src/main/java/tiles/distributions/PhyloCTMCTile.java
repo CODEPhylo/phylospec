@@ -9,6 +9,7 @@ import beast.base.spec.evolution.branchratemodel.StrictClockModel;
 import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beastconfig.BEASTState;
 import tiles.TemplateTile;
 import tiling.*;
 

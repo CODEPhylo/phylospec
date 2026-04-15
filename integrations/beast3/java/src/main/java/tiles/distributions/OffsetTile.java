@@ -5,6 +5,7 @@ import beast.base.spec.inference.distribution.OffsetReal;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
+import beastconfig.BEASTState;
 import tiling.*;
 import tiles.TemplateTile;
 

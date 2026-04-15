@@ -5,7 +5,7 @@ import beast.base.spec.inference.distribution.Dirichlet;
 import beast.base.spec.inference.parameter.SimplexParam;
 import beast.base.spec.type.RealVector;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 import java.util.Arrays;

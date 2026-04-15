@@ -3,7 +3,7 @@ package tiles.functions;
 import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.tree.Tree;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 public class TreeTaxaTile extends GeneratorTile<TaxonSet> {
 

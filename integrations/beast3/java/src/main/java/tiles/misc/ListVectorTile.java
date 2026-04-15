@@ -1,14 +1,13 @@
 package tiles.misc;
 
 import beast.base.core.BEASTObject;
-import beast.base.spec.inference.parameter.*;
 import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiles.AstNodeTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.FailedTilingAttempt;
 import tiling.Tile;
 

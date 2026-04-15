@@ -1,14 +1,17 @@
-package tiling;
+package beastconfig;
 
 import beast.base.core.*;
-import beast.base.evolution.tree.Tree;
 import beast.base.inference.*;
+import tiling.TypeToken;
 
 import java.util.*;
 
+/**
+ * This class manages the BEAST state which is built up during tiling.
+ */
 public class BEASTState {
 
-    private final String runName;
+    public final String runName;
 
     public final HashMap<StateNode, TypeToken<?>> stateNodes;
     public final HashMap<StateNode, Distribution> distributions;
@@ -17,9 +20,9 @@ public class BEASTState {
     private final Set<BEASTObject> initializedBeastObjects;
 
     public long chainLength = 10_00_000;
-    public final List<Logger> screenLoggers;
-    public final List<Logger> fileLoggers;
-    public final List<Logger> treeLoggers;
+    public final List<beast.base.inference.Logger> screenLoggers;
+    public final List<beast.base.inference.Logger> fileLoggers;
+    public final List<beast.base.inference.Logger> treeLoggers;
 
     private final Set<String> ids;
 
@@ -36,22 +39,37 @@ public class BEASTState {
         this.treeLoggers = new ArrayList<>();
     }
 
-    public String getID(String id) {
-        if (!this.ids.contains(id)) {
-            this.ids.add(id);
-            return id;
+    /**
+     * Gets the next available ID based on the proposed ID.
+     */
+    public String getID(String proposal) {
+        if (!this.ids.contains(proposal)) {
+            this.ids.add(proposal);
+            return proposal;
         }
 
         int prefix = 1;
-        while (this.ids.contains(id + prefix)) {
+        while (this.ids.contains(proposal + prefix)) {
             prefix++;
         }
 
-        id = id + prefix;
-        this.ids.add(id);
-        return id;
+        proposal = proposal + prefix;
+        this.ids.add(proposal);
+        return proposal;
     }
 
+    /**
+     * Adds a new object to the BEAST object store and wraps it into a VirtualBEASTObject if necessary.
+     */
+    public BEASTObject addBEASTObject(Object object) {
+        BEASTObject beastObject = BEASTObjectStore.INSTANCE.getBEASTObject(object);
+        this.beastObjects.add(beastObject);
+        return beastObject;
+    }
+
+    /**
+     * Initializes a BEAST object.
+     */
     public void initBEASTObject(Object object) {
         BEASTObject beastObject = BEASTObjectStore.INSTANCE.getBEASTObject(object);
 
@@ -63,12 +81,11 @@ public class BEASTState {
         this.initializedBeastObjects.add(beastObject);
     }
 
-    public BEASTObject addBEASTObject(Object object) {
-        BEASTObject beastObject = BEASTObjectStore.INSTANCE.getBEASTObject(object);
-        this.beastObjects.add(beastObject);
-        return beastObject;
-    }
-
+    /**
+     * Sets the given input of the beast object to the value.
+     * If value does not have an ID yet, it is tried to construct one based on the beastObject ID if possible.
+     * Furthermore, value is initialized.
+     */
     public <T> void setInput(BEASTObject beastObject, Input<T> input, T value) {
         input.setValue(value, beastObject);
 
@@ -86,12 +103,18 @@ public class BEASTState {
         this.initBEASTObject(value);
     }
 
+    /**
+     * Adds a given state node to the BEAST state.
+     */
     public void addStateNode(StateNode stateNode, TypeToken<?> typeToken, String id) {
         stateNode.setID(this.getID(id));
         this.addBEASTObject(stateNode);
         this.stateNodes.put(stateNode, typeToken);
     }
 
+    /**
+     * Adds a given distribution to the BEAST state.
+     */
     public void addDistribution(StateNode stateNode, Distribution distribution, String id) {
         distribution.setID(this.getID(id));
         this.addBEASTObject(stateNode);
@@ -99,10 +122,16 @@ public class BEASTState {
         this.distributions.put(stateNode, distribution);
     }
 
+    /**
+     * Adds a given operator to the BEAST state.
+     */
     public void addOperator(Operator operator, StateNode stateNode) {
         this.addOperator(operator, Set.of(stateNode));
     }
 
+    /**
+     * Adds a given operator to the BEAST state.
+     */
     public void addOperator(Operator operator, Set<StateNode> stateNodes) {
         // set id
         if (operator.getID() == null) {
@@ -118,77 +147,41 @@ public class BEASTState {
         this.operators.put(operator, stateNodes);
     }
 
-    public List<BEASTObject> getLoggableObjects() {
-        List<BEASTObject> loggables = new ArrayList<>();
-
-        for (BEASTObject object : this.stateNodes.keySet()) {
-            if (object.getID() != null && object instanceof Loggable && !(object instanceof Tree)) {
-                loggables.add(object);
-            }
-        }
-
-        return loggables;
-    }
-
-    public List<BEASTObject> getLoggableTrees() {
-        List<BEASTObject> loggables = new ArrayList<>();
-
-        for (BEASTObject object : this.stateNodes.keySet()) {
-            if (object.getID() != null && object instanceof Tree) {
-                loggables.add(object);
-            }
-        }
-
-        return loggables;
-    }
-
-    public void addScreenLogger(Logger logger) {
+    /**
+     * Adds a given screen logger to the BEAST state.
+     */
+    public void addScreenLogger(beast.base.inference.Logger logger) {
         this.screenLoggers.add(logger);
     }
-    public void addFileLogger(Logger logger) {
+
+    /**
+     * Adds a given file logger to the BEAST state.
+     */
+    public void addFileLogger(beast.base.inference.Logger logger) {
         this.fileLoggers.add(logger);
     }
-    public void addTreeLogger(Logger logger) {
+
+    /**
+     * Adds a given tree logger to the BEAST state.
+     */
+    public void addTreeLogger(beast.base.inference.Logger logger) {
         this.treeLoggers.add(logger);
     }
 
-    public List<Logger> getLoggers() {
-        List<Logger> loggers = new ArrayList<>();
+    /**
+     * Returns all registered loggers.
+     */
+    public List<beast.base.inference.Logger> getLoggers() {
+        List<beast.base.inference.Logger> loggers = new ArrayList<>();
         loggers.addAll(this.screenLoggers);
         loggers.addAll(this.fileLoggers);
         loggers.addAll(this.treeLoggers);
         return loggers;
     }
 
-    public void addMissingLoggers() {
-        List<BEASTObject> loggableObjects = this.getLoggableObjects();
-
-        if (!loggableObjects.isEmpty() && this.screenLoggers.isEmpty()) {
-            Logger screenLogger = new Logger();
-            this.setInput(screenLogger, screenLogger.everyInput, 1000);
-            this.setInput(screenLogger, screenLogger.loggersInput, loggableObjects);
-            this.addScreenLogger(screenLogger);
-        }
-        if (!loggableObjects.isEmpty() && this.fileLoggers.isEmpty()) {
-            Logger fileLogger = new Logger();
-            this.setInput(fileLogger, fileLogger.fileNameInput, this.runName + ".log");
-            this.setInput(fileLogger, fileLogger.everyInput, 1000);
-            this.setInput(fileLogger, fileLogger.loggersInput, loggableObjects);
-            this.addScreenLogger(fileLogger);
-        }
-
-        List<BEASTObject> loggableTrees = this.getLoggableTrees();
-
-        if (!loggableTrees.isEmpty() && this.treeLoggers.isEmpty()) {
-            Logger treeLogger = new Logger();
-            this.setInput(treeLogger, treeLogger.modeInput, Logger.LOGMODE.tree);
-            this.setInput(treeLogger, treeLogger.fileNameInput, this.runName + ".trees");
-            this.setInput(treeLogger, treeLogger.everyInput, 1000);
-            this.setInput(treeLogger, treeLogger.loggersInput, loggableTrees);
-            this.addScreenLogger(treeLogger);
-        }
-    }
-
+    /**
+     * Initialized all BEAST objects that have not yet been registered.
+     */
     public void initializeBEASTObjects() {
         for (BEASTObject object : this.beastObjects) {
             this.initBEASTObject(object);

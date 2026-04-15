@@ -6,7 +6,7 @@ import beast.base.spec.inference.distribution.Beta;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 public class BetaTile extends GeneratorTile<BoundDistribution<RealScalarParam<UnitInterval>, Beta>> {

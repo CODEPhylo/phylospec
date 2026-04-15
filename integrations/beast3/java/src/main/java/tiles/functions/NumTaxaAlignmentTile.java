@@ -5,7 +5,7 @@ import beast.base.spec.inference.parameter.IntScalarParam;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 import java.util.Set;
 

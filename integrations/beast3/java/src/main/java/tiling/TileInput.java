@@ -1,6 +1,7 @@
 package tiling;
 
 
+import beastconfig.BEASTState;
 import org.phylospec.ast.AstNode;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;

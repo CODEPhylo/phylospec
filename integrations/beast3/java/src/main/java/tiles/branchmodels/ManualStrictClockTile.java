@@ -5,7 +5,7 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.evolution.branchratemodel.StrictClockModel;
 import beast.base.spec.type.RealScalar;
 import tiles.TemplateTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 public class ManualStrictClockTile extends TemplateTile<StrictClockModel> {
 

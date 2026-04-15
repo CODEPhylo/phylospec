@@ -12,7 +12,7 @@ import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiles.AstNodeTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.FailedTilingAttempt;
 import tiling.Tile;
 import tiling.TypeToken;

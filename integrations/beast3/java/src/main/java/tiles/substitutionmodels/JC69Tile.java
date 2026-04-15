@@ -2,8 +2,7 @@ package tiles.substitutionmodels;
 
 import beast.base.spec.evolution.substitutionmodel.JukesCantor;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
-import tiling.Tile;
+import beastconfig.BEASTState;
 
 public class JC69Tile extends GeneratorTile<JukesCantor> {
 

@@ -1,7 +1,7 @@
 package tiles.functions;
 
 import org.phylospec.typeresolver.Stochasticity;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiles.GeneratorTile;
 import tiling.TilingError;
 

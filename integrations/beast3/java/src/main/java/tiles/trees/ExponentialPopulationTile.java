@@ -5,7 +5,7 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.evolution.tree.coalescent.ExponentialGrowth;
 import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 public class ExponentialPopulationTile extends GeneratorTile<PopulationFunction> {
 

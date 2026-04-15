@@ -4,7 +4,7 @@ import beast.base.spec.evolution.substitutionmodel.Frequencies;
 import beast.base.spec.evolution.substitutionmodel.WAG;
 import beast.base.spec.type.Simplex;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 public class WAGTile extends GeneratorTile<WAG> {
 

@@ -15,6 +15,9 @@ import tiles.substitutionmodels.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * This class loads all known tiles into a static field.
+ */
 public class TileLibrary {
     private final static List<Tile<?>> tiles = new ArrayList<>();
 

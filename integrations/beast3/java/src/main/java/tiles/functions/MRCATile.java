@@ -4,7 +4,7 @@ import beast.base.evolution.tree.Tree;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 import java.util.List;
 

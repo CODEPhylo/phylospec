@@ -2,9 +2,10 @@ package tiles.mcmc;
 
 import beast.base.core.BEASTObject;
 import beast.base.inference.Logger;
+import beastconfig.LoggerSelector;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.TemplateTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 
 import java.util.List;
 import java.util.Set;
@@ -35,7 +36,7 @@ public class ScreenLoggerTile extends TemplateTile<Void> {
         List<BEASTObject> parameters = this.parametersInput.apply(beastState);
 
         if (parameters == null) {
-            parameters = beastState.getLoggableObjects();
+            parameters = LoggerSelector.getLoggableObjects(beastState);
         }
 
         Logger logger = new Logger();

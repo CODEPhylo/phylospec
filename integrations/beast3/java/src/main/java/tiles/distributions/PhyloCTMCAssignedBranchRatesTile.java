@@ -7,7 +7,7 @@ import beast.base.spec.evolution.branchratemodel.Base;
 import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beast.base.spec.evolution.sitemodel.SiteModel;
 import tiles.TemplateTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.Partial;
 import tiling.UnboundDistribution;
 

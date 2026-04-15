@@ -385,6 +385,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 observationTypeSet, generatedTypeSet, componentResolver
         )) {
             throw new TypeError(
+                    observedAs,
                     "Wrong observation type.",
                     "You specify an observation of type '" + printType(observationTypeSet) + "' for a random variable of type '" + printType(generatedTypeSet) + "'. Use an observation of type '" + printType(generatedTypeSet) + "' instead."
             );
@@ -460,6 +461,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 observationTypeSet, generatedTypeSet, componentResolver
         )) {
             throw new TypeError(
+                    observedBetween,
                     "Wrong observation type.",
                     "You specify an observation of type '" + printType(observationTypeSet) + "' for a random variable of type '" + printType(generatedTypeSet) + "'. Use an observation of type '" + printType(generatedTypeSet) + "' instead."
             );

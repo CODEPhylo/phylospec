@@ -1,5 +1,6 @@
 package tiles.misc;
 
+import beastconfig.BEASTState;
 import org.phylospec.ast.Stmt;
 import tiling.*;
 import tiles.AstNodeTile;

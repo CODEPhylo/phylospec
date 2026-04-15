@@ -8,6 +8,7 @@ import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
+import beastconfig.BEASTState;
 import tiles.GeneratorTile;
 import tiling.*;
 

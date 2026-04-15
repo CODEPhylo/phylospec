@@ -6,7 +6,7 @@ import beast.base.spec.inference.distribution.Cauchy;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 public class CauchyTile extends GeneratorTile<BoundDistribution<RealScalarParam<Real>, Cauchy>> {

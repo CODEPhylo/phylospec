@@ -2,7 +2,7 @@ package tiles.misc;
 
 import org.phylospec.ast.Expr;
 import tiles.AstNodeTile;
-import tiling.BEASTState;
+import beastconfig.BEASTState;
 import tiling.TypeToken;
 
 public class AssignedArgumentTile extends AstNodeTile<Object, Expr.AssignedArgument> {
