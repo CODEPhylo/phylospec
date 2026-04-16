@@ -1,6 +1,7 @@
 package tiles;
 
 import tiles.branchmodels.*;
+import tiles.errors.*;
 import tiles.functions.*;
 import tiles.input.*;
 import tiles.mcmc.*;
@@ -97,7 +98,8 @@ public class TileLibrary {
 
         addTile(new SiteModelTile());
         addTile(new PhyloCTMCTile());
-        addTile(new PhyloCTMCAssignedBranchRatesTile());
+        addTile(new VectorBranchRatesErrorTile());
+        addTile(new VectorSiteRatesErrorTile());
 
         addTile(new ChainLengthTile());
         addTile(new ScreenLoggerTile());

@@ -1,0 +1,23 @@
+Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+
+Tree tree ~ Yule(
+    birthRate=1.0, taxa=taxa(data)
+)
+
+Alignment alignment ~ PhyloCTMC(
+  tree,
+  siteRates=[1.0],
+  branchRates=repeat(0.5, num=4),
+  qMatrix=hky(
+    kappa~LogNormal(logMean=1.0, logSd=0.5),
+    baseFrequencies~Dirichlet(repeat(1.0, num=4))
+  ),
+) observed as data
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED_APPLICATION_ERRORS
+// Explicit branch rates are not supported. Use either 'StrictClock' or 'RelaxedClock' to specify branch rates.
+// EXPECTED_APPLICATION_ERRORS

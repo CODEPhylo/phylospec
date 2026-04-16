@@ -21,10 +21,20 @@ public abstract class TemplateTile<T> extends Tile<T> {
 
     protected abstract String getPhyloSpecTemplate();
 
-    private final AstTemplateMatcher astTemplateMatcher;
+    protected List<String> getPhyloSpecTemplates() {
+        return List.of(this.getPhyloSpecTemplate());
+    };
+
+    private final List<AstTemplateMatcher> astTemplateMatchers;
 
     public TemplateTile() {
-        this.astTemplateMatcher = new AstTemplateMatcher(this.getPhyloSpecTemplate());
+        this.astTemplateMatchers = new ArrayList<>();
+
+        for (String template : this.getPhyloSpecTemplates()) {
+            this.astTemplateMatchers.add(
+                    new AstTemplateMatcher(template)
+            );
+        }
     }
 
     @Override
@@ -34,9 +44,15 @@ public abstract class TemplateTile<T> extends Tile<T> {
             VariableResolver variableResolver,
             StochasticityResolver stochasticityResolver
     ) throws FailedTilingAttempt {
-        // try to match the template
+        // try to match any of the templates
 
-        Map<String, AstNode> matchedTemplateVariables = this.astTemplateMatcher.match(node, variableResolver);
+        Map<String, AstNode> matchedTemplateVariables = null;
+        for (AstTemplateMatcher templateMatcher : this.astTemplateMatchers) {
+            matchedTemplateVariables = templateMatcher.match(node, variableResolver);
+
+            if (matchedTemplateVariables != null) break;
+        }
+
         if (matchedTemplateVariables == null) {
             throw new FailedTilingAttempt.Irrelevant();
         }

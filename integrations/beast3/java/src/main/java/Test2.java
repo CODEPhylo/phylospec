@@ -13,20 +13,13 @@ public class Test2 {
             kappa~LogNormal(mean=1, logSd=1.0),
             baseFrequencies=[0.25, 0.25, 0.25, 0.25]
         )
-        Vector<Rate> branchRates ~ StrictClock(
-            rate~LogNormal(mean=0.1, logSd=2.0),
-            tree,
-        )
-        Vector<Rate> siteRates ~ DiscreteGammaInv(
-            shape~LogNormal(mean=0.1, logSd=2.0),
-            numCategories=4,
-            invariantProportion=0.1,
-            numSites=100
-        )
+        Vector<Rate> branchRates = [2.0]
+        Vector<Rate> siteRates = [1.0]
         
         Alignment alignment ~ PhyloCTMC(
-          tree, qMatrix, branchRates, siteRates
+          tree, qMatrix, siteRates, branchRates
         ) observed as data
+        
         
         mcmc {
             Integer chainLength = 100000
