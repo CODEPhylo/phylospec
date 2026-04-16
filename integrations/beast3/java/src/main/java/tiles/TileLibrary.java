@@ -55,7 +55,6 @@ public class TileLibrary {
         addTile(new RepeatSimplexTile());
 
         addTile(new AlignmentTaxaTile());
-        addTile(new TreeTaxaTile());
         addTile(new NumBranchesTile());
         addTile(new NumTaxaAlignmentTile());
         addTile(new NumTaxaTreeTile());

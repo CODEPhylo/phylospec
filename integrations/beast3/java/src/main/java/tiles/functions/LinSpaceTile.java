@@ -35,10 +35,14 @@ public class LinSpaceTile extends GeneratorTile<RealVectorParam<Real>> {
         int num = this.numInput.apply(beastState).get();
 
         double[] values = new double[num];
-        double gap = (end - start) / (num - 1);
 
-        for (int i = 0; i < num; i++) {
-            values[i] = start + i * gap;
+        if (num == 1) {
+            values[0] = start;
+        } else {
+            double gap = (end - start) / (num - 1);
+            for (int i = 0; i < num; i++) {
+                values[i] = start + i * gap;
+            }
         }
 
         return new RealVectorParam<>(values, Real.INSTANCE);

@@ -50,6 +50,31 @@ public class VariableResolver implements AstVisitor<Void, Void, Void> {
     }
 
     @Override
+    public Void visitObservedAsStmt(Stmt.ObservedAs observedAs) {
+        observedAs.observedAs.accept(this);
+
+        createScope();
+        observedAs.stmt.accept(this);
+        dropScope();
+
+        this.resolvedGlobalVariableNames.put(this.extractVariableName(observedAs.stmt), observedAs);
+        return null;
+    }
+
+    @Override
+    public Void visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
+        observedBetween.observedFrom.accept(this);
+        observedBetween.observedTo.accept(this);
+
+        createScope();
+        observedBetween.stmt.accept(this);
+        dropScope();
+
+        this.resolvedGlobalVariableNames.put(this.extractVariableName(observedBetween.stmt), observedBetween);
+        return null;
+    }
+
+    @Override
     public Void visitIndexedStmt(Stmt.Indexed indexed) {
         indexed.ranges.forEach(x -> x.accept(this));
         createScope();

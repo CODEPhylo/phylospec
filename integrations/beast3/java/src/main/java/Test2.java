@@ -2,11 +2,17 @@ public class Test2 {
 
     static void main(String[] args) {
         String source = """
-        Real x ~ Normal(mean=1.0, sd=2.0)
-        Real y ~ Normal(mean=1.0, sd=2.0)
-        Real z = -2.0
-        Real w = -x + (exp(z) - x * y) / y
-        Real k = 2*w
+        Alignment data = fromNexus(
+             "/Users/ochsneto/Documents/PhyloSpec/beast3/beast-base/src/test/resources/beast.base/examples/nexus/primate-mtDNA.nex"
+         )
+         Tree tree ~ Yule(birthRate=1.0, taxa=taxa(data))
+         QMatrix qMatrix = jc69()
+        
+         Alignment alignment ~ PhyloCTMC(
+           tree, qMatrix
+         ) observed as data
+        
+         Integer numTaxa = numTaxa(alignment)
         """;
 
         PhyloSpecRunner parser = new PhyloSpecRunner(source);

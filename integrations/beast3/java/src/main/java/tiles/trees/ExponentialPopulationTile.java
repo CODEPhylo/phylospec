@@ -24,7 +24,7 @@ public class ExponentialPopulationTile extends GeneratorTile<PopulationFunction>
 
         ExponentialGrowth population = new ExponentialGrowth();
         beastState.setInput(population, population.popSizeParameterInput, populationSize);
-        beastState.setInput(population, population.growthRateParameterInput, populationSize);
+        beastState.setInput(population, population.growthRateParameterInput, growthRate);
 
         return population;
     }

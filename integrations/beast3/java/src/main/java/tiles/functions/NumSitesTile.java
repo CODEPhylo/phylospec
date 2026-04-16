@@ -23,8 +23,8 @@ public class NumSitesTile extends GeneratorTile<IntScalarParam<NonNegativeInt>> 
 
     @Override
     public IntScalarParam<NonNegativeInt> applyTile(BEASTState beastState) {
-        DecoratedAlignment tree = this.alignmentInput.apply(beastState);
-        return new IntScalarParam<>(tree.alignment().getSiteCount(), NonNegativeInt.INSTANCE);
+        DecoratedAlignment alignment = this.alignmentInput.apply(beastState);
+        return new IntScalarParam<>(alignment.alignment().getSiteCount(), NonNegativeInt.INSTANCE);
     }
 
 }

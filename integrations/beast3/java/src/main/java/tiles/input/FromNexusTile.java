@@ -69,7 +69,7 @@ public class FromNexusTile extends GeneratorTile<DecoratedAlignment> {
 
             StringBuilder traits = new StringBuilder();
             for (String taxon : alignment.getTaxaNames()) {
-                traits.append(taxon).append("=").append(ageParser.parse(taxon)).append(",");
+                traits.append(taxon).append("=").append(dateParser.parse(taxon)).append(",");
             }
 
             beastState.setInput(ageTraitSet, ageTraitSet.traitNameInput, "date");

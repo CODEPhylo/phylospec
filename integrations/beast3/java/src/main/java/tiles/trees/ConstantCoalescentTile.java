@@ -34,6 +34,7 @@ public class ConstantCoalescentTile extends GeneratorTile<BoundDistribution<Tree
 
         RandomTree defaultState = new RandomTree();
         beastState.setInput(defaultState, defaultState.taxaInput, taxaAlignment.alignment());
+        beastState.setInput(defaultState, defaultState.m_taxonset, taxaAlignment.taxonSet());
         beastState.setInput(defaultState, defaultState.populationFunctionInput, populationFunction);
 
         // set tip dates if provided

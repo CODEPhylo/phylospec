@@ -23,8 +23,8 @@ public class NumTaxaAlignmentTile extends GeneratorTile<IntScalarParam<NonNegati
 
     @Override
     public IntScalarParam<NonNegativeInt> applyTile(BEASTState beastState) {
-        DecoratedAlignment tree = this.alignmentInput.apply(beastState);
-        return new IntScalarParam<>(tree.alignment().getTaxonCount(), NonNegativeInt.INSTANCE);
+        DecoratedAlignment alignment = this.alignmentInput.apply(beastState);
+        return new IntScalarParam<>(alignment.alignment().getTaxonCount(), NonNegativeInt.INSTANCE);
     }
 
 }

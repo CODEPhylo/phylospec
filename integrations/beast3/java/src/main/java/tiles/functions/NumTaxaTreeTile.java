@@ -18,7 +18,7 @@ public class NumTaxaTreeTile extends GeneratorTile<IntScalarParam<NonNegativeInt
     @Override
     public IntScalarParam<NonNegativeInt> applyTile(BEASTState beastState) {
         Tree tree = this.treeInput.apply(beastState);
-        return new IntScalarParam<>(tree.getNodeCount(), NonNegativeInt.INSTANCE);
+        return new IntScalarParam<>(tree.getTaxaNames().length, NonNegativeInt.INSTANCE);
     }
 
 }
