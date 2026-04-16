@@ -1,5 +1,7 @@
 package tiles;
 
+import tiles.binary.BinaryTile;
+import tiles.binary.RPNAssignmentTile;
 import tiles.branchmodels.*;
 import tiles.errors.*;
 import tiles.functions.*;
@@ -35,6 +37,12 @@ public class TileLibrary {
         addTile(new ObservedAsTile());
         addTile(new ObservedAsAlignmentTile());
         addTile(new RootObservedBetweenTile());
+
+        addTile(new BinaryTile.RpnRpn());
+        addTile(new BinaryTile.RpnReal());
+        addTile(new BinaryTile.RealRpn());
+        addTile(new BinaryTile.RealReal());
+        addTile(new RPNAssignmentTile());
 
         addTile(new EnvTile());
         addTile(new LogTile());

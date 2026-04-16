@@ -52,6 +52,11 @@ public class LoggerSelector {
                 loggables.add(object);
             }
         }
+        for (BEASTObject object : beastState.calculationNodes.keySet()) {
+            if (object.getID() != null && object instanceof Loggable && !(object instanceof Tree)) {
+                loggables.add(object);
+            }
+        }
 
         return loggables;
     }
@@ -63,6 +68,11 @@ public class LoggerSelector {
         List<BEASTObject> loggables = new ArrayList<>();
 
         for (BEASTObject object : beastState.stateNodes.keySet()) {
+            if (object.getID() != null && object instanceof Tree) {
+                loggables.add(object);
+            }
+        }
+        for (BEASTObject object : beastState.calculationNodes.keySet()) {
             if (object.getID() != null && object instanceof Tree) {
                 loggables.add(object);
             }

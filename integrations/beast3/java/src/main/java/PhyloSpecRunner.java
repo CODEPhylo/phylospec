@@ -127,6 +127,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
         } catch (IOException | SAXException | ParserConfigurationException e) {
             throw new RuntimeException(e);
         }
+
+        System.out.println("Cool");
     }
 
     private static ComponentResolver loadComponentResolver() {

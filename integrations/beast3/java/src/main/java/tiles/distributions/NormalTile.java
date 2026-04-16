@@ -28,7 +28,7 @@ public class NormalTile extends GeneratorTile<BoundDistribution<RealScalarParam<
         beastState.setInput(distribution, distribution.meanInput, mean);
         beastState.setInput(distribution, distribution.sdInput, sd);
 
-        RealScalarParam<Real> defaultState = new RealScalarParam<>();
+        RealScalarParam<Real> defaultState = new RealScalarParam<>(0.1, Real.INSTANCE);
 
         return new BoundDistribution<>(
                 distribution,

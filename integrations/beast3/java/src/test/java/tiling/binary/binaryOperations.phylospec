@@ -1,0 +1,11 @@
+Real x ~ Normal(mean=1.0, sd=2.0)
+Real y ~ Normal(mean=1.0, sd=2.0)
+PositiveReal z = 2.0
+Real w = x + (exp(z) - x * y) / y
+Real m = 2*w
+Real k = x*x*x*x + z / z - (5.0 - exp(z)) + sqrt(z)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES

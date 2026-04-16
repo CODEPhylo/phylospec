@@ -14,6 +14,7 @@ public class BEASTState {
     public final String runName;
 
     public final HashMap<StateNode, TypeToken<?>> stateNodes;
+    public final HashMap<CalculationNode, TypeToken<?>> calculationNodes;
     public final HashMap<StateNode, Distribution> distributions;
     public final HashMap<Operator, Set<StateNode>> operators;
     private final List<BEASTObject> beastObjects;
@@ -29,6 +30,7 @@ public class BEASTState {
     public BEASTState(String runName) {
         this.runName = runName;
         this.stateNodes = new HashMap<>();
+        this.calculationNodes = new HashMap<>();
         this.distributions = new HashMap<>();
         this.operators = new HashMap<>();
         this.beastObjects = new ArrayList<>();
@@ -110,6 +112,15 @@ public class BEASTState {
         stateNode.setID(this.getID(id));
         this.addBEASTObject(stateNode);
         this.stateNodes.put(stateNode, typeToken);
+    }
+
+    /**
+     * Adds a given calculation node to the BEAST state.
+     */
+    public void addCalculationNode(CalculationNode calculationNode, TypeToken<?> typeToken, String id) {
+        calculationNode.setID(this.getID(id));
+        this.addBEASTObject(calculationNode);
+        this.calculationNodes.put(calculationNode, typeToken);
     }
 
     /**
