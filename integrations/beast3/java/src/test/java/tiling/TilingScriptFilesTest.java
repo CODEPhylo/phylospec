@@ -110,7 +110,7 @@ public class TilingScriptFilesTest {
                 PrintStream original = System.out;
                 System.setOut(new PrintStream(OutputStream.nullOutputStream()));
                 try {
-                    BEASTState beastState = new BEASTState();
+                    BEASTState beastState = new BEASTState("test");
                     for (Tile<?> tile : bestTilings) {
                         tile.apply(beastState);
                     }

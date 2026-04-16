@@ -1,0 +1,14 @@
+Tree tree = fromNewick("")
+Vector<Rate> rates ~ StrictClock(
+    branchRate~LogNormal(mean=1.0, logSd=0.4),
+    tree
+)
+
+// EXPECT AST
+// (AS Tree tree (CA fromNewick (AA null "")))
+// (DR Vector<Rate> rates (CA StrictClock (DA branchRate (CA LogNormal (AA mean 1.0) (AA logSd 0.4))) (AA null tree)))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Function `StrictClock` takes no argument named `branchRate`. Do you mean 'rate'?
+// EXPECT TYPE_ERRORS

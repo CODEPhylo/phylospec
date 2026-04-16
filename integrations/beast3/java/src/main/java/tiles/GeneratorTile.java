@@ -63,9 +63,8 @@ public abstract class GeneratorTile<T> extends Tile<T> {
             if (argumentInput == null) {
                 // Generator has an argument for which no Input field is defined in the tile
                 // we cannot tile
-                throw new FailedTilingAttempt.RejectedBoundary(
-                        "You cannot pass a value to the '" + argumentName + "' argument to run this in BEAST.",
-                        argument
+                throw new FailedTilingAttempt.Rejected(
+                        "You cannot pass a value to the '" + argumentName + "' argument to run this in BEAST."
                 );
             }
 

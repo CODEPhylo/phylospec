@@ -9,5 +9,5 @@ Real c = log(a, base=2)
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Function `log` takes the required argument `x`.
+// Function `log` takes no argument named `a`. Do you mean 'x'?
 // EXPECT TYPE_ERRORS

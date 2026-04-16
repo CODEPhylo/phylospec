@@ -5,32 +5,35 @@ public class Test2 {
         Alignment data = fromNexus(
             "/Users/ochsneto/Documents/PhyloSpec/beast3/beast-base/src/test/resources/beast.base/examples/nexus/primate-mtDNA.nex"
         )
-        Alignment filtered = subset(
-            alignment=data,
-            start=10,
-            end=898
-        )
         
-        PositiveReal birthRate ~ LogNormal(mean=1.0, logSd=2.0)
         Tree tree ~ Yule(
-            birthRate,
-            taxa=taxa(filtered)
+            birthRate=1.0, taxa=taxa(data)
         )
-        
-        PositiveReal kappa ~ LogNormal(mean=1, logSd=1.0)
-        Alignment alignment ~ PhyloCTMC(
-          tree,
-          qMatrix=hky(
-            kappa=kappa,
+        QMatrix qMatrix = hky(
+            kappa~LogNormal(mean=1, logSd=1.0),
             baseFrequencies=[0.25, 0.25, 0.25, 0.25]
-          )
         )
-        Alignment a = alignment observed as filtered
+        Vector<Rate> branchRates ~ StrictClock(
+            rate~LogNormal(mean=0.1, logSd=2.0),
+            tree,
+        )
+        Vector<Rate> siteRates ~ DiscreteGammaInv(
+            shape~LogNormal(mean=exp(0.1), logSd=2.0),
+            numCategories=4,
+            invariantProportion=0.1,
+            numSites=100
+        )
         
-        Age root = rootAge(tree) observed between [0.01, 3.0]
+        Alignment alignment ~ PhyloCTMC(
+          tree, qMatrix, branchRates, siteRates
+        ) observed as data
+        
         
         mcmc {
-            Integer chainLength = 10000
+            Integer chainLength = 100000
+            Logger treeLogger = treeLogger(
+                fileName="trees.trees", logEvery=1000
+            )
         }
         """;
 

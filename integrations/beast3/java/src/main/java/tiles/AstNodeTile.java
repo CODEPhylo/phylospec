@@ -53,7 +53,10 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
             Set<Tile<?>> compatibleInputs = tileInput.getCompatibleInputTiles(node, allInputTiles, stochasticityResolver);
 
             if (compatibleInputs.isEmpty()) {
-                throw new FailedTilingAttempt.Rejected("BEAST 2.8 cannot handle this operation.");
+                throw new FailedTilingAttempt.RejectedBoundary(
+                        "BEAST 2.8 cannot deal with the value you provided for " + tileInput.getKey() + ".",
+                        node
+                );
             }
 
             compatibleInputTiles.add(compatibleInputs);

@@ -775,7 +775,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         // check if generators are compatible with arguments
         Set<ResolvedType> possibleReturnTypes = new HashSet<>();
-        List<String> errorMessages = new ArrayList<>();
+        List<TypeError> errors = new ArrayList<>();
         for (Generator generator : generators) {
             try {
                 Set<ResolvedType> possibleGeneratorReturnTypes = TypeUtils.resolveGeneratedType(
@@ -783,19 +783,28 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 );
                 possibleReturnTypes.addAll(possibleGeneratorReturnTypes);
             } catch (TypeError e) {
-                errorMessages.add(e.getMessage());
+                e.attachAstNode(expr);
+                errors.add(e);
             }
         }
 
         // throw errors if needed
-        if (possibleReturnTypes.isEmpty() && errorMessages.isEmpty()) {
+        if (possibleReturnTypes.isEmpty() && errors.isEmpty()) {
             throw new TypeError(expr, "Function `" + expr.functionName + "` with the given arguments does not exist.");
-        } else if (possibleReturnTypes.isEmpty() && errorMessages.size() == 1) {
-            throw new TypeError(expr, errorMessages.getFirst());
+        } else if (possibleReturnTypes.isEmpty() && errors.size() == 1) {
+            throw errors.getFirst();
         } else if (possibleReturnTypes.isEmpty()) {
-            String errorMessage = "Function `" + expr.functionName + "` with the given arguments does not exist: \n\t";
-            errorMessage += String.join("\n\t", errorMessages);
-            throw new TypeError(expr, errorMessage);
+            String description = "Function `" + expr.functionName + "` with the given arguments does not exist.";
+
+            StringBuilder hint = new StringBuilder("There are " + generators.size() + " different versions of '" + expr.functionName + "'. They cannot be used due to the following reasons:\n");
+
+            for (int i = 0; i < errors.size(); i++) {
+                hint.append("\n ").append(i + 1).append(". ").append(errors.get(i).getMessage());
+            }
+
+            hint.append("\n\nFix any of these issues to use '").append(expr.functionName).append("'.");
+
+            throw new TypeError(expr, description, hint.toString());
         }
 
         return remember(expr, possibleReturnTypes);

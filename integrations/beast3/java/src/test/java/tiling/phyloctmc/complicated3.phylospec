@@ -4,14 +4,15 @@ Tree tree ~ Yule(
     birthRate=1.0, taxa=taxa(data)
 )
 
+Vector<Rate> siteRates ~ DiscreteGammaInv(
+     shape~LogNormal(mean=1.0, logSd=0.05),
+     numCategories=4,
+     numSites=numSites(data)
+)
 Alignment alignment ~ PhyloCTMC(
   tree,
   qMatrix=jc69(),
-  siteRates~DiscreteGammaInv(
-    shape~LogNormal(mean=1.0, logSd=0.05),
-    numCategories=4,
-    numSites=numSites(data)
-  )
+  siteRates
 )
 Alignment alignment2 = alignment observed as data
 

@@ -68,8 +68,14 @@ public class TypeUtils {
                 .map(Argument::getName)
                 .collect(Collectors.toSet());
         for (String argument : resolvedArguments.keySet()) {
-            if (!parameterNames.contains(argument) && firstArgumentName != null && !argument.equals(firstArgumentName)) {
-                throw new TypeError("Function `" + generator.getName() + "` takes no argument named `" + argument + "`.");
+            if (!parameterNames.contains(argument) && (!Objects.equals(firstArgumentName, argument))) {
+                    String closestMatch = parameterNames.stream()
+                            .min(Comparator.comparingInt(x -> Utils.editDistance(x, argument)))
+                            .orElse("");
+                throw new TypeError(
+                        "Function `" + generator.getName() + "` takes no argument named `" + argument + "`.",
+                        "Do you mean '" + closestMatch + "'?"
+                );
             }
         }
 
