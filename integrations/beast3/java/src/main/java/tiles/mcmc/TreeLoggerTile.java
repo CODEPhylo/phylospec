@@ -18,7 +18,7 @@ public class TreeLoggerTile extends TemplateTile<Void> {
                 mcmc {
                     Logger treeLogger = treeLogger(
                         logEvery=$logEvery,
-                        fileName=$fileName,
+                        file=$fileName,
                         trees=$$trees
                     )
                 }""";

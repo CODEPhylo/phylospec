@@ -18,7 +18,7 @@ public class FileLoggerTile extends TemplateTile<Void> {
                 mcmc {
                     Logger fileLogger = fileLogger(
                         logEvery=$logEvery,
-                        fileName=$fileName,
+                        file=$fileName,
                         parameters=$$parameters
                     )
                 }""";
