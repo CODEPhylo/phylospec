@@ -26,7 +26,9 @@ public class ObservedAsAlignmentTile extends TemplateTile<DecoratedAlignment> {
         // we register the distribution as a likelihood with the given state node as parameter
 
         evaluatedDistribution.bind(observedStateNode.alignment());
-        beastState.addDistribution(observedStateNode.alignment(), evaluatedDistribution.distribution, "likelihood");
+        beastState.addLikelihoodDistribution(
+                observedStateNode.alignment(), evaluatedDistribution.distribution, observedStateNode.alignment().getID() + "_likelihood"
+        );
 
         // we return the observed state
 

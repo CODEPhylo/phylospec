@@ -95,9 +95,17 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // add distribution
 
+        CompoundDistribution prior = new CompoundDistribution();
+        prior.setID(beastState.getID("prior"));
+        beastState.setInput(prior, prior.pDistributions, new ArrayList<>(beastState.priorDistributions.values()));
+
+        CompoundDistribution likelihood = new CompoundDistribution();
+        likelihood.setID(beastState.getID("likelihood"));
+        beastState.setInput(likelihood, likelihood.pDistributions, new ArrayList<>(beastState.likelihoodDistributions.values()));
+
         CompoundDistribution posterior = new CompoundDistribution();
         posterior.setID(beastState.getID("posterior"));
-        beastState.setInput(posterior, posterior.pDistributions, new ArrayList<>(beastState.distributions.values()));
+        beastState.setInput(posterior, posterior.pDistributions, List.of(prior, likelihood));
 
         // add operators
 
@@ -107,7 +115,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // add loggers
 
-        LoggerSelector.addMissingLoggers(beastState);
+        LoggerSelector.addMissingLoggers(beastState, posterior, prior, likelihood);
 
         // create MCMC object
 

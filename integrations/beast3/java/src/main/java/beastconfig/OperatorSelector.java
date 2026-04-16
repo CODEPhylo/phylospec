@@ -16,6 +16,11 @@ import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 
+/// Selects and adds the appropriate MCMC operators for a given state node.
+///
+/// Assigns a default set of operators based on the runtime type of the state node.
+/// Trees receive a standard suite of tree operators; scalar and vector parameters receive
+/// scale, bit-flip, random-walk, or swap operators as appropriate.
 public class OperatorSelector {
 
     /**

@@ -41,7 +41,7 @@ public class RootObservedBetweenTile extends TemplateTile<RealScalarParam<Positi
 
         // we add the prior as likelihood to the beast state
 
-        beastState.addDistribution(from, prior, "rootCalibration");
+        beastState.addLikelihoodDistribution(from, prior, "rootCalibration");
 
         // we return the observed root age
 

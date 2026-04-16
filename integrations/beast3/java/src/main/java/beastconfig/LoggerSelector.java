@@ -3,25 +3,37 @@ package beastconfig;
 import beast.base.core.BEASTObject;
 import beast.base.core.Loggable;
 import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeStatLogger;
+import beast.base.inference.CompoundDistribution;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/// Selects and adds loggers to the BEAST state based on the available loggable objects.
+///
+/// If no screen or file loggers are present, default loggers are created that log all loggable
+/// objects (state nodes and calculation nodes). If no tree loggers are present, a default tree
+/// logger is created for all trees in the state.
 public class LoggerSelector {
 
     /**
      * Adds the missing loggers to the beast state.
      */
-    public static void addMissingLoggers(BEASTState beastState) {
+    public static void addMissingLoggers(
+            BEASTState beastState, CompoundDistribution posterior, CompoundDistribution prior, CompoundDistribution likelihood
+    ) {
         List<BEASTObject> loggableObjects = getLoggableObjects(beastState);
+        loggableObjects.add(posterior);
+        loggableObjects.add(prior);
+        loggableObjects.add(likelihood);
 
-        if (!loggableObjects.isEmpty() && beastState.screenLoggers.isEmpty()) {
+        if (beastState.screenLoggers.isEmpty()) {
             beast.base.inference.Logger screenLogger = new beast.base.inference.Logger();
             beastState.setInput(screenLogger, screenLogger.everyInput, 1000);
             beastState.setInput(screenLogger, screenLogger.loggersInput, loggableObjects);
             beastState.addScreenLogger(screenLogger);
         }
-        if (!loggableObjects.isEmpty() && beastState.fileLoggers.isEmpty()) {
+        if (beastState.fileLoggers.isEmpty()) {
             beast.base.inference.Logger fileLogger = new beast.base.inference.Logger();
             beastState.setInput(fileLogger, fileLogger.fileNameInput, beastState.runName + ".log");
             beastState.setInput(fileLogger, fileLogger.everyInput, 1000);
@@ -50,6 +62,12 @@ public class LoggerSelector {
         for (BEASTObject object : beastState.stateNodes.keySet()) {
             if (object.getID() != null && object instanceof Loggable && !(object instanceof Tree)) {
                 loggables.add(object);
+            }
+
+            if (object instanceof Tree tree) {
+                TreeStatLogger treeStatLogger = new TreeStatLogger();
+                beastState.setInput(treeStatLogger, treeStatLogger.treeInput, tree);
+                loggables.add(treeStatLogger);
             }
         }
         for (BEASTObject object : beastState.calculationNodes.keySet()) {

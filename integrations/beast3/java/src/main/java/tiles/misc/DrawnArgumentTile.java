@@ -30,7 +30,7 @@ public class DrawnArgumentTile extends AstNodeTile<StateNode, Expr.DrawnArgument
         // we initialize the state node and add it to the BEAST state
         evaluatedDistribution.bind();
         beastState.addStateNode(evaluatedDistribution.stateNode, this.getTypeToken(), this.getRootNode().name);
-        beastState.addDistribution(evaluatedDistribution.stateNode, evaluatedDistribution.distribution, this.getRootNode().name + "_prior");
+        beastState.addPriorDistribution(evaluatedDistribution.stateNode, evaluatedDistribution.distribution, this.getRootNode().name + "_prior");
 
         // we return the initialized state node
         return evaluatedDistribution.stateNode;

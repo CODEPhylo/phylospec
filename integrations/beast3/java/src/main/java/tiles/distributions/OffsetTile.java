@@ -33,7 +33,7 @@ public class OffsetTile extends TemplateTile<RealScalarParam<Real>> {
 
         OffsetReal offsetDistribution = new OffsetReal(distribution.distribution, offset);
         beastState.addStateNode(distribution.stateNode, this.getTypeToken(), "offset");
-        beastState.addDistribution(distribution.stateNode, offsetDistribution, "offset_prior");
+        beastState.addPriorDistribution(distribution.stateNode, offsetDistribution, "offset_prior");
 
         return distribution.stateNode;
     }

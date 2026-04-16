@@ -6,16 +6,19 @@ import tiling.TypeToken;
 
 import java.util.*;
 
-/**
- * This class manages the BEAST state which is built up during tiling.
- */
+/// Manages the BEAST state that is built up incrementally during tiling.
+///
+/// Tracks state nodes, calculation nodes, distributions, operators, and loggers.
+/// Provides utilities for assigning unique IDs, wiring inputs, and initializing
+/// BEAST objects in the correct order.
 public class BEASTState {
 
     public final String runName;
 
     public final HashMap<StateNode, TypeToken<?>> stateNodes;
     public final HashMap<CalculationNode, TypeToken<?>> calculationNodes;
-    public final HashMap<StateNode, Distribution> distributions;
+    public final HashMap<StateNode, Distribution> priorDistributions;
+    public final HashMap<StateNode, Distribution> likelihoodDistributions;
     public final HashMap<Operator, Set<StateNode>> operators;
     private final List<BEASTObject> beastObjects;
     private final Set<BEASTObject> initializedBeastObjects;
@@ -27,11 +30,15 @@ public class BEASTState {
 
     private final Set<String> ids;
 
+    /**
+     * Creates a new BEAST state with the given run name.
+     */
     public BEASTState(String runName) {
         this.runName = runName;
         this.stateNodes = new HashMap<>();
         this.calculationNodes = new HashMap<>();
-        this.distributions = new HashMap<>();
+        this.priorDistributions = new HashMap<>();
+        this.likelihoodDistributions = new HashMap<>();
         this.operators = new HashMap<>();
         this.beastObjects = new ArrayList<>();
         this.ids = new HashSet<>();
@@ -124,13 +131,23 @@ public class BEASTState {
     }
 
     /**
-     * Adds a given distribution to the BEAST state.
+     * Adds a given prior distribution to the BEAST state.
      */
-    public void addDistribution(StateNode stateNode, Distribution distribution, String id) {
+    public void addPriorDistribution(StateNode stateNode, Distribution distribution, String id) {
         distribution.setID(this.getID(id));
         this.addBEASTObject(stateNode);
         this.addBEASTObject(distribution);
-        this.distributions.put(stateNode, distribution);
+        this.priorDistributions.put(stateNode, distribution);
+    }
+
+    /**
+     * Adds a given likelihood to the BEAST state.
+     */
+    public void addLikelihoodDistribution(StateNode stateNode, Distribution distribution, String id) {
+        distribution.setID(this.getID(id));
+        this.addBEASTObject(stateNode);
+        this.addBEASTObject(distribution);
+        this.likelihoodDistributions.put(stateNode, distribution);
     }
 
     /**

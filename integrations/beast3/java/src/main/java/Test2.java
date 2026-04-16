@@ -11,8 +11,6 @@ public class Test2 {
          Alignment alignment ~ PhyloCTMC(
            tree, qMatrix
          ) observed as data
-        
-         Integer numTaxa = numTaxa(alignment)
         """;
 
         PhyloSpecRunner parser = new PhyloSpecRunner(source);
