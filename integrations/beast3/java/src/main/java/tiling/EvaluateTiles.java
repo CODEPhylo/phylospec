@@ -353,8 +353,8 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         Stmt variableDefinitionStmt = this.variableResolver.resolveVariable(expr);
 
         if (variableDefinitionStmt != null) {
-            this.consumedStatements.add(variableDefinitionStmt);
             Tile<?> bestTile = variableDefinitionStmt.accept(this);
+            this.consumedStatements.add(variableDefinitionStmt);
 
             // we re-use the found tiles from the definition statement for the variable
 

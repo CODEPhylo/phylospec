@@ -64,7 +64,7 @@ public abstract class TileInput<T> {
 
         Set<Tile<?>> potentialInputs = possibleInputTiles.get(inputAstNode);
 
-        if (potentialInputs.isEmpty()) {
+        if (potentialInputs == null || potentialInputs.isEmpty()) {
             throw new FailedTilingAttempt.RejectedCascade(inputAstNode);
         }
 

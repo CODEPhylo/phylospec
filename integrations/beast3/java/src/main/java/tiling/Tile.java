@@ -118,14 +118,16 @@ public abstract class Tile<T> {
     /** methods to apply a tiling */
 
     private T result = null;
+    private boolean applied = false;
 
     /**
      * Applies the tile. Memoization is used to not apply the same tile twice.
      */
     public T apply(BEASTState beastState) {
-        if (this.result == null) {
+        if (!this.applied) {
             try {
                 this.result = this.applyTile(beastState);
+                this.applied = true;
             } catch (TilingError tilingError) {
                 // attach node if needed
                 if (tilingError.getAstNode() == null) {
