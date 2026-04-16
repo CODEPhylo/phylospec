@@ -18,7 +18,7 @@ public class Test2 {
             tree,
         )
         Vector<Rate> siteRates ~ DiscreteGammaInv(
-            shape~LogNormal(mean=exp(0.1), logSd=2.0),
+            shape~LogNormal(mean=0.1, logSd=2.0),
             numCategories=4,
             invariantProportion=0.1,
             numSites=100
@@ -27,7 +27,6 @@ public class Test2 {
         Alignment alignment ~ PhyloCTMC(
           tree, qMatrix, branchRates, siteRates
         ) observed as data
-        
         
         mcmc {
             Integer chainLength = 100000

@@ -30,11 +30,14 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     // statements that have already been claimed by a tile covering multiple statements
     private final Set<Stmt> consumedStatements;
 
-    // best failure per node (RejectedBoundary > Rejected > RejectedCascade, Irrelevant ignored)
-    private final IdentityHashMap<AstNode, FailedTilingAttempt> bestFailures;
+    // all non-Irrelevant failures per failed node, used to build the cascade DAG for root-cause analysis
+    private final IdentityHashMap<AstNode, List<FailedTilingAttempt>> allFailures;
 
-    // all nodes that failed to tile, recorded in visit order (children before parents)
-    private final List<AstNode> failedNodesInVisitOrder;
+    // memoised cascade depths, computed lazily during error reporting
+    private final IdentityHashMap<AstNode, Integer> depthCache;
+
+    // sentinel depth for nodes that tiled successfully (they act as dead-ends in the cascade DAG)
+    private static final int DEPTH_SUCCEEDED = Integer.MIN_VALUE;
 
     public EvaluateTiles(List<Tile<?>> tiles, List<Tile<?>> operatorTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
         this.tiles = tiles;
@@ -44,8 +47,8 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         this.evaluatedTiles = new IdentityHashMap<>();
         this.bestEvaluatedTiles = new IdentityHashMap<>();
         this.consumedStatements = new HashSet<>();
-        this.bestFailures = new IdentityHashMap<>();
-        this.failedNodesInVisitOrder = new ArrayList<>();
+        this.allFailures = new IdentityHashMap<>();
+        this.depthCache = new IdentityHashMap<>();
         this.matchedOperatorTiles = new ArrayList<>();
     }
 
@@ -69,12 +72,10 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
 
             if (this.consumedStatements.contains(stmt)) continue;
 
-            // snapshot the failure list before visiting so we can scope the search to this statement
-            int failedCountBefore = this.failedNodesInVisitOrder.size();
             Tile<?> bestTile = stmt.accept(this);
 
             if (bestTile == null) {
-                this.throwDeepestFailure(failedCountBefore);
+                this.throwDeepestFailure(stmt);
             }
 
             bestTiles.addFirst(bestTile);
@@ -110,8 +111,8 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
      * Finds the best tile for {@code node} by asking every registered tile to attempt a match,
      * then returning the one with the lowest weight. Results are memoised so the same node is
      * never evaluated twice.
-     * When no tile matches, the highest-priority failure is stored in {@link #bestFailures} for
-     * later root-cause analysis.
+     * When no tile matches, all non-{@link FailedTilingAttempt.Irrelevant} failures are stored
+     * in {@link #allFailures} so the cascade DAG can be traversed during root-cause analysis.
      */
     private Tile<?> visitNode(AstNode node) {
         if (this.bestEvaluatedTiles.containsKey(node)) {
@@ -122,12 +123,9 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         Tile<?> bestEvaluatedTile = null;
 
         this.evaluatedTiles.putIfAbsent(node, new HashSet<>());
+        List<FailedTilingAttempt> failures = new ArrayList<>();
 
-        // we track the best failure seen across all tiles for this node
-
-        FailedTilingAttempt.RejectedBoundary bestBoundary = null;
-        FailedTilingAttempt.Rejected bestRejected = null;
-        FailedTilingAttempt.RejectedCascade bestCascade = null;
+        // we go through all tiles and try to apply them
 
         for (Tile<?> tile : this.tiles) {
             Set<Tile<?>> evaluatedTiles;
@@ -138,9 +136,8 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
             } catch (FailedTilingAttempt.Irrelevant e) {
                 continue;
             } catch (FailedTilingAttempt e) {
-                if (e instanceof FailedTilingAttempt.RejectedBoundary rb && bestBoundary == null) bestBoundary = rb;
-                else if (e instanceof FailedTilingAttempt.Rejected r && bestRejected == null) bestRejected = r;
-                else if (e instanceof FailedTilingAttempt.RejectedCascade rc && bestCascade == null) bestCascade = rc;
+                // this tile is relevant but couldn't be applied
+                failures.add(e);
                 continue;
             }
 
@@ -155,13 +152,9 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         }
 
         if (bestEvaluatedTile == null) {
-            // record in visit order so findDeepestFailure can scan children-first
-            this.failedNodesInVisitOrder.add(node);
-
-            // store highest-priority failure for the scan to inspect
-            if (bestBoundary != null) this.bestFailures.put(node, bestBoundary);
-            else if (bestRejected != null) this.bestFailures.put(node, bestRejected);
-            else if (bestCascade != null) this.bestFailures.put(node, bestCascade);
+            // none of the tiles fits
+            // we store the failures for error recovery later
+            this.allFailures.put(node, failures);
         }
 
         this.bestEvaluatedTiles.put(node, bestEvaluatedTile);
@@ -184,25 +177,110 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     }
 
     /**
-     * Scans failed nodes recorded since {@code fromIndex} in visit order (children before parents)
-     * and returns the first one that carries a {@code Rejected} or {@code RejectedBoundary}.
-     * Because children are visited before parents, the first match is the deepest actionable
-     * failure — everything above it failed only as a cascade consequence.
+     * Finds the deepest leaf failure reachable from {@code root} via the cascade DAG and throws
+     * it as a {@link TilingError}. When multiple leaves are tied at the same depth (independent
+     * failures), the first in encounter order is reported.
      */
-    private FailedTilingAttempt throwDeepestFailure(int fromIndex) {
-        for (int i = fromIndex; i < this.failedNodesInVisitOrder.size(); i++) {
-            AstNode failedNode = this.failedNodesInVisitOrder.get(i);
-            FailedTilingAttempt failure = this.bestFailures.get(failedNode);
-            if (i == this.failedNodesInVisitOrder.size() - 1 || failure instanceof FailedTilingAttempt.Rejected || failure instanceof FailedTilingAttempt.RejectedBoundary) {
-                String reason = switch (failure) {
-                    case FailedTilingAttempt.Rejected r -> r.getReason();
-                    case FailedTilingAttempt.RejectedBoundary rb -> rb.getReason();
-                    case null, default -> "BEAST 2.8 does not support this operation.";
-                };
-                throw new TilingError(failedNode, "Unsupported operation.", reason);
+    private void throwDeepestFailure(AstNode root) {
+        for (AstNode leaf : this.findErrorLeaves(root)) {
+            throw new TilingError(leaf, "Unsupported operation.", this.getBestReason(this.allFailures.get(leaf)));
+        }
+        // fallback: root failed but every tile threw Irrelevant (no tile targets this node type)
+        throw new TilingError(root, "Unsupported operation.", "BEAST 2.8 does not support this operation.");
+    }
+
+    /**
+     * Traverses the failure cascade DAG from {@code node}, following only the deepest
+     * {@link FailedTilingAttempt.RejectedCascade} chains at each step, and returns the set of
+     * leaf nodes whose failure is a {@link FailedTilingAttempt.Rejected} or
+     * {@link FailedTilingAttempt.RejectedBoundary}.
+     * Multiple leaves are returned when two cascade paths are tied at maximum depth, indicating
+     * genuinely independent failures.
+     */
+    private Set<AstNode> findErrorLeaves(AstNode node) {
+        List<FailedTilingAttempt> failures = this.allFailures.get(node);
+        if (failures == null) {
+            // node succeeded — dead end, contributes no leaf
+            return Set.of();
+        }
+
+        // find the max depth among cascade targets that are themselves failed nodes
+
+        int maxChildDepth = DEPTH_SUCCEEDED;
+        for (FailedTilingAttempt f : failures) {
+            if (f instanceof FailedTilingAttempt.RejectedCascade rc) {
+                int d = this.getFailureDepth(rc.getOtherNode());
+                if (d > maxChildDepth) maxChildDepth = d;
             }
         }
-        return null;
+
+        if (maxChildDepth == DEPTH_SUCCEEDED) {
+            // no cascades lead to failed children — this node is the leaf
+            return Set.of(node);
+        }
+
+        // follow all cascades tied at the maximum depth
+
+        Set<AstNode> leaves = new LinkedHashSet<>();
+        for (FailedTilingAttempt f : failures) {
+            if (f instanceof FailedTilingAttempt.RejectedCascade rc && this.getFailureDepth(rc.getOtherNode()) == maxChildDepth) {
+                leaves.addAll(this.findErrorLeaves(rc.getOtherNode()));
+            }
+        }
+        return leaves;
+    }
+
+    /**
+     * Returns the cascade depth of {@code node}: the length of the longest chain of
+     * {@link FailedTilingAttempt.RejectedCascade} pointers reachable from it before reaching a
+     * leaf failure. Returns {@link #DEPTH_SUCCEEDED} for nodes that are not in
+     * {@link #allFailures} (they tiled successfully and act as dead-ends).
+     * Results are memoised in {@link #depthCache}.
+     */
+    private int getFailureDepth(AstNode node) {
+        Integer cached = this.depthCache.get(node);
+        if (cached != null) return cached;
+
+        List<FailedTilingAttempt> failures = this.allFailures.get(node);
+        if (failures == null) {
+            // node succeeded — cascade into it is a dead end
+            this.depthCache.put(node, DEPTH_SUCCEEDED);
+            return DEPTH_SUCCEEDED;
+        }
+
+        // we recursively find the failure with the highest cascade depth
+
+        int maxChildDepth = DEPTH_SUCCEEDED;
+        for (FailedTilingAttempt f : failures) {
+            if (f instanceof FailedTilingAttempt.RejectedCascade rc) {
+                int childDepth = this.getFailureDepth(rc.getOtherNode());
+                if (childDepth > maxChildDepth) maxChildDepth = childDepth;
+            }
+        }
+
+        // if no cascades reach a failed child, this node is a leaf at depth 0
+        int d = (maxChildDepth == DEPTH_SUCCEEDED) ? 0 : maxChildDepth + 1;
+
+        this.depthCache.put(node, d);
+        return d;
+    }
+
+    /**
+     * Picks the most informative reason string from the failure list of a leaf node.
+     * {@link FailedTilingAttempt.RejectedBoundary} is preferred over
+     * {@link FailedTilingAttempt.Rejected} because it also carries the specific sub-node where
+     * the type incompatibility occurred.
+     */
+    private String getBestReason(List<FailedTilingAttempt> failures) {
+        FailedTilingAttempt.RejectedBoundary boundary = null;
+        FailedTilingAttempt.Rejected rejected = null;
+        for (FailedTilingAttempt f : failures) {
+            if (f instanceof FailedTilingAttempt.RejectedBoundary rb && boundary == null) boundary = rb;
+            else if (f instanceof FailedTilingAttempt.Rejected r && rejected == null) rejected = r;
+        }
+        if (boundary != null) return boundary.getReason();
+        if (rejected != null) return rejected.getReason();
+        return "BEAST 2.8 does not support this operation.";
     }
 
     /* visitor methods */

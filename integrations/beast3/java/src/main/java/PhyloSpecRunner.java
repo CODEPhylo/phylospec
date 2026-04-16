@@ -1,6 +1,7 @@
 import beast.base.inference.*;
 import beastconfig.LoggerSelector;
 import beastconfig.OperatorSelector;
+import org.phylospec.ast.transformers.EvaluateScalarFunctions;
 import tiles.OperatorTileLibrary;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
@@ -55,6 +56,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         statements = new RemoveGroupings().transform(statements);
         statements = new EvaluateLiterals().transform(statements);
+        statements = new EvaluateScalarFunctions().transform(statements);
 
         // run variable resolver
 

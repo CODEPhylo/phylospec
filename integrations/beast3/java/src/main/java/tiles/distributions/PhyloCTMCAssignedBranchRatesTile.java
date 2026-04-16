@@ -18,7 +18,7 @@ public class PhyloCTMCAssignedBranchRatesTile extends TemplateTile<UnboundDistri
         return """
                PhyloCTMC(
                   tree=$tree,
-                  branchRates=$branchRateModel,
+                  branchRates=$branchRates,
                   qMatrix=$substitutionModel,
                   siteRates~$$partialSiteRateModel
                )
@@ -26,7 +26,7 @@ public class PhyloCTMCAssignedBranchRatesTile extends TemplateTile<UnboundDistri
     }
 
     TemplateTileInput<Tree> treeInput = new TemplateTileInput<>("$tree");
-    TemplateTileInput<Base> branchRateModelInput = new TemplateTileInput<>("$branchRateModel");
+    TemplateTileInput<Base> branchRateModelInput = new TemplateTileInput<>("$branchRates");
     TemplateTileInput<SubstitutionModel> substitutionModelInput = new TemplateTileInput<>("$substitutionModel");
     TemplateTileInput<Partial<SiteModel, SubstitutionModel>> partialSiteRateModel = new TemplateTileInput<>("$partialSiteRateModel");
 
