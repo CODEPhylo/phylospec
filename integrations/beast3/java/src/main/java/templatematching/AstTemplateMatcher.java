@@ -425,18 +425,24 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
         this.check(expr.operator == queryBinary.operator);
 
+        Map<String, AstNode> snapshot = new HashMap<>(this.templateVariableMap);
         try {
             this.match(expr.left, queryBinary.left);
             this.match(expr.right, queryBinary.right);
         } catch (MatchingError firstError) {
-            // this did not work. we swap the operand order and try again
+            // this did not work. restore bindings and try with swapped operand order
+
+            this.templateVariableMap.clear();
+            this.templateVariableMap.putAll(snapshot);
 
             try {
                 this.match(expr.left, queryBinary.right);
                 this.match(expr.right, queryBinary.left);
             } catch (MatchingError ignored) {
                 // this also did not work
-                // we re-throw the error caused by the original order
+                // restore bindings and re-throw the error caused by the original order
+                this.templateVariableMap.clear();
+                this.templateVariableMap.putAll(snapshot);
                 throw firstError;
             }
         }
@@ -516,7 +522,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     @Override
     public Void visitAssignedArgument(Expr.AssignedArgument expr) {
         if (this.currentQueryNode instanceof Expr.DrawnArgument drawnQueryArg) {
-            // in this case, the query is an assigned argument (x~dist) but the template is not
+            // in this case, the template is an assigned argument (x=dist) but the query is a drawn argument (x~dist)
             // this still works if the template has a variable pointing to a drawn statement
 
             this.check(expr.name.equals(drawnQueryArg.name));
