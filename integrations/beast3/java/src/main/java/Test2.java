@@ -5,7 +5,10 @@ public class Test2 {
         Alignment data = fromNexus(
              "/Users/ochsneto/Documents/PhyloSpec/beast3/beast-base/src/test/resources/beast.base/examples/nexus/primate-mtDNA.nex"
          )
-         Tree tree ~ Yule(birthRate=1.0, taxa=taxa(data))
+         Tree tree ~ Yule(
+            birthRate=1.0,
+            taxa=taxa(data)
+         )
          QMatrix qMatrix = jc69()
         
          Alignment alignment ~ PhyloCTMC(

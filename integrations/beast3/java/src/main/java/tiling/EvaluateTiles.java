@@ -199,6 +199,12 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
      */
     private Set<AstNode> findErrorLeaves(AstNode node) {
         List<FailedTilingAttempt> failures = this.allFailures.get(node);
+
+        if (failures == null && node instanceof Expr.Variable nodeVar) {
+            Stmt definition = this.variableResolver.resolveVariable(nodeVar);
+            failures = this.allFailures.get(definition);
+        }
+
         if (failures == null) {
             // node succeeded — dead end, contributes no leaf
             return Set.of();
@@ -242,6 +248,13 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         if (cached != null) return cached;
 
         List<FailedTilingAttempt> failures = this.allFailures.get(node);
+
+        if (failures == null && node instanceof Expr.Variable nodeVar) {
+            Stmt definition = this.variableResolver.resolveVariable(nodeVar);
+            failures = this.allFailures.get(definition);
+        }
+
+
         if (failures == null) {
             // node succeeded — cascade into it is a dead end
             this.depthCache.put(node, DEPTH_SUCCEEDED);
