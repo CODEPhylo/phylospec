@@ -1,0 +1,13 @@
+Tree tree = fromNewick("")
+Vector<Rate> rates ~ StrictClock(
+    clockRate~LogNormal(mean=1.0, logSd=0.4),
+    tree
+)
+
+// EXPECT AST
+// (AS Tree tree (CA fromNewick (AA null "")))
+// (DR Vector<Rate> rates (CA StrictClock (DA clockRate (CA LogNormal (AA mean 1.0) (AA logSd 0.4))) (AA null tree)))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS

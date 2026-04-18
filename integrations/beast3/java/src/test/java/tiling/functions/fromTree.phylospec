@@ -1,0 +1,7 @@
+String file = "src/test/java/resources/valid.newick"
+Tree tree = fromTree(file)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+

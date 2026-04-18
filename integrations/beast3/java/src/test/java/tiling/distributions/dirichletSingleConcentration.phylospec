@@ -1,0 +1,7 @@
+// Dirichlet with a single-element concentration vector (degenerate case)
+// the default state should be a 1-element simplex with value 1.0
+Vector<Real> c ~ Dirichlet(concentration=[1.0])
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

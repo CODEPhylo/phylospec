@@ -1,0 +1,6 @@
+Real c = -1.0
+Real x ~ LogNormal(logMean=0.0, logSd=c)
+
+// EXPECTED_TILES
+// Unsupported operation. BEAST 2.8 cannot deal with the value you provided for the 'logSd' argument for 'LogNormal'.
+// EXPECTED_TILES

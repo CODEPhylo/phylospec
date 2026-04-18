@@ -155,7 +155,7 @@ public abstract class Stmt extends AstNode {
         }
 
         @JsonPropertyDescription("The indexed statement.")
-        public final Stmt statement;
+        public Stmt statement;
         @JsonPropertyDescription("The index variables.")
         public final List<Expr.Variable> indices;
         @JsonPropertyDescription("The ranges over which the indices go.")
@@ -212,9 +212,9 @@ public abstract class Stmt extends AstNode {
         }
 
         @JsonPropertyDescription("The statement observed.")
-        public final Stmt stmt;
+        public Stmt stmt;
         @JsonPropertyDescription("The observed value.")
-        public final Expr observedAs;
+        public Expr observedAs;
 
         @Override
         public boolean equals(Object o) {
@@ -243,11 +243,11 @@ public abstract class Stmt extends AstNode {
         }
 
         @JsonPropertyDescription("The statement observed.")
-        public final Stmt stmt;
+        public Stmt stmt;
         @JsonPropertyDescription("The lower bound.")
-        public final Expr observedFrom;
+        public Expr observedFrom;
         @JsonPropertyDescription("The upper bound.")
-        public final Expr observedTo;
+        public Expr observedTo;
 
         @Override
         public boolean equals(Object o) {

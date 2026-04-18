@@ -1,0 +1,6 @@
+Real mean = 0.0
+Real a ~ Normal(sd=2.0, mean)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

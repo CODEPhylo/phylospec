@@ -1,0 +1,6 @@
+PositiveReal x = 100
+Real sqrt = sqrt(x)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

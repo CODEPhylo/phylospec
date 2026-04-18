@@ -1,0 +1,7 @@
+Real a = 1.0
+Real c = -1.0
+Real d ~ Normal(mean=a, sd=c)
+
+// EXPECTED_TILES
+// Unsupported operation. BEAST 2.8 cannot deal with the value you provided for the 'sd' argument for 'Normal'.
+// EXPECTED_TILES

@@ -1,0 +1,5 @@
+Int x ~ Poisson(rate=3.0)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

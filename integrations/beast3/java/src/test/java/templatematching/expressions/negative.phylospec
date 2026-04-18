@@ -1,0 +1,12 @@
+// TEMPLATE
+-$value
+// TEMPLATE
+
+// QUERY
+Real x = 10
+-(100 * x)
+// QUERY
+
+// MATCH
+// $value -> (* 100 x)
+// MATCH

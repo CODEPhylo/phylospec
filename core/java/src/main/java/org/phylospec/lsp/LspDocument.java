@@ -13,7 +13,6 @@ import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.ResolvedType;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
-import org.phylospec.typeresolver.TypeUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -152,7 +151,7 @@ class LspDocument implements ErrorEventListener {
 
         switch (node) {
             case AstType typeNode -> {
-                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveType(typeNode);
+                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveTypeSet(typeNode);
                 if (resolvedTypeSet == null) return null;
 
                 for (ResolvedType resolvedType : resolvedTypeSet) {
@@ -163,7 +162,7 @@ class LspDocument implements ErrorEventListener {
                 }
             }
             case Stmt.Assignment stmt -> {
-                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveType(stmt);
+                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveTypeSet(stmt);
                 if (resolvedTypeSet == null) return null;
 
                 for (ResolvedType resolvedType : resolvedTypeSet) {
@@ -173,7 +172,7 @@ class LspDocument implements ErrorEventListener {
                 }
             }
             case Stmt.Draw stmt -> {
-                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveType(stmt);
+                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveTypeSet(stmt);
                 if (resolvedTypeSet == null) return null;
 
                 for (ResolvedType resolvedType : resolvedTypeSet) {
@@ -202,7 +201,7 @@ class LspDocument implements ErrorEventListener {
                 }
             }
             case Expr.Argument argument -> {
-                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveType(argument);
+                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveTypeSet(argument);
 
                 for (ResolvedType resolvedType : resolvedTypeSet) {
                     hoverText.append("```phylospec\n");

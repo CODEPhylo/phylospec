@@ -1,0 +1,11 @@
+// TEMPLATE
+Real x[i] ~ Normal(mean=i, sd=$sd) for i in 1:5
+// TEMPLATE
+
+// QUERY
+Real x[i] ~ Normal(mean=i, sd=2.0) for i in 1:5
+// QUERY
+
+// MATCH
+// $sd -> 2.0
+// MATCH

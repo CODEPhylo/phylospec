@@ -1,0 +1,13 @@
+// TEMPLATE
+Normal(sd=$sd, mean=$mean)
+// TEMPLATE
+
+// QUERY
+PositiveReal mean = 10
+Normal(sd=mean, mean=mean)
+// QUERY
+
+// MATCH
+// $sd -> mean
+// $mean -> mean
+// MATCH

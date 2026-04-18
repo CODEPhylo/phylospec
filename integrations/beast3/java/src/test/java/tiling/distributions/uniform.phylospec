@@ -1,0 +1,5 @@
+Real x ~ Uniform(lower=0.0, upper=10.0)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

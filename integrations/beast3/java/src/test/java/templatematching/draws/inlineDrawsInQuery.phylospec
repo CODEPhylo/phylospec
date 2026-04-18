@@ -1,0 +1,13 @@
+// TEMPLATE
+Real a ~ $dist1
+log(x=a)
+// TEMPLATE
+
+// QUERY
+Distribution<Real> dist = Exponential(1.0)
+log(x~dist)
+// QUERY
+
+// MATCH
+// $dist1 -> dist
+// MATCH

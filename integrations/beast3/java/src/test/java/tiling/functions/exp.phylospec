@@ -1,0 +1,6 @@
+Real x = -100
+Real exp = exp(x)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

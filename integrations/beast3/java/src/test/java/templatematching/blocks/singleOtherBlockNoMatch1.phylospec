@@ -1,0 +1,15 @@
+// TEMPLATE
+mcmc {
+    Real x = $x
+}
+// TEMPLATE
+
+// QUERY
+beast {
+    Real x = 10
+}
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH

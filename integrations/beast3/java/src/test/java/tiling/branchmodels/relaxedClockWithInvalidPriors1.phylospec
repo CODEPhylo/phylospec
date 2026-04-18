@@ -1,0 +1,15 @@
+Alignment alignment = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+Taxa taxa = taxa(alignment)
+Tree tree ~ Yule(
+    birthRate=1.0, taxa
+)
+
+Distribution<Vector<Rate>> dist = RelaxedClock(
+    clockRate~Gamma(shape=1.0, rate=2.0),
+    base=Normal(mean=1.0, sd=2.0),
+    tree
+)
+
+// EXPECTED_TILES
+// Unsupported operation. BEAST 2.8 cannot deal with the value you provided for the 'base' argument for 'RelaxedClock'.
+// EXPECTED_TILES

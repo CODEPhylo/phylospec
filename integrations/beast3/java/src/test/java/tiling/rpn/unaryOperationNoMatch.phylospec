@@ -1,0 +1,7 @@
+Real x ~ Normal(mean=1.0, sd=2.0)
+Real y ~ Normal(mean=1.0, sd=2.0)
+Real w = -x - y
+
+// EXPECTED_TILES
+// Unsupported operation. BEAST 2.8 does not support this operation.
+// EXPECTED_TILES

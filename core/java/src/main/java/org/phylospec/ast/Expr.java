@@ -48,6 +48,62 @@ public abstract class Expr extends AstNode {
         }
     }
 
+    /** Represents a template variable. This is not used in normal PhyloSpec models, but in PhyloSpec
+     * templates which have template variables which are not defined in the PhyloSpec template. */
+    public static class TemplateVariable extends Expr {
+        public TemplateVariable(String variableName) {
+            this.variableName = variableName;
+        }
+
+        @JsonPropertyDescription("The template name of the variable.")
+        public final String variableName;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            TemplateVariable variable1 = (TemplateVariable) o;
+            return Objects.equals(variableName, variable1.variableName);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(variableName);
+        }
+
+        @Override
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
+            return visitor.visitTemplateVariable(this);
+        }
+    }
+
+    /** Represents an optional template variable. This is not used in normal PhyloSpec models, but in PhyloSpec
+     * templates which have template variables which are not defined in the PhyloSpec template. */
+    public static class OptionalTemplateVariable extends Expr {
+        public OptionalTemplateVariable(String variableName) {
+            this.variableName = variableName;
+        }
+
+        @JsonPropertyDescription("The template name of the variable.")
+        public final String variableName;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            TemplateVariable variable1 = (TemplateVariable) o;
+            return Objects.equals(variableName, variable1.variableName);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(variableName);
+        }
+
+        @Override
+        public <S, E, T> E accept(AstVisitor<S, E, T> visitor) {
+            return visitor.visitOptionalTemplateVariable(this);
+        }
+    }
+
     /** Represents a string template that may contain interpolated expressions,
      * e.g. {@code "file_${seed}.nex"}. Plain strings with no interpolations
      * are represented by {@link Literal} instead.
@@ -368,9 +424,9 @@ public abstract class Expr extends AstNode {
         }
 
         @JsonPropertyDescription("The lower bound of the range (inclusive).")
-        public final Expr from;
+        public Expr from;
         @JsonPropertyDescription("The upper bound of the range (inclusive).")
-        public final Expr to;
+        public Expr to;
 
         @Override
         public boolean equals(Object o) {

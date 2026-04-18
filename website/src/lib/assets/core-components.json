@@ -658,33 +658,19 @@
                         "name": "start",
                         "type": "PositiveInteger",
                         "description": "Starting site position",
-                        "required": true
+                        "required": false
                     },
                     {
                         "name": "end",
                         "type": "PositiveInteger",
                         "description": "Ending site position (inclusive)",
-                        "required": true
-                    }
-                ]
-            },
-            {
-                "name": "codonPosition",
-                "generatedType": "Alignment",
-                "namespace": "phylospec.functions.alignment",
-                "description": "Extract sites at a specific codon position from a coding sequence alignment",
-                "arguments": [
-                    {
-                        "name": "alignment",
-                        "type": "Alignment",
-                        "description": "Input coding sequence alignment",
-                        "required": true
+                        "required": false
                     },
                     {
-                        "name": "position",
-                        "type": "PositiveInteger",
-                        "description": "Codon position to extract (1, 2, or 3)",
-                        "required": true
+                      "name": "codonPosition",
+                      "type": "PositiveInteger",
+                      "description": "Codon position to extract (1, 2, or 3)",
+                      "required": false
                     }
                 ]
             },
@@ -1794,7 +1780,7 @@
                 "description": "Strict clock model for branch rates",
                 "arguments": [
                     {
-                        "name": "rate",
+                        "name": "clockRate",
                         "type": "Rate",
                         "description": "The base rate",
                         "required": false,
@@ -1817,8 +1803,14 @@
                     {
                         "name": "base",
                         "type": "Distribution<Rate>",
-                        "description": "The distribution to draw branch-wise rates from",
+                        "description": "The distribution with mean 1.0 to draw branch-wise rates from",
                         "required": true
+                    },
+                    {
+                      "name": "clockRate",
+                      "type": "Rate",
+                      "description": "The distribution to draw the mean clock rate from",
+                      "required": true
                     },
                     {
                         "name": "tree",
@@ -1923,9 +1915,39 @@
                 "description": "General Time-Reversible model",
                 "arguments": [
                     {
-                        "name": "rateMatrix",
-                        "type": "Vector<Real>",
-                        "description": "Relative rate parameters",
+                        "name": "rateAC",
+                        "type": "Rate",
+                        "description": "Substitution rate for A to C",
+                        "required": true
+                    },
+                    {
+                        "name": "rateAG",
+                        "type": "Rate",
+                        "description": "Substitution rate for A to G",
+                        "required": true
+                    },
+                    {
+                        "name": "rateAT",
+                        "type": "Rate",
+                        "description": "Substitution rate for A to T",
+                        "required": true
+                    },
+                    {
+                        "name": "rateCG",
+                        "type": "Rate",
+                        "description": "Substitution rate for C to G",
+                        "required": true
+                    },
+                    {
+                        "name": "rateCT",
+                        "type": "Rate",
+                        "description": "Substitution rate for C to T",
+                        "required": true
+                    },
+                    {
+                        "name": "rateGT",
+                        "type": "Rate",
+                        "description": "Substitution rate for G to T",
                         "required": true
                     },
                     {

@@ -1,0 +1,46 @@
+PositiveReal mean = 10
+PositiveReal sd = 10
+
+Real a ~ Normal(mean=1.0, sd=2.0) // ✅
+Real b ~ Normal(mean, sd) // ✅
+Real c ~ Normal(mean=mean, sd=mean) // ✅
+Real d ~ Normal(sd, mean) // ✅
+Real e ~ Normal(mean, sd=2.0) // ✅
+Real f ~ Normal(100.0, sd) // ✅
+
+Real g ~ Normal(100.0, 20) // 🚫
+Real h ~ Normal(mean, 20) // 🚫
+Real i ~ Normal(mean, mean) // 🚫
+Real j ~ Normal(sd, sd) // 🚫
+Real k ~ Normal(mean=1.0, mean) // 🚫
+Real l ~ Normal(mean=1.0, mean, sd) // 🚫
+Real m ~ Normal(mean=1.0, mean, sd=1.0) // 🚫
+
+
+// EXPECT AST
+// (AS PositiveReal mean 10)
+// (AS PositiveReal sd 10)
+// (DR Real a (CA Normal (AA mean 1.0) (AA sd 2.0)))
+// (DR Real b (CA Normal (AA null mean) (AA null sd)))
+// (DR Real c (CA Normal (AA mean mean) (AA sd mean)))
+// (DR Real d (CA Normal (AA null sd) (AA null mean)))
+// (DR Real e (CA Normal (AA null mean) (AA sd 2.0)))
+// (DR Real f (CA Normal (AA null 100.0) (AA null sd)))
+// (DR Real g (CA Normal (AA null 100.0) (AA null 20)))
+// (DR Real h (CA Normal (AA null mean) (AA null 20)))
+// (DR Real i (CA Normal (AA null mean) (AA null mean)))
+// (DR Real j (CA Normal (AA null sd) (AA null sd)))
+// (DR Real k (CA Normal (AA mean 1.0) (AA null mean)))
+// (DR Real l (CA Normal (AA mean 1.0) (AA null mean) (AA null sd)))
+// (DR Real m (CA Normal (AA mean 1.0) (AA null mean) (AA sd 1.0)))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Argument name not specified. You have to specify the name of the argument here using 'name=<value>'. You can only omit the argument name for the first argument or when your variable has the same name as the argument.
+// Argument name not specified. You have to specify the name of the argument here using 'name=<value>'. You can only omit the argument name for the first argument or when your variable has the same name as the argument.
+// Argument 'mean' specified multiple times. You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than 'mean', set it explicitly with '<argument>=mean'.
+// Argument 'sd' specified multiple times. You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than 'sd', set it explicitly with '<argument>=sd'.
+// Argument 'mean' specified multiple times. You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than 'mean', set it explicitly with '<argument>=mean'.
+// Argument 'mean' specified multiple times. You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than 'mean', set it explicitly with '<argument>=mean'.
+// Argument 'mean' specified multiple times. You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than 'mean', set it explicitly with '<argument>=mean'.
+// EXPECT TYPE_ERRORS

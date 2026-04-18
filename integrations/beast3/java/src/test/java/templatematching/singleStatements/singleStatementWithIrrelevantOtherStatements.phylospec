@@ -1,0 +1,14 @@
+// TEMPLATE
+Normal(mean=$mean, sd=$sd)
+// TEMPLATE
+
+// QUERY
+String env = env(variable="hallo")
+Real x = 100
+Normal(mean=1.0, sd=2.0)
+// QUERY
+
+// MATCH
+// $mean -> 1.0
+// $sd -> 2.0
+// MATCH

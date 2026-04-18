@@ -1,0 +1,6 @@
+// range with start < end produces an ascending integer sequence
+Vector<Integer> x = range(start=1, end=5)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

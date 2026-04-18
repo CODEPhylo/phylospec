@@ -96,16 +96,51 @@ public final class Error extends Throwable {
 
         String[] lines = source.split("\n", -1);
         if (range != null && range.startLine >= 1 && range.startLine <= lines.length) {
-            String sourceLine = lines[range.startLine - 1];
-            text.append("\n\n").append(INDENT).append(sourceLine).append("\n").append(INDENT);
+            int lastLine = Math.min(range.endLine, lines.length);
+            // gutter wide enough for the largest line number shown
+            int gutterWidth = String.valueOf(lastLine).length();
+            String gutter = " ".repeat(gutterWidth);
 
-            // carets span from range.start to range.end on the start line
-            int caretStart = range.start;
-            int caretEnd = range.startLine == range.endLine ? range.end : sourceLine.length();
-            int caretLen = Math.max(1, caretEnd - caretStart);
+            if (range.startLine == range.endLine) {
+                /* single-line range */
+                String sourceLine = lines[range.startLine - 1];
+                String lineLabel = String.format("%" + gutterWidth + "d", range.startLine);
+                text.append("\n\n")
+                        .append(INDENT).append(lineLabel).append(" | ").append(sourceLine)
+                        .append("\n")
+                        .append(INDENT).append(gutter).append(" | ")
+                        .append(" ".repeat(range.start))
+                        .append(YELLOW).append("^".repeat(Math.max(1, range.end - range.start))).append(RESET);
+            } else {
+                /* multiline range — show each line with carets beneath it */
+                text.append("\n");
+                for (int lineNum = range.startLine; lineNum <= lastLine; lineNum++) {
+                    String sourceLine = lines[lineNum - 1];
+                    String lineLabel = String.format("%" + gutterWidth + "d", lineNum);
+                    text.append("\n")
+                            .append(INDENT).append(lineLabel).append(" | ").append(sourceLine)
+                            .append("\n")
+                            .append(INDENT).append(gutter).append(" | ");
 
-            text.append(" ".repeat(caretStart))
-                    .append(YELLOW).append("^".repeat(caretLen)).append(RESET);
+                    int caretStart, caretLen;
+                    if (lineNum == range.startLine) {
+                        // first line: carets from range.start to end of line
+                        caretStart = range.start;
+                        caretLen = Math.max(1, sourceLine.length() - range.start);
+                    } else if (lineNum == range.endLine) {
+                        // last line: carets from column 0 up to range.end
+                        caretStart = 0;
+                        caretLen = Math.max(1, range.end);
+                    } else {
+                        // middle lines: carets under the whole line
+                        caretStart = 0;
+                        caretLen = Math.max(1, sourceLine.length());
+                    }
+
+                    text.append(" ".repeat(caretStart))
+                            .append(YELLOW).append("^".repeat(caretLen)).append(RESET);
+                }
+            }
         }
 
         if (!hint().isBlank()) {

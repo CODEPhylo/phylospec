@@ -1,0 +1,10 @@
+Vector<Real> concentration = [exp(1.0), exp(3.0), 0.7]
+Vector<Real> c ~ Dirichlet(concentration)
+QMatrix qMatrix = wag(
+    baseFrequencies=[0.2, 0.7, 0.1]
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES

@@ -1,0 +1,12 @@
+// TEMPLATE
+Real a ~ $dist
+// TEMPLATE
+
+// QUERY
+@revbayes(x=10)
+Real a ~ Normal(mean=1.0, sd=2.0)
+// QUERY
+
+// MATCH
+// $dist -> (CA Normal (AA mean 1.0) (AA sd 2.0))
+// MATCH

@@ -1,0 +1,15 @@
+// TEMPLATE
+Real a = log(x=exp(x=$x))
+// TEMPLATE
+
+// QUERY
+Real x = 10
+Real y = exp(x)
+Real z = ((y))
+Real w = (z)
+Real a = log(w)
+// QUERY
+
+// MATCH
+// $x -> x
+// MATCH

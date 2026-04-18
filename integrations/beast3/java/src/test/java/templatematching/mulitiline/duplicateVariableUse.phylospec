@@ -1,0 +1,13 @@
+// TEMPLATE
+$a + $b
+// TEMPLATE
+
+// QUERY
+Real x ~ Normal(mean=1.0, sd=1.0)
+x + x
+// QUERY
+
+// MATCH
+// $a -> x
+// $b -> x
+// MATCH

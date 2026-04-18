@@ -6,7 +6,6 @@ import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.TokenType;
 import org.phylospec.typeresolver.*;
 
-import java.io.IOException;
 import java.util.*;
 
 /// This class converts parsed PhyloSpec statements into a Rev script.
@@ -175,7 +174,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(stmt);
         if (stochasticity == Stochasticity.STOCHASTIC) stochasticity = Stochasticity.DETERMINISTIC;
 
-        ResolvedType type = typeResolver.resolveType(stmt).iterator().next();
+        ResolvedType type = typeResolver.resolveTypeSet(stmt).iterator().next();
 
         addRevAssignment(stmt.name, stochasticity, type, expression);
 
@@ -185,9 +184,9 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     @Override
     public Void visitDraw(Stmt.Draw stmt) {
         StringBuilder expression = stmt.expression.accept(this);
-        ResolvedType type = typeResolver.resolveType(stmt).iterator().next();
+        ResolvedType type = typeResolver.resolveTypeSet(stmt).iterator().next();
 
-        Set<ResolvedType> expressionTypeSet = typeResolver.resolveType(stmt.expression);
+        Set<ResolvedType> expressionTypeSet = typeResolver.resolveTypeSet(stmt.expression);
         Stochasticity[] stochasticity = new Stochasticity[] {Stochasticity.DETERMINISTIC};
         for (ResolvedType expressionType : expressionTypeSet) {
             TypeUtils.visitTypeAndParents(expressionType, t -> {
@@ -280,7 +279,7 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     public StringBuilder visitDrawnArgument(Expr.DrawnArgument expr) {
         // we add a separate variable with the result of the draw
         String variableName = expr.name;
-        Set<ResolvedType> resolvedTypeSet = typeResolver.resolveType(expr);
+        Set<ResolvedType> resolvedTypeSet = typeResolver.resolveTypeSet(expr);
         ResolvedType mostGeneralType = TypeUtils.getLowestCover(resolvedTypeSet.stream().toList(), componentResolver);
         StringBuilder variableDeclaration = expr.expression.accept(this);
         RevStmt.Assignment stmt = addRevAssignment(variableName, Stochasticity.STOCHASTIC, mostGeneralType, variableDeclaration);

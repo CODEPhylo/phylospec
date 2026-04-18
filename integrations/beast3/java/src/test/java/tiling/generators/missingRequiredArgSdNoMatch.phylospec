@@ -1,0 +1,6 @@
+// Normal without the required sd argument
+Real x ~ Normal(mean=1.0)
+
+// EXPECTED_TILES
+// Unsupported operation. BEAST 2.8 expects you to provide a value for the 'sd' argument.
+// EXPECTED_TILES

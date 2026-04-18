@@ -1,0 +1,11 @@
+Vector<Integer> repeatInt = repeat(
+    value=10, num=5
+) // right now, this might be parsed as RepeatIntTile as "10" could be both int or real
+Vector<Real> repeatReal = repeat(
+    value=10.5, num=3
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES

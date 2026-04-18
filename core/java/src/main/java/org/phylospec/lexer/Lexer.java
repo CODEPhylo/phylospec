@@ -115,7 +115,12 @@ public class Lexer {
                 addToken(TokenType.RIGHT_SQUARE_BRACKET);
                 break;
             case '$':
-                addToken(TokenType.DOLLAR);
+                if (peek() == '$') {
+                    advance();
+                    addToken(TokenType.DOLLAR_DOLLAR);
+                } else {
+                    addToken(TokenType.DOLLAR);
+                }
                 break;
             case ':':
                 addToken(TokenType.COLON);

@@ -1,0 +1,13 @@
+// TEMPLATE
+$vec[$idx]
+// TEMPLATE
+
+// QUERY
+Real v = [10.0, 20.0, 30.0]
+v[1]
+// QUERY
+
+// MATCH
+// $vec -> v
+// $idx -> 1
+// MATCH

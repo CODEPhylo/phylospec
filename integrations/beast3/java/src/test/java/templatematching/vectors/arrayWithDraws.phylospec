@@ -1,0 +1,14 @@
+// TEMPLATE
+[$a, $b]
+// TEMPLATE
+
+// QUERY
+Real x ~ Normal(mean=0.0, sd=1.0)
+Real y ~ Exponential(rate=2.0)
+[x, y]
+// QUERY
+
+// MATCH
+// $a -> x
+// $b -> y
+// MATCH

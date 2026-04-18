@@ -1,0 +1,8 @@
+PositiveReal a = 100
+Real log = log(x=a)
+Real log10 = log(x=a, base=10)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES

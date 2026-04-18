@@ -121,6 +121,75 @@ public class Parser {
         return statements;
     }
 
+    /**
+     * Reads the source code provided in the constructor and returns a list
+     * of tokens.
+     * Unlike {@code parse()}, this also parses incomplete expressions if no full statements are detected.
+     * @return list of scanned tokens.
+     */
+    public List<AstNode> parseStmtOrExpr() {
+        List<AstNode> expressions = new ArrayList<>();
+
+        // skip all EOL until the first statement
+        skipEOLs();
+
+        while (!isAtEnd()) {
+            try {
+                if (isBlockHeader()) {
+                    parseBlockHeader();
+                } else if (isBlockEnd()) {
+                    parseBlockEnd();
+                } else {
+                    // store the current state such that we can recover if this is not a complete statement
+                    int oldCurrent = current;
+                    int oldStackSize = astNodeStartPositions.size();
+
+                    try {
+                        Stmt stmt = importRule();
+                        stmt.block = currentBlock;
+                        expressions.add(stmt);
+                    } catch (Error e) {
+                        // we try to parse an expression instead
+
+                        current = oldCurrent;
+                        while (astNodeStartPositions.size() > oldStackSize) {
+                            astNodeStartPositions.pop();
+                        }
+
+                        Expr expr = expression();
+                        expressions.add(expr);
+                    }
+                }
+
+                if (!isAtEnd()) {
+                    consume(
+                            TokenType.EOL,
+                            "Missing line break.",
+                            "There already is a complete statement on this line. Put each statement on its own line."
+                    );
+
+                    // skip all EOL until the next statement
+                    skipEOLs();
+                }
+            } catch (Error error) {
+                logError(error);
+                recover();
+            }
+        }
+
+        // make sure that the last block has been closed
+
+        if (currentBlock != Stmt.Block.NO_BLOCK) {
+            logError(new Error(
+                    currentBlockRange,
+                    "Unclosed block.",
+                    "You started a '" + currentBlock + "' block but did not close it. Use curly brackets to close the block."
+            ));
+        }
+
+        return expressions;
+    }
+
     private boolean isBlockHeader() {
         if (isAtEnd()) return false;
         if (!check(TokenType.IDENTIFIER)) return false;
@@ -691,6 +760,24 @@ public class Parser {
 
         if (match(TokenType.IDENTIFIER)) {
             return remember(new Expr.Variable(previous().lexeme));
+        }
+
+        if (match(TokenType.DOLLAR) && peek().type == TokenType.IDENTIFIER) {
+            // this is a template variable ($varName)
+
+            // consume the identifier
+            String variableName = advance().lexeme;
+
+            return remember(new Expr.TemplateVariable("$" + variableName));
+        }
+
+        if (match(TokenType.DOLLAR_DOLLAR) && peek().type == TokenType.IDENTIFIER) {
+            // this is an optional template variable ($$varName)
+
+            // consume the identifier
+            String variableName = advance().lexeme;
+
+            return remember(new Expr.OptionalTemplateVariable("$$" + variableName));
         }
 
         throw new Error(peek().range, "Invalid expression.", "Something is missing.");

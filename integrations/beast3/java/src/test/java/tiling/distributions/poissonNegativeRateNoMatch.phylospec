@@ -1,0 +1,6 @@
+Real c = -1.0
+Int x ~ Poisson(rate=c)
+
+// EXPECTED_TILES
+// Unsupported operation. BEAST 2.8 cannot deal with the value you provided for the 'rate' argument for 'Poisson'.
+// EXPECTED_TILES

@@ -1,0 +1,8 @@
+// two draws that don't reference each other produce two independent top-level tiles
+Real a ~ Normal(mean=1.0, sd=2.0)
+Real b ~ Gamma(shape=2.0, rate=1.0)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES

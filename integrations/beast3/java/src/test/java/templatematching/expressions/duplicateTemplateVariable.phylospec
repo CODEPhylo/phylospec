@@ -1,0 +1,12 @@
+// TEMPLATE
+$a + $a
+// TEMPLATE
+
+// QUERY
+Real a = random()
+a + a
+// QUERY
+
+// MATCH
+// $a -> a
+// MATCH

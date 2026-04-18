@@ -64,7 +64,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
      * or PositiveInteger. Another example are generators overloaded in
      * their return type.
      */
-    public Set<ResolvedType> resolveType(AstNode expression) {
+    public Set<ResolvedType> resolveTypeSet(AstNode expression) {
         return this.resolvedTypes.getOrDefault(expression, Set.of());
     }
 
@@ -72,7 +72,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
      * Returns the types associated with the given AST type node. Returns null if no
      * type is known.
      */
-    public Set<ResolvedType> resolveType(AstType astTypeNode) {
+    public Set<ResolvedType> resolveTypeSet(AstType astTypeNode) {
         return this.resolvedTypes.getOrDefault(astTypeNode, null);
     }
 
@@ -80,7 +80,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
      * Returns the types associated with the given AST statement node. Returns null if
      * no type is known.
      */
-    public Set<ResolvedType> resolveType(Stmt astTypeNode) {
+    public Set<ResolvedType> resolveTypeSet(Stmt astTypeNode) {
         return this.resolvedTypes.getOrDefault(astTypeNode, null);
     }
 
@@ -115,11 +115,14 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
     @Override
     public Set<ResolvedType> visitDecoratedStmt(Stmt.Decorated stmt) {
+        if (this.ignoreStmt(stmt)) return Set.of();
         return remember(stmt, stmt.statement.accept(this));
     }
 
     @Override
     public Set<ResolvedType> visitAssignment(Stmt.Assignment stmt) {
+        if (this.ignoreStmt(stmt)) return Set.of();
+
         Set<ResolvedType> resolvedVariableTypeSet = stmt.type.accept(this);
 
         Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
@@ -167,6 +170,8 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
     @Override
     public Set<ResolvedType> visitDraw(Stmt.Draw stmt) {
+        if (this.ignoreStmt(stmt)) return Set.of();
+
         Set<ResolvedType> resolvedVariableTypeSet = stmt.type.accept(this);
 
         Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
@@ -245,6 +250,8 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
     @Override
     public Set<ResolvedType> visitIndexedStmt(Stmt.Indexed indexed) {
+        if (this.ignoreStmt(indexed)) return Set.of();
+
         if (indexed.indices.size() != indexed.ranges.size()) {
             throw new TypeError(
                     indexed,
@@ -269,7 +276,17 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
             );
         }
 
-        // evaluate each range and add the corresponding index variable to a new scope
+        // evaluate each range
+
+        List<Set<ResolvedType>> rangeTypeSets = new ArrayList<>();
+
+        for (int i = 0; i < indexed.indices.size(); i++) {
+            Expr.Variable indexVar = indexed.indices.get(i);
+            Set<ResolvedType> rangeTypeSet = indexed.ranges.get(i).accept(this);
+            rangeTypeSets.add(rangeTypeSet);
+        }
+
+        // add the corresponding index variable to a new scope
 
         createScope();
 
@@ -277,7 +294,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         try {
             for (int i = 0; i < indexed.indices.size(); i++) {
                 Expr.Variable indexVar = indexed.indices.get(i);
-                Set<ResolvedType> rangeTypeSet = indexed.ranges.get(i).accept(this);
+                Set<ResolvedType> rangeTypeSet = rangeTypeSets.get(i);
 
                 if (!TypeUtils.canBeAssignedTo(rangeTypeSet, ResolvedType.fromString("phylospec.types.Vector<NonNegativeInteger>", componentResolver), componentResolver)) {
                     throw new TypeError(
@@ -320,7 +337,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         // register the widened type in the outer scope under the variable name
 
-        String variableName = extractVariableName(indexed.statement);
+        String variableName = this.extractVariableName(indexed.statement);
         if (variableName != null) {
             remember(variableName, widenedTypeSet);
         }
@@ -330,6 +347,8 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
     @Override
     public Set<ResolvedType> visitObservedAsStmt(Stmt.ObservedAs observedAs) {
+        if (this.ignoreStmt(observedAs)) return Set.of();
+
         Set<ResolvedType> observationTypeSet = observedAs.observedAs.accept(this);
         Set<ResolvedType> generatedDistributionTypeSet = observedAs.stmt.accept(this);
 
@@ -366,6 +385,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 observationTypeSet, generatedTypeSet, componentResolver
         )) {
             throw new TypeError(
+                    observedAs,
                     "Wrong observation type.",
                     "You specify an observation of type '" + printType(observationTypeSet) + "' for a random variable of type '" + printType(generatedTypeSet) + "'. Use an observation of type '" + printType(generatedTypeSet) + "' instead."
             );
@@ -376,6 +396,8 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
     @Override
     public Set<ResolvedType> visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
+        if (this.ignoreStmt(observedBetween)) return Set.of();
+
         Set<ResolvedType> observationFromTypeSet = observedBetween.observedFrom.accept(this);
         Set<ResolvedType> observationToTypeSet = observedBetween.observedTo.accept(this);
 
@@ -439,6 +461,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 observationTypeSet, generatedTypeSet, componentResolver
         )) {
             throw new TypeError(
+                    observedBetween,
                     "Wrong observation type.",
                     "You specify an observation of type '" + printType(observationTypeSet) + "' for a random variable of type '" + printType(generatedTypeSet) + "'. Use an observation of type '" + printType(generatedTypeSet) + "' instead."
             );
@@ -575,6 +598,24 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
+    public Set<ResolvedType> visitTemplateVariable(Expr.TemplateVariable expr) {
+        // template variables are not allowed in normal PhyloSpec models
+        throw new TypeError(
+                "Template variables are not allowed.",
+                "You use a variable name starting with a '$'. This is not allowed in a PhyloSpec model. Use a variable name without a dollar symbol."
+        );
+    }
+
+    @Override
+    public Set<ResolvedType> visitOptionalTemplateVariable(Expr.OptionalTemplateVariable expr) {
+        // optional template variables are not allowed in normal PhyloSpec models
+        throw new TypeError(
+                "Template variables are not allowed.",
+                "You use a variable name starting with a '$$'. This is not allowed in a PhyloSpec model. Use a variable name without a dollar symbol."
+        );
+    }
+
+    @Override
     public Set<ResolvedType> visitUnary(Expr.Unary expr) {
         List<TypeMatcher.Rule> typeMap = List.of(
                 new TypeMatcher.Rule(TokenType.BANG, "Boolean", "Boolean"),
@@ -669,25 +710,48 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     public Set<ResolvedType> visitCall(Expr.Call expr) {
         // resolve arguments
 
+        /* Rules for argument names:
+         * (1) If an argument name is given, the value is assigned that argument.
+         * If no argument name is given:
+         *      (2) If only one argument is passed, the value is assigned to the single required argument.
+         *      (3) If a variable is passed, the value is assigned the argument with the name of the variable.
+         *      (4) If the value is not a variable, and this is the first given argument, it is assigned the first argument.
+         * (5) If any argument has two values assigned to it, it is an error.
+         */
+
         Map<String, Set<ResolvedType>> resolvedArguments = new HashMap<>();
         String firstArgumentName = null;
         for (int i = 0; i < expr.arguments.length; i++) {
             Expr.Argument argument = expr.arguments[i];
 
             if (argument.name != null) {
+                // rule (1)
                 resolvedArguments.put(argument.name, argument.accept(this));
-            } else if (argument.expression instanceof Expr.Variable) {
+            } else if (argument.expression instanceof Expr.Variable variable) {
                 // any argument can drop the name if a variable name is passed with the same name
+                if (resolvedArguments.containsKey(variable.variableName)) {
+                    // rule (5)
+                    throw new TypeError(
+                            argument,
+                            "Argument '" + variable.variableName + "' specified multiple times.",
+                            "You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than '" + variable.variableName + "', set it explicitly with '<argument>=" + variable.variableName + "'."
+                    );
+                }
+
+                // rule (3)
                 resolvedArguments.put(
-                        ((Expr.Variable) argument.expression).variableName,
+                        variable.variableName,
                         argument.accept(this)
                 );
 
-                if (i == 0) {
-                    firstArgumentName = ((Expr.Variable) argument.expression).variableName;
+                if (expr.arguments.length == 1) {
+                    // if there is only one argument given, the given value is always assigned
+                    // rule (2)
+                    firstArgumentName = variable.variableName;
                 }
             } else if (i == 0) {
                 // the first argument does not need a name
+                // rule (4)
                 resolvedArguments.put(null, argument.accept(this));
             } else {
                 // we are not in a situation where the argument name can be dropped
@@ -711,7 +775,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         // check if generators are compatible with arguments
         Set<ResolvedType> possibleReturnTypes = new HashSet<>();
-        List<String> errorMessages = new ArrayList<>();
+        List<TypeError> errors = new ArrayList<>();
         for (Generator generator : generators) {
             try {
                 Set<ResolvedType> possibleGeneratorReturnTypes = TypeUtils.resolveGeneratedType(
@@ -719,19 +783,28 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 );
                 possibleReturnTypes.addAll(possibleGeneratorReturnTypes);
             } catch (TypeError e) {
-                errorMessages.add(e.getMessage());
+                e.attachAstNode(expr);
+                errors.add(e);
             }
         }
 
         // throw errors if needed
-        if (possibleReturnTypes.isEmpty() && errorMessages.isEmpty()) {
+        if (possibleReturnTypes.isEmpty() && errors.isEmpty()) {
             throw new TypeError(expr, "Function `" + expr.functionName + "` with the given arguments does not exist.");
-        } else if (possibleReturnTypes.isEmpty() && errorMessages.size() == 1) {
-            throw new TypeError(expr, errorMessages.getFirst());
+        } else if (possibleReturnTypes.isEmpty() && errors.size() == 1) {
+            throw errors.getFirst();
         } else if (possibleReturnTypes.isEmpty()) {
-            String errorMessage = "Function `" + expr.functionName + "` with the given arguments does not exist: \n\t";
-            errorMessage += String.join("\n\t", errorMessages);
-            throw new TypeError(expr, errorMessage);
+            String description = "Function `" + expr.functionName + "` with the given arguments does not exist.";
+
+            StringBuilder hint = new StringBuilder("There are " + generators.size() + " different versions of '" + expr.functionName + "'. They cannot be used due to the following reasons:\n");
+
+            for (int i = 0; i < errors.size(); i++) {
+                hint.append("\n ").append(i + 1).append(". ").append(errors.get(i).getMessage());
+            }
+
+            hint.append("\n\nFix any of these issues to use '").append(expr.functionName).append("'.");
+
+            throw new TypeError(expr, description, hint.toString());
         }
 
         return remember(expr, possibleReturnTypes);
@@ -950,6 +1023,14 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         Set<ResolvedType> resolvedType = ResolvedType.fromString(expr.name, typeParameters, componentResolver, true);
         return remember(expr, resolvedType);
+    }
+
+    /**
+     * Check if the type resolver ignores the statement because it is in a custom block.
+     */
+    private boolean ignoreStmt(Stmt stmt) {
+        Set<Stmt.Block> blocksConsidered = Set.of(Stmt.Block.NO_BLOCK, Stmt.Block.MODEL, Stmt.Block.DATA);
+        return (!blocksConsidered.contains(stmt.block));
     }
 
     /**

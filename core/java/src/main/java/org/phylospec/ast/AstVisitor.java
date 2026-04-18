@@ -1,5 +1,6 @@
 package org.phylospec.ast;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -8,45 +9,132 @@ import java.util.List;
  * the visitor pattern.
  */
 public interface AstVisitor<S, E, T> {
-    default void visitStatements(List<Stmt> statements) {
+    default S visitStatements(List<Stmt> statements) {
+        S last = null;
         for (Stmt stmt : statements) {
-            stmt.accept(this);
+            last = stmt.accept(this);
         }
+        return last;
     }
 
-    public S visitDecoratedStmt(Stmt.Decorated stmt);
-    public S visitAssignment(Stmt.Assignment stmt);
-    public S visitDraw(Stmt.Draw stmt);
-    public S visitImport(Stmt.Import stmt);
+    default S visitDecoratedStmt(Stmt.Decorated stmt) {
+        stmt.statement.accept(this);
+        return null;
+    }
+
+    default S visitAssignment(Stmt.Assignment stmt) {
+        stmt.type.accept(this);
+        stmt.expression.accept(this);
+        return null;
+    }
+
+    default S visitDraw(Stmt.Draw stmt) {
+        stmt.type.accept(this);
+        stmt.expression.accept(this);
+        return null;
+    }
+
+    default S visitImport(Stmt.Import stmt) {
+        return null;
+    }
+
     default S visitIndexedStmt(Stmt.Indexed indexed) {
+        indexed.statement.accept(this);
+        indexed.ranges.stream().forEach(x -> x.accept(this));
         return null;
     }
+
     default S visitObservedAsStmt(Stmt.ObservedAs observedAs) {
+        observedAs.stmt.accept(this);
+        observedAs.observedAs.accept(this);
         return null;
     }
+
     default S visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
+        observedBetween.stmt.accept(this);
+        observedBetween.observedFrom.accept(this);
+        observedBetween.observedTo.accept(this);
         return null;
     }
 
-    public E visitLiteral(Expr.Literal expr);
+    default E visitLiteral(Expr.Literal expr) {
+        return null;
+    }
+
     default E visitStringTemplate(Expr.StringTemplate expr) {
-        return null;
-    }
-    public E visitVariable(Expr.Variable expr);
-    public E visitUnary(Expr.Unary expr);
-    public E visitBinary(Expr.Binary expr);
-    public E visitCall(Expr.Call expr);
-    public E visitAssignedArgument(Expr.AssignedArgument expr);
-    public E visitDrawnArgument(Expr.DrawnArgument expr);
-    public E visitGrouping(Expr.Grouping expr);
-    public E visitArray(Expr.Array expr);
-    default E visitIndex(Expr.Index expr) {
-        return null;
-    }
-    default E visitRange(Expr.Range range) {
+        for (Expr.StringTemplate.Part part : expr.parts) {
+            if (part instanceof Expr.StringTemplate.ExpressionPart expressionPart) expressionPart.expression().accept(this);
+        }
+
         return null;
     }
 
-    public T visitAtomicType(AstType.Atomic expr);
-    public T visitGenericType(AstType.Generic expr);
+    default E visitVariable(Expr.Variable expr) {
+        return null;
+    }
+
+    default E visitTemplateVariable(Expr.TemplateVariable expr) {
+        return null;
+    }
+
+    default E visitOptionalTemplateVariable(Expr.OptionalTemplateVariable expr) {
+        return null;
+    }
+
+    default E visitUnary(Expr.Unary expr) {
+        expr.right.accept(this);
+        return null;
+    }
+
+    default E visitBinary(Expr.Binary expr) {
+        expr.left.accept(this);
+        expr.right.accept(this);
+        return null;
+    }
+
+    default E visitCall(Expr.Call expr) {
+        Arrays.stream(expr.arguments).forEach(x -> x.accept(this));
+        return null;
+    }
+
+    default E visitAssignedArgument(Expr.AssignedArgument expr) {
+        expr.expression.accept(this);
+        return null;
+    }
+
+    default E visitDrawnArgument(Expr.DrawnArgument expr) {
+        expr.expression.accept(this);
+        return null;
+    }
+
+    default E visitGrouping(Expr.Grouping expr) {
+        expr.expression.accept(this);
+        return null;
+    }
+
+    default E visitArray(Expr.Array expr) {
+        expr.elements.forEach(x -> x.accept(this));
+        return null;
+    }
+
+    default E visitIndex(Expr.Index expr) {
+        expr.object.accept(this);
+        expr.indices.forEach(x -> x.accept(this));
+        return null;
+    }
+
+    default E visitRange(Expr.Range range) {
+        range.from.accept(this);
+        range.to.accept(this);
+        return null;
+    }
+
+    default T visitAtomicType(AstType.Atomic expr) {
+        return null;
+    }
+
+    default T visitGenericType(AstType.Generic expr) {
+        Arrays.stream(expr.typeParameters).forEach(x -> x.accept(this));
+        return null;
+    }
 }

@@ -8,10 +8,7 @@ import java.util.List;
  * Every visitor function should return the transformed node. Each concrete
  * implementation only has to implement the visitor functions for nodes which
  * it transforms.
- *
- * @deprecated not updated to 03-2026
  */
-@Deprecated
 public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> {
     List<Stmt> oldStatements;
     List<Stmt> transformedStatements;
@@ -75,12 +72,76 @@ public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> 
     }
 
     @Override
+    public Stmt visitIndexedStmt(Stmt.Indexed indexed) {
+        indexed.statement = indexed.statement.accept(this);
+        indexed.ranges.replaceAll(x -> x.accept(this));
+
+        boolean isOldStatement = oldStatements.contains(indexed);
+        if (isOldStatement) {
+            transformedStatements.add(indexed);
+        }
+
+        return indexed;
+    }
+
+    @Override
+    public Stmt visitObservedAsStmt(Stmt.ObservedAs observedAs) {
+        observedAs.stmt = observedAs.stmt.accept(this);
+        observedAs.observedAs = observedAs.observedAs.accept(this);
+
+        boolean isOldStatement = oldStatements.contains(observedAs);
+        if (isOldStatement) {
+            transformedStatements.add(observedAs);
+        }
+
+        return observedAs;
+    }
+
+    @Override
+    public Stmt visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
+        observedBetween.stmt = observedBetween.stmt.accept(this);
+        observedBetween.observedFrom = observedBetween.observedFrom.accept(this);
+        observedBetween.observedTo = observedBetween.observedTo.accept(this);
+
+        boolean isOldStatement = oldStatements.contains(observedBetween);
+        if (isOldStatement) {
+            transformedStatements.add(observedBetween);
+        }
+
+        return observedBetween;
+    }
+
+    @Override
     public Expr visitLiteral(Expr.Literal expr) {
         return expr;
     }
 
     @Override
+    public Expr visitStringTemplate(Expr.StringTemplate expr) {
+        for (int i = 0; i < expr.parts.size(); i++) {
+            if (expr.parts.get(i) instanceof Expr.StringTemplate.ExpressionPart partExpr) {
+                expr.parts.set(i,
+                        new Expr.StringTemplate.ExpressionPart(
+                                (Expr.Variable) partExpr.expression().accept(this)
+                        )
+                );
+            }
+        }
+        return expr;
+    }
+
+    @Override
     public Expr visitVariable(Expr.Variable expr) {
+        return expr;
+    }
+
+    @Override
+    public Expr visitTemplateVariable(Expr.TemplateVariable expr) {
+        return expr;
+    }
+
+    @Override
+    public Expr visitOptionalTemplateVariable(Expr.OptionalTemplateVariable expr) {
         return expr;
     }
 
@@ -132,10 +193,15 @@ public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> 
     @Override
     public Expr visitIndex(Expr.Index expr) {
         expr.object = expr.object.accept(this);
-        for (int i = 0; i < expr.indices.size(); i++) {
-            expr.indices.set(i, expr.indices.get(i).accept(this));
-        }
+        expr.indices.replaceAll(expr1 -> expr1.accept(this));
         return expr;
+    }
+
+    @Override
+    public Expr visitRange(Expr.Range range) {
+        range.from = range.from.accept(this);
+        range.to = range.to.accept(this);
+        return range;
     }
 
     @Override

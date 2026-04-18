@@ -1,0 +1,11 @@
+// TEMPLATE
+Real x = $x
+// TEMPLATE
+
+// QUERY
+10
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH
