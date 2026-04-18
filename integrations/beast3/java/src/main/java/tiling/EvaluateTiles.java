@@ -178,15 +178,15 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
 
     /**
      * Finds the deepest leaf failure reachable from {@code root} via the cascade DAG and throws
-     * it as a {@link TilingError}. When multiple leaves are tied at the same depth (independent
+     * it as a {@link TileApplicationError}. When multiple leaves are tied at the same depth (independent
      * failures), the first in encounter order is reported.
      */
     private void throwDeepestFailure(AstNode root) {
         for (AstNode leaf : this.findErrorLeaves(root)) {
-            throw new TilingError(leaf, "Unsupported operation.", this.getBestReason(this.allFailures.get(leaf)));
+            throw new TileApplicationError(leaf, "Unsupported operation.", this.getBestReason(this.allFailures.get(leaf)));
         }
         // fallback: root failed but every tile threw Irrelevant (no tile targets this node type)
-        throw new TilingError(root, "Unsupported operation.", "BEAST 2.8 does not support this operation.");
+        throw new TileApplicationError(root, "Unsupported operation.", "BEAST 2.8 does not support this operation.");
     }
 
     /**

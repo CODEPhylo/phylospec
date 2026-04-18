@@ -6,7 +6,7 @@ import beast.base.spec.inference.parameter.IntVectorParam;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
-import tiling.TilingError;
+import tiling.TileApplicationError;
 
 import java.util.List;
 import java.util.Set;
@@ -32,7 +32,7 @@ public class RangeTile extends GeneratorTile<IntVectorParam<Int>> {
         int num = Math.abs(end - start);
 
         if (num == 0) {
-            throw new TilingError(
+            throw new TileApplicationError(
                     this.getRootNode(),
                     "Empty range.",
                     "You use a range with a length of 0. Specify a different start and end.",

@@ -7,7 +7,7 @@ import beast.base.parser.NexusParser;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
-import tiling.TilingError;
+import tiling.TileApplicationError;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +35,7 @@ public class FromNexusTile extends GeneratorTile<DecoratedAlignment> {
         try {
             nexusParser.parseFile(file);
         } catch (IOException e) {
-            throw new TilingError(
+            throw new TileApplicationError(
                     "File not found.",
                     "'" + path + "' could not be found. Does it exist? Select a valid file path."
             );

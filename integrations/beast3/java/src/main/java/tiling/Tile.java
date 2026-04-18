@@ -132,7 +132,7 @@ public abstract class Tile<T> {
             try {
                 this.result = this.applyTile(beastState);
                 this.applied = true;
-            } catch (TilingError tilingError) {
+            } catch (TileApplicationError tilingError) {
                 // attach node if needed
                 if (tilingError.getAstNode() == null) {
                     tilingError.setAstNode(this.getRootNode());
@@ -141,7 +141,7 @@ public abstract class Tile<T> {
                 throw tilingError;
             } catch (Exception e) {
                 // we wrap the exception into a tiling error
-                throw new TileApplicationError(
+                throw new WrappedTileApplicationError(
                         this.getRootNode(),
                         "Creating the BEAST 2.8 objects did not work.",
                         e

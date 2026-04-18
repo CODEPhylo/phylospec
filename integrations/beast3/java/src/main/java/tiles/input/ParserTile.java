@@ -3,7 +3,7 @@ package tiles.input;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
-import tiling.TilingError;
+import tiling.TileApplicationError;
 
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -85,7 +85,7 @@ public class ParserTile {
             if (matcher.find()) {
                 return matcher.group(1);
             } else {
-                throw new TilingError("Regex cannot be matched for input '" + raw + " '.", "Is the regex correct?");
+                throw new TileApplicationError("Regex cannot be matched for input '" + raw + " '.", "Is the regex correct?");
             }
         }
     }

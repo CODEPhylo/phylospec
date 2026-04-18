@@ -1,27 +1,45 @@
 package tiling;
 
 import org.phylospec.ast.AstNode;
+import org.phylospec.errors.Error;
+import org.phylospec.lexer.Range;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.util.List;
 
-public class TileApplicationError extends TilingError {
+/**
+ * This class describes an error which occurs during an application of a tile.
+ */
+public class TileApplicationError extends RuntimeException {
+    private AstNode node;
+    private final String description;
+    private final String hint;
+    private final List<String> examples;
 
-    private final Exception beastException;
-
-    public TileApplicationError(AstNode node, String description, Exception beastException) {
-        super(node, description, "Check out the underlying BEAST 2.8 error:\n\n" + getError(beastException));
-        this.beastException = beastException;
+    public TileApplicationError(String description, String hint) {
+        this(null, description, hint);
     }
 
-    public Exception getBeastException() {
-        return beastException;
+    public TileApplicationError(AstNode node, String description, String hint) {
+        this(node, description, hint, List.of());
     }
 
-    private static String getError(Exception e) {
-        StringWriter sw = new StringWriter();
-        e.printStackTrace(new PrintWriter(sw));
-        return sw.toString();
+    public TileApplicationError(AstNode node, String description, String hint, List<String> examples) {
+        super(description + " " + hint);
+        this.node = node;
+        this.description = description;
+        this.hint = hint;
+        this.examples = examples;
     }
 
+    public AstNode getAstNode() {
+        return node;
+    }
+
+    public Error toError(Range range) {
+        return new Error(range, this.description, this.hint, this.examples);
+    }
+
+    public void setAstNode(AstNode node) {
+        this.node = node;
+    }
 }

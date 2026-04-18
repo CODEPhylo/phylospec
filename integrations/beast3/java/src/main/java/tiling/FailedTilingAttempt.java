@@ -3,7 +3,7 @@ package tiling;
 import org.phylospec.ast.AstNode;
 
 /**
- * This error wraps information on a failed attempt at applying a tile to an AST subgraph.
+ * This error wraps information on a failed attempt to tile an AST subgraph with a tile.
  */
 public abstract class FailedTilingAttempt extends Throwable {
 

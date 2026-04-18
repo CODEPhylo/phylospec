@@ -87,7 +87,7 @@ public class TilingScriptFilesTest {
                 for (Tile<?> bestTiling : bestTilings) {
                     actualTileLines.add(bestTiling != null ? "TILING_SUCCESS" : "NO_VALID_TILING");
                 }
-            } catch (TilingError e) {
+            } catch (TileApplicationError e) {
                 actualTileLines.add(e.getMessage());
             }
 
@@ -114,7 +114,7 @@ public class TilingScriptFilesTest {
                     for (Tile<?> tile : bestTilings) {
                         tile.apply(beastState);
                     }
-                } catch (TilingError e) {
+                } catch (TileApplicationError e) {
                     actualApplicationErrorLines.add(e.getMessage());
                 } finally {
                     System.setOut(original);

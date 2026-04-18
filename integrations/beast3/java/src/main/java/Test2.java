@@ -11,8 +11,9 @@ public class Test2 {
          )
          QMatrix qMatrix = jc69()
         
+         Vector<Rate> branchRates ~ StrictClock(clockRate=1.0, tree)
          Alignment alignment ~ PhyloCTMC(
-           tree, qMatrix
+           tree, qMatrix, branchRates
          ) observed as data
         """;
 

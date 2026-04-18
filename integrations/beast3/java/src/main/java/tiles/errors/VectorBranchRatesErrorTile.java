@@ -7,7 +7,7 @@ import beast.base.spec.inference.parameter.RealVectorParam;
 import beastconfig.BEASTState;
 import tiles.TemplateTile;
 import tiling.TilePriority;
-import tiling.TilingError;
+import tiling.TileApplicationError;
 import tiling.UnboundDistribution;
 
 import java.util.List;
@@ -55,7 +55,7 @@ public class VectorBranchRatesErrorTile extends TemplateTile<UnboundDistribution
 
     @Override
     public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState) {
-        throw new TilingError(
+        throw new TileApplicationError(
                 this.rootNode,
                 "Explicit branch rates are not supported.",
                 "Use either 'StrictClock' or 'RelaxedClock' to specify branch rates.",

@@ -6,7 +6,7 @@ import beast.base.parser.NexusParser;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
-import tiling.TilingError;
+import tiling.TileApplicationError;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,20 +36,20 @@ public class FromTreeTile extends GeneratorTile<Tree> {
             try {
                 nexusParser.parseFile(file);
             } catch (IOException e) {
-                throw new TilingError(
+                throw new TileApplicationError(
                         "File not found.",
                         "'" + path + "' could not be found. Does it exist? Select a valid file path."
                 );
             }
 
             if (nexusParser.trees == null || nexusParser.trees.isEmpty()) {
-                throw new TilingError(
+                throw new TileApplicationError(
                         "No tree found.",
                         "The file '" + path + "' contains no trees. Choose a file with exactly one tree to load."
                 );
             }
             if (nexusParser.trees.size() > 1) {
-                throw new TilingError(
+                throw new TileApplicationError(
                         "Too many trees found.",
                         "The file '" + path + "' contains more than one tree. Choose a file with exactly one tree to load."
                 );
@@ -64,7 +64,7 @@ public class FromTreeTile extends GeneratorTile<Tree> {
         try {
             newick = Files.readString(Path.of(path), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new TilingError(
+            throw new TileApplicationError(
                     "File not found.",
                     "'" + path + "' could not be found. Does it exist? Select a valid file path."
             );

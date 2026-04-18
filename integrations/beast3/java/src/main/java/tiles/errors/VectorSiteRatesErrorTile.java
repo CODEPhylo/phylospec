@@ -7,7 +7,7 @@ import beast.base.spec.inference.parameter.RealVectorParam;
 import beastconfig.BEASTState;
 import tiles.TemplateTile;
 import tiling.TilePriority;
-import tiling.TilingError;
+import tiling.TileApplicationError;
 import tiling.UnboundDistribution;
 
 import java.util.List;
@@ -38,7 +38,7 @@ public class VectorSiteRatesErrorTile extends TemplateTile<UnboundDistribution<A
 
     @Override
     public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState) {
-        throw new TilingError(
+        throw new TileApplicationError(
                 this.rootNode,
                 "Explicit site rates are not supported by BEAST 2.8.",
                 "Use 'DiscreteGammaInv' to specify varying site rates, or don't specify any site rates for constant rates.",

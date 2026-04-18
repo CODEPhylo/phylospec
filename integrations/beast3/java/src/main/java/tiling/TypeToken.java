@@ -9,9 +9,29 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/// Captures a full generic type at runtime, working around Java's type erasure.
+///
+/// Java erases generic type parameters at runtime, so {@code List<String>.class} does not
+/// exist and cannot be obtained via normal reflection. The standard workaround is to create an
+/// anonymous subclass whose generic superclass is baked into the bytecode and can be recovered
+/// via {@link Class#getGenericSuperclass()}. This class automates that pattern:
+///
+/// ```java
+/// // captures the full type List<String> at runtime
+/// TypeToken<List<String>> token = new TypeToken<List<String>>() {};
+/// ```
+///
+/// Beyond type capture, this class provides {@link #isAssignableFrom} — a generics-aware
+/// assignability check that {@link Class#isAssignableFrom} cannot perform because it only
+/// operates on raw types.
 public abstract class TypeToken<T> {
     private final Type type;
 
+    /**
+     * Captures the generic type argument {@code T} from the anonymous subclass created by the
+     * caller. Must be invoked as {@code new TypeToken<Foo>() {}} — direct instantiation would
+     * lose the type argument.
+     */
     protected TypeToken() {
         Type superclass = getClass().getGenericSuperclass();
         this.type = ((ParameterizedType) superclass).getActualTypeArguments()[0];
@@ -21,12 +41,18 @@ public abstract class TypeToken<T> {
         this.type = type;
     }
 
-    /** Wraps an existing {@link Type} in a {@code TypeToken}. */
+    /**
+     * Wraps an existing {@link Type} (obtained from reflection) in a {@code TypeToken}.
+     * Use this when you already have a {@link Type} object rather than writing it as a literal.
+     */
     public static TypeToken<?> of(Type type) {
         return new TypeToken<>(type) {};
     }
 
-    /** Constructs a parameterized type at runtime, e.g. {@code parameterized(List.class, String.class)}. */
+    /**
+     * Builds a parameterized type token at runtime, e.g. {@code parameterized(List.class, String.class)}.
+     * Needed when the type arguments are only known at runtime and cannot be written as a literal.
+     */
     public static TypeToken<?> parameterized(Class<?> raw, Type... typeArgs) {
         ParameterizedType pt = new ParameterizedType() {
             @Override public Type[] getActualTypeArguments() { return typeArgs.clone(); }
@@ -49,10 +75,17 @@ public abstract class TypeToken<T> {
         return new TypeToken<>(pt) {};
     }
 
+    /** Returns the underlying {@link Type} represented by this token. */
     public Type getType() {
         return type;
     }
 
+    /**
+     * Returns {@code true} if this type is assignable from {@code other}, including
+     * full generic type argument checking that {@link Class#isAssignableFrom} cannot perform.
+     * For example, {@code TypeToken<List<String>>} is <em>not</em> assignable from
+     * {@code TypeToken<List<Integer>>}, even though raw {@code List} would be.
+     */
     public boolean isAssignableFrom(TypeToken<?> other) {
         return isAssignable(type, other.type);
     }
@@ -69,6 +102,11 @@ public abstract class TypeToken<T> {
         return type.hashCode();
     }
 
+    /**
+     * Core recursive assignability check that handles raw classes, parameterized types,
+     * and wildcards. For parameterized types it walks the source's supertype chain to find
+     * a compatible instantiation of the target's raw type, then checks each type argument.
+     */
     private static boolean isAssignable(Type target, Type source) {
         if (target.equals(source)) return true;
 
@@ -147,6 +185,10 @@ public abstract class TypeToken<T> {
         return null;
     }
 
+    /**
+     * Applies the given type-variable substitution map to {@code type}, replacing any
+     * {@link TypeVariable} occurrences and rebuilding nested {@link ParameterizedType}s as needed.
+     */
     private static Type substituteType(Type type, Map<TypeVariable<?>, Type> subs) {
         if (subs.isEmpty()) return type;
         if (type instanceof TypeVariable<?> tv)
