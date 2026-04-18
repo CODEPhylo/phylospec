@@ -6,11 +6,11 @@ author: "Tobia Ochsner"
 
 # A First Look at the BEAST 2.8 Parser
 
-I've finalized the first version of a proper PhyloSpec parser for BEAST 2.8 🎉. In this post, we look at the main features parser and at what is yet to come.
+The first version of a proper PhyloSpec parser for BEAST 2.8 is done 🎉 (<a href="https://github.com/CODEPhylo/phylospec/pull/30" target="_blank">PR</a>). This post walks through its main features and what is still to come.
 
-The parser takes a PhyloSpec model as an input. It then runs the static type checker and linter to detect common errors. If the model is valid, it builds up a BEAST 2 analysis before BEAST takes over and performs the MCMC analysis.
+The parser takes a PhyloSpec model, runs the static type checker and linter to catch common errors, and — if the model is valid — constructs a full BEAST 2 analysis ready to run. BEAST then takes over and performs the MCMC.
 
-An example of a model which can be run by the parser is the following:
+An example of a model which can be run is the following:
 
 ```phylospec
 Alignment data = fromNexus("primate-mtDNA.nex")
@@ -55,15 +55,15 @@ mcmc {
 
 ## Supported PhyloSpec Features
 
-Right now, 48 out of 76 core components are at least partially supported by the parser (check out the [current status](../beast28-support) for more details). Most of the missing components (like `mk` or `PhyloOU`) are not implemented in beast-core and only work once we add support for external BEAST packages.
+48 out of 76 core components are at least partially supported (see the [current status](../beast28-support) for the full picture). Most of the gaps — `mk`, `PhyloOU`, and similar — have no equivalent in BEAST core and will only be unlocked once external package support is added.
 
-Some components are only partially supported. The `exp(x)` function, for instance, can only be used when `x` is a non-stochastic expression or for logging purposes. This is simply because there is no BEAST `StateNode` implementing the exponential function.
+A handful of components are only partially supported. `exp(x)`, for instance, works only when `x` is a constant or deterministic expression, or when used inside a logger. There is simply no BEAST `StateNode` that implements the exponential function.
 
-On the language side, indexed statements (like Real x[i] = f(i) for i in 1:10), matrix literals, and index accessors are not yet handled.
+On the language side, indexed statements (like `Real x[i] = f(i) for i in 1:10`), matrix literals, and index accessors are not yet handled.
 
 ## Flexibility
 
-Internally, the parser works using a flexible pattern-matching framwork. This means that the following snippets are all equivalent and produce the same BEAST objects:
+Internally, the parser uses a flexible pattern-matching framework, so the same model can be written in many equivalent ways. The following three snippets all produce identical BEAST objects:
 
 ```phylospec
 Alignment alignment ~ PhyloCTMC(
@@ -93,7 +93,7 @@ Alignment alignment ~ PhyloCTMC(
 
 ## Loggers
 
-By default, a screen logger, a file logger, and a tree logger are created. Every variable and every inline drawn random variable is logged:
+By default, the parser creates a screen logger, a file logger, and a tree logger. Every named variable and every inline random variable is included automatically:
 
 ```phylospec
 Rate birthRate ~ LogNormal(logMean=1.0, logSd=0.5)
@@ -106,7 +106,7 @@ Real halfRootAge = rootAge(tree) / 2
 // birthRate, logBirthRate, tree, and halfRootAge are logged
 ```
 
-One can use the `mcmc` block to customize the loggers used:
+To override the defaults, use the `mcmc` block:
 
 ```phylospec
 mcmc {
@@ -125,13 +125,13 @@ mcmc {
 
 ## Operator Selection
 
-Currently, the operators are automatically set based on the types of random variables. There are also some rules implemented for operators operating on multiple elements. One example is an `UpDownOperator` on the tree and clock rate.
+Operators are selected automatically based on the state node types. A few multi-variable rules are also applied — for example, an `UpDownOperator` is added whenever there is both a tree and a clock rate coming together in a `PhyloCMTC` distribution.
 
-In a coming version, it will be possible to control the operators used in a `beast28` block of a PhyloSpec model.
+A future version will allow operators to be configured explicitly via a `beast28` block.
 
 ## Errors
 
-I focused on really helpful error messages that give useful hints on how to solve the problem. Some example error messages are the following:
+A lot of effort went into making error messages actionable. Here are a few examples:
 
 _Wrong argument names:_
 
@@ -149,16 +149,17 @@ _Instantiation errors:_
 
 <img src="/errors4.png" class="w-10/10" alt="Screenshot of error message examples" />
 
-Here, `invalid.newick` does not contain a valid tree. Whenever an error is raised by BEAST itself, the causing PhyloSpec lines are highlighted, but the underlying error is still reported back.
+In the last example, `invalid.newick` does not contain a valid tree. When BEAST itself raises an error, the parser traces it back to the relevant PhyloSpec lines while still surfacing the underlying message.
 
-As a side effect, good errors will also improve the experience when building up models using agents.
+As a side effect, precise errors also make the parser much more useful when building models with an AI agent.
 
 ## Implementation
 
 
-I will describe the algorithm used by the parser in a follow-up post. However, the parser is based on over 70 small Java classes called _tiles_. Every tile describes how a part of a PhyloSpec model is converted into BEAST objects.
+A follow-up post will go into the algorithm in detail. In short, the parser is built from over 70 small Java classes called _tiles_, each responsible for mapping one fragment of a PhyloSpec model onto the corresponding BEAST objects.
 
-As an example, there are two tiles handling the `exp` function. The first uses the `RPNCalculator` and is relevant for logged objects. The second tile is more versatile and can handle any non-stochastic input. The Java class of the latter looks as follows:
+As a concrete example, there are two tiles for the `exp` function. One wraps BEAST's `RPNCalculator` and is used when the result needs to be logged. The other handles any non-stochastic input more directly:
+
 
 ```java
 public class ExpTile extends GeneratorTile<RealScalarParam<PositiveReal>> {
@@ -179,8 +180,8 @@ public class ExpTile extends GeneratorTile<RealScalarParam<PositiveReal>> {
 }
 ```
 
-The parsing algorithm automatically chooses the right tiles used to build up the BEAST objects.
+The algorithm automatically selects and assembles the right tiles for any given model.
 
 ## Next Steps
 
-The most impactful near-term addition is support for external BEAST packages, which would immediately unlock components like `SkylineCoalescent`, `FossilizedBirthDeath`, and `mk`. After that, the plan is to add a `beast28` block to PhyloSpec models so users can configure operators directly, and to extend the language support to cover indexed statements and matrix literals. On the testing side, a suite that validates the constructed BEAST DAG against hand-crafted XMLs will be essential before the parser can be considered production-ready.
+One important addition is external package support, which would immediately unlock components like `FossilizedBirthDeath` and `mk`. Other planned features include a `beast28` block for configuring operators directly, filling in the remaining language gaps (indexed statements, matrix literals), and building a validation suite that compares the constructed BEAST DAG against hand-crafted XMLs. The parser will also be integrated into <a href="https://github.com/tochsner/phylorun" target="_blank">phylorun</a>, making it possible to run PhyloSpec models from the command line without any manual setup.
