@@ -6,7 +6,7 @@ Tree tree ~ Yule(
 
 Alignment alignment ~ PhyloCTMC(
   tree,
-  branchRates~StrictClock(rate=1.0, tree),
+  branchRates~StrictClock(clockRate=1.0, tree),
   qMatrix=hky(
     kappa~LogNormal(logMean=1.0, logSd=0.5),
     baseFrequencies~Dirichlet(repeat(1.0, num=4))

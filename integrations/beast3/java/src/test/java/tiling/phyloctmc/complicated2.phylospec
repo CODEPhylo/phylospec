@@ -6,7 +6,7 @@ Tree tree ~ Yule(
 
 Alignment alignment ~ PhyloCTMC(
   tree,
-  branchRates~StrictClock(rate=1.0, tree),
+  branchRates~StrictClock(clockRate=1.0, tree),
   qMatrix=jc69(),
   siteRates~DiscreteGammaInv(
     shape=1.0, numCategories=4, numSites=100

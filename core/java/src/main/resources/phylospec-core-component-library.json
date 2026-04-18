@@ -1831,7 +1831,7 @@
         "description": "Strict clock model for branch rates",
         "arguments": [
           {
-            "name": "rate",
+            "name": "clockRate",
             "type": "Rate",
             "description": "The base rate",
             "required": false,

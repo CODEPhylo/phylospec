@@ -14,7 +14,7 @@ public class StrictClockTile extends GeneratorTile<StrictClockModel> {
         return "StrictClock";
     }
 
-    GeneratorTileInput<RealScalar<PositiveReal>> rateInput = new GeneratorTileInput<>("rate");
+    GeneratorTileInput<RealScalar<PositiveReal>> rateInput = new GeneratorTileInput<>("clockRate");
     GeneratorTileInput<Tree> treeInput = new GeneratorTileInput<>("tree");
 
     @Override
