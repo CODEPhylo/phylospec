@@ -8,6 +8,8 @@ import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.*;
 
 public abstract class Tile<T> {
@@ -33,11 +35,13 @@ public abstract class Tile<T> {
      * determined at compile-time, a custom tile has to override this method.
      */
     public TypeToken<?> getTypeToken() {
-        java.lang.reflect.Type rawType = TileUtils.getParametricType(this, 0);
-        if (rawType == null) {
+        // parse the type parameter T
+        Type superclass = this.getClass().getGenericSuperclass();
+        if (superclass instanceof ParameterizedType pt) {
+            return TypeToken.of(pt.getActualTypeArguments()[0]);
+        } else {
             throw new IllegalArgumentException("Tile " + this.getClass() + " has no return type parameter. Either specify the type in the type signature of the inheriting class, or override the getTypeToken method.");
         }
-        return TypeToken.of(rawType);
     }
 
     /**
