@@ -13,7 +13,7 @@ import tiling.Tile;
 
 import java.util.*;
 
-public class ListVectorTile<T> extends AstNodeTile<List<BEASTObject>, Expr.Array> {
+public class ListVectorTile<T> extends AstNodeTile<List<Object>, Expr.Array> {
 
     private final List<Tile<?>> inputTiles;
 
@@ -57,11 +57,11 @@ public class ListVectorTile<T> extends AstNodeTile<List<BEASTObject>, Expr.Array
     }
 
     @Override
-    public List<BEASTObject> applyTile(BEASTState beastState) {
-        List<BEASTObject> list = new ArrayList<>();
+    public List<Object> applyTile(BEASTState beastState) {
+        List<Object> list = new ArrayList<>();
 
         for (Tile<?> tile : inputTiles) {
-            list.add(beastState.addBEASTObject(tile.apply(beastState)));
+            list.add(tile.apply(beastState));
         }
 
         return list;

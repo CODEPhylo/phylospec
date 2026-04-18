@@ -53,7 +53,7 @@ public record RPNCalculationResult(String calculation, List<Tensor> inputs, List
         BEASTInterface rightBeastObject = (BEASTInterface) right;
 
         if (rightBeastObject.getID() == null) {
-            rightBeastObject.setID(beastState.getID("var"));
+            rightBeastObject.setID(beastState.getAvailableID("var"));
         }
 
         String name = rightBeastObject.getID();

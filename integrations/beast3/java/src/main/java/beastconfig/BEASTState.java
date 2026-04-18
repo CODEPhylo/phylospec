@@ -14,21 +14,23 @@ import java.util.*;
 public class BEASTState {
 
     public final String runName;
+    public long chainLength = 10_00_000;
+
+    private final List<BEASTObject> beastObjects;
+    private final Set<BEASTObject> initializedBeastObjects;
+    private final Set<String> ids;
 
     public final HashMap<StateNode, TypeToken<?>> stateNodes;
     public final HashMap<CalculationNode, TypeToken<?>> calculationNodes;
+
     public final HashMap<StateNode, Distribution> priorDistributions;
     public final HashMap<StateNode, Distribution> likelihoodDistributions;
-    public final HashMap<Operator, Set<StateNode>> operators;
-    private final List<BEASTObject> beastObjects;
-    private final Set<BEASTObject> initializedBeastObjects;
 
-    public long chainLength = 10_00_000;
+    public final HashMap<Operator, Set<StateNode>> operators;
+
     public final List<beast.base.inference.Logger> screenLoggers;
     public final List<beast.base.inference.Logger> fileLoggers;
     public final List<beast.base.inference.Logger> treeLoggers;
-
-    private final Set<String> ids;
 
     /**
      * Creates a new BEAST state with the given run name.
@@ -51,7 +53,7 @@ public class BEASTState {
     /**
      * Gets the next available ID based on the proposed ID.
      */
-    public String getID(String proposal) {
+    public String getAvailableID(String proposal) {
         if (!this.ids.contains(proposal)) {
             this.ids.add(proposal);
             return proposal;
@@ -70,7 +72,7 @@ public class BEASTState {
     /**
      * Adds a new object to the BEAST object store and wraps it into a VirtualBEASTObject if necessary.
      */
-    public BEASTObject addBEASTObject(Object object) {
+    private BEASTObject addBEASTObject(Object object) {
         BEASTObject beastObject = BEASTObjectStore.INSTANCE.getBEASTObject(object);
         this.beastObjects.add(beastObject);
         return beastObject;
@@ -101,7 +103,7 @@ public class BEASTState {
         // set id
         if (beastObject.getID() != null && value instanceof BEASTObject beastValue && beastValue.getID() == null) {
             String valueId = beastObject.getID() + "_" + input.getName();
-            beastValue.setID(this.getID(valueId));
+            beastValue.setID(this.getAvailableID(valueId));
         }
 
         // add beast object to outputs of input
@@ -116,7 +118,7 @@ public class BEASTState {
      * Adds a given state node to the BEAST state.
      */
     public void addStateNode(StateNode stateNode, TypeToken<?> typeToken, String id) {
-        stateNode.setID(this.getID(id));
+        stateNode.setID(this.getAvailableID(id));
         this.addBEASTObject(stateNode);
         this.stateNodes.put(stateNode, typeToken);
     }
@@ -125,7 +127,7 @@ public class BEASTState {
      * Adds a given calculation node to the BEAST state.
      */
     public void addCalculationNode(CalculationNode calculationNode, TypeToken<?> typeToken, String id) {
-        calculationNode.setID(this.getID(id));
+        calculationNode.setID(this.getAvailableID(id));
         this.addBEASTObject(calculationNode);
         this.calculationNodes.put(calculationNode, typeToken);
     }
@@ -134,7 +136,7 @@ public class BEASTState {
      * Adds a given prior distribution to the BEAST state.
      */
     public void addPriorDistribution(StateNode stateNode, Distribution distribution, String id) {
-        distribution.setID(this.getID(id));
+        distribution.setID(this.getAvailableID(id));
         this.addBEASTObject(stateNode);
         this.addBEASTObject(distribution);
         this.priorDistributions.put(stateNode, distribution);
@@ -144,7 +146,7 @@ public class BEASTState {
      * Adds a given likelihood to the BEAST state.
      */
     public void addLikelihoodDistribution(StateNode stateNode, Distribution distribution, String id) {
-        distribution.setID(this.getID(id));
+        distribution.setID(this.getAvailableID(id));
         this.addBEASTObject(stateNode);
         this.addBEASTObject(distribution);
         this.likelihoodDistributions.put(stateNode, distribution);
