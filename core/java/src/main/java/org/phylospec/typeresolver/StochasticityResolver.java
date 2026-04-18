@@ -52,36 +52,40 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
 
     @Override
     public Stochasticity visitIndexedStmt(Stmt.Indexed indexed) {
+        Stochasticity stochasticity = Stochasticity.DETERMINISTIC;
+
         for (Expr range : indexed.ranges) {
-            range.accept(this);
+            stochasticity = Stochasticity.merge(range.accept(this), stochasticity);
         }
 
         this.scopedIndexVariables.clear();
         for (Expr.Variable index : indexed.indices) {
             this.scopedIndexVariables.add(index.variableName);
-            index.accept(this);
+            stochasticity = Stochasticity.merge(index.accept(this), stochasticity);
         }
 
-        Stochasticity expressionStochasticity = indexed.statement.accept(this);
+        stochasticity = Stochasticity.merge(indexed.statement.accept(this), stochasticity);
 
         this.scopedIndexVariables.clear();
 
-        return remember(indexed, expressionStochasticity);
+        return remember(indexed, stochasticity);
     }
 
     @Override
     public Stochasticity visitObservedAsStmt(Stmt.ObservedAs observedAs) {
-        Stochasticity stmtStochasticity = observedAs.stmt.accept(this);
-        observedAs.observedAs.accept(this);
-        return remember(observedAs, stmtStochasticity);
+        observedAs.stmt.accept(this);
+        Stochasticity stochasticity = observedAs.observedAs.accept(this);
+        return remember(observedAs, stochasticity);
     }
 
     @Override
     public Stochasticity visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
-        Stochasticity stmtStochasticity = observedBetween.stmt.accept(this);
-        observedBetween.observedFrom.accept(this);
-        observedBetween.observedTo.accept(this);
-        return remember(observedBetween, stmtStochasticity);
+        observedBetween.stmt.accept(this);
+        Stochasticity stochasticity = Stochasticity.merge(
+            observedBetween.observedFrom.accept(this),
+            observedBetween.observedTo.accept(this)
+        );
+        return remember(observedBetween, stochasticity);
     }
 
     @Override
@@ -117,12 +121,12 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
 
     @Override
     public Stochasticity visitTemplateVariable(Expr.TemplateVariable expr) {
-        return remember(expr, Stochasticity.DETERMINISTIC);
+        return remember(expr, Stochasticity.CONSTANT);
     }
 
     @Override
     public Stochasticity visitOptionalTemplateVariable(Expr.OptionalTemplateVariable expr) {
-        return remember(expr, Stochasticity.DETERMINISTIC);
+        return remember(expr, Stochasticity.CONSTANT);
     }
 
     @Override
