@@ -59,7 +59,7 @@ Right now, 48 out of 76 core components are at least partially supported by the 
 
 Some components are only partially supported. The `exp(x)` function, for instance, can only be used when `x` is a non-stochastic expression or for logging purposes. This is simply because there is no BEAST `StateNode` implementing the exponential function.
 
-On a language level, we support every PhyloSpec feature except indexed expressions (like `Integer x[i] = i for i in 1:10`).
+On the language side, indexed statements (like Real x[i] = f(i) for i in 1:10), matrix literals, and index accessors are not yet handled.
 
 ## Flexibility
 
@@ -155,6 +155,7 @@ As a side effect, good errors will also improve the experience when building up 
 
 ## Implementation
 
+
 I will describe the algorithm used by the parser in a follow-up post. However, the parser is based on over 70 small Java classes called _tiles_. Every tile describes how a part of a PhyloSpec model is converted into BEAST objects.
 
 As an example, there are two tiles handling the `exp` function. The first uses the `RPNCalculator` and is relevant for logged objects. The second tile is more versatile and can handle any non-stochastic input. The Java class of the latter looks as follows:
@@ -180,5 +181,6 @@ public class ExpTile extends GeneratorTile<RealScalarParam<PositiveReal>> {
 
 The parsing algorithm automatically chooses the right tiles used to build up the BEAST objects.
 
-## Limitations
+## Next Steps
 
+The most impactful near-term addition is support for external BEAST packages, which would immediately unlock components like `SkylineCoalescent`, `FossilizedBirthDeath`, and `mk`. After that, the plan is to add a `beast28` block to PhyloSpec models so users can configure operators directly, and to extend the language support to cover indexed statements and matrix literals. On the testing side, a suite that validates the constructed BEAST DAG against hand-crafted XMLs will be essential before the parser can be considered production-ready.
