@@ -16,9 +16,9 @@ import java.util.*;
 ///
 /// Usage:
 /// ```
-/// AstTemplateMatcher matcher = new AstTemplateMatcher("Real $x ~ Normal(mean=$mu, sd=$sigma)");
+/// AstTemplateMatcher matcher = new AstTemplateMatcher("Real x ~ Normal(mean=$mu, sd=$sigma)");
 /// Map<String, AstNode> bindings = matcher.match(queryNode, queryVariableResolver);
-/// // bindings maps "$x" -> ..., "$mu" -> ..., "$sigma" -> ...
+/// // bindings maps "$mu" -> ..., "$sigma" -> ...
 /// ```
 public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
@@ -106,6 +106,11 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             templateVariable.accept(this);
             return;
         }
+        if (template instanceof Expr.OptionalTemplateVariable templateVariable) {
+            this.currentQueryNode = query;
+            templateVariable.accept(this);
+            return;
+        }
 
         query = this.potentiallyPassThrough(query, this.queryVariableResolver);
         template = this.potentiallyPassThrough(template, templateVariableResolver);
@@ -170,6 +175,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             return this.potentiallyPassThrough(assignment.expression, variableResolver);
         }
 
+        // we don't pass through draws, observations, or decorated statements, because they have semantic meaning
+
         return node;
     }
 
@@ -216,6 +223,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         if (!(this.currentQueryNode instanceof Stmt.Draw queryStmt)) {
             throw new MatchingError();
         }
+
+        // we can ignore the variable name, as we only care about the expression
 
         this.match(stmt.type, queryStmt.type);
         this.match(stmt.expression, queryStmt.expression);
@@ -299,7 +308,13 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             throw new MatchingError();
         }
 
-        this.check(expr.value.equals(queryLiteral.value));
+        if (expr.value instanceof Number na && queryLiteral.value instanceof Number nb) {
+            // this is a number and could be an int or a double. we treat 1 == 1.0
+            this.check(Double.compare(na.doubleValue(), nb.doubleValue()) == 0);
+        } else {
+            this.check(expr.value.equals(queryLiteral.value));
+        }
+
 
         if (expr.unit != Unit.IMPLICIT) {
             throw new RuntimeException("Template has explicit units, which is not supported.");
@@ -310,30 +325,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitStringTemplate(Expr.StringTemplate expr) {
-        if (!(this.currentQueryNode instanceof Expr.StringTemplate queryTemplate)) {
-            throw new MatchingError();
-        }
-
-        this.check(expr.parts.size() == queryTemplate.parts.size());
-
-        for (int i = 0; i < expr.parts.size(); i++) {
-            Expr.StringTemplate.Part templatePart = expr.parts.get(i);
-            Expr.StringTemplate.Part queryPart = queryTemplate.parts.get(i);
-
-            if (templatePart instanceof Expr.StringTemplate.StringPart(String value)) {
-                this.check(
-                        queryPart instanceof Expr.StringTemplate.StringPart(String value1) && value.equals(value1)
-                );
-            } else if (templatePart instanceof Expr.StringTemplate.ExpressionPart(Expr.Variable expression)) {
-                this.check(queryPart instanceof Expr.StringTemplate.ExpressionPart);
-                this.match(
-                        expression,
-                        ((Expr.StringTemplate.ExpressionPart) queryPart).expression()
-                );
-            }
-        }
-
-        return null;
+        throw new RuntimeException("String templates are not supported in PhyloSpec templates.");
     }
 
     @Override
@@ -354,7 +346,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitTemplateVariable(Expr.TemplateVariable expr) {
-        // template variables this.match any expression and capture the query node
+        // template variables match any expression and capture the query node
 
         // if we have already encountered this template variable, it must have been resolved to the same AST node
 
@@ -380,7 +372,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitOptionalTemplateVariable(Expr.OptionalTemplateVariable expr) {
-        // optional template variables this.match any expression and capture the query node
+        // optional template variables match any expression and capture the query node
 
         // if we have already encountered this template variable, it must have been resolved to the same AST node
 
@@ -572,11 +564,6 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
                 throw new MatchingError();
             }
 
-            this.check(
-                    Objects.equals(expr.name, assignedQueryArg.name) ||
-                            assignedQueryArg.name == null && Objects.equals(expr.name, queryVar.variableName)
-            );
-
             AstNode resolvedQueryStmt = this.potentiallyPassThrough(queryVar, this.queryVariableResolver);
             if (resolvedQueryStmt == null) {
                 throw new MatchingError();
@@ -595,7 +582,9 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             throw new MatchingError();
         }
 
-        this.check(Objects.equals(expr.name, queryArg.name));
+        // we don't have to check the argument name as visitCall takes care of that
+        // just check the expression
+
         this.match(expr.expression, queryArg.expression);
 
         return null;
@@ -669,7 +658,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             throw new MatchingError();
         }
 
-        this.check(expr.name.equals(queryGeneric.name));
+        this.check(expr.name.equals(queryGeneric.name) || expr.name.equals("Any"));
         this.check(expr.typeParameters.length == queryGeneric.typeParameters.length);
 
         for (int i = 0; i < expr.typeParameters.length; i++) {
