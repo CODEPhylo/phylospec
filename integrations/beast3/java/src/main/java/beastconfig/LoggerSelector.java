@@ -5,6 +5,7 @@ import beast.base.core.Loggable;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeStatLogger;
 import beast.base.inference.CompoundDistribution;
+import beast.base.inference.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +32,8 @@ public class LoggerSelector {
             beast.base.inference.Logger screenLogger = new beast.base.inference.Logger();
             beastState.setInput(screenLogger, screenLogger.everyInput, 1000);
             beastState.setInput(screenLogger, screenLogger.loggersInput, loggableObjects);
+            beastState.setInput(screenLogger, screenLogger.sortModeInput, Logger.SORTMODE.smart);
+            beastState.setInput(screenLogger, screenLogger.sanitiseHeadersInput, true);
             beastState.addScreenLogger(screenLogger);
         }
         if (beastState.fileLoggers.isEmpty()) {
@@ -38,18 +41,24 @@ public class LoggerSelector {
             beastState.setInput(fileLogger, fileLogger.fileNameInput, beastState.runName + ".log");
             beastState.setInput(fileLogger, fileLogger.everyInput, 1000);
             beastState.setInput(fileLogger, fileLogger.loggersInput, loggableObjects);
-            beastState.addScreenLogger(fileLogger);
+            beastState.addFileLogger(fileLogger);
         }
 
         List<BEASTObject> loggableTrees = getLoggableTrees(beastState);
 
         if (!loggableTrees.isEmpty() && beastState.treeLoggers.isEmpty()) {
-            beast.base.inference.Logger treeLogger = new beast.base.inference.Logger();
-            beastState.setInput(treeLogger, treeLogger.modeInput, beast.base.inference.Logger.LOGMODE.tree);
-            beastState.setInput(treeLogger, treeLogger.fileNameInput, beastState.runName + ".trees");
-            beastState.setInput(treeLogger, treeLogger.everyInput, 1000);
-            beastState.setInput(treeLogger, treeLogger.loggersInput, loggableTrees);
-            beastState.addScreenLogger(treeLogger);
+            for (BEASTObject tree : loggableTrees) {
+                beast.base.inference.Logger treeLogger = new beast.base.inference.Logger();
+
+                String name = loggableTrees.size() == 1 ? "" : "-" + tree.getID();
+                beastState.setInput(treeLogger, treeLogger.fileNameInput, beastState.runName + name + ".trees");
+
+                beastState.setInput(treeLogger, treeLogger.modeInput, beast.base.inference.Logger.LOGMODE.tree);
+                beastState.setInput(treeLogger, treeLogger.everyInput, 1000);
+                beastState.setInput(treeLogger, treeLogger.loggersInput, List.of(tree));
+
+                beastState.addTreeLogger(treeLogger);
+            }
         }
     }
 

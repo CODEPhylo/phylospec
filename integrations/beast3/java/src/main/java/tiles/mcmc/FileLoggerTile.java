@@ -48,6 +48,8 @@ public class FileLoggerTile extends TemplateTile<Void> {
         beastState.setInput(logger, logger.everyInput, logEvery);
         beastState.setInput(logger, logger.fileNameInput, fileName);
         beastState.setInput(logger, logger.loggersInput, parameters);
+        beastState.setInput(logger, logger.sanitiseHeadersInput, true);
+        beastState.setInput(logger, logger.sortModeInput, Logger.SORTMODE.smart);
         beastState.addFileLogger(logger);
 
         return null;
