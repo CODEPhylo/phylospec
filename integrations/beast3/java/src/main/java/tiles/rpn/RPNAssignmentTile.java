@@ -1,4 +1,4 @@
-package tiles.binary;
+package tiles.rpn;
 
 import beast.base.spec.inference.util.RPNcalculator;
 import beastconfig.BEASTState;

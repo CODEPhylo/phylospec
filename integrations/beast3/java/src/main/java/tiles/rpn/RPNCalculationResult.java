@@ -1,4 +1,4 @@
-package tiles.binary;
+package tiles.rpn;
 
 import beast.base.core.BEASTInterface;
 import beast.base.spec.type.Tensor;
@@ -35,7 +35,7 @@ public record RPNCalculationResult(String calculation, List<Tensor> inputs, List
         return new RPNCalculationResult(calculation, inputs, names);
     }
 
-    public static RPNCalculationResult combineUnary(TokenType operand, RPNCalculationResult right) {
+    public static RPNCalculationResult combineUnary(String operand, RPNCalculationResult right) {
         // add right operand
 
         String calculation = right.calculation;;
@@ -44,7 +44,7 @@ public record RPNCalculationResult(String calculation, List<Tensor> inputs, List
 
         // add operation
 
-        calculation += " " + TokenType.getLexeme(operand);
+        calculation += " " + operand;
 
         return new RPNCalculationResult(calculation, inputs, names);
     }

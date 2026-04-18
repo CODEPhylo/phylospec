@@ -20,6 +20,11 @@ public class Test2 {
          Alignment alignment ~ PhyloCTMC(
            tree, qMatrix, branchRates
          ) observed as data
+         Real x ~ Normal(1.0, sd=2.0)
+         Real y ~ Normal(mean=x, sd=2.0) observed as 1.0
+         PositiveReal a = 1.0 + exp(2 * x + log(5.0))
+         Real b = log(a) + 2
+
         """;
 
         PhyloSpecRunner parser = new PhyloSpecRunner(source);

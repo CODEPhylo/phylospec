@@ -1,4 +1,4 @@
-package tiles.binary;
+package tiles.rpn;
 
 import beast.base.spec.type.Tensor;
 import beastconfig.BEASTState;

@@ -1,7 +1,9 @@
 package tiles;
 
-import tiles.binary.BinaryTile;
-import tiles.binary.RPNAssignmentTile;
+import tiles.rpn.BinaryTile;
+import tiles.rpn.ExpRPNTile;
+import tiles.rpn.LogRPNTile;
+import tiles.rpn.RPNAssignmentTile;
 import tiles.branchmodels.*;
 import tiles.errors.*;
 import tiles.functions.*;
@@ -42,6 +44,10 @@ public class TileLibrary {
         addTile(new BinaryTile.RpnReal());
         addTile(new BinaryTile.RealRpn());
         addTile(new BinaryTile.RealReal());
+        addTile(new LogRPNTile.Real());
+        addTile(new LogRPNTile.Rpn());
+        addTile(new ExpRPNTile.Real());
+        addTile(new ExpRPNTile.Rpn());
         addTile(new RPNAssignmentTile());
 
         addTile(new EnvTile());
