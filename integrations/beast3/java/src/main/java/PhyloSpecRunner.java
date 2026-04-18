@@ -29,15 +29,28 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/// Top-level entry point for running a PhyloSpec model against BEAST 3.
+///
+/// Orchestrates the full pipeline: lexing and parsing the source, simplifying the AST,
+/// resolving variables and types, applying tiles to build a BEAST object graph, assembling
+/// the MCMC run (state, distributions, operators, loggers), and finally executing it.
 public class PhyloSpecRunner implements ErrorEventListener {
 
     private final String source;
 
+    /**
+     * Constructs a runner for the given PhyloSpec source code.
+     */
     public PhyloSpecRunner(String source) {
         this.source = source;
     }
 
-    public void runPhyloSpec(String runName) {
+    /**
+     * Runs the full PhyloSpec-to-BEAST pipeline for the given run name.
+     * Any error detected during lexing, parsing, type resolution, or tiling is reported
+     * via {@link #errorDetected} and terminates the process immediately.
+     */
+    public void runPhyloSpec(String runName) throws IOException, ParserConfigurationException, SAXException {
         ComponentResolver componentResolver = loadComponentResolver();
 
         // run lexer
@@ -130,15 +143,13 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         beastState.initializeBEASTObjects();
 
-        try {
-            mcmc.run();
-        } catch (IOException | SAXException | ParserConfigurationException e) {
-            throw new RuntimeException(e);
-        }
-
-        System.out.println("Cool");
+        mcmc.run();
     }
 
+    /**
+     * Loads the core component libraries (built-in types and generators) and returns a
+     * resolver backed by them.
+     */
     private static ComponentResolver loadComponentResolver() {
         try {
             List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
@@ -148,6 +159,9 @@ public class PhyloSpecRunner implements ErrorEventListener {
         }
     }
 
+    /**
+     * Prints the error to standard output and exits the process.
+     */
     @Override
     public void errorDetected(Error error) {
         System.out.println(error.toStdOutString(this.source));

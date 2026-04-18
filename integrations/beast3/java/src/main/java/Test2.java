@@ -1,6 +1,11 @@
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+
 public class Test2 {
 
-    static void main(String[] args) {
+    static void main(String[] args) throws IOException, ParserConfigurationException, SAXException {
         String source = """
         Alignment data = fromNexus(
              "/Users/ochsneto/Documents/PhyloSpec/beast3/beast-base/src/test/resources/beast.base/examples/nexus/primate-mtDNA.nex"
