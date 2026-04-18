@@ -17,13 +17,12 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     private final List<Tile<?>> tiles;
     private final List<Tile<?>> operatorTiles;
 
-    private List<Stmt> queryStatements;
     private List<Tile<?>> bestTiles;
 
-    // memoisation caches: all candidates per node, and the single best candidate per node
     private final IdentityHashMap<AstNode, Set<Tile<?>>> evaluatedTiles;
     private final IdentityHashMap<AstNode, Tile<?>> bestEvaluatedTiles;
     private final List<Tile<?>> matchedOperatorTiles;
+
     private final VariableResolver variableResolver;
     private final StochasticityResolver stochasticityResolver;
 
@@ -61,8 +60,6 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
      * @return one best tile per unconsumed statement, in source order
      */
     public List<Tile<?>> getBestTiling(List<Stmt> statements) {
-        this.queryStatements = statements;
-
         // we start with the last statements and go backwards
 
         List<Tile<?>> bestTiles = new ArrayList<>();
@@ -97,6 +94,7 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         }
 
         // perform operator tiling
+        // TODO this is wrong right now, as the operator tiles might use inputs which do not belong to the best tiling
 
         for (Tile<?> operatorTile : this.matchedOperatorTiles) {
             operatorTile.applyTile(beastState);
@@ -142,6 +140,8 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
             }
 
             this.evaluatedTiles.get(node).addAll(evaluatedTiles);
+
+            // find the matching tile with the lowest weight
 
             for (Tile<?> evaluatedTile : evaluatedTiles) {
                 if (evaluatedTile.getWeight() < lowestWeight) {
@@ -201,6 +201,7 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         List<FailedTilingAttempt> failures = this.allFailures.get(node);
 
         if (failures == null && node instanceof Expr.Variable nodeVar) {
+            // we check if there are failures when tiling the definition statement
             Stmt definition = this.variableResolver.resolveVariable(nodeVar);
             failures = this.allFailures.get(definition);
         }
@@ -250,6 +251,7 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         List<FailedTilingAttempt> failures = this.allFailures.get(node);
 
         if (failures == null && node instanceof Expr.Variable nodeVar) {
+            // we check if there are failures when tiling the definition statement
             Stmt definition = this.variableResolver.resolveVariable(nodeVar);
             failures = this.allFailures.get(definition);
         }
