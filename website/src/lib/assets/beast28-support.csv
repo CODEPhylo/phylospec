@@ -1,0 +1,77 @@
+generator,beast28_support,limitations
+log,2,non-stochastic input only or for logging
+exp,2,non-stochastic input only or for logging
+sqrt,2,non-stochastic input only
+linspace,2,all arguments must be non-stochastic
+range,2,all arguments must be non-stochastic
+repeat,2,value must be non-stochastic
+fromNexus,3,
+fromFasta,1,
+fromTree,3,
+fromCSV,1,
+traitsFromTaxa,1,
+env,3,
+fromNewick,3,
+parse,3,
+taxa,2,tree overload not supported
+taxon,1,
+subset,2,position bounds must be non-stochastic
+numBranches,3,
+numTaxa,3,
+numSites,2,sequence overload not supported
+num,2,non-stochastic vectors only
+rootAge,3,
+age,1,
+mrca,1,
+numRows,3,
+numCols,3,
+sum,1,
+name,1,
+species,1,
+IID,1,dependent on <a href="https://github.com/CompEvol/beast3/issues/64">this issue</a>
+Mixture,1,dependent on <a href="https://github.com/CompEvol/beast3/issues/64">this issue</a>
+Truncated,1,dependent on <a href="https://github.com/CompEvol/beast3/issues/64">this issue</a>
+Offset,2,offset value must be non-stochastic
+Normal,3,
+LogNormal,3,
+Gamma,3,
+DiscreteGamma,1,
+Beta,3,
+Exponential,3,
+Uniform,3,
+DiscreteUniform,3,
+Cauchy,3,
+Dirichlet,3,
+MultivariateNormal,1,
+Bernoulli,1,
+Categorical,1,
+Binomial,1,
+Multinomial,1,
+Geometric,1,
+Poisson,3,
+ExponentialMarkovChain,2,numValues must be non-stochastic
+Yule,3,
+BirthDeath,2,only diversificationRate / turnover parameterization supported
+Coalescent,3,
+SkylineCoalescent,1,
+FossilizedBirthDeath,1,
+PhyloCTMC,3,
+PhyloBM,1,
+PhyloOU,1,
+StrictClock,3,
+RelaxedClock,3
+DiscreteGammaInv,3,
+jc69,3,
+k80,3,
+f81,3,
+hky,3,
+gtr,3,
+wag,3,
+jtt,3,
+lg,1,
+gy94,1,
+mk,1,
+constantPopulationFunction,3,
+exponentialPopulationFunction,3,
+logisticPopulationFunction,1,
+compoundPopulationFunction,1,
