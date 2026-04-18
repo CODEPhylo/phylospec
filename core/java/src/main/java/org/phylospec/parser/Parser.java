@@ -140,7 +140,9 @@ public class Parser {
                 } else if (isBlockEnd()) {
                     parseBlockEnd();
                 } else {
+                    // store the current state such that we can recover if this is not a complete statement
                     int oldCurrent = current;
+                    int oldStackSize = astNodeStartPositions.size();
 
                     try {
                         Stmt stmt = importRule();
@@ -148,7 +150,12 @@ public class Parser {
                         expressions.add(stmt);
                     } catch (Error e) {
                         // we try to parse an expression instead
+
                         current = oldCurrent;
+                        while (astNodeStartPositions.size() > oldStackSize) {
+                            astNodeStartPositions.pop();
+                        }
+
                         Expr expr = expression();
                         expressions.add(expr);
                     }

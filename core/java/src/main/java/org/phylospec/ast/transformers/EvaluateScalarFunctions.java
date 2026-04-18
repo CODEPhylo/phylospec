@@ -26,8 +26,7 @@ public class EvaluateScalarFunctions extends AstTransformer {
                 );
                 default -> super.visitCall(expr);
             };
-        } catch (
-                UnpackError e) {
+        } catch (UnpackError e) {
             return super.visitCall(expr);
         }
     }
