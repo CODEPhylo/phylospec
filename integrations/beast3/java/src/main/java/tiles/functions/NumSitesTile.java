@@ -17,8 +17,7 @@ public class NumSitesTile extends GeneratorTile<IntScalarParam<NonNegativeInt>> 
     }
 
     GeneratorTileInput<DecoratedAlignment> alignmentInput = new GeneratorTileInput<>(
-            "alignment",
-            Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+            "alignment"
     );
 
     @Override

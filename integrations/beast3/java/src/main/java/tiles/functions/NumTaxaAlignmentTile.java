@@ -17,8 +17,7 @@ public class NumTaxaAlignmentTile extends GeneratorTile<IntScalarParam<NonNegati
     }
 
     GeneratorTileInput<DecoratedAlignment> alignmentInput = new GeneratorTileInput<>(
-            "alignment",
-            Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+            "alignment"
     );
 
     @Override

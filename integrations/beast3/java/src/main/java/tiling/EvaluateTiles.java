@@ -203,7 +203,8 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
         if (failures == null && node instanceof Expr.Variable nodeVar) {
             // we check if there are failures when tiling the definition statement
             Stmt definition = this.variableResolver.resolveVariable(nodeVar);
-            failures = this.allFailures.get(definition);
+            node = definition;
+            failures = this.allFailures.get(node);
         }
 
         if (failures == null) {
