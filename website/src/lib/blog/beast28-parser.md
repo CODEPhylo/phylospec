@@ -4,6 +4,10 @@ date: "2026-04-16"
 author: "Tobia Ochsner"
 ---
 
+<script>
+  import { base } from '$app/paths';
+</script>
+
 # A First Look at the BEAST 2.8 Parser
 
 The first version of a proper PhyloSpec parser for BEAST 2.8 is done 🎉 (<a href="https://github.com/CODEPhylo/phylospec/pull/30" target="_blank">PR</a>). This post walks through its main features and what is still to come.
@@ -135,19 +139,19 @@ A lot of effort went into making error messages actionable. Here are a few examp
 
 _Wrong argument names:_
 
-<img src="/errors1.png" class="w-10/10" alt="Screenshot of error message examples" />
+<img src="{base}/errors1.png" class="w-10/10" alt="Screenshot of error message examples" />
 
 _Invalid values:_
 
-<img src="/errors2.png" class="w-7/10" alt="Screenshot of error message examples" />
+<img src="{base}/errors2.png" class="w-7/10" alt="Screenshot of error message examples" />
 
 _Unsupported statements:_
 
-<img src="/errors3.png" class="w-10/10" alt="Screenshot of error message examples" />
+<img src="{base}/errors3.png" class="w-10/10" alt="Screenshot of error message examples" />
 
 _Instantiation errors:_
 
-<img src="/errors4.png" class="w-10/10" alt="Screenshot of error message examples" />
+<img src="{base}/errors4.png" class="w-10/10" alt="Screenshot of error message examples" />
 
 In the last example, `invalid.newick` does not contain a valid tree. When BEAST itself raises an error, the parser traces it back to the relevant PhyloSpec lines while still surfacing the underlying message.
 
