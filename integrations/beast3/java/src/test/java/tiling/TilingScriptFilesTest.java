@@ -14,6 +14,7 @@ import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
+import tiles.BeastCoreTileLibrary;
 import tiles.TileLibrary;
 
 import java.io.IOException;
@@ -80,7 +81,7 @@ public class TilingScriptFilesTest {
 
             List<String> actualTileLines = new ArrayList<>();
 
-            EvaluateTiles evaluateTiles = new EvaluateTiles(TileLibrary.getTiles(), OperatorTileLibrary.getTiles(), variableResolver, stochasticityResolver);
+            EvaluateTiles evaluateTiles = new EvaluateTiles(TileLibrary.loadAll(), OperatorTileLibrary.getTiles(), variableResolver, stochasticityResolver);
             List<Tile<?>> bestTilings = null;
             try {
                 bestTilings = evaluateTiles.getBestTiling(statements);
