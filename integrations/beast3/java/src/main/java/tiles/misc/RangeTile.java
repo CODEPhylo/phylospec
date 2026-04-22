@@ -20,11 +20,6 @@ public class RangeTile extends AstNodeTile<Integer, Expr.Range> {
     );
 
     @Override
-    public Class<Expr.Range> getTargetNodeType() {
-        return Expr.Range.class;
-    }
-
-    @Override
     public Integer applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
         IntScalar<? extends Int> from = this.fromInput.apply(beastState, indexVariables);
         IntScalar<? extends Int> to = this.toInput.apply(beastState, indexVariables);

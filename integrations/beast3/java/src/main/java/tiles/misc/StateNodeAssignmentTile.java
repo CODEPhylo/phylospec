@@ -17,11 +17,6 @@ public class StateNodeAssignmentTile extends AstNodeTile<StateNode, Stmt.Assignm
     );
 
     @Override
-    public Class<Stmt.Assignment> getTargetNodeType() {
-        return Stmt.Assignment.class;
-    }
-
-    @Override
     protected Set<Stochasticity> getCompatibleStochasticities() {
         return Set.of(Stochasticity.STOCHASTIC);
     }

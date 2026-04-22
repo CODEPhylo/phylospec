@@ -27,11 +27,6 @@ public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array> {
     }
 
     @Override
-    public Class<Expr.Array> getTargetNodeType() {
-        return Expr.Array.class;
-    }
-
-    @Override
     public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
         if (!(node instanceof Expr.Array array)) throw new FailedTilingAttempt.Irrelevant();
 

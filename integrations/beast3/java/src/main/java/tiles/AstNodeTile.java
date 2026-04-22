@@ -9,6 +9,7 @@ import tiling.Tile;
 import tiling.TileInput;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.util.*;
 import java.util.function.Function;
 
@@ -17,7 +18,11 @@ import java.util.function.Function;
  * Use AstNodeTileInput fields to specify the tile inputs (similar to BEAST 2.8 inputs).
  */
 public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> {
-    public abstract Class<N> getTargetNodeType();
+
+    public Class<N> getTargetNodeType() {
+        return (Class<N>) ((ParameterizedType) getClass().getGenericSuperclass())
+                .getActualTypeArguments()[1];
+    }
 
     @Override
     public Set<Tile<?>> tryToTile(

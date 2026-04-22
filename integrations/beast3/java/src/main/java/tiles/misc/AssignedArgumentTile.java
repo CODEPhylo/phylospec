@@ -12,11 +12,6 @@ public class AssignedArgumentTile extends AstNodeTile<Object, Expr.AssignedArgum
     AstNodeTileInput<Object, Expr.AssignedArgument> expressionInput = new AstNodeTileInput<>("expression", expr -> expr.expression);
 
     @Override
-    public Class<Expr.AssignedArgument> getTargetNodeType() {
-        return Expr.AssignedArgument.class;
-    }
-
-    @Override
     public Object applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
         return this.expressionInput.apply(beastState, indexVariables);
     }

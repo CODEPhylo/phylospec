@@ -14,11 +14,6 @@ public class AssignmentTile extends AstNodeTile<Object, Stmt.Assignment> {
     );
 
     @Override
-    public Class<Stmt.Assignment> getTargetNodeType() {
-        return Stmt.Assignment.class;
-    }
-
-    @Override
     public Object applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
         return this.expressionInput.apply(beastState, indexVariables);
     }

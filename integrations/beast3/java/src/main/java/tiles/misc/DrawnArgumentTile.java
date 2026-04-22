@@ -20,11 +20,6 @@ public class DrawnArgumentTile extends AstNodeTile<StateNode, Expr.DrawnArgument
     );
 
     @Override
-    public Class<Expr.DrawnArgument> getTargetNodeType() {
-        return Expr.DrawnArgument.class;
-    }
-
-    @Override
     public StateNode applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
         BoundDistribution<?, ?> evaluatedDistribution = this.expressionInput.apply(beastState, indexVariables);
 

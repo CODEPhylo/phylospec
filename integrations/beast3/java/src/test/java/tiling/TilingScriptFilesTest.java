@@ -112,7 +112,7 @@ public class TilingScriptFilesTest {
                 try {
                     BEASTState beastState = new BEASTState("test");
                     for (Tile<?> tile : bestTilings) {
-                        tile.apply(beastState, indexVariables);
+                        tile.apply(beastState, new HashMap<>());
                     }
                 } catch (TileApplicationError e) {
                     actualApplicationErrorLines.add(e.getMessage());
