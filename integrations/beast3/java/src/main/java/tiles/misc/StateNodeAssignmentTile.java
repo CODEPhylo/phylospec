@@ -7,6 +7,7 @@ import org.phylospec.typeresolver.Stochasticity;
 import tiling.*;
 import tiles.AstNodeTile;
 
+import java.util.Map;
 import java.util.Set;
 
 public class StateNodeAssignmentTile extends AstNodeTile<StateNode, Stmt.Assignment> {
@@ -26,8 +27,8 @@ public class StateNodeAssignmentTile extends AstNodeTile<StateNode, Stmt.Assignm
     }
 
     @Override
-    public StateNode applyTile(BEASTState beastState) {
-        StateNode stateNode = this.expressionInput.apply(beastState);
+    public StateNode applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        StateNode stateNode = this.expressionInput.apply(beastState, indexVariables);
         beastState.addStateNode(stateNode, this.getTypeToken(), this.getRootNode().name);
         return stateNode;
     }

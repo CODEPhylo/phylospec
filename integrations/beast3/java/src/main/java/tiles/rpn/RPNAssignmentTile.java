@@ -6,6 +6,8 @@ import org.phylospec.ast.Stmt;
 import tiles.AstNodeTile;
 import tiling.TypeToken;
 
+import java.util.Map;
+
 public class RPNAssignmentTile extends AstNodeTile<RPNCalculationResult, Stmt.Assignment> {
 
     AstNodeTileInput<RPNCalculationResult, Stmt.Assignment> expressionInput = new AstNodeTileInput<>(
@@ -18,8 +20,8 @@ public class RPNAssignmentTile extends AstNodeTile<RPNCalculationResult, Stmt.As
     }
 
     @Override
-    public RPNCalculationResult applyTile(BEASTState beastState) {
-        RPNCalculationResult calculationResult = this.expressionInput.apply(beastState);
+    public RPNCalculationResult applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RPNCalculationResult calculationResult = this.expressionInput.apply(beastState, indexVariables);
 
         RPNcalculator rpnCalculator = new RPNcalculator();
         beastState.setInput(rpnCalculator, rpnCalculator.strExpressionInput, calculationResult.calculation());

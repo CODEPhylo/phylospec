@@ -9,6 +9,8 @@ import beastconfig.BEASTState;
 import tiling.*;
 import tiles.TemplateTile;
 
+import java.util.Map;
+
 public class OffsetTile extends TemplateTile<RealScalarParam<Real>> {
 
     @Override
@@ -25,11 +27,11 @@ public class OffsetTile extends TemplateTile<RealScalarParam<Real>> {
     TemplateTileInput<Double> offsetInput = new TemplateTileInput<>("$offset");
 
     @Override
-    public RealScalarParam<Real> applyTile(BEASTState beastState) {
+    public RealScalarParam<Real> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
         BoundDistribution<RealScalarParam<Real>, ? extends ScalarDistribution<RealScalar<Real>, Double>> distribution = this.distributionInput.apply(
-                beastState
+                beastState, indexVariables
         );
-        Double offset = this.offsetInput.apply(beastState);
+        Double offset = this.offsetInput.apply(beastState, indexVariables);
 
         OffsetReal offsetDistribution = new OffsetReal(distribution.distribution, offset);
         beastState.addStateNode(distribution.stateNode, this.getTypeToken(), "offset");

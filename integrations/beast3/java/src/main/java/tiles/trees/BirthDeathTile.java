@@ -13,6 +13,8 @@ import tiles.input.DecoratedAlignment;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
+import java.util.Map;
+
 public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthDeathGernhard08Model>> {
 
     @Override
@@ -27,12 +29,12 @@ public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthD
     GeneratorTileInput<RealScalar<? extends PositiveReal>> rootAgeInput = new GeneratorTileInput<>("rootAge", false);
 
     @Override
-    public BoundDistribution<Tree, BirthDeathGernhard08Model> applyTile(BEASTState beastState) {
-        RealScalar<? extends PositiveReal> diversificationRate = this.diversificationRateInput.apply(beastState);
-        RealScalar<? extends PositiveReal> turnover = this.turnoverInput.apply(beastState);
-        RealScalar<UnitInterval> samplingProbability = this.samplingProbabilityInput.apply(beastState);
-        RealScalar<? extends PositiveReal> rootAge = this.rootAgeInput.apply(beastState);
-        DecoratedAlignment taxaAlignment = this.taxaInput.apply(beastState);
+    public BoundDistribution<Tree, BirthDeathGernhard08Model> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RealScalar<? extends PositiveReal> diversificationRate = this.diversificationRateInput.apply(beastState, indexVariables);
+        RealScalar<? extends PositiveReal> turnover = this.turnoverInput.apply(beastState, indexVariables);
+        RealScalar<UnitInterval> samplingProbability = this.samplingProbabilityInput.apply(beastState, indexVariables);
+        RealScalar<? extends PositiveReal> rootAge = this.rootAgeInput.apply(beastState, indexVariables);
+        DecoratedAlignment taxaAlignment = this.taxaInput.apply(beastState, indexVariables);
 
         // initialize initial state
 

@@ -50,9 +50,9 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
         );
 
         @Override
-        protected RPNCalculationResult applyTile(BEASTState beastState) {
-            RPNCalculationResult leftRpn = this.leftInput.apply(beastState);
-            RPNCalculationResult rightRpn = this.rightInput.apply(beastState);
+        protected RPNCalculationResult applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+            RPNCalculationResult leftRpn = this.leftInput.apply(beastState, indexVariables);
+            RPNCalculationResult rightRpn = this.rightInput.apply(beastState, indexVariables);
 
             TokenType operation = this.getRootNode().operator;
 
@@ -70,10 +70,10 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
         );
 
         @Override
-        protected RPNCalculationResult applyTile(BEASTState beastState) {
-            RPNCalculationResult leftRpn = this.leftInput.apply(beastState);
+        protected RPNCalculationResult applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+            RPNCalculationResult leftRpn = this.leftInput.apply(beastState, indexVariables);
 
-            Tensor<?, ?> right = this.rightInput.apply(beastState);
+            Tensor<?, ?> right = this.rightInput.apply(beastState, indexVariables);
             RPNCalculationResult rightRpn = RPNCalculationResult.from(right, beastState);
 
             TokenType operation = this.getRootNode().operator;
@@ -92,11 +92,11 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
         );
 
         @Override
-        protected RPNCalculationResult applyTile(BEASTState beastState) {
-            Tensor<?, ?> left = this.leftInput.apply(beastState);
+        protected RPNCalculationResult applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+            Tensor<?, ?> left = this.leftInput.apply(beastState, indexVariables);
             RPNCalculationResult leftRpn = RPNCalculationResult.from(left, beastState);
 
-            RPNCalculationResult rightRpn = this.rightInput.apply(beastState);
+            RPNCalculationResult rightRpn = this.rightInput.apply(beastState, indexVariables);
 
             TokenType operation = this.getRootNode().operator;
 
@@ -114,11 +114,11 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
         );
 
         @Override
-        protected RPNCalculationResult applyTile(BEASTState beastState) {
-            Tensor<?, ?> left = this.leftInput.apply(beastState);
+        protected RPNCalculationResult applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+            Tensor<?, ?> left = this.leftInput.apply(beastState, indexVariables);
             RPNCalculationResult leftRpn = RPNCalculationResult.from(left, beastState);
 
-            Tensor<?, ?> right = this.rightInput.apply(beastState);
+            Tensor<?, ?> right = this.rightInput.apply(beastState, indexVariables);
             RPNCalculationResult rightRpn = RPNCalculationResult.from(right, beastState);
 
             TokenType operation = this.getRootNode().operator;

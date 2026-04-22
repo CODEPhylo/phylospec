@@ -38,8 +38,8 @@ public class ChainLengthTile extends TemplateTile<Void> {
     }
 
     @Override
-    protected Void applyTile(BEASTState beastState) {
-        beastState.chainLength = this.chainLengthInput.apply(beastState);
+    protected Void applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        beastState.chainLength = this.chainLengthInput.apply(beastState, indexVariables);
         return null;
     }
 

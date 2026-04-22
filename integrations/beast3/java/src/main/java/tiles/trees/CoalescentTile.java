@@ -12,6 +12,8 @@ import tiles.input.DecoratedAlignment;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
+import java.util.Map;
+
 public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coalescent>> {
 
     @Override
@@ -23,9 +25,9 @@ public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coales
     GeneratorTileInput<DecoratedAlignment> taxaInput = new GeneratorTileInput<>("taxa", true);
 
     @Override
-    public BoundDistribution<Tree, Coalescent> applyTile(BEASTState beastState) {
-        PopulationFunction populationSize = this.populationSizeInput.apply(beastState);
-        DecoratedAlignment taxaAlignment = this.taxaInput.apply(beastState);
+    public BoundDistribution<Tree, Coalescent> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        PopulationFunction populationSize = this.populationSizeInput.apply(beastState, indexVariables);
+        DecoratedAlignment taxaAlignment = this.taxaInput.apply(beastState, indexVariables);
 
         // initialize initial state
 

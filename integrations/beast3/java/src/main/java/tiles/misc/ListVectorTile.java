@@ -1,6 +1,5 @@
 package tiles.misc;
 
-import beast.base.core.BEASTObject;
 import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
@@ -10,10 +9,12 @@ import tiles.AstNodeTile;
 import beastconfig.BEASTState;
 import tiling.FailedTilingAttempt;
 import tiling.Tile;
+import tiling.TypeToken;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.*;
 
-public class ListVectorTile<T> extends AstNodeTile<List<Object>, Expr.Array> {
+public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array> {
 
     private final List<Tile<?>> inputTiles;
 
@@ -43,7 +44,7 @@ public class ListVectorTile<T> extends AstNodeTile<List<Object>, Expr.Array> {
         Set<Tile<?>> wiredUpTiles = new HashSet<>();
         Utils.visitCombinations(
                 allPossibleInputTiles, inputTiles -> {
-                    Tile<?> tile = new ListVectorTile<>(inputTiles);
+                    Tile<?> tile = new ListVectorTile(inputTiles);
                     tile.setRootNode(node);
 
                     int totalWeight = inputTiles.stream().mapToInt(Tile::getWeight).sum();
@@ -57,14 +58,25 @@ public class ListVectorTile<T> extends AstNodeTile<List<Object>, Expr.Array> {
     }
 
     @Override
-    public List<Object> applyTile(BEASTState beastState) {
+    public List<Object> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
         List<Object> list = new ArrayList<>();
 
         for (Tile<?> tile : inputTiles) {
-            list.add(tile.apply(beastState));
+            list.add(tile.apply(beastState, indexVariables));
         }
 
         return list;
+    }
+
+    @Override
+    public TypeToken<?> getTypeToken() {
+        TypeToken<?> valueType = this.inputTiles.getFirst().getTypeToken();
+        if (valueType != null) {
+            return TypeToken.parameterized(List.class, valueType.getType());
+        }
+
+        // we return the basic vector type
+        return super.getTypeToken();
     }
 
 }

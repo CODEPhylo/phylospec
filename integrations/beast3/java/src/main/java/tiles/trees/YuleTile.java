@@ -12,6 +12,8 @@ import tiles.input.DecoratedAlignment;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
+import java.util.Map;
+
 public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>> {
 
     @Override
@@ -24,10 +26,10 @@ public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>> 
     GeneratorTileInput<RealScalar<? extends PositiveReal>> rootAgeInput = new GeneratorTileInput<>("rootAge", false);
 
     @Override
-    public BoundDistribution<Tree, YuleModel> applyTile(BEASTState beastState) {
-        RealScalar<? extends PositiveReal> birthRate = this.birthRateInput.apply(beastState);
-        RealScalar<? extends PositiveReal> rootAge = this.rootAgeInput.apply(beastState);
-        DecoratedAlignment taxaAlignment = this.taxaInput.apply(beastState);
+    public BoundDistribution<Tree, YuleModel> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RealScalar<? extends PositiveReal> birthRate = this.birthRateInput.apply(beastState, indexVariables);
+        RealScalar<? extends PositiveReal> rootAge = this.rootAgeInput.apply(beastState, indexVariables);
+        DecoratedAlignment taxaAlignment = this.taxaInput.apply(beastState, indexVariables);
 
         // initialize initial state
 

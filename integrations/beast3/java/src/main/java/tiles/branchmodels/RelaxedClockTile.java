@@ -13,6 +13,7 @@ import tiles.GeneratorTile;
 import tiling.*;
 
 import java.util.List;
+import java.util.Map;
 
 public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel> {
 
@@ -28,10 +29,10 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel> {
     GeneratorTileInput<Tree> treeInput = new GeneratorTileInput<>("tree");
 
     @Override
-    protected UCRelaxedClockModel applyTile(BEASTState beastState) {
-        UnboundDistribution<? extends RealScalarParam<? extends PositiveReal>, ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>> base = this.baseInput.apply(beastState);
-        RealScalarParam<PositiveReal> clockRate = this.clockRateInput.apply(beastState);
-        Tree tree = this.treeInput.apply(beastState);
+    protected UCRelaxedClockModel applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        UnboundDistribution<? extends RealScalarParam<? extends PositiveReal>, ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>> base = this.baseInput.apply(beastState, indexVariables);
+        RealScalarParam<PositiveReal> clockRate = this.clockRateInput.apply(beastState, indexVariables);
+        Tree tree = this.treeInput.apply(beastState, indexVariables);
 
         // make sure that the distribution has mean rate 1.0
 

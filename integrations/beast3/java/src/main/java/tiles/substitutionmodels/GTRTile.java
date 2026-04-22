@@ -8,6 +8,8 @@ import beast.base.spec.type.Simplex;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
+import java.util.Map;
+
 public class GTRTile extends GeneratorTile<GTR> {
 
     @Override
@@ -24,14 +26,14 @@ public class GTRTile extends GeneratorTile<GTR> {
     GeneratorTileInput<Simplex> baseFrequenciesInput = new GeneratorTileInput<>("baseFrequencies");
 
     @Override
-    public GTR applyTile(BEASTState beastState) {
-        RealScalar<PositiveReal> rateAC = this.rateACInput.apply(beastState);
-        RealScalar<PositiveReal> rateAG = this.rateAGInput.apply(beastState);
-        RealScalar<PositiveReal> rateAT = this.rateATInput.apply(beastState);
-        RealScalar<PositiveReal> rateCG = this.rateCGInput.apply(beastState);
-        RealScalar<PositiveReal> rateCT = this.rateCTInput.apply(beastState);
-        RealScalar<PositiveReal> rateGT = this.rateGTInput.apply(beastState);
-        Simplex baseFrequencies = this.baseFrequenciesInput.apply(beastState);
+    public GTR applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RealScalar<PositiveReal> rateAC = this.rateACInput.apply(beastState, indexVariables);
+        RealScalar<PositiveReal> rateAG = this.rateAGInput.apply(beastState, indexVariables);
+        RealScalar<PositiveReal> rateAT = this.rateATInput.apply(beastState, indexVariables);
+        RealScalar<PositiveReal> rateCG = this.rateCGInput.apply(beastState, indexVariables);
+        RealScalar<PositiveReal> rateCT = this.rateCTInput.apply(beastState, indexVariables);
+        RealScalar<PositiveReal> rateGT = this.rateGTInput.apply(beastState, indexVariables);
+        Simplex baseFrequencies = this.baseFrequenciesInput.apply(beastState, indexVariables);
 
         // initialize frequencies
 

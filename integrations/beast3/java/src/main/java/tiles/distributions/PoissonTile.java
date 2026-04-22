@@ -9,6 +9,8 @@ import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
+import java.util.Map;
+
 public class PoissonTile extends GeneratorTile<BoundDistribution<IntScalarParam<NonNegativeInt>, Poisson>> {
 
     @Override
@@ -19,8 +21,8 @@ public class PoissonTile extends GeneratorTile<BoundDistribution<IntScalarParam<
     GeneratorTileInput<RealScalar<NonNegativeReal>> rateInput = new GeneratorTileInput<>("rate");
 
     @Override
-    public BoundDistribution<IntScalarParam<NonNegativeInt>, Poisson> applyTile(BEASTState beastState) {
-        RealScalar<NonNegativeReal> rate = this.rateInput.apply(beastState);
+    public BoundDistribution<IntScalarParam<NonNegativeInt>, Poisson> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RealScalar<NonNegativeReal> rate = this.rateInput.apply(beastState, indexVariables);
 
         Poisson distribution = new Poisson();
         beastState.setInput(distribution, distribution.lambdaInput, rate);

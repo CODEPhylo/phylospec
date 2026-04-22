@@ -9,6 +9,8 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import tiles.TemplateTile;
 import beastconfig.BEASTState;
 
+import java.util.Map;
+
 public class RootObservedBetweenTile extends TemplateTile<RealScalarParam<PositiveReal>> {
 
     @Override
@@ -21,10 +23,10 @@ public class RootObservedBetweenTile extends TemplateTile<RealScalarParam<Positi
     TemplateTileInput<RealScalarParam<Real>> toInput = new TemplateTileInput<>("$to");
 
     @Override
-    public RealScalarParam<PositiveReal> applyTile(BEASTState beastState) {
-        Tree tree = this.treeInput.apply(beastState);
-        RealScalarParam<Real> from = this.fromInput.apply(beastState);
-        RealScalarParam<Real> to = this.toInput.apply(beastState);
+    public RealScalarParam<PositiveReal> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        Tree tree = this.treeInput.apply(beastState, indexVariables);
+        RealScalarParam<Real> from = this.fromInput.apply(beastState, indexVariables);
+        RealScalarParam<Real> to = this.toInput.apply(beastState, indexVariables);
 
         // we create a uniform distribution as our prior
 

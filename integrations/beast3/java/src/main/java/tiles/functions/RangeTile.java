@@ -9,6 +9,7 @@ import beastconfig.BEASTState;
 import tiling.TileApplicationError;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class RangeTile extends GeneratorTile<IntVectorParam<Int>> {
@@ -26,9 +27,9 @@ public class RangeTile extends GeneratorTile<IntVectorParam<Int>> {
     );
 
     @Override
-    public IntVectorParam<Int> applyTile(BEASTState beastState) {
-        int start = this.startInput.apply(beastState).get();
-        int end = this.endInput.apply(beastState).get();
+    public IntVectorParam<Int> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        int start = this.startInput.apply(beastState, indexVariables).get();
+        int end = this.endInput.apply(beastState, indexVariables).get();
         int num = Math.abs(end - start);
 
         if (num == 0) {

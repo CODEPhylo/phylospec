@@ -7,6 +7,8 @@ import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
+import java.util.Map;
+
 public class ExponentialPopulationTile extends GeneratorTile<PopulationFunction> {
 
     @Override
@@ -18,9 +20,9 @@ public class ExponentialPopulationTile extends GeneratorTile<PopulationFunction>
     GeneratorTileInput<RealScalar<? extends PositiveReal>> growthRateInput = new GeneratorTileInput<>("growthRate");
 
     @Override
-    public PopulationFunction applyTile(BEASTState beastState) {
-        RealScalar<? extends PositiveReal> populationSize = this.populationSizeInput.apply(beastState);
-        RealScalar<? extends PositiveReal> growthRate = this.growthRateInput.apply(beastState);
+    public PopulationFunction applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RealScalar<? extends PositiveReal> populationSize = this.populationSizeInput.apply(beastState, indexVariables);
+        RealScalar<? extends PositiveReal> growthRate = this.growthRateInput.apply(beastState, indexVariables);
 
         ExponentialGrowth population = new ExponentialGrowth();
         beastState.setInput(population, population.popSizeParameterInput, populationSize);

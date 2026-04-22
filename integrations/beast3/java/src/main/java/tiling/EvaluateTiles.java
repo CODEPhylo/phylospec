@@ -90,14 +90,14 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
      */
     public BEASTState applyBestTiling(BEASTState beastState) {
         for (Tile<?> bestTiling : this.bestTiles) {
-            bestTiling.apply(beastState);
+            bestTiling.apply(beastState, new HashMap<>());
         }
 
         // perform operator tiling
         // TODO this is wrong right now, as the operator tiles might use inputs which do not belong to the best tiling
 
         for (Tile<?> operatorTile : this.matchedOperatorTiles) {
-            operatorTile.applyTile(beastState);
+            operatorTile.applyTile(beastState, new HashMap<>());
         }
 
         return beastState;

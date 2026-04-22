@@ -9,6 +9,7 @@ import org.phylospec.typeresolver.Stochasticity;
 import beastconfig.BEASTState;
 import tiles.GeneratorTile;
 
+import java.util.Map;
 import java.util.Set;
 
 public class LogTile extends GeneratorTile<RealScalarParam<Real>> {
@@ -26,9 +27,9 @@ public class LogTile extends GeneratorTile<RealScalarParam<Real>> {
     );
 
     @Override
-    public RealScalarParam<Real> applyTile(BEASTState beastState) {
-        RealScalarParam<? extends PositiveReal> x = this.xInput.apply(beastState);
-        IntScalarParam<? extends PositiveInt> basis = this.basisInput.apply(beastState);
+    public RealScalarParam<Real> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RealScalarParam<? extends PositiveReal> x = this.xInput.apply(beastState, indexVariables);
+        IntScalarParam<? extends PositiveInt> basis = this.basisInput.apply(beastState, indexVariables);
 
         if (basis == null) {
             // we use the natural logarithm

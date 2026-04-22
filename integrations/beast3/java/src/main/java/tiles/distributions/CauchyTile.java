@@ -9,6 +9,8 @@ import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
+import java.util.Map;
+
 public class CauchyTile extends GeneratorTile<BoundDistribution<RealScalarParam<Real>, Cauchy>> {
 
     @Override
@@ -20,9 +22,9 @@ public class CauchyTile extends GeneratorTile<BoundDistribution<RealScalarParam<
     GeneratorTileInput<RealScalar<PositiveReal>> scaleInput = new GeneratorTileInput<>("scale");
 
     @Override
-    public BoundDistribution<RealScalarParam<Real>, Cauchy> applyTile(BEASTState beastState) {
-        RealScalar<Real> location = this.locationInput.apply(beastState);
-        RealScalar<PositiveReal> scale = this.scaleInput.apply(beastState);
+    public BoundDistribution<RealScalarParam<Real>, Cauchy> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RealScalar<Real> location = this.locationInput.apply(beastState, indexVariables);
+        RealScalar<PositiveReal> scale = this.scaleInput.apply(beastState, indexVariables);
 
         Cauchy distribution = new Cauchy();
         beastState.setInput(distribution, distribution.locationInput, location);

@@ -7,6 +7,8 @@ import beast.base.spec.type.RealScalar;
 import tiles.TemplateTile;
 import beastconfig.BEASTState;
 
+import java.util.Map;
+
 public class ManualStrictClockTile extends TemplateTile<StrictClockModel> {
 
     @Override
@@ -18,9 +20,9 @@ public class ManualStrictClockTile extends TemplateTile<StrictClockModel> {
     TemplateTileInput<Tree> treeInput = new TemplateTileInput<>("$tree");
 
     @Override
-    public StrictClockModel applyTile(BEASTState beastState) {
-        RealScalar<PositiveReal> rate = this.rateInput.apply(beastState);
-        this.treeInput.apply(beastState);
+    public StrictClockModel applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RealScalar<PositiveReal> rate = this.rateInput.apply(beastState, indexVariables);
+        this.treeInput.apply(beastState, indexVariables);
 
         StrictClockModel strictClockModel = new StrictClockModel();
         beastState.setInput(strictClockModel, strictClockModel.meanRateInput, rate);

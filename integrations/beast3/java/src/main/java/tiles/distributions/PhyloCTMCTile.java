@@ -13,6 +13,8 @@ import beastconfig.BEASTState;
 import tiles.TemplateTile;
 import tiling.*;
 
+import java.util.Map;
+
 public class PhyloCTMCTile extends TemplateTile<UnboundDistribution<Alignment, TreeLikelihood>> {
 
     @Override
@@ -33,11 +35,11 @@ public class PhyloCTMCTile extends TemplateTile<UnboundDistribution<Alignment, T
     TemplateTileInput<Partial<SiteModel, SubstitutionModel>> partialSiteRateModel = new TemplateTileInput<>("$$partialSiteRateModel", false);
 
     @Override
-    public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState) {
-        Tree tree = this.treeInput.apply(beastState);
-        SubstitutionModel substitutionModel = this.substitutionModelInput.apply(beastState);
-        Base branchRateModel = this.branchRateModelInput.apply(beastState);
-        Partial<SiteModel, SubstitutionModel> partialSiteModel = this.partialSiteRateModel.apply(beastState);
+    public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        Tree tree = this.treeInput.apply(beastState, indexVariables);
+        SubstitutionModel substitutionModel = this.substitutionModelInput.apply(beastState, indexVariables);
+        Base branchRateModel = this.branchRateModelInput.apply(beastState, indexVariables);
+        Partial<SiteModel, SubstitutionModel> partialSiteModel = this.partialSiteRateModel.apply(beastState, indexVariables);
 
         // initialize clock model
 

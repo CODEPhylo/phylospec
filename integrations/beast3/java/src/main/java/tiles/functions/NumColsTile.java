@@ -6,6 +6,8 @@ import beast.base.spec.type.Tensor;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
+import java.util.Map;
+
 public class NumColsTile extends GeneratorTile<IntScalarParam<NonNegativeInt>> {
 
     @Override
@@ -16,8 +18,8 @@ public class NumColsTile extends GeneratorTile<IntScalarParam<NonNegativeInt>> {
     GeneratorTileInput<Tensor<?, ?>> matrixInput = new GeneratorTileInput<>("matrix");
 
     @Override
-    public IntScalarParam<NonNegativeInt> applyTile(BEASTState beastState) {
-        Tensor<?, ?> matrix = this.matrixInput.apply(beastState);
+    public IntScalarParam<NonNegativeInt> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        Tensor<?, ?> matrix = this.matrixInput.apply(beastState, indexVariables);
         return new IntScalarParam<>(matrix.shape()[1], NonNegativeInt.INSTANCE);
     }
 

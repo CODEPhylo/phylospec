@@ -9,6 +9,8 @@ import beastconfig.BEASTState;
 import tiling.*;
 import tiles.GeneratorTile;
 
+import java.util.Map;
+
 public class NormalTile extends GeneratorTile<BoundDistribution<RealScalarParam<Real>, Normal>> {
 
     @Override
@@ -20,9 +22,9 @@ public class NormalTile extends GeneratorTile<BoundDistribution<RealScalarParam<
     GeneratorTileInput<RealScalar<PositiveReal>> sdInput = new GeneratorTileInput<>("sd");
 
     @Override
-    public BoundDistribution<RealScalarParam<Real>, Normal> applyTile(BEASTState beastState) {
-        RealScalar<Real> mean = this.meanInput.apply(beastState);
-        RealScalar<PositiveReal> sd = this.sdInput.apply(beastState);
+    public BoundDistribution<RealScalarParam<Real>, Normal> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RealScalar<Real> mean = this.meanInput.apply(beastState, indexVariables);
+        RealScalar<PositiveReal> sd = this.sdInput.apply(beastState, indexVariables);
 
         Normal distribution = new Normal();
         beastState.setInput(distribution, distribution.meanInput, mean);

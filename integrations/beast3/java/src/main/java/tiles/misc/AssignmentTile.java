@@ -5,6 +5,8 @@ import org.phylospec.ast.Stmt;
 import tiling.*;
 import tiles.AstNodeTile;
 
+import java.util.Map;
+
 public class AssignmentTile extends AstNodeTile<Object, Stmt.Assignment> {
 
     AstNodeTileInput<Object, Stmt.Assignment> expressionInput = new AstNodeTileInput<>(
@@ -17,8 +19,8 @@ public class AssignmentTile extends AstNodeTile<Object, Stmt.Assignment> {
     }
 
     @Override
-    public Object applyTile(BEASTState beastState) {
-        return this.expressionInput.apply(beastState);
+    public Object applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        return this.expressionInput.apply(beastState, indexVariables);
     }
 
     @Override

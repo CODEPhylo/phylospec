@@ -1,5 +1,6 @@
 package tiles;
 
+import tiles.misc.RangeTile;
 import tiles.rpn.BinaryTile;
 import tiles.rpn.ExpRPNTile;
 import tiles.rpn.LogRPNTile;
@@ -32,9 +33,14 @@ public class BeastCoreTileLibrary extends TileLibrary {
         addTile(new DrawTile());
         addTile(new LiteralTile<>());
         addTile(new VectorTile<>());
-        addTile(new ListVectorTile<>());
+        addTile(new ListVectorTile());
         addTile(new DrawnArgumentTile());
         addTile(new AssignedArgumentTile());
+
+        addTile(new RangeTile());
+        addTile(new IndexVariableTile());
+        addTile(new IndexedTile());
+        addTile(new IndexedStatementTile());
 
         addTile(new ObservedAsTile());
         addTile(new ObservedAsAlignmentTile());
@@ -55,7 +61,7 @@ public class BeastCoreTileLibrary extends TileLibrary {
         addTile(new ExpTile());
         addTile(new SqrtTile());
         addTile(new LinSpaceTile());
-        addTile(new RangeTile());
+        addTile(new tiles.functions.RangeTile());
         addTile(new RepeatRealTile());
         addTile(new RepeatIntTile());
         addTile(new RepeatSimplexTile());
@@ -65,7 +71,8 @@ public class BeastCoreTileLibrary extends TileLibrary {
         addTile(new NumTaxaAlignmentTile());
         addTile(new NumTaxaTreeTile());
         addTile(new NumSitesTile());
-        addTile(new NumTile());
+        addTile(new NumVectorTile());
+        addTile(new NumListTile());
         addTile(new NumRowsTile());
         addTile(new NumColsTile());
 
