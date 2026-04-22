@@ -11,6 +11,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.Map;
 
 public class DrawnArgumentTile extends AstNodeTile<StateNode, Expr.DrawnArgument> {
 
@@ -24,8 +25,8 @@ public class DrawnArgumentTile extends AstNodeTile<StateNode, Expr.DrawnArgument
     }
 
     @Override
-    public StateNode applyTile(BEASTState beastState) {
-        BoundDistribution<?, ?> evaluatedDistribution = this.expressionInput.apply(beastState);
+    public StateNode applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        BoundDistribution<?, ?> evaluatedDistribution = this.expressionInput.apply(beastState, indexVariables);
 
         // we initialize the state node and add it to the BEAST state
         evaluatedDistribution.bind();

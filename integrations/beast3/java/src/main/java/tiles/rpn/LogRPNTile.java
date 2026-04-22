@@ -5,6 +5,8 @@ import beastconfig.BEASTState;
 import tiles.GeneratorTile;
 import tiling.TypeToken;
 
+import java.util.Map;
+
 public abstract class LogRPNTile extends GeneratorTile<RPNCalculationResult> {
 
     @Override
@@ -23,8 +25,8 @@ public abstract class LogRPNTile extends GeneratorTile<RPNCalculationResult> {
         GeneratorTileInput<RPNCalculationResult> xInput = new GeneratorTileInput<>("x");
 
         @Override
-        protected RPNCalculationResult applyTile(BEASTState beastState) {
-            RPNCalculationResult xRpn = this.xInput.apply(beastState);
+        protected RPNCalculationResult applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+            RPNCalculationResult xRpn = this.xInput.apply(beastState, indexVariables);
             return RPNCalculationResult.combineUnary("log", xRpn);
         }
     }
@@ -34,8 +36,8 @@ public abstract class LogRPNTile extends GeneratorTile<RPNCalculationResult> {
         GeneratorTileInput<? extends Tensor<?, ?>> xInput = new GeneratorTileInput<>("x");
 
         @Override
-        protected RPNCalculationResult applyTile(BEASTState beastState) {
-            Tensor<?, ?> x = this.xInput.apply(beastState);
+        protected RPNCalculationResult applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+            Tensor<?, ?> x = this.xInput.apply(beastState, indexVariables);
             RPNCalculationResult xRpn = RPNCalculationResult.from(x, beastState);
 
             return RPNCalculationResult.combineUnary("log", xRpn);

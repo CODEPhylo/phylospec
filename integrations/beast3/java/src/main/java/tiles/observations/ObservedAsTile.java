@@ -5,6 +5,8 @@ import beastconfig.BEASTState;
 import tiles.TemplateTile;
 import tiling.*;
 
+import java.util.Map;
+
 public class ObservedAsTile extends TemplateTile<StateNode> {
 
     @Override
@@ -16,9 +18,9 @@ public class ObservedAsTile extends TemplateTile<StateNode> {
     TemplateTileInput<? extends StateNode> observationInput = new TemplateTileInput<>("$observation");
 
     @Override
-    public StateNode applyTile(BEASTState beastState) {
-        UnboundDistribution<? extends StateNode, ?> evaluatedDistribution = this.distributionInput.apply(beastState);
-        StateNode observedStateNode = this.observationInput.apply(beastState);
+    public StateNode applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        UnboundDistribution<? extends StateNode, ?> evaluatedDistribution = this.distributionInput.apply(beastState, indexVariables);
+        StateNode observedStateNode = this.observationInput.apply(beastState, indexVariables);
 
         // we register the distribution as a likelihood with the given state node as parameter
 

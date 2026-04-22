@@ -7,6 +7,8 @@ import beast.base.spec.type.RealScalar;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
+import java.util.Map;
+
 public class ConstantPopulationTile extends GeneratorTile<PopulationFunction> {
 
     @Override
@@ -17,8 +19,8 @@ public class ConstantPopulationTile extends GeneratorTile<PopulationFunction> {
     GeneratorTileInput<RealScalar<? extends PositiveReal>> populationSizeInput = new GeneratorTileInput<>("populationSize");
 
     @Override
-    public PopulationFunction applyTile(BEASTState beastState) {
-        RealScalar<? extends PositiveReal> populationSize = this.populationSizeInput.apply(beastState);
+    public PopulationFunction applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RealScalar<? extends PositiveReal> populationSize = this.populationSizeInput.apply(beastState, indexVariables);
 
         ConstantPopulation constantPopulation = new ConstantPopulation();
         beastState.setInput(constantPopulation, constantPopulation.popSizeParameter, populationSize);

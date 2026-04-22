@@ -106,7 +106,7 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal> {
     }
 
     @Override
-    public T applyTile(BEASTState beastState) {
+    public T applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
         return this.value;
     }
 

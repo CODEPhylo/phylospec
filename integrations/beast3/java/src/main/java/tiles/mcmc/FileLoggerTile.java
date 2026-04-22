@@ -8,6 +8,7 @@ import tiles.TemplateTile;
 import beastconfig.BEASTState;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class FileLoggerTile extends TemplateTile<Void> {
@@ -35,10 +36,10 @@ public class FileLoggerTile extends TemplateTile<Void> {
     );
 
     @Override
-    protected Void applyTile(BEASTState beastState) {
-        Integer logEvery = this.logEveryInput.apply(beastState);
-        String fileName = this.fileNameInput.apply(beastState);
-        List<BEASTObject> parameters = this.parametersInput.apply(beastState);
+    protected Void applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        Integer logEvery = this.logEveryInput.apply(beastState, indexVariables);
+        String fileName = this.fileNameInput.apply(beastState, indexVariables);
+        List<BEASTObject> parameters = this.parametersInput.apply(beastState, indexVariables);
 
         if (parameters == null) {
             parameters = LoggerSelector.getLoggableObjects(beastState);

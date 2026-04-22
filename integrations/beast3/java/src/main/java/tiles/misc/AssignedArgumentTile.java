@@ -5,6 +5,8 @@ import tiles.AstNodeTile;
 import beastconfig.BEASTState;
 import tiling.TypeToken;
 
+import java.util.Map;
+
 public class AssignedArgumentTile extends AstNodeTile<Object, Expr.AssignedArgument> {
 
     AstNodeTileInput<Object, Expr.AssignedArgument> expressionInput = new AstNodeTileInput<>("expression", expr -> expr.expression);
@@ -15,8 +17,8 @@ public class AssignedArgumentTile extends AstNodeTile<Object, Expr.AssignedArgum
     }
 
     @Override
-    public Object applyTile(BEASTState beastState) {
-        return this.expressionInput.apply(beastState);
+    public Object applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        return this.expressionInput.apply(beastState, indexVariables);
     }
 
     @Override

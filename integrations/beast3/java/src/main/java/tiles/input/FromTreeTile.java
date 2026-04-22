@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Set;
 
 public class FromTreeTile extends GeneratorTile<Tree> {
@@ -27,8 +28,8 @@ public class FromTreeTile extends GeneratorTile<Tree> {
     );
 
     @Override
-    public Tree applyTile(BEASTState beastState) {
-        String path = this.fileInput.apply(beastState);
+    public Tree applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        String path = this.fileInput.apply(beastState, indexVariables);
         if (path.endsWith(".nex") || path.endsWith(".nexus") || path.endsWith(".trees")) {
             NexusParser nexusParser = new NexusParser();
             File file = new File(path);

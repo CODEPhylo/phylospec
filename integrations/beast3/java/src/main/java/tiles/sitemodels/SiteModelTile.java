@@ -9,6 +9,7 @@ import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import tiling.Partial;
 
+import java.util.Map;
 import java.util.Objects;
 
 public class SiteModelTile extends GeneratorTile<Partial<SiteModel, SubstitutionModel>> {
@@ -24,13 +25,13 @@ public class SiteModelTile extends GeneratorTile<Partial<SiteModel, Substitution
     GeneratorTileInput<IntScalar<NonNegativeInt>> numSitesInput = new GeneratorTileInput<>("numSites");
 
     @Override
-    public Partial<SiteModel, SubstitutionModel> applyTile(BEASTState beastState) {
-        RealScalarParam<PositiveReal> shape = this.shapeInput.apply(beastState);
-        Integer numCategories = this.numCategoriesInput.apply(beastState);
+    public Partial<SiteModel, SubstitutionModel> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RealScalarParam<PositiveReal> shape = this.shapeInput.apply(beastState, indexVariables);
+        Integer numCategories = this.numCategoriesInput.apply(beastState, indexVariables);
         RealScalarParam<UnitInterval> invariantProportion = Objects.requireNonNullElse(
-                invariantProportionInput.apply(beastState), new RealScalarParam<>(0.0, UnitInterval.INSTANCE)
+                invariantProportionInput.apply(beastState, indexVariables), new RealScalarParam<>(0.0, UnitInterval.INSTANCE)
         );
-        this.numSitesInput.apply(beastState);
+        this.numSitesInput.apply(beastState, indexVariables);
 
         SiteModel partialSiteModel = new SiteModel();
         beastState.setInput(partialSiteModel, partialSiteModel.shapeParameterInput, shape);

@@ -7,6 +7,7 @@ import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
+import java.util.Map;
 import java.util.Set;
 
 public class ExpTile extends GeneratorTile<RealScalarParam<PositiveReal>> {
@@ -21,8 +22,8 @@ public class ExpTile extends GeneratorTile<RealScalarParam<PositiveReal>> {
     );
 
     @Override
-    public RealScalarParam<PositiveReal> applyTile(BEASTState beastState) {
-        RealScalarParam<? extends Real> variable = this.xInput.apply(beastState);
+    public RealScalarParam<PositiveReal> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RealScalarParam<? extends Real> variable = this.xInput.apply(beastState, indexVariables);
         return new RealScalarParam<>(Math.exp(variable.get()), PositiveReal.INSTANCE);
     }
 

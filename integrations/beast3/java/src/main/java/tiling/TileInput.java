@@ -8,6 +8,7 @@ import org.phylospec.typeresolver.StochasticityResolver;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -83,8 +84,8 @@ public abstract class TileInput<T> {
     /**
      * Applies the input tile and its descendents to the given beast state.
      */
-    public T apply(BEASTState beastState) {
-        return this.tile != null ? this.tile.apply(beastState) : null;
+    public T apply(BEASTState beastState, Map<String, Integer> indexVariables) {
+        return this.tile != null ? this.tile.apply(beastState, indexVariables) : null;
     }
 
     /* getter */

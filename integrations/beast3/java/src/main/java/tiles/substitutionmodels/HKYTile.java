@@ -8,6 +8,8 @@ import beast.base.spec.type.Simplex;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
+import java.util.Map;
+
 public class HKYTile extends GeneratorTile<HKY> {
 
     @Override
@@ -19,9 +21,9 @@ public class HKYTile extends GeneratorTile<HKY> {
     GeneratorTileInput<Simplex> baseFrequenciesInput = new GeneratorTileInput<>("baseFrequencies");
 
     @Override
-    public HKY applyTile(BEASTState beastState) {
-        RealScalar<PositiveReal> kappa = this.kappaInput.apply(beastState);
-        Simplex baseFrequencies = this.baseFrequenciesInput.apply(beastState);
+    public HKY applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RealScalar<PositiveReal> kappa = this.kappaInput.apply(beastState, indexVariables);
+        Simplex baseFrequencies = this.baseFrequenciesInput.apply(beastState, indexVariables);
 
         // initialize frequencies
 

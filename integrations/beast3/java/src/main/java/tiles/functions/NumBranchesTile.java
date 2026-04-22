@@ -6,6 +6,8 @@ import beast.base.spec.inference.parameter.IntScalarParam;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
+import java.util.Map;
+
 public class NumBranchesTile extends GeneratorTile<IntScalarParam<NonNegativeInt>> {
 
     @Override
@@ -16,8 +18,8 @@ public class NumBranchesTile extends GeneratorTile<IntScalarParam<NonNegativeInt
     GeneratorTileInput<Tree> treeInput = new GeneratorTileInput<>("tree");
 
     @Override
-    public IntScalarParam<NonNegativeInt> applyTile(BEASTState beastState) {
-        Tree tree = this.treeInput.apply(beastState);
+    public IntScalarParam<NonNegativeInt> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        Tree tree = this.treeInput.apply(beastState, indexVariables);
         return new IntScalarParam<>(tree.getNodeCount() - 1, NonNegativeInt.INSTANCE);
     }
 

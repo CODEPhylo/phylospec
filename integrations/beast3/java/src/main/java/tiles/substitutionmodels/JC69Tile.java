@@ -4,6 +4,8 @@ import beast.base.spec.evolution.substitutionmodel.JukesCantor;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
+import java.util.Map;
+
 public class JC69Tile extends GeneratorTile<JukesCantor> {
 
     @Override
@@ -12,7 +14,7 @@ public class JC69Tile extends GeneratorTile<JukesCantor> {
     }
 
     @Override
-    public JukesCantor applyTile(BEASTState beastState) {
+    public JukesCantor applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
         return new JukesCantor();
     }
 

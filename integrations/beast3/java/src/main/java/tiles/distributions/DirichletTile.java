@@ -9,6 +9,7 @@ import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 import java.util.Arrays;
+import java.util.Map;
 
 public class DirichletTile extends GeneratorTile<BoundDistribution<SimplexParam, Dirichlet>> {
 
@@ -20,8 +21,8 @@ public class DirichletTile extends GeneratorTile<BoundDistribution<SimplexParam,
     GeneratorTileInput<RealVector<PositiveReal>> concentrationInput = new GeneratorTileInput<>("concentration");
 
     @Override
-    public BoundDistribution<SimplexParam, Dirichlet> applyTile(BEASTState beastState) {
-        RealVector<PositiveReal> concentration = this.concentrationInput.apply(beastState);
+    public BoundDistribution<SimplexParam, Dirichlet> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RealVector<PositiveReal> concentration = this.concentrationInput.apply(beastState, indexVariables);
 
         Dirichlet distribution = new Dirichlet();
         beastState.setInput(distribution, distribution.alphaInput, concentration);

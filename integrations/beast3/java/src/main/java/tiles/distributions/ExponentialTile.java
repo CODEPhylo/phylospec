@@ -9,6 +9,7 @@ import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
+import java.util.Map;
 import java.util.Set;
 
 public class ExponentialTile extends GeneratorTile<BoundDistribution<RealScalarParam<NonNegativeReal>, Exponential>> {
@@ -26,8 +27,8 @@ public class ExponentialTile extends GeneratorTile<BoundDistribution<RealScalarP
     );
 
     @Override
-    public BoundDistribution<RealScalarParam<NonNegativeReal>, Exponential> applyTile(BEASTState beastState) {
-        RealScalarParam<PositiveReal> rate = this.rateInput.apply(beastState);
+    public BoundDistribution<RealScalarParam<NonNegativeReal>, Exponential> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RealScalarParam<PositiveReal> rate = this.rateInput.apply(beastState, indexVariables);
         RealScalarParam<PositiveReal> mean = new RealScalarParam<>(1.0 / rate.get(), PositiveReal.INSTANCE);
 
         Exponential distribution = new Exponential();

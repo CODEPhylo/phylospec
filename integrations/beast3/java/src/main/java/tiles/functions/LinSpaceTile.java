@@ -9,6 +9,7 @@ import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
+import java.util.Map;
 import java.util.Set;
 
 public class LinSpaceTile extends GeneratorTile<RealVectorParam<Real>> {
@@ -29,10 +30,10 @@ public class LinSpaceTile extends GeneratorTile<RealVectorParam<Real>> {
     );
 
     @Override
-    public RealVectorParam<Real> applyTile(BEASTState beastState) {
-        double start = this.startInput.apply(beastState).get();
-        double end = this.endInput.apply(beastState).get();
-        int num = this.numInput.apply(beastState).get();
+    public RealVectorParam<Real> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        double start = this.startInput.apply(beastState, indexVariables).get();
+        double end = this.endInput.apply(beastState, indexVariables).get();
+        int num = this.numInput.apply(beastState, indexVariables).get();
 
         double[] values = new double[num];
 

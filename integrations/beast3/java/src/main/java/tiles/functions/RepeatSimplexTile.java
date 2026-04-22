@@ -60,9 +60,9 @@ public class RepeatSimplexTile extends GeneratorTile<SimplexParam> {
     }
 
     @Override
-    public SimplexParam applyTile(BEASTState beastState) {
-        double value = this.valueInput.apply(beastState).get();
-        int num = this.numInput.apply(beastState).get();
+    public SimplexParam applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        double value = this.valueInput.apply(beastState, indexVariables).get();
+        int num = this.numInput.apply(beastState, indexVariables).get();
 
         double[] values = new double[num];
         Arrays.fill(values, value);

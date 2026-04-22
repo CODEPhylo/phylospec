@@ -8,6 +8,8 @@ import beast.base.spec.type.Simplex;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
+import java.util.Map;
+
 public class F81Tile extends GeneratorTile<HKY> {
 
     @Override
@@ -18,8 +20,8 @@ public class F81Tile extends GeneratorTile<HKY> {
     GeneratorTileInput<Simplex> baseFrequenciesInput = new GeneratorTileInput<>("baseFrequencies");
 
     @Override
-    public HKY applyTile(BEASTState beastState) {
-        Simplex baseFrequencies = this.baseFrequenciesInput.apply(beastState);
+    public HKY applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        Simplex baseFrequencies = this.baseFrequenciesInput.apply(beastState, indexVariables);
 
         // f81 = hky with kappa = 1 (equal transition/transversion rates)
         RealScalarParam<PositiveReal> kappaOne = new RealScalarParam<>(1.0, PositiveReal.INSTANCE);

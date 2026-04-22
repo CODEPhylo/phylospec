@@ -13,7 +13,7 @@ public class OperatorTileLibrary {
     private final static List<Tile<?>> tiles = new ArrayList<>();
 
     static {
-        addTile(new BranchRateTreeUpDownOperatorTile());
+        // addTile(new BranchRateTreeUpDownOperatorTile());
     }
 
     public static void addTile(Tile<?> tile) {

@@ -2,12 +2,11 @@ package tiles.functions;
 
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.inference.parameter.IntScalarParam;
-import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
 import beastconfig.BEASTState;
 
-import java.util.Set;
+import java.util.Map;
 
 public class NumSitesTile extends GeneratorTile<IntScalarParam<NonNegativeInt>> {
 
@@ -21,8 +20,8 @@ public class NumSitesTile extends GeneratorTile<IntScalarParam<NonNegativeInt>> 
     );
 
     @Override
-    public IntScalarParam<NonNegativeInt> applyTile(BEASTState beastState) {
-        DecoratedAlignment alignment = this.alignmentInput.apply(beastState);
+    public IntScalarParam<NonNegativeInt> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        DecoratedAlignment alignment = this.alignmentInput.apply(beastState, indexVariables);
         return new IntScalarParam<>(alignment.alignment().getSiteCount(), NonNegativeInt.INSTANCE);
     }
 

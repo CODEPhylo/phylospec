@@ -127,10 +127,10 @@ public abstract class Tile<T> {
     /**
      * Applies the tile. Memoization is used to not apply the same tile twice.
      */
-    public T apply(BEASTState beastState) {
+    public T apply(BEASTState beastState, Map<String, Integer> indexVariables) {
         if (!this.applied) {
             try {
-                this.result = this.applyTile(beastState);
+                this.result = this.applyTile(beastState, indexVariables);
                 this.applied = true;
             } catch (TileApplicationError tilingError) {
                 // attach node if needed
@@ -155,7 +155,7 @@ public abstract class Tile<T> {
     /**
      * Applies the tile. This method should be overridden by custom tiles.
      */
-    protected abstract T applyTile(BEASTState beastState);
+    protected abstract T applyTile(BEASTState beastState, Map<String, Integer> indexVariables);
 
     /* root node of an applied tile */
 

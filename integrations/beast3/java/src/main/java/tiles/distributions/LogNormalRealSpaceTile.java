@@ -9,6 +9,8 @@ import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
+import java.util.Map;
+
 public class LogNormalRealSpaceTile extends GeneratorTile<BoundDistribution<RealScalarParam<PositiveReal>, LogNormal>> {
 
     @Override
@@ -20,9 +22,9 @@ public class LogNormalRealSpaceTile extends GeneratorTile<BoundDistribution<Real
     GeneratorTileInput<RealScalar<PositiveReal>> logSdInput = new GeneratorTileInput<>("logSd");
 
     @Override
-    public BoundDistribution<RealScalarParam<PositiveReal>, LogNormal> applyTile(BEASTState beastState) {
-        RealScalar<Real> mean = this.meanInput.apply(beastState);
-        RealScalar<PositiveReal> logSd = this.logSdInput.apply(beastState);
+    public BoundDistribution<RealScalarParam<PositiveReal>, LogNormal> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        RealScalar<Real> mean = this.meanInput.apply(beastState, indexVariables);
+        RealScalar<PositiveReal> logSd = this.logSdInput.apply(beastState, indexVariables);
 
         LogNormal distribution = new LogNormal();
         beastState.setInput(distribution, distribution.MParameterInput, mean);

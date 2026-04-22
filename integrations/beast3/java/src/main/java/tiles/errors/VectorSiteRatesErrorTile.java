@@ -11,6 +11,7 @@ import tiling.TileApplicationError;
 import tiling.UnboundDistribution;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * This tile applies when a user specifies site rates using a vector instead of 'DiscreteGammaInv'. This is currently
@@ -37,7 +38,7 @@ public class VectorSiteRatesErrorTile extends TemplateTile<UnboundDistribution<A
     TemplateTileInput<? extends RealVectorParam<?>> siteRatesInput = new TemplateTileInput<>("$siteRates", true);
 
     @Override
-    public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState) {
+    public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
         throw new TileApplicationError(
                 this.rootNode,
                 "Explicit site rates are not supported by BEAST 2.8.",

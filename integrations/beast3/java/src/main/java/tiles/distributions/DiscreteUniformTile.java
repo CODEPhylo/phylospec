@@ -8,6 +8,8 @@ import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
+import java.util.Map;
+
 public class DiscreteUniformTile extends GeneratorTile<BoundDistribution<IntScalarParam<Int>, IntUniform>> {
 
     @Override
@@ -19,9 +21,9 @@ public class DiscreteUniformTile extends GeneratorTile<BoundDistribution<IntScal
     GeneratorTileInput<IntScalar<Int>> upperInput = new GeneratorTileInput<>("upper");
 
     @Override
-    public BoundDistribution<IntScalarParam<Int>, IntUniform> applyTile(BEASTState beastState) {
-        IntScalar<Int> lower = this.lowerInput.apply(beastState);
-        IntScalar<Int> upper = this.upperInput.apply(beastState);
+    public BoundDistribution<IntScalarParam<Int>, IntUniform> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        IntScalar<Int> lower = this.lowerInput.apply(beastState, indexVariables);
+        IntScalar<Int> upper = this.upperInput.apply(beastState, indexVariables);
 
         IntUniform distribution = new IntUniform();
         beastState.setInput(distribution, distribution.lowerInput, lower);

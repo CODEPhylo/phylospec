@@ -11,6 +11,7 @@ import tiling.TileApplicationError;
 import tiling.UnboundDistribution;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * This tile applies when a user specifies branch rates using a vector instead of on of the clock models.
@@ -54,7 +55,7 @@ public class VectorBranchRatesErrorTile extends TemplateTile<UnboundDistribution
     TemplateTileInput<?> siteRatesInput = new TemplateTileInput<>("$$siteRates", false);
 
     @Override
-    public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState) {
+    public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
         throw new TileApplicationError(
                 this.rootNode,
                 "Explicit branch rates are not supported.",

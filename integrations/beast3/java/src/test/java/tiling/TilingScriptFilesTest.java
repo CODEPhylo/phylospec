@@ -14,7 +14,6 @@ import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
-import tiles.BeastCoreTileLibrary;
 import tiles.TileLibrary;
 
 import java.io.IOException;
@@ -113,7 +112,7 @@ public class TilingScriptFilesTest {
                 try {
                     BEASTState beastState = new BEASTState("test");
                     for (Tile<?> tile : bestTilings) {
-                        tile.apply(beastState);
+                        tile.apply(beastState, indexVariables);
                     }
                 } catch (TileApplicationError e) {
                     actualApplicationErrorLines.add(e.getMessage());
