@@ -36,11 +36,6 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array> {
     }
 
     @Override
-    public Class<Expr.Array> getTargetNodeType() {
-        return Expr.Array.class;
-    }
-
-    @Override
     protected Set<Stochasticity> getCompatibleStochasticities() {
         return Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC);
     }

@@ -22,11 +22,6 @@ public class IndexedStatementTile extends AstNodeTile<List<?>, Stmt.Indexed> {
     );
 
     @Override
-    public Class<Stmt.Indexed> getTargetNodeType() {
-        return Stmt.Indexed.class;
-    }
-
-    @Override
     public List<Object> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
         Integer range = this.rangeInput.apply(beastState, indexVariables);
 

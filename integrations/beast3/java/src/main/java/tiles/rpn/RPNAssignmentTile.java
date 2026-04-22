@@ -15,11 +15,6 @@ public class RPNAssignmentTile extends AstNodeTile<RPNCalculationResult, Stmt.As
     );
 
     @Override
-    public Class<Stmt.Assignment> getTargetNodeType() {
-        return Stmt.Assignment.class;
-    }
-
-    @Override
     public RPNCalculationResult applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
         RPNCalculationResult calculationResult = this.expressionInput.apply(beastState, indexVariables);
 

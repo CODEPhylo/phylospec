@@ -27,11 +27,6 @@ public class IndexedTile extends AstNodeTile<Object, Expr.Index> {
     );
 
     @Override
-    public Class<Expr.Index> getTargetNodeType() {
-        return Expr.Index.class;
-    }
-
-    @Override
     public Object applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
         List<?> vector = this.vectorInput.apply(beastState, indexVariables);
         int index = this.firstIndexInput.apply(beastState, indexVariables).get();

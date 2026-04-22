@@ -30,11 +30,6 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal> {
     }
 
     @Override
-    public Class<Expr.Literal> getTargetNodeType() {
-        return Expr.Literal.class;
-    }
-
-    @Override
     public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
         if (!(node instanceof Expr.Literal literal)) throw new FailedTilingAttempt.Irrelevant();
 
