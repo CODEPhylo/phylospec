@@ -17,4 +17,9 @@ public class IndexVariableTile extends AstNodeTile<IntScalar<Int>, Expr.Variable
         return new IntScalarParam<>(indexVariables.get(variableName), Int.INSTANCE);
     }
 
+    @Override
+    public boolean isDependentOnIndexVariable(String indexVariable) {
+        return this.getRootNode().variableName.equals(indexVariable);
+    }
+
 }

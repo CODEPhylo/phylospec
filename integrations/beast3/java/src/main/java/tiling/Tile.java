@@ -55,6 +55,76 @@ public abstract class Tile<T> {
     ) throws FailedTilingAttempt;
 
     /**
+     * Checks if this tile is dependent on a given index variable.
+     */
+    public boolean isDependentOnIndexVariable(String indexVariable) {
+        for (TileInput<?> input : this.getTileInputs()) {
+            Tile<?> inputTile = input.getTile();
+            if (inputTile != null && input.getTile().isDependentOnIndexVariable(indexVariable)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Recursively walks this tile's wired sub-tiles and verifies that no AstNode is committed
+     * to two different sub-tiles anywhere in the sub-graph.
+     * Throws {@link InconsistentTilingException} if an inconsistency is detected at any depth.
+     */
+    public boolean isConsistent(IdentityHashMap<AstNode, Tile<?>> commitments) {
+        Map<AstNode, Tile<?>> usedInputs;
+
+        try {
+            usedInputs = this.getUsedInputs();
+        } catch (InconsistentTilingException exception) {
+            return false;
+        }
+
+        for (Map.Entry<AstNode, Tile<?>> entry : usedInputs.entrySet()) {
+            AstNode inputNode = entry.getKey();
+            Tile<?> inputTile = entry.getValue();
+
+            Tile<?> existingInputTile = commitments.putIfAbsent(inputNode, inputTile);
+
+            if (existingInputTile == null) {
+                // new commitment — recurse into it
+                if (!inputTile.isConsistent(commitments)) {
+                    return false;
+                }
+            } else if (existingInputTile != inputTile) {
+                return false;
+            }
+            // if existingInputTile == inputTile, this sub-tile has already been walked
+        }
+
+        return true;
+    }
+
+    /**
+     * Returns the immediate wired sub-tiles of this tile, keyed by the AstNode each sub-tile
+     * covers. Throws {@link InconsistentTilingException} if two TileInputs wire to different
+     * sub-tiles for the same AstNode, which indicates an intra-candidate inconsistency (e.g.
+     * {@code f(x, x)} where the two x-slots picked different sub-tiles for the same declaration).
+     */
+    public Map<AstNode, Tile<?>> getUsedInputs() throws InconsistentTilingException {
+        Map<AstNode, Tile<?>> usedInputs = new IdentityHashMap<>();
+
+        for (TileInput<?> input : this.getTileInputs()) {
+            Tile<?> inputTile = input.getTile();
+            if (inputTile == null) continue;
+
+            AstNode inputNode = inputTile.getRootNode();
+            Tile<?> existingInputTile = usedInputs.putIfAbsent(inputNode, inputTile);
+
+            if (existingInputTile != null && existingInputTile != inputTile) {
+                // we already have a different input mapped to this AST node and there we used a different input tile
+                throw new InconsistentTilingException(inputNode, existingInputTile, inputTile);
+            }
+        }
+
+        return usedInputs;
+    }
+
+    /**
      * Returns the {@code TileInput<?>} fields of this tile using reflection.
      */
     protected List<TileInput<?>> getTileInputs() {
@@ -121,35 +191,45 @@ public abstract class Tile<T> {
 
     /** methods to apply a tiling */
 
-    private T result = null;
-    private boolean applied = false;
+    private final Map<Map<String, Integer>, T> appliedWithIndexedVariables = new HashMap<>();
 
     /**
      * Applies the tile. Memoization is used to not apply the same tile twice.
      */
     public T apply(BEASTState beastState, Map<String, Integer> indexVariables) {
-        if (!this.applied) {
-            try {
-                this.result = this.applyTile(beastState, indexVariables);
-                this.applied = true;
-            } catch (TileApplicationError tilingError) {
-                // attach node if needed
-                if (tilingError.getAstNode() == null) {
-                    tilingError.setAstNode(this.getRootNode());
-                }
-                // rethrow the error
-                throw tilingError;
-            } catch (Exception e) {
-                // we wrap the exception into a tiling error
-                throw new WrappedTileApplicationError(
-                        this.getRootNode(),
-                        "Creating the BEAST 2.8 objects did not work.",
-                        e
-                );
+        // we check if we have already applied this tile with the given index variables
+        for (Map<String, Integer> previousIndexVariables : this.appliedWithIndexedVariables.keySet()) {
+            if (previousIndexVariables.size() != indexVariables.size()) continue;
+
+            boolean allMatch = true;
+            for (String index : indexVariables.keySet()) {
+                if (!this.isDependentOnIndexVariable(index)) continue;
+
+                if (!Objects.equals(indexVariables.get(index), previousIndexVariables.get(index))) allMatch = false;
             }
+
+            if (allMatch) return this.appliedWithIndexedVariables.get(previousIndexVariables);
         }
 
-        return this.result;
+        try {
+            T result = this.applyTile(beastState, indexVariables);
+            this.appliedWithIndexedVariables.put(new HashMap<>(indexVariables), result);
+            return result;
+        } catch (TileApplicationError tilingError) {
+            // attach node if needed
+            if (tilingError.getAstNode() == null) {
+                tilingError.setAstNode(this.getRootNode());
+            }
+            // rethrow the error
+            throw tilingError;
+        } catch (Exception e) {
+            // we wrap the exception into a tiling error
+            throw new WrappedTileApplicationError(
+                    this.getRootNode(),
+                    "Creating the BEAST 2.8 objects did not work.",
+                    e
+            );
+        }
     }
 
     /**

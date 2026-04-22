@@ -7,7 +7,6 @@ import tiles.AstNodeTile;
 import tiling.TileApplicationError;
 import tiling.TypeToken;
 
-import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +19,11 @@ public class IndexedStatementTile extends AstNodeTile<List<?>, Stmt.Indexed> {
     AstNodeTileInput<Integer, Stmt.Indexed> rangeInput = new AstNodeTileInput<>(
             "range", expr -> expr.ranges.getFirst()
     );
+
+    @Override
+    public boolean isDependentOnIndexVariable(String indexVariable) {
+        return false;
+    }
 
     @Override
     public List<Object> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
@@ -42,7 +46,11 @@ public class IndexedStatementTile extends AstNodeTile<List<?>, Stmt.Indexed> {
             list.add(element);
         }
 
-        indexVariables.put(indexName, oldIndexValue);
+        if (oldIndexValue == null) {
+            indexVariables.remove(indexName);
+        } else {
+            indexVariables.put(indexName, oldIndexValue);
+        }
 
         return list;
     }
