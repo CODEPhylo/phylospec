@@ -24,7 +24,7 @@ public class BEASTState {
     public final HashMap<CalculationNode, TypeToken<?>> calculationNodes;
 
     public final HashMap<StateNode, Distribution> priorDistributions;
-    public final HashMap<StateNode, Distribution> likelihoodDistributions;
+    public final List<Distribution> likelihoodDistributions;
 
     public final HashMap<Operator, Set<StateNode>> operators;
 
@@ -40,7 +40,7 @@ public class BEASTState {
         this.stateNodes = new HashMap<>();
         this.calculationNodes = new HashMap<>();
         this.priorDistributions = new HashMap<>();
-        this.likelihoodDistributions = new HashMap<>();
+        this.likelihoodDistributions = new ArrayList<>();
         this.operators = new HashMap<>();
         this.beastObjects = new ArrayList<>();
         this.ids = new HashSet<>();
@@ -145,11 +145,10 @@ public class BEASTState {
     /**
      * Adds a given likelihood to the BEAST state.
      */
-    public void addLikelihoodDistribution(StateNode stateNode, Distribution distribution, String id) {
+    public void addLikelihoodDistribution(Distribution distribution, String id) {
         distribution.setID(this.getAvailableID(id));
-        this.addBEASTObject(stateNode);
         this.addBEASTObject(distribution);
-        this.likelihoodDistributions.put(stateNode, distribution);
+        this.likelihoodDistributions.add(distribution);
     }
 
     /**

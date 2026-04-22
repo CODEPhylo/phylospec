@@ -73,6 +73,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     public Map<String, AstNode> match(AstNode queryRoot, VariableResolver queryVariableResolver) {
         this.queryVariableResolver = queryVariableResolver;
         this.templateVariableMap.clear();
+        this.currentIndexBindings = null;
 
         try {
             // the root node needs to be of the same type

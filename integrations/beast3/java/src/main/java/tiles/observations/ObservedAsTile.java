@@ -25,7 +25,7 @@ public class ObservedAsTile extends TemplateTile<StateNode> {
         // we register the distribution as a likelihood with the given state node as parameter
 
         evaluatedDistribution.bind(observedStateNode);
-        beastState.addLikelihoodDistribution(observedStateNode, evaluatedDistribution.distribution, observedStateNode.getID() + "_likelihood");
+        beastState.addLikelihoodDistribution(evaluatedDistribution.distribution, observedStateNode.getID() + "_likelihood");
 
         // we return the observed state
 

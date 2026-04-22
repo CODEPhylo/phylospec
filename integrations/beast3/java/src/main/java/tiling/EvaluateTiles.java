@@ -1,18 +1,21 @@
 package tiling;
 
 import beastconfig.BEASTState;
+import org.phylospec.Utils;
 import org.phylospec.ast.*;
+import org.phylospec.domain.Int;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Visits an AST and determines the best tiling for each statement by selecting the lowest-weight
  * tile that matches. Statements consumed by a multi-statement tile are skipped at the top level
  * so they are not tiled a second time.
  */
-public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
+public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
 
     private final List<Tile<?>> tiles;
     private final List<Tile<?>> operatorTiles;
@@ -62,20 +65,66 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     public List<Tile<?>> getBestTiling(List<Stmt> statements) {
         // we start with the last statements and go backwards
 
-        List<Tile<?>> bestTiles = new ArrayList<>();
+        List<List<Tile<?>>> possibleTiles = new ArrayList<>();
 
         for (int i = statements.size() - 1; i >= 0; i--) {
             Stmt stmt = statements.get(i);
 
-            if (this.consumedStatements.contains(stmt)) continue;
+            if (this.consumedStatements.contains(stmt)) {
+                // this statement has already been consumed by a subsequent statement
+                // this happens if a subsequent statement refers to the variable declared here
+                continue;
+            }
 
-            Tile<?> bestTile = stmt.accept(this);
+            // find all tilings
 
-            if (bestTile == null) {
+            stmt.accept(this);
+            Set<Tile<?>> candidateTiles = this.evaluatedTiles.get(stmt);
+
+            if (candidateTiles.isEmpty()) {
                 this.throwDeepestFailure(stmt);
             }
 
-            bestTiles.addFirst(bestTile);
+            // remove all inconsistent tilings
+
+            candidateTiles.removeIf(x -> !x.isConsistent(new IdentityHashMap<>()));
+
+            // sort them by weight (least first)
+
+            List<Tile<?>> orderedCandidateTiles = new ArrayList<>(candidateTiles);
+            orderedCandidateTiles.sort(Comparator.comparingInt(Tile::getWeight));
+
+            possibleTiles.add(orderedCandidateTiles);
+        }
+
+        List<Tile<?>> bestTiles = new ArrayList<>();
+        int[] bestTileWeight = new int[] {Integer.MAX_VALUE};
+
+        Utils.visitOrderedCombinations(possibleTiles, tiles -> {
+            if (bestTileWeight[0] < Integer.MAX_VALUE) return;
+
+            // check for consistency across the statement tiles
+            IdentityHashMap<AstNode, Tile<?>> assignments = new IdentityHashMap<>();
+
+            int weightSum = 0;
+            for (Tile<?> tile : tiles) {
+                if (!tile.isConsistent(assignments)) return;
+                weightSum += tile.getWeight();
+            }
+
+            if (weightSum < bestTileWeight[0]) {
+                bestTiles.clear();
+                bestTiles.addAll(tiles);
+                bestTileWeight[0] = weightSum;
+            }
+        });
+
+        if (bestTileWeight[0] == Integer.MAX_VALUE) {
+            // no consistent tiling found
+            // this usually does not happen
+            throw new TileApplicationError(
+                    "Unsupported operation.", "Your model is not supported by BEAST 2.8."
+            );
         }
 
         this.bestTiles = bestTiles;
@@ -93,13 +142,6 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
             bestTiling.apply(beastState, new HashMap<>());
         }
 
-        // perform operator tiling
-        // TODO this is wrong right now, as the operator tiles might use inputs which do not belong to the best tiling
-
-        for (Tile<?> operatorTile : this.matchedOperatorTiles) {
-            operatorTile.applyTile(beastState, new HashMap<>());
-        }
-
         return beastState;
     }
 
@@ -112,13 +154,11 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
      * When no tile matches, all non-{@link FailedTilingAttempt.Irrelevant} failures are stored
      * in {@link #allFailures} so the cascade DAG can be traversed during root-cause analysis.
      */
-    private Tile<?> visitNode(AstNode node) {
-        if (this.bestEvaluatedTiles.containsKey(node)) {
-            return this.bestEvaluatedTiles.get(node);
+    private Void visitNode(AstNode node) {
+        if (this.evaluatedTiles.containsKey(node)) {
+            // we have already processed that node
+            return null;
         }
-
-        int lowestWeight = Integer.MAX_VALUE;
-        Tile<?> bestEvaluatedTile = null;
 
         this.evaluatedTiles.putIfAbsent(node, new HashSet<>());
         List<FailedTilingAttempt> failures = new ArrayList<>();
@@ -139,41 +179,21 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
                 continue;
             }
 
-            this.evaluatedTiles.get(node).addAll(evaluatedTiles);
-
-            // find the matching tile with the lowest weight
-
-            for (Tile<?> evaluatedTile : evaluatedTiles) {
-                if (evaluatedTile.getWeight() < lowestWeight) {
-                    lowestWeight = evaluatedTile.getWeight();
-                    bestEvaluatedTile = evaluatedTile;
-                }
+            // sanity check
+            for (Tile<?> t : evaluatedTiles) {
+                if (t.getRootNode() == null) throw new RuntimeException();
             }
+
+            this.evaluatedTiles.get(node).addAll(evaluatedTiles);
         }
 
-        if (bestEvaluatedTile == null) {
+        if (this.evaluatedTiles.get(node).isEmpty()) {
             // none of the tiles fits
             // we store the failures for error recovery later
             this.allFailures.put(node, failures);
         }
 
-        this.bestEvaluatedTiles.put(node, bestEvaluatedTile);
-
-        // match operator tiles
-
-        for (Tile<?> operatorTile : this.operatorTiles) {
-            try {
-                this.matchedOperatorTiles.addAll(
-                    operatorTile.tryToTile(
-                            node, this.evaluatedTiles, this.variableResolver, this.stochasticityResolver
-                    )
-                );
-            } catch (FailedTilingAttempt ignored) {
-                continue;
-            }
-        }
-
-        return bestEvaluatedTile;
+        return null;
     }
 
     /**
@@ -302,31 +322,31 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     /* visitor methods */
 
     @Override
-    public Tile<?> visitAssignment(Stmt.Assignment stmt) {
+    public Void visitAssignment(Stmt.Assignment stmt) {
         stmt.expression.accept(this);
         return this.visitNode(stmt);
     }
 
     @Override
-    public Tile<?> visitDraw(Stmt.Draw stmt) {
+    public Void visitDraw(Stmt.Draw stmt) {
         stmt.expression.accept(this);
         return this.visitNode(stmt);
     }
 
     @Override
-    public Tile<?> visitDecoratedStmt(Stmt.Decorated stmt) {
+    public Void visitDecoratedStmt(Stmt.Decorated stmt) {
         stmt.decorator.accept(this);
         stmt.statement.accept(this);
         return this.visitNode(stmt);
     }
 
     @Override
-    public Tile<?> visitImport(Stmt.Import stmt) {
+    public Void visitImport(Stmt.Import stmt) {
         return this.visitNode(stmt);
     }
 
     @Override
-    public Tile<?> visitIndexedStmt(Stmt.Indexed indexed) {
+    public Void visitIndexedStmt(Stmt.Indexed indexed) {
         indexed.statement.accept(this);
         for (Expr.Variable index : indexed.indices) {
             index.accept(this);
@@ -338,14 +358,14 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     }
 
     @Override
-    public Tile<?> visitObservedAsStmt(Stmt.ObservedAs observedAs) {
+    public Void visitObservedAsStmt(Stmt.ObservedAs observedAs) {
         observedAs.stmt.accept(this);
         observedAs.observedAs.accept(this);
         return this.visitNode(observedAs);
     }
 
     @Override
-    public Tile<?> visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
+    public Void visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
         observedBetween.stmt.accept(this);
         observedBetween.observedFrom.accept(this);
         observedBetween.observedTo.accept(this);
@@ -353,23 +373,23 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     }
 
     @Override
-    public Tile<?> visitLiteral(Expr.Literal expr) {
+    public Void visitLiteral(Expr.Literal expr) {
         return this.visitNode(expr);
     }
 
     @Override
-    public Tile<?> visitStringTemplate(Expr.StringTemplate expr) {
+    public Void visitStringTemplate(Expr.StringTemplate expr) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Tile<?> visitVariable(Expr.Variable expr) {
+    public Void visitVariable(Expr.Variable expr) {
         // we try to jump to the definition statement of this variable to allow a tiling to cover multiple statements
 
         Stmt variableDefinitionStmt = this.variableResolver.resolveVariable(expr);
 
         if (variableDefinitionStmt != null) {
-            Tile<?> bestTile = variableDefinitionStmt.accept(this);
+            variableDefinitionStmt.accept(this);
             this.consumedStatements.add(variableDefinitionStmt);
 
             // we re-use the found tiles from the definition statement for the variable
@@ -381,7 +401,7 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
                     expr, this.bestEvaluatedTiles.get(variableDefinitionStmt)
             );
 
-            return bestTile;
+            return null;
         } else {
             // this is a scoped index variable, we visit it normally
             return this.visitNode(expr);
@@ -389,20 +409,20 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     }
 
     @Override
-    public Tile<?> visitUnary(Expr.Unary expr) {
+    public Void visitUnary(Expr.Unary expr) {
         expr.right.accept(this);
         return this.visitNode(expr);
     }
 
     @Override
-    public Tile<?> visitBinary(Expr.Binary expr) {
+    public Void visitBinary(Expr.Binary expr) {
         expr.left.accept(this);
         expr.right.accept(this);
         return this.visitNode(expr);
     }
 
     @Override
-    public Tile<?> visitCall(Expr.Call expr) {
+    public Void visitCall(Expr.Call expr) {
         for (Expr.Argument argument : expr.arguments) {
             argument.accept(this);
         }
@@ -410,24 +430,24 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     }
 
     @Override
-    public Tile<?> visitAssignedArgument(Expr.AssignedArgument expr) {
+    public Void visitAssignedArgument(Expr.AssignedArgument expr) {
         expr.expression.accept(this);
         return this.visitNode(expr);
     }
 
     @Override
-    public Tile<?> visitDrawnArgument(Expr.DrawnArgument expr) {
+    public Void visitDrawnArgument(Expr.DrawnArgument expr) {
         expr.expression.accept(this);
         return this.visitNode(expr);
     }
 
     @Override
-    public Tile<?> visitGrouping(Expr.Grouping expr) {
+    public Void visitGrouping(Expr.Grouping expr) {
         return this.visitNode(expr.expression);
     }
 
     @Override
-    public Tile<?> visitArray(Expr.Array expr) {
+    public Void visitArray(Expr.Array expr) {
         for (Expr element : expr.elements) {
             element.accept(this);
         }
@@ -435,7 +455,7 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     }
 
     @Override
-    public Tile<?> visitIndex(Expr.Index expr) {
+    public Void visitIndex(Expr.Index expr) {
         expr.object.accept(this);
         for (Expr index : expr.indices) {
             index.accept(this);
@@ -444,19 +464,19 @@ public class EvaluateTiles implements AstVisitor<Tile<?>, Tile<?>, Tile<?>> {
     }
 
     @Override
-    public Tile<?> visitRange(Expr.Range range) {
+    public Void visitRange(Expr.Range range) {
         range.from.accept(this);
         range.to.accept(this);
         return this.visitNode(range);
     }
 
     @Override
-    public Tile<?> visitAtomicType(AstType.Atomic expr) {
+    public Void visitAtomicType(AstType.Atomic expr) {
         return this.visitNode(expr);
     }
 
     @Override
-    public Tile<?> visitGenericType(AstType.Generic expr) {
+    public Void visitGenericType(AstType.Generic expr) {
         for (AstType typeParameter : expr.typeParameters) {
             typeParameter.accept(this);
         }

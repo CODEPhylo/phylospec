@@ -115,7 +115,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         CompoundDistribution likelihood = new CompoundDistribution();
         likelihood.setID(beastState.getAvailableID("likelihood"));
-        beastState.setInput(likelihood, likelihood.pDistributions, new ArrayList<>(beastState.likelihoodDistributions.values()));
+        beastState.setInput(likelihood, likelihood.pDistributions, beastState.likelihoodDistributions);
 
         CompoundDistribution posterior = new CompoundDistribution();
         posterior.setID(beastState.getAvailableID("posterior"));
