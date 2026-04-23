@@ -337,7 +337,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         // register the widened type in the outer scope under the variable name
 
-        String variableName = this.extractVariableName(indexed.statement);
+        String variableName = indexed.statement.getName();
         if (variableName != null) {
             remember(variableName, widenedTypeSet);
         }
@@ -468,13 +468,6 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         }
 
         return generatedDistributionTypeSet;
-    }
-
-    private String extractVariableName(Stmt stmt) {
-        if (stmt instanceof Stmt.Assignment a) return a.name;
-        if (stmt instanceof Stmt.Draw d) return d.name;
-        if (stmt instanceof Stmt.Decorated decorated) return extractVariableName(decorated.statement);
-        return null;
     }
 
     @Override

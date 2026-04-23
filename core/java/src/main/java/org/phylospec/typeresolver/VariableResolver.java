@@ -91,7 +91,7 @@ public class VariableResolver implements AstVisitor<Void, Void, Void> {
         observedAs.stmt.accept(this);
         dropScope();
 
-        this.resolvedGlobalVariableNames.put(this.extractVariableName(observedAs.stmt), observedAs);
+        this.resolvedGlobalVariableNames.put(observedAs.stmt.getName(), observedAs);
         return null;
     }
 
@@ -108,7 +108,7 @@ public class VariableResolver implements AstVisitor<Void, Void, Void> {
         observedBetween.stmt.accept(this);
         dropScope();
 
-        this.resolvedGlobalVariableNames.put(this.extractVariableName(observedBetween.stmt), observedBetween);
+        this.resolvedGlobalVariableNames.put(observedBetween.stmt.getName(), observedBetween);
         return null;
     }
 
@@ -127,18 +127,7 @@ public class VariableResolver implements AstVisitor<Void, Void, Void> {
         indexed.statement.accept(this);
         dropScope();
 
-        this.resolvedGlobalVariableNames.put(this.extractVariableName(indexed.statement), indexed);
-        return null;
-    }
-
-    /**
-     * Extracts the declared variable name from an assignment, draw, or decorated statement.
-     * Returns {@code null} for statement types that do not declare a variable.
-     */
-    private String extractVariableName(Stmt stmt) {
-        if (stmt instanceof Stmt.Assignment a) return a.name;
-        if (stmt instanceof Stmt.Draw d) return d.name;
-        if (stmt instanceof Stmt.Decorated decorated) return extractVariableName(decorated.statement);
+        this.resolvedGlobalVariableNames.put(indexed.statement.getName(), indexed);
         return null;
     }
 
