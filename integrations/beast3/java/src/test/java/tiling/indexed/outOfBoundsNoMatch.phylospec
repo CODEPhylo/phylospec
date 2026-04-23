@@ -1,9 +1,13 @@
 Real vector1[i] = 100 for i in 1:3
-Real vector2[i] = vector1[i + 1] for i in 1:2
+Real vector2[i] = vector1[i] for i in 1:5
 
 // EXPECTED_TILES
-// Unsupported operation. BEAST 2.8 cannot deal with the value you provided for index.
+// TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED_APPLICATION_ERRORS
+// Index 4 is greater than the number of elements. Use an index which is between 1 and 3.
+// EXPECTED_APPLICATION_ERRORS
 
 // EXPECTED BEAST STATE
 // EXPECTED BEAST STATE

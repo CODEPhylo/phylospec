@@ -25,113 +25,108 @@ import java.util.List;
  * This class loads all known tiles into a static field.
  */
 public class BeastCoreTileLibrary extends TileLibrary {
-    private final static List<Tile<?>> tiles = new ArrayList<>();
-
-    static {
-        addTile(new AssignmentTile());
-        addTile(new DrawTile());
-        addTile(new LiteralTile<>());
-        addTile(new VectorTile<>());
-        addTile(new ListVectorTile());
-        addTile(new DrawnArgumentTile());
-        addTile(new AssignedArgumentTile());
-
-        addTile(new RangeTile());
-        addTile(new IndexVariableTile());
-        addTile(new IndexedTile());
-        addTile(new IndexedStatementTile());
-
-        addTile(new ObservedAsTile());
-        addTile(new ObservedAsAlignmentTile());
-        addTile(new RootObservedBetweenTile());
-
-        addTile(new BinaryTile.RpnRpn());
-        addTile(new BinaryTile.RpnReal());
-        addTile(new BinaryTile.RealRpn());
-        addTile(new BinaryTile.RealReal());
-        addTile(new LogRPNTile.Real());
-        addTile(new LogRPNTile.Rpn());
-        addTile(new ExpRPNTile.Real());
-        addTile(new ExpRPNTile.Rpn());
-        addTile(new RPNAssignmentTile());
-
-        addTile(new EnvTile());
-        addTile(new LogTile());
-        addTile(new ExpTile());
-        addTile(new SqrtTile());
-        addTile(new LinSpaceTile());
-        addTile(new tiles.functions.RangeTile());
-        addTile(new RepeatRealTile());
-        addTile(new RepeatIntTile());
-        addTile(new RepeatSimplexTile());
-
-        addTile(new AlignmentTaxaTile());
-        addTile(new NumBranchesTile());
-        addTile(new NumTaxaAlignmentTile());
-        addTile(new NumTaxaTreeTile());
-        addTile(new NumSitesTile());
-        addTile(new NumVectorTile());
-        addTile(new NumListTile());
-        addTile(new NumRowsTile());
-        addTile(new NumColsTile());
-
-        addTile(new FromNexusTile());
-        addTile(new FromTreeTile());
-        addTile(new FromNewickTile());
-        addTile(new ParserTile.Regex());
-        addTile(new ParserTile.Delimiter());
-
-        addTile(new SubsetTile());
-
-        addTile(new OffsetTile());
-        addTile(new NormalTile());
-        addTile(new LogNormalTile());
-        addTile(new LogNormalRealSpaceTile());
-        addTile(new BetaTile());
-        addTile(new CauchyTile());
-        addTile(new DiscreteUniformTile());
-        addTile(new ExponentialTile());
-        addTile(new GammaTile());
-        addTile(new PoissonTile());
-        addTile(new UniformTile());
-        addTile(new DirichletTile());
-
-        addTile(new YuleTile());
-        addTile(new BirthDeathTile());
-        addTile(new ConstantCoalescentTile());
-        addTile(new CoalescentTile());
-        addTile(new ConstantPopulationTile());
-        addTile(new ExponentialPopulationTile());
-
-        addTile(new StrictClockTile());
-        addTile(new ManualStrictClockTile());
-        addTile(new RelaxedClockTile());
-
-        addTile(new JC69Tile());
-        addTile(new K80Tile());
-        addTile(new F81Tile());
-        addTile(new HKYTile());
-        addTile(new GTRTile());
-        addTile(new WAGTile());
-        addTile(new JTTTile());
-
-        addTile(new SiteModelTile());
-        addTile(new PhyloCTMCTile());
-        addTile(new VectorBranchRatesErrorTile());
-        addTile(new VectorSiteRatesErrorTile());
-
-        addTile(new ChainLengthTile());
-        addTile(new ScreenLoggerTile());
-        addTile(new FileLoggerTile());
-        addTile(new TreeLoggerTile());
-    }
-
-    public static void addTile(Tile<?> tile) {
-        tiles.add(tile);
-    }
 
     @Override
     public List<Tile<?>> getTiles() {
+        List<Tile<?>> tiles = new ArrayList<>();
+
+        tiles.add(new AssignmentTile());
+        tiles.add(new DrawTile());
+        tiles.add(new LiteralTile<>());
+        tiles.add(new VectorTile<>());
+        tiles.add(new ListVectorTile());
+        tiles.add(new DrawnArgumentTile());
+        tiles.add(new AssignedArgumentTile());
+
+        tiles.add(new RangeTile());
+        tiles.add(new IndexVariableTile());
+        tiles.add(new IndexedTile());
+        tiles.add(new IndexedStatementTile());
+
+        tiles.add(new ObservedAsTile());
+        tiles.add(new ObservedAsAlignmentTile());
+        tiles.add(new RootObservedBetweenTile());
+
+        tiles.add(new BinaryTile.RpnRpn());
+        tiles.add(new BinaryTile.RpnReal());
+        tiles.add(new BinaryTile.RealRpn());
+        tiles.add(new BinaryTile.RealReal());
+        tiles.add(new LogRPNTile.Real());
+        tiles.add(new LogRPNTile.Rpn());
+        tiles.add(new ExpRPNTile.Real());
+        tiles.add(new ExpRPNTile.Rpn());
+        tiles.add(new RPNAssignmentTile());
+
+        tiles.add(new EnvTile());
+        tiles.add(new LogTile());
+        tiles.add(new ExpTile());
+        tiles.add(new SqrtTile());
+        tiles.add(new LinSpaceTile());
+        tiles.add(new tiles.functions.RangeTile());
+        tiles.add(new RepeatRealTile());
+        tiles.add(new RepeatIntTile());
+        tiles.add(new RepeatSimplexTile());
+
+        tiles.add(new AlignmentTaxaTile());
+        tiles.add(new NumBranchesTile());
+        tiles.add(new NumTaxaAlignmentTile());
+        tiles.add(new NumTaxaTreeTile());
+        tiles.add(new NumSitesTile());
+        tiles.add(new NumVectorTile());
+        tiles.add(new NumListTile());
+        tiles.add(new NumRowsTile());
+        tiles.add(new NumColsTile());
+
+        tiles.add(new FromNexusTile());
+        tiles.add(new FromTreeTile());
+        tiles.add(new FromNewickTile());
+        tiles.add(new ParserTile.Regex());
+        tiles.add(new ParserTile.Delimiter());
+
+        tiles.add(new SubsetTile());
+
+        tiles.add(new OffsetTile());
+        tiles.add(new NormalTile());
+        tiles.add(new LogNormalTile());
+        tiles.add(new LogNormalRealSpaceTile());
+        tiles.add(new BetaTile());
+        tiles.add(new CauchyTile());
+        tiles.add(new DiscreteUniformTile());
+        tiles.add(new ExponentialTile());
+        tiles.add(new GammaTile());
+        tiles.add(new PoissonTile());
+        tiles.add(new UniformTile());
+        tiles.add(new DirichletTile());
+
+        tiles.add(new YuleTile());
+        tiles.add(new BirthDeathTile());
+        tiles.add(new ConstantCoalescentTile());
+        tiles.add(new CoalescentTile());
+        tiles.add(new ConstantPopulationTile());
+        tiles.add(new ExponentialPopulationTile());
+
+        tiles.add(new StrictClockTile());
+        tiles.add(new ManualStrictClockTile());
+        tiles.add(new RelaxedClockTile());
+
+        tiles.add(new JC69Tile());
+        tiles.add(new K80Tile());
+        tiles.add(new F81Tile());
+        tiles.add(new HKYTile());
+        tiles.add(new GTRTile());
+        tiles.add(new WAGTile());
+        tiles.add(new JTTTile());
+
+        tiles.add(new SiteModelTile());
+        tiles.add(new PhyloCTMCTile());
+        tiles.add(new VectorBranchRatesErrorTile());
+        tiles.add(new VectorSiteRatesErrorTile());
+
+        tiles.add(new ChainLengthTile());
+        tiles.add(new ScreenLoggerTile());
+        tiles.add(new FileLoggerTile());
+        tiles.add(new TreeLoggerTile());
+
         return tiles;
     }
 }

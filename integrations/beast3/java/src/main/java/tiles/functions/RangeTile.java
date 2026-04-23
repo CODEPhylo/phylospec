@@ -1,6 +1,8 @@
 package tiles.functions;
 
 import beast.base.spec.domain.Int;
+import beast.base.spec.domain.NonNegativeInt;
+import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import org.phylospec.typeresolver.Stochasticity;
@@ -19,10 +21,10 @@ public class RangeTile extends GeneratorTile<IntVectorParam<Int>> {
         return "range";
     }
 
-    GeneratorTileInput<IntScalarParam<? extends Int>> startInput = new GeneratorTileInput<>(
+    GeneratorTileInput<IntScalarParam<PositiveInt>> startInput = new GeneratorTileInput<>(
             "start", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
-    GeneratorTileInput<IntScalarParam<? extends Int>> endInput = new GeneratorTileInput<>(
+    GeneratorTileInput<IntScalarParam<PositiveInt>> endInput = new GeneratorTileInput<>(
             "end", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
 
