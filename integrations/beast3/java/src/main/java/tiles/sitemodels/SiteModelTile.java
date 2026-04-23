@@ -5,11 +5,12 @@ import beast.base.spec.domain.*;
 import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.IntScalar;
+import org.phylospec.ast.Expr;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import tiling.Partial;
 
-import java.util.Map;
+import java.util.IdentityHashMap;
 import java.util.Objects;
 
 public class SiteModelTile extends GeneratorTile<Partial<SiteModel, SubstitutionModel>> {
@@ -25,7 +26,7 @@ public class SiteModelTile extends GeneratorTile<Partial<SiteModel, Substitution
     GeneratorTileInput<IntScalar<NonNegativeInt>> numSitesInput = new GeneratorTileInput<>("numSites");
 
     @Override
-    public Partial<SiteModel, SubstitutionModel> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public Partial<SiteModel, SubstitutionModel> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalarParam<PositiveReal> shape = this.shapeInput.apply(beastState, indexVariables);
         Integer numCategories = this.numCategoriesInput.apply(beastState, indexVariables);
         RealScalarParam<UnitInterval> invariantProportion = Objects.requireNonNullElse(

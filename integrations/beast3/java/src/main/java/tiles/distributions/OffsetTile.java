@@ -6,10 +6,11 @@ import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
+import org.phylospec.ast.Expr;
 import tiling.*;
 import tiles.TemplateTile;
 
-import java.util.Map;
+import java.util.IdentityHashMap;
 
 public class OffsetTile extends TemplateTile<RealScalarParam<Real>> {
 
@@ -27,7 +28,7 @@ public class OffsetTile extends TemplateTile<RealScalarParam<Real>> {
     TemplateTileInput<Double> offsetInput = new TemplateTileInput<>("$offset");
 
     @Override
-    public RealScalarParam<Real> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public RealScalarParam<Real> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         BoundDistribution<RealScalarParam<Real>, ? extends ScalarDistribution<RealScalar<Real>, Double>> distribution = this.distributionInput.apply(
                 beastState, indexVariables
         );

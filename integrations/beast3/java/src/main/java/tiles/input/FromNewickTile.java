@@ -2,11 +2,12 @@ package tiles.input;
 
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeParser;
+import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
-import java.util.Map;
+import java.util.IdentityHashMap;
 import java.util.Set;
 
 public class FromNewickTile extends GeneratorTile<Tree> {
@@ -21,7 +22,7 @@ public class FromNewickTile extends GeneratorTile<Tree> {
     );
 
     @Override
-    public Tree applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public Tree applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         String newick = this.newickStringInput.apply(beastState, indexVariables);
         return new TreeParser(newick);
     }

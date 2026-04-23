@@ -2,10 +2,11 @@ package tiles.rpn;
 
 import beast.base.spec.type.Tensor;
 import beastconfig.BEASTState;
+import org.phylospec.ast.Expr;
 import tiles.GeneratorTile;
 import tiling.TypeToken;
 
-import java.util.Map;
+import java.util.IdentityHashMap;
 
 public abstract class ExpRPNTile extends GeneratorTile<RPNCalculationResult> {
 
@@ -25,7 +26,7 @@ public abstract class ExpRPNTile extends GeneratorTile<RPNCalculationResult> {
         GeneratorTileInput<RPNCalculationResult> xInput = new GeneratorTileInput<>("x");
 
         @Override
-        protected RPNCalculationResult applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        protected RPNCalculationResult applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
             RPNCalculationResult xRpn = this.xInput.apply(beastState, indexVariables);
             return RPNCalculationResult.combineUnary("exp", xRpn);
         }
@@ -36,7 +37,7 @@ public abstract class ExpRPNTile extends GeneratorTile<RPNCalculationResult> {
         GeneratorTileInput<? extends Tensor<?, ?>> xInput = new GeneratorTileInput<>("x");
 
         @Override
-        protected RPNCalculationResult applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        protected RPNCalculationResult applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
             Tensor<?, ?> x = this.xInput.apply(beastState, indexVariables);
             RPNCalculationResult xRpn = RPNCalculationResult.from(x, beastState);
 

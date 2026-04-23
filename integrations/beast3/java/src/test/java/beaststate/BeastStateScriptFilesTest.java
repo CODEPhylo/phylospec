@@ -107,7 +107,7 @@ public class BeastStateScriptFilesTest {
             System.setOut(new PrintStream(OutputStream.nullOutputStream()));
             try {
                 for (Tile<?> tile : bestTilings) {
-                    tile.apply(beastState, new HashMap<>());
+                    tile.apply(beastState, new IdentityHashMap<>());
                 }
             } catch (TileApplicationError e) {
                 return;

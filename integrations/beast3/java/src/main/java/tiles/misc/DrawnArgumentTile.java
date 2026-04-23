@@ -11,7 +11,9 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class DrawnArgumentTile extends AstNodeTile<StateNode, Expr.DrawnArgument> {
 
@@ -20,18 +22,30 @@ public class DrawnArgumentTile extends AstNodeTile<StateNode, Expr.DrawnArgument
     );
 
     @Override
-    public boolean isDependentOnIndexVariable(String indexVariable) {
-        return true;
-    }
-
-    @Override
-    public StateNode applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public StateNode applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         BoundDistribution<?, ?> evaluatedDistribution = this.expressionInput.apply(beastState, indexVariables);
 
+        // construct ID
+
+        StringBuilder id = new StringBuilder(this.getRootNode().name);
+
+        if (!indexVariables.isEmpty()) {
+            Map<String, String> sortedIndexValues = new TreeMap<>();
+            for (Expr.Variable indexVar : indexVariables.keySet()) {
+                // this does not work with duplicate index names, but this never happens
+                sortedIndexValues.put(indexVar.variableName, indexVariables.get(indexVar).toString());
+            }
+
+            for (String index : sortedIndexValues.keySet()) {
+                id.append("_").append(sortedIndexValues.get(index));
+            }
+        }
+
         // we initialize the state node and add it to the BEAST state
+
         evaluatedDistribution.bind();
-        beastState.addStateNode(evaluatedDistribution.stateNode, this.getTypeToken(), this.getRootNode().name);
-        beastState.addPriorDistribution(evaluatedDistribution.stateNode, evaluatedDistribution.distribution, this.getRootNode().name + "_prior");
+        beastState.addStateNode(evaluatedDistribution.stateNode, this.getTypeToken(), id.toString());
+        beastState.addPriorDistribution(evaluatedDistribution.stateNode, evaluatedDistribution.distribution, id + "_prior");
 
         // we return the initialized state node
         return evaluatedDistribution.stateNode;

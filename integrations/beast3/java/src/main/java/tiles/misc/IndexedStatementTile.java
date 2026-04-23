@@ -8,8 +8,8 @@ import tiling.TileApplicationError;
 import tiling.TypeToken;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class IndexedStatementTile extends AstNodeTile<List<?>, Stmt.Indexed> {
 
@@ -21,12 +21,7 @@ public class IndexedStatementTile extends AstNodeTile<List<?>, Stmt.Indexed> {
     );
 
     @Override
-    public boolean isDependentOnIndexVariable(String indexVariable) {
-        return false;
-    }
-
-    @Override
-    public List<Object> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public List<Object> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Integer range = this.rangeInput.apply(beastState, indexVariables);
 
         List<Expr.Variable> indices = this.getRootNode().indices;
@@ -36,20 +31,20 @@ public class IndexedStatementTile extends AstNodeTile<List<?>, Stmt.Indexed> {
             );
         }
 
-        String indexName = indices.getFirst().variableName;
-        Integer oldIndexValue = indexVariables.get(indexName);
+        Expr.Variable index = indices.getFirst();
+        Integer oldIndexValue = indexVariables.get(index);
 
         List<Object> list = new ArrayList<>();
         for (int i = 0; i < range; i++) {
-            indexVariables.put(indexName, i + 1);
+            indexVariables.put(indices.getFirst(), i + 1);
             Object element = this.statementInput.apply(beastState, indexVariables);
             list.add(element);
         }
 
         if (oldIndexValue == null) {
-            indexVariables.remove(indexName);
+            indexVariables.remove(index);
         } else {
-            indexVariables.put(indexName, oldIndexValue);
+            indexVariables.put(index, oldIndexValue);
         }
 
         return list;

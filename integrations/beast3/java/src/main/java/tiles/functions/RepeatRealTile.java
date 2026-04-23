@@ -5,13 +5,14 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
+import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import tiling.TypeToken;
 
 import java.util.Arrays;
-import java.util.Map;
+import java.util.IdentityHashMap;
 import java.util.Set;
 
 public class RepeatRealTile extends GeneratorTile<RealVectorParam<Real>> {
@@ -29,7 +30,7 @@ public class RepeatRealTile extends GeneratorTile<RealVectorParam<Real>> {
     );
 
     @Override
-    public RealVectorParam<Real> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public RealVectorParam<Real> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         double value = this.valueInput.apply(beastState, indexVariables).get();
         int num = this.numInput.apply(beastState, indexVariables).get();
 

@@ -3,8 +3,8 @@ package tiles.misc;
 import beast.base.spec.domain.Int;
 import beast.base.spec.type.IntScalar;
 import beastconfig.BEASTState;
+import com.google.gson.internal.bind.util.ISO8601Utils;
 import org.phylospec.ast.Expr;
-import org.phylospec.typeresolver.Stochasticity;
 import tiles.AstNodeTile;
 import tiling.TileApplicationError;
 import tiling.TypeToken;
@@ -13,9 +13,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public class IndexedTile extends AstNodeTile<Object, Expr.Index> {
 
@@ -27,7 +26,7 @@ public class IndexedTile extends AstNodeTile<Object, Expr.Index> {
     );
 
     @Override
-    public Object applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public Object applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         List<?> vector = this.vectorInput.apply(beastState, indexVariables);
         int index = this.firstIndexInput.apply(beastState, indexVariables).get();
 
@@ -62,5 +61,6 @@ public class IndexedTile extends AstNodeTile<Object, Expr.Index> {
         // we return the basic vector type
         return super.getTypeToken();
     }
+
 
 }

@@ -2,11 +2,12 @@ package tiles.functions;
 
 import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
-import java.util.Map;
+import java.util.IdentityHashMap;
 import java.util.Set;
 
 public class SqrtTile extends GeneratorTile<RealScalarParam<NonNegativeReal>> {
@@ -21,7 +22,7 @@ public class SqrtTile extends GeneratorTile<RealScalarParam<NonNegativeReal>> {
     );
 
     @Override
-    public RealScalarParam<NonNegativeReal> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public RealScalarParam<NonNegativeReal> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         double x = this.xInput.apply(beastState, indexVariables).get();
         return new RealScalarParam<>(Math.sqrt(x), NonNegativeReal.INSTANCE);
     }

@@ -115,7 +115,7 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array> {
             Real domain = null;
 
             for (int i = 0; i < elementTiles.size(); i++) {
-                RealScalarParam<?> scalar = (RealScalarParam<?>) elementTiles.get(i).apply(null, new HashMap<>());
+                RealScalarParam<?> scalar = (RealScalarParam<?>) elementTiles.get(i).apply(null, new IdentityHashMap<>());
                 values[i] = scalar.get();
                 if (domain == null) domain = scalar.getDomain();
             }
@@ -148,7 +148,7 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array> {
             Int domain = null;
 
             for (int i = 0; i < elementTiles.size(); i++) {
-                IntScalarParam<?> scalar = (IntScalarParam<?>) elementTiles.get(i).apply(null, new HashMap<>());
+                IntScalarParam<?> scalar = (IntScalarParam<?>) elementTiles.get(i).apply(null, new IdentityHashMap<>());
                 values[i] = scalar.get();
                 if (domain == null) domain = scalar.getDomain();
             }
@@ -164,7 +164,7 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array> {
     }
 
     @Override
-    public T applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public T applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         return this.value;
     }
 

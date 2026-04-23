@@ -4,6 +4,7 @@ import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.tree.TraitSet;
 import beast.base.parser.NexusParser;
+import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
@@ -11,7 +12,7 @@ import tiling.TileApplicationError;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
+import java.util.IdentityHashMap;
 import java.util.Set;
 
 public class FromNexusTile extends GeneratorTile<DecoratedAlignment> {
@@ -28,7 +29,7 @@ public class FromNexusTile extends GeneratorTile<DecoratedAlignment> {
     GeneratorTileInput<ParserTile.Parser> dateInput = new GeneratorTileInput<>("date", false);
 
     @Override
-    public DecoratedAlignment applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public DecoratedAlignment applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         String path = this.fileInput.apply(beastState, indexVariables);
         File file = new File(path);
 

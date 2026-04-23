@@ -4,7 +4,7 @@ Vector<PositiveReal> diversificationRates = [1.0, 2.0]
 PositiveReal turnover ~ LogNormal(mean=1.0, logSd=1.0)
 
 Tree tree[i] ~ BirthDeath(
-    diversificationRates[i], turnover, taxa=taxa(data)
+    diversificationRate=diversificationRates[i], turnover, taxa=taxa(data)
 ) for i in 1:2
 
 // EXPECTED_TILES
@@ -15,6 +15,6 @@ Tree tree[i] ~ BirthDeath(
 // EXPECTED_APPLICATION_ERRORS
 
 // EXPECTED BEAST STATE
-// SN: vector2
-// P: vector2_prior
+// SN: turnover, tree_1, tree_2
+// P: turnover_prior, tree_1_prior, tree_2_prior
 // EXPECTED BEAST STATE

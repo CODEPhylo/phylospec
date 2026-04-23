@@ -1,12 +1,13 @@
 package tiles.input;
 
 import beast.base.spec.evolution.alignment.FilteredAlignment;
+import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import tiling.TileApplicationError;
 
-import java.util.Map;
+import java.util.IdentityHashMap;
 import java.util.Set;
 
 public class SubsetTile extends GeneratorTile<DecoratedAlignment> {
@@ -28,7 +29,7 @@ public class SubsetTile extends GeneratorTile<DecoratedAlignment> {
     );
 
     @Override
-    public DecoratedAlignment applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public DecoratedAlignment applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         DecoratedAlignment alignment = this.alignmentInput.apply(beastState, indexVariables);
         Integer start = this.startInput.apply(beastState, indexVariables);
         Integer end = this.endInput.apply(beastState, indexVariables);

@@ -8,12 +8,13 @@ import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
 import beast.base.spec.evolution.tree.coalescent.RandomTree;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
+import org.phylospec.ast.Expr;
 import tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
-import java.util.Map;
+import java.util.IdentityHashMap;
 
 public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthDeathGernhard08Model>> {
 
@@ -29,7 +30,7 @@ public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthD
     GeneratorTileInput<RealScalar<? extends PositiveReal>> rootAgeInput = new GeneratorTileInput<>("rootAge", false);
 
     @Override
-    public BoundDistribution<Tree, BirthDeathGernhard08Model> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public BoundDistribution<Tree, BirthDeathGernhard08Model> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<? extends PositiveReal> diversificationRate = this.diversificationRateInput.apply(beastState, indexVariables);
         RealScalar<? extends PositiveReal> turnover = this.turnoverInput.apply(beastState, indexVariables);
         RealScalar<UnitInterval> samplingProbability = this.samplingProbabilityInput.apply(beastState, indexVariables);

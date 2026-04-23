@@ -7,8 +7,8 @@ import org.phylospec.ast.Expr;
 import tiles.AstNodeTile;
 import tiling.TileApplicationError;
 
+import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class RangeTile extends AstNodeTile<Integer, Expr.Range> {
 
@@ -20,7 +20,7 @@ public class RangeTile extends AstNodeTile<Integer, Expr.Range> {
     );
 
     @Override
-    public Integer applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public Integer applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         IntScalar<? extends Int> from = this.fromInput.apply(beastState, indexVariables);
         IntScalar<? extends Int> to = this.toInput.apply(beastState, indexVariables);
 

@@ -9,11 +9,12 @@ import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
+import org.phylospec.ast.Expr;
 import tiles.GeneratorTile;
 import tiling.*;
 
+import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel> {
 
@@ -29,7 +30,7 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel> {
     GeneratorTileInput<Tree> treeInput = new GeneratorTileInput<>("tree");
 
     @Override
-    protected UCRelaxedClockModel applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    protected UCRelaxedClockModel applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         UnboundDistribution<? extends RealScalarParam<? extends PositiveReal>, ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>> base = this.baseInput.apply(beastState, indexVariables);
         RealScalarParam<PositiveReal> clockRate = this.clockRateInput.apply(beastState, indexVariables);
         Tree tree = this.treeInput.apply(beastState, indexVariables);

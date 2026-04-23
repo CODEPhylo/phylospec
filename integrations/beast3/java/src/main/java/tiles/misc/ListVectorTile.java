@@ -11,7 +11,6 @@ import tiling.FailedTilingAttempt;
 import tiling.Tile;
 import tiling.TypeToken;
 
-import java.lang.reflect.ParameterizedType;
 import java.util.*;
 
 public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array> {
@@ -39,6 +38,10 @@ public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array> {
         Set<Tile<?>> wiredUpTiles = new HashSet<>();
         Utils.visitCombinations(
                 allPossibleInputTiles, inputTiles -> {
+                    // make sure that all input tiles have the same type token
+                    TypeToken<?> firstToken = inputTiles.getFirst().getTypeToken();
+                    if (inputTiles.stream().anyMatch(t -> !Objects.equals(t.getTypeToken(), firstToken))) return;
+
                     Tile<?> tile = new ListVectorTile(inputTiles);
                     tile.setRootNode(node);
 
@@ -53,12 +56,15 @@ public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array> {
     }
 
     @Override
-    public List<Object> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public List<Object> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         List<Object> list = new ArrayList<>();
 
         for (Tile<?> tile : inputTiles) {
             list.add(tile.apply(beastState, indexVariables));
         }
+
+        System.out.println("H");
+        System.out.println(this.getTypeToken());
 
         return list;
     }

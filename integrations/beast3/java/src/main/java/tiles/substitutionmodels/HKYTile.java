@@ -5,10 +5,11 @@ import beast.base.spec.evolution.substitutionmodel.Frequencies;
 import beast.base.spec.evolution.substitutionmodel.HKY;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.Simplex;
+import org.phylospec.ast.Expr;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
-import java.util.Map;
+import java.util.IdentityHashMap;
 
 public class HKYTile extends GeneratorTile<HKY> {
 
@@ -21,7 +22,7 @@ public class HKYTile extends GeneratorTile<HKY> {
     GeneratorTileInput<Simplex> baseFrequenciesInput = new GeneratorTileInput<>("baseFrequencies");
 
     @Override
-    public HKY applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public HKY applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<PositiveReal> kappa = this.kappaInput.apply(beastState, indexVariables);
         Simplex baseFrequencies = this.baseFrequenciesInput.apply(beastState, indexVariables);
 

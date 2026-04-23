@@ -2,11 +2,12 @@ package tiles.functions;
 
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.inference.parameter.IntScalarParam;
+import org.phylospec.ast.Expr;
 import tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
 import beastconfig.BEASTState;
 
-import java.util.Map;
+import java.util.IdentityHashMap;
 
 public class NumTaxaAlignmentTile extends GeneratorTile<IntScalarParam<NonNegativeInt>> {
 
@@ -20,7 +21,7 @@ public class NumTaxaAlignmentTile extends GeneratorTile<IntScalarParam<NonNegati
     );
 
     @Override
-    public IntScalarParam<NonNegativeInt> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public IntScalarParam<NonNegativeInt> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         DecoratedAlignment alignment = this.alignmentInput.apply(beastState, indexVariables);
         return new IntScalarParam<>(alignment.alignment().getTaxonCount(), NonNegativeInt.INSTANCE);
     }

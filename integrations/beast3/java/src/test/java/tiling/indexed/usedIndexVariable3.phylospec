@@ -6,6 +6,6 @@ Real vector2[i] ~ Normal(mean=vector1[i], sd=1.0) for i in 1:3
 // EXPECTED_TILES
 
 // EXPECTED BEAST STATE
-// SN: vector2
-// P: vector2_prior
+// SN: vector1_1, vector1_2, vector1_3, vector2_1, vector2_2, vector2_3
+// P: vector1_1_prior, vector1_2_prior, vector1_3_prior, vector2_1_prior, vector2_2_prior, vector2_3_prior
 // EXPECTED BEAST STATE
