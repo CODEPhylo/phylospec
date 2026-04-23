@@ -76,14 +76,6 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         this.currentIndexBindings = null;
 
         try {
-            // the root node needs to be of the same type
-            this.check(
-                    queryRoot instanceof Expr == this.templateRoot instanceof Expr
-            );
-            this.check(
-                    queryRoot instanceof Stmt == this.templateRoot instanceof Stmt
-            );
-
             // if the root is a statement, check its block
             // we don't check the block of any referenced statements for simplicity
             if (queryRoot instanceof Stmt queryStmt) this.matchBlock(queryStmt);
@@ -221,6 +213,15 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitDraw(Stmt.Draw stmt) {
+        if (this.currentQueryNode instanceof Expr.DrawnArgument drawnArgumentQuery) {
+            // in this case, the query is a drawn argument (x~dist) but the template is a drawn argument (Any x ~ dist)
+            // this still works, we directly route to the drawn distribution
+
+            this.match(stmt.expression, drawnArgumentQuery.expression);
+
+            return null;
+        }
+
         if (!(this.currentQueryNode instanceof Stmt.Draw queryStmt)) {
             throw new MatchingError();
         }
@@ -644,22 +645,26 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitAtomicType(AstType.Atomic expr) {
+        if (expr.name.equals("Any")) return null;
+
         if (!(this.currentQueryNode instanceof AstType.Atomic queryAtomic)) {
             throw new MatchingError();
         }
 
-        this.check(expr.name.equals(queryAtomic.name) || expr.name.equals("Any"));
+        this.check(expr.name.equals(queryAtomic.name));
 
         return null;
     }
 
     @Override
     public Void visitGenericType(AstType.Generic expr) {
+        if (expr.name.equals("Any")) return null;
+
         if (!(this.currentQueryNode instanceof AstType.Generic queryGeneric)) {
             throw new MatchingError();
         }
 
-        this.check(expr.name.equals(queryGeneric.name) || expr.name.equals("Any"));
+        this.check(expr.name.equals(queryGeneric.name));
         this.check(expr.typeParameters.length == queryGeneric.typeParameters.length);
 
         for (int i = 0; i < expr.typeParameters.length; i++) {

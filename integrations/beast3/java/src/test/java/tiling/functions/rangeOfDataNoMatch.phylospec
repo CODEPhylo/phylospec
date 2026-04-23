@@ -6,7 +6,7 @@ Integer numBranches = numBranches(tree)
 Vector<Integer> range = range(0, end=numBranches)
 
 // EXPECTED_TILES
-// Unsupported operation. BEAST 2.8 cannot deal with the value you provided for the 'start' argument for 'range'.
+// Unsupported operation. BEAST 2.8 does not support a random variable for 'end'.
 // EXPECTED_TILES
 
 // EXPECTED BEAST STATE

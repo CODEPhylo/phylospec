@@ -1,6 +1,8 @@
 package tiles.misc;
 
 import beast.base.spec.domain.Int;
+import beast.base.spec.domain.NonNegativeInt;
+import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.type.IntScalar;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
@@ -12,10 +14,10 @@ import java.util.List;
 
 public class RangeTile extends AstNodeTile<Integer, Expr.Range> {
 
-    AstNodeTileInput<? extends IntScalar<? extends Int>, Expr.Range> fromInput = new AstNodeTileInput<>(
+    AstNodeTileInput<? extends IntScalar<NonNegativeInt>, Expr.Range> fromInput = new AstNodeTileInput<>(
             "from", expr -> expr.from
     );
-    AstNodeTileInput<? extends IntScalar<? extends Int>, Expr.Range> toInput = new AstNodeTileInput<>(
+    AstNodeTileInput<? extends IntScalar<NonNegativeInt>, Expr.Range> toInput = new AstNodeTileInput<>(
             "to", expr -> expr.to
     );
 

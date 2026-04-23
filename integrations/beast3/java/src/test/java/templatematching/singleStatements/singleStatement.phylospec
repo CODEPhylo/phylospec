@@ -1,12 +1,11 @@
 // TEMPLATE
-$x + log(x=2 * $y)
+$x
 // TEMPLATE
 
 // QUERY
-(100 + 2) + log(2 * exp(10))
+Real x = 10
 // QUERY
 
 // MATCH
-// $x -> 102
-// $y -> (CA exp (AA null 10))
+// $x -> (AS Real x 10)
 // MATCH

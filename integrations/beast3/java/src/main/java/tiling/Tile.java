@@ -172,7 +172,9 @@ public abstract class Tile<T> {
                     wiredUpTile.setWeight(totalWeight);
                     wiredUpTile.setRootNode(rootNode);
 
-                    wiredUpTiles.add(wiredUpTile);
+                    if (!wiredUpTile.isInconsistent(new IdentityHashMap<>())) {
+                        wiredUpTiles.add(wiredUpTile);
+                    }
                 }
         );
 
