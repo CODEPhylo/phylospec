@@ -25,17 +25,8 @@ public abstract class TemplateTile<T> extends Tile<T> {
         return List.of(this.getPhyloSpecTemplate());
     };
 
-    private final List<AstTemplateMatcher> astTemplateMatchers;
+    private List<AstTemplateMatcher> astTemplateMatchers;
 
-    public TemplateTile() {
-        this.astTemplateMatchers = new ArrayList<>();
-
-        for (String template : this.getPhyloSpecTemplates()) {
-            this.astTemplateMatchers.add(
-                    new AstTemplateMatcher(template)
-            );
-        }
-    }
 
     @Override
     public Set<Tile<?>> tryToTile(
@@ -44,6 +35,16 @@ public abstract class TemplateTile<T> extends Tile<T> {
             VariableResolver variableResolver,
             StochasticityResolver stochasticityResolver
     ) throws FailedTilingAttempt {
+        if (this.astTemplateMatchers == null) {
+            this.astTemplateMatchers = new ArrayList<>();
+
+            for (String template : this.getPhyloSpecTemplates()) {
+                this.astTemplateMatchers.add(
+                        new AstTemplateMatcher(template)
+                );
+            }
+        }
+
         // try to match any of the templates
 
         Map<String, AstNode> matchedTemplateVariables = null;

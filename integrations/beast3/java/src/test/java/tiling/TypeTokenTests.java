@@ -4,10 +4,14 @@ import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.tree.TreeDistribution;
 import beast.base.inference.Distribution;
 import beast.base.inference.StateNode;
+import beast.base.spec.domain.Int;
+import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.distribution.ScalarDistribution;
+import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import org.junit.jupiter.api.Test;
+import org.phylospec.domain.PositiveReal;
 import org.phylospec.domain.Real;
 import org.phylospec.types.RealScalar;
 import org.phylospec.types.Scalar;
@@ -43,6 +47,10 @@ public class TypeTokenTests {
     @Test
     public void testInvariantTypeIsNotAssignableFromSubType() {
         assert !new TypeToken<List<Object>>() {}.isAssignableFrom(new TypeToken<List<Double>>() {});
+        assert !new TypeToken<RealScalar<Real>>() {}.isAssignableFrom(new TypeToken<RealScalar<PositiveReal>>() {});
+        assert !new TypeToken<RealScalar<PositiveReal>>() {}.isAssignableFrom(new TypeToken<RealScalar<Real>>() {});
+        assert !new TypeToken<IntScalarParam<PositiveInt>>() {}.isAssignableFrom(new TypeToken<IntScalarParam<Int>>() {});
+        assert !new TypeToken<IntScalarParam<Int>>() {}.isAssignableFrom(new TypeToken<IntScalarParam<PositiveInt>>() {});
     }
 
 }

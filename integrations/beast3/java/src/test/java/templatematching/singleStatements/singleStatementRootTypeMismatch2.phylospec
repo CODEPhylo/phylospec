@@ -7,5 +7,5 @@ Real x = $x
 // QUERY
 
 // MATCH
-// NO MATCH
+// $x -> 10
 // MATCH

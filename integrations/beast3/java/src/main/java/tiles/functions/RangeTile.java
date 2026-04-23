@@ -21,10 +21,10 @@ public class RangeTile extends GeneratorTile<IntVectorParam<Int>> {
         return "range";
     }
 
-    GeneratorTileInput<IntScalarParam<PositiveInt>> startInput = new GeneratorTileInput<>(
+    GeneratorTileInput<IntScalarParam<? extends Int>> startInput = new GeneratorTileInput<>(
             "start", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
-    GeneratorTileInput<IntScalarParam<PositiveInt>> endInput = new GeneratorTileInput<>(
+    GeneratorTileInput<IntScalarParam<? extends Int>> endInput = new GeneratorTileInput<>(
             "end", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
 
