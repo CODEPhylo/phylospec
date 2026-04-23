@@ -14,6 +14,8 @@ public class Utils {
     /// A combination is a list of the same size as {@code variants}.
     /// The i-th element of a combination is one of the items in the i-th {@code Set<T>}
     /// in {@code variants}.
+    ///
+    /// If the order of the visitor calls is important, consider using {@code visitOrderedCombinations}.
     public static <T> void visitCombinations(List<Set<T>> variants, Consumer<List<T>> visitor) {
         boolean fullyResolved = true;
 
@@ -45,6 +47,9 @@ public class Utils {
     /// A combination is a list of the same size as {@code variants}.
     /// The i-th element of a combination is one of the items in the i-th {@code Set<T>}
     /// in {@code variants}.
+    ///
+    /// Compared to {@code visitCombinations}, here the order of the visitor calls matches the given order of the
+    /// variants.
     public static <T> void visitOrderedCombinations(List<List<T>> variants, Consumer<List<T>> visitor) {
         boolean fullyResolved = true;
 

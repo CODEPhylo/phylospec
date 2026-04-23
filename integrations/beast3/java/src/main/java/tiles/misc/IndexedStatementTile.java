@@ -27,7 +27,7 @@ public class IndexedStatementTile extends AstNodeTile<List<?>, Stmt.Indexed> {
         List<Expr.Variable> indices = this.getRootNode().indices;
         if (indices.size() != 1) {
             throw new TileApplicationError(
-                    "BEAST 2.8 does not support statement with two different indices.", "Only use one index variable."
+                    "BEAST 2.8 does not support statement with multiple indices.", "Only use one index variable."
             );
         }
 
