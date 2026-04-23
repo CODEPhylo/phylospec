@@ -7,10 +7,6 @@ import org.phylospec.ast.Stmt;
 import tiling.*;
 import tiles.AstNodeTile;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -42,13 +38,8 @@ public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw> {
     @Override
     public TypeToken<?> getTypeToken() {
         // we first try to get the state node type from the BoundDistribution input
-        Type expressionType = this.expressionInput.getTypeToken().getType();
-        if (expressionType instanceof ParameterizedType pt) {
-            Type typeArg = pt.getActualTypeArguments()[0];
-            if (!(typeArg instanceof TypeVariable) && !(typeArg instanceof WildcardType)) {
-                return TypeToken.of(typeArg);
-            }
-        }
+        TypeToken<?> resolved = TypeToken.firstConcreteTypeArg(this.expressionInput.getTypeToken());
+        if (resolved != null) return resolved;
 
         // we cannot obtain the type yet (e.g. before tiling)
         // we return a more general StateNode
