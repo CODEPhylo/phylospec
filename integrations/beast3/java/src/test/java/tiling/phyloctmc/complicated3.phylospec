@@ -28,3 +28,9 @@ Integer numBranches = numBranches(tree)
 // TILING_SUCCESS
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: tree, shape
+// P: tree_prior, shape_prior
+// L: alignment2_likelihood
+// EXPECTED BEAST STATE

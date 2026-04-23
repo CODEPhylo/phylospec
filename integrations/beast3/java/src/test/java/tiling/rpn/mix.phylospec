@@ -7,3 +7,10 @@ Real b = log(a) + 2
 // TILING_SUCCESS
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: x
+// P: x_prior
+// L: y_likelihood
+// CN: a, b
+// EXPECTED BEAST STATE

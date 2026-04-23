@@ -8,3 +8,8 @@ Tree tree ~ BirthDeath(
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: tree, diversificationRate, turnover
+// P: tree_prior, diversificationRate_prior, turnover_prior
+// EXPECTED BEAST STATE

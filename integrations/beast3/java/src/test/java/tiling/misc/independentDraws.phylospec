@@ -6,3 +6,8 @@ Real b ~ Gamma(shape=2.0, rate=1.0)
 // TILING_SUCCESS
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: a, b
+// P: a_prior, b_prior
+// EXPECTED BEAST STATE

@@ -1,5 +1,9 @@
 Real log2 = log(x=-10.0)
 
 // EXPECTED_TILES
-// Unsupported operation. BEAST 2.8 cannot deal with the value you provided for the 'x' argument for 'log'.
+// TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// CN: log2
+// EXPECTED BEAST STATE

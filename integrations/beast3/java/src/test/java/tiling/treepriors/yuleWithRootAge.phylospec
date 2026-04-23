@@ -6,3 +6,8 @@ Tree tree ~ Yule(birthRate=1.0, rootAge=rootAge, taxa=taxa(data))
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: rootAge, tree
+// P: rootAge_prior, tree_prior
+// EXPECTED BEAST STATE

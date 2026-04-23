@@ -2,6 +2,7 @@ package tiles.observations;
 
 import beast.base.inference.StateNode;
 import beastconfig.BEASTState;
+import org.phylospec.ast.Stmt;
 import tiles.TemplateTile;
 import tiling.*;
 
@@ -22,10 +23,19 @@ public class ObservedAsTile extends TemplateTile<StateNode> {
         UnboundDistribution<? extends StateNode, ?> evaluatedDistribution = this.distributionInput.apply(beastState, indexVariables);
         StateNode observedStateNode = this.observationInput.apply(beastState, indexVariables);
 
+        // find the ID
+
+        String id = "likelihood";
+        if (this.getRootNode() instanceof Stmt stmt) {
+            id = stmt.getName() + "_likelihood";
+        } else if (observedStateNode.getID() != null) {
+            id = observedStateNode.getID() + "_likelihood";
+        }
+
         // we register the distribution as a likelihood with the given state node as parameter
 
         evaluatedDistribution.bind(observedStateNode);
-        beastState.addLikelihoodDistribution(evaluatedDistribution.distribution, observedStateNode.getID() + "_likelihood");
+        beastState.addLikelihoodDistribution(evaluatedDistribution.distribution, id);
 
         // we return the observed state
 

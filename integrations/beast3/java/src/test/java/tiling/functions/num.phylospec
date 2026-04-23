@@ -12,3 +12,8 @@ Integer k = numSites(data)
 // TILING_SUCCESS
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: tree
+// P: tree_prior
+// EXPECTED BEAST STATE

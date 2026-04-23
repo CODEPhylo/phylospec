@@ -3,3 +3,7 @@ String a = env(variable=env(variable="Hallo"), useFile=false)
 // EXPECTED_TILES
 // Unsupported operation. You cannot pass a value to the 'useFile' argument to run this in BEAST.
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// NO_STATE
+// EXPECTED BEAST STATE

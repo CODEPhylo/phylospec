@@ -59,12 +59,12 @@ public class BEASTState {
             return proposal;
         }
 
-        int prefix = 1;
-        while (this.ids.contains(proposal + prefix)) {
+        int prefix = 2;
+        while (this.ids.contains(proposal + "_" + prefix)) {
             prefix++;
         }
 
-        proposal = proposal + prefix;
+        proposal = proposal + "_" + prefix;
         this.ids.add(proposal);
         return proposal;
     }

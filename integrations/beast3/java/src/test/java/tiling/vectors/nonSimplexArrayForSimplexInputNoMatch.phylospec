@@ -4,3 +4,7 @@ QMatrix model = f81(baseFrequencies=[0.1, 0.2, 0.4])
 // EXPECTED_TILES
 // Unsupported operation. BEAST 2.8 cannot deal with the value you provided for the 'baseFrequencies' argument for 'f81'.
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// NO_STATE
+// EXPECTED BEAST STATE

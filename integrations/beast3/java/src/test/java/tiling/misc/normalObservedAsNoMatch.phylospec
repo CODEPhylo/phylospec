@@ -3,3 +3,7 @@ Real c ~ Normal(mean=2.0, sd=10.0) observed as "hallo"
 // EXPECTED_TILES
 // Unsupported operation. BEAST 2.8 cannot deal with the value you provided for observation.
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// NO_STATE
+// EXPECTED BEAST STATE

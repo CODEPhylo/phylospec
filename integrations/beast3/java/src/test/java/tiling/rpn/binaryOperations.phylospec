@@ -9,3 +9,9 @@ Real k = x*x*x*x + z / z - (5.0 - exp(z)) + sqrt(z)
 // TILING_SUCCESS
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: x, y
+// P: x_prior, y_prior
+// CN: w, m, k
+// EXPECTED BEAST STATE

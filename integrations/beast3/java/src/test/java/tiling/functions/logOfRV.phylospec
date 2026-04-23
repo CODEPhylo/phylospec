@@ -1,4 +1,4 @@
-Real x ~ LogNormal(logMean=0.0, logSd=1.0)
+Real log2 = log(x~Exponential(1.0))
 
 // EXPECTED_TILES
 // TILING_SUCCESS
@@ -7,4 +7,5 @@ Real x ~ LogNormal(logMean=0.0, logSd=1.0)
 // EXPECTED BEAST STATE
 // SN: x
 // P: x_prior
+// CN: log2
 // EXPECTED BEAST STATE

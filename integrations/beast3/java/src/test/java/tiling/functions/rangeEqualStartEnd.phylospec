@@ -8,3 +8,7 @@ Vector<Integer> x = range(start=5, end=5)
 // EXPECTED_APPLICATION_ERRORS
 // Empty range. You use a range with a length of 0. Specify a different start and end.
 // EXPECTED_APPLICATION_ERRORS
+
+// EXPECTED BEAST STATE
+// NO STATE
+// EXPECTED BEAST STATE

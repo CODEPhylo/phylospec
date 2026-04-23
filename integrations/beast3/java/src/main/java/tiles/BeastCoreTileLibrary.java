@@ -29,7 +29,6 @@ public class BeastCoreTileLibrary extends TileLibrary {
 
     static {
         addTile(new AssignmentTile());
-        addTile(new StateNodeAssignmentTile());
         addTile(new DrawTile());
         addTile(new LiteralTile<>());
         addTile(new VectorTile<>());

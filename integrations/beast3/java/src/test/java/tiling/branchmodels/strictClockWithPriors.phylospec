@@ -7,7 +7,7 @@ Distribution<Vector<Rate>> dist = StrictClock(
     clockRate~LogNormal(logMean=1, logSd=2.0),
     tree
 )
-Distribution<Vector<Rate>> dist = StrictClock(
+Distribution<Vector<Rate>> dist1 = StrictClock(
     clockRate~Gamma(shape=1.0, rate=2.0),
     tree
 )
@@ -16,3 +16,8 @@ Distribution<Vector<Rate>> dist = StrictClock(
 // TILING_SUCCESS
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: tree, clockRate_2, clockRate
+// P: tree_prior, clockRate_prior, clockRate_prior_2
+// EXPECTED BEAST STATE

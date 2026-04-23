@@ -3,3 +3,8 @@ Real x ~ Exponential(rate=2.0)
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: x
+// P: x_prior
+// EXPECTED BEAST STATE

@@ -8,3 +8,6 @@ Tree tree = fromTree(file)
 // EXPECTED_APPLICATION_ERRORS
 // Creating the BEAST 2.8 objects did not work. Check out the underlying BEAST 2.8 error:
 // EXPECTED_APPLICATION_ERRORS
+
+// EXPECTED BEAST STATE
+// EXPECTED BEAST STATE

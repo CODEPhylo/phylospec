@@ -12,3 +12,8 @@ Tree tree ~ BirthDeath(
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: samplingProb, rootAge, tree
+// P: tree_prior, samplingProb_prior, rootAge_prior
+// EXPECTED BEAST STATE

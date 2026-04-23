@@ -5,3 +5,8 @@ Vector<Real> c ~ Dirichlet(concentration=[1.0])
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: c
+// P: c_prior
+// EXPECTED BEAST STATE
