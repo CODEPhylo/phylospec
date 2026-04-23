@@ -2,11 +2,12 @@ package tiles.observations;
 
 import beast.base.inference.StateNode;
 import beastconfig.BEASTState;
+import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import tiles.TemplateTile;
 import tiling.*;
 
-import java.util.Map;
+import java.util.IdentityHashMap;
 
 public class ObservedAsTile extends TemplateTile<StateNode> {
 
@@ -19,7 +20,7 @@ public class ObservedAsTile extends TemplateTile<StateNode> {
     TemplateTileInput<? extends StateNode> observationInput = new TemplateTileInput<>("$observation");
 
     @Override
-    public StateNode applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public StateNode applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         UnboundDistribution<? extends StateNode, ?> evaluatedDistribution = this.distributionInput.apply(beastState, indexVariables);
         StateNode observedStateNode = this.observationInput.apply(beastState, indexVariables);
 

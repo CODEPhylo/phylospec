@@ -12,6 +12,7 @@ import tiling.FailedTilingAttempt;
 import tiling.Tile;
 import tiling.TypeToken;
 
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,7 +51,7 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
         );
 
         @Override
-        protected RPNCalculationResult applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        protected RPNCalculationResult applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
             RPNCalculationResult leftRpn = this.leftInput.apply(beastState, indexVariables);
             RPNCalculationResult rightRpn = this.rightInput.apply(beastState, indexVariables);
 
@@ -70,7 +71,7 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
         );
 
         @Override
-        protected RPNCalculationResult applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        protected RPNCalculationResult applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
             RPNCalculationResult leftRpn = this.leftInput.apply(beastState, indexVariables);
 
             Tensor<?, ?> right = this.rightInput.apply(beastState, indexVariables);
@@ -92,7 +93,7 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
         );
 
         @Override
-        protected RPNCalculationResult applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        protected RPNCalculationResult applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
             Tensor<?, ?> left = this.leftInput.apply(beastState, indexVariables);
             RPNCalculationResult leftRpn = RPNCalculationResult.from(left, beastState);
 
@@ -114,7 +115,7 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
         );
 
         @Override
-        protected RPNCalculationResult applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        protected RPNCalculationResult applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
             Tensor<?, ?> left = this.leftInput.apply(beastState, indexVariables);
             RPNCalculationResult leftRpn = RPNCalculationResult.from(left, beastState);
 

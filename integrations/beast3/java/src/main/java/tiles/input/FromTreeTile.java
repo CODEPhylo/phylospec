@@ -3,6 +3,7 @@ package tiles.input;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeParser;
 import beast.base.parser.NexusParser;
+import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
@@ -13,7 +14,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
+import java.util.IdentityHashMap;
 import java.util.Set;
 
 public class FromTreeTile extends GeneratorTile<Tree> {
@@ -28,7 +29,7 @@ public class FromTreeTile extends GeneratorTile<Tree> {
     );
 
     @Override
-    public Tree applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public Tree applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         String path = this.fileInput.apply(beastState, indexVariables);
         if (path.endsWith(".nex") || path.endsWith(".nexus") || path.endsWith(".trees")) {
             NexusParser nexusParser = new NexusParser();

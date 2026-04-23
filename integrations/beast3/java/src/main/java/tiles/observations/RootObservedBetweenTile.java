@@ -6,10 +6,11 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.evolution.tree.MRCAPrior;
 import beast.base.spec.inference.distribution.Uniform;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import org.phylospec.ast.Expr;
 import tiles.TemplateTile;
 import beastconfig.BEASTState;
 
-import java.util.Map;
+import java.util.IdentityHashMap;
 
 public class RootObservedBetweenTile extends TemplateTile<RealScalarParam<PositiveReal>> {
 
@@ -23,7 +24,7 @@ public class RootObservedBetweenTile extends TemplateTile<RealScalarParam<Positi
     TemplateTileInput<RealScalarParam<Real>> toInput = new TemplateTileInput<>("$to");
 
     @Override
-    public RealScalarParam<PositiveReal> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public RealScalarParam<PositiveReal> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Tree tree = this.treeInput.apply(beastState, indexVariables);
         RealScalarParam<Real> from = this.fromInput.apply(beastState, indexVariables);
         RealScalarParam<Real> to = this.toInput.apply(beastState, indexVariables);

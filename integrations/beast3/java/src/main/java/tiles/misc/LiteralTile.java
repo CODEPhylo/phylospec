@@ -12,6 +12,7 @@ import tiling.*;
 import tiles.AstNodeTile;
 
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -102,7 +103,7 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal> {
     }
 
     @Override
-    public T applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public T applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         return this.value;
     }
 

@@ -10,10 +10,11 @@ import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beastconfig.BEASTState;
+import org.phylospec.ast.Expr;
 import tiles.TemplateTile;
 import tiling.*;
 
-import java.util.Map;
+import java.util.IdentityHashMap;
 
 public class PhyloCTMCTile extends TemplateTile<UnboundDistribution<Alignment, TreeLikelihood>> {
 
@@ -35,7 +36,7 @@ public class PhyloCTMCTile extends TemplateTile<UnboundDistribution<Alignment, T
     TemplateTileInput<Partial<SiteModel, SubstitutionModel>> partialSiteRateModel = new TemplateTileInput<>("$$partialSiteRateModel", false);
 
     @Override
-    public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Tree tree = this.treeInput.apply(beastState, indexVariables);
         SubstitutionModel substitutionModel = this.substitutionModelInput.apply(beastState, indexVariables);
         Base branchRateModel = this.branchRateModelInput.apply(beastState, indexVariables);

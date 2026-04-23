@@ -6,10 +6,11 @@ import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
+import org.phylospec.ast.Expr;
 import tiling.*;
 import tiles.GeneratorTile;
 
-import java.util.Map;
+import java.util.IdentityHashMap;
 
 public class NormalTile extends GeneratorTile<BoundDistribution<RealScalarParam<Real>, Normal>> {
 
@@ -22,7 +23,7 @@ public class NormalTile extends GeneratorTile<BoundDistribution<RealScalarParam<
     GeneratorTileInput<RealScalar<PositiveReal>> sdInput = new GeneratorTileInput<>("sd");
 
     @Override
-    public BoundDistribution<RealScalarParam<Real>, Normal> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public BoundDistribution<RealScalarParam<Real>, Normal> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<Real> mean = this.meanInput.apply(beastState, indexVariables);
         RealScalar<PositiveReal> sd = this.sdInput.apply(beastState, indexVariables);
 

@@ -4,6 +4,7 @@ import beast.base.spec.domain.Int;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
+import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
@@ -11,7 +12,7 @@ import tiling.TypeToken;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
-import java.util.Map;
+import java.util.IdentityHashMap;
 import java.util.Set;
 
 public class RepeatIntTile extends GeneratorTile<IntVectorParam<Int>> {
@@ -42,7 +43,7 @@ public class RepeatIntTile extends GeneratorTile<IntVectorParam<Int>> {
     }
 
     @Override
-    public IntVectorParam<Int> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public IntVectorParam<Int> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         int value = this.valueInput.apply(beastState, indexVariables).get();
         int num = this.numInput.apply(beastState, indexVariables).get();
 

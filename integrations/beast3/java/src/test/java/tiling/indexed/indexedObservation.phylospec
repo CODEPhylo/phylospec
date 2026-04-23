@@ -1,4 +1,4 @@
-Alignment data = [
+Vector<Alignment> data = [
     fromNexus("src/test/java/resources/primate-mtDNA.nex"),
     fromNexus("src/test/java/resources/primate-mtDNA.nex")
 ]
@@ -13,7 +13,7 @@ QMatrix qMatrix[i] = hky(
  baseFrequencies~Dirichlet(repeat(1.0, num=4))
 ) for i in 1:2
 
-Alignment alignment ~ PhyloCTMC(
+Alignment alignment[i] ~ PhyloCTMC(
   tree, qMatrix=qMatrix[i]
 ) observed as data[i] for i in 1:2
 
@@ -22,10 +22,10 @@ Alignment alignment ~ PhyloCTMC(
 // EXPECTED_TILES
 
 // EXPECTED_APPLICATION_ERRORS
-// h
 // EXPECTED_APPLICATION_ERRORS
 
 // EXPECTED BEAST STATE
-// SN: vector2
-// P: vector2_prior
+// SN: tree, kappa_1, kappa_2, baseFrequencies_1, baseFrequencies_2
+// P: tree_prior, kappa_1_prior, kappa_2_prior, baseFrequencies_1_prior, baseFrequencies_2_prior
+// L: alignment_1_likelihood, alignment_2_likelihood
 // EXPECTED BEAST STATE

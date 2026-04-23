@@ -7,12 +7,13 @@ import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
 import beast.base.spec.evolution.tree.coalescent.RandomTree;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
+import org.phylospec.ast.Expr;
 import tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
-import java.util.Map;
+import java.util.IdentityHashMap;
 
 public class ConstantCoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coalescent>> {
 
@@ -25,7 +26,7 @@ public class ConstantCoalescentTile extends GeneratorTile<BoundDistribution<Tree
     GeneratorTileInput<DecoratedAlignment> taxaInput = new GeneratorTileInput<>("taxa", true);
 
     @Override
-    public BoundDistribution<Tree, Coalescent> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public BoundDistribution<Tree, Coalescent> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<? extends PositiveReal> populationSize = this.populationSizeInput.apply(beastState, indexVariables);
         DecoratedAlignment taxaAlignment = this.taxaInput.apply(beastState, indexVariables);
 

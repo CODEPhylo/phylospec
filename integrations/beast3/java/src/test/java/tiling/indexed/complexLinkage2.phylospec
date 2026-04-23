@@ -19,10 +19,10 @@ Alignment alignment[i] ~ PhyloCTMC(
 // EXPECTED_TILES
 
 // EXPECTED_APPLICATION_ERRORS
-// h
 // EXPECTED_APPLICATION_ERRORS
 
 // EXPECTED BEAST STATE
-// SN: vector2
-// P: vector2_prior
+// SN: tree, kappa_1, kappa_2, baseFrequencies_1, baseFrequencies_2
+// P: tree_prior, kappa_1_prior, kappa_2_prior, baseFrequencies_1_prior, baseFrequencies_2_prior
+// L: alignment_1_likelihood, alignment_2_likelihood
 // EXPECTED BEAST STATE

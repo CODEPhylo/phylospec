@@ -3,12 +3,13 @@ package tiles.mcmc;
 import beast.base.core.BEASTObject;
 import beast.base.inference.Logger;
 import beastconfig.LoggerSelector;
+import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.TemplateTile;
 import beastconfig.BEASTState;
 
+import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class TreeLoggerTile extends TemplateTile<Void> {
@@ -36,7 +37,7 @@ public class TreeLoggerTile extends TemplateTile<Void> {
     );
 
     @Override
-    protected Void applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    protected Void applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Integer logEvery = this.logEveryInput.apply(beastState, indexVariables);
         String fileName = this.fileNameInput.apply(beastState, indexVariables);
         List<BEASTObject> parameters = this.treesInput.apply(beastState, indexVariables);

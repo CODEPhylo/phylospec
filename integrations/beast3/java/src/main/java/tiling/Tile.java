@@ -3,6 +3,7 @@ package tiling;
 import beastconfig.BEASTState;
 import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
+import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
@@ -53,17 +54,6 @@ public abstract class Tile<T> {
             VariableResolver variableResolver,
             StochasticityResolver stochasticityResolver
     ) throws FailedTilingAttempt;
-
-    /**
-     * Checks if this tile is dependent on a given index variable.
-     */
-    public boolean isDependentOnIndexVariable(String indexVariable) {
-        for (TileInput<?> input : this.getTileInputs()) {
-            Tile<?> inputTile = input.getTile();
-            if (inputTile != null && input.getTile().isDependentOnIndexVariable(indexVariable)) return true;
-        }
-        return false;
-    }
 
     /**
      * Recursively walks this tile's wired sub-tiles and verifies that no AstNode is committed
@@ -191,29 +181,35 @@ public abstract class Tile<T> {
 
     /** methods to apply a tiling */
 
-    private final Map<Map<String, Integer>, T> appliedWithIndexedVariables = new HashMap<>();
+    private final Map<IdentityHashMap<Expr.Variable, Integer>, T> appliedWithIndexedVariables = new HashMap<>();
 
     /**
      * Applies the tile. Memoization is used to not apply the same tile twice.
      */
-    public T apply(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public T apply(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+        // we filter the index Variables by the one in the current scope
+        IdentityHashMap<Expr.Variable, Integer> indexVariablesInScope = new IdentityHashMap<>();
+        for (Expr.Variable variable : indexVariables.keySet()) {
+            if (this.getIndexVariables().contains(variable)) {
+                indexVariablesInScope.put(variable, indexVariables.get(variable));
+            }
+        }
+
         // we check if we have already applied this tile with the given index variables
-        for (Map<String, Integer> previousIndexVariables : this.appliedWithIndexedVariables.keySet()) {
-            if (previousIndexVariables.size() != indexVariables.size()) continue;
+        for (IdentityHashMap<Expr.Variable, Integer> previousIndexVariables : this.appliedWithIndexedVariables.keySet()) {
+            if (previousIndexVariables.size() != indexVariablesInScope.size()) continue;
 
             boolean allMatch = true;
-            for (String index : indexVariables.keySet()) {
-                if (!this.isDependentOnIndexVariable(index)) continue;
-
-                if (!Objects.equals(indexVariables.get(index), previousIndexVariables.get(index))) allMatch = false;
+            for (Expr.Variable index : indexVariablesInScope.keySet()) {
+                if (!Objects.equals(indexVariablesInScope.get(index), previousIndexVariables.get(index))) allMatch = false;
             }
 
             if (allMatch) return this.appliedWithIndexedVariables.get(previousIndexVariables);
         }
 
         try {
-            T result = this.applyTile(beastState, indexVariables);
-            this.appliedWithIndexedVariables.put(new HashMap<>(indexVariables), result);
+            T result = this.applyTile(beastState, indexVariablesInScope);
+            this.appliedWithIndexedVariables.put(new IdentityHashMap<>(indexVariablesInScope), result);
             return result;
         } catch (TileApplicationError tilingError) {
             // attach node if needed
@@ -235,7 +231,7 @@ public abstract class Tile<T> {
     /**
      * Applies the tile. This method should be overridden by custom tiles.
      */
-    protected abstract T applyTile(BEASTState beastState, Map<String, Integer> indexVariables);
+    protected abstract T applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables);
 
     /* root node of an applied tile */
 
@@ -247,6 +243,18 @@ public abstract class Tile<T> {
 
     public void setRootNode(AstNode node) {
         this.rootNode = node;
+    }
+
+    /* index variables in scope */
+
+    private Set<Expr.Variable> indexVariables;
+
+    public Set<Expr.Variable> getIndexVariables() {
+        return this.indexVariables;
+    }
+
+    public void setIndexVariables(Set<Expr.Variable> currentIndexVariables) {
+        this.indexVariables = currentIndexVariables;
     }
 
     /* tiling weight */
@@ -273,4 +281,5 @@ public abstract class Tile<T> {
             throw new RuntimeException("Tile " + getClass().getSimpleName() + " has no public no-arg constructor", e);
         }
     }
+
 }

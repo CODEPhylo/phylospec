@@ -1,11 +1,12 @@
 package tiles.input;
 
+import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import tiling.TileApplicationError;
 
-import java.util.Map;
+import java.util.IdentityHashMap;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,7 +28,7 @@ public class ParserTile {
         );
 
         @Override
-        public DelimiterParser applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        public DelimiterParser applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
             return new DelimiterParser(this.delimiterInput.apply(beastState, indexVariables), this.partInput.apply(beastState, indexVariables));
         }
 
@@ -43,7 +44,7 @@ public class ParserTile {
         GeneratorTileInput<String> regexInput = new GeneratorTileInput<>("regex");
 
         @Override
-        public RegexParser applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+        public RegexParser applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
             return new RegexParser(this.regexInput.apply(beastState, indexVariables));
         }
 

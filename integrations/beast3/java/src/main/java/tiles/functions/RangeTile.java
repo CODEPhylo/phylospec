@@ -1,17 +1,17 @@
 package tiles.functions;
 
 import beast.base.spec.domain.Int;
-import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
+import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import tiling.TileApplicationError;
 
+import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class RangeTile extends GeneratorTile<IntVectorParam<Int>> {
@@ -29,7 +29,7 @@ public class RangeTile extends GeneratorTile<IntVectorParam<Int>> {
     );
 
     @Override
-    public IntVectorParam<Int> applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public IntVectorParam<Int> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         int start = this.startInput.apply(beastState, indexVariables).get();
         int end = this.endInput.apply(beastState, indexVariables).get();
         int num = Math.abs(end - start);

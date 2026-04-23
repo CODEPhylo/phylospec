@@ -27,6 +27,8 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
     private final VariableResolver variableResolver;
     private final StochasticityResolver stochasticityResolver;
 
+    private Set<Expr.Variable> currentIndexVariables;
+
     // statements that have already been claimed by a tile covering multiple statements
     private final Set<Stmt> consumedStatements;
 
@@ -44,9 +46,10 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
         this.operatorTiles = operatorTiles;
         this.variableResolver = variableResolver;
         this.stochasticityResolver = stochasticityResolver;
+        this.currentIndexVariables = Collections.newSetFromMap(new IdentityHashMap<>());
         this.evaluatedTiles = new IdentityHashMap<>();
         this.bestEvaluatedTiles = new IdentityHashMap<>();
-        this.consumedStatements = new HashSet<>();
+        this.consumedStatements = Collections.newSetFromMap(new IdentityHashMap<>());
         this.allFailures = new IdentityHashMap<>();
         this.depthCache = new IdentityHashMap<>();
         this.matchedOperatorTiles = new ArrayList<>();
@@ -144,7 +147,7 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
      */
     public BEASTState applyBestTiling(BEASTState beastState) {
         for (Tile<?> bestTiling : this.bestTiles) {
-            bestTiling.apply(beastState, new HashMap<>());
+            bestTiling.apply(beastState, new IdentityHashMap<>());
         }
 
         return beastState;
@@ -184,9 +187,16 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
                 continue;
             }
 
-            // sanity check
+            // sanity check: check that all tiles have a root associated with them
+
             for (Tile<?> t : evaluatedTiles) {
-                if (t.getRootNode() == null) throw new RuntimeException();
+                if (t.getRootNode() == null) t.setRootNode(node);
+            }
+
+            // add the index variables of the current scope
+
+            for (Tile<?> t : evaluatedTiles) {
+                if (t.getIndexVariables() == null) t.setIndexVariables(this.currentIndexVariables);
             }
 
             this.evaluatedTiles.get(node).addAll(evaluatedTiles);
@@ -200,6 +210,8 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
 
         return null;
     }
+
+    /* error handling */
 
     /**
      * Finds the deepest leaf failure reachable from {@code root} via the cascade DAG and throws
@@ -352,13 +364,20 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitIndexedStmt(Stmt.Indexed indexed) {
+        if (!this.currentIndexVariables.isEmpty()) {
+            throw new RuntimeException("Non-empty index variables found. This should not happen.");
+        }
+        this.currentIndexVariables.addAll(indexed.indices);
         indexed.statement.accept(this);
+        this.currentIndexVariables = Collections.newSetFromMap(new IdentityHashMap<>());
+
         for (Expr.Variable index : indexed.indices) {
             index.accept(this);
         }
         for (Expr range : indexed.ranges) {
             range.accept(this);
         }
+
         return this.visitNode(indexed);
     }
 
@@ -394,7 +413,13 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
         Stmt variableDefinitionStmt = this.variableResolver.resolveVariable(expr);
 
         if (variableDefinitionStmt != null) {
+            // reset the index variable scope because we enter another statement
+            Set<Expr.Variable> oldIndexVariables = this.currentIndexVariables;
+            this.currentIndexVariables = Collections.newSetFromMap(new IdentityHashMap<>());
+
             variableDefinitionStmt.accept(this);
+
+            this.currentIndexVariables = oldIndexVariables;
             this.consumedStatements.add(variableDefinitionStmt);
 
             // we re-use the found tiles from the definition statement for the variable

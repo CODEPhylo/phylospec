@@ -1,11 +1,12 @@
 package tiles.misc;
 
 import beastconfig.BEASTState;
+import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import tiling.*;
 import tiles.AstNodeTile;
 
-import java.util.Map;
+import java.util.IdentityHashMap;
 
 public class AssignmentTile extends AstNodeTile<Object, Stmt.Assignment> {
 
@@ -14,7 +15,7 @@ public class AssignmentTile extends AstNodeTile<Object, Stmt.Assignment> {
     );
 
     @Override
-    public Object applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
+    public Object applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         return this.expressionInput.apply(beastState, indexVariables);
     }
 
