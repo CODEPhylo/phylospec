@@ -1,0 +1,28 @@
+Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+Tree tree ~ Yule(
+    birthRate=1.0, taxa=taxa(data)
+)
+
+Vector<PositiveReal> logMeans = [1.0, 0.5]
+
+QMatrix qMatrix = hky(
+ kappa~LogNormal(logMean=logMeans[1], logSd=0.5),
+ baseFrequencies~Dirichlet(repeat(1.0, num=4))
+)
+
+Alignment alignment[i] ~ PhyloCTMC(
+  tree, qMatrix
+) observed as data for i in 1:2
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED_APPLICATION_ERRORS
+// EXPECTED_APPLICATION_ERRORS
+
+// EXPECTED BEAST STATE
+// SN: tree, kappa, baseFrequencies
+// P: tree_prior, kappa_prior, baseFrequencies_prior
+// L: alignment_1_likelihood, alignment_2_likelihood
+// EXPECTED BEAST STATE
