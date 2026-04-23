@@ -4,3 +4,8 @@ Real x ~ LogNormal(mean=2.0, logSd=0.5)
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: x
+// P: x_prior
+// EXPECTED BEAST STATE

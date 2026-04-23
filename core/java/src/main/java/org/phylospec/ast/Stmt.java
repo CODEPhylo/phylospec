@@ -14,6 +14,8 @@ public abstract class Stmt extends AstNode {
 
     abstract public <S, E, T> S accept(AstVisitor<S, E, T> visitor);
 
+    abstract public String getName();
+
     /** Identifies which block a statement belongs to. */
     public sealed interface Block permits Block.NoBlock, Block.Data, Block.Model, Block.Mcmc, Block.Custom {
         record NoBlock() implements Block {}
@@ -80,6 +82,11 @@ public abstract class Stmt extends AstNode {
         public <S, E, T> S accept(AstVisitor<S, E, T> visitor) {
             return visitor.visitAssignment(this);
         }
+
+        @Override
+        public String getName() {
+            return this.name;
+        }
     }
 
     /** Represents a draw like `Real value ~ Normal(mean=1, sd=1)`. */
@@ -96,6 +103,11 @@ public abstract class Stmt extends AstNode {
         public final String name;
         @JsonPropertyDescription("The expression being drawn from.")
         public Expr expression;
+
+        @Override
+        public String getName() {
+            return this.name;
+        }
 
         @Override
         public boolean equals(Object o) {
@@ -127,6 +139,11 @@ public abstract class Stmt extends AstNode {
         public final Expr.Call decorator;
         @JsonPropertyDescription("The decorated statement.")
         public Stmt statement;
+
+        @Override
+        public String getName() {
+            return this.statement.getName();
+        }
 
         @Override
         public boolean equals(Object o) {
@@ -162,6 +179,11 @@ public abstract class Stmt extends AstNode {
         public final List<Expr> ranges;
 
         @Override
+        public String getName() {
+            return this.statement.getName();
+        }
+
+        @Override
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Indexed indexed = (Indexed) o;
@@ -186,6 +208,11 @@ public abstract class Stmt extends AstNode {
 
         @JsonPropertyDescription("The imported namespace name.")
         public final List<String> namespace;
+
+        @Override
+        public String getName() {
+            throw new UnsupportedOperationException();
+        }
 
         @Override
         public boolean equals(Object o) {
@@ -215,6 +242,11 @@ public abstract class Stmt extends AstNode {
         public Stmt stmt;
         @JsonPropertyDescription("The observed value.")
         public Expr observedAs;
+
+        @Override
+        public String getName() {
+            return this.stmt.getName();
+        }
 
         @Override
         public boolean equals(Object o) {
@@ -248,6 +280,11 @@ public abstract class Stmt extends AstNode {
         public Expr observedFrom;
         @JsonPropertyDescription("The upper bound.")
         public Expr observedTo;
+
+        @Override
+        public String getName() {
+            return this.stmt.getName();
+        }
 
         @Override
         public boolean equals(Object o) {

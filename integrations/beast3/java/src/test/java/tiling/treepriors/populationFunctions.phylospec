@@ -15,3 +15,8 @@ Tree tree2 ~ Coalescent(
 // TILING_SUCCESS
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: tree1, tree2, populationSize
+// P: tree1_prior, tree2_prior, populationSize_prior
+// EXPECTED BEAST STATE

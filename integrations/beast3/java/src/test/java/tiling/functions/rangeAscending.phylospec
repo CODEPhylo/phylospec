@@ -4,3 +4,6 @@ Vector<Integer> x = range(start=1, end=5)
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// EXPECTED BEAST STATE

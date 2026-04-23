@@ -3,3 +3,7 @@ Real b ~ Normal(mean=2.0, sd=10.0) observed as 100.0
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// L: b_likelihood
+// EXPECTED BEAST STATE

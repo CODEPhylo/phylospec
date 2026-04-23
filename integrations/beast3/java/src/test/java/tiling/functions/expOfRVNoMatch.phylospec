@@ -1,6 +1,0 @@
-Real y ~ Exponential(10.0)
-Real x = exp(y)
-
-// EXPECTED_TILES
-// Unsupported operation. BEAST 2.8 does not support a random variable for 'x'.
-// EXPECTED_TILES

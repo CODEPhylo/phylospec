@@ -95,7 +95,7 @@ public class TilingScriptFilesTest {
             for (int i = 0; i < expectedTileLines.size(); i++) {
                 String expected = expectedTileLines.get(i).trim();
                 String actual = actualTileLines.get(i).trim();
-                if (!actual.equals("TILING_SUCCESS")) {
+                if (!expected.equals("TILING_SUCCESS")) {
                     assertEquals(expected, actual, "Tile mismatch at index " + i + " for: " + psPath);
                 }
             }
@@ -164,12 +164,4 @@ public class TilingScriptFilesTest {
         return expected;
     }
 
-    private ComponentResolver loadComponentResolver() {
-        try {
-            List<ComponentLibrary> libraries = ComponentResolver.loadCoreComponentLibraries();
-            return new ComponentResolver(libraries);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

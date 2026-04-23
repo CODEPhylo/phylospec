@@ -8,3 +8,8 @@ Real z = normal + offset
 
 // EXPECTED_APPLICATION_ERRORS
 // EXPECTED_APPLICATION_ERRORS
+
+// EXPECTED BEAST STATE
+// SN: offset
+// P: offset_prior
+// EXPECTED BEAST STATE

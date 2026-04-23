@@ -15,3 +15,8 @@ Distribution<Vector<Rate>> dist = RelaxedClock(
 
 // EXPECTED_APPLICATION_ERRORS
 // EXPECTED_APPLICATION_ERRORS
+
+// EXPECTED BEAST STATE
+// SN: tree, branchRateCategories
+// P: tree_prior
+// EXPECTED BEAST STATE

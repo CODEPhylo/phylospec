@@ -5,3 +5,8 @@ Real a ~ Normal(mean, sd)
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: a
+// P: a_prior
+// EXPECTED BEAST STATE

@@ -16,3 +16,9 @@ Alignment alignment2 ~ PhyloCTMC(
 
 // EXPECTED_APPLICATION_ERRORS
 // EXPECTED_APPLICATION_ERRORS
+
+// EXPECTED BEAST STATE
+// SN: tree
+// P: tree_prior
+// L: alignment_likelihood, alignment2_likelihood
+// EXPECTED BEAST STATE

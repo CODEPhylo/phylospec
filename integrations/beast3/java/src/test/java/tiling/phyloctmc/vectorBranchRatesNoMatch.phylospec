@@ -20,3 +20,7 @@ Alignment alignment ~ PhyloCTMC(
 // EXPECTED_APPLICATION_ERRORS
 // Explicit branch rates are not supported. Use either 'StrictClock' or 'RelaxedClock' to specify branch rates.
 // EXPECTED_APPLICATION_ERRORS
+
+// EXPECTED BEAST STATE
+// NO_STATE
+// EXPECTED BEAST STATE

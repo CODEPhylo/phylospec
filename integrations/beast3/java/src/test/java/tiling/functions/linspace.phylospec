@@ -6,3 +6,6 @@ Vector<Real> intervalStartTimes = linspace(
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// EXPECTED BEAST STATE

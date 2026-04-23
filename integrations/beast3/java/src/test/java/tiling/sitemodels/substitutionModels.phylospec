@@ -35,3 +35,8 @@ QMatrix gtr = gtr(
 // TILING_SUCCESS
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: kappa, kappa_2, baseFrequencies, baseFrequencies_2, baseFrequencies_3, baseFrequencies_4
+// P: kappa_prior, kappa_prior_2, baseFrequencies_prior, baseFrequencies_prior_2, baseFrequencies_prior_3, baseFrequencies_prior_4
+// EXPECTED BEAST STATE

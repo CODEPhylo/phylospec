@@ -8,3 +8,7 @@ Vector<Integer> range = range(0, end=numBranches)
 // EXPECTED_TILES
 // Unsupported operation. BEAST 2.8 does not support a random variable for 'end'.
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// NO_STATE
+// EXPECTED BEAST STATE

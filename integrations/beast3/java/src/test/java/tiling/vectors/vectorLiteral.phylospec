@@ -10,3 +10,8 @@ Vector<Integer> b = [
 // TILING_SUCCESS
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: c
+// P: c_prior
+// EXPECTED BEAST STATE

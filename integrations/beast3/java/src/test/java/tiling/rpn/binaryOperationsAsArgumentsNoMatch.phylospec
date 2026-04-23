@@ -4,3 +4,7 @@ Real y ~ Normal(mean=x + x, sd=2.0)
 // EXPECTED_TILES
 // Unsupported operation. BEAST 2.8 cannot deal with the value you provided for the 'mean' argument for 'Normal'.
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// NO_STATE
+// EXPECTED BEAST STATE

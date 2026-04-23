@@ -20,3 +20,7 @@ Alignment alignment ~ PhyloCTMC(
 // EXPECTED_APPLICATION_ERRORS
 // Explicit site rates are not supported by BEAST 2.8. Use 'DiscreteGammaInv' to specify varying site rates, or don't specify any site rates for constant rates.
 // EXPECTED_APPLICATION_ERRORS
+
+// EXPECTED BEAST STATE
+// NO_STATE
+// EXPECTED BEAST STATE

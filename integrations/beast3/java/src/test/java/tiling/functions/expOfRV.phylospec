@@ -1,10 +1,12 @@
-Real x ~ LogNormal(logMean=0.0, logSd=1.0)
+Real y ~ Exponential(10.0)
+Real x = exp(y)
 
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
 
 // EXPECTED BEAST STATE
-// SN: x
-// P: x_prior
+// SN: y
+// P: y_prior
+// CN: x
 // EXPECTED BEAST STATE

@@ -16,3 +16,9 @@ Alignment alignment ~ PhyloCTMC(
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// SN: tree
+// P: tree_prior
+// L: alignment_likelihood
+// EXPECTED BEAST STATE

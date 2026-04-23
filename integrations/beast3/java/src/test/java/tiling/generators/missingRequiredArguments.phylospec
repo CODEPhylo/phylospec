@@ -3,3 +3,7 @@ String a = env(variable=env(variableName="Hallo"))
 // EXPECTED_TILES
 // Unsupported operation. You cannot pass a value to the 'variableName' argument to run this in BEAST.
 // EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// NO_STATE
+// EXPECTED BEAST STATE
