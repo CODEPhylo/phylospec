@@ -32,10 +32,10 @@ public class Utils {
                 visitCombinations(clonedTypeParams, visitor);
             }
 
-            fullyResolved = false;
+            return;
         }
 
-        if (fullyResolved) visitor.accept(
+        visitor.accept(
                 variants.stream().map(x -> x.iterator().next()).collect(Collectors.toList())
         );
     }
@@ -63,10 +63,10 @@ public class Utils {
                 visitOrderedCombinations(clonedTypeParams, visitor);
             }
 
-            fullyResolved = false;
+            return;
         }
 
-        if (fullyResolved) visitor.accept(
+        visitor.accept(
                 variants.stream().map(x -> x.iterator().next()).collect(Collectors.toList())
         );
     }
