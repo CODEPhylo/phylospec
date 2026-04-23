@@ -95,9 +95,7 @@ public class TilingScriptFilesTest {
             for (int i = 0; i < expectedTileLines.size(); i++) {
                 String expected = expectedTileLines.get(i).trim();
                 String actual = actualTileLines.get(i).trim();
-                if (!expected.equals("TILING_SUCCESS")) {
-                    assertEquals(expected, actual, "Tile mismatch at index " + i + " for: " + psPath);
-                }
+                assertEquals(expected, actual, "Tile mismatch at index " + i + " for: " + psPath);
             }
 
             // apply tiles if tiling succeeded and compare application errors

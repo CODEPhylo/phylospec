@@ -5,7 +5,7 @@ Real vector1[i] = 100 for i in 2:3
 // EXPECTED_TILES
 
 // EXPECTED_APPLICATION_ERRORS
-// Index 4 is greater than the number of elements. Use an index which is between 1 and 3.
+// BEAST 2.8 only supports ranges starting with 1. Start the range with 1.
 // EXPECTED_APPLICATION_ERRORS
 
 // EXPECTED BEAST STATE

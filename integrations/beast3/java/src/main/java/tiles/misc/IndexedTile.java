@@ -20,7 +20,7 @@ import java.util.Set;
 public class IndexedTile extends AstNodeTile<Object, Expr.Index> {
 
     AstNodeTileInput<List<?>, Expr.Index> vectorInput = new AstNodeTileInput<>(
-            "vector", expr -> expr.object, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+            "vector", expr -> expr.object
     );
     AstNodeTileInput<? extends IntScalar<? extends Int>, Expr.Index> firstIndexInput = new AstNodeTileInput<>(
             "index", expr -> expr.indices.getFirst()
