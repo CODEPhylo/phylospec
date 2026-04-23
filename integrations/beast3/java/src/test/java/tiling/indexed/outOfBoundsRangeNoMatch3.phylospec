@@ -1,0 +1,12 @@
+Real vector1[i] = 100 for i in 4:3
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED_APPLICATION_ERRORS
+// BEAST 2.8 only supports ranges starting with 1. Start the range with 1.
+// EXPECTED_APPLICATION_ERRORS
+
+// EXPECTED BEAST STATE
+// EXPECTED BEAST STATE
