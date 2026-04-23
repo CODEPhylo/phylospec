@@ -3,12 +3,10 @@ package tiling;
 import beastconfig.BEASTState;
 import org.phylospec.Utils;
 import org.phylospec.ast.*;
-import org.phylospec.domain.Int;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Visits an AST and determines the best tiling for each statement by selecting the lowest-weight
@@ -63,6 +61,7 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
      * @return one best tile per unconsumed statement, in source order
      */
     public List<Tile<?>> getBestTiling(List<Stmt> statements) {
+        // we first find all matching tiles for every AstNode
         // we start with the last statements and go backwards
 
         List<List<Tile<?>>> possibleTiles = new ArrayList<>();
@@ -76,18 +75,19 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
                 continue;
             }
 
-            // find all tilings
+            // find all tilings for this statement
 
             stmt.accept(this);
             Set<Tile<?>> candidateTiles = this.evaluatedTiles.get(stmt);
 
             if (candidateTiles.isEmpty()) {
+                // no valid tiling found
                 this.throwDeepestFailure(stmt);
             }
 
-            // remove all inconsistent tilings
+            // remove all inconsistent tilings (tilings where the same AstNode maps is tiled with different tiles)
 
-            candidateTiles.removeIf(x -> !x.isConsistent(new IdentityHashMap<>()));
+            candidateTiles.removeIf(x -> x.isInconsistent(new IdentityHashMap<>()));
 
             // sort them by weight (least first)
 
@@ -98,30 +98,35 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
         }
 
         List<Tile<?>> bestTiles = new ArrayList<>();
-        int[] bestTileWeight = new int[] {Integer.MAX_VALUE};
+        boolean[] foundBestTile = new boolean[] {false};
 
         Utils.visitOrderedCombinations(possibleTiles, tiles -> {
-            if (bestTileWeight[0] < Integer.MAX_VALUE) return;
+            if (foundBestTile[0]) {
+                // we've already found the (greedy) best one
+                return;
+            }
 
             // check for consistency across the statement tiles
+
             IdentityHashMap<AstNode, Tile<?>> assignments = new IdentityHashMap<>();
 
-            int weightSum = 0;
             for (Tile<?> tile : tiles) {
-                if (!tile.isConsistent(assignments)) return;
-                weightSum += tile.getWeight();
+                if (tile.isInconsistent(assignments)) return;
             }
 
-            if (weightSum < bestTileWeight[0]) {
-                bestTiles.clear();
-                bestTiles.addAll(tiles);
-                bestTileWeight[0] = weightSum;
-            }
+            // we found a consistent tiling
+            // we sorted the candidates by weight earlier, but there could still be a lower-weight consistent tiling
+            // however, we just greedily pick the first consistent one because otherwise this is exponential and
+            // might blow up quickly
+
+            bestTiles.clear();
+            bestTiles.addAll(tiles);
+            foundBestTile[0] = true;
         });
 
-        if (bestTileWeight[0] == Integer.MAX_VALUE) {
+        if (!foundBestTile[0]) {
             // no consistent tiling found
-            // this usually does not happen
+            // this is very rare
             throw new TileApplicationError(
                     "Unsupported operation.", "Your model is not supported by BEAST 2.8."
             );
