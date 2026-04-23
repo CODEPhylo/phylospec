@@ -27,24 +27,12 @@ public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw> {
 
         // construct ID
 
-        StringBuilder id = new StringBuilder(this.getRootNode().name);
-
-        if (!indexVariables.isEmpty()) {
-            Map<String, String> sortedIndexValues = new TreeMap<>();
-            for (Expr.Variable indexVar : indexVariables.keySet()) {
-                // this does not work with duplicate index names, but this never happens
-                sortedIndexValues.put(indexVar.variableName, indexVariables.get(indexVar).toString());
-            }
-
-            for (String index : sortedIndexValues.keySet()) {
-                id.append("_").append(sortedIndexValues.get(index));
-            }
-        }
+        String id = this.getId(this.getRootNode().name, indexVariables, "");
 
         // we initialize the state node and add it to the BEAST state
 
         evaluatedDistribution.bind();
-        beastState.addStateNode(evaluatedDistribution.stateNode, this.getTypeToken(), id.toString());
+        beastState.addStateNode(evaluatedDistribution.stateNode, this.getTypeToken(), id);
         beastState.addPriorDistribution(evaluatedDistribution.stateNode, evaluatedDistribution.distribution, id + "_prior");
 
         // we return the initialized state node

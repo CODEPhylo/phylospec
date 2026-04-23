@@ -31,32 +31,20 @@ public class ObservedAsAlignmentTile extends TemplateTile<DecoratedAlignment> {
 
         // find the ID
 
-        StringBuilder id = new StringBuilder();
+        String prefix = "";
 
         if (this.getRootNode() instanceof Stmt stmt) {
-            id.append(stmt.getName()).append("_");
+            prefix = stmt.getName();
         } else if (observedStateNode.alignment() != null) {
-            id.append(observedStateNode.alignment()).append("_");
+            prefix = observedStateNode.alignment().getID();
         }
 
-        if (!indexVariables.isEmpty()) {
-            Map<String, String> sortedIndexValues = new TreeMap<>();
-            for (Expr.Variable indexVar : indexVariables.keySet()) {
-                // this does not work with duplicate index names, but this never happens
-                sortedIndexValues.put(indexVar.variableName, indexVariables.get(indexVar).toString());
-            }
-
-            for (String index : sortedIndexValues.keySet()) {
-                id.append(sortedIndexValues.get(index)).append("_");
-            }
-        }
-
-        id.append("likelihood");
+        String id = this.getId(prefix, indexVariables, "likelihood");
 
         // we register the distribution as a likelihood with the given state node as parameter
 
         evaluatedDistribution.bind(observedStateNode.alignment());
-        beastState.addLikelihoodDistribution(evaluatedDistribution.distribution, id.toString());
+        beastState.addLikelihoodDistribution(evaluatedDistribution.distribution, id);
 
         // we return the observed state
 

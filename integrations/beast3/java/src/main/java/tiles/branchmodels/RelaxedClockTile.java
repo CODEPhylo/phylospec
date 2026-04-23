@@ -51,25 +51,13 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel> {
 
         // init the branch rate categories
 
-        StringBuilder branchRateCategoriesId = new StringBuilder("branchRateCategories");
-
-        if (!indexVariables.isEmpty()) {
-            Map<String, String> sortedIndexValues = new TreeMap<>();
-            for (Expr.Variable indexVar : indexVariables.keySet()) {
-                // this does not work with duplicate index names, but this never happens
-                sortedIndexValues.put(indexVar.variableName, indexVariables.get(indexVar).toString());
-            }
-
-            for (String index : sortedIndexValues.keySet()) {
-                branchRateCategoriesId.append("_").append(sortedIndexValues.get(index));
-            }
-        }
+        String id = this.getId("branchRateCategories", indexVariables, "");
 
         int numBranches = 2 * tree.getTaxaNames().length - 2;
         int[] rateArray = new int[numBranches];
         IntVectorParam<NonNegativeInt> rateCategories = new IntVectorParam<>(rateArray, NonNegativeInt.INSTANCE);
         beastState.addStateNode(rateCategories, new TypeToken<IntVectorParam<NonNegativeInt>>() {
-        }, branchRateCategoriesId.toString());
+        }, id);
 
         // init the relaxed clock
 
