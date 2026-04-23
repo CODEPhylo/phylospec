@@ -311,7 +311,14 @@ public class TypeUtils {
             ComponentResolver componentResolver
     ) {
         if (type.getExtends() != null) {
-            Set<ResolvedType> directlyExtendedTypeSet = ResolvedType.fromString(type.getExtends(), componentResolver);
+            HashMap<String, Set<ResolvedType>> inheritedTypeParameters = new HashMap<>();
+            for (String name : type.getParameterTypes().keySet()) {
+                inheritedTypeParameters.put(name, Set.of(type.getParameterTypes().get(name)));
+            }
+
+            Set<ResolvedType> directlyExtendedTypeSet = ResolvedType.fromString(
+                    type.getExtends(), inheritedTypeParameters, componentResolver, false
+            );
             for (ResolvedType directlyExtendedType : directlyExtendedTypeSet) {
                 visitTypeAndParents(directlyExtendedType, visitor, componentResolver);
             }

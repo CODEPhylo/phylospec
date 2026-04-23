@@ -1,0 +1,9 @@
+Real vector1[i] = 100 for i in 1:3
+Real vector2[i] = vector1[i + 1] for i in 1:2
+
+// EXPECTED_TILES
+// Unsupported operation. BEAST 2.8 cannot deal with the value you provided for index.
+// EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// EXPECTED BEAST STATE

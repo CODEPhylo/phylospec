@@ -101,7 +101,7 @@
       {
         "name": "SquareMatrix",
         "description": "Square matrix with equal number of rows and columns",
-        "extends": "Matrix",
+        "extends": "Matrix<T>",
         "namespace": "phylospec.types",
         "typeParameters": [
           "T"
