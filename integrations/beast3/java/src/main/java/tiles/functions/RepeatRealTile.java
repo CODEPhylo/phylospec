@@ -43,10 +43,8 @@ public class RepeatRealTile extends GeneratorTile<RealVectorParam<Real>> {
     @Override
     public TypeToken<?> getTypeToken() {
         // extract the domain type arg from RealScalarParam<D> to produce RealVectorParam<D>
-        TypeToken<?> valueType = this.valueInput.getTypeToken();
-        if (valueType != null && valueType.getType() instanceof java.lang.reflect.ParameterizedType pt) {
-            return TypeToken.parameterized(RealVectorParam.class, pt.getActualTypeArguments()[0]);
-        }
+        TypeToken<?> domainArg = TypeToken.firstConcreteTypeArg(this.valueInput.getTypeToken());
+        if (domainArg != null) return TypeToken.parameterized(RealVectorParam.class, domainArg.getType());
 
         // we return the basic vector type
         return super.getTypeToken();

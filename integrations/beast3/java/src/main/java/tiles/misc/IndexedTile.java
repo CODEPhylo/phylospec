@@ -3,16 +3,11 @@ package tiles.misc;
 import beast.base.spec.domain.Int;
 import beast.base.spec.type.IntScalar;
 import beastconfig.BEASTState;
-import com.google.gson.internal.bind.util.ISO8601Utils;
 import org.phylospec.ast.Expr;
 import tiles.AstNodeTile;
 import tiling.TileApplicationError;
 import tiling.TypeToken;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
 import java.util.IdentityHashMap;
 import java.util.List;
 
@@ -49,14 +44,9 @@ public class IndexedTile extends AstNodeTile<Object, Expr.Index> {
 
     @Override
     public TypeToken<?> getTypeToken() {
-        // we first try to get the state node type from the vector input
-        Type expressionType = this.vectorInput.getTypeToken().getType();
-        if (expressionType instanceof ParameterizedType pt) {
-            Type typeArg = pt.getActualTypeArguments()[0];
-            if (!(typeArg instanceof TypeVariable) && !(typeArg instanceof WildcardType)) {
-                return TypeToken.of(typeArg);
-            }
-        }
+        // we first try to get the element type from the vector input
+        TypeToken<?> resolved = TypeToken.firstConcreteTypeArg(this.vectorInput.getTypeToken());
+        if (resolved != null) return resolved;
 
         // we return the basic vector type
         return super.getTypeToken();

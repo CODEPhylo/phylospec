@@ -6,6 +6,7 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -73,6 +74,28 @@ public abstract class TypeToken<T> {
             }
         };
         return new TypeToken<>(pt) {};
+    }
+
+    /**
+     * Returns the first type argument of {@code container} as a {@code TypeToken}, or {@code null}
+     * if the type is not parameterized or the argument is still an unresolved variable or wildcard.
+     * Use this to "unwrap" a generic container, e.g. extracting {@code T} from {@code Foo<T>}.
+     */
+    public static TypeToken<?> firstConcreteTypeArg(TypeToken<?> container) {
+        if (container.getType() instanceof ParameterizedType pt) {
+            Type arg = pt.getActualTypeArguments()[0];
+            if (!(arg instanceof TypeVariable) && !(arg instanceof WildcardType)) {
+                return TypeToken.of(arg);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Builds a {@code TypeToken<List<E>>} from an element token.
+     */
+    public static TypeToken<?> listOf(TypeToken<?> element) {
+        return TypeToken.parameterized(List.class, element.getType());
     }
 
     /** Returns the underlying {@link Type} represented by this token. */

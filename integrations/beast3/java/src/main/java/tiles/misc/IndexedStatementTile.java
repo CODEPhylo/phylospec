@@ -53,9 +53,7 @@ public class IndexedStatementTile extends AstNodeTile<List<?>, Stmt.Indexed> {
     @Override
     public TypeToken<?> getTypeToken() {
         TypeToken<?> valueType = this.statementInput.getTypeToken();
-        if (valueType != null) {
-            return TypeToken.parameterized(List.class, valueType.getType());
-        }
+        if (valueType != null) return TypeToken.listOf(valueType);
 
         // we return the basic vector type
         return super.getTypeToken();
