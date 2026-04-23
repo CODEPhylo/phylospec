@@ -21,7 +21,6 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
     private List<Tile<?>> bestTiles;
 
     private final IdentityHashMap<AstNode, Set<Tile<?>>> evaluatedTiles;
-    private final IdentityHashMap<AstNode, Tile<?>> bestEvaluatedTiles;
     private final List<Tile<?>> matchedOperatorTiles;
 
     private final VariableResolver variableResolver;
@@ -48,7 +47,6 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
         this.stochasticityResolver = stochasticityResolver;
         this.currentIndexVariables = Collections.newSetFromMap(new IdentityHashMap<>());
         this.evaluatedTiles = new IdentityHashMap<>();
-        this.bestEvaluatedTiles = new IdentityHashMap<>();
         this.consumedStatements = Collections.newSetFromMap(new IdentityHashMap<>());
         this.allFailures = new IdentityHashMap<>();
         this.depthCache = new IdentityHashMap<>();
@@ -426,9 +424,6 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
 
             this.evaluatedTiles.put(
                     expr, this.evaluatedTiles.get(variableDefinitionStmt)
-            );
-            this.bestEvaluatedTiles.put(
-                    expr, this.bestEvaluatedTiles.get(variableDefinitionStmt)
             );
 
             return null;

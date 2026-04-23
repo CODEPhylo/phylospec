@@ -63,9 +63,6 @@ public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array> {
             list.add(tile.apply(beastState, indexVariables));
         }
 
-        System.out.println("H");
-        System.out.println(this.getTypeToken());
-
         return list;
     }
 
