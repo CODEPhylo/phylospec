@@ -284,4 +284,28 @@ public abstract class Tile<T> {
         }
     }
 
+    /**
+     * Constructs an ID consisting of the given prefix, postfix, and index variables.
+     */
+    protected String getId(String prefix, IdentityHashMap<Expr.Variable, Integer> indexVariables, String postfix) {
+        StringBuilder builder = new StringBuilder(prefix);
+
+        if (!indexVariables.isEmpty()) {
+            Map<String, String> sortedIndexValues = new TreeMap<>();
+            for (Expr.Variable indexVar : indexVariables.keySet()) {
+                // this does not work with duplicate index names, but this never happens
+                sortedIndexValues.put(indexVar.variableName, indexVariables.get(indexVar).toString());
+            }
+
+            for (String index : sortedIndexValues.keySet()) {
+                builder.append("_").append(sortedIndexValues.get(index));
+            }
+        }
+
+        if (!postfix.equals("")) {
+            builder.append("_").append(postfix);
+        }
+
+        return builder.toString();
+    }
 }
