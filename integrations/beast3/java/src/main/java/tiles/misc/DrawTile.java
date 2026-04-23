@@ -19,6 +19,11 @@ public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw> {
     );
 
     @Override
+    public boolean isDependentOnIndexVariable(String indexVariable) {
+        return true;
+    }
+
+    @Override
     public StateNode applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
         BoundDistribution<?, ?> evaluatedDistribution = this.expressionInput.apply(beastState, indexVariables);
 

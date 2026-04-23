@@ -19,6 +19,11 @@ public class ObservedAsAlignmentTile extends TemplateTile<DecoratedAlignment> {
     TemplateTileInput<DecoratedAlignment> observationInput = new TemplateTileInput<>("$observation");
 
     @Override
+    public boolean isDependentOnIndexVariable(String indexVariable) {
+        return true;
+    }
+
+    @Override
     public DecoratedAlignment applyTile(BEASTState beastState, Map<String, Integer> indexVariables) {
         // this is the same as ObservedAsTile, expect that we unwrap the alignment object from the DecoratedAlignment
 

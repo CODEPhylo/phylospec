@@ -70,33 +70,33 @@ public abstract class Tile<T> {
      * to two different sub-tiles anywhere in the sub-graph.
      * Throws {@link InconsistentTilingException} if an inconsistency is detected at any depth.
      */
-    public boolean isConsistent(IdentityHashMap<AstNode, Tile<?>> commitments) {
+    public boolean isInconsistent(IdentityHashMap<AstNode, Tile<?>> assignments) {
         Map<AstNode, Tile<?>> usedInputs;
 
         try {
-            usedInputs = this.getUsedInputs();
+            usedInputs = this.getWiredUpInputs();
         } catch (InconsistentTilingException exception) {
-            return false;
+            return true;
         }
 
         for (Map.Entry<AstNode, Tile<?>> entry : usedInputs.entrySet()) {
             AstNode inputNode = entry.getKey();
             Tile<?> inputTile = entry.getValue();
 
-            Tile<?> existingInputTile = commitments.putIfAbsent(inputNode, inputTile);
+            Tile<?> existingInputTile = assignments.putIfAbsent(inputNode, inputTile);
 
             if (existingInputTile == null) {
-                // new commitment — recurse into it
-                if (!inputTile.isConsistent(commitments)) {
-                    return false;
+                // new commitment - recurse into it
+                if (inputTile.isInconsistent(assignments)) {
+                    return true;
                 }
             } else if (existingInputTile != inputTile) {
-                return false;
+                return true;
             }
             // if existingInputTile == inputTile, this sub-tile has already been walked
         }
 
-        return true;
+        return false;
     }
 
     /**
@@ -105,7 +105,7 @@ public abstract class Tile<T> {
      * sub-tiles for the same AstNode, which indicates an intra-candidate inconsistency (e.g.
      * {@code f(x, x)} where the two x-slots picked different sub-tiles for the same declaration).
      */
-    public Map<AstNode, Tile<?>> getUsedInputs() throws InconsistentTilingException {
+    public Map<AstNode, Tile<?>> getWiredUpInputs() throws InconsistentTilingException {
         Map<AstNode, Tile<?>> usedInputs = new IdentityHashMap<>();
 
         for (TileInput<?> input : this.getTileInputs()) {

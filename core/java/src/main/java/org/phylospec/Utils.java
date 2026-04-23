@@ -40,6 +40,37 @@ public class Utils {
         );
     }
 
+    /// Calls the given visitor function for every combination of the given variants.
+    ///
+    /// A combination is a list of the same size as {@code variants}.
+    /// The i-th element of a combination is one of the items in the i-th {@code Set<T>}
+    /// in {@code variants}.
+    public static <T> void visitOrderedCombinations(List<List<T>> variants, Consumer<List<T>> visitor) {
+        boolean fullyResolved = true;
+
+        for (int i = 0; i < variants.size(); i++) {
+            List<T> parameterTypeSet = variants.get(i);
+
+            if (parameterTypeSet.size() == 1) continue;
+
+            for (T parameterType : parameterTypeSet) {
+                List<T> clonedParameterTypeSet = new ArrayList<>();
+                clonedParameterTypeSet.add(parameterType);
+
+                List<List<T>> clonedTypeParams = new ArrayList<>(variants);
+                clonedTypeParams.set(i, clonedParameterTypeSet);
+
+                visitOrderedCombinations(clonedTypeParams, visitor);
+            }
+
+            fullyResolved = false;
+        }
+
+        if (fullyResolved) visitor.accept(
+                variants.stream().map(x -> x.iterator().next()).collect(Collectors.toList())
+        );
+    }
+
     public static int editDistance(String a, String b) {
         if (a.equalsIgnoreCase(b)) return 0;
         int[] prev = new int[b.length() + 1];
