@@ -179,6 +179,18 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
                 );
             } catch (FailedTilingAttempt.Irrelevant e) {
                 continue;
+            } catch (FailedTilingAttempt.RejectedCascade e) {
+                if (e.getOtherNode() == node) {
+                    // the other node points to the node itself. This can sometimes happen due to template matching
+                    // or bugs in TileInput fields
+
+                    // we log this error as irrelevant as otherwise we might have cycles leading to stack overflows later
+                    failures.add(new FailedTilingAttempt.Irrelevant());
+                } else {
+                    failures.add(e);
+                }
+
+                continue;
             } catch (FailedTilingAttempt e) {
                 // this tile is relevant but couldn't be applied
                 failures.add(e);

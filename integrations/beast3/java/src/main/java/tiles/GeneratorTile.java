@@ -75,8 +75,7 @@ public abstract class GeneratorTile<T> extends Tile<T> implements TileFactory {
 
             if (currentCompatibleInputTiles.isEmpty()) {
                 throw new FailedTilingAttempt.RejectedBoundary(
-                        "BEAST 2.8 cannot deal with the value you provided for the '" + argumentName + "' argument for '" + this.getPhyloSpecGeneratorName() + "'.",
-                        argument
+                        "BEAST 2.8 cannot deal with the value you provided for the '" + argumentName + "' argument for '" + this.getPhyloSpecGeneratorName() + "'."
                 );
             }
 

@@ -60,8 +60,7 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> implemen
 
             if (compatibleInputs.isEmpty()) {
                 throw new FailedTilingAttempt.RejectedBoundary(
-                        "BEAST 2.8 cannot deal with the value you provided for " + tileInput.getKey() + ".",
-                        node
+                        "BEAST 2.8 cannot deal with the value you provided for " + tileInput.getKey() + "."
                 );
             }
 
