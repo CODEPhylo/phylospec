@@ -113,7 +113,7 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal> {
     }
 
     @Override
-    protected Tile<?> createInstance() {
+    public Tile<?> createInstance() {
         return new LiteralTile<>(new TypeToken<>() {
         }, null, null);
     }

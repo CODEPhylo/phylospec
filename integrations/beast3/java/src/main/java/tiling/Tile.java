@@ -1,34 +1,21 @@
 package tiling;
 
 import beastconfig.BEASTState;
-import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
-import org.phylospec.typeresolver.Stochasticity;
-import org.phylospec.typeresolver.StochasticityResolver;
-import org.phylospec.typeresolver.VariableResolver;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 
+/**
+ * A tile covers a subgraph of the PhyloSpec AST rooted at a root node and describes how to turn ("apply") this
+ * subgraph into BEAST objects.
+ */
 public abstract class Tile<T> {
-    /* methods to find a tiling */
 
-    /**
-     * Returns the default priority of these tiles. Can be overridden by custom tiles.
-     */
-    public TilePriority getPriority() {
-        return TilePriority.DEFAULT;
-    }
-
-    /**
-     * Returns the different stochasticity levels which the root of the AST subgraph covered by the tile can have.
-     */
-    protected Set<Stochasticity> getCompatibleStochasticities() {
-        return EnumSet.allOf(Stochasticity.class);
-    }
+    /* methods to evaluate a tiling */
 
     /**
      * Returns the {@code TypeToken<?>} produced when by a successful application of this tile.
@@ -44,16 +31,6 @@ public abstract class Tile<T> {
             throw new IllegalArgumentException("Tile " + this.getClass() + " has no return type parameter. Either specify the type in the type signature of the inheriting class, or override the getTypeToken method.");
         }
     }
-
-    /**
-     * Tries to tile this tile to the AST subgraph starting with 'node'. Has to be overridden by custom tiles.
-     */
-    public abstract Set<Tile<?>> tryToTile(
-            AstNode node, Map<AstNode,
-            Set<Tile<?>>> inputTiles,
-            VariableResolver variableResolver,
-            StochasticityResolver stochasticityResolver
-    ) throws FailedTilingAttempt;
 
     /**
      * Recursively walks this tile's wired sub-tiles and verifies that no AstNode is committed
@@ -132,53 +109,6 @@ public abstract class Tile<T> {
             }
         }
         return inputs;
-    }
-
-    /**
-     * Creates wired up fresh tiles for the given inputs and their compatible input tiles.
-     */
-    protected Set<Tile<?>> getWiredUpTiles(
-            List<TileInput<?>> tileInputs,
-            List<Set<Tile<?>>> compatibleInputTiles,
-            AstNode rootNode
-    ) {
-        Set<Tile<?>> wiredUpTiles = new HashSet<>();
-
-        Utils.visitCombinations(
-                compatibleInputTiles,
-                inputs -> {
-                    Tile<?> wiredUpTile = this.createInstance();
-
-                    // get TileInput fields from fresh instance
-
-                    Map<String, TileInput<?>> freshInputsByKey = new HashMap<>();
-                    for (TileInput<?> freshInput : wiredUpTile.getTileInputs()) {
-                        freshInputsByKey.put(freshInput.getKey(), freshInput);
-                    }
-
-                    // wire each input tile and accumulate weight
-
-                    int totalWeight = this.getPriority().getWeight();
-                    for (int i = 0; i < tileInputs.size(); i++) {
-                        Tile<?> inputTile = inputs.get(i);
-                        String tileInputKey = tileInputs.get(i).getKey();
-
-                        TileInput<?> freshInputTile = freshInputsByKey.get(tileInputKey);
-                        freshInputTile.setTile(inputTile);
-
-                        totalWeight += inputTile.getWeight();
-                    }
-
-                    wiredUpTile.setWeight(totalWeight);
-                    wiredUpTile.setRootNode(rootNode);
-
-                    if (!wiredUpTile.isInconsistent(new IdentityHashMap<>())) {
-                        wiredUpTiles.add(wiredUpTile);
-                    }
-                }
-        );
-
-        return wiredUpTiles;
     }
 
     /** methods to apply a tiling */
@@ -278,17 +208,6 @@ public abstract class Tile<T> {
     }
 
     /* helper */
-
-    /**
-     * Creates a new instance of this tile.
-     */
-    protected Tile<?> createInstance() {
-        try {
-            return this.getClass().getDeclaredConstructor().newInstance();
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException("Tile " + getClass().getSimpleName() + " has no public no-arg constructor", e);
-        }
-    }
 
     /**
      * Constructs an ID consisting of the given prefix, postfix, and index variables.

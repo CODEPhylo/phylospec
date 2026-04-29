@@ -36,7 +36,7 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array> {
     }
 
     @Override
-    protected Set<Stochasticity> getCompatibleStochasticities() {
+    public Set<Stochasticity> getCompatibleStochasticities() {
         return Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC);
     }
 
@@ -174,7 +174,7 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array> {
     }
 
     @Override
-    protected Tile<?> createInstance() {
+    public Tile<?> createInstance() {
         return new VectorTile<>(new TypeToken<>() {
         }, null);
     }

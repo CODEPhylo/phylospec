@@ -7,6 +7,7 @@ import org.phylospec.typeresolver.VariableResolver;
 import templatematching.AstTemplateMatcher;
 import tiling.FailedTilingAttempt;
 import tiling.Tile;
+import tiling.TileFactory;
 import tiling.TileInput;
 
 import java.lang.reflect.Field;
@@ -17,7 +18,7 @@ import java.util.*;
  * PhyloSpec template used to match the AST subgraph.
  * Use TemplateTileInput fields to specify the tile inputs (similar to BEAST 2.8 inputs).
  */
-public abstract class TemplateTile<T> extends Tile<T> {
+public abstract class TemplateTile<T> extends Tile<T> implements TileFactory {
 
     protected abstract String getPhyloSpecTemplate();
 
