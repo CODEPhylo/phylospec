@@ -27,20 +27,15 @@ public abstract class FailedTilingAttempt extends Throwable {
     /** This error indicates that the tile is relevant but failed due to an incompatibility at the tile boundary. */
     public static class RejectedBoundary extends FailedTilingAttempt {
         private final String reason;
-        private final AstNode otherNode;
 
-        public RejectedBoundary(String reason, AstNode otherNode) {
+        public RejectedBoundary(String reason) {
             this.reason = reason;
-            this.otherNode = otherNode;
         }
 
         public String getReason() {
             return reason;
         }
 
-        public AstNode getOtherNode() {
-            return otherNode;
-        }
     }
 
     /** This error indicates that the tile is relevant but failed due a missing tile at the interface. */

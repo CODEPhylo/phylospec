@@ -92,8 +92,7 @@ public abstract class TemplateTile<T> extends Tile<T> implements TileFactory {
             Set<Tile<?>> compatible = tileInput.getCompatibleInputTiles(inputAstNode, allInputTiles, stochasticityResolver);
             if (compatible.isEmpty()) {
                 throw new FailedTilingAttempt.RejectedBoundary(
-                        "BEAST 2.8 cannot deal with the value you provided for " + tileInput.getKey().replace("$", "") + ".",
-                        inputAstNode
+                        "BEAST 2.8 cannot deal with the value you provided for " + tileInput.getKey().replace("$", "") + "."
                 );
             }
 

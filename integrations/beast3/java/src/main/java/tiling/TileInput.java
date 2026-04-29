@@ -59,8 +59,7 @@ public abstract class TileInput<T> {
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(inputAstNode);
         if (!this.acceptedStochasticities.contains(stochasticity)) {
             throw new FailedTilingAttempt.RejectedBoundary(
-                    Stochasticity.getErrorMessage("BEAST 2.8", this.getKey(), stochasticity, this.acceptedStochasticities),
-                    inputAstNode
+                    Stochasticity.getErrorMessage("BEAST 2.8", this.getKey(), stochasticity, this.acceptedStochasticities)
             );
         }
 
