@@ -7,6 +7,7 @@ import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiling.FailedTilingAttempt;
 import tiling.Tile;
+import tiling.TileFactory;
 import tiling.TileInput;
 
 import java.lang.reflect.Field;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
  * This class represents tiles that cover a single generator call. Extend this class for custom tiles.
  * Use GeneratorTileInput fields to specify the tile inputs (similar to BEAST 2.8 inputs).
  */
-public abstract class GeneratorTile<T> extends Tile<T> {
+public abstract class GeneratorTile<T> extends Tile<T> implements TileFactory {
 
     public abstract String getPhyloSpecGeneratorName();
 

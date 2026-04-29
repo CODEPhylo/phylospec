@@ -17,6 +17,7 @@ import tiling.Tile;
 import tiles.distributions.*;
 import tiles.misc.*;
 import tiles.substitutionmodels.*;
+import tiling.TileFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +28,8 @@ import java.util.List;
 public class BeastCoreTileLibrary extends TileLibrary {
 
     @Override
-    public List<Tile<?>> getTiles() {
-        List<Tile<?>> tiles = new ArrayList<>();
+    public List<TileFactory> getTiles() {
+        List<TileFactory> tiles = new ArrayList<>();
 
         tiles.add(new AssignmentTile());
         tiles.add(new DrawTile());
