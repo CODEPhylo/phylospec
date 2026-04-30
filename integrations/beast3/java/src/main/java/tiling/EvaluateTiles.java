@@ -15,7 +15,7 @@ import java.util.*;
  */
 public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
 
-    private final List<TileFactory> candidateTiles;
+    private final List<CandidateTile> candidateTiles;
     private final List<Tile<?>> operatorTiles;
 
     private List<Tile<?>> bestTiles;
@@ -40,7 +40,7 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
     // sentinel depth for nodes that tiled successfully (they act as dead-ends in the cascade DAG)
     private static final int DEPTH_SUCCEEDED = Integer.MIN_VALUE;
 
-    public EvaluateTiles(List<TileFactory> candidateTiles, List<Tile<?>> operatorTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
+    public EvaluateTiles(List<CandidateTile> candidateTiles, List<Tile<?>> operatorTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
         this.candidateTiles = candidateTiles;
         this.operatorTiles = operatorTiles;
         this.variableResolver = variableResolver;
@@ -171,7 +171,7 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
 
         // we go through all tiles and try to apply them
 
-        for (TileFactory tile : this.candidateTiles) {
+        for (CandidateTile tile : this.candidateTiles) {
             Set<Tile<?>> evaluatedTiles;
             try {
                 evaluatedTiles = tile.tryToTile(

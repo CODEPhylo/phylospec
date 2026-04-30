@@ -6,7 +6,7 @@ import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiling.FailedTilingAttempt;
 import tiling.Tile;
-import tiling.TileFactory;
+import tiling.CandidateTile;
 import tiling.TileInput;
 
 import java.lang.reflect.Field;
@@ -18,7 +18,7 @@ import java.util.function.Function;
  * This class represents tiles that cover a single AstNode of type N. Extend this class for custom tiles.
  * Use AstNodeTileInput fields to specify the tile inputs (similar to BEAST 2.8 inputs).
  */
-public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> implements TileFactory {
+public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> implements CandidateTile {
 
     public Class<N> getTargetNodeType() {
         return (Class<N>) ((ParameterizedType) getClass().getGenericSuperclass())

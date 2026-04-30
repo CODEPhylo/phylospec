@@ -11,7 +11,7 @@ import java.util.*;
 /**
  * This interface provides methods to construct tiles for a subgraph of the PhyloSpec AST.
  */
-public interface TileFactory {
+public interface CandidateTile {
 
     /**
      * Tries to tile this tile to the AST subgraph starting with 'node'. Has to be overridden by custom tile factories.
