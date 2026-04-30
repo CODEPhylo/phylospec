@@ -31,6 +31,12 @@ function resolveTemplate(
   return result
 }
 
+function formatTabLabel(placeholder: string, index: number): string {
+  const name = placeholder.replace(/^\$/, '')
+  const words = name.replace(/([A-Z])/g, ' $1').trim()
+  return `${index + 1}. ${words.charAt(0).toUpperCase() + words.slice(1)}`
+}
+
 export function TemplateForm({ template, config, onChange }: TemplateFormProps) {
   const placeholders = Object.entries(config)
 
@@ -57,7 +63,7 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
 
         {/* tab bar */}
         <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
-          {placeholders.map(([placeholder]) => (
+          {placeholders.map(([placeholder], index) => (
             <button
               key={placeholder}
               onClick={() => setActiveTab(placeholder)}
@@ -67,7 +73,7 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
                   : 'border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
             >
-              {placeholder.replace(/^\$/, '')}
+              {formatTabLabel(placeholder, index)}
             </button>
           ))}
         </div>

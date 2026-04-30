@@ -1,5 +1,5 @@
 import { z, ZodType } from 'zod'
-import { register, getComponents } from '../registry'
+import { register, registerAlias, getComponents } from '../registry'
 import { GeneratorInput, GeneratorInputValue } from './GeneratorInput'
 import coreComponents from '@/app/core-components.json'
 
@@ -20,6 +20,12 @@ function buildExpression(
 
   if (lines.length === 0) return `${name}()`
   return `${name}(\n${lines.join(',\n')}\n)`
+}
+
+for (const type of coreComponents.componentLibrary.types) {
+  if ('alias' in type && typeof type.alias === 'string') {
+    registerAlias(type.name, type.alias)
+  }
 }
 
 const seen = new Set<string>()

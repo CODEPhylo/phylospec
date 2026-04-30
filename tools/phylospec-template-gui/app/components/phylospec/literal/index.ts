@@ -36,15 +36,6 @@ register({
   toExpression: String,
 })
 
-register({
-  id: 'literal.count',
-  label: 'Specific Value',
-  outputType: 'Count',
-  schema: nonNegativeIntegerSchema,
-  Component: (props) => IntegerInput({ ...props, schema: nonNegativeIntegerSchema, min: 0 }),
-  toExpression: String,
-})
-
 // real types
 
 const realSchema = z.number()
@@ -87,26 +78,6 @@ register({
   toExpression: String,
 })
 
-// Rate is an alias for PositiveReal
-register({
-  id: 'literal.rate',
-  label: 'Specific Value',
-  outputType: 'Rate',
-  schema: positiveRealSchema,
-  Component: (props) => RealInput({ ...props, schema: positiveRealSchema, min: 0 }),
-  toExpression: String,
-})
-
-// Age is an alias for NonNegativeReal
-register({
-  id: 'literal.age',
-  label: 'Specific Value',
-  outputType: 'Age',
-  schema: nonNegativeRealSchema,
-  Component: (props) => RealInput({ ...props, schema: nonNegativeRealSchema, min: 0 }),
-  toExpression: String,
-})
-
 // string
 
 const stringSchema = z.string()
@@ -116,5 +87,5 @@ register({
   outputType: 'String',
   schema: stringSchema,
   Component: (props) => StringInput({ ...props, schema: stringSchema }),
-  toExpression: (v) => `"${v}"`,
+  toExpression: (v) => typeof v === 'string' ? `"${v}"` : '',
 })

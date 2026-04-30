@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { getComponents } from './registry'
+import { getComponents, resolveAlias } from './registry'
 
 export type TypeSelectorValue = {
   componentId: string
@@ -17,7 +17,7 @@ type TypeSelectorProps = {
 }
 
 export function TypeSelector({ type, value, onChange, allowDistributions = false }: TypeSelectorProps) {
-  const distComponents = allowDistributions ? getComponents(`Distribution<${type}>`) : []
+  const distComponents = allowDistributions ? getComponents(`Distribution<${resolveAlias(type)}>`) : []
   const fixedComponents = getComponents(type)
   const distIds = new Set(distComponents.map((c) => c.id))
 
