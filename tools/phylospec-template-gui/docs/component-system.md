@@ -204,6 +204,38 @@ export type { PhyloSpecComponent, ComponentProps } from './types'
 
 ---
 
+## TemplateForm — `app/components/phylospec/TemplateForm.tsx`
+
+`TemplateForm` renders a form from a PhyloSpec template string and a config that maps `$placeholder` tokens to their types.
+
+```ts
+type PlaceholderConfig = { type: string }
+
+type TemplateFormProps = {
+  template: string
+  config: Record<string, PlaceholderConfig>  // keys include "$", e.g. "$tree"
+  onChange?: (resolvedTemplate: string) => void
+}
+```
+
+### Behaviour
+
+- Maintains `values: Record<string, TypeSelectorValue | null>` — one entry per placeholder key.
+- Calls `onChange` (if provided) with the resolved template whenever any value changes.
+- Unresolved placeholders (no value or no matching component) remain as their original `$name` token in the output.
+
+### Resolution
+
+For each placeholder, if a `TypeSelectorValue` is set (a component has been selected), the matching registered component's `toExpression` is called and the token is replaced via `String.replaceAll`. When `TypeSelectorValue.value` is `null` — which is permanent for zero-arg generators like `jc69` that have nothing to fill in — an empty record `{}` is passed to `toExpression` instead, producing `name()`. Placeholders with no component selected are left unchanged.
+
+### Layout
+
+Two columns (`items-start` so each side takes its own natural height):
+- **Left**: vertical list of labeled `TypeSelector` components, one per placeholder. The label shows the placeholder name without the leading `$`.
+- **Right**: a `<pre>` block showing the resolved template, with unresolved tokens left in place.
+
+---
+
 ## Adding a new component
 
 Call `register()` with a `PhyloSpecComponent<T>` from any module that gets imported before the component is used:
