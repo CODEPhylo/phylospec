@@ -15,14 +15,26 @@ export type GeneratorArg = {
 
 export type GeneratorInputValue = Record<string, TypeSelectorValue | null>
 
+export function formatGeneratorArgLabel(name: string): string {
+  const words = name.replace(/([A-Z])/g, ' $1').trim()
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
 type GeneratorInputProps = {
   value: GeneratorInputValue | null
   onChange: (value: GeneratorInputValue | null) => void
   args: GeneratorArg[]
   description?: string
+  collapseOptionalArgs?: boolean
 }
 
-export function GeneratorInput({ value, onChange, args, description }: GeneratorInputProps) {
+export function GeneratorInput({
+  value,
+  onChange,
+  args,
+  description,
+  collapseOptionalArgs = true,
+}: GeneratorInputProps) {
   const defaults = useContext(DefaultsContext)
 
   const sentinelDefaults = useMemo(
@@ -57,14 +69,10 @@ export function GeneratorInput({ value, onChange, args, description }: Generator
       )}
       {visibleArgs.map((arg) => {
         const argVal = value?.[arg.name] ?? null
+        const label = formatGeneratorArgLabel(arg.name)
         const operator = argVal ? (argVal.isDistribution ? '~' : '=') : '='
-        return (
-          <div key={arg.name} className="flex flex-col gap-1 rounded-lg bg-gray-50/50 border border-gray-200 p-3 dark:bg-gray-800/60">
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-medium">{arg.name}</span>
-              <span className="text-sm text-gray-500">{operator}</span>
-              {!arg.required && <span className="text-sm text-gray-500">(optional)</span>}
-            </div>
+        const content = (
+          <>
             <span className="text-sm italic text-gray-600">{arg.description}</span>
             <TypeSelector
               type={arg.type}
@@ -72,6 +80,44 @@ export function GeneratorInput({ value, onChange, args, description }: Generator
               onChange={(v) => handleArgChange(arg.name, v)}
               allowDistributions={true}
             />
+          </>
+        )
+
+        if (!arg.required && collapseOptionalArgs) {
+          return (
+            <details key={arg.name} className="group rounded-lg bg-gray-50/50 border border-gray-200 p-3 dark:bg-gray-800/60">
+              <summary className="flex cursor-pointer items-center gap-1">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="size-4 text-gray-500 rotate-180 transition-transform group-open:rotate-90"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.75 19.5 8.25 12l7.5-7.5"
+                  />
+                </svg>
+                <span className="text-sm font-medium">{label}</span>
+                <span className="text-sm text-gray-500">(optional)</span>
+              </summary>
+              <div className="mt-2 flex flex-col gap-1">
+                {content}
+              </div>
+            </details>
+          )
+        }
+
+        return (
+          <div key={arg.name} className="flex flex-col gap-1 rounded-lg bg-gray-50/50 border border-gray-200 p-3 dark:bg-gray-800/60">
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-medium">{label}</span>
+              {!arg.required && <span className="text-sm text-gray-500">(optional)</span>}
+            </div>
+            {content}
           </div>
         )
       })}

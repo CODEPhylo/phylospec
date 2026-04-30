@@ -30,6 +30,7 @@ registerGeneratorComponent({
       ...props,
       args: genArgs,
       description: def.description,
+      collapseOptionalArgs: true,
     }),
   toExpression: (value: GeneratorInputValue) =>
     buildExpression("fromNexus", genArgs, value),

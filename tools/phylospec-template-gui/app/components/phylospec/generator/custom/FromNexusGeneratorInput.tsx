@@ -5,13 +5,18 @@ import { TypeSelector, TypeSelectorValue } from "../../TypeSelector";
 import { DefaultsContext } from "../../DefaultsContext";
 import type { ComponentProps } from "../../types";
 import { DEFAULT_COMPONENT_ID } from "../constants";
-import type { GeneratorArg, GeneratorInputValue } from "../GeneratorInput";
+import {
+  formatGeneratorArgLabel,
+  type GeneratorArg,
+  type GeneratorInputValue,
+} from "../GeneratorInput";
 
 const LITERAL_STRING_ID = "literal.string";
 
 type FromNexusGeneratorInputProps = ComponentProps<GeneratorInputValue> & {
   args: GeneratorArg[];
   description?: string;
+  collapseOptionalArgs?: boolean;
 };
 
 export function FromNexusGeneratorInput({
@@ -19,6 +24,7 @@ export function FromNexusGeneratorInput({
   onChange,
   args,
   description,
+  collapseOptionalArgs = true,
 }: FromNexusGeneratorInputProps) {
   const defaults = useContext(DefaultsContext);
 
@@ -95,8 +101,7 @@ export function FromNexusGeneratorInput({
       {fileArg && (
         <div className="flex flex-col gap-1 rounded-lg border border-gray-200 bg-gray-50/50 p-3 dark:bg-gray-800/60">
           <div className="flex items-center gap-1">
-            <span className="text-sm font-medium">file</span>
-            <span className="text-sm text-gray-500">=</span>
+            <span className="text-sm font-medium">File</span>
             <span className="text-sm text-gray-500">(required)</span>
           </div>
           <span className="text-sm italic text-gray-600 dark:text-gray-400">
@@ -117,19 +122,10 @@ export function FromNexusGeneratorInput({
       )}
       {otherVisibleArgs.map((arg) => {
         const argVal = value?.[arg.name] ?? null;
+        const label = formatGeneratorArgLabel(arg.name);
         const operator = argVal ? (argVal.isDistribution ? "~" : "=") : "=";
-        return (
-          <div
-            key={arg.name}
-            className="flex flex-col gap-1 rounded-lg border border-gray-200 bg-gray-50/50 p-3 dark:bg-gray-800/60"
-          >
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-medium">{arg.name}</span>
-              <span className="text-sm text-gray-500">{operator}</span>
-              {!arg.required && (
-                <span className="text-sm text-gray-500">(optional)</span>
-              )}
-            </div>
+        const content = (
+          <>
             <span className="text-sm italic text-gray-600 dark:text-gray-400">
               {arg.description}
             </span>
@@ -139,6 +135,51 @@ export function FromNexusGeneratorInput({
               onChange={(v) => handleArgChange(arg.name, v)}
               allowDistributions={true}
             />
+          </>
+        );
+
+        if (!arg.required && collapseOptionalArgs) {
+          return (
+            <details
+              key={arg.name}
+              className="group rounded-lg border border-gray-200 bg-gray-50/50 p-3 dark:bg-gray-800/60"
+            >
+              <summary className="flex cursor-pointer items-center gap-1">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="size-4 text-gray-500 rotate-180 transition-transform group-open:rotate-90"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.75 19.5 8.25 12l7.5-7.5"
+                  />
+                </svg>
+                <span className="text-sm font-medium">{label}</span>
+                <span className="text-sm text-gray-500">(optional)</span>
+              </summary>
+              <div className="mt-2 flex flex-col gap-1">{content}</div>
+            </details>
+          );
+        }
+
+        return (
+          <div
+            key={arg.name}
+            className="flex flex-col gap-1 rounded-lg border border-gray-200 bg-gray-50/50 p-3 dark:bg-gray-800/60"
+          >
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-medium">{label}</span>
+              <span className="text-sm text-gray-500">{operator}</span>
+              {!arg.required && (
+                <span className="text-sm text-gray-500">(optional)</span>
+              )}
+            </div>
+            {content}
           </div>
         );
       })}
