@@ -24,7 +24,7 @@ export function TypeSelector({ type, value, onChange }: TypeSelectorProps) {
     return <span className="text-xs text-gray-400">No components registered for type &quot;{type}&quot;</span>
   }
 
-  const effectiveId = selectedId
+  const effectiveId = selectedId ?? (components.length === 1 ? components[0].id : null)
   const registration = effectiveId ? (components.find((c) => c.id === effectiveId) ?? null) : null
   const currentValue = value?.componentId === effectiveId ? value.value : null
 

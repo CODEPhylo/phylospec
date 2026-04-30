@@ -11,9 +11,9 @@ Alignment alignment ~ PhyloCTMC(
 ) observed as data`
 
 const CONFIG = {
-  '$fileName': { type: 'String' },
-  '$tree':     { type: 'Tree' },
-  '$qMatrix':  { type: 'QMatrix' },
+  '$fileName': { type: 'String',              description: 'Choose the nexus file with the alignment.' },
+  '$tree':     { type: 'Distribution<Tree>',  description: 'Specify a prior distribution over the tree topology and branch lengths.' },
+  '$qMatrix':  { type: 'QMatrix',             description: 'Select a substitution model for the alignment.' },
 }
 
 export function Demo() {
