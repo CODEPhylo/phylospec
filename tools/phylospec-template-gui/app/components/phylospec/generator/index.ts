@@ -3,6 +3,12 @@ import { register, registerAlias, getComponents } from '../registry'
 import { GeneratorInput, GeneratorInputValue } from './GeneratorInput'
 import coreComponents from '@/app/core-components.json'
 
+function indentContinuation(expr: string, col: number): string {
+  if (!expr.includes('\n')) return expr
+  const pad = ' '.repeat(col)
+  return expr.split('\n').map((line, i) => (i === 0 ? line : pad + line)).join('\n')
+}
+
 function buildExpression(
   name: string,
   args: { name: string; type: string }[],
@@ -15,7 +21,9 @@ function buildExpression(
     if (!argValue || argValue.value === null) continue
     const component = getComponents(arg.type).find((c) => c.id === argValue.componentId)
     if (!component) continue
-    lines.push(`    ${arg.name}=${component.toExpression(argValue.value)}`)
+    const prefix = `    ${arg.name}=`
+    const expr = component.toExpression(argValue.value)
+    lines.push(prefix + indentContinuation(expr, prefix.length))
   }
 
   if (lines.length === 0) return `${name}()`
