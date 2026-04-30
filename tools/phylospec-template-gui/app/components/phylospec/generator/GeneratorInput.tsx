@@ -53,7 +53,7 @@ export function GeneratorInput({ value, onChange, args, description }: Generator
   return (
     <div className="flex flex-col gap-4">
       {description && (
-        <p className="text-sm text-gray-600 dark:text-gray-400">{description}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 italic">{description}</p>
       )}
       {visibleArgs.map((arg) => {
         const argVal = value?.[arg.name] ?? null
@@ -65,7 +65,7 @@ export function GeneratorInput({ value, onChange, args, description }: Generator
               <span className="text-sm text-gray-500">{operator}</span>
               {!arg.required && <span className="text-sm text-gray-500">(optional)</span>}
             </div>
-            <span className="text-sm text-gray-600">{arg.description}</span>
+            <span className="text-sm italic text-gray-600">{arg.description}</span>
             <TypeSelector
               type={arg.type}
               value={argVal}

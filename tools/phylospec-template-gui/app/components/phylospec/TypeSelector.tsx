@@ -67,7 +67,7 @@ export function TypeSelector({ type, value, onChange, allowDistributions = false
             onClick={() => handleModeSwitch('fixed')}
             className={`px-3 py-1 ${
               mode === 'fixed'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-accent text-white'
                 : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
             }`}
           >
@@ -77,7 +77,7 @@ export function TypeSelector({ type, value, onChange, allowDistributions = false
             onClick={() => handleModeSwitch('prior')}
             className={`border-l border-gray-200 px-3 py-1 dark:border-gray-700 ${
               mode === 'prior'
-                ? 'bg-amber-500 text-white'
+                ? 'bg-cyan-600 text-white'
                 : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
             }`}
           >
@@ -95,7 +95,7 @@ export function TypeSelector({ type, value, onChange, allowDistributions = false
               onClick={() => handleSelect(c.id)}
               className={`rounded px-2.5 py-1 text-sm ${
                 c.id === effectiveId
-                  ? (mode === 'prior' && showModePicker ? 'bg-amber-500 text-white' : 'bg-blue-600 text-white')
+                  ? (mode === 'prior' && showModePicker ? 'bg-cyan-600 text-white' : 'bg-accent text-white')
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
               }`}
             >
