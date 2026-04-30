@@ -5,11 +5,13 @@ import '@/app/components/phylospec'
 import { useState, useEffect } from 'react'
 import { TypeSelector, type TypeSelectorValue } from './TypeSelector'
 import { getComponents } from './registry'
+import { DefaultsContext } from './DefaultsContext'
 
 type PlaceholderConfig = { type: string; name?: string; description?: string }
 
 export type TemplateFormConfig = {
   experimentName?: string
+  defaults?: Record<string, string>
   placeholders: Record<string, PlaceholderConfig>
 }
 
@@ -111,9 +113,8 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
     setValues((prev) => ({ ...prev, [placeholder]: v }))
   }
 
-  const activeConfig = placeholders[activeTab]
-
   return (
+    <DefaultsContext.Provider value={config.defaults ?? {}}>
     <div className="flex flex-col gap-4 font-mono text-sm">
 
       {experimentName && (
@@ -140,20 +141,20 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
             ))}
           </div>
 
-          {/* active tab content */}
-          {activeConfig && (
-            <div className="flex flex-col gap-3">
-              {activeConfig.description && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">{activeConfig.description}</p>
+          {/* tab content — all mounted, inactive ones hidden to preserve internal state */}
+          {placeholderEntries.map(([placeholder, cfg]) => (
+            <div key={placeholder} className={`flex flex-col gap-3${placeholder !== activeTab ? ' hidden' : ''}`}>
+              {cfg.description && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">{cfg.description}</p>
               )}
               <TypeSelector
-                type={activeConfig.type}
-                value={values[activeTab] ?? null}
-                onChange={(v) => handleChange(activeTab, v)}
+                type={cfg.type}
+                value={values[placeholder] ?? null}
+                onChange={(v) => handleChange(placeholder, v)}
                 allowDistributions={false}
               />
             </div>
-          )}
+          ))}
 
         </div>
 
@@ -170,5 +171,6 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
         </pre>
       </div>
     </div>
+    </DefaultsContext.Provider>
   )
 }

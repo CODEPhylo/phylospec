@@ -244,9 +244,15 @@ type PlaceholderConfig = {
   description?: string   // shown below the placeholder tab
 }
 
+type TemplateFormConfig = {
+  experimentName?: string
+  defaults?: Record<string, string>  // argument name → raw expression, e.g. { taxa: "taxa(data)" }
+  placeholders: Record<string, PlaceholderConfig>
+}
+
 type TemplateFormProps = {
   template: string
-  config: Record<string, PlaceholderConfig>  // keys include "$", e.g. "$tree"
+  config: TemplateFormConfig
   onChange?: (resolvedTemplate: string) => void
 }
 ```
@@ -256,10 +262,19 @@ type TemplateFormProps = {
 - Maintains `values: Record<string, TypeSelectorValue | null>` — one entry per placeholder.
 - Calls `onChange` (if provided) with the resolved template whenever any value changes.
 - Unresolved placeholders remain as their `$name` token in the output.
+- Provides `DefaultsContext` (from `DefaultsContext.ts`) to all descendants, carrying `config.defaults ?? {}`.
 
 ### Resolution
 
-For each placeholder, if a `TypeSelectorValue` is set, the matching component's `toExpression` is called and the token is replaced via `String.replaceAll`. When `TypeSelectorValue.value` is `null` — permanent for zero-arg generators like `jc69` — an empty record `{}` is passed to `toExpression`, producing `name()`.
+For each placeholder, if a `TypeSelectorValue` is set, the matching component's `toExpression` is called and the token is replaced. When `TypeSelectorValue.value` is `null` — permanent for zero-arg generators like `jc69` — an empty record `{}` is passed to `toExpression`, producing `name()`.
+
+### `defaults` — pre-filled generator arguments
+
+`defaults` maps generator argument names to raw PhyloSpec expression strings. When a `GeneratorInput` renders an argument whose name appears in `defaults`:
+
+- The argument row is not rendered — no user input is possible.
+- The raw expression string is injected into the generated output verbatim (e.g. `taxa=taxa(data)`).
+- The value is stored internally as a sentinel `TypeSelectorValue` with `componentId: '__default__'` and `value` equal to the raw expression string; `buildExpression` in `generator/index.ts` handles this sentinel.
 
 ### Layout
 

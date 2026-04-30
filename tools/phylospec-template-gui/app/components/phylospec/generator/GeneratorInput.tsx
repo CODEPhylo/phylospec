@@ -1,6 +1,9 @@
 'use client'
 
+import { useContext, useEffect, useMemo } from 'react'
 import { TypeSelector, TypeSelectorValue } from '../TypeSelector'
+import { DefaultsContext } from '../DefaultsContext'
+import { DEFAULT_COMPONENT_ID } from './index'
 
 export type GeneratorArg = {
   name: string
@@ -20,10 +23,31 @@ type GeneratorInputProps = {
 }
 
 export function GeneratorInput({ value, onChange, args, description }: GeneratorInputProps) {
-  if (args.length === 0 && !description) return null
+  const defaults = useContext(DefaultsContext)
+
+  const sentinelDefaults = useMemo(
+    () => Object.fromEntries(
+      args
+        .filter((arg) => arg.name in defaults)
+        .map((arg) => [arg.name, { componentId: DEFAULT_COMPONENT_ID, value: defaults[arg.name], isDistribution: false }])
+    ),
+    [args, defaults]
+  )
+
+  useEffect(() => {
+    if (Object.keys(sentinelDefaults).length === 0) return
+    const needsUpdate = Object.entries(sentinelDefaults).some(
+      ([k, v]) => value?.[k]?.componentId !== DEFAULT_COMPONENT_ID || value?.[k]?.value !== v.value
+    )
+    if (needsUpdate) onChange({ ...(value ?? {}), ...sentinelDefaults })
+  }, [sentinelDefaults])
+
+  const visibleArgs = args.filter((arg) => !(arg.name in defaults))
+
+  if (visibleArgs.length === 0 && !description) return null
 
   function handleArgChange(argName: string, v: TypeSelectorValue) {
-    onChange({ ...(value ?? {}), [argName]: v })
+    onChange({ ...(value ?? {}), ...sentinelDefaults, [argName]: v })
   }
 
   return (
@@ -31,7 +55,7 @@ export function GeneratorInput({ value, onChange, args, description }: Generator
       {description && (
         <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
       )}
-      {args.map((arg) => {
+      {visibleArgs.map((arg) => {
         const argVal = value?.[arg.name] ?? null
         const operator = argVal ? (argVal.isDistribution ? '~' : '=') : '='
         return (
