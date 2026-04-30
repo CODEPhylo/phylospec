@@ -2,16 +2,15 @@
 
 ## Goal
 
-The GUI lets users compose PhyloSpec models visually. Every UI component in this system corresponds to one PhyloSpec expression that produces a value of a specific type (e.g. `PositiveReal`, `String`, `Tree`). Components can represent:
+The GUI lets users compose PhyloSpec models visually. Every UI component corresponds to one PhyloSpec expression that produces a value of a specific type (e.g. `PositiveReal`, `String`, `Tree`). Components can represent:
 
 1. **Literals** — a typed input box (e.g. a number field for `PositiveReal`)
-2. **A type selector** — picks any registered component for a given type and renders it
-3. **Generator components** — inputs for a generator's arguments, auto-composed from the above
-4. **Specialised generator components** — hand-written for a nicer UI (future work)
+2. **Generators** — inputs for a generator's arguments, auto-composed from literals
+3. **Specialised generators** — hand-written for a nicer UI (future work)
 
 The output of every component is a fragment of a PhyloSpec model, not a runtime value.
 
-Check out 'app/core-components.json' for a list of all types and generators.
+See `app/core-components.json` for all types and generators.
 
 ---
 
@@ -35,7 +34,7 @@ type PhyloSpecComponent<T> = {
   id: string                          // unique, e.g. "literal.positiveReal"
   label: string                       // shown in the TypeSelector button group
   outputType: string                  // PhyloSpec type name, e.g. "PositiveReal"
-  schema: ZodType<T>                  // Zod schema used for validation
+  schema: ZodType<T>
   Component: React.FC<ComponentProps<T>>
   toExpression: (value: T) => string  // converts value to a PhyloSpec expression fragment
 }
@@ -45,16 +44,14 @@ type PhyloSpecComponent<T> = {
 
 ## Registry — `app/components/phylospec/registry.ts`
 
-A module-level `Map<string, PhyloSpecComponent<unknown>[]>` acts as the registry. It is a plain singleton — no React context needed.
+A module-level `Map<string, PhyloSpecComponent<unknown>[]>` keyed by `outputType`.
 
 ```ts
 register(component: PhyloSpecComponent<T>): void
 getComponents(type: string): PhyloSpecComponent<unknown>[]
 ```
 
-Multiple components can be registered for the same type. `getComponents` returns them in registration order.
-
-**Important:** registrations are side effects that run when the module is imported. The top-level `app/components/phylospec/index.ts` does `import './literal'` to trigger all literal registrations. Any client component that imports from `app/components/phylospec` will have the registry populated.
+Multiple components can be registered for the same type; `getComponents` returns them in registration order. Registrations are side effects that run on module import. `app/components/phylospec/index.ts` imports `./literal` and `./generator` to trigger them; any client component that imports from `app/components/phylospec` has the registry populated.
 
 ---
 
@@ -94,7 +91,7 @@ All numeric inputs keep a local `raw: string` state separate from the validated 
 
 ## Literal registrations — `app/components/phylospec/literal/index.ts`
 
-Each type gets exactly one registration. Aliases use the schema of their parent type:
+Each type gets exactly one registration. Aliases share the schema of their parent type:
 
 | Type | Schema | Notes |
 |---|---|---|
@@ -114,11 +111,11 @@ Each type gets exactly one registration. Aliases use the schema of their parent 
 
 ## Generator components — `app/components/phylospec/generator/`
 
-Generator components cover every generator declared in `app/core-components.json`. They are registered automatically at module load time — no manual `register()` calls are needed when a new generator is added to the JSON.
+Generator components cover every generator declared in `app/core-components.json` and are registered automatically at module load — no manual `register()` call is needed when a generator is added to the JSON.
 
 ### `GeneratorInput` — `generator/GeneratorInput.tsx`
 
-A generic React component that renders one TypeSelector per argument, stacked vertically:
+Props:
 
 ```ts
 type GeneratorArg = {
@@ -129,34 +126,40 @@ type GeneratorArg = {
   default?: unknown
 }
 
-type GeneratorInputValue = Record<string, TypeSelectorValue | null>
+type GeneratorInputProps = {
+  value: GeneratorInputValue | null   // Record<string, TypeSelectorValue | null>
+  onChange: (value: GeneratorInputValue | null) => void
+  args: GeneratorArg[]
+  description?: string                // generator-level description, shown above args
+}
 ```
 
-Each argument is rendered inside a bordered rounded box (`bg-gray-50/50 border border-gray-200 rounded-lg`). The box contains:
-- The argument name (bold) with an "(optional)" badge when `required: false`
-- The description in small gray text
-- A `TypeSelector` for the argument's type
+Renders nothing when both `args` is empty and `description` is absent. Otherwise renders a column containing:
 
-When an argument changes, `onChange` is called with the full updated record (partial values for unfilled arguments remain as `null`).
+1. An optional `<p>` with the generator description (small gray text), if provided.
+2. One bordered rounded box per argument, each containing:
+   - The argument name (medium weight) with an "(optional)" badge when `required: false`.
+   - The argument description in small gray text.
+   - A `TypeSelector` for the argument's type.
+
+When any argument changes, `onChange` is called with the full updated record; unfilled arguments remain `null`.
 
 ### Auto-registration — `generator/index.ts`
 
-On import, iterates over all entries in `core-components.json → componentLibrary.generators`. When the same generator name appears more than once (e.g. `fromNexus`, `BirthDeath`), only the **first** occurrence is registered.
-
-Each generator is registered as:
+On import, iterates over `core-components.json → componentLibrary.generators`. When the same generator name appears more than once, only the first occurrence is registered.
 
 | Field | Value |
 |---|---|
 | `id` | `generator.<name>` |
 | `label` | the generator name |
 | `outputType` | `generatedType` from the JSON |
-| `schema` | `z.record(z.string(), z.any())` (cast to `ZodType<GeneratorInputValue>`) |
-| `Component` | `GeneratorInput` with `args` closed over |
+| `schema` | `z.record(z.string(), z.any())` cast to `ZodType<GeneratorInputValue>` |
+| `Component` | `GeneratorInput` with `args` and `description` closed over |
 | `toExpression` | see below |
 
 ### `toExpression` format
 
-Arguments are emitted on separate lines, named, following the multi-argument convention from the PhyloSpec language spec. Arguments with a `null` value or no registered component for their type are omitted:
+Arguments are emitted on separate indented lines. Arguments whose value is `null` or whose type has no registered component are omitted:
 
 ```
 Normal(
@@ -165,9 +168,7 @@ Normal(
 )
 ```
 
-For generators with no arguments or when all arguments are unset: `jc69()`.
-
-Each argument's expression fragment is obtained by calling `toExpression` on the matching registered component for that argument's type.
+When no arguments are set: `Normal()`.
 
 ---
 
@@ -182,9 +183,10 @@ type TypeSelectorProps = {
 ```
 
 Behaviour:
+
 - Calls `getComponents(type)` to find all registered components.
-- If **one** is registered, renders it directly with no selector UI.
-- If **multiple** are registered, shows a button group; no component is pre-selected — the user must make an explicit choice.
+- If **one** is registered, it is auto-selected — the component renders immediately with no selector UI.
+- If **multiple** are registered, shows a button group. The user must click a button to select one; no component is pre-selected.
 - Switching components resets the value to `null`.
 - Shows a gray placeholder when no components are registered for the type.
 
@@ -206,10 +208,13 @@ export type { PhyloSpecComponent, ComponentProps } from './types'
 
 ## TemplateForm — `app/components/phylospec/TemplateForm.tsx`
 
-`TemplateForm` renders a form from a PhyloSpec template string and a config that maps `$placeholder` tokens to their types.
+Renders a form from a PhyloSpec template string and a config that maps `$placeholder` tokens to their types.
 
 ```ts
-type PlaceholderConfig = { type: string }
+type PlaceholderConfig = {
+  type: string
+  description?: string   // shown below the placeholder tab
+}
 
 type TemplateFormProps = {
   template: string
@@ -220,25 +225,26 @@ type TemplateFormProps = {
 
 ### Behaviour
 
-- Maintains `values: Record<string, TypeSelectorValue | null>` — one entry per placeholder key.
+- Maintains `values: Record<string, TypeSelectorValue | null>` — one entry per placeholder.
 - Calls `onChange` (if provided) with the resolved template whenever any value changes.
-- Unresolved placeholders (no value or no matching component) remain as their original `$name` token in the output.
+- Unresolved placeholders remain as their `$name` token in the output.
 
 ### Resolution
 
-For each placeholder, if a `TypeSelectorValue` is set (a component has been selected), the matching registered component's `toExpression` is called and the token is replaced via `String.replaceAll`. When `TypeSelectorValue.value` is `null` — which is permanent for zero-arg generators like `jc69` that have nothing to fill in — an empty record `{}` is passed to `toExpression` instead, producing `name()`. Placeholders with no component selected are left unchanged.
+For each placeholder, if a `TypeSelectorValue` is set, the matching component's `toExpression` is called and the token is replaced via `String.replaceAll`. When `TypeSelectorValue.value` is `null` — permanent for zero-arg generators like `jc69` — an empty record `{}` is passed to `toExpression`, producing `name()`.
 
 ### Layout
 
-Two columns (`items-start` so each side takes its own natural height):
-- **Left**: vertical list of labeled `TypeSelector` components, one per placeholder. The label shows the placeholder name without the leading `$`.
-- **Right**: a `<pre>` block showing the resolved template, with unresolved tokens left in place.
+Two columns (`items-start`):
+
+- **Left** (`flex-1`): a tab bar with one tab per placeholder (label = name without leading `$`). The active tab shows an optional description and a `TypeSelector`.
+- **Right** (`w-1/3 shrink-0`): a `<pre>` block showing the resolved template with unresolved tokens left in place.
 
 ---
 
 ## Adding a new component
 
-Call `register()` with a `PhyloSpecComponent<T>` from any module that gets imported before the component is used:
+Call `register()` from any module that is imported before the component is used:
 
 ```ts
 import { z } from 'zod'
@@ -254,4 +260,4 @@ register({
 })
 ```
 
-The `id` should be namespaced to avoid collisions. The `literal.*` and `generator.*` namespaces are already in use; prefer `custom.*` or a descriptive prefix for hand-written additions.
+The `literal.*` and `generator.*` id namespaces are reserved; use `custom.*` or a descriptive prefix for hand-written additions.

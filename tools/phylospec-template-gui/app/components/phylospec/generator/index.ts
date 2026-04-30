@@ -37,7 +37,7 @@ for (const generator of coreComponents.componentLibrary.generators) {
     label: genName,
     outputType: genType,
     schema: z.record(z.string(), z.any()) as ZodType<GeneratorInputValue>,
-    Component: (props) => GeneratorInput({ ...props, args: genArgs }),
+    Component: (props) => GeneratorInput({ ...props, args: genArgs, description: generator.description }),
     toExpression: (value: GeneratorInputValue) => buildExpression(genName, genArgs, value),
   })
 }

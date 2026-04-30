@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { TypeSelector, type TypeSelectorValue } from './TypeSelector'
 import { getComponents } from './registry'
 
-type PlaceholderConfig = { type: string }
+type PlaceholderConfig = { type: string; description?: string }
 
 export type TemplateFormProps = {
   template: string
@@ -32,9 +32,12 @@ function resolveTemplate(
 }
 
 export function TemplateForm({ template, config, onChange }: TemplateFormProps) {
+  const placeholders = Object.entries(config)
+
   const [values, setValues] = useState<Record<string, TypeSelectorValue | null>>(() =>
-    Object.fromEntries(Object.keys(config).map((k) => [k, null]))
+    Object.fromEntries(placeholders.map(([k]) => [k, null]))
   )
+  const [activeTab, setActiveTab] = useState<string>(placeholders[0]?.[0] ?? '')
 
   const resolvedTemplate = resolveTemplate(template, config, values)
 
@@ -46,25 +49,46 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
     setValues((prev) => ({ ...prev, [placeholder]: v }))
   }
 
-  const placeholders = Object.entries(config)
+  const activeConfig = config[activeTab]
 
   return (
     <div className="flex items-start gap-8 font-mono text-sm">
-      <div className="flex flex-col gap-6">
-        {placeholders.map(([placeholder, { type }]) => (
-          <div key={placeholder} className="flex flex-col gap-1">
-            <span className="font-semibold text-gray-800 dark:text-gray-200">
+      <div className="flex flex-col gap-3 flex-1">
+
+        {/* tab bar */}
+        <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
+          {placeholders.map(([placeholder]) => (
+            <button
+              key={placeholder}
+              onClick={() => setActiveTab(placeholder)}
+              className={`px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors ${
+                placeholder === activeTab
+                  ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'
+              }`}
+            >
               {placeholder.replace(/^\$/, '')}
-            </span>
+            </button>
+          ))}
+        </div>
+
+        {/* active tab content */}
+        {activeConfig && (
+          <div className="flex flex-col gap-3">
+            {activeConfig.description && (
+              <p className="text-xs text-gray-500 dark:text-gray-400">{activeConfig.description}</p>
+            )}
             <TypeSelector
-              type={type}
-              value={values[placeholder] ?? null}
-              onChange={(v) => handleChange(placeholder, v)}
+              type={activeConfig.type}
+              value={values[activeTab] ?? null}
+              onChange={(v) => handleChange(activeTab, v)}
             />
           </div>
-        ))}
+        )}
+
       </div>
-      <pre className="flex-1 whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm dark:border-gray-700 dark:bg-gray-900">
+
+      <pre className="w-1/3 shrink-0 whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm dark:border-gray-700 dark:bg-gray-900">
         {resolvedTemplate}
       </pre>
     </div>
