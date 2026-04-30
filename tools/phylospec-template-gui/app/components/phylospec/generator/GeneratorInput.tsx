@@ -53,7 +53,7 @@ export function GeneratorInput({ value, onChange, args, description }: Generator
   return (
     <div className="flex flex-col gap-4">
       {description && (
-        <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400">{description}</p>
       )}
       {visibleArgs.map((arg) => {
         const argVal = value?.[arg.name] ?? null
@@ -61,11 +61,11 @@ export function GeneratorInput({ value, onChange, args, description }: Generator
         return (
           <div key={arg.name} className="flex flex-col gap-1 rounded-lg bg-gray-50/50 border border-gray-200 p-3 dark:bg-gray-800/60">
             <div className="flex items-center gap-1">
-              <span className="text-xs font-medium">{arg.name}</span>
-              <span className="text-xs text-gray-400 font-mono">{operator}</span>
-              {!arg.required && <span className="text-xs text-gray-400">(optional)</span>}
+              <span className="text-sm font-medium">{arg.name}</span>
+              <span className="text-sm text-gray-500">{operator}</span>
+              {!arg.required && <span className="text-sm text-gray-500">(optional)</span>}
             </div>
-            <span className="text-xs text-gray-500">{arg.description}</span>
+            <span className="text-sm text-gray-600">{arg.description}</span>
             <TypeSelector
               type={arg.type}
               value={argVal}

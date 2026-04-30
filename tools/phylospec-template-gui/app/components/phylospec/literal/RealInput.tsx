@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { fromZodError } from 'zod-validation-error'
 import type { ZodType } from 'zod'
 import type { ComponentProps } from '../types'
@@ -13,11 +13,6 @@ type RealInputProps = ComponentProps<number> & {
 
 export function RealInput({ value, onChange, schema, min, max }: RealInputProps) {
   const [raw, setRaw] = useState(value != null ? String(value) : '')
-
-  // sync display when parent resets the value (e.g. component switch)
-  useEffect(() => {
-    if (value === null) setRaw('')
-  }, [value])
 
   const parsed = parseFloat(raw)
   // incomplete inputs that shouldn't trigger errors yet
@@ -57,7 +52,7 @@ export function RealInput({ value, onChange, schema, min, max }: RealInputProps)
             : 'border-gray-300 dark:border-gray-600'
         }`}
       />
-      {error && <span className="text-xs text-red-500">{error}</span>}
+      {error && <span className="text-sm text-red-500">{error}</span>}
     </div>
   )
 }

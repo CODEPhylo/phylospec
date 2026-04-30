@@ -33,7 +33,7 @@ export function TypeSelector({ type, value, onChange, allowDistributions = false
     : [...distComponents, ...fixedComponents]
 
   if (activeComponents.length === 0 && !showModePicker) {
-    return <span className="text-xs text-gray-400">No components registered for type &quot;{type}&quot;</span>
+    return <span className="text-sm text-gray-500">No components registered for type &quot;{type}&quot;</span>
   }
 
   // only honour selectedId if it actually exists in the current bucket
@@ -62,10 +62,10 @@ export function TypeSelector({ type, value, onChange, allowDistributions = false
 
       {/* mode toggle: fixed value vs. prior distribution */}
       {showModePicker && (
-        <div className="flex rounded overflow-hidden border border-gray-200 w-fit text-xs dark:border-gray-700">
+        <div className="flex w-fit overflow-hidden rounded border border-gray-200 text-sm dark:border-gray-700">
           <button
             onClick={() => handleModeSwitch('fixed')}
-            className={`px-2.5 py-0.5 font-mono ${
+            className={`px-3 py-1 ${
               mode === 'fixed'
                 ? 'bg-blue-600 text-white'
                 : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
@@ -75,7 +75,7 @@ export function TypeSelector({ type, value, onChange, allowDistributions = false
           </button>
           <button
             onClick={() => handleModeSwitch('prior')}
-            className={`px-2.5 py-0.5 font-mono border-l border-gray-200 dark:border-gray-700 ${
+            className={`border-l border-gray-200 px-3 py-1 dark:border-gray-700 ${
               mode === 'prior'
                 ? 'bg-amber-500 text-white'
                 : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
@@ -93,7 +93,7 @@ export function TypeSelector({ type, value, onChange, allowDistributions = false
             <button
               key={c.id}
               onClick={() => handleSelect(c.id)}
-              className={`rounded px-2 py-0.5 text-xs ${
+              className={`rounded px-2.5 py-1 text-sm ${
                 c.id === effectiveId
                   ? (mode === 'prior' && showModePicker ? 'bg-amber-500 text-white' : 'bg-blue-600 text-white')
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'

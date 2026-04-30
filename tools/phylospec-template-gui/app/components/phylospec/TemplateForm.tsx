@@ -115,12 +115,7 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
 
   return (
     <DefaultsContext.Provider value={config.defaults ?? {}}>
-    <div className="flex flex-col gap-4 font-mono text-sm">
-
-      {experimentName && (
-        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{experimentName}</h2>
-      )}
-
+    <div className="flex flex-col gap-4 text-base">
       <div className="flex items-start gap-8">
         <div className="flex flex-col gap-3 flex-1">
 
@@ -130,7 +125,7 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
               <button
                 key={placeholder}
                 onClick={() => setActiveTab(placeholder)}
-                className={`px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors ${
+                className={`px-5 py-1.5 font-medium border-b-2 -mb-px transition-colors ${
                   placeholder === activeTab
                     ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
                     : 'border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'
@@ -145,7 +140,7 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
           {placeholderEntries.map(([placeholder, cfg]) => (
             <div key={placeholder} className={`flex flex-col gap-3${placeholder !== activeTab ? ' hidden' : ''}`}>
               {cfg.description && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">{cfg.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{cfg.description}</p>
               )}
               <TypeSelector
                 type={cfg.type}

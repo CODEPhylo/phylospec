@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { TemplateForm } from './TemplateForm'
 
 const TEMPLATE = `Alignment data = fromNexus($fileName)
@@ -26,8 +27,17 @@ const CONFIG = {
 
 export function Demo() {
   return (
-    <div className="p-8">
-      <TemplateForm template={TEMPLATE} config={CONFIG} />
-    </div>
+    <main className="min-h-screen bg-background text-foreground">
+      <header className="w-full border-b border-gray-200 bg-light-gray/80 p-4 backdrop-blur-md">
+        <div className="mx-auto flex w-full max-w-7xl items-center">
+          <Link className="text-2xl font-bold flex-1" href="/">
+            <span className="text-accent">Phylo</span><span className="text-gray-900">Spec</span>
+          </Link>
+        </div>
+      </header>
+      <div className="mx-auto w-full max-w-7xl px-6 py-8">
+        <TemplateForm template={TEMPLATE} config={CONFIG} />
+      </div>
+    </main>
   )
 }
