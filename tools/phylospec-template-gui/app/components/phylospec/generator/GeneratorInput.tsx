@@ -3,7 +3,7 @@
 import { useContext, useEffect, useMemo } from 'react'
 import { TypeSelector, TypeSelectorValue } from '../TypeSelector'
 import { DefaultsContext } from '../DefaultsContext'
-import { DEFAULT_COMPONENT_ID } from './index'
+import { DEFAULT_COMPONENT_ID } from './constants'
 
 export type GeneratorArg = {
   name: string
