@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { TemplateForm } from './TemplateForm'
 
-const TEMPLATE = `Alignment data = fromNexus($fileName)
+const TEMPLATE = `Alignment data = $alignment
 Tree tree ~ $tree
 QMatrix qMatrix = $qMatrix
 
@@ -19,7 +19,7 @@ const CONFIG = {
     tree: 'tree',
   },
   placeholders: {
-    '$fileName': { type: 'String',             name: 'Nexus File',         description: 'Choose the nexus file with the alignment.' },
+    '$alignment': { type: 'Alignment',             name: 'Alignment',         description: 'Choose the nucleotide sequence alignment.' },
     '$tree':     { type: 'Distribution<Tree>', name: 'Tree Prior',         description: 'Specify a prior distribution over the tree topology and branch lengths.' },
     '$qMatrix':  { type: 'QMatrix',            name: 'Substitution Model', description: 'Select a substitution model for the alignment.' },
   },

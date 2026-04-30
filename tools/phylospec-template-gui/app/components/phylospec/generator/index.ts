@@ -1,48 +1,13 @@
+import "./custom";
 import { z, ZodType } from "zod";
-import { register, registerAlias, getComponents } from "../registry";
+import {
+  register,
+  registerAlias,
+  getGeneratorComponent,
+} from "../registry";
 import { GeneratorInput, GeneratorInputValue } from "./GeneratorInput";
+import { buildExpression } from "./expression";
 import coreComponents from "@/app/core-components.json";
-
-export const DEFAULT_COMPONENT_ID = "__default__";
-
-function indentContinuation(expr: string, col: number): string {
-  if (!expr.includes("\n")) return expr;
-  const pad = " ".repeat(col);
-  return expr
-    .split("\n")
-    .map((line, i) => (i === 0 ? line : pad + line))
-    .join("\n");
-}
-
-function buildExpression(
-  name: string,
-  args: { name: string; type: string }[],
-  value: GeneratorInputValue,
-): string {
-  const lines: string[] = [];
-
-  for (const arg of args) {
-    const argValue = value[arg.name];
-    if (!argValue || argValue.value === null) continue;
-    if (argValue.componentId === DEFAULT_COMPONENT_ID) {
-      const prefix = `    ${arg.name}=`;
-      lines.push(
-        prefix + indentContinuation(argValue.value as string, prefix.length),
-      );
-      continue;
-    }
-    const component = getComponents(arg.type).find(
-      (c) => c.id === argValue.componentId,
-    );
-    if (!component) continue;
-    const prefix = `    ${arg.name}=`;
-    const expr = component.toExpression(argValue.value);
-    lines.push(prefix + indentContinuation(expr, prefix.length));
-  }
-
-  if (lines.length === 0) return `${name}()`;
-  return `${name}(\n${lines.join(",\n")}\n)`;
-}
 
 for (const type of coreComponents.componentLibrary.types) {
   if ("alias" in type && typeof type.alias === "string") {
@@ -65,6 +30,19 @@ for (const generator of coreComponents.componentLibrary.generators) {
     required: boolean;
     default?: unknown;
   }[];
+
+  const override = getGeneratorComponent(genName);
+  if (override) {
+    register({
+      id: override.id,
+      label: override.label,
+      outputType: genType,
+      schema: override.schema,
+      Component: override.Component,
+      toExpression: override.toExpression,
+    });
+    continue;
+  }
 
   register({
     id: `generator.${genName}`,

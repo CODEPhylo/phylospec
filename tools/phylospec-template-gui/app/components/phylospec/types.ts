@@ -13,3 +13,13 @@ export type PhyloSpecComponent<T> = {
   Component: React.FC<ComponentProps<T>>
   toExpression: (value: T) => string
 }
+
+/** Registered by generator name; `outputType` is supplied from core-components.json at auto-registration time. */
+export type PhyloSpecGeneratorComponent<T> = {
+  generatorName: string
+  id: string
+  label: string
+  schema: ZodType<T>
+  Component: React.FC<ComponentProps<T>>
+  toExpression: (value: T) => string
+}

@@ -1,9 +1,18 @@
 import './literal'
 import './generator'
 
-export { register, getComponents } from './registry'
+export {
+  register,
+  getComponents,
+  registerGeneratorComponent,
+  getGeneratorComponent,
+} from './registry'
 export { TypeSelector } from './TypeSelector'
 export type { TypeSelectorValue } from './TypeSelector'
-export type { PhyloSpecComponent, ComponentProps } from './types'
+export type {
+  PhyloSpecComponent,
+  PhyloSpecGeneratorComponent,
+  ComponentProps,
+} from './types'
 export { TemplateForm } from './TemplateForm'
 export type { TemplateFormProps } from './TemplateForm'
