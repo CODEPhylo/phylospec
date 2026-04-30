@@ -118,7 +118,7 @@ Generator components cover every generator declared in `app/core-components.json
 
 ### `GeneratorInput` — `generator/GeneratorInput.tsx`
 
-A generic React component that renders one TypeSelector per argument, arranged in a horizontal wrapping row:
+A generic React component that renders one TypeSelector per argument, stacked vertically:
 
 ```ts
 type GeneratorArg = {
@@ -132,7 +132,7 @@ type GeneratorArg = {
 type GeneratorInputValue = Record<string, TypeSelectorValue | null>
 ```
 
-Each argument column shows:
+Each argument is rendered inside a bordered rounded box (`bg-gray-50/50 border border-gray-200 rounded-lg`). The box contains:
 - The argument name (bold) with an "(optional)" badge when `required: false`
 - The description in small gray text
 - A `TypeSelector` for the argument's type
@@ -184,7 +184,7 @@ type TypeSelectorProps = {
 Behaviour:
 - Calls `getComponents(type)` to find all registered components.
 - If **one** is registered, renders it directly with no selector UI.
-- If **multiple** are registered, shows a button group; the active component is highlighted.
+- If **multiple** are registered, shows a button group; no component is pre-selected — the user must make an explicit choice.
 - Switching components resets the value to `null`.
 - Shows a gray placeholder when no components are registered for the type.
 

@@ -26,9 +26,9 @@ export function GeneratorInput({ value, onChange, args }: GeneratorInputProps) {
   }
 
   return (
-    <div className="flex flex-row flex-wrap gap-4">
+    <div className="flex flex-col gap-4">
       {args.map((arg) => (
-        <div key={arg.name} className="flex flex-col gap-1">
+        <div key={arg.name} className="flex flex-col gap-1 rounded-lg bg-gray-50/50 border border-gray-200 p-3 dark:bg-gray-800/60">
           <div className="flex items-center gap-1">
             <span className="text-xs font-medium">{arg.name}</span>
             {!arg.required && <span className="text-xs text-gray-400">(optional)</span>}
