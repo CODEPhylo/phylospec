@@ -12,6 +12,11 @@ Alignment alignment ~ PhyloCTMC(
 
 const CONFIG = {
   experimentName: 'PhyloCTMC Analysis',
+  defaults: {
+    taxa: 'taxa(data)',
+    alignment: 'data',
+    tree: 'tree',
+  },
   placeholders: {
     '$fileName': { type: 'String',             name: 'Nexus File',         description: 'Choose the nexus file with the alignment.' },
     '$tree':     { type: 'Distribution<Tree>', name: 'Tree Prior',         description: 'Specify a prior distribution over the tree topology and branch lengths.' },
