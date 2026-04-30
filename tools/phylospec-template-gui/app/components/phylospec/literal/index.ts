@@ -9,7 +9,7 @@ import { StringInput } from './StringInput'
 const integerSchema = z.number().int()
 register({
   id: 'literal.integer',
-  label: 'Integer literal',
+  label: 'Specific Value',
   outputType: 'Integer',
   schema: integerSchema,
   Component: (props) => IntegerInput({ ...props, schema: integerSchema }),
@@ -19,7 +19,7 @@ register({
 const positiveIntegerSchema = z.number().int().positive()
 register({
   id: 'literal.positiveInteger',
-  label: 'Integer literal',
+  label: 'Specific Value',
   outputType: 'PositiveInteger',
   schema: positiveIntegerSchema,
   Component: (props) => IntegerInput({ ...props, schema: positiveIntegerSchema, min: 1 }),
@@ -29,7 +29,7 @@ register({
 const nonNegativeIntegerSchema = z.number().int().nonnegative()
 register({
   id: 'literal.nonNegativeInteger',
-  label: 'Integer literal',
+  label: 'Specific Value',
   outputType: 'NonNegativeInteger',
   schema: nonNegativeIntegerSchema,
   Component: (props) => IntegerInput({ ...props, schema: nonNegativeIntegerSchema, min: 0 }),
@@ -38,7 +38,7 @@ register({
 
 register({
   id: 'literal.count',
-  label: 'Integer literal',
+  label: 'Specific Value',
   outputType: 'Count',
   schema: nonNegativeIntegerSchema,
   Component: (props) => IntegerInput({ ...props, schema: nonNegativeIntegerSchema, min: 0 }),
@@ -50,7 +50,7 @@ register({
 const realSchema = z.number()
 register({
   id: 'literal.real',
-  label: 'Number literal',
+  label: 'Specific Value',
   outputType: 'Real',
   schema: realSchema,
   Component: (props) => RealInput({ ...props, schema: realSchema }),
@@ -60,7 +60,7 @@ register({
 const positiveRealSchema = z.number().positive()
 register({
   id: 'literal.positiveReal',
-  label: 'Number literal',
+  label: 'Specific Value',
   outputType: 'PositiveReal',
   schema: positiveRealSchema,
   Component: (props) => RealInput({ ...props, schema: positiveRealSchema, min: 0 }),
@@ -70,7 +70,7 @@ register({
 const nonNegativeRealSchema = z.number().nonnegative()
 register({
   id: 'literal.nonNegativeReal',
-  label: 'Number literal',
+  label: 'Specific Value',
   outputType: 'NonNegativeReal',
   schema: nonNegativeRealSchema,
   Component: (props) => RealInput({ ...props, schema: nonNegativeRealSchema, min: 0 }),
@@ -80,7 +80,7 @@ register({
 const probabilitySchema = z.number().min(0).max(1)
 register({
   id: 'literal.probability',
-  label: 'Number literal',
+  label: 'Specific Value',
   outputType: 'Probability',
   schema: probabilitySchema,
   Component: (props) => RealInput({ ...props, schema: probabilitySchema, min: 0, max: 1 }),
@@ -90,7 +90,7 @@ register({
 // Rate is an alias for PositiveReal
 register({
   id: 'literal.rate',
-  label: 'Number literal',
+  label: 'Specific Value',
   outputType: 'Rate',
   schema: positiveRealSchema,
   Component: (props) => RealInput({ ...props, schema: positiveRealSchema, min: 0 }),
@@ -100,7 +100,7 @@ register({
 // Age is an alias for NonNegativeReal
 register({
   id: 'literal.age',
-  label: 'Number literal',
+  label: 'Specific Value',
   outputType: 'Age',
   schema: nonNegativeRealSchema,
   Component: (props) => RealInput({ ...props, schema: nonNegativeRealSchema, min: 0 }),
@@ -112,7 +112,7 @@ register({
 const stringSchema = z.string()
 register({
   id: 'literal.string',
-  label: 'String literal',
+  label: 'Specific Value',
   outputType: 'String',
   schema: stringSchema,
   Component: (props) => StringInput({ ...props, schema: stringSchema }),

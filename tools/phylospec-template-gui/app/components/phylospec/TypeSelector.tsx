@@ -17,15 +17,15 @@ type TypeSelectorProps = {
 export function TypeSelector({ type, value, onChange }: TypeSelectorProps) {
   const components = getComponents(type)
 
-  const activeId = value?.componentId ?? components[0]?.id ?? null
+  const activeId = value?.componentId ?? null
   const [selectedId, setSelectedId] = useState<string | null>(activeId)
 
   if (components.length === 0) {
     return <span className="text-xs text-gray-400">No components registered for type &quot;{type}&quot;</span>
   }
 
-  const effectiveId = selectedId ?? components[0].id
-  const registration = components.find((c) => c.id === effectiveId) ?? components[0]
+  const effectiveId = selectedId
+  const registration = effectiveId ? (components.find((c) => c.id === effectiveId) ?? null) : null
   const currentValue = value?.componentId === effectiveId ? value.value : null
 
   function handleSelect(id: string) {
@@ -56,10 +56,12 @@ export function TypeSelector({ type, value, onChange }: TypeSelectorProps) {
           ))}
         </div>
       )}
-      <registration.Component
-        value={currentValue}
-        onChange={handleChange}
-      />
+      {registration && (
+        <registration.Component
+          value={currentValue}
+          onChange={handleChange}
+        />
+      )}
     </div>
   )
 }
