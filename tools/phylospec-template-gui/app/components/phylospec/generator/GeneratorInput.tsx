@@ -1,0 +1,46 @@
+'use client'
+
+import { TypeSelector, TypeSelectorValue } from '../TypeSelector'
+
+export type GeneratorArg = {
+  name: string
+  type: string
+  description: string
+  required: boolean
+  default?: unknown
+}
+
+export type GeneratorInputValue = Record<string, TypeSelectorValue | null>
+
+type GeneratorInputProps = {
+  value: GeneratorInputValue | null
+  onChange: (value: GeneratorInputValue | null) => void
+  args: GeneratorArg[]
+}
+
+export function GeneratorInput({ value, onChange, args }: GeneratorInputProps) {
+  if (args.length === 0) return null
+
+  function handleArgChange(argName: string, v: TypeSelectorValue) {
+    onChange({ ...(value ?? {}), [argName]: v })
+  }
+
+  return (
+    <div className="flex flex-row flex-wrap gap-4">
+      {args.map((arg) => (
+        <div key={arg.name} className="flex flex-col gap-1">
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-medium">{arg.name}</span>
+            {!arg.required && <span className="text-xs text-gray-400">(optional)</span>}
+          </div>
+          <span className="text-xs text-gray-500">{arg.description}</span>
+          <TypeSelector
+            type={arg.type}
+            value={value?.[arg.name] ?? null}
+            onChange={(v) => handleArgChange(arg.name, v)}
+          />
+        </div>
+      ))}
+    </div>
+  )
+}
