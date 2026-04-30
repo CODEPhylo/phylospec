@@ -127,7 +127,7 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
                 onClick={() => setActiveTab(placeholder)}
                 className={`px-5 py-1.5 font-medium border-b-2 -mb-px transition-colors ${
                   placeholder === activeTab
-                    ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                    ? 'border-accent text-accent'
                     : 'border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
               >
@@ -156,9 +156,9 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
         <pre className="w-1/3 shrink-0 whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm dark:border-gray-700 dark:bg-gray-900">
           {segments.map((seg, i) =>
             seg.kind === 'placeholder' ? (
-              <span key={i} className="text-orange-500 dark:text-orange-400">{seg.text}</span>
+              <span key={i} className="text-cyan-600 dark:text-cyan-400">{seg.text}</span>
             ) : seg.kind === 'value' ? (
-              <span key={i} className="font-semibold text-blue-600 dark:text-blue-400">{seg.text}</span>
+              <span key={i} className="font-semibold text-accent">{seg.text}</span>
             ) : (
               seg.text
             )
