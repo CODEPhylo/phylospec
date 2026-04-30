@@ -283,6 +283,10 @@ Two columns (`items-start`):
 - **Left** (`flex-1`): a tab bar with one tab per placeholder (label = name without leading `$`). The active tab shows an optional description and a `TypeSelector` with `allowDistributions={false}` — template placeholders are always deterministic values.
 - **Right** (`w-1/3 shrink-0`): a `<pre>` block showing the resolved template with unresolved tokens left in place.
 
+## Global page styling
+
+The GUI root page (`Demo.tsx`) includes a website-style top header with the PhyloSpec brand mark and navigation links. Global CSS (`app/globals.css`) sets `Noto Sans` as the default font, a base font size of `1.1rem`, and the accent variable `--accent: #15897d`, which is exposed as `text-accent` for headings and brand highlights.
+
 ---
 
 ## Adding a new component
