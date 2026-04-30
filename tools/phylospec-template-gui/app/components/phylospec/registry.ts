@@ -1,12 +1,27 @@
 import type { PhyloSpecComponent } from './types'
 
 const registry = new Map<string, PhyloSpecComponent<unknown>[]>()
+const aliases = new Map<string, string>()
 
 export function register<T>(component: PhyloSpecComponent<T>): void {
   const existing = registry.get(component.outputType) ?? []
   registry.set(component.outputType, [...existing, component as PhyloSpecComponent<unknown>])
 }
 
+export function registerAlias(alias: string, target: string): void {
+  aliases.set(alias, target)
+}
+
+export function resolveAlias(type: string): string {
+  const target = aliases.get(type)
+  return target ? resolveAlias(target) : type
+}
+
 export function getComponents(type: string): PhyloSpecComponent<unknown>[] {
-  return registry.get(type) ?? []
+  const direct = registry.get(type) ?? []
+  const aliasTarget = aliases.get(type)
+  if (!aliasTarget) return direct
+  const inherited = getComponents(aliasTarget)
+  const seen = new Set(direct.map((c) => c.id))
+  return [...direct, ...inherited.filter((c) => !seen.has(c.id))]
 }
