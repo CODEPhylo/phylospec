@@ -138,9 +138,11 @@ Renders nothing when both `args` is empty and `description` is absent. Otherwise
 
 1. An optional `<p>` with the generator description (small gray text), if provided.
 2. One bordered rounded box per argument, each containing:
-   - The argument name (medium weight) with an "(optional)" badge when `required: false`.
+   - The argument name (medium weight), a `=` or `~` operator badge, and an "(optional)" badge when `required: false`.
    - The argument description in small gray text.
-   - A `TypeSelector` for the argument's type.
+   - A `TypeSelector` for the argument's type with `allowDistributions={true}`.
+
+The operator badge reflects whether the current value for that argument is a prior distribution (`~`) or a deterministic value (`=`); it defaults to `=` when nothing is selected yet.
 
 When any argument changes, `onChange` is called with the full updated record; unfilled arguments remain `null`.
 
@@ -175,20 +177,46 @@ When no arguments are set: `Normal()`.
 ## TypeSelector — `app/components/phylospec/TypeSelector.tsx`
 
 ```ts
+export type TypeSelectorValue = {
+  componentId: string
+  value: unknown
+  isDistribution: boolean   // true when the selected component comes from a Distribution<T> bucket
+}
+
 type TypeSelectorProps = {
   type: string
-  value: TypeSelectorValue | null    // { componentId, value }
+  value: TypeSelectorValue | null
   onChange: (v: TypeSelectorValue) => void
+  allowDistributions?: boolean   // default false
 }
 ```
 
-Behaviour:
+### Basic behaviour (allowDistributions = false)
 
 - Calls `getComponents(type)` to find all registered components.
-- If **one** is registered, it is auto-selected — the component renders immediately with no selector UI.
+- If **one** is registered and there is no mode picker, it is auto-selected — the component renders immediately with no selector UI.
 - If **multiple** are registered, shows a button group. The user must click a button to select one; no component is pre-selected.
 - Switching components resets the value to `null`.
 - Shows a gray placeholder when no components are registered for the type.
+
+### Distribution mode (allowDistributions = true)
+
+When `allowDistributions` is `true`, the selector also considers components registered under `Distribution<{type}>` (e.g. `Distribution<Tree>` when `type` is `"Tree"`). These represent prior distributions that can be drawn from with `~`.
+
+**Mode picker** — shown when both buckets are non-empty:
+
+A segmented toggle sits above the component list:
+
+| Button | Colour when active | Meaning |
+|---|---|---|
+| `= fixed` | Blue | Deterministic value (`=` assignment) |
+| `~ prior` | Amber | Sample from a distribution (`~` assignment) |
+
+Switching modes clears the current selection. No prior is auto-selected; the user must always pick explicitly when the mode picker is visible.
+
+**Single-bucket case** — when only one of the two buckets has components (e.g. a type with no literal representation), the mode picker is hidden and the available components are shown directly in the usual button group.
+
+`isDistribution` in the emitted `TypeSelectorValue` is `true` iff the selected component came from the `Distribution<T>` bucket.
 
 ---
 
@@ -237,7 +265,7 @@ For each placeholder, if a `TypeSelectorValue` is set, the matching component's 
 
 Two columns (`items-start`):
 
-- **Left** (`flex-1`): a tab bar with one tab per placeholder (label = name without leading `$`). The active tab shows an optional description and a `TypeSelector`.
+- **Left** (`flex-1`): a tab bar with one tab per placeholder (label = name without leading `$`). The active tab shows an optional description and a `TypeSelector` with `allowDistributions={false}` — template placeholders are always deterministic values.
 - **Right** (`w-1/3 shrink-0`): a `<pre>` block showing the resolved template with unresolved tokens left in place.
 
 ---

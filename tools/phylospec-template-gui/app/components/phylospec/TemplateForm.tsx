@@ -82,6 +82,7 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
               type={activeConfig.type}
               value={values[activeTab] ?? null}
               onChange={(v) => handleChange(activeTab, v)}
+              allowDistributions={false}
             />
           </div>
         )}
