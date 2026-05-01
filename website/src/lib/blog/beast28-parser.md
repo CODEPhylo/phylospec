@@ -10,7 +10,7 @@ author: "Tobia Ochsner"
 
 # A First Look at the BEAST 2.8 Parser
 
-The first version of a proper PhyloSpec parser for BEAST 2.8 is done 🎉 (<a href="https://github.com/CODEPhylo/phylospec/pull/30" target="_blank">PR</a>). This post walks through its main features and what is still to come.
+The first version of a proper PhyloSpec parser for BEAST 2.8 is done 🎉 (<a href="https://github.com/CODEPhylo/phylospec/pull/30" target="_blank">PR 1</a> and <a href="https://github.com/CODEPhylo/phylospec/pull/32" target="_blank">PR 2</a>). This post walks through its main features and what is still to come.
 
 The parser takes a PhyloSpec model, runs the static type checker and linter to catch common errors, and — if the model is valid — constructs a full BEAST 2 analysis ready to run. BEAST then takes over and performs the MCMC.
 
@@ -63,7 +63,7 @@ mcmc {
 
 A handful of components are only partially supported. `exp(x)`, for instance, works only when `x` is a constant or deterministic expression, or when used inside a logger. There is simply no BEAST `StateNode` that implements the exponential function.
 
-On the language side, indexed statements (like `Real x[i] = f(i) for i in 1:10`), matrix literals, and index accessors are not yet handled.
+On the language side, matrix literals and indexed statements with multiple indices are not yet handled. Indexed statements over one index variable are fully supported.
 
 ## Flexibility
 
