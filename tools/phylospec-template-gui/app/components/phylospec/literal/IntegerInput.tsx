@@ -43,7 +43,7 @@ export function IntegerInput({ value, onChange, schema, min, max }: IntegerInput
         max={max}
         value={raw}
         onChange={handleChange}
-        className={`w-32 rounded border px-2 py-1 text-sm bg-white dark:bg-gray-800 ${
+        className={`w-32 rounded-lg border px-2.5 py-1.5 text-sm bg-white outline-none transition-all focus:ring-2 focus:ring-accent/20 dark:bg-gray-800 ${
           isValid
             ? 'border-green-500 dark:border-green-400'
             : error

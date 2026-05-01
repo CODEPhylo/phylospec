@@ -28,9 +28,9 @@ const CONFIG = {
 export function Demo() {
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <header className="w-full border-b border-gray-200 bg-light-gray/80 p-4 backdrop-blur-md">
+      <header className="w-full border-b border-accent/20 bg-white/90 p-4 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-7xl items-center">
-          <Link className="text-2xl font-bold flex-1" href="/">
+          <Link className="text-2xl font-bold tracking-tight flex-1" href="/">
             <span className="text-accent">Phylo</span><span className="text-gray-900">Spec</span>
           </Link>
         </div>

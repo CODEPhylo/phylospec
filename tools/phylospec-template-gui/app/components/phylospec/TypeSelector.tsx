@@ -92,15 +92,15 @@ export function TypeSelector({ type, value, onChange, allowDistributions = false
     <div className="flex flex-col gap-2">
 
       {showModePicker && (
-        <div className="flex w-fit overflow-hidden rounded border border-gray-200 text-sm dark:border-gray-700">
-          {availableModes.map((m, i) => (
+        <div className="flex w-fit rounded-full border border-gray-200/80 bg-gray-100/50 p-0.5 text-sm gap-px dark:border-gray-700">
+          {availableModes.map((m) => (
             <button
               key={m}
               onClick={() => handleModeSwitch(m)}
-              className={`px-3 py-1 ${i > 0 ? 'border-l border-gray-200 dark:border-gray-700' : ''} ${
+              className={`rounded-full px-3.5 py-1 transition-all active:scale-95 ${
                 mode === m
                   ? MODE_CONFIG[m].activeClass
-                  : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+                  : 'text-gray-500 hover:bg-white/80 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700'
               }`}
             >
               {MODE_CONFIG[m].label}
@@ -109,19 +109,19 @@ export function TypeSelector({ type, value, onChange, allowDistributions = false
         </div>
       )}
 
-      {mode === 'estimated' && <span className="text-sm text-gray-500">Choose a prior:</span>}
-      {mode === 'calculated' && <span className="text-sm text-gray-500">Choose a function:</span>}
+      {showModePicker && mode === 'estimated' && <span className="text-sm text-gray-500">Choose a prior:</span>}
+      {showModePicker && mode === 'calculated' && <span className="text-sm text-gray-500">Choose a function:</span>}
 
       {(activeBucket.length > 1 || (showModePicker && !(mode === 'fixed' && activeBucket.length === 1))) && (
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1 mt-2">
           {activeBucket.map((c) => (
             <button
               key={c.id}
               onClick={() => handleSelect(c.id)}
-              className={`rounded px-2.5 py-1 text-sm ${
+              className={`rounded-full px-3 py-1 text-sm font-medium transition-all active:scale-95 hover:-translate-y-px ${
                 c.id === effectiveId
                   ? MODE_CONFIG[mode].activeClass
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
               }`}
             >
               {c.label}
