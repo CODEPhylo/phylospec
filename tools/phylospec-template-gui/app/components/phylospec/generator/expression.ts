@@ -1,4 +1,4 @@
-import { getComponents } from "../registry";
+import { getComponents, resolveAlias } from "../registry";
 import { DEFAULT_COMPONENT_ID } from "./constants";
 import type { GeneratorInputValue } from "./GeneratorInput";
 
@@ -28,9 +28,11 @@ export function buildExpression(
       );
       continue;
     }
-    const component = getComponents(arg.type).find(
-      (c) => c.id === argValue.componentId,
-    );
+    const searchTypes = argValue.isDistribution
+      ? [arg.type, `Distribution<${resolveAlias(arg.type)}>`]
+      : [arg.type];
+    const allCandidates = searchTypes.flatMap((t) => getComponents(t));
+    const component = allCandidates.find((c) => c.id === argValue.componentId);
     if (!component) continue;
     const prefix = `    ${arg.name}=`;
     const expr = component.toExpression(argValue.value);
