@@ -14,7 +14,7 @@ import java.util.*;
 public interface CandidateTile {
 
     /**
-     * Tries to tile this tile to the AST subgraph starting with 'node'. Has to be overridden by custom tile factories.
+     * Tries to tile this tile to the AST subgraph starting with 'node'. Has to be overridden by custom candidate tiles.
      * Returns a set of the possible tilings.
      */
     Set<Tile<?>> tryToTile(
@@ -87,12 +87,12 @@ public interface CandidateTile {
 
     /**
      * Creates a new instance of the corresponding tile.
-     * The default method assumes that the tile itself implements {@code TileFactory}. If this is not the case,
-     * the custom tile factory has to implement this.
+     * The default method assumes that the tile itself implements {@code CandidateTile}. If this is not the case,
+     * the custom candidate tile has to implement this.
      */
     default Tile<?> createInstance() {
         if (!(this instanceof Tile<?> tile)) {
-            throw new RuntimeException("TileFactory " + getClass().getSimpleName()  + " is not a tile. In that case, implement createInstance yourself.");
+            throw new RuntimeException(getClass().getSimpleName()  + " does not inherit from Tile<?>. In that case, implement createInstance yourself.");
         }
 
         try {
