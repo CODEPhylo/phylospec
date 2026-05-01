@@ -37,6 +37,7 @@ for (const generator of coreComponents.componentLibrary.generators) {
       id: override.id,
       label: override.label,
       outputType: genType,
+      isLiteral: false,
       schema: override.schema,
       Component: override.Component,
       toExpression: override.toExpression,
@@ -48,6 +49,7 @@ for (const generator of coreComponents.componentLibrary.generators) {
     id: `generator.${genName}`,
     label: genName,
     outputType: genType,
+    isLiteral: false,
     schema: z.record(z.string(), z.any()) as ZodType<GeneratorInputValue>,
     Component: (props) =>
       GeneratorInput({

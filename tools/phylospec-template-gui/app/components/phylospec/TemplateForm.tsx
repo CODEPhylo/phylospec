@@ -153,7 +153,9 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
 
         </div>
 
-        <pre className="w-1/3 shrink-0 whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm dark:border-gray-700 dark:bg-gray-900">
+        <div className="flex w-1/3 shrink-0 flex-col gap-2">
+          <span className="text-sm font-medium text-gray-500 ml-2 italic">PhyloSpec Model Description</span>
+          <pre className="whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-4 font-mono text-base dark:border-gray-700 dark:bg-gray-900">
           {segments.map((seg, i) =>
             seg.kind === 'placeholder' ? (
               <span key={i} className="text-cyan-600 dark:text-cyan-400">{seg.text}</span>
@@ -164,6 +166,7 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
             )
           )}
         </pre>
+        </div>
       </div>
     </div>
     </DefaultsContext.Provider>

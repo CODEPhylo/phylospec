@@ -34,11 +34,20 @@ type PhyloSpecComponent<T> = {
   id: string                          // unique, e.g. "literal.positiveReal"
   label: string                       // shown in the TypeSelector button group
   outputType: string                  // PhyloSpec type name, e.g. "PositiveReal"
+  isLiteral: boolean                  // drives TypeSelector mode bucketing
   schema: ZodType<T>
   Component: React.FC<ComponentProps<T>>
   toExpression: (value: T) => string  // converts value to a PhyloSpec expression fragment
 }
 ```
+
+`isLiteral` determines which TypeSelector mode the component appears under:
+
+| `isLiteral` | Mode shown in | Assignment operator |
+|---|---|---|
+| `true` | Fixed | `=` |
+| `false` (Distribution type) | Estimated | `~` |
+| `false` (other type) | Calculated | `=` |
 
 ---
 
@@ -180,7 +189,7 @@ When no arguments are set: `Normal()`.
 export type TypeSelectorValue = {
   componentId: string
   value: unknown
-  isDistribution: boolean   // true when the selected component comes from a Distribution<T> bucket
+  isDistribution: boolean   // true when the selected component is from the Distribution<T> bucket
 }
 
 type TypeSelectorProps = {
@@ -191,32 +200,30 @@ type TypeSelectorProps = {
 }
 ```
 
-### Basic behaviour (allowDistributions = false)
+### Modes
 
-- Calls `getComponents(type)` to find all registered components.
-- If **one** is registered and there is no mode picker, it is auto-selected — the component renders immediately with no selector UI.
-- If **multiple** are registered, shows a button group. The user must click a button to select one; no component is pre-selected.
-- Switching components resets the value to `null`.
-- Shows a gray placeholder when no components are registered for the type.
+The selector groups components into up to three modes:
+
+| Mode | Filter | Button label | Active colour |
+|---|---|---|---|
+| Fixed | `isLiteral === true` components for the given type | `= fixed` | Teal (accent) |
+| Estimated | Components registered under `Distribution<GivenType>` | `~ estimated` | Cyan |
+| Calculated | `isLiteral === false` components for the given type | `ƒ calculated` | Violet |
+
+Only modes that have at least one registered component are shown. A **mode picker** (segmented button group) appears only when two or more modes are available.
+
+### Basic behaviour
+
+- When only one mode has components and that mode contains exactly one component, it is auto-selected — no picker UI is shown.
+- When multiple components exist within the active mode, a button group lets the user choose one. No component is pre-selected when the mode picker is visible.
+- Switching modes clears the current selection.
+- Shows a gray placeholder when no components are registered for the type at all.
 
 ### Distribution mode (allowDistributions = true)
 
-When `allowDistributions` is `true`, the selector also considers components registered under `Distribution<{type}>` (e.g. `Distribution<Tree>` when `type` is `"Tree"`). These represent prior distributions that can be drawn from with `~`.
+When `allowDistributions` is `true`, the selector also looks up components registered under `Distribution<{type}>` (e.g. `Distribution<PositiveReal>`). These appear under the **Estimated** mode.
 
-**Mode picker** — shown when both buckets are non-empty:
-
-A segmented toggle sits above the component list:
-
-| Button | Colour when active | Meaning |
-|---|---|---|
-| `= fixed` | Blue | Deterministic value (`=` assignment) |
-| `~ prior` | Amber | Sample from a distribution (`~` assignment) |
-
-Switching modes clears the current selection. No prior is auto-selected; the user must always pick explicitly when the mode picker is visible.
-
-**Single-bucket case** — when only one of the two buckets has components (e.g. a type with no literal representation), the mode picker is hidden and the available components are shown directly in the usual button group.
-
-`isDistribution` in the emitted `TypeSelectorValue` is `true` iff the selected component came from the `Distribution<T>` bucket.
+`isDistribution` in the emitted `TypeSelectorValue` is `true` iff the selected component is from the `Distribution<T>` bucket.
 
 ---
 
@@ -301,6 +308,7 @@ register({
   id: 'myNamespace.myComponent',
   label: 'My component',
   outputType: 'PositiveReal',
+  isLiteral: false,
   schema: z.number().positive(),
   Component: MyComponent,
   toExpression: (v) => String(v),
