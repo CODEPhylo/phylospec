@@ -94,7 +94,7 @@ function formatTabLabel(placeholder: string, cfg: PlaceholderConfig, index: numb
 }
 
 export function TemplateForm({ template, config, onChange }: TemplateFormProps) {
-  const { experimentName, placeholders } = config
+  const { placeholders } = config
   const placeholderEntries = Object.entries(placeholders)
 
   const [values, setValues] = useState<Record<string, TypeSelectorValue | null>>(() =>
@@ -104,6 +104,17 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
 
   const resolvedTemplate = resolveTemplate(template, placeholders, values)
   const segments = buildSegments(template, placeholders, values)
+  const allResolved = segments.every(seg => seg.kind !== 'placeholder')
+
+  function handleExport() {
+    const blob = new Blob([resolvedTemplate], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'model.phylospec'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   useEffect(() => {
     onChange?.(resolvedTemplate)
@@ -166,6 +177,13 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
             )
           )}
         </pre>
+          <button
+            onClick={handleExport}
+            disabled={!allResolved}
+            className={`w-full rounded-lg px-4 py-2 text-sm font-medium transition-opacity bg-accent text-white ${allResolved ? 'opacity-100 hover:opacity-80 active:opacity-60 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
+          >
+            Export model.phylospec
+          </button>
         </div>
       </div>
     </div>
