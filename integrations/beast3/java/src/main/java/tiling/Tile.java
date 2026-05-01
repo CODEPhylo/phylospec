@@ -189,6 +189,9 @@ public abstract class Tile<T> {
      * Applies the tile. Memoization is used to not apply the same tile twice.
      */
     public T apply(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+        // we use memoization to make sure that no tile is applied more than once.
+        // two apply calls are only considered the same when the index variables in scope are identical
+
         // we filter the index Variables by the one in the current scope
         IdentityHashMap<Expr.Variable, Integer> indexVariablesInScope = new IdentityHashMap<>();
         for (Expr.Variable variable : indexVariables.keySet()) {
@@ -208,6 +211,9 @@ public abstract class Tile<T> {
 
             if (allMatch) return this.appliedWithIndexedVariables.get(previousIndexVariables);
         }
+
+        // we have never applied this tile with these index variables
+        // we apply it now
 
         try {
             T result = this.applyTile(beastState, indexVariablesInScope);

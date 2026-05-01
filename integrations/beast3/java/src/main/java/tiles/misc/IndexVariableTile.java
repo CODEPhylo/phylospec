@@ -21,7 +21,10 @@ public class IndexVariableTile extends AstNodeTile<IntScalar<Int>, Expr.Variable
             }
         }
 
-        throw new RuntimeException();
+        // {@code EvaluateTiles} should never actually create a tile for any variable which is not
+        // an index variable
+
+        throw new RuntimeException("Tile applied for an variable AST node which is not an index variable. This should not happen.");
     }
 
 }
