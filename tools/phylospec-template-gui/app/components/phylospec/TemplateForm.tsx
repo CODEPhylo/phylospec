@@ -131,15 +131,15 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
         <div className="flex flex-col gap-3 flex-1">
 
           {/* tab bar */}
-          <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex gap-1 border-b border-gray-200/70 dark:border-gray-700">
             {placeholderEntries.map(([placeholder, cfg], index) => (
               <button
                 key={placeholder}
                 onClick={() => setActiveTab(placeholder)}
-                className={`px-5 py-1.5 font-medium border-b-2 -mb-px transition-colors ${
+                className={`px-5 py-2 border-b-2 -mb-px transition-all active:scale-95 ${
                   placeholder === activeTab
-                    ? 'border-accent text-accent'
-                    : 'border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'
+                    ? 'font-semibold border-accent text-accent'
+                    : 'font-medium border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
               >
                 {formatTabLabel(placeholder, cfg, index)}
@@ -165,8 +165,8 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
         </div>
 
         <div className="flex w-1/3 shrink-0 flex-col gap-2">
-          <span className="text-sm font-medium text-gray-500 ml-2 italic">PhyloSpec Model Description</span>
-          <pre className="whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-4 font-mono text-base dark:border-gray-700 dark:bg-gray-900">
+          <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 ml-1">PhyloSpec Model Description</span>
+          <pre className="whitespace-pre-wrap rounded-xl border border-gray-200/70 bg-gradient-to-br from-gray-50 to-white p-5 font-mono text-base shadow-sm dark:border-gray-700 dark:bg-gray-900">
           {segments.map((seg, i) =>
             seg.kind === 'placeholder' ? (
               <span key={i} className="text-cyan-600 dark:text-cyan-400">{seg.text}</span>
@@ -180,7 +180,7 @@ export function TemplateForm({ template, config, onChange }: TemplateFormProps) 
           <button
             onClick={handleExport}
             disabled={!allResolved}
-            className={`w-full rounded-lg px-4 py-2 text-sm font-medium transition-opacity bg-accent text-white ${allResolved ? 'opacity-100 hover:opacity-80 active:opacity-60 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
+            className={`w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition-all bg-gradient-to-r from-accent to-teal-500 text-white shadow-sm ${allResolved ? 'opacity-100 hover:opacity-90 hover:-translate-y-px hover:shadow-md active:scale-[0.98] active:opacity-75 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
           >
             Export model.phylospec
           </button>

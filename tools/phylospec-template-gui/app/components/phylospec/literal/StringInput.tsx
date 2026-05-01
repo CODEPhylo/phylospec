@@ -20,7 +20,7 @@ export function StringInput({ value, onChange, schema }: StringInputProps) {
         type="text"
         value={raw}
         onChange={(e) => onChange(e.target.value || null)}
-        className={`w-48 rounded border px-2 py-1 bg-white text-sm dark:bg-gray-800 ${
+        className={`w-48 rounded-lg border px-2.5 py-1.5 text-sm bg-white outline-none transition-all focus:ring-2 focus:ring-accent/20 dark:bg-gray-800 ${
           isValid
             ? 'border-green-500 dark:border-green-400'
             : error

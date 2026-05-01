@@ -7,9 +7,10 @@ import {
   LineElement,
   PointElement,
   LinearScale,
+  Filler,
 } from 'chart.js'
 
-Chart.register(LineController, LineElement, PointElement, LinearScale)
+Chart.register(LineController, LineElement, PointElement, LinearScale, Filler)
 
 const BINS = 100
 
@@ -36,6 +37,10 @@ export function DensityPlot({ densityFn, xRange }: DensityPlotProps) {
     const accentColor = getComputedStyle(document.documentElement)
       .getPropertyValue('--accent')
       .trim()
+    const ctx = canvasRef.current.getContext('2d')!
+    const gradient = ctx.createLinearGradient(0, 0, 0, 160)
+    gradient.addColorStop(0, `${accentColor}30`)
+    gradient.addColorStop(1, `${accentColor}00`)
     chartRef.current = new Chart(canvasRef.current, {
       type: 'line',
       data: {
@@ -45,7 +50,8 @@ export function DensityPlot({ densityFn, xRange }: DensityPlotProps) {
             borderColor: accentColor,
             borderWidth: 1.5,
             pointRadius: 0,
-            fill: false,
+            fill: true,
+            backgroundColor: gradient,
             tension: 0.3,
           },
         ],

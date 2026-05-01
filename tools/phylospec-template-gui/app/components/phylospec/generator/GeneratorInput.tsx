@@ -85,7 +85,7 @@ export function GeneratorInput({
 
         if (!arg.required && collapseOptionalArgs) {
           return (
-            <details key={arg.name} className="group rounded-lg bg-gray-50/50 border border-gray-200 p-3 dark:bg-gray-800/60">
+            <details key={arg.name} className="group rounded-xl border border-gray-200/70 bg-gradient-to-br from-gray-50/60 to-white p-4 dark:bg-gray-800/60">
               <summary className="flex cursor-pointer items-center gap-1">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -102,7 +102,7 @@ export function GeneratorInput({
                   />
                 </svg>
                 <span className="text-sm font-medium">{label}</span>
-                <span className="text-sm text-gray-500">(optional)</span>
+                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">optional</span>
               </summary>
               <div className="mt-2 flex flex-col gap-1">
                 {content}
@@ -112,10 +112,10 @@ export function GeneratorInput({
         }
 
         return (
-          <div key={arg.name} className="flex flex-col gap-1 rounded-lg bg-gray-50/50 border border-gray-200 p-3 dark:bg-gray-800/60">
-            <div className="flex items-center gap-1">
+          <div key={arg.name} className="flex flex-col gap-2 rounded-xl border border-gray-200/70 bg-gradient-to-br from-gray-50/60 to-white p-4 dark:bg-gray-800/60">
+            <div className="flex items-center gap-1.5">
               <span className="text-sm font-medium">{label}</span>
-              {!arg.required && <span className="text-sm text-gray-500">(optional)</span>}
+              {!arg.required && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">optional</span>}
             </div>
             {content}
           </div>

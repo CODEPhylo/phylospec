@@ -114,7 +114,7 @@ function makeSchema() {
         description: def.description,
         densityFn: (p, x) => logNormalPdf(x, p.logMean, p.logSd),
         xRange: (p) =>
-          p.logSd > 0 ? [1e-8, Math.exp(p.logMean + 2 * p.logSd)] : null,
+          p.logSd > 0 ? [1e-8, Math.exp(p.logMean + p.logSd)] : null,
       }),
     toExpression: (v: GeneratorInputValue) =>
       buildExpression("LogNormal", genArgs, v),

@@ -45,19 +45,23 @@ export function ScalarDistributionInput({
             args={args}
           />
         </div>
-        {computedRange && (
-          <div className="w-1/3 shrink-0 h-40 bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col">
-            <div className="px-3 py-1 border-b border-gray-200 text-xs font-semibold text-gray-400 tracking-wider">
-              PREVIEW
-            </div>
-            <div className="flex-1 min-h-0 px-1 pt-1">
+        <div className="w-1/3 shrink-0 h-40 bg-gradient-to-br from-gray-50 to-white border border-gray-200/70 rounded-xl overflow-hidden flex flex-col shadow-sm">
+          <div className="px-3 py-1.5 border-b border-gray-200/70 text-xs font-semibold uppercase tracking-wider text-gray-400">
+            Preview
+          </div>
+          <div className="flex-1 min-h-0 px-1 pt-1 relative">
+            {computedRange ? (
               <DensityPlot
                 densityFn={(x) => densityFn(params, x)}
                 xRange={computedRange}
               />
-            </div>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xs text-gray-300 select-none">fill in parameters</span>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   )

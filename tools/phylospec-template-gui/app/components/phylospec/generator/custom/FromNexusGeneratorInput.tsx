@@ -99,10 +99,10 @@ export function FromNexusGeneratorInput({
         </p>
       )}
       {fileArg && (
-        <div className="flex flex-col gap-1 rounded-lg border border-gray-200 bg-gray-50/50 p-3 dark:bg-gray-800/60">
-          <div className="flex items-center gap-1">
+        <div className="flex flex-col gap-2 rounded-xl border border-gray-200/70 bg-gradient-to-br from-gray-50/60 to-white p-4 dark:bg-gray-800/60">
+          <div className="flex items-center gap-1.5">
             <span className="text-sm font-medium">File</span>
-            <span className="text-sm text-gray-500">(required)</span>
+            <span className="rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">required</span>
           </div>
           <span className="text-sm italic text-gray-600 dark:text-gray-400">
             {fileArg.description}
@@ -110,7 +110,7 @@ export function FromNexusGeneratorInput({
           <input
             type="file"
             accept=".nex,.nexus,.nxs"
-            className="text-sm file:mr-2 file:rounded file:border file:border-gray-300 file:bg-white file:px-2 file:py-1 dark:file:border-gray-600 dark:file:bg-gray-800"
+            className="text-sm file:mr-2 file:cursor-pointer file:rounded-full file:border-0 file:bg-accent/10 file:px-3 file:py-1 file:text-xs file:font-medium file:text-accent"
             onChange={handleFileChange}
           />
           {displayName && (
@@ -142,7 +142,7 @@ export function FromNexusGeneratorInput({
           return (
             <details
               key={arg.name}
-              className="group rounded-lg border border-gray-200 bg-gray-50/50 p-3 dark:bg-gray-800/60"
+              className="group rounded-xl border border-gray-200/70 bg-gradient-to-br from-gray-50/60 to-white p-4 dark:bg-gray-800/60"
             >
               <summary className="flex cursor-pointer items-center gap-1">
                 <svg
@@ -160,7 +160,7 @@ export function FromNexusGeneratorInput({
                   />
                 </svg>
                 <span className="text-sm font-medium">{label}</span>
-                <span className="text-sm text-gray-500">(optional)</span>
+                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">optional</span>
               </summary>
               <div className="mt-2 flex flex-col gap-1">{content}</div>
             </details>
@@ -170,13 +170,13 @@ export function FromNexusGeneratorInput({
         return (
           <div
             key={arg.name}
-            className="flex flex-col gap-1 rounded-lg border border-gray-200 bg-gray-50/50 p-3 dark:bg-gray-800/60"
+            className="flex flex-col gap-2 rounded-xl border border-gray-200/70 bg-gradient-to-br from-gray-50/60 to-white p-4 dark:bg-gray-800/60"
           >
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <span className="text-sm font-medium">{label}</span>
               <span className="text-sm text-gray-500">{operator}</span>
               {!arg.required && (
-                <span className="text-sm text-gray-500">(optional)</span>
+                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">optional</span>
               )}
             </div>
             {content}
