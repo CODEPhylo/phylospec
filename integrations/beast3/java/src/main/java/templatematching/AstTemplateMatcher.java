@@ -214,7 +214,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     @Override
     public Void visitDraw(Stmt.Draw stmt) {
         if (this.currentQueryNode instanceof Expr.DrawnArgument drawnArgumentQuery) {
-            // in this case, the query is a drawn argument (x~dist) but the template is a drawn argument (Any x ~ dist)
+            // in this case, the query is a drawn argument (x~dist) but the template is a drawn statement (Any x ~ dist)
             // this still works, we directly route to the drawn distribution
 
             this.match(stmt.expression, drawnArgumentQuery.expression);

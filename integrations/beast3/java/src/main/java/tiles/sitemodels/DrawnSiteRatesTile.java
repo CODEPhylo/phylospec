@@ -13,16 +13,16 @@ public class DrawnSiteRatesTile extends TemplateTile<Partial<SiteModel, Substitu
 
     @Override
     protected String getPhyloSpecTemplate() {
-        return "Any branchRates ~ $branchRateDistribution";
+        return "Any siteRates ~ $siteRateDistribution";
     }
 
-    TemplateTileInput<? extends Partial<SiteModel, SubstitutionModel>> branchRateDistributionInput = new TemplateTileInput<>(
-            "$branchRateDistribution"
+    TemplateTileInput<? extends Partial<SiteModel, SubstitutionModel>> siteRateDistributionInput = new TemplateTileInput<>(
+            "$siteRateDistribution"
     );
 
     @Override
     protected Partial<SiteModel, SubstitutionModel> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        return this.branchRateDistributionInput.apply(beastState, indexVariables);
+        return this.siteRateDistributionInput.apply(beastState, indexVariables);
     }
 
 }

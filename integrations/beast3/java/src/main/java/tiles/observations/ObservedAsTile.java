@@ -26,12 +26,15 @@ public class ObservedAsTile extends TemplateTile<StateNode> {
 
         // find the ID
 
-        String id = "likelihood";
+        String prefix = "";
+
         if (this.getRootNode() instanceof Stmt stmt) {
-            id = stmt.getName() + "_likelihood";
+            prefix = stmt.getName();
         } else if (observedStateNode.getID() != null) {
-            id = observedStateNode.getID() + "_likelihood";
+            prefix = observedStateNode.getID();
         }
+
+        String id = this.getId(prefix, indexVariables, "likelihood");
 
         // we register the distribution as a likelihood with the given state node as parameter
 

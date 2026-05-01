@@ -34,12 +34,16 @@ public class IndexedStatementTile extends AstNodeTile<List<?>, Stmt.Indexed> {
         Expr.Variable index = indices.getFirst();
         Integer oldIndexValue = indexVariables.get(index);
 
+        // we go through every element in 1:range and evaluate the statement
+
         List<Object> list = new ArrayList<>();
         for (int i = 0; i < range; i++) {
             indexVariables.put(indices.getFirst(), i + 1);
             Object element = this.statementInput.apply(beastState, indexVariables);
             list.add(element);
         }
+
+        // set the index variable back to the old value
 
         if (oldIndexValue == null) {
             indexVariables.remove(index);

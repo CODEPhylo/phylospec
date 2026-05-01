@@ -25,7 +25,14 @@ public class IndexedTile extends AstNodeTile<Object, Expr.Index> {
         List<?> vector = this.vectorInput.apply(beastState, indexVariables);
         int index = this.firstIndexInput.apply(beastState, indexVariables).get();
 
-        if (index < 1) {
+        if (index == 0) {
+            throw new TileApplicationError(
+                    "Index " + index + " is smaller than 1",
+                    "PhyloSpec uses 1-based indexing. Use an index which is between 1 and " + vector.size() + "."
+            );
+        }
+
+        if (index < 0) {
             throw new TileApplicationError(
                     "Index " + index + " is smaller than 1",
                     "Use an index which is between 1 and " + vector.size() + "."
@@ -39,6 +46,7 @@ public class IndexedTile extends AstNodeTile<Object, Expr.Index> {
             );
         }
 
+        // index - 1 because PhyloSpec uses 1-indexing and Java uses 0-indexing
         return vector.get(index - 1);
     }
 
