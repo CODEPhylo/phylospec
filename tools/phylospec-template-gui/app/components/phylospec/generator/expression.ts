@@ -11,6 +11,15 @@ function indentContinuation(expr: string, col: number): string {
     .join("\n");
 }
 
+// inner args (lines starting with spaces) get 2-space prefix; closing `)` gets 4-space
+function indentNestedExpression(expr: string): string {
+  if (!expr.includes("\n")) return expr;
+  return expr
+    .split("\n")
+    .map((line, i) => (i === 0 ? line : (line.startsWith(" ") ? "  " : "    ") + line))
+    .join("\n");
+}
+
 export function buildExpression(
   name: string,
   args: { name: string; type: string }[],
@@ -36,7 +45,7 @@ export function buildExpression(
     if (!component) continue;
     const prefix = `    ${arg.name}=`;
     const expr = component.toExpression(argValue.value);
-    lines.push(prefix + indentContinuation(expr, prefix.length));
+    lines.push(prefix + indentNestedExpression(expr));
   }
 
   if (lines.length === 0) return `${name}()`;
