@@ -14,12 +14,14 @@
   --color-accent: var(--accent);
   --color-light-gray: var(--light-gray);
   --font-sans: 'Noto Sans', 'sans-serif';
-  --font-mono: 'Noto Sans', 'sans-serif';
+}
+
+@theme {
+  --text-sm: 0.925rem;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Noto Sans', sans-serif;
-  font-size: 1.1rem;
 }

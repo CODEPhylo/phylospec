@@ -9,6 +9,7 @@ export type PhyloSpecComponent<T> = {
   id: string
   label: string
   outputType: string
+  isLiteral: boolean
   schema: ZodType<T>
   Component: React.FC<ComponentProps<T>>
   toExpression: (value: T) => string

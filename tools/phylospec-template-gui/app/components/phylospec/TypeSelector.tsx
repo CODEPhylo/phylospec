@@ -16,34 +16,65 @@ type TypeSelectorProps = {
   allowDistributions?: boolean
 }
 
+type Mode = 'fixed' | 'estimated' | 'calculated'
+
+const MODE_CONFIG: Record<Mode, { label: string; activeClass: string }> = {
+  fixed:      { label: '= fixed',      activeClass: 'bg-accent text-white' },
+  estimated:  { label: '~ estimated',  activeClass: 'bg-cyan-600 text-white' },
+  calculated: { label: 'ƒ calculated', activeClass: 'bg-violet-600 text-white' },
+}
+
+function deriveInitialMode(
+  value: TypeSelectorValue | null,
+  calcIds: Set<string>,
+  availableModes: Mode[],
+): Mode {
+  if (!value) return availableModes[0] ?? 'fixed'
+  if (value.isDistribution) return 'estimated'
+  if (calcIds.has(value.componentId)) return 'calculated'
+  return availableModes[0] ?? 'fixed'
+}
+
 export function TypeSelector({ type, value, onChange, allowDistributions = false }: TypeSelectorProps) {
-  const distComponents = allowDistributions ? getComponents(`Distribution<${resolveAlias(type)}>`) : []
-  const fixedComponents = getComponents(type)
-  const distIds = new Set(distComponents.map((c) => c.id))
+  const allForType = getComponents(type)
+  const literalComponents = allForType.filter(c => c.isLiteral)
+  const calcComponents    = allForType.filter(c => !c.isLiteral)
+  const distComponents    = allowDistributions
+    ? getComponents(`Distribution<${resolveAlias(type)}>`)
+    : []
 
-  const showModePicker = allowDistributions && distComponents.length > 0 && fixedComponents.length > 0
+  const availableModes: Mode[] = [
+    ...(literalComponents.length > 0 ? (['fixed']      as Mode[]) : []),
+    ...(distComponents.length > 0    ? (['estimated']  as Mode[]) : []),
+    ...(calcComponents.length > 0    ? (['calculated'] as Mode[]) : []),
+  ]
 
-  const initialMode = value?.isDistribution ? 'prior' : 'fixed'
-  const [mode, setMode] = useState<'fixed' | 'prior'>(initialMode)
+  const calcIds = new Set(calcComponents.map(c => c.id))
+  const distIds = new Set(distComponents.map(c => c.id))
+
+  const [mode, setMode]           = useState<Mode>(() => deriveInitialMode(value, calcIds, availableModes))
   const [selectedId, setSelectedId] = useState<string | null>(value?.componentId ?? null)
 
-  // when mode picker is shown, restrict to the active bucket; otherwise merge (dist first)
-  const activeComponents = showModePicker
-    ? (mode === 'prior' ? distComponents : fixedComponents)
-    : [...distComponents, ...fixedComponents]
-
-  if (activeComponents.length === 0 && !showModePicker) {
+  if (availableModes.length === 0) {
     return <span className="text-sm text-gray-500">No components registered for type &quot;{type}&quot;</span>
   }
 
-  // only honour selectedId if it actually exists in the current bucket
-  const validSelectedId = activeComponents.some((c) => c.id === selectedId) ? selectedId : null
-  // auto-select only when there is no mode picker (single-bucket); with the mode picker shown the user must pick explicitly
-  const effectiveId = validSelectedId ?? (!showModePicker && activeComponents.length === 1 ? activeComponents[0].id : null)
-  const registration = effectiveId ? (activeComponents.find((c) => c.id === effectiveId) ?? null) : null
+  const activeBucket =
+    mode === 'fixed'      ? literalComponents :
+    mode === 'estimated'  ? distComponents :
+                            calcComponents
+
+  // only honour selectedId if it exists in the current bucket
+  const validSelectedId = activeBucket.some(c => c.id === selectedId) ? selectedId : null
+  const showModePicker = availableModes.length > 1
+  // auto-select when there is no mode picker, or when in fixed mode with a single component
+  const effectiveId = validSelectedId ?? (
+    activeBucket.length === 1 && (!showModePicker || mode === 'fixed') ? activeBucket[0].id : null
+  )
+  const registration = effectiveId ? (activeBucket.find(c => c.id === effectiveId) ?? null) : null
   const currentValue = value?.componentId === effectiveId ? value.value : null
 
-  function handleModeSwitch(newMode: 'fixed' | 'prior') {
+  function handleModeSwitch(newMode: Mode) {
     setMode(newMode)
     setSelectedId(null)
   }
@@ -60,42 +91,36 @@ export function TypeSelector({ type, value, onChange, allowDistributions = false
   return (
     <div className="flex flex-col gap-2">
 
-      {/* mode toggle: fixed value vs. prior distribution */}
       {showModePicker && (
         <div className="flex w-fit overflow-hidden rounded border border-gray-200 text-sm dark:border-gray-700">
-          <button
-            onClick={() => handleModeSwitch('fixed')}
-            className={`px-3 py-1 ${
-              mode === 'fixed'
-                ? 'bg-accent text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
-            }`}
-          >
-            = fixed
-          </button>
-          <button
-            onClick={() => handleModeSwitch('prior')}
-            className={`border-l border-gray-200 px-3 py-1 dark:border-gray-700 ${
-              mode === 'prior'
-                ? 'bg-cyan-600 text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
-            }`}
-          >
-            ~ prior
-          </button>
+          {availableModes.map((m, i) => (
+            <button
+              key={m}
+              onClick={() => handleModeSwitch(m)}
+              className={`px-3 py-1 ${i > 0 ? 'border-l border-gray-200 dark:border-gray-700' : ''} ${
+                mode === m
+                  ? MODE_CONFIG[m].activeClass
+                  : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+              }`}
+            >
+              {MODE_CONFIG[m].label}
+            </button>
+          ))}
         </div>
       )}
 
-      {/* component picker within the active mode — always show when mode picker is visible */}
-      {(activeComponents.length > 1 || showModePicker) && (
+      {mode === 'estimated' && <span className="text-sm text-gray-500">Choose a prior:</span>}
+      {mode === 'calculated' && <span className="text-sm text-gray-500">Choose a function:</span>}
+
+      {(activeBucket.length > 1 || (showModePicker && !(mode === 'fixed' && activeBucket.length === 1))) && (
         <div className="flex flex-wrap gap-1">
-          {activeComponents.map((c) => (
+          {activeBucket.map((c) => (
             <button
               key={c.id}
               onClick={() => handleSelect(c.id)}
               className={`rounded px-2.5 py-1 text-sm ${
                 c.id === effectiveId
-                  ? (mode === 'prior' && showModePicker ? 'bg-cyan-600 text-white' : 'bg-accent text-white')
+                  ? MODE_CONFIG[mode].activeClass
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
               }`}
             >
