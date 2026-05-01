@@ -19,7 +19,7 @@ const CONFIG = {
     tree: 'tree',
   },
   placeholders: {
-    '$alignment': { type: 'Alignment',             name: 'Alignment',         description: 'Choose the nucleotide sequence alignment.' },
+    '$alignment': { type: 'Alignment<Character>',             name: 'Alignment',         description: 'Choose the nucleotide sequence alignment.' },
     '$tree':     { type: 'Distribution<Tree>', name: 'Tree Prior',         description: 'Specify a prior distribution over the tree topology and branch lengths.' },
     '$qMatrix':  { type: 'QMatrix',            name: 'Substitution Model', description: 'Select a substitution model for the alignment.' },
   },
@@ -28,7 +28,7 @@ const CONFIG = {
 export function Demo() {
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <header className="w-full border-b border-accent/20 bg-white/90 p-4 backdrop-blur-md">
+      <header className="w-full border-b border-accent/20 bg-gray-50 p-4 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-7xl items-center">
           <Link className="text-2xl font-bold tracking-tight flex-1" href="/">
             <span className="text-accent">Phylo</span><span className="text-gray-900">Spec</span>
