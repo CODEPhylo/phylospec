@@ -23,15 +23,33 @@ public class VectorSiteRatesErrorTile extends TemplateTile<UnboundDistribution<A
 
     @Override
     protected String getPhyloSpecTemplate() {
-        return """
-               PhyloCTMC(
-                  tree=$tree,
-                  qMatrix=$substitutionModel,
-                  branchRates~$$branchRates,
-                  siteRates=$siteRates
-               )
-               """;
+        throw new UnsupportedOperationException();
     }
+
+    protected List<String> getPhyloSpecTemplates() {
+        return List.of(
+                // first template draws branchRates
+                """
+                       PhyloCTMC(
+                          tree=$tree,
+                          qMatrix=$substitutionModel,
+                          branchRates~$$branchRates,
+                          siteRates=$siteRates
+                       )
+                       """,
+                // second template assigns branchRates. we don't care for this tile
+                """
+                        PhyloCTMC(
+                          tree=$tree,
+                          qMatrix=$substitutionModel,
+                          branchRates=$$branchRates,
+                          siteRates=$siteRates
+                        )
+                        """
+        );
+    }
+
+
 
     TemplateTileInput<Tree> treeInput = new TemplateTileInput<>("$tree");
     TemplateTileInput<?> substitutionModelInput = new TemplateTileInput<>("$substitutionModel", true);

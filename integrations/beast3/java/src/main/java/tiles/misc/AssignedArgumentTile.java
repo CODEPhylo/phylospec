@@ -9,7 +9,9 @@ import java.util.IdentityHashMap;
 
 public class AssignedArgumentTile extends AstNodeTile<Object, Expr.AssignedArgument> {
 
-    AstNodeTileInput<Object, Expr.AssignedArgument> expressionInput = new AstNodeTileInput<>("expression", expr -> expr.expression);
+    AstNodeTileInput<Object, Expr.AssignedArgument> expressionInput = new AstNodeTileInput<>(
+            "expression", expr -> expr.expression
+    );
 
     @Override
     public Object applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

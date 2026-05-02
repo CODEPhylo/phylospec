@@ -22,6 +22,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * This tile applies to repeat(value, num) calls which produce a simplex (value*num=1.0).
+ */
 public class RepeatSimplexTile extends GeneratorTile<SimplexParam> {
 
     @Override

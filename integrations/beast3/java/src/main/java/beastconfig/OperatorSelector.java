@@ -47,13 +47,13 @@ public class OperatorSelector {
             Exchange narrowExchangeOperator = new Exchange();
             beastState.setInput(narrowExchangeOperator, narrowExchangeOperator.treeInput, tree);
             beastState.setInput(narrowExchangeOperator, narrowExchangeOperator.m_pWeight, 15.0);
-            beastState.setInput(narrowExchangeOperator, narrowExchangeOperator.isNarrowInput, false);
+            beastState.setInput(narrowExchangeOperator, narrowExchangeOperator.isNarrowInput, true);
             beastState.addOperator(narrowExchangeOperator, stateNode);
 
             Exchange wideExchangeOperator = new Exchange();
             beastState.setInput(wideExchangeOperator, wideExchangeOperator.treeInput, tree);
             beastState.setInput(wideExchangeOperator, wideExchangeOperator.m_pWeight, 5.0);
-            beastState.setInput(wideExchangeOperator, wideExchangeOperator.isNarrowInput, true);
+            beastState.setInput(wideExchangeOperator, wideExchangeOperator.isNarrowInput, false);
             beastState.addOperator(wideExchangeOperator, stateNode);
 
             WilsonBalding wilsonBaldingOperator = new WilsonBalding();

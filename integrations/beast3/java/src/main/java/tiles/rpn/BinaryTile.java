@@ -16,6 +16,13 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Tiles a binary arithmetic expression ({@code +}, {@code -}, {@code *}, {@code /}) into an
+ * RPN fragment.
+ * Four concrete inner classes cover every combination of already-tiled RPN sub-expressions
+ * and plain BEAST tensors on the left and right operand positions:
+ * {@link RpnRpn}, {@link RpnReal}, {@link RealRpn}, and {@link RealReal}.
+ */
 public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.Binary> {
 
     @Override

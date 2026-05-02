@@ -8,6 +8,9 @@ import tiling.TypeToken;
 
 import java.util.IdentityHashMap;
 
+/**
+ * Tiles the {@code log} generator into an RPN fragment.
+ */
 public abstract class LogRPNTile extends GeneratorTile<RPNCalculationResult> {
 
     @Override

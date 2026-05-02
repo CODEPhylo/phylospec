@@ -16,6 +16,12 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * This tile matches any literals (e.g. 10, 5.0, "hallo").
+ * When tiling, a separate tile is created for every possible corresponding Java type.
+ * For 10.4 for instance, tiles are created with Double, RealScalar<Real>, RealScalar<NonNegativeReal>,
+ * and RealScalar<PositiveReal>.
+ */
 public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal> {
     private final TypeToken<T> typeToken;
     private final T value;

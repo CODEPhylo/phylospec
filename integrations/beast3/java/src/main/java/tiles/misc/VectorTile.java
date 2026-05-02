@@ -21,6 +21,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 
+/**
+ * This tile matches vectors where every element is a RealScalarParam or a IntScalarParam and produces a
+ * RealVectorParam or IntVectorParam.
+ */
 public class VectorTile<T> extends AstNodeTile<T, Expr.Array> {
     private final TypeToken<T> typeToken;
     private final T value;

@@ -39,6 +39,7 @@ public class SiteModelTile extends GeneratorTile<Partial<SiteModel, Substitution
         beastState.setInput(partialSiteModel, partialSiteModel.gammaCategoryCount, numCategories);
         beastState.setInput(partialSiteModel, partialSiteModel.invarParameterInput, invariantProportion);
 
+        // we return a partial site model where the substitution model can be set later
         return new Partial<>(partialSiteModel, (siteModel, substitutionModel) -> {
             beastState.setInput(siteModel, siteModel.substModelInput, substitutionModel);
             return siteModel;

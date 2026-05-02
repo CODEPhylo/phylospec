@@ -12,6 +12,10 @@ import tiling.TileApplicationError;
 import java.util.IdentityHashMap;
 import java.util.List;
 
+/**
+ * This tile matches range statements like 1:5. Only ranges starting from 1 are supported. The result of this tile
+ * is the upper bound (e.g. 5 for 1:5).
+ */
 public class RangeTile extends AstNodeTile<Integer, Expr.Range> {
 
     AstNodeTileInput<? extends IntScalar<NonNegativeInt>, Expr.Range> fromInput = new AstNodeTileInput<>(

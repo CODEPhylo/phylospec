@@ -8,6 +8,10 @@ import org.phylospec.lexer.TokenType;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Holds an in-progress RPN expression as a string together with the BEAST tensors it
+ * references and the names that identify each tensor within the expression.
+ */
 public record RPNCalculationResult(String calculation, List<Tensor> inputs, List<String> names) {
 
     public static RPNCalculationResult combine(TokenType operand, RPNCalculationResult left, RPNCalculationResult right) {
