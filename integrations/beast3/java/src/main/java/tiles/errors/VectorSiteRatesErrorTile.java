@@ -49,8 +49,6 @@ public class VectorSiteRatesErrorTile extends TemplateTile<UnboundDistribution<A
         );
     }
 
-
-
     TemplateTileInput<Tree> treeInput = new TemplateTileInput<>("$tree");
     TemplateTileInput<?> substitutionModelInput = new TemplateTileInput<>("$substitutionModel", true);
     TemplateTileInput<?> branchRatesInput = new TemplateTileInput<>("$$branchRates", false);
