@@ -1,14 +1,12 @@
 package tiling;
 
-import beast.base.inference.StateNode;
-
 import java.util.function.Consumer;
 
 /// A distribution paired with a setter that wires its state node.
 ///
 /// The distribution is "unbound" in the sense that it holds no default state node —
 /// binding must always be triggered with an explicit observed state node.
-public class UnboundDistribution<T extends StateNode, O extends beast.base.inference.Distribution> {
+public class UnboundDistribution<T, O extends beast.base.inference.Distribution> {
 
     public final O distribution;
     protected Consumer<T> setStateNodeFunc;

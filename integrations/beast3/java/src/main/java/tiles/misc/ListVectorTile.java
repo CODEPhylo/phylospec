@@ -13,6 +13,10 @@ import tiling.TypeToken;
 
 import java.util.*;
 
+/**
+ * This tile matches an array and simply creates a Java List with all objects produced by the elements. A vector tile
+ * is created for every combination of element tiles which have the same TypeToken.
+ */
 public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array> {
 
     private final List<Tile<?>> inputTiles;
@@ -29,11 +33,16 @@ public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array> {
     public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
         if (!(node instanceof Expr.Array array)) throw new FailedTilingAttempt.Irrelevant();
 
+        // we gather at all possible input tiles for each element
+
         List<Set<Tile<?>>> allPossibleInputTiles = new ArrayList<>();
         for (Expr element : array.elements) {
             Set<Tile<?>> elementTiles = allInputTiles.get(element);
             allPossibleInputTiles.add(elementTiles);
         }
+
+        // we now look at every combination of element tiles. we create a tile for every combination where
+        // everything has the same type
 
         Set<Tile<?>> wiredUpTiles = new HashSet<>();
         Utils.visitCombinations(

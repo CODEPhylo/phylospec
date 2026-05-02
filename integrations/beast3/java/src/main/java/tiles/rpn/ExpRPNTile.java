@@ -8,6 +8,9 @@ import tiling.TypeToken;
 
 import java.util.IdentityHashMap;
 
+/**
+ * Tiles the {@code exp} generator into an RPN fragment.
+ */
 public abstract class ExpRPNTile extends GeneratorTile<RPNCalculationResult> {
 
     @Override

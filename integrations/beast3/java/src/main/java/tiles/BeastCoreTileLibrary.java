@@ -106,7 +106,7 @@ public class BeastCoreTileLibrary extends TileLibrary {
         tiles.add(new ExponentialPopulationTile());
 
         tiles.add(new StrictClockTile());
-        tiles.add(new ManualStrictClockTile());
+        // tiles.add(new ManualStrictClockTile());
         tiles.add(new RelaxedClockTile());
         tiles.add(new DrawnBranchRatesTile());
         tiles.add(new DrawnSiteRatesTile());

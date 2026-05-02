@@ -16,7 +16,7 @@ import java.util.*;
 public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
 
     private final List<CandidateTile> candidateTiles;
-    private final List<Tile<?>> operatorTiles;
+    private final List<Tile<?>> operatorTiles; // TODO: operatorTiles not supported atm
 
     private List<Tile<?>> bestTiles;
 
@@ -55,15 +55,27 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
 
     /**
      * Returns the best (lowest-weight) tile for each top-level statement in the list.
-     * Iteration goes from last to first so that a tile can eagerly consume preceding statements
-     * before those statements are visited independently.
+     *
+     * <p>The algorithm has two phases:
+     * <ol>
+     *   <li><b>Bottom-up matching</b> — statements are visited last-to-first so that a tile
+     *       spanning multiple statements (e.g. a tile that inlines its predecessor variable) can
+     *       eagerly claim those predecessors via {@link #consumedStatements} before the predecessors
+     *       are visited on their own. For each statement, every registered {@link CandidateTile} is
+     *       asked to match; successful matches are collected into {@link #evaluatedTiles}, keyed by
+     *       AST node.
+     *   <li><b>Greedy cross-statement consistency check</b> — after matching, the per-statement
+     *       candidate lists are sorted by weight and visited in combination order (cheapest-first).
+     *       The first combination where no two tiles disagree on how the same AST node should be
+     *       translated is accepted. This is greedy and may miss the global optimum, but avoids
+     *       exponential blowup in the number of statements.</li>
+     * </ol>
      *
      * @param statements the top-level statements to tile
      * @return one best tile per unconsumed statement, in source order
      */
     public List<Tile<?>> getBestTiling(List<Stmt> statements) {
-        // we first find all matching tiles for every AstNode
-        // we start with the last statements and go backwards
+        // phase 1: bottom-up matching, last-to-first so multi-statement tiles can claim predecessors
 
         List<List<Tile<?>>> possibleTiles = new ArrayList<>();
 
@@ -98,6 +110,7 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
             possibleTiles.add(orderedCandidateTiles);
         }
 
+        // phase 2: visit combinations cheapest-first and accept the first globally consistent one
         List<Tile<?>> bestTiles = new ArrayList<>();
         boolean[] foundBestTile = new boolean[] {false};
 

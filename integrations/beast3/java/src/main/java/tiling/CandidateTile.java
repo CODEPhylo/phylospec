@@ -25,7 +25,8 @@ public interface CandidateTile {
     ) throws FailedTilingAttempt;
 
     /**
-     * Creates wired up fresh tiles for the given inputs and their compatible input tiles.
+     * Creates wired up fresh tiles for the given inputs and their compatible input tiles. For every combination of
+     * compatible input tiles, a wired-up tile is created.
      */
     default Set<Tile<?>> getWiredUpTiles(
             List<TileInput<?>> tileInputs,

@@ -9,6 +9,10 @@ import tiling.TypeToken;
 
 import java.util.IdentityHashMap;
 
+/**
+ * Finalizes an RPN expression by wiring the fully assembled {@link RPNCalculationResult}
+ * into a BEAST {@code RPNcalculator} and registering it with the {@code BEASTState}.
+ */
 public class RPNAssignmentTile extends AstNodeTile<RPNCalculationResult, Stmt.Assignment> {
 
     AstNodeTileInput<RPNCalculationResult, Stmt.Assignment> expressionInput = new AstNodeTileInput<>(
