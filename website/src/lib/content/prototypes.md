@@ -25,8 +25,9 @@ PhyloSpec has working prototype tools that are being developed to guide the desi
 **PhyloRun** — Executes PhyloSpec models in RevBayes and BEAST 2 (<a href="https://github.com/tochsner/phylorun/tree/main" target="_blank">Try it out</a>)
 
 
-## Converters
+## Converters & Parsers
 
+**BEAST 2.8 PhyloSpec Parser** — Allows PhyloSpec models to run in BEAST 2.8 (<a href="https://github.com/CODEPhylo/phylospec/pull/30" target="_blank">PR #30</a> and <a href="https://github.com/CODEPhylo/phylospec/pull/32" target="_blank">PR #32</a>)
 
 **PhyloSpec to RevBayes** — Allows PhyloSpec models to run in RevBayes (<a href="https://github.com/CODEPhylo/phylospec/pull/16" target="_blank">PR #16</a>, <a href="https://github.com/tochsner/phylorun/tree/main#run-phylospec-analyses" target="_blank">try it out</a>)
 
