@@ -1,3 +1,7 @@
+<script>
+	import { base } from '$app/paths';
+</script>
+
 # Prototypes
 
 PhyloSpec has working prototype tools that are being developed to guide the design of the component library format and core components. Furthermore, they allow to catch potential challenges related to integration into engines early on.
