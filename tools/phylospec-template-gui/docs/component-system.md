@@ -62,6 +62,8 @@ getComponents(type: string): PhyloSpecComponent<unknown>[]
 
 Multiple components can be registered for the same type; `getComponents` returns them in registration order. Registrations are side effects that run on module import. `app/components/phylospec/index.ts` imports `./literal` and `./generator` to trigger them; any client component that imports from `app/components/phylospec` has the registry populated.
 
+`resolveAlias` resolves both simple aliases (`Rate` → `PositiveReal`) and parameterised types (`Distribution<Rate>` → `Distribution<PositiveReal>`). `getComponents` automatically falls through to the resolved type when no direct registration exists.
+
 ---
 
 ## Literal components — `app/components/phylospec/literal/`
@@ -248,13 +250,21 @@ Renders a form from a PhyloSpec template string and a config that maps `$placeho
 ```ts
 type PlaceholderConfig = {
   type: string
+  name?: string          // overrides the auto-derived tab/row label
   description?: string   // shown below the placeholder tab
+}
+
+type TabGroup = {
+  name: string            // tab label
+  description?: string    // optional summary shown at the top of the tab pane
+  placeholders: string[]  // $placeholder keys that share this tab, in display order
 }
 
 type TemplateFormConfig = {
   experimentName?: string
   defaults?: Record<string, string>  // argument name → raw expression, e.g. { taxa: "taxa(data)" }
   placeholders: Record<string, PlaceholderConfig>
+  groups?: TabGroup[]    // optional; placeholders not in any group each get their own tab
 }
 
 type TemplateFormProps = {
@@ -287,8 +297,8 @@ For each placeholder, if a `TypeSelectorValue` is set, the matching component's 
 
 Two columns (`items-start`):
 
-- **Left** (`flex-1`): a tab bar with one tab per placeholder (label = name without leading `$`). The active tab shows an optional description and a `TypeSelector` with `allowDistributions={false}` — template placeholders are always deterministic values.
-- **Right** (`w-1/3 shrink-0`): a `<pre>` block showing the resolved template with unresolved tokens left in place.
+- **Left** (`flex-1`): a tab bar derived from `placeholders` and `groups`. Placeholders listed in a `TabGroup` share one tab (label = group name); all others each get their own tab. The active tab shows each placeholder's optional description and `TypeSelector` (with `allowDistributions={false}`) in declaration order.
+- **Right** (`w-2/5 shrink-0`): a preview panel with a `<pre>` block showing the resolved template. Unresolved tokens are rendered in cyan; resolved values are rendered in the accent colour. A copy-to-clipboard button sits above the preview. An **Export model.phylospec** download button appears below — it is disabled until all placeholders are resolved.
 
 ## Global page styling
 
