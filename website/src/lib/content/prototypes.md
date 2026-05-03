@@ -20,7 +20,9 @@ PhyloSpec has working prototype tools that are being developed to guide the desi
 >
 </video>
 
+**Template-based GUI** — a visual form builder for composing PhyloSpec models. Users can fill in placeholders interactively and export a ready-to-run `.phylospec` file (<a href="https://github.com/CODEPhylo/phylospec/pull/36" target="_blank">PR #36</a>)
 
+<img src="{base}/template-gui.png" class="w-10/10" alt="Screenshot of the template-based GUI" />
 
 ## Runner
 
