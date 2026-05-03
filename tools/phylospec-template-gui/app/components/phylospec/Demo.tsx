@@ -6,9 +6,14 @@ import { TemplateForm } from './TemplateForm'
 const TEMPLATE = `Alignment data = $alignment
 Tree tree ~ $tree
 QMatrix qMatrix = $qMatrix
+Vector<Rate> branchRates ~ RelaxedClock(
+  base=LogNormal(mean=1.0, logSd=$logSd),
+  clockRate~$clockRate, 
+  tree
+)
 
 Alignment alignment ~ PhyloCTMC(
-  tree, qMatrix
+  tree, qMatrix, branchRates
 ) observed as data`
 
 const CONFIG = {
@@ -19,10 +24,15 @@ const CONFIG = {
     tree: 'tree',
   },
   placeholders: {
-    '$alignment': { type: 'Alignment<Character>',             name: 'Alignment',         description: 'Choose the nucleotide sequence alignment.' },
-    '$tree':     { type: 'Distribution<Tree>', name: 'Tree Prior',         description: 'Specify a prior distribution over the tree topology and branch lengths.' },
-    '$qMatrix':  { type: 'QMatrix',            name: 'Substitution Model', description: 'Select a substitution model for the alignment.' },
+    '$alignment': { type: 'Alignment<Character>', name: 'Alignment',          description: 'Choose the nucleotide sequence alignment.' },
+    '$tree':      { type: 'Distribution<Tree>',   name: 'Tree Prior',         description: 'Specify a prior distribution over the tree topology and branch lengths.' },
+    '$qMatrix':   { type: 'QMatrix',              name: 'Substitution Model', description: 'Select a substitution model for the alignment.' },
+    '$logSd':     { type: 'PositiveReal',         name: 'Log Sd',             description: 'Log standard deviation of the relaxed clock log-normal.' },
+    '$clockRate': { type: 'Distribution<Rate>',   name: 'Clock Rate',         description: 'Prior distribution over the mean clock rate.' },
   },
+  groups: [
+    { name: 'Relaxed Clock', description: 'Parameters of the relaxed molecular clock (uncorrelated log-normal).', placeholders: ['$logSd', '$clockRate'] },
+  ],
 }
 
 export function Demo() {

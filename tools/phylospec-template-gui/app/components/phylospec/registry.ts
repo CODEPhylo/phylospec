@@ -30,15 +30,27 @@ export function registerAlias(alias: string, target: string): void {
 }
 
 export function resolveAlias(type: string): string {
-  const target = aliases.get(type)
-  return target ? resolveAlias(target) : type
+  const direct = aliases.get(type)
+  if (direct) return resolveAlias(direct)
+  // resolve parameterised types like Distribution<Rate> → Distribution<PositiveReal>
+  const m = type.match(/^([^<]+)<(.+)>$/)
+  if (m) {
+    const inner = resolveAlias(m[2])
+    if (inner !== m[2]) return `${m[1]}<${inner}>`
+  }
+  return type
 }
 
 export function getComponents(type: string): PhyloSpecComponent<unknown>[] {
   const direct = registry.get(type) ?? []
   const aliasTarget = aliases.get(type)
-  if (!aliasTarget) return direct
-  const inherited = getComponents(aliasTarget)
-  const seen = new Set(direct.map((c) => c.id))
-  return [...direct, ...inherited.filter((c) => !seen.has(c.id))]
+  if (aliasTarget) {
+    const inherited = getComponents(aliasTarget)
+    const seen = new Set(direct.map((c) => c.id))
+    return [...direct, ...inherited.filter((c) => !seen.has(c.id))]
+  }
+  // fall back to resolving parameterised aliases (e.g. Distribution<Rate> → Distribution<PositiveReal>)
+  const resolved = resolveAlias(type)
+  if (resolved !== type) return getComponents(resolved)
+  return direct
 }
