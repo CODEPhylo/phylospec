@@ -2,7 +2,7 @@ import { getComponents, resolveAlias } from "../registry";
 import { DEFAULT_COMPONENT_ID } from "./constants";
 import type { GeneratorInputValue } from "./GeneratorInput";
 
-function indentContinuation(expr: string, col: number): string {
+export function indentContinuation(expr: string, col: number): string {
   if (!expr.includes("\n")) return expr;
   const pad = " ".repeat(col);
   return expr
