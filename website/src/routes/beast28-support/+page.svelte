@@ -19,7 +19,7 @@
 	const supported = generators.filter((g) => (supportMap.get(g.name)?.level ?? 1) >= 2).length;
 	const pct = Math.round((supported / generators.length) * 100);
 
-function badgeLabel(level: number) {
+	function badgeLabel(level: number) {
 		if (level === 3) return 'Full';
 		if (level === 2) return 'Partial';
 		return 'None';
@@ -43,8 +43,7 @@ function badgeLabel(level: number) {
 		</div>
 	</div>
 
-
-<div class="not-prose overflow-hidden rounded-md border border-gray-200">
+	<div class="not-prose overflow-hidden rounded-md border border-gray-200">
 		<table class="w-full text-sm">
 			<thead>
 				<tr class="bg-gray-50 border-b border-gray-200">
