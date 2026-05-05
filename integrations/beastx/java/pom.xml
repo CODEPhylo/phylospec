@@ -26,6 +26,14 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- BEAST X. Not on Maven Central; install locally first via
+             integrations/beastx/install-beast-mcmc.sh (see README). -->
+        <dependency>
+            <groupId>dr</groupId>
+            <artifactId>beast-mcmc</artifactId>
+            <version>10.5.0</version>
+        </dependency>
+
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
