@@ -6,21 +6,21 @@ import beast.base.spec.inference.distribution.Exponential;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-public class ExponentialTile extends GeneratorTile<BoundDistribution<RealScalarParam<NonNegativeReal>, Exponential>> {
+public class ExponentialTile extends GeneratorTile<BoundDistribution<RealScalarParam<NonNegativeReal>, Exponential>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "Exponential";
     }
 
-    GeneratorTileInput<RealScalarParam<PositiveReal>> rateInput = new GeneratorTileInput<>(
+    GeneratorTileInput<RealScalarParam<PositiveReal>, BEASTState> rateInput = new GeneratorTileInput<>(
             "rate",
             // PhyloSpec uses a rate parameterization, but BEAST uses a mean parameterization
             // this means that we have to transform the input, which would have an influence on the density of a RV

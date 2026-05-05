@@ -5,20 +5,20 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-public class ExpTile extends GeneratorTile<RealScalarParam<PositiveReal>> {
+public class ExpTile extends GeneratorTile<RealScalarParam<PositiveReal>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "exp";
     }
 
-    GeneratorTileInput<RealScalarParam<? extends Real>> xInput = new GeneratorTileInput<>(
+    GeneratorTileInput<RealScalarParam<? extends Real>, BEASTState> xInput = new GeneratorTileInput<>(
             "x", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
 

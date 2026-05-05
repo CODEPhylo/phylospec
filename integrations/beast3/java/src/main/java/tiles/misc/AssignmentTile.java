@@ -3,14 +3,15 @@ package tiles.misc;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
-import tiling.*;
-import tiles.AstNodeTile;
+import org.phylospec.tiling.tiles.TilePriority;
+import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.tiles.AstNodeTile;
 
 import java.util.IdentityHashMap;
 
-public class AssignmentTile extends AstNodeTile<Object, Stmt.Assignment> {
+public class AssignmentTile extends AstNodeTile<Object, Stmt.Assignment, BEASTState> {
 
-    AstNodeTileInput<Object, Stmt.Assignment> expressionInput = new AstNodeTileInput<>(
+    AstNodeTileInput<Object, Stmt.Assignment, BEASTState> expressionInput = new AstNodeTileInput<>(
             "expression", expr -> expr.expression
     );
 

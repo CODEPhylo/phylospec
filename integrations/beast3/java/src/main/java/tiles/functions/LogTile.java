@@ -8,22 +8,22 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import beastconfig.BEASTState;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-public class LogTile extends GeneratorTile<RealScalarParam<Real>> {
+public class LogTile extends GeneratorTile<RealScalarParam<Real>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "log";
     }
 
-    GeneratorTileInput<RealScalarParam<? extends PositiveReal>> xInput = new GeneratorTileInput<>(
+    GeneratorTileInput<RealScalarParam<? extends PositiveReal>, BEASTState> xInput = new GeneratorTileInput<>(
             "x", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
-    GeneratorTileInput<IntScalarParam<? extends PositiveInt>> basisInput = new GeneratorTileInput<>(
+    GeneratorTileInput<IntScalarParam<? extends PositiveInt>, BEASTState> basisInput = new GeneratorTileInput<>(
             "base", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
 

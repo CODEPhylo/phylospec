@@ -3,20 +3,20 @@ package tiles.functions;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import org.phylospec.ast.Expr;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
 import beastconfig.BEASTState;
 
 import java.util.IdentityHashMap;
 
-public class NumSitesTile extends GeneratorTile<IntScalarParam<NonNegativeInt>> {
+public class NumSitesTile extends GeneratorTile<IntScalarParam<NonNegativeInt>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "numSites";
     }
 
-    GeneratorTileInput<DecoratedAlignment> alignmentInput = new GeneratorTileInput<>(
+    GeneratorTileInput<DecoratedAlignment, BEASTState> alignmentInput = new GeneratorTileInput<>(
             "alignment"
     );
 

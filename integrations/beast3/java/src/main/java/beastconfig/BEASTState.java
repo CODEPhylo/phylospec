@@ -2,7 +2,7 @@ package beastconfig;
 
 import beast.base.core.*;
 import beast.base.inference.*;
-import tiling.TypeToken;
+import org.phylospec.tiling.TypeToken;
 
 import java.util.*;
 

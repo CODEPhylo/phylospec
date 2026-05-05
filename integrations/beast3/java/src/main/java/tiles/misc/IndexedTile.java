@@ -4,19 +4,19 @@ import beast.base.spec.domain.Int;
 import beast.base.spec.type.IntScalar;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
-import tiles.AstNodeTile;
-import tiling.TileApplicationError;
-import tiling.TypeToken;
+import org.phylospec.tiling.tiles.AstNodeTile;
+import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.TypeToken;
 
 import java.util.IdentityHashMap;
 import java.util.List;
 
-public class IndexedTile extends AstNodeTile<Object, Expr.Index> {
+public class IndexedTile extends AstNodeTile<Object, Expr.Index, BEASTState> {
 
-    AstNodeTileInput<List<?>, Expr.Index> vectorInput = new AstNodeTileInput<>(
+    AstNodeTileInput<List<?>, Expr.Index, BEASTState> vectorInput = new AstNodeTileInput<>(
             "vector", expr -> expr.object
     );
-    AstNodeTileInput<? extends IntScalar<? extends Int>, Expr.Index> firstIndexInput = new AstNodeTileInput<>(
+    AstNodeTileInput<? extends IntScalar<? extends Int>, Expr.Index, BEASTState> firstIndexInput = new AstNodeTileInput<>(
             "index", expr -> expr.indices.getFirst()
     );
 

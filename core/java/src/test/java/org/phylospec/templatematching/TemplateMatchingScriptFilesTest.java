@@ -1,4 +1,4 @@
-package templatematching;
+package org.phylospec.templatematching;
 
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
@@ -25,7 +25,7 @@ public class TemplateMatchingScriptFilesTest {
 
     @TestFactory
     public Iterable<DynamicTest> testAllPhylospecFiles() throws IOException {
-        List<Path> psFiles = findPsFiles(Paths.get("src/test/java/templatematching"));
+        List<Path> psFiles = findPsFiles(Paths.get("src/test/java/org/phylospec/templatematching"));
         psFiles.sort(Comparator.comparing(Path::toString));
 
         List<DynamicTest> tests = new ArrayList<>();
