@@ -145,7 +145,7 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
             // no consistent tiling found
             // this is very rare
             throw new TileApplicationError(
-                    "Unsupported operation.", "Your model is not supported by BEAST 2.8."
+                    "Unsupported operation.", "Your model is not supported by your engine."
             );
         }
 
@@ -249,7 +249,7 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
             throw new TileApplicationError(leaf, "Unsupported operation.", this.getBestReason(this.allFailures.get(leaf)));
         }
         // fallback: root failed but every tile threw Irrelevant (no tile targets this node type)
-        throw new TileApplicationError(root, "Unsupported operation.", "BEAST 2.8 does not support this operation.");
+        throw new TileApplicationError(root, "Unsupported operation.", "Your engine does not support this operation.");
     }
 
     /**
@@ -359,7 +359,7 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
         }
         if (boundary != null) return boundary.getReason();
         if (rejected != null) return rejected.getReason();
-        return "BEAST 2.8 does not support this operation.";
+        return "Your engine does not support this operation.";
     }
 
     /* visitor methods */
