@@ -4,8 +4,8 @@ import beast.base.spec.inference.util.RPNcalculator;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
-import tiles.AstNodeTile;
-import tiling.TypeToken;
+import org.phylospec.tiling.tiles.AstNodeTile;
+import org.phylospec.tiling.TypeToken;
 
 import java.util.IdentityHashMap;
 
@@ -13,9 +13,9 @@ import java.util.IdentityHashMap;
  * Finalizes an RPN expression by wiring the fully assembled {@link RPNCalculationResult}
  * into a BEAST {@code RPNcalculator} and registering it with the {@code BEASTState}.
  */
-public class RPNAssignmentTile extends AstNodeTile<RPNCalculationResult, Stmt.Assignment> {
+public class RPNAssignmentTile extends AstNodeTile<RPNCalculationResult, Stmt.Assignment, BEASTState> {
 
-    AstNodeTileInput<RPNCalculationResult, Stmt.Assignment> expressionInput = new AstNodeTileInput<>(
+    AstNodeTileInput<RPNCalculationResult, Stmt.Assignment, BEASTState> expressionInput = new AstNodeTileInput<>(
             "expression", expr -> expr.expression
     );
 

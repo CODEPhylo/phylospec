@@ -6,27 +6,27 @@ import beast.base.evolution.tree.TraitSet;
 import beast.base.parser.NexusParser;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
-import tiling.TileApplicationError;
+import org.phylospec.tiling.errors.TileApplicationError;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-public class FromNexusTile extends GeneratorTile<DecoratedAlignment> {
+public class FromNexusTile extends GeneratorTile<DecoratedAlignment, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "fromNexus";
     }
 
-    GeneratorTileInput<String> fileInput = new GeneratorTileInput<>(
+    GeneratorTileInput<String, BEASTState> fileInput = new GeneratorTileInput<>(
             "file", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
-    GeneratorTileInput<ParserTile.Parser> ageInput = new GeneratorTileInput<>("age", false);
-    GeneratorTileInput<ParserTile.Parser> dateInput = new GeneratorTileInput<>("date", false);
+    GeneratorTileInput<ParserTile.Parser, BEASTState> ageInput = new GeneratorTileInput<>("age", false);
+    GeneratorTileInput<ParserTile.Parser, BEASTState> dateInput = new GeneratorTileInput<>("date", false);
 
     @Override
     public DecoratedAlignment applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

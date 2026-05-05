@@ -1,4 +1,4 @@
-package templatematching;
+package org.phylospec.templatematching;
 
 import org.phylospec.ast.*;
 import org.phylospec.lexer.Lexer;

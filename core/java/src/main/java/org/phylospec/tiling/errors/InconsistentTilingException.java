@@ -1,6 +1,7 @@
-package tiling;
+package org.phylospec.tiling.errors;
 
 import org.phylospec.ast.AstNode;
+import org.phylospec.tiling.tiles.Tile;
 
 /**
  * Signals that a wired-up tile commits to two different sub-tiles for the same AstNode.
@@ -11,10 +12,10 @@ import org.phylospec.ast.AstNode;
 public class InconsistentTilingException extends Throwable {
 
     private final AstNode node;
-    private final Tile<?> firstTile;
-    private final Tile<?> secondTile;
+    private final Tile<?, ?> firstTile;
+    private final Tile<?, ?> secondTile;
 
-    public InconsistentTilingException(AstNode node, Tile<?> firstTile, Tile<?> secondTile) {
+    public InconsistentTilingException(AstNode node, Tile<?, ?> firstTile, Tile<?, ?> secondTile) {
         super("Two different sub-tiles were wired for the same AstNode.");
         this.node = node;
         this.firstTile = firstTile;
@@ -25,11 +26,11 @@ public class InconsistentTilingException extends Throwable {
         return this.node;
     }
 
-    public Tile<?> getFirstTile() {
+    public Tile<?, ?> getFirstTile() {
         return this.firstTile;
     }
 
-    public Tile<?> getSecondTile() {
+    public Tile<?, ?> getSecondTile() {
         return this.secondTile;
     }
 }

@@ -1,13 +1,10 @@
-package tiles;
+package org.phylospec.tiling.tiles;
 
 import org.phylospec.ast.AstNode;
+import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
-import tiling.FailedTilingAttempt;
-import tiling.Tile;
-import tiling.CandidateTile;
-import tiling.TileInput;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -18,7 +15,7 @@ import java.util.function.Function;
  * This class represents tiles that cover a single AstNode of type N. Extend this class for custom tiles.
  * Use AstNodeTileInput fields to specify the tile inputs (similar to BEAST 2.8 inputs).
  */
-public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> implements CandidateTile {
+public abstract class AstNodeTile<T, N extends AstNode, S> extends Tile<T, S> implements CandidateTile<S> {
 
     public Class<N> getTargetNodeType() {
         return (Class<N>) ((ParameterizedType) getClass().getGenericSuperclass())
@@ -26,9 +23,9 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> implemen
     }
 
     @Override
-    public Set<Tile<?>> tryToTile(
+    public Set<Tile<?, S>> tryToTile(
             AstNode node,
-            Map<AstNode, Set<Tile<?>>> allInputTiles,
+            Map<AstNode, Set<Tile<?, S>>> allInputTiles,
             VariableResolver variableResolver,
             StochasticityResolver stochasticityResolver
     ) throws FailedTilingAttempt {
@@ -50,13 +47,13 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> implemen
         // the inputs correspond to the class fields with type GeneratorTile.Input (similar to BEAST 2.8 inputs)
         // we use reflection to get the expected inputs
 
-        List<TileInput<?>> expectedInputs = this.getTileInputs();
+        List<TileInput<?, S>> expectedInputs = this.getTileInputs();
 
         // for every specified TileInput, we collect the compatible tiles
 
-        List<Set<Tile<?>>> compatibleInputTiles = new ArrayList<>();
-        for (TileInput<?> tileInput : expectedInputs) {
-            Set<Tile<?>> compatibleInputs = tileInput.getCompatibleInputTiles(node, allInputTiles, stochasticityResolver);
+        List<Set<Tile<?, S>>> compatibleInputTiles = new ArrayList<>();
+        for (TileInput<?, S> tileInput : expectedInputs) {
+            Set<Tile<?, S>> compatibleInputs = tileInput.getCompatibleInputTiles(node, allInputTiles, stochasticityResolver);
 
             if (compatibleInputs.isEmpty()) {
                 throw new FailedTilingAttempt.RejectedBoundary(
@@ -85,8 +82,8 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> implemen
             if (field.getType().equals(AstNodeTileInput.class)) {
                 field.setAccessible(true);
                 try {
-                    AstNodeTileInput<?, ?> input = (AstNodeTileInput<?, ?>) field.get(this);
-                    Tile<?> child = input.getTile();
+                    AstNodeTileInput<?, ?, S> input = (AstNodeTileInput<?, ?, S>) field.get(this);
+                    Tile<?, S> child = input.getTile();
                     if (child != null) {
                         sb.append(" ").append(child);
                     }
@@ -99,7 +96,7 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> implemen
         return sb.toString();
     }
 
-    public static class AstNodeTileInput<O, N extends AstNode> extends TileInput<O> {
+    public static class AstNodeTileInput<O, N extends AstNode, S> extends TileInput<O, S> {
 
         private final String key;
         private final Function<N, AstNode> getter;
@@ -115,7 +112,7 @@ public abstract class AstNodeTile<T, N extends AstNode> extends Tile<T> implemen
         }
 
         @Override
-        public Set<Tile<?>> getCompatibleInputTiles(AstNode astNode, Map<AstNode, Set<Tile<?>>> inputTiles, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt.RejectedCascade, FailedTilingAttempt.RejectedBoundary {
+        public Set<Tile<?, S>> getCompatibleInputTiles(AstNode astNode, Map<AstNode, Set<Tile<?, S>>> inputTiles, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt.RejectedCascade, FailedTilingAttempt.RejectedBoundary {
             AstNode inputAstNode = this.getter.apply((N) astNode);
             return super.getCompatibleInputTiles(inputAstNode, inputTiles, stochasticityResolver);
         }

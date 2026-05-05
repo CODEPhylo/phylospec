@@ -6,9 +6,9 @@ import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
-import tiles.TemplateTile;
-import tiling.TilePriority;
-import tiling.TileApplicationError;
+import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.tiles.TemplateTile;
+import org.phylospec.tiling.tiles.TilePriority;
 import tiling.UnboundDistribution;
 
 import java.util.IdentityHashMap;
@@ -19,7 +19,7 @@ import java.util.List;
  * not supported by BEAST.
  * Thus, this tile throws an error when it is applied successfully.
  */
-public class VectorSiteRatesErrorTile extends TemplateTile<UnboundDistribution<Alignment, TreeLikelihood>> {
+public class VectorSiteRatesErrorTile extends TemplateTile<UnboundDistribution<Alignment, TreeLikelihood>, BEASTState> {
 
     @Override
     protected String getPhyloSpecTemplate() {
@@ -49,10 +49,10 @@ public class VectorSiteRatesErrorTile extends TemplateTile<UnboundDistribution<A
         );
     }
 
-    TemplateTileInput<Tree> treeInput = new TemplateTileInput<>("$tree");
-    TemplateTileInput<?> substitutionModelInput = new TemplateTileInput<>("$substitutionModel", true);
-    TemplateTileInput<?> branchRatesInput = new TemplateTileInput<>("$$branchRates", false);
-    TemplateTileInput<? extends RealVectorParam<?>> siteRatesInput = new TemplateTileInput<>("$siteRates", true);
+    TemplateTileInput<Tree, BEASTState> treeInput = new TemplateTileInput<>("$tree");
+    TemplateTileInput<?, BEASTState> substitutionModelInput = new TemplateTileInput<>("$substitutionModel", true);
+    TemplateTileInput<?, BEASTState> branchRatesInput = new TemplateTileInput<>("$$branchRates", false);
+    TemplateTileInput<? extends RealVectorParam<?>, BEASTState> siteRatesInput = new TemplateTileInput<>("$siteRates", true);
 
     @Override
     public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
@@ -68,4 +68,5 @@ public class VectorSiteRatesErrorTile extends TemplateTile<UnboundDistribution<A
     public TilePriority getPriority() {
         return TilePriority.ERROR;
     }
+
 }

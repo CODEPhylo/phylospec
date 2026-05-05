@@ -1,4 +1,4 @@
-package tiling;
+package org.phylospec.tiling;
 
 import java.util.function.BiFunction;
 

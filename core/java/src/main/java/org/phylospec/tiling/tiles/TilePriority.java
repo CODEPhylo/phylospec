@@ -1,4 +1,4 @@
-package tiling;
+package org.phylospec.tiling.tiles;
 
 /**
  * This enum allows tiles to have different priorities and thus weights. Because the tiling algorithms seeks

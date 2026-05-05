@@ -1,8 +1,11 @@
-package tiling;
+package org.phylospec.tiling.tiles;
 
-import beastconfig.BEASTState;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
+import org.phylospec.tiling.*;
+import org.phylospec.tiling.errors.InconsistentTilingException;
+import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.errors.WrappedTileApplicationError;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -13,7 +16,7 @@ import java.util.*;
  * A tile covers a subgraph of the PhyloSpec AST rooted at a root node and describes how to turn ("apply") this
  * subgraph into BEAST objects.
  */
-public abstract class Tile<T> {
+public abstract class Tile<T, S> {
 
     /* methods to evaluate a tiling */
 
@@ -37,8 +40,8 @@ public abstract class Tile<T> {
      * to two different sub-tiles anywhere in the sub-graph.
      * Throws {@link InconsistentTilingException} if an inconsistency is detected at any depth.
      */
-    public boolean isInconsistent(IdentityHashMap<AstNode, Tile<?>> assignments) {
-        Map<AstNode, Tile<?>> usedInputs;
+    public boolean isInconsistent(IdentityHashMap<AstNode, Tile<?, ?>> assignments) {
+        Map<AstNode, Tile<?, ?>> usedInputs;
 
         try {
             usedInputs = this.getWiredUpInputs();
@@ -46,11 +49,11 @@ public abstract class Tile<T> {
             return true;
         }
 
-        for (Map.Entry<AstNode, Tile<?>> entry : usedInputs.entrySet()) {
+        for (Map.Entry<AstNode, Tile<?, ?>> entry : usedInputs.entrySet()) {
             AstNode inputNode = entry.getKey();
-            Tile<?> inputTile = entry.getValue();
+            Tile<?, ?> inputTile = entry.getValue();
 
-            Tile<?> existingInputTile = assignments.putIfAbsent(inputNode, inputTile);
+            Tile<?, ?> existingInputTile = assignments.putIfAbsent(inputNode, inputTile);
 
             if (existingInputTile == null) {
                 // new commitment - recurse into it
@@ -72,15 +75,15 @@ public abstract class Tile<T> {
      * sub-tiles for the same AstNode, which indicates an intra-candidate inconsistency (e.g.
      * {@code f(x, x)} where the two x-slots picked different sub-tiles for the same declaration).
      */
-    public Map<AstNode, Tile<?>> getWiredUpInputs() throws InconsistentTilingException {
-        Map<AstNode, Tile<?>> usedInputs = new IdentityHashMap<>();
+    public Map<AstNode, Tile<?, ?>> getWiredUpInputs() throws InconsistentTilingException {
+        Map<AstNode, Tile<?, ?>> usedInputs = new IdentityHashMap<>();
 
-        for (TileInput<?> input : this.getTileInputs()) {
-            Tile<?> inputTile = input.getTile();
+        for (TileInput<?, ?> input : this.getTileInputs()) {
+            Tile<?, ?> inputTile = input.getTile();
             if (inputTile == null) continue;
 
             AstNode inputNode = inputTile.getRootNode();
-            Tile<?> existingInputTile = usedInputs.putIfAbsent(inputNode, inputTile);
+            Tile<?, ?> existingInputTile = usedInputs.putIfAbsent(inputNode, inputTile);
 
             if (existingInputTile != null && existingInputTile != inputTile) {
                 // we already have a different input mapped to this AST node and there we used a different input tile
@@ -94,13 +97,13 @@ public abstract class Tile<T> {
     /**
      * Returns the {@code TileInput<?>} fields of this tile using reflection.
      */
-    protected List<TileInput<?>> getTileInputs() {
-        List<TileInput<?>> inputs = new ArrayList<>();
+    protected List<TileInput<?, S>> getTileInputs() {
+        List<TileInput<?, S>> inputs = new ArrayList<>();
         for (Field field : this.getClass().getDeclaredFields()) {
             if (TileInput.class.isAssignableFrom(field.getType())) {
                 field.setAccessible(true);
                 try {
-                    TileInput<?> input = (TileInput<?>) field.get(this);
+                    TileInput<?, S> input = (TileInput<?, S>) field.get(this);
                     input.resolveTypeFromField(field);
                     inputs.add(input);
                 } catch (IllegalAccessException e) {
@@ -118,7 +121,7 @@ public abstract class Tile<T> {
     /**
      * Applies the tile. Memoization is used to not apply the same tile twice.
      */
-    public T apply(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    public T apply(S state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         // we use memoization to make sure that no tile is applied more than once.
         // two apply calls are only considered the same when the index variables in scope are identical
 
@@ -146,7 +149,7 @@ public abstract class Tile<T> {
         // we apply it now
 
         try {
-            T result = this.applyTile(beastState, indexVariablesInScope);
+            T result = this.applyTile(state, indexVariablesInScope);
             this.appliedWithIndexedVariables.put(new IdentityHashMap<>(indexVariablesInScope), result);
             return result;
         } catch (TileApplicationError tilingError) {
@@ -169,13 +172,13 @@ public abstract class Tile<T> {
     /**
      * Applies the tile. This method should be overridden by custom tiles.
      */
-    protected abstract T applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables);
+    protected abstract T applyTile(S beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables);
 
     /* root node of an applied tile */
 
     protected AstNode rootNode;
 
-    protected AstNode getRootNode() {
+    public AstNode getRootNode() {
         return this.rootNode;
     }
 

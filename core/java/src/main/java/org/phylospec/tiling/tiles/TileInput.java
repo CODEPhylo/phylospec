@@ -1,9 +1,10 @@
-package tiling;
+package org.phylospec.tiling.tiles;
 
 
-import beastconfig.BEASTState;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
+import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 
@@ -18,12 +19,12 @@ import java.util.Set;
  * This class can be used to specify tile inputs.
  * @param <T> the type produced by the input tile.
  */
-public abstract class TileInput<T> {
+public abstract class TileInput<T, S> {
     private final boolean required;
     private final Set<Stochasticity> acceptedStochasticities;
 
     private TypeToken<T> typeToken;
-    private Tile<T> tile;
+    private Tile<T, S> tile;
 
     public TileInput(boolean required, Set<Stochasticity> acceptedStochasticities) {
         this.required = required;
@@ -41,10 +42,10 @@ public abstract class TileInput<T> {
         this.typeToken = (TypeToken<T>) TypeToken.of(fieldType.getActualTypeArguments()[0]);
     }
 
-    public void setTile(Tile<?> tile) {
+    public void setTile(Tile<?, S> tile) {
         // we assume that the generated type is compatible
         try {
-            this.tile = (Tile<T>) tile;
+            this.tile = (Tile<T, S>) tile;
         } catch (ClassCastException e) {
             throw new RuntimeException("Incompatible tile assigned to a tile input. This should not happen.");
         }
@@ -54,7 +55,7 @@ public abstract class TileInput<T> {
      * Returns the tiles rooted at 'inputAstNode' which have types compatible with this input.
      * Also checks that the stochasticity of 'inputAstNode' is accepted by this input.
      */
-    public Set<Tile<?>> getCompatibleInputTiles(AstNode inputAstNode, Map<AstNode, Set<Tile<?>>> possibleInputTiles, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt.RejectedCascade, FailedTilingAttempt.RejectedBoundary {
+    public Set<Tile<?, S>> getCompatibleInputTiles(AstNode inputAstNode, Map<AstNode, Set<Tile<?, S>>> possibleInputTiles, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt.RejectedCascade, FailedTilingAttempt.RejectedBoundary {
         // check the stochasticity of the input node
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(inputAstNode);
         if (!this.acceptedStochasticities.contains(stochasticity)) {
@@ -63,7 +64,7 @@ public abstract class TileInput<T> {
             );
         }
 
-        Set<Tile<?>> potentialInputs = possibleInputTiles.get(inputAstNode);
+        Set<Tile<?, S>> potentialInputs = possibleInputTiles.get(inputAstNode);
 
         if (potentialInputs == null || potentialInputs.isEmpty()) {
             throw new FailedTilingAttempt.RejectedCascade(inputAstNode);
@@ -71,8 +72,8 @@ public abstract class TileInput<T> {
 
         TypeToken<?> expectedTypeToken = this.getTypeToken();
 
-        Set<Tile<?>> compatibleInputs = new HashSet<>();
-        for (Tile<?> potentialInput : potentialInputs) {
+        Set<Tile<?, S>> compatibleInputs = new HashSet<>();
+        for (Tile<?, S> potentialInput : potentialInputs) {
             if (expectedTypeToken.isAssignableFrom(potentialInput.getTypeToken())) {
                 compatibleInputs.add(potentialInput);
             }
@@ -82,17 +83,17 @@ public abstract class TileInput<T> {
     }
 
     /**
-     * Applies the input tile and its descendents to the given beast state.
+     * Applies the input tile and its descendents to the given state.
      */
-    public T apply(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        return this.tile != null ? this.tile.apply(beastState, indexVariables) : null;
+    public T apply(S state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+        return this.tile != null ? this.tile.apply(state, indexVariables) : null;
     }
 
     /* getter */
 
     public abstract String getKey();
 
-    public Tile<T> getTile() {
+    public Tile<T, S> getTile() {
         return this.tile;
     }
 

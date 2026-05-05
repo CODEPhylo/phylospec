@@ -3,20 +3,20 @@ package tiles.misc;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
-import tiles.AstNodeTile;
-import tiling.TileApplicationError;
-import tiling.TypeToken;
+import org.phylospec.tiling.tiles.AstNodeTile;
+import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.TypeToken;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 
-public class IndexedStatementTile extends AstNodeTile<List<?>, Stmt.Indexed> {
+public class IndexedStatementTile extends AstNodeTile<List<?>, Stmt.Indexed, BEASTState> {
 
-    AstNodeTileInput<Object, Stmt.Indexed> statementInput = new AstNodeTileInput<>(
+    AstNodeTileInput<Object, Stmt.Indexed, BEASTState> statementInput = new AstNodeTileInput<>(
             "statement", expr -> expr.statement
     );
-    AstNodeTileInput<Integer, Stmt.Indexed> rangeInput = new AstNodeTileInput<>(
+    AstNodeTileInput<Integer, Stmt.Indexed, BEASTState> rangeInput = new AstNodeTileInput<>(
             "range", expr -> expr.ranges.getFirst()
     );
 

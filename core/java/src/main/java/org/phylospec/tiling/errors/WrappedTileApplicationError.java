@@ -1,4 +1,4 @@
-package tiling;
+package org.phylospec.tiling.errors;
 
 import org.phylospec.ast.AstNode;
 

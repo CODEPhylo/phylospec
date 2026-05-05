@@ -1,4 +1,4 @@
-package tiling;
+package org.phylospec.tiling;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

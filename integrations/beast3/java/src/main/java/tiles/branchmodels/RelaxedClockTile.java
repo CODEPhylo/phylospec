@@ -10,26 +10,27 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
-import tiles.GeneratorTile;
-import tiling.*;
+import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import tiling.BoundDistribution;
+import tiling.UnboundDistribution;
 
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
-public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel> {
+public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "RelaxedClock";
     }
 
-    GeneratorTileInput<RealScalarParam<PositiveReal>> clockRateInput = new GeneratorTileInput<>("clockRate");
-    GeneratorTileInput<BoundDistribution<? extends RealScalarParam<? extends PositiveReal>, ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>>> baseInput = new GeneratorTileInput<>(
+    GeneratorTileInput<RealScalarParam<PositiveReal>, BEASTState> clockRateInput = new GeneratorTileInput<>("clockRate");
+    GeneratorTileInput<BoundDistribution<? extends RealScalarParam<? extends PositiveReal>, ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>>, BEASTState> baseInput = new GeneratorTileInput<>(
             "base"
     );
-    GeneratorTileInput<Tree> treeInput = new GeneratorTileInput<>("tree");
+    GeneratorTileInput<Tree, BEASTState> treeInput = new GeneratorTileInput<>("tree");
 
     @Override
     protected UCRelaxedClockModel applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
