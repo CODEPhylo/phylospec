@@ -3,20 +3,20 @@ package tiles.functions;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import beastconfig.BEASTState;
-import tiles.GeneratorTile;
-import tiling.TileApplicationError;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.tiling.errors.TileApplicationError;
 
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-public class EnvTile extends GeneratorTile<String> {
+public class EnvTile extends GeneratorTile<String, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "env";
     }
 
-    GeneratorTileInput<String> variableInput = new GeneratorTileInput<>(
+    GeneratorTileInput<String, BEASTState> variableInput = new GeneratorTileInput<>(
             "variable", true, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
 

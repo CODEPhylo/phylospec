@@ -4,8 +4,8 @@ import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.spec.evolution.sitemodel.SiteModel;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
-import tiles.TemplateTile;
-import tiling.Partial;
+import org.phylospec.tiling.tiles.TemplateTile;
+import org.phylospec.tiling.Partial;
 
 import java.util.IdentityHashMap;
 
@@ -15,14 +15,14 @@ import java.util.IdentityHashMap;
 /// This accounts for the fact that in BEAST, we don't explicitly draw the site rates, but simply pass
 /// the site model object to the `TreeLikelihood` object. Thus, the other tiles dealing with draws (e.g.
 /// `DrawTile` or `DrawnArgumentTile`) don't apply here.
-public class DrawnSiteRatesTile extends TemplateTile<Partial<SiteModel, SubstitutionModel>> {
+public class DrawnSiteRatesTile extends TemplateTile<Partial<SiteModel, SubstitutionModel>, BEASTState> {
 
     @Override
     protected String getPhyloSpecTemplate() {
         return "Any siteRates ~ $siteRateDistribution";
     }
 
-    TemplateTileInput<? extends Partial<SiteModel, SubstitutionModel>> siteRateDistributionInput = new TemplateTileInput<>(
+    TemplateTileInput<? extends Partial<SiteModel, SubstitutionModel>, BEASTState> siteRateDistributionInput = new TemplateTileInput<>(
             "$siteRateDistribution"
     );
 

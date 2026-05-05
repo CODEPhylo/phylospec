@@ -8,22 +8,22 @@ import beast.base.spec.evolution.tree.coalescent.RandomTree;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.phylospec.ast.Expr;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 import java.util.IdentityHashMap;
 
-public class ConstantCoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coalescent>> {
+public class ConstantCoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coalescent>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "Coalescent";
     }
 
-    GeneratorTileInput<RealScalar<? extends PositiveReal>> populationSizeInput = new GeneratorTileInput<>("populationSize");
-    GeneratorTileInput<DecoratedAlignment> taxaInput = new GeneratorTileInput<>("taxa", true);
+    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> populationSizeInput = new GeneratorTileInput<>("populationSize");
+    GeneratorTileInput<DecoratedAlignment, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
 
     @Override
     public BoundDistribution<Tree, Coalescent> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

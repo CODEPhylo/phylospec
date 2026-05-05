@@ -9,25 +9,25 @@ import beast.base.spec.evolution.tree.coalescent.RandomTree;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.phylospec.ast.Expr;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 import java.util.IdentityHashMap;
 
-public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthDeathGernhard08Model>> {
+public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthDeathGernhard08Model>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "BirthDeath";
     }
 
-    GeneratorTileInput<RealScalar<? extends PositiveReal>> diversificationRateInput = new GeneratorTileInput<>("diversificationRate");
-    GeneratorTileInput<RealScalar<? extends PositiveReal>> turnoverInput = new GeneratorTileInput<>("turnover");
-    GeneratorTileInput<RealScalar<UnitInterval>> samplingProbabilityInput = new GeneratorTileInput<>("samplingProbability", false);
-    GeneratorTileInput<DecoratedAlignment> taxaInput = new GeneratorTileInput<>("taxa", true);
-    GeneratorTileInput<RealScalar<? extends PositiveReal>> rootAgeInput = new GeneratorTileInput<>("rootAge", false);
+    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> diversificationRateInput = new GeneratorTileInput<>("diversificationRate");
+    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> turnoverInput = new GeneratorTileInput<>("turnover");
+    GeneratorTileInput<RealScalar<UnitInterval>, BEASTState> samplingProbabilityInput = new GeneratorTileInput<>("samplingProbability", false);
+    GeneratorTileInput<DecoratedAlignment, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
+    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> rootAgeInput = new GeneratorTileInput<>("rootAge", false);
 
     @Override
     public BoundDistribution<Tree, BirthDeathGernhard08Model> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

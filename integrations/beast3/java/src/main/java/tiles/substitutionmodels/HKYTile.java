@@ -6,20 +6,20 @@ import beast.base.spec.evolution.substitutionmodel.HKY;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.Simplex;
 import org.phylospec.ast.Expr;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
 import java.util.IdentityHashMap;
 
-public class HKYTile extends GeneratorTile<HKY> {
+public class HKYTile extends GeneratorTile<HKY, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "hky";
     }
 
-    GeneratorTileInput<RealScalar<PositiveReal>> kappaInput = new GeneratorTileInput<>("kappa");
-    GeneratorTileInput<Simplex> baseFrequenciesInput = new GeneratorTileInput<>("baseFrequencies");
+    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> kappaInput = new GeneratorTileInput<>("kappa");
+    GeneratorTileInput<Simplex, BEASTState> baseFrequenciesInput = new GeneratorTileInput<>("baseFrequencies");
 
     @Override
     public HKY applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

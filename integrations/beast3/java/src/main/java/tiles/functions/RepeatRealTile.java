@@ -7,25 +7,25 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
-import tiling.TypeToken;
+import org.phylospec.tiling.TypeToken;
 
 import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-public class RepeatRealTile extends GeneratorTile<RealVectorParam<Real>> {
+public class RepeatRealTile extends GeneratorTile<RealVectorParam<Real>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "repeat";
     }
 
-    GeneratorTileInput<RealScalarParam<? extends Real>> valueInput = new GeneratorTileInput<>(
+    GeneratorTileInput<RealScalarParam<? extends Real>, BEASTState> valueInput = new GeneratorTileInput<>(
             "value", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
-    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>> numInput = new GeneratorTileInput<>(
+    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>, BEASTState> numInput = new GeneratorTileInput<>(
             "num", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
 

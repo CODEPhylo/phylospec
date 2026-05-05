@@ -1,14 +1,11 @@
-package tiles;
+package org.phylospec.tiling.tiles;
 
 import org.phylospec.ast.AstNode;
+import org.phylospec.templatematching.AstTemplateMatcher;
+import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
-import templatematching.AstTemplateMatcher;
-import tiling.FailedTilingAttempt;
-import tiling.Tile;
-import tiling.CandidateTile;
-import tiling.TileInput;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -18,7 +15,7 @@ import java.util.*;
  * PhyloSpec template used to match the AST subgraph.
  * Use TemplateTileInput fields to specify the tile inputs (similar to BEAST 2.8 inputs).
  */
-public abstract class TemplateTile<T> extends Tile<T> implements CandidateTile {
+public abstract class TemplateTile<T, S> extends Tile<T, S> implements CandidateTile<S> {
 
     protected abstract String getPhyloSpecTemplate();
 
@@ -30,9 +27,9 @@ public abstract class TemplateTile<T> extends Tile<T> implements CandidateTile {
 
 
     @Override
-    public Set<Tile<?>> tryToTile(
+    public Set<Tile<?, S>> tryToTile(
             AstNode node,
-            Map<AstNode, Set<Tile<?>>> allInputTiles,
+            Map<AstNode, Set<Tile<?, S>>> allInputTiles,
             VariableResolver variableResolver,
             StochasticityResolver stochasticityResolver
     ) throws FailedTilingAttempt {
@@ -70,13 +67,13 @@ public abstract class TemplateTile<T> extends Tile<T> implements CandidateTile {
 
         // collect TileInput fields from this template in declaration order
 
-        List<TileInput<?>> tileInputs = this.getTileInputs();
+        List<TileInput<?, S>> tileInputs = this.getTileInputs();
 
         // build ordered list of compatible tiles per input
 
-        List<TileInput<?>> usedInputs = new ArrayList<>();
-        List<Set<Tile<?>>> compatibleInputTiles = new ArrayList<>();
-        for (TileInput<?> tileInput : tileInputs) {
+        List<TileInput<?, S>> usedInputs = new ArrayList<>();
+        List<Set<Tile<?, S>>> compatibleInputTiles = new ArrayList<>();
+        for (TileInput<?, S> tileInput : tileInputs) {
             AstNode inputAstNode = matchedTemplateVariables.get(tileInput.getKey());
 
             if (inputAstNode == null) {
@@ -89,7 +86,7 @@ public abstract class TemplateTile<T> extends Tile<T> implements CandidateTile {
                 }
             }
 
-            Set<Tile<?>> compatible = tileInput.getCompatibleInputTiles(inputAstNode, allInputTiles, stochasticityResolver);
+            Set<Tile<?, S>> compatible = tileInput.getCompatibleInputTiles(inputAstNode, allInputTiles, stochasticityResolver);
             if (compatible.isEmpty()) {
                 throw new FailedTilingAttempt.RejectedBoundary(
                         "BEAST 2.8 cannot deal with the value you provided for " + tileInput.getKey().replace("$", "") + "."
@@ -112,8 +109,8 @@ public abstract class TemplateTile<T> extends Tile<T> implements CandidateTile {
             if (field.getType().equals(TemplateTileInput.class)) {
                 field.setAccessible(true);
                 try {
-                    TemplateTileInput<?> input = (TemplateTileInput<?>) field.get(this);
-                    Tile<?> child = input.getTile();
+                    TemplateTileInput<?, S> input = (TemplateTileInput<?, S>) field.get(this);
+                    Tile<?, S> child = input.getTile();
                     if (child != null) {
                         // strip leading $ from template variable name
                         String varName = input.getKey().substring(1);
@@ -128,7 +125,7 @@ public abstract class TemplateTile<T> extends Tile<T> implements CandidateTile {
         return sb.toString();
     }
 
-    public static class TemplateTileInput<O> extends TileInput<O> {
+    public static class TemplateTileInput<O, S> extends TileInput<O, S> {
         private final String templateVariable;
 
         public TemplateTileInput(String templateVariable) {

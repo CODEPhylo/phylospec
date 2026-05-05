@@ -1,5 +1,8 @@
 package tiles;
 
+import beastconfig.BEASTState;
+import org.phylospec.tiling.TileLibrary;
+import org.phylospec.tiling.tiles.CandidateTile;
 import tiles.misc.RangeTile;
 import tiles.rpn.BinaryTile;
 import tiles.rpn.ExpRPNTile;
@@ -16,7 +19,6 @@ import tiles.trees.*;
 import tiles.distributions.*;
 import tiles.misc.*;
 import tiles.substitutionmodels.*;
-import tiling.CandidateTile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,11 +26,11 @@ import java.util.List;
 /**
  * This class loads all known tiles into a static field.
  */
-public class BeastCoreTileLibrary extends TileLibrary {
+public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
 
     @Override
-    public List<CandidateTile> getTiles() {
-        List<CandidateTile> tiles = new ArrayList<>();
+    public List<CandidateTile<BEASTState>> getTiles() {
+        List<CandidateTile<BEASTState>> tiles = new ArrayList<>();
 
         tiles.add(new AssignmentTile());
         tiles.add(new DrawTile());

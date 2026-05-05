@@ -1,7 +1,8 @@
-package tiling;
+package org.phylospec.tiling.tiles;
 
 import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
+import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
@@ -11,15 +12,15 @@ import java.util.*;
 /**
  * This interface provides methods to construct tiles for a subgraph of the PhyloSpec AST.
  */
-public interface CandidateTile {
+public interface CandidateTile<S> {
 
     /**
      * Tries to tile this tile to the AST subgraph starting with 'node'. Has to be overridden by custom candidate tiles.
      * Returns a set of the possible tilings.
      */
-    Set<Tile<?>> tryToTile(
+    Set<Tile<?, S>> tryToTile(
             AstNode node,
-            Map<AstNode, Set<Tile<?>>> inputTiles,
+            Map<AstNode, Set<Tile<?, S>>> inputTiles,
             VariableResolver variableResolver,
             StochasticityResolver stochasticityResolver
     ) throws FailedTilingAttempt;
@@ -28,22 +29,22 @@ public interface CandidateTile {
      * Creates wired up fresh tiles for the given inputs and their compatible input tiles. For every combination of
      * compatible input tiles, a wired-up tile is created.
      */
-    default Set<Tile<?>> getWiredUpTiles(
-            List<TileInput<?>> tileInputs,
-            List<Set<Tile<?>>> compatibleInputTiles,
+    default Set<Tile<?, S>> getWiredUpTiles(
+            List<TileInput<?, S>> tileInputs,
+            List<Set<Tile<?, S>>> compatibleInputTiles,
             AstNode rootNode
     ) {
-        Set<Tile<?>> wiredUpTiles = new HashSet<>();
+        Set<Tile<?, S>> wiredUpTiles = new HashSet<>();
 
         Utils.visitCombinations(
                 compatibleInputTiles,
                 inputs -> {
-                    Tile<?> wiredUpTile = this.createInstance();
+                    Tile<?, S> wiredUpTile = this.createInstance();
 
                     // get TileInput fields from fresh instance
 
-                    Map<String, TileInput<?>> freshInputsByKey = new HashMap<>();
-                    for (TileInput<?> freshInput : wiredUpTile.getTileInputs()) {
+                    Map<String, TileInput<?, S>> freshInputsByKey = new HashMap<>();
+                    for (TileInput<?, S> freshInput : wiredUpTile.getTileInputs()) {
                         freshInputsByKey.put(freshInput.getKey(), freshInput);
                     }
 
@@ -51,10 +52,10 @@ public interface CandidateTile {
 
                     int totalWeight = this.getPriority().getWeight();
                     for (int i = 0; i < tileInputs.size(); i++) {
-                        Tile<?> inputTile = inputs.get(i);
+                        Tile<?, S> inputTile = inputs.get(i);
                         String tileInputKey = tileInputs.get(i).getKey();
 
-                        TileInput<?> freshInputTile = freshInputsByKey.get(tileInputKey);
+                        TileInput<?, S> freshInputTile = freshInputsByKey.get(tileInputKey);
                         freshInputTile.setTile(inputTile);
 
                         totalWeight += inputTile.getWeight();
@@ -91,8 +92,8 @@ public interface CandidateTile {
      * The default method assumes that the tile itself implements {@code CandidateTile}. If this is not the case,
      * the custom candidate tile has to implement this.
      */
-    default Tile<?> createInstance() {
-        if (!(this instanceof Tile<?> tile)) {
+    default Tile<?, S> createInstance() {
+        if (!(this instanceof Tile<?, ?> tile)) {
             throw new RuntimeException(getClass().getSimpleName()  + " does not inherit from Tile<?>. In that case, implement createInstance yourself.");
         }
 

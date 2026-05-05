@@ -4,20 +4,21 @@ import beast.base.inference.StateNode;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
-import tiles.TemplateTile;
-import tiling.*;
+import org.phylospec.tiling.tiles.TemplateTile;
+import org.phylospec.tiling.TypeToken;
+import tiling.UnboundDistribution;
 
 import java.util.IdentityHashMap;
 
-public class ObservedAsTile extends TemplateTile<StateNode> {
+public class ObservedAsTile extends TemplateTile<StateNode, BEASTState> {
 
     @Override
     protected String getPhyloSpecTemplate() {
         return "Any x ~ $distribution observed as $observation";
     }
 
-    TemplateTileInput<UnboundDistribution<? extends StateNode, ?>> distributionInput = new TemplateTileInput<>("$distribution");
-    TemplateTileInput<? extends StateNode> observationInput = new TemplateTileInput<>("$observation");
+    TemplateTileInput<UnboundDistribution<? extends StateNode, ?>, BEASTState> distributionInput = new TemplateTileInput<>("$distribution");
+    TemplateTileInput<? extends StateNode, BEASTState> observationInput = new TemplateTileInput<>("$observation");
 
     @Override
     public StateNode applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

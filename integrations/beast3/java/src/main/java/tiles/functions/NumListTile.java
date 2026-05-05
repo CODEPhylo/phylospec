@@ -5,20 +5,20 @@ import beast.base.spec.inference.parameter.IntScalarParam;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 
-public class NumListTile extends GeneratorTile<IntScalarParam<NonNegativeInt>> {
+public class NumListTile extends GeneratorTile<IntScalarParam<NonNegativeInt>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "num";
     }
 
-    GeneratorTileInput<? extends List<?>> vectorInput = new GeneratorTileInput<>(
+    GeneratorTileInput<? extends List<?>, BEASTState> vectorInput = new GeneratorTileInput<>(
             "vector",
             Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );

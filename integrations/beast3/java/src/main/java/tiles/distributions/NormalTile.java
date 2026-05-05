@@ -7,20 +7,20 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
-import tiling.*;
-import tiles.GeneratorTile;
+import tiling.BoundDistribution;
+import org.phylospec.tiling.tiles.GeneratorTile;
 
 import java.util.IdentityHashMap;
 
-public class NormalTile extends GeneratorTile<BoundDistribution<RealScalarParam<Real>, Normal>> {
+public class NormalTile extends GeneratorTile<BoundDistribution<RealScalarParam<Real>, Normal>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "Normal";
     }
 
-    GeneratorTileInput<RealScalar<Real>> meanInput = new GeneratorTileInput<>("mean");
-    GeneratorTileInput<RealScalar<PositiveReal>> sdInput = new GeneratorTileInput<>("sd");
+    GeneratorTileInput<RealScalar<Real>, BEASTState> meanInput = new GeneratorTileInput<>("mean");
+    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> sdInput = new GeneratorTileInput<>("sd");
 
     @Override
     public BoundDistribution<RealScalarParam<Real>, Normal> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

@@ -5,21 +5,21 @@ import beast.base.spec.inference.distribution.Uniform;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.phylospec.ast.Expr;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 import java.util.IdentityHashMap;
 
-public class UniformTile extends GeneratorTile<BoundDistribution<RealScalarParam<Real>, Uniform>> {
+public class UniformTile extends GeneratorTile<BoundDistribution<RealScalarParam<Real>, Uniform>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "Uniform";
     }
 
-    GeneratorTileInput<RealScalar<Real>> lowerInput = new GeneratorTileInput<>("lower");
-    GeneratorTileInput<RealScalar<Real>> upperInput = new GeneratorTileInput<>("upper");
+    GeneratorTileInput<RealScalar<Real>, BEASTState> lowerInput = new GeneratorTileInput<>("lower");
+    GeneratorTileInput<RealScalar<Real>, BEASTState> upperInput = new GeneratorTileInput<>("upper");
 
     @Override
     public BoundDistribution<RealScalarParam<Real>, Uniform> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

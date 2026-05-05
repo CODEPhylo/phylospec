@@ -7,26 +7,26 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-public class LinSpaceTile extends GeneratorTile<RealVectorParam<Real>> {
+public class LinSpaceTile extends GeneratorTile<RealVectorParam<Real>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "linspace";
     }
 
-    GeneratorTileInput<RealScalarParam<? extends Real>> startInput = new GeneratorTileInput<>(
+    GeneratorTileInput<RealScalarParam<? extends Real>, BEASTState> startInput = new GeneratorTileInput<>(
             "start", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
-    GeneratorTileInput<RealScalarParam<? extends Real>> endInput = new GeneratorTileInput<>(
+    GeneratorTileInput<RealScalarParam<? extends Real>, BEASTState> endInput = new GeneratorTileInput<>(
             "end", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
-    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>> numInput = new GeneratorTileInput<>(
+    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>, BEASTState> numInput = new GeneratorTileInput<>(
             "num", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
 

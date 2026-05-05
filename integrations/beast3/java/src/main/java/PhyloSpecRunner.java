@@ -2,7 +2,9 @@ import beast.base.inference.*;
 import beastconfig.LoggerSelector;
 import beastconfig.OperatorSelector;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
-import tiles.OperatorTileLibrary;
+import org.phylospec.tiling.EvaluateTiles;
+import org.phylospec.tiling.errors.TileApplicationError;
+import tiles.BeastCoreTileLibrary;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.RemoveGroupings;
@@ -19,11 +21,7 @@ import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import org.xml.sax.SAXException;
-import tiles.BeastCoreTileLibrary;
 import beastconfig.BEASTState;
-import tiles.TileLibrary;
-import tiling.EvaluateTiles;
-import tiling.TileApplicationError;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
@@ -92,7 +90,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // perform tiling
 
-        EvaluateTiles applyTiles = new EvaluateTiles(TileLibrary.loadAll(), OperatorTileLibrary.getTiles(), variableResolver, stochasticityResolver);
+        EvaluateTiles<BEASTState> applyTiles = new EvaluateTiles<>(new BeastCoreTileLibrary().getTiles(), new ArrayList<>(), variableResolver, stochasticityResolver);
         BEASTState beastState = new BEASTState(runName);
         try {
             applyTiles.getBestTiling(statements);

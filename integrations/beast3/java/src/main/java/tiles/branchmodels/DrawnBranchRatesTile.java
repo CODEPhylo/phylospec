@@ -3,7 +3,7 @@ package tiles.branchmodels;
 import beast.base.spec.evolution.branchratemodel.Base;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
-import tiles.TemplateTile;
+import org.phylospec.tiling.tiles.TemplateTile;
 
 import java.util.IdentityHashMap;
 
@@ -13,14 +13,14 @@ import java.util.IdentityHashMap;
 /// This accounts for the fact that in BEAST, we don't always explicitly draw the branch rates, but simply pass
 /// the branch model object to the `TreeLikelihood` object. Thus, the other tiles dealing with draws (e.g.
 /// `DrawTile` or `DrawnArgumentTile`) don't apply here.
-public class DrawnBranchRatesTile extends TemplateTile<Base> {
+public class DrawnBranchRatesTile extends TemplateTile<Base, BEASTState> {
 
     @Override
     protected String getPhyloSpecTemplate() {
         return "Any branchRates ~ $branchRateDistribution";
     }
 
-    TemplateTileInput<? extends Base> branchRateDistributionInput = new TemplateTileInput<>(
+    TemplateTileInput<? extends Base, BEASTState> branchRateDistributionInput = new TemplateTileInput<>(
             "$branchRateDistribution"
     );
 

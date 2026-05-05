@@ -4,20 +4,20 @@ import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-public class SqrtTile extends GeneratorTile<RealScalarParam<NonNegativeReal>> {
+public class SqrtTile extends GeneratorTile<RealScalarParam<NonNegativeReal>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "sqrt";
     }
 
-    GeneratorTileInput<RealScalarParam<? extends NonNegativeReal>> xInput = new GeneratorTileInput<>(
+    GeneratorTileInput<RealScalarParam<? extends NonNegativeReal>, BEASTState> xInput = new GeneratorTileInput<>(
             "x", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
 
