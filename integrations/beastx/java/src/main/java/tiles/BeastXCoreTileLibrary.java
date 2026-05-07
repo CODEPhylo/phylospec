@@ -4,6 +4,9 @@ import org.phylospec.tiling.TileLibrary;
 import org.phylospec.tiling.tiles.CandidateTile;
 import tiles.substitutionmodels.JC69Tile;
 import tiles.substitutionmodels.K80Tile;
+import tiles.substitutionmodels.F81Tile;
+import tiles.substitutionmodels.HKYTile;
+import tiles.substitutionmodels.GTRTile;
 import tiling.BeastXState;
 
 import java.util.ArrayList;
@@ -20,7 +23,9 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
 
         tiles.add(new JC69Tile());
         tiles.add(new K80Tile());
-
+        tiles.add(new F81Tile());
+        tiles.add(new HKYTile());
+        tiles.add(new GTRTile());
         return tiles;
     }
 }
