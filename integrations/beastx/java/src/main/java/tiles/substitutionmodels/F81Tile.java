@@ -24,6 +24,22 @@ public class F81Tile extends GeneratorTile<HKY, BeastXState> {
     public HKY applyTile(BeastXState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Simplex baseFrequencies = this.baseFrequenciesInput.apply(beastState, indexVariables);
 
+        if (baseFrequencies == null) {
+            throw new IllegalArgumentException("F81 requires baseFrequencies input.");
+        }
+
+        if (baseFrequencies.size() != 4) {
+            throw new IllegalArgumentException(
+                    "F81 requires exactly four nucleotide base frequencies: A, C, G, T."
+            );
+        }
+
+        if (!baseFrequencies.isValid()) {
+            throw new IllegalArgumentException(
+                    "F81 baseFrequencies must be a valid simplex: all values must be in [0, 1] and sum to 1."
+            );
+        }
+
         FrequencyModel frequencies = new FrequencyModel(
                 Nucleotides.INSTANCE,
                 baseFrequencies.getDoubleArray()
