@@ -1,0 +1,32 @@
+QMatrix jc = jc69()
+
+QMatrix k80 = k80(
+    kappa = 2.0
+)
+
+QMatrix f81 = f81(
+    baseFrequencies = repeat(0.25, num=4)
+)
+
+QMatrix hky = hky(
+    kappa = 2.0,
+    baseFrequencies = repeat(0.25, num=4)
+)
+
+QMatrix gtr = gtr(
+    rateAC = 2.0,
+    rateAG = 1.0,
+    rateAT = 2.0,
+    rateCG = 1.0,
+    rateCT = 2.0,
+    rateGT = 5.0,
+    baseFrequencies = repeat(0.25, num=4)
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES
