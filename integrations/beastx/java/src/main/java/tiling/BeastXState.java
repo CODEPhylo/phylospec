@@ -1,28 +1,30 @@
 package tiling;
 
+import dr.inference.distribution.DistributionLikelihood;
+import dr.inference.model.Parameter;
+import org.phylospec.tiling.TypeToken;
+
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
-/**
- * Manages the BEAST state that is built up incrementally during tiling.
- * Tracks state nodes, calculation nodes, distributions, operators, and loggers.
- * Provides utilities for assigning unique IDs, wiring inputs, and initializing
- * BEAST objects in the correct order.
- */
 public class BeastXState {
 
     public final String runName;
+
+    public final Map<Parameter, TypeToken<?>> stateNodes;
+    public final Map<Parameter, DistributionLikelihood> priorDistributions;
 
     private final Set<String> ids;
 
     public BeastXState(String runName) {
         this.runName = runName;
-        ids = new HashSet<>();
+        this.stateNodes = new HashMap<>();
+        this.priorDistributions = new HashMap<>();
+        this.ids = new HashSet<>();
     }
 
-    /**
-     * Gets the next available ID based on the proposed ID.
-     */
     public String getAvailableID(String proposal) {
         if (!this.ids.contains(proposal)) {
             this.ids.add(proposal);
@@ -38,5 +40,20 @@ public class BeastXState {
         this.ids.add(proposal);
         return proposal;
     }
-    
+
+    public void addStateNode(BeastXParam stateNode, TypeToken<?> typeToken, String id) {
+        Parameter parameter = stateNode.getParameter();
+        parameter.setId(this.getAvailableID(id));
+        this.stateNodes.put(parameter, typeToken);
+    }
+
+    public void addPriorDistribution(
+            BeastXParam stateNode,
+            DistributionLikelihood distribution,
+            String id
+    ) {
+        Parameter parameter = stateNode.getParameter();
+        distribution.setId(this.getAvailableID(id));
+        this.priorDistributions.put(parameter, distribution);
+    }
 }
