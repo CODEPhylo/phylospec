@@ -6,6 +6,16 @@ import org.phylospec.tiling.tiles.CandidateTile;
 import tiles.misc.AssignmentTile;
 import tiles.misc.AssignedArgumentTile;
 import tiles.misc.LiteralTile;
+import tiles.misc.DrawTile;
+import tiles.distributions.ExponentialTile;
+import tiles.distributions.LogNormalTile;
+import tiles.distributions.NormalTile;
+import tiles.distributions.GammaTile;
+import tiles.distributions.BetaTile;
+import tiles.distributions.UniformTile;
+import tiles.distributions.CauchyTile;
+import tiles.distributions.LogNormalRealSpaceTile;
+import tiles.distributions.PoissonTile;
 import tiles.functions.RepeatSimplexTile;
 
 import tiles.substitutionmodels.JC69Tile;
@@ -29,10 +39,22 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
 
         // Basic PhyloSpec language support
         tiles.add(new AssignmentTile());
-        tiles.add(new LiteralTile());
+        tiles.add(new DrawTile());
+        tiles.add(new LiteralTile<>());
         tiles.add(new AssignedArgumentTile());
 
         tiles.add(new RepeatSimplexTile());
+
+        // BEAST X prior distributions
+        tiles.add(new ExponentialTile());
+        tiles.add(new LogNormalTile());
+        tiles.add(new LogNormalRealSpaceTile());
+        tiles.add(new NormalTile());
+        tiles.add(new GammaTile());
+        tiles.add(new BetaTile());
+        tiles.add(new UniformTile());
+        tiles.add(new CauchyTile());
+        tiles.add(new PoissonTile());
 
         // BeastX substitution models
         tiles.add(new JC69Tile());
