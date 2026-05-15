@@ -4,11 +4,13 @@ import dr.evolution.datatype.Nucleotides;
 import dr.evomodel.substmodel.FrequencyModel;
 import dr.evomodel.substmodel.nucleotide.GTR;
 import dr.inference.model.Parameter;
+import dr.inference.model.Variable;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import org.phylospec.types.Simplex;
+import tiling.BeastXRealScalarParam;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;
@@ -60,13 +62,21 @@ public class GTRTile extends GeneratorTile<GTR, BeastXState> {
         );
 
         return new GTR(
-                new Parameter.Default(rateAC.get()),
-                new Parameter.Default(rateAG.get()),
-                new Parameter.Default(rateAT.get()),
-                new Parameter.Default(rateCG.get()),
-                new Parameter.Default(rateCT.get()),
-                new Parameter.Default(rateGT.get()),
+                toBeastXVariable(rateAC),
+                toBeastXVariable(rateAG),
+                toBeastXVariable(rateAT),
+                toBeastXVariable(rateCG),
+                toBeastXVariable(rateCT),
+                toBeastXVariable(rateGT),
                 frequencies
         );
+    }
+
+    private static Variable<Double> toBeastXVariable(RealScalar<PositiveReal> scalar) {
+        if (scalar instanceof BeastXRealScalarParam<?> beastXScalar) {
+            return beastXScalar.getParameter();
+        }
+
+        return new Parameter.Default(scalar.get());
     }
 }

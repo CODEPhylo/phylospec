@@ -1,0 +1,6 @@
+// LogNormal with real-space mean parameterization
+Real x ~ LogNormal(mean=2.0, logSd=0.5)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

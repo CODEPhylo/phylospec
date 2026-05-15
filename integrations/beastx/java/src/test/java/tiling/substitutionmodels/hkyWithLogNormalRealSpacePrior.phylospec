@@ -1,0 +1,10 @@
+Real kappa ~ LogNormal(mean=2.0, logSd=0.5)
+
+QMatrix Q = hky(
+    kappa = kappa,
+    baseFrequencies = repeat(0.25, num=4)
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

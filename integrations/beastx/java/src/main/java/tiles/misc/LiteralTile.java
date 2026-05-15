@@ -13,6 +13,7 @@ import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.types.RealScalar;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
+import tiling.BeastXRealScalarParam;
 import tiling.BeastXState;
 
 import java.util.HashSet;
@@ -20,21 +21,13 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * This tile matches literal values in PhyloSpec, such as:
- * 2.0, 4, and "text".
- *
- * For BeastX, numeric literals are converted not only to Java Double / Integer,
- * but also to PhyloSpec semantic scalar types such as RealScalar<PositiveReal>.
- */
 public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BeastXState> {
 
     private final TypeToken<T> typeToken;
     private final T value;
 
     public LiteralTile() {
-        this(new TypeToken<>() {
-        }, null, null);
+        this(new TypeToken<>() {}, null, null);
     }
 
     public LiteralTile(TypeToken<T> typeToken, T value, Expr.Literal astNode) {
@@ -50,41 +43,21 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BeastXState> {
             VariableResolver variableResolver,
             StochasticityResolver stochasticityResolver
     ) throws FailedTilingAttempt {
-
         if (!(node instanceof Expr.Literal literal)) {
             throw new FailedTilingAttempt.Irrelevant();
         }
 
         if (literal.value instanceof String string) {
-            return Set.of(
-                    new LiteralTile<>(
-                            new TypeToken<String>() {
-                            },
-                            string,
-                            literal
-                    )
-            );
+            return Set.of(new LiteralTile<>(new TypeToken<String>() {}, string, literal));
         }
 
         if (literal.value instanceof Integer number) {
             Set<Tile<?, BeastXState>> tiles = new HashSet<>();
 
-            tiles.add(new LiteralTile<>(
-                    new TypeToken<Integer>() {
-                    },
-                    number,
-                    literal
-            ));
+            tiles.add(new LiteralTile<>(new TypeToken<Integer>() {}, number, literal));
+            tiles.add(new LiteralTile<>(new TypeToken<Double>() {}, number.doubleValue(), literal));
 
             double asDouble = number.doubleValue();
-
-            tiles.add(new LiteralTile<>(
-                    new TypeToken<Double>() {
-                    },
-                    asDouble,
-                    literal
-            ));
-
             addRealScalarTiles(tiles, asDouble, literal);
 
             return tiles;
@@ -93,13 +66,7 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BeastXState> {
         if (literal.value instanceof Double number) {
             Set<Tile<?, BeastXState>> tiles = new HashSet<>();
 
-            tiles.add(new LiteralTile<>(
-                    new TypeToken<Double>() {
-                    },
-                    number,
-                    literal
-            ));
-
+            tiles.add(new LiteralTile<>(new TypeToken<Double>() {}, number, literal));
             addRealScalarTiles(tiles, number, literal);
 
             return tiles;
@@ -114,16 +81,14 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BeastXState> {
             Expr.Literal literal
     ) {
         tiles.add(new LiteralTile<>(
-                new TypeToken<RealScalar<Real>>() {
-                },
+                new TypeToken<RealScalar<Real>>() {},
                 realScalar(number, Real.INSTANCE),
                 literal
         ));
 
         if (number >= 0.0) {
             tiles.add(new LiteralTile<>(
-                    new TypeToken<RealScalar<NonNegativeReal>>() {
-                    },
+                    new TypeToken<RealScalar<NonNegativeReal>>() {},
                     realScalar(number, NonNegativeReal.INSTANCE),
                     literal
             ));
@@ -131,8 +96,7 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BeastXState> {
 
         if (number > 0.0) {
             tiles.add(new LiteralTile<>(
-                    new TypeToken<RealScalar<PositiveReal>>() {
-                    },
+                    new TypeToken<RealScalar<PositiveReal>>() {},
                     realScalar(number, PositiveReal.INSTANCE),
                     literal
             ));
@@ -140,8 +104,7 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BeastXState> {
 
         if (number > 0.0 && number < 1.0) {
             tiles.add(new LiteralTile<>(
-                    new TypeToken<RealScalar<UnitInterval>>() {
-                    },
+                    new TypeToken<RealScalar<UnitInterval>>() {},
                     realScalar(number, UnitInterval.INSTANCE),
                     literal
             ));
@@ -149,30 +112,7 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BeastXState> {
     }
 
     private static <D extends Real> RealScalar<D> realScalar(double value, D domain) {
-        return new RealScalar<>() {
-            @Override
-            public double get() {
-                return value;
-            }
-
-            @Override
-            public Double get(int... idx) {
-                if (idx.length != 0) {
-                    throw new IllegalArgumentException("RealScalar does not take indices.");
-                }
-                return value;
-            }
-
-            @Override
-            public long size() {
-                return 1;
-            }
-
-            @Override
-            public D domainType() {
-                return domain;
-            }
-        };
+        return new BeastXRealScalarParam<>(value, domain);
     }
 
     @Override
@@ -187,11 +127,6 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BeastXState> {
 
     @Override
     public Tile<?, BeastXState> createInstance() {
-        return new LiteralTile<>(
-                new TypeToken<>() {
-                },
-                null,
-                null
-        );
+        return new LiteralTile<>(new TypeToken<>() {}, null, null);
     }
 }
