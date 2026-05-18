@@ -1,10 +1,10 @@
 package tiling;
 
-import dr.inference.distribution.DistributionLikelihood;
+import dr.inference.distribution.AbstractDistributionLikelihood;
 
 import java.util.function.Consumer;
 
-public class BoundDistribution<T extends BeastXParam, O extends DistributionLikelihood> {
+public class BoundDistribution<T extends BeastXParam, O extends AbstractDistributionLikelihood> {
 
     public final O distribution;
     public T stateNode;

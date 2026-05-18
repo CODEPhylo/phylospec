@@ -1,0 +1,5 @@
+Simplex freqs ~ Dirichlet(concentration=repeat(1.0, num=4))
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

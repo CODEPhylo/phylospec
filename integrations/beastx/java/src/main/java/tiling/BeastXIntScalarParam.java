@@ -10,7 +10,7 @@ public class BeastXIntScalarParam<D extends Int> implements IntScalar<D>, BeastX
     private final D domain;
 
     public BeastXIntScalarParam(int value, D domain) {
-        this(new Parameter.Default(value), domain);
+        this(new Parameter.Default((double) value), domain);
     }
 
     public BeastXIntScalarParam(Parameter parameter, D domain) {

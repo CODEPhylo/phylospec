@@ -1,0 +1,7 @@
+Real realExp = exp(x=0.0)
+PositiveReal positiveExp = exp(x=1.0)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES
