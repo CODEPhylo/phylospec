@@ -1,6 +1,6 @@
 package tiling;
 
-import dr.inference.distribution.DistributionLikelihood;
+import dr.inference.distribution.AbstractDistributionLikelihood;
 import dr.inference.model.Parameter;
 import org.phylospec.tiling.TypeToken;
 
@@ -14,7 +14,7 @@ public class BeastXState {
     public final String runName;
 
     public final Map<Parameter, TypeToken<?>> stateNodes;
-    public final Map<Parameter, DistributionLikelihood> priorDistributions;
+    public final Map<Parameter, AbstractDistributionLikelihood> priorDistributions;
 
     private final Set<String> ids;
 
@@ -49,7 +49,7 @@ public class BeastXState {
 
     public void addPriorDistribution(
             BeastXParam stateNode,
-            DistributionLikelihood distribution,
+            AbstractDistributionLikelihood distribution,
             String id
     ) {
         Parameter parameter = stateNode.getParameter();

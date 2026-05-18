@@ -1,0 +1,5 @@
+Real x ~ Exponential(rate=exp(x=0.0))
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

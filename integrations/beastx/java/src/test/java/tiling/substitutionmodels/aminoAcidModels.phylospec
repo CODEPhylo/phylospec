@@ -1,0 +1,18 @@
+QMatrix defaultJTT = jtt()
+
+QMatrix customJTT = jtt(
+    baseFrequencies = repeat(0.05, num=20)
+)
+
+QMatrix defaultWAG = wag()
+
+QMatrix customWAG = wag(
+    baseFrequencies = repeat(0.05, num=20)
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES

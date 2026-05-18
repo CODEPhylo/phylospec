@@ -1,0 +1,16 @@
+Vector<Rate> siteRates ~ DiscreteGammaInv(
+    shape=1.0,
+    numCategories=4,
+    invariantProportion=0.1,
+    numSites=100
+)
+
+QMatrix Q = hky(
+    kappa=2.0,
+    baseFrequencies=repeat(0.25, num=4)
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES

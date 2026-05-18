@@ -2,7 +2,10 @@ package tiles.misc;
 
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
+import org.phylospec.domain.Int;
+import org.phylospec.domain.NonNegativeInt;
 import org.phylospec.domain.NonNegativeReal;
+import org.phylospec.domain.PositiveInt;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.domain.Real;
 import org.phylospec.domain.UnitInterval;
@@ -10,9 +13,11 @@ import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.tiling.tiles.AstNodeTile;
 import org.phylospec.tiling.tiles.Tile;
+import org.phylospec.types.IntScalar;
 import org.phylospec.types.RealScalar;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
+import tiling.BeastXIntScalarParam;
 import tiling.BeastXRealScalarParam;
 import tiling.BeastXState;
 
@@ -57,8 +62,8 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BeastXState> {
             tiles.add(new LiteralTile<>(new TypeToken<Integer>() {}, number, literal));
             tiles.add(new LiteralTile<>(new TypeToken<Double>() {}, number.doubleValue(), literal));
 
-            double asDouble = number.doubleValue();
-            addRealScalarTiles(tiles, asDouble, literal);
+            addIntScalarTiles(tiles, number, literal);
+            addRealScalarTiles(tiles, number.doubleValue(), literal);
 
             return tiles;
         }
@@ -73,6 +78,34 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BeastXState> {
         }
 
         throw new FailedTilingAttempt.Irrelevant();
+    }
+
+    private static void addIntScalarTiles(
+            Set<Tile<?, BeastXState>> tiles,
+            int number,
+            Expr.Literal literal
+    ) {
+        tiles.add(new LiteralTile<>(
+                new TypeToken<IntScalar<Int>>() {},
+                intScalar(number, Int.INSTANCE),
+                literal
+        ));
+
+        if (number >= 0) {
+            tiles.add(new LiteralTile<>(
+                    new TypeToken<IntScalar<NonNegativeInt>>() {},
+                    intScalar(number, NonNegativeInt.INSTANCE),
+                    literal
+            ));
+        }
+
+        if (number > 0) {
+            tiles.add(new LiteralTile<>(
+                    new TypeToken<IntScalar<PositiveInt>>() {},
+                    intScalar(number, PositiveInt.INSTANCE),
+                    literal
+            ));
+        }
     }
 
     private static void addRealScalarTiles(
@@ -109,6 +142,10 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BeastXState> {
                     literal
             ));
         }
+    }
+
+    private static <D extends Int> IntScalar<D> intScalar(int value, D domain) {
+        return new BeastXIntScalarParam<>(value, domain);
     }
 
     private static <D extends Real> RealScalar<D> realScalar(double value, D domain) {

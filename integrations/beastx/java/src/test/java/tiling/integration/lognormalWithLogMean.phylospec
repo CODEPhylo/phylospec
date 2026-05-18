@@ -1,0 +1,5 @@
+Real x ~ LogNormal(logMean=log(x=2.0), logSd=1.0)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

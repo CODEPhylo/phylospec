@@ -1,0 +1,7 @@
+NonNegativeInt fromRange = num(vector=range(start=0, end=4))
+NonNegativeInt fromRepeat = num(vector=repeat(value=2, num=5))
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES
