@@ -6,6 +6,7 @@ import dr.inference.model.Parameter;
 import dr.util.Attribute;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.Real;
+import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import tiling.BeastXRealScalarParam;
@@ -13,6 +14,7 @@ import tiling.BeastXState;
 import tiling.BoundDistribution;
 
 import java.util.IdentityHashMap;
+import java.util.List;
 
 public class UniformTile extends GeneratorTile<
         BoundDistribution<BeastXRealScalarParam<Real>, DistributionLikelihood>,
@@ -40,6 +42,15 @@ public class UniformTile extends GeneratorTile<
 
         RealScalar<Real> upper =
                 this.upperInput.apply(beastState, indexVariables);
+
+        if (lower.get() > upper.get()) {
+            throw new TileApplicationError(
+                    this.getRootNode(),
+                    "Uniform lower bound must not be greater than upper bound.",
+                    "Use lower <= upper.",
+                    List.of("Uniform(lower=0.0, upper=1.0)")
+            );
+        }
 
         Parameter lowerParameter = new Parameter.Default(lower.get());
         Parameter upperParameter = new Parameter.Default(upper.get());

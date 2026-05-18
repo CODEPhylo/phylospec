@@ -1,0 +1,18 @@
+Real kappaArray ~ LogNormal(logMean=1.0, logSd=0.5)
+Simplex freqsArray ~ Dirichlet(concentration=[1.0, 1.0, 1.0, 1.0])
+QMatrix hkyArrayFreqs = hky(
+    kappa = kappaArray,
+    baseFrequencies = freqsArray
+)
+
+Real kappaRepeat ~ LogNormal(logMean=1.0, logSd=0.5)
+Simplex freqsRepeat ~ Dirichlet(concentration=repeat(1.0, num=4))
+QMatrix hkyRepeatFreqs = hky(
+    kappa = kappaRepeat,
+    baseFrequencies = freqsRepeat
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES

@@ -1,0 +1,9 @@
+Vector<Rate> siteRates ~ DiscreteGammaInv(
+    shape=1.0,
+    numCategories=4,
+    numSites=100
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

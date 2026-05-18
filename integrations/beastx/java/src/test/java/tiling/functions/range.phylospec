@@ -1,0 +1,7 @@
+IntVector<Int> ascending = range(start=0, end=4)
+IntVector<Int> descending = range(start=4, end=0)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES
