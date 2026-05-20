@@ -1,0 +1,6 @@
+Tree tree = fromTree("src/test/java/resources/simple.nwk")
+Integer n = numTaxa(tree)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

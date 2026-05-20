@@ -1,0 +1,13 @@
+Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+Taxa taxa = taxa(data)
+
+Real populationSize ~ LogNormal(logMean=0.0, logSd=1.0)
+
+Tree tree ~ Coalescent(
+    populationSize=populationSize,
+    taxa=taxa
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

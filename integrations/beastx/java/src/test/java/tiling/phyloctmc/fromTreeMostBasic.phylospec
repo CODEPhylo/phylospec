@@ -1,0 +1,12 @@
+Alignment data = fromFasta("src/test/java/resources/simple.fasta")
+Tree tree = fromTree("src/test/java/resources/simple.nwk")
+QMatrix qMatrix = jc69()
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix
+) observed as data
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
