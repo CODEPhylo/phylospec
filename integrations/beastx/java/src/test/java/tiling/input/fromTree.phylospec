@@ -1,0 +1,5 @@
+Tree tree = fromTree("src/test/java/resources/simple.nwk")
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
