@@ -135,7 +135,7 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BeastXState> {
             ));
         }
 
-        if (number > 0.0 && number < 1.0) {
+        if (number >= 0.0 && number <= 1.0) {
             tiles.add(new LiteralTile<>(
                     new TypeToken<RealScalar<UnitInterval>>() {},
                     realScalar(number, UnitInterval.INSTANCE),

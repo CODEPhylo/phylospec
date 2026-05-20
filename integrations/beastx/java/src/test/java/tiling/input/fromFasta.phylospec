@@ -1,0 +1,5 @@
+Alignment data = fromFasta("src/test/java/resources/simple.fasta")
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
