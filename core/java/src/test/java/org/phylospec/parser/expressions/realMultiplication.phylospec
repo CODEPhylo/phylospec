@@ -1,0 +1,13 @@
+Real a = -2.0
+Real b = 3.0
+NonNegativeReal c = a * b
+
+// EXPECT AST
+// (AS Real a (- 2.0))
+// (AS Real b 3.0)
+// (AS NonNegativeReal c (* a b))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Expression of type `Real` cannot be assigned to variable `c` of type `NonNegativeReal`. Change the type of the variable to `Real`, or change what you assign to it.
+// EXPECT TYPE_ERRORS
