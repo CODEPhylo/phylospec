@@ -4,3 +4,8 @@ Real x ~ Normal(mean=mean, sd=1.0)
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: x
+// P: x_prior
+// EXPECTED BEASTX STATE

@@ -16,3 +16,8 @@ QMatrix hkyRepeatFreqs = hky(
 // TILING_SUCCESS
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: kappaArray, freqsArray, kappaRepeat, freqsRepeat
+// P: kappaArray_prior, freqsArray_prior, kappaRepeat_prior, freqsRepeat_prior
+// EXPECTED BEASTX STATE

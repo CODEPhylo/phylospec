@@ -1,0 +1,19 @@
+Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+Taxa taxa = taxa(data)
+Tree tree ~ Yule(birthRate=1.0, taxa=taxa)
+
+Vector<Rate> branchRates ~ RelaxedClock(
+    clockRate=1.0,
+    base=LogNormal(mean=1.0, logSd=0.1),
+    tree=tree
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: branchRateCategories
+// TM: tree
+// TP: tree_prior
+// EXPECTED BEASTX STATE

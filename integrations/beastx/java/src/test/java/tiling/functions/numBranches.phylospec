@@ -6,3 +6,8 @@ Integer n = numBranches(tree)
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// TM: tree
+// TP: tree_prior
+// EXPECTED BEASTX STATE
