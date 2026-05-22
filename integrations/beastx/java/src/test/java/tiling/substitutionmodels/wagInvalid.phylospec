@@ -9,3 +9,7 @@ QMatrix invalidWAG = wag(
 // EXPECTED_APPLICATION_ERRORS
 // WAG requires exactly 20 amino-acid base frequencies. Provide a Simplex with 20 values.
 // EXPECTED_APPLICATION_ERRORS
+
+// EXPECTED BEASTX STATE
+// NO_STATE
+// EXPECTED BEASTX STATE

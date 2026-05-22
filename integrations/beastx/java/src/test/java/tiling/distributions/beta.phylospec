@@ -1,5 +1,12 @@
-Real x ~ Uniform(lower=0.0, upper=1.0)
+PositiveReal alpha ~ LogNormal(logMean=0.0, logSd=1.0)
+PositiveReal beta ~ LogNormal(logMean=0.0, logSd=1.0)
+UnitInterval x ~ Beta(alpha=alpha, beta=beta)
 
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: alpha, beta, x
+// P: alpha_prior, beta_prior, x_prior
+// EXPECTED BEASTX STATE

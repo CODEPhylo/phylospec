@@ -1,0 +1,7 @@
+Taxon taxon1 = taxon(name="taxon1")
+Taxon taxon2 = taxon(name="taxon2", species="speciesA", age=1.5)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES

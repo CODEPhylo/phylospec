@@ -10,3 +10,8 @@ Tree tree ~ BirthDeath(
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// TM: tree
+// TP: tree_prior
+// EXPECTED BEASTX STATE

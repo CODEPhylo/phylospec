@@ -1,0 +1,9 @@
+Tree tree = fromTree("src/test/java/resources/simple.nwk")
+Taxa taxa = taxa(tree)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// EXPECTED BEASTX STATE

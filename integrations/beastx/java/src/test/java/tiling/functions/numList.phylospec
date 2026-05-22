@@ -1,0 +1,6 @@
+Vector<String> clade = ["taxon1", "taxon2"]
+Integer n = num(clade)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

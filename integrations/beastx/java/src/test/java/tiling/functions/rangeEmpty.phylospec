@@ -7,3 +7,7 @@ IntVector<Int> xs = range(start=4, end=4)
 // EXPECTED_APPLICATION_ERRORS
 // Empty range. You use a range with a length of 0. Specify a different start and end.
 // EXPECTED_APPLICATION_ERRORS
+
+// EXPECTED BEASTX STATE
+// NO_STATE
+// EXPECTED BEASTX STATE

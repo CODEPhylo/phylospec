@@ -10,11 +10,13 @@ import tiles.misc.DrawTile;
 import tiles.misc.TreeDrawTile;
 import tiles.misc.VectorTile;
 import tiles.misc.DrawnArgumentTile;
+import tiles.misc.ListVectorTile;
 
 import tiles.input.FromNexusTile;
 import tiles.input.FromFastaTile;
 import tiles.input.FromNewickTile;
 import tiles.input.FromTreeTile;
+import tiles.input.ParserTile;
 
 import tiles.distributions.ExponentialTile;
 import tiles.distributions.LogNormalTile;
@@ -28,6 +30,7 @@ import tiles.distributions.PoissonTile;
 import tiles.distributions.DirichletTile;
 import tiles.distributions.DiscreteUniformTile;
 import tiles.distributions.PhyloCTMCTile;
+import tiles.distributions.OffsetTile;
 
 import tiles.functions.AlignmentTaxaTile;
 import tiles.functions.RepeatSimplexTile;
@@ -38,14 +41,22 @@ import tiles.functions.ExpTile;
 import tiles.functions.SqrtTile;
 import tiles.functions.RangeTile;
 import tiles.functions.NumVectorTile;
+import tiles.functions.NumListTile;
 import tiles.functions.NumSitesTile;
 import tiles.functions.NumTaxaAlignmentTile;
 import tiles.functions.NumTaxaTreeTile;
 import tiles.functions.LinSpaceTile;
 import tiles.functions.NumBranchesTile;
+import tiles.functions.RootAgeTile;
+import tiles.functions.TaxonTile;
+import tiles.functions.AgeTaxonTile;
+import tiles.functions.AgeNodeTreeTile;
+import tiles.functions.MRCATile;
+import tiles.functions.TreeTaxaTile;
 
 import tiles.branchmodels.DrawnBranchRatesTile;
 import tiles.branchmodels.StrictClockTile;
+import tiles.branchmodels.RelaxedClockTile;
 
 import tiles.observations.ObservedAsAlignmentTile;
 
@@ -59,11 +70,13 @@ import tiles.substitutionmodels.HKYTile;
 import tiles.substitutionmodels.GTRTile;
 import tiles.substitutionmodels.JTTTile;
 import tiles.substitutionmodels.WAGTile;
+import tiles.substitutionmodels.LGTile;
 
 import tiles.trees.YuleTile;
 import tiles.trees.BirthDeathTile;
 import tiles.trees.CoalescentTile;
 import tiles.trees.ConstantPopulationFunctionTile;
+import tiles.trees.ExponentialPopulationFunctionTile;
 import tiles.trees.CoalescentPopulationFunctionTile;
 
 import tiling.BeastXState;
@@ -86,13 +99,15 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new VectorTile<>());
         tiles.add(new AssignedArgumentTile());
         tiles.add(new DrawnArgumentTile());
+        tiles.add(new ListVectorTile());
 
         // Input/accessor support
         tiles.add(new FromNexusTile());
         tiles.add(new FromFastaTile());
         tiles.add(new FromNewickTile());
         tiles.add(new FromTreeTile());
-        tiles.add(new AlignmentTaxaTile());
+        tiles.add(new ParserTile.Regex());
+        tiles.add(new ParserTile.Delimiter());
 
         // PhyloSpec functions
         tiles.add(new RepeatSimplexTile());
@@ -103,11 +118,19 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new SqrtTile());
         tiles.add(new RangeTile());
         tiles.add(new NumVectorTile());
+        tiles.add(new NumListTile());
         tiles.add(new NumSitesTile());
         tiles.add(new NumTaxaAlignmentTile());
         tiles.add(new NumTaxaTreeTile());
         tiles.add(new NumBranchesTile());
+        tiles.add(new RootAgeTile());
         tiles.add(new LinSpaceTile());
+        tiles.add(new TaxonTile());
+        tiles.add(new AgeTaxonTile());
+        tiles.add(new AgeNodeTreeTile());
+        tiles.add(new MRCATile());
+        tiles.add(new AlignmentTaxaTile());
+        tiles.add(new TreeTaxaTile());
 
         // BEAST X prior distributions
         tiles.add(new ExponentialTile());
@@ -121,17 +144,20 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new PoissonTile());
         tiles.add(new DiscreteUniformTile());
         tiles.add(new DirichletTile());
+        tiles.add(new OffsetTile());
 
         // BEAST X tree priors
         tiles.add(new YuleTile());
         tiles.add(new BirthDeathTile());
         tiles.add(new CoalescentTile());
         tiles.add(new ConstantPopulationFunctionTile());
+        tiles.add(new ExponentialPopulationFunctionTile());
         tiles.add(new CoalescentPopulationFunctionTile());
 
         // BEAST X branch models
         tiles.add(new DrawnBranchRatesTile());
         tiles.add(new StrictClockTile());
+        tiles.add(new RelaxedClockTile());
 
         // BEAST X sequence likelihoods
         tiles.add(new PhyloCTMCTile());
@@ -144,6 +170,7 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new GTRTile());
         tiles.add(new JTTTile());
         tiles.add(new WAGTile());
+        tiles.add(new LGTile());
 
         // BEAST X site models
         tiles.add(new DrawnSiteRatesTile());

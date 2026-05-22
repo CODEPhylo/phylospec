@@ -1,0 +1,6 @@
+Taxon taxon1 = taxon(name="taxon1", age=1.5)
+Age sampleAge = age(taxon=taxon1)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
