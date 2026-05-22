@@ -28,3 +28,8 @@ QMatrix hkyLogNormalRealSpace = hky(
 // TILING_SUCCESS
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: kappaExp, kappaGamma, kappaLogNormal, kappaLogNormalRealSpace
+// P: kappaExp_prior, kappaGamma_prior, kappaLogNormal_prior, kappaLogNormalRealSpace_prior
+// EXPECTED BEASTX STATE

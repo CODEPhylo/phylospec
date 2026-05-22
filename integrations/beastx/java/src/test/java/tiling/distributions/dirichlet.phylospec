@@ -3,3 +3,8 @@ Simplex pi ~ Dirichlet(concentration=[1.0, 1.0, 1.0, 1.0])
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: pi
+// P: pi_prior
+// EXPECTED BEASTX STATE

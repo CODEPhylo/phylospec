@@ -1,0 +1,6 @@
+Tree tree = fromNewick("((taxon1:0.1,taxon2:0.1):0.2,(taxon3:0.1,taxon4:0.1):0.2);")
+Age nodeAge = age(node="taxon1", tree=tree)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES

@@ -1,0 +1,10 @@
+Parser delimiterParser = parse(delimiter="_", part=2)
+Parser regexParser = parse(regex="taxon_(\\d+)")
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// EXPECTED BEASTX STATE

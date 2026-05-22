@@ -7,3 +7,7 @@ RealVector<Real> empty = linspace(start=0.0, end=1.0, num=0)
 // EXPECTED_APPLICATION_ERRORS
 // Empty linspace. You use linspace with num less than or equal to 0. Specify a positive num.
 // EXPECTED_APPLICATION_ERRORS
+
+// EXPECTED BEASTX STATE
+// NO_STATE
+// EXPECTED BEASTX STATE

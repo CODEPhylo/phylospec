@@ -5,3 +5,8 @@ Tree tree ~ Yule(birthRate=1.0, taxa=taxa)
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// TM: tree
+// TP: tree_prior
+// EXPECTED BEASTX STATE
