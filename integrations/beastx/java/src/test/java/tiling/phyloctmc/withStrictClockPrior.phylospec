@@ -2,7 +2,7 @@ Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
 Taxa taxa = taxa(data)
 Tree tree ~ Yule(birthRate=1.0, taxa=taxa)
 QMatrix qMatrix = jc69()
-Real clockRate ~ LogNormal(logMean=0.0, logSd=1.0)
+Rate clockRate ~ LogNormal(logMean=0.0, logSd=1.0)
 
 Alignment alignment ~ PhyloCTMC(
     tree=tree,
