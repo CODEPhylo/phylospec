@@ -32,6 +32,7 @@ public class BeastXModelBuilder {
 
         priorLikelihoods.addAll(beastState.priorDistributions.values());
         priorLikelihoods.addAll(beastState.treePriorDistributions.values());
+        priorLikelihoods.addAll(beastState.calibrationPriorDistributions);
 
         CompoundLikelihood prior =
                 new CompoundLikelihood(priorLikelihoods);

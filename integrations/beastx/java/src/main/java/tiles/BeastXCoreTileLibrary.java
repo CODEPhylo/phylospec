@@ -59,6 +59,8 @@ import tiles.branchmodels.StrictClockTile;
 import tiles.branchmodels.RelaxedClockTile;
 
 import tiles.observations.ObservedAsAlignmentTile;
+import tiles.observations.RootObservedBetweenTile;
+import tiles.observations.MRCAObservedBetweenTile;
 
 import tiles.sitemodels.SiteModelTile;
 import tiles.sitemodels.DrawnSiteRatesTile;
@@ -95,6 +97,8 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new DrawTile());
         tiles.add(new TreeDrawTile());
         tiles.add(new ObservedAsAlignmentTile());
+        tiles.add(new RootObservedBetweenTile());
+        tiles.add(new MRCAObservedBetweenTile());
         tiles.add(new LiteralTile<>());
         tiles.add(new VectorTile<>());
         tiles.add(new AssignedArgumentTile());

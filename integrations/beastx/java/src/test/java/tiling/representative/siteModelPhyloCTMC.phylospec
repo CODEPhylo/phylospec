@@ -1,0 +1,34 @@
+Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+Taxa taxa = taxa(data)
+
+Tree tree ~ Yule(
+    birthRate=1.0,
+    taxa=taxa
+)
+
+PositiveReal shape ~ LogNormal(logMean=0.0, logSd=1.0)
+
+Vector<Rate> siteRates ~ DiscreteGammaInv(
+    shape=shape,
+    numCategories=4,
+    invariantProportion=0.1,
+    numSites=numSites(data)
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=jc69(),
+    siteRates=siteRates
+) observed as data
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: shape
+// P: shape_prior
+// TM: tree
+// TP: tree_prior
+// L: alignment_likelihood
+// EXPECTED BEASTX STATE

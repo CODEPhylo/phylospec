@@ -10,6 +10,11 @@ Tree tree ~ BirthDeath(
     taxa=taxa
 )
 
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=jc69()
+) observed as data
+
 // EXPECTED_TILES
 // TILING_SUCCESS
 // EXPECTED_TILES
@@ -19,4 +24,5 @@ Tree tree ~ BirthDeath(
 // P: diversificationRate_prior, turnover_prior
 // TM: tree
 // TP: tree_prior
+// L: alignment_likelihood
 // EXPECTED BEASTX STATE
