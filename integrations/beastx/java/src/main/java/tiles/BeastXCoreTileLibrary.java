@@ -17,6 +17,7 @@ import tiles.input.FromFastaTile;
 import tiles.input.FromNewickTile;
 import tiles.input.FromTreeTile;
 import tiles.input.ParserTile;
+import tiles.input.SubsetTile;
 
 import tiles.distributions.ExponentialTile;
 import tiles.distributions.LogNormalTile;
@@ -61,6 +62,14 @@ import tiles.branchmodels.RelaxedClockTile;
 import tiles.observations.ObservedAsAlignmentTile;
 import tiles.observations.RootObservedBetweenTile;
 import tiles.observations.MRCAObservedBetweenTile;
+import tiles.observations.ObservedAsTile;
+import tiles.observations.ObservedAsNonNegativeIntTile;
+import tiles.observations.ObservedAsIntTile;
+
+import tiles.mcmc.ChainLengthTile;
+import tiles.mcmc.ScreenLoggerTile;
+import tiles.mcmc.FileLoggerTile;
+import tiles.mcmc.TreeLoggerTile;
 
 import tiles.sitemodels.SiteModelTile;
 import tiles.sitemodels.DrawnSiteRatesTile;
@@ -97,6 +106,9 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new DrawTile());
         tiles.add(new TreeDrawTile());
         tiles.add(new ObservedAsAlignmentTile());
+        tiles.add(new ObservedAsTile());
+        tiles.add(new ObservedAsNonNegativeIntTile());
+        tiles.add(new ObservedAsIntTile());
         tiles.add(new RootObservedBetweenTile());
         tiles.add(new MRCAObservedBetweenTile());
         tiles.add(new LiteralTile<>());
@@ -110,6 +122,7 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new FromFastaTile());
         tiles.add(new FromNewickTile());
         tiles.add(new FromTreeTile());
+        tiles.add(new SubsetTile());
         tiles.add(new ParserTile.Regex());
         tiles.add(new ParserTile.Delimiter());
 
@@ -135,6 +148,12 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new MRCATile());
         tiles.add(new AlignmentTaxaTile());
         tiles.add(new TreeTaxaTile());
+
+        // BEAST X MCMC configuration
+        tiles.add(new ChainLengthTile());
+        tiles.add(new ScreenLoggerTile());
+        tiles.add(new FileLoggerTile());
+        tiles.add(new TreeLoggerTile());
 
         // BEAST X prior distributions
         tiles.add(new ExponentialTile());

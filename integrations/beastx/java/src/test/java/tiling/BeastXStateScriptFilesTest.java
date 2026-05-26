@@ -3,6 +3,7 @@ package tiling;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.distribution.AbstractDistributionLikelihood;
 import dr.inference.model.AbstractModelLikelihood;
+import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
@@ -151,7 +152,7 @@ public class BeastXStateScriptFilesTest {
 
             Set<String> actualLikelihoodIds =
                     beastState.likelihoodDistributions.stream()
-                            .map(AbstractModelLikelihood::getId)
+                            .map(Likelihood::getId)
                             .collect(Collectors.toSet());
 
             ExpectedBeastXState expected =
