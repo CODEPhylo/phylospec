@@ -32,7 +32,7 @@ public class BirthDeathTile extends GeneratorTile<
     GeneratorTileInput<RealScalar<? extends PositiveReal>, BeastXState> diversificationRateInput =
             new GeneratorTileInput<>("diversificationRate");
 
-    GeneratorTileInput<RealScalar<UnitInterval>, BeastXState> turnoverInput =
+    GeneratorTileInput<RealScalar<? extends PositiveReal>, BeastXState> turnoverInput =
             new GeneratorTileInput<>("turnover");
 
     GeneratorTileInput<RealScalar<UnitInterval>, BeastXState> samplingProbabilityInput =
@@ -49,7 +49,7 @@ public class BirthDeathTile extends GeneratorTile<
         RealScalar<? extends PositiveReal> diversificationRate =
                 this.diversificationRateInput.apply(beastState, indexVariables);
 
-        RealScalar<UnitInterval> turnover =
+        RealScalar<? extends PositiveReal> turnover =
                 this.turnoverInput.apply(beastState, indexVariables);
 
         RealScalar<UnitInterval> samplingProbability =
@@ -87,7 +87,6 @@ public class BirthDeathTile extends GeneratorTile<
                 defaultTreeModel,
                 treeModel -> {
                     // SpeciationLikelihood receives the tree in its constructor.
-                    // This hook keeps the same binding shape as other tree distributions.
                 }
         );
     }
@@ -119,9 +118,12 @@ public class BirthDeathTile extends GeneratorTile<
             int to
     ) {
         if (to - from == 1) {
-            SimpleNode leaf = new SimpleNode();
+            SimpleNode leaf =
+                    new SimpleNode();
+
             leaf.setTaxon(taxa.getTaxon(from));
             leaf.setHeight(0.0);
+
             return leaf;
         }
 
@@ -134,7 +136,9 @@ public class BirthDeathTile extends GeneratorTile<
         SimpleNode right =
                 buildBalancedSubtree(taxa, mid, to);
 
-        SimpleNode parent = new SimpleNode();
+        SimpleNode parent =
+                new SimpleNode();
+
         parent.addChild(left);
         parent.addChild(right);
         parent.setHeight(Math.max(left.getHeight(), right.getHeight()) + 1.0);

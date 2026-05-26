@@ -20,7 +20,9 @@ public class BeastXState {
     public final Map<Parameter, TypeToken<?>> stateNodes;
     public final Map<Parameter, AbstractDistributionLikelihood> priorDistributions;
     public final Map<TreeModel, AbstractModelLikelihood> treePriorDistributions;
+    public final List<AbstractDistributionLikelihood> calibrationPriorDistributions;
     public final List<AbstractModelLikelihood> likelihoodDistributions;
+    public final Map<TreeModel, List<Parameter>> treeClockRateParameters;
 
     private final Set<String> ids;
 
@@ -29,7 +31,9 @@ public class BeastXState {
         this.stateNodes = new HashMap<>();
         this.priorDistributions = new HashMap<>();
         this.treePriorDistributions = new HashMap<>();
+        this.calibrationPriorDistributions = new ArrayList<>();
         this.likelihoodDistributions = new ArrayList<>();
+        this.treeClockRateParameters = new HashMap<>();
         this.ids = new HashSet<>();
     }
 
@@ -75,11 +79,28 @@ public class BeastXState {
         this.treePriorDistributions.put(treeModel, likelihood);
     }
 
+    public void addCalibrationPriorDistribution(
+            AbstractDistributionLikelihood likelihood,
+            String id
+    ) {
+        likelihood.setId(this.getAvailableID(id));
+        this.calibrationPriorDistributions.add(likelihood);
+    }
+
     public void addLikelihoodDistribution(
             AbstractModelLikelihood likelihood,
             String id
     ) {
         likelihood.setId(this.getAvailableID(id));
         this.likelihoodDistributions.add(likelihood);
+    }
+
+    public void addTreeClockRateParameter(
+            TreeModel treeModel,
+            Parameter clockRateParameter
+    ) {
+        this.treeClockRateParameters
+                .computeIfAbsent(treeModel, ignored -> new ArrayList<>())
+                .add(clockRateParameter);
     }
 }

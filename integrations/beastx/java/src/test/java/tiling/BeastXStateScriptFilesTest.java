@@ -144,6 +144,11 @@ public class BeastXStateScriptFilesTest {
                             .map(AbstractModelLikelihood::getId)
                             .collect(Collectors.toSet());
 
+            Set<String> actualCalibrationPriorIds =
+                    beastState.calibrationPriorDistributions.stream()
+                            .map(AbstractDistributionLikelihood::getId)
+                            .collect(Collectors.toSet());
+
             Set<String> actualLikelihoodIds =
                     beastState.likelihoodDistributions.stream()
                             .map(AbstractModelLikelihood::getId)
@@ -174,6 +179,12 @@ public class BeastXStateScriptFilesTest {
                     expected.treePriorIds,
                     actualTreePriorIds,
                     "Tree prior distribution ID mismatch for: " + psPath
+            );
+
+            assertEquals(
+                    expected.calibrationPriorIds,
+                    actualCalibrationPriorIds,
+                    "Calibration prior distribution ID mismatch for: " + psPath
             );
 
             assertEquals(
@@ -217,6 +228,8 @@ public class BeastXStateScriptFilesTest {
                 parseCommaSeparated(trimmed.substring(4), expected.treeModelIds);
             } else if (trimmed.startsWith("TP: ")) {
                 parseCommaSeparated(trimmed.substring(4), expected.treePriorIds);
+            } else if (trimmed.startsWith("CP: ")) {
+                parseCommaSeparated(trimmed.substring(4), expected.calibrationPriorIds);
             } else if (trimmed.startsWith("L: ")) {
                 parseCommaSeparated(trimmed.substring(3), expected.likelihoodIds);
             }
@@ -302,6 +315,7 @@ public class BeastXStateScriptFilesTest {
         private final Set<String> priorIds = new HashSet<>();
         private final Set<String> treeModelIds = new HashSet<>();
         private final Set<String> treePriorIds = new HashSet<>();
+        private final Set<String> calibrationPriorIds = new HashSet<>();
         private final Set<String> likelihoodIds = new HashSet<>();
     }
 }

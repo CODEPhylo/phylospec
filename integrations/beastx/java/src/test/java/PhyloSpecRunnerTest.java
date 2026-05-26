@@ -8,7 +8,7 @@ import dr.inference.operators.ScaleOperator;
 import org.junit.jupiter.api.Test;
 import tiling.BeastXModel;
 import tiling.BeastXMCMCBuilder;
-import tiling.BeastXOperatorBuilder;
+import tiling.operators.BeastXOperatorBuilder;
 import tiling.BeastXState;
 
 import java.nio.charset.StandardCharsets;
