@@ -33,9 +33,18 @@ public class StrictClockTile extends GeneratorTile<StrictClockBranchRates, Beast
         RealScalar<PositiveReal> clockRate =
                 this.clockRateInput.apply(beastState, indexVariables);
 
-        this.treeInput.apply(beastState, indexVariables);
+        TreeModel tree =
+                this.treeInput.apply(beastState, indexVariables);
 
-        return new StrictClockBranchRates(toParameter(clockRate));
+        Parameter clockRateParameter =
+                toParameter(clockRate);
+
+        beastState.addTreeClockRateParameter(
+                tree,
+                clockRateParameter
+        );
+
+        return new StrictClockBranchRates(clockRateParameter);
     }
 
     private static Parameter toParameter(RealScalar<?> scalar) {

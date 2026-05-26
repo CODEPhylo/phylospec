@@ -6,6 +6,7 @@ import dr.inference.mcmc.MCMCOptions;
 import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.operators.MCMCOperator;
 import dr.inference.operators.SimpleOperatorSchedule;
+import tiling.operators.BeastXOperatorBuilder;
 
 import java.util.List;
 

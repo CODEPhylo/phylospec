@@ -1,0 +1,27 @@
+Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+Taxa taxa = taxa(data)
+
+Tree tree ~ Yule(
+    birthRate=1.0,
+    taxa=taxa
+)
+
+Rate clockRate ~ LogNormal(logMean=0.0, logSd=1.0)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=jc69(),
+    branchRates~StrictClock(clockRate=clockRate, tree=tree)
+) observed as data
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: clockRate
+// P: clockRate_prior
+// TM: tree
+// TP: tree_prior
+// L: alignment_likelihood
+// EXPECTED BEASTX STATE
