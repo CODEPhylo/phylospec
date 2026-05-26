@@ -1,0 +1,9 @@
+Integer observedIndex ~ DiscreteUniform(lower=1, upper=5) observed as 3
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// L: observedIndex_likelihood
+// EXPECTED BEASTX STATE
