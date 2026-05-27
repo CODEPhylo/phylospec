@@ -1,7 +1,5 @@
 package tiles.trees;
 
-import dr.evolution.tree.SimpleNode;
-import dr.evolution.tree.SimpleTree;
 import dr.evolution.util.Taxa;
 import dr.evolution.util.Units;
 import dr.evomodel.speciation.BirthDeathGernhard08Model;
@@ -9,6 +7,7 @@ import dr.evomodel.speciation.SpeciationLikelihood;
 import dr.evomodel.tree.DefaultTreeModel;
 import dr.inference.model.Parameter;
 import org.phylospec.ast.Expr;
+import org.phylospec.domain.NonNegativeReal;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
@@ -31,6 +30,9 @@ public class YuleTile extends GeneratorTile<
     GeneratorTileInput<RealScalar<? extends PositiveReal>, BeastXState> birthRateInput =
             new GeneratorTileInput<>("birthRate");
 
+    GeneratorTileInput<RealScalar<? extends NonNegativeReal>, BeastXState> rootAgeInput =
+            new GeneratorTileInput<>("rootAge", false);
+
     GeneratorTileInput<Taxa, BeastXState> taxaInput =
             new GeneratorTileInput<>("taxa");
 
@@ -42,11 +44,17 @@ public class YuleTile extends GeneratorTile<
         RealScalar<? extends PositiveReal> birthRate =
                 this.birthRateInput.apply(beastState, indexVariables);
 
+        RealScalar<? extends NonNegativeReal> rootAge =
+                this.rootAgeInput.apply(beastState, indexVariables);
+
         Taxa taxa =
                 this.taxaInput.apply(beastState, indexVariables);
 
         DefaultTreeModel defaultTreeModel =
-                new DefaultTreeModel("tree", createInitialTree(taxa));
+                new DefaultTreeModel(
+                        "tree",
+                        InitialTreeBuilder.balancedTree(taxa, "Yule", rootAge)
+                );
 
         BirthDeathGernhard08Model yuleModel =
                 new BirthDeathGernhard08Model(
@@ -69,7 +77,6 @@ public class YuleTile extends GeneratorTile<
                 defaultTreeModel,
                 treeModel -> {
                     // SpeciationLikelihood receives the tree in its constructor.
-                    // This hook exists so TreeDrawTile has the same bind pattern as scalar draws.
                 }
         );
     }
@@ -80,45 +87,5 @@ public class YuleTile extends GeneratorTile<
         }
 
         return new Parameter.Default(scalar.get());
-    }
-
-    private static SimpleTree createInitialTree(Taxa taxa) {
-        if (taxa.getTaxonCount() < 2) {
-            throw new IllegalArgumentException("Yule requires at least two taxa.");
-        }
-
-        SimpleNode root = buildBalancedSubtree(taxa, 0, taxa.getTaxonCount(), 0.0);
-        root.setHeight(Math.max(root.getHeight(), 1.0));
-
-        return new SimpleTree(root);
-    }
-
-    private static SimpleNode buildBalancedSubtree(
-            Taxa taxa,
-            int from,
-            int to,
-            double height
-    ) {
-        if (to - from == 1) {
-            SimpleNode leaf = new SimpleNode();
-            leaf.setTaxon(taxa.getTaxon(from));
-            leaf.setHeight(0.0);
-            return leaf;
-        }
-
-        int mid = from + (to - from) / 2;
-
-        SimpleNode left =
-                buildBalancedSubtree(taxa, from, mid, height);
-
-        SimpleNode right =
-                buildBalancedSubtree(taxa, mid, to, height);
-
-        SimpleNode parent = new SimpleNode();
-        parent.addChild(left);
-        parent.addChild(right);
-        parent.setHeight(Math.max(left.getHeight(), right.getHeight()) + 1.0);
-
-        return parent;
     }
 }

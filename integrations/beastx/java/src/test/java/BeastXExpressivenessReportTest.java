@@ -82,6 +82,7 @@ public class BeastXExpressivenessReportTest {
         report.append("| Component axis | Current BeastX support |\n");
         report.append("| --- | --- |\n");
         report.append("| Scalar/vector stochastic parameters | Supported |\n");
+        report.append("| Deterministic calculations | Supported through RPNcalculatorStatistic calculation nodes |\n");
         report.append("| Prior distributions | Normal, LogNormal, LogNormalRealSpace, Exponential, Gamma, Beta, Uniform, Cauchy, Poisson, DiscreteUniform, Dirichlet, Offset |\n");
         report.append("| Input | Nexus, FASTA, Newick, existing tree object, parser helpers, alignment subset |\n");
         report.append("| Tree priors | Yule, BirthDeath, Coalescent, constant population, exponential population |\n");
@@ -93,11 +94,11 @@ public class BeastXExpressivenessReportTest {
         report.append("| Likelihood materialization | Optional BeastXPhyloCTMCLikelihoodSpec -> BeagleTreeLikelihood path; requires native BEAGLE |\n");
         report.append("| MCMC operators | Default parameter operators and tree operators generated from BeastXState |\n");
         report.append("| MCMC runner config | chainLength, screenLogger, fileLogger, treeLogger |\n");
-        report.append("| MCMC execution | Prior-only short MCMC run writes real samples; PhyloCTMC MCMC run is BEAGLE-dependent |\n\n");
+        report.append("| MCMC execution | Prior-only short MCMC run writes real samples; deterministic calculation nodes can be logged; PhyloCTMC MCMC run is BEAGLE-dependent |\n\n");
 
         report.append("## Non-trivial Model Examples\n\n");
-        report.append("| Model | Category | State nodes | Parameter priors | Tree priors | Calibration priors | Likelihoods | Operators | MCMC config | Interpretation |\n");
-        report.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n");
+        report.append("| Model | Category | State nodes | Calculation nodes | Parameter priors | Tree priors | Calibration priors | Likelihoods | Operators | MCMC config | Interpretation |\n");
+        report.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n");
 
         int builtExamples =
                 0;
@@ -128,6 +129,8 @@ public class BeastXExpressivenessReportTest {
                     .append(" | ")
                     .append(escape(summary.stateNodes.toString()))
                     .append(" | ")
+                    .append(escape(summary.calculationNodes.toString()))
+                    .append(" | ")
                     .append(escape(summary.parameterPriors.toString()))
                     .append(" | ")
                     .append(escape(summary.treePriors.toString()))
@@ -146,11 +149,57 @@ public class BeastXExpressivenessReportTest {
             builtExamples++;
         }
 
-        report.append("\n## Runtime Validation\n\n");
+        BeastXModel deterministicModel =
+                buildModelFromSource(
+                        """
+                        PositiveReal x ~ LogNormal(logMean=0.0, logSd=1.0)
+                        PositiveReal y ~ LogNormal(logMean=0.0, logSd=1.0)
+                        Real z = x + y
+
+                        mcmc {
+                            Integer chainLength = 5
+
+                            Logger fileLogger = fileLogger(
+                                logEvery=1,
+                                file="target/beastx-results/deterministic-rpn.log",
+                                parameters=[z]
+                            )
+                        }
+                        """
+                );
+
+        BeastXModelSummary deterministicSummary =
+                BeastXModelSummary.from(deterministicModel);
+
+        assertTrue(deterministicSummary.calculationNodes.contains("z"));
+
+        report.append("\n## Deterministic Calculation Example\n\n");
+        report.append("This small model checks the language-level deterministic calculation path separately from sequence likelihoods.\n\n");
+        report.append("| Feature | BeastX result |\n");
+        report.append("| --- | --- |\n");
+        report.append("| State nodes | ")
+                .append(escape(deterministicSummary.stateNodes.toString()))
+                .append(" |\n");
+        report.append("| Calculation nodes | ")
+                .append(escape(deterministicSummary.calculationNodes.toString()))
+                .append(" |\n");
+        report.append("| Calculation node types | ")
+                .append(escape(deterministicSummary.calculationNodeTypes.toString()))
+                .append(" |\n");
+        report.append("| Parameter priors | ")
+                .append(escape(deterministicSummary.parameterPriors.toString()))
+                .append(" |\n");
+        report.append("| MCMC config | ")
+                .append(escape(formatMCMCConfig(deterministicSummary)))
+                .append(" |\n\n");
+
+        report.append("## Runtime Validation\n\n");
         report.append("| Runtime path | Status |\n");
         report.append("| --- | --- |\n");
         report.append("| PhyloSpec -> BeastXState | Implemented and covered by script-state tests |\n");
         report.append("| PhyloSpec -> BeastXModel | Implemented and covered by runner/model tests |\n");
+        report.append("| Deterministic expression -> RPNcalculatorStatistic | Implemented and covered by RPN smoke tests |\n");
+        report.append("| Deterministic calculation logging | Implemented; MCMC fileLogger can log calculation nodes |\n");
         report.append("| Prior-only MCMC execution | Implemented; short chain writes multiple logger samples |\n");
         report.append("| fileLogger/treeLogger output | Implemented; logger smoke tests write non-empty log/tree files |\n");
         report.append("| PhyloCTMC materialization | Implemented as optional BeagleTreeLikelihood materialization path |\n");
@@ -167,7 +216,8 @@ public class BeastXExpressivenessReportTest {
 
         report.append("These examples show that the BeastX backend can tile PhyloSpec models across multiple model axes: ");
         report.append("tree priors, calibration priors, demographic models, substitution models, site-rate models, ");
-        report.append("branch-rate models, sequence likelihoods, parameter priors, default MCMC operators, and MCMC logging configuration.\n\n");
+        report.append("branch-rate models, sequence likelihoods, parameter priors, deterministic calculations, ");
+        report.append("default MCMC operators, and MCMC logging configuration.\n\n");
 
         report.append("Current engine-level limitation: full PhyloCTMC likelihood evaluation and PhyloCTMC MCMC execution ");
         report.append("require the native BEAGLE library to be installed and available on java.library.path. ");
@@ -187,6 +237,10 @@ public class BeastXExpressivenessReportTest {
         String source =
                 readSource(path);
 
+        return buildModelFromSource(source);
+    }
+
+    private BeastXModel buildModelFromSource(String source) throws Exception {
         PhyloSpecRunner runner =
                 new PhyloSpecRunner(source);
 

@@ -6,6 +6,7 @@ import dr.inference.loggers.Logger;
 import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
+import dr.inference.model.Statistic;
 import org.phylospec.tiling.TypeToken;
 
 import java.util.ArrayList;
@@ -21,6 +22,8 @@ public class BeastXState {
 
     public final Map<Parameter, TypeToken<?>> stateNodes;
     public final Map<String, Parameter> stateNodesByPhyloSpecName;
+    public final Map<Statistic, TypeToken<?>> calculationNodes;
+    public final Map<String, Statistic> calculationNodesByPhyloSpecName;
     public final Map<String, TreeModel> treeModelsByPhyloSpecName;
     public final Map<Parameter, AbstractDistributionLikelihood> priorDistributions;
     public final Map<TreeModel, AbstractModelLikelihood> treePriorDistributions;
@@ -40,6 +43,8 @@ public class BeastXState {
         this.runName = runName;
         this.stateNodes = new HashMap<>();
         this.stateNodesByPhyloSpecName = new HashMap<>();
+        this.calculationNodes = new HashMap<>();
+        this.calculationNodesByPhyloSpecName = new HashMap<>();
         this.treeModelsByPhyloSpecName = new HashMap<>();
         this.priorDistributions = new HashMap<>();
         this.treePriorDistributions = new HashMap<>();
@@ -74,6 +79,16 @@ public class BeastXState {
         parameter.setId(this.getAvailableID(id));
         this.stateNodes.put(parameter, typeToken);
         this.stateNodesByPhyloSpecName.put(id, parameter);
+    }
+
+    public void addCalculationNode(
+            Statistic statistic,
+            TypeToken<?> typeToken,
+            String id
+    ) {
+        statistic.setId(this.getAvailableID(id));
+        this.calculationNodes.put(statistic, typeToken);
+        this.calculationNodesByPhyloSpecName.put(id, statistic);
     }
 
     public void addPriorDistribution(

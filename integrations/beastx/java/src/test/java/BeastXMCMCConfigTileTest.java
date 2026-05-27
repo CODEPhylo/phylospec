@@ -232,4 +232,36 @@ public class BeastXMCMCConfigTileTest {
         assertEquals(1, loggers.size());
         assertInstanceOf(dr.evomodel.tree.TreeLogger.class, loggers.getFirst());
     }
+
+    @Test
+    public void buildsFileLoggerForSelectedCalculationNode() throws Exception {
+        String source = """
+        PositiveReal x ~ LogNormal(logMean=0.0, logSd=1.0)
+        PositiveReal y ~ LogNormal(logMean=0.0, logSd=1.0)
+        Real z = x + y
+
+        mcmc {
+            Logger fileLogger = fileLogger(
+                logEvery=1000,
+                file="target/test-fileLogger-rpn.log",
+                parameters=[z]
+            )
+        }
+        """;
+
+        PhyloSpecRunner runner = new PhyloSpecRunner(source);
+        BeastXState state = runner.buildState("test");
+
+        List<Logger> loggers =
+                new BeastXMCMCBuilder().buildLoggers(state);
+
+        assertEquals(1, loggers.size());
+
+        MCLogger logger =
+                assertInstanceOf(MCLogger.class, loggers.getFirst());
+
+        assertEquals(1000, logger.getLogEvery());
+        assertEquals(1, logger.getColumnCount());
+        assertEquals("z", logger.getColumnLabel(0));
+    }
 }
