@@ -8,7 +8,21 @@ import java.util.List;
 
 public class BeastXModelBuilder {
 
+    private final boolean materializePhyloCTMC;
+
+    public BeastXModelBuilder() {
+        this(false);
+    }
+
+    public BeastXModelBuilder(boolean materializePhyloCTMC) {
+        this.materializePhyloCTMC = materializePhyloCTMC;
+    }
+
     public BeastXModel build(BeastXState beastState) {
+        if (this.materializePhyloCTMC) {
+            materializePhyloCTMCLikelihoods(beastState);
+        }
+
         CompoundLikelihood prior =
                 buildPrior(beastState);
 
@@ -24,6 +38,26 @@ public class BeastXModelBuilder {
                 likelihood,
                 posterior
         );
+    }
+
+    private void materializePhyloCTMCLikelihoods(BeastXState beastState) {
+        List<Likelihood> materializedLikelihoods =
+                new ArrayList<>();
+
+        for (Likelihood likelihood : beastState.likelihoodDistributions) {
+            if (likelihood instanceof BeastXPhyloCTMCLikelihoodSpec phyloCTMCLikelihoodSpec) {
+                Likelihood materializedLikelihood =
+                        phyloCTMCLikelihoodSpec.materializeBeagleTreeLikelihood();
+
+                materializedLikelihood.setId(phyloCTMCLikelihoodSpec.getId());
+                materializedLikelihoods.add(materializedLikelihood);
+            } else {
+                materializedLikelihoods.add(likelihood);
+            }
+        }
+
+        beastState.likelihoodDistributions.clear();
+        beastState.likelihoodDistributions.addAll(materializedLikelihoods);
     }
 
     private CompoundLikelihood buildPrior(BeastXState beastState) {

@@ -46,6 +46,9 @@ public class BeastXRepresentativeModelsTest {
             assertNoBlankValues(summary.treePriors, "tree priors", modelPath);
             assertNoBlankValues(summary.likelihoods, "likelihoods", modelPath);
             assertNoBlankValues(summary.operators, "operators", modelPath);
+            assertNoBlankValues(summary.screenLoggers, "screen loggers", modelPath);
+            assertNoBlankValues(summary.fileLoggers, "file loggers", modelPath);
+            assertNoBlankValues(summary.treeLoggers, "tree loggers", modelPath);
 
             if (!summary.treePriors.isEmpty()) {
                 assertTrue(
@@ -86,6 +89,9 @@ public class BeastXRepresentativeModelsTest {
         int modelsWithOperators =
                 0;
 
+        int modelsWithMCMCConfig =
+                0;
+
         for (Path modelPath : modelPaths) {
             BeastXModel model =
                     buildModelFromFile(modelPath);
@@ -112,6 +118,13 @@ public class BeastXRepresentativeModelsTest {
             if (!summary.operators.isEmpty()) {
                 modelsWithOperators++;
             }
+
+            if (summary.chainLength != 1
+                    || !summary.screenLoggers.isEmpty()
+                    || !summary.fileLoggers.isEmpty()
+                    || !summary.treeLoggers.isEmpty()) {
+                modelsWithMCMCConfig++;
+            }
         }
 
         assertTrue(
@@ -137,6 +150,11 @@ public class BeastXRepresentativeModelsTest {
         assertTrue(
                 modelsWithOperators >= 4,
                 "Representative models should include several models with MCMC operators."
+        );
+
+        assertTrue(
+                modelsWithMCMCConfig >= 1,
+                "Representative models should include at least one model with explicit MCMC configuration."
         );
     }
 

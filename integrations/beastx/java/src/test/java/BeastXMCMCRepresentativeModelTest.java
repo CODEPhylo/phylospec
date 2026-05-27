@@ -27,8 +27,14 @@ public class BeastXMCMCRepresentativeModelTest {
 
     @Test
     public void buildsStrictClockPhyloCTMCWithMCMCConfiguration() throws Exception {
+        Path fileLogPath =
+                uniqueTargetPath("strictClockPhyloCTMC-config", ".log");
+
+        Path treeLogPath =
+                uniqueTargetPath("strictClockPhyloCTMC-config", ".trees");
+
         String source =
-                readSource(MODEL_PATH);
+                readSourceWithLogFiles(fileLogPath, treeLogPath);
 
         PhyloSpecRunner runner =
                 new PhyloSpecRunner(source);
@@ -44,12 +50,12 @@ public class BeastXMCMCRepresentativeModelTest {
 
         assertEquals(1, state.fileLoggerSpecs.size());
         assertEquals(1000, state.fileLoggerSpecs.getFirst().logEvery);
-        assertEquals("target/strictClockPhyloCTMC.log", state.fileLoggerSpecs.getFirst().fileName);
+        assertEquals(toPhyloSpecPath(fileLogPath), state.fileLoggerSpecs.getFirst().fileName);
         assertEquals(List.of("clockRate"), state.fileLoggerSpecs.getFirst().parameterNames);
 
         assertEquals(1, state.treeLoggerSpecs.size());
         assertEquals(1000, state.treeLoggerSpecs.getFirst().logEvery);
-        assertEquals("target/strictClockPhyloCTMC.trees", state.treeLoggerSpecs.getFirst().fileName);
+        assertEquals(toPhyloSpecPath(treeLogPath), state.treeLoggerSpecs.getFirst().fileName);
         assertEquals(List.of("tree"), state.treeLoggerSpecs.getFirst().treeNames);
 
         assertEquals(1, state.stateNodesByPhyloSpecName.size());
@@ -65,29 +71,109 @@ public class BeastXMCMCRepresentativeModelTest {
         List<Logger> loggers =
                 new BeastXMCMCBuilder().buildLoggers(state);
 
-        assertEquals(3, loggers.size());
+        try {
+            assertEquals(3, loggers.size());
 
-        List<MCLogger> parameterLoggers =
-                loggers.stream()
-                        .filter(MCLogger.class::isInstance)
-                        .filter(logger -> !(logger instanceof dr.evomodel.tree.TreeLogger))
-                        .map(MCLogger.class::cast)
-                        .toList();
+            List<MCLogger> parameterLoggers =
+                    loggers.stream()
+                            .filter(MCLogger.class::isInstance)
+                            .filter(logger -> !(logger instanceof dr.evomodel.tree.TreeLogger))
+                            .map(MCLogger.class::cast)
+                            .toList();
 
-        assertEquals(2, parameterLoggers.size());
+            assertEquals(2, parameterLoggers.size());
 
-        for (MCLogger logger : parameterLoggers) {
-            assertEquals(1000, logger.getLogEvery());
-            assertEquals(1, logger.getColumnCount());
-            assertEquals("clockRate", logger.getColumnLabel(0));
+            for (MCLogger logger : parameterLoggers) {
+                assertEquals(1000, logger.getLogEvery());
+                assertEquals(1, logger.getColumnCount());
+                assertEquals("clockRate", logger.getColumnLabel(0));
+            }
+
+            long treeLoggerCount =
+                    loggers.stream()
+                            .filter(dr.evomodel.tree.TreeLogger.class::isInstance)
+                            .count();
+
+            assertEquals(1, treeLoggerCount);
+        } finally {
+            stopLoggersQuietly(loggers);
+        }
+    }
+
+    @Test
+    public void writesNonEmptyFileAndTreeLogsWhenLoggersAreTriggered() throws Exception {
+        Path fileLogPath =
+                uniqueTargetPath("strictClockPhyloCTMC-write", ".log");
+
+        Path treeLogPath =
+                uniqueTargetPath("strictClockPhyloCTMC-write", ".trees");
+
+        String source =
+                readSourceWithLogFiles(fileLogPath, treeLogPath);
+
+        PhyloSpecRunner runner =
+                new PhyloSpecRunner(source);
+
+        BeastXState state =
+                runner.buildState("test");
+
+        List<Logger> loggers =
+                new BeastXMCMCBuilder().buildLoggers(state);
+
+        try {
+            for (Logger logger : loggers) {
+                logger.startLogging();
+                logger.log(0);
+            }
+        } finally {
+            stopLoggersQuietly(loggers);
         }
 
-        long treeLoggerCount =
-                loggers.stream()
-                        .filter(dr.evomodel.tree.TreeLogger.class::isInstance)
-                        .count();
+        assertNonEmptyFile(fileLogPath);
+        assertNonEmptyFile(treeLogPath);
+    }
 
-        assertEquals(1, treeLoggerCount);
+    private Path uniqueTargetPath(String prefix, String suffix) throws Exception {
+        Files.createDirectories(Path.of("target", "mcmc-logger-smoke"));
+
+        return Path.of(
+                "target",
+                "mcmc-logger-smoke",
+                prefix + "-" + System.nanoTime() + suffix
+        );
+    }
+
+    private void stopLoggersQuietly(List<Logger> loggers) {
+        for (Logger logger : loggers) {
+            try {
+                logger.stopLogging();
+            } catch (RuntimeException ignored) {
+            }
+        }
+    }
+
+    private void assertNonEmptyFile(Path path) throws Exception {
+        assertTrue(
+                Files.exists(path),
+                "Expected log file to exist: " + path
+        );
+
+        assertTrue(
+                Files.size(path) > 0,
+                "Expected log file to be non-empty: " + path
+        );
+    }
+
+    private String readSourceWithLogFiles(Path fileLogPath, Path treeLogPath) throws Exception {
+        return readSource(MODEL_PATH)
+                .replace(
+                        "target/strictClockPhyloCTMC.log",
+                        toPhyloSpecPath(fileLogPath)
+                )
+                .replace(
+                        "target/strictClockPhyloCTMC.trees",
+                        toPhyloSpecPath(treeLogPath)
+                );
     }
 
     private String readSource(Path path) throws Exception {
@@ -95,5 +181,9 @@ public class BeastXMCMCRepresentativeModelTest {
                 .lines()
                 .takeWhile(line -> !line.trim().startsWith("// EXPECTED_"))
                 .collect(Collectors.joining("\n"));
+    }
+
+    private String toPhyloSpecPath(Path path) {
+        return path.toString().replace("\\", "/");
     }
 }
