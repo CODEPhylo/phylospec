@@ -1,0 +1,12 @@
+Real vector1[i] = 100 for i in 1:3
+Real vector2[i] ~ Normal(mean=0.0, sd=1.0) for i in 1:3
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: vector2_1, vector2_2, vector2_3
+// P: vector2_1_prior, vector2_2_prior, vector2_3_prior
+// EXPECTED BEASTX STATE
