@@ -26,6 +26,11 @@ public class BeastXModelSummary {
     public final List<String> likelihoods;
     public final List<String> operators;
 
+    public final long chainLength;
+    public final List<String> screenLoggers;
+    public final List<String> fileLoggers;
+    public final List<String> treeLoggers;
+
     public BeastXModelSummary(
             List<String> stateNodes,
             List<String> stateNodeTypes,
@@ -34,7 +39,11 @@ public class BeastXModelSummary {
             List<String> treePriors,
             List<String> calibrationPriors,
             List<String> likelihoods,
-            List<String> operators
+            List<String> operators,
+            long chainLength,
+            List<String> screenLoggers,
+            List<String> fileLoggers,
+            List<String> treeLoggers
     ) {
         this.stateNodes = stateNodes;
         this.stateNodeTypes = stateNodeTypes;
@@ -44,6 +53,10 @@ public class BeastXModelSummary {
         this.calibrationPriors = calibrationPriors;
         this.likelihoods = likelihoods;
         this.operators = operators;
+        this.chainLength = chainLength;
+        this.screenLoggers = screenLoggers;
+        this.fileLoggers = fileLoggers;
+        this.treeLoggers = treeLoggers;
     }
 
     public static BeastXModelSummary from(BeastXModel model) {
@@ -90,6 +103,41 @@ public class BeastXModelSummary {
             operators.add(operator.getClass().getSimpleName());
         }
 
+        List<String> screenLoggers = new ArrayList<>();
+
+        for (BeastXState.ScreenLoggerSpec spec : model.beastState.screenLoggerSpecs) {
+            screenLoggers.add(
+                    "screenLogger(logEvery=%d, parameters=%s)".formatted(
+                            spec.logEvery,
+                            formatParameterNames(spec.parameterNames)
+                    )
+            );
+        }
+
+        List<String> fileLoggers = new ArrayList<>();
+
+        for (BeastXState.FileLoggerSpec spec : model.beastState.fileLoggerSpecs) {
+            fileLoggers.add(
+                    "fileLogger(logEvery=%d, file=%s, parameters=%s)".formatted(
+                            spec.logEvery,
+                            spec.fileName,
+                            formatParameterNames(spec.parameterNames)
+                    )
+            );
+        }
+
+        List<String> treeLoggers = new ArrayList<>();
+
+        for (BeastXState.TreeLoggerSpec spec : model.beastState.treeLoggerSpecs) {
+            treeLoggers.add(
+                    "treeLogger(logEvery=%d, file=%s, trees=%s)".formatted(
+                            spec.logEvery,
+                            spec.fileName,
+                            spec.treeNames
+                    )
+            );
+        }
+
         return new BeastXModelSummary(
                 sorted(stateNodes),
                 sorted(stateNodeTypes),
@@ -98,7 +146,11 @@ public class BeastXModelSummary {
                 sorted(treePriors),
                 sorted(calibrationPriors),
                 sorted(likelihoods),
-                sorted(operators)
+                sorted(operators),
+                model.beastState.chainLength,
+                sorted(screenLoggers),
+                sorted(fileLoggers),
+                sorted(treeLoggers)
         );
     }
 
@@ -113,6 +165,10 @@ public class BeastXModelSummary {
                 calibration priors: %s
                 likelihoods: %s
                 operators: %s
+                chain length: %d
+                screen loggers: %s
+                file loggers: %s
+                tree loggers: %s
                 """.formatted(
                 title,
                 this.stateNodes,
@@ -122,8 +178,20 @@ public class BeastXModelSummary {
                 this.treePriors,
                 this.calibrationPriors,
                 this.likelihoods,
-                this.operators
+                this.operators,
+                this.chainLength,
+                this.screenLoggers,
+                this.fileLoggers,
+                this.treeLoggers
         );
+    }
+
+    private static String formatParameterNames(List<String> parameterNames) {
+        if (parameterNames == null) {
+            return "all state nodes";
+        }
+
+        return parameterNames.toString();
     }
 
     private static List<String> sorted(List<String> values) {

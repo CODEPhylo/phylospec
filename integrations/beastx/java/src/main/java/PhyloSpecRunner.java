@@ -77,6 +77,18 @@ public class PhyloSpecRunner implements ErrorEventListener {
         return new BeastXModelBuilder().build(beastState);
     }
 
+    public BeastXModel buildMaterializedModel(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        BeastXState beastState =
+                buildState(runName);
+
+        return buildMaterializedModel(beastState);
+    }
+
+    public BeastXModel buildMaterializedModel(BeastXState beastState) {
+        return new BeastXModelBuilder(true).build(beastState);
+    }
+
     public MCMC buildMCMC(String runName, long chainLength)
             throws IOException, ParserConfigurationException, SAXException {
         BeastXModel model =
