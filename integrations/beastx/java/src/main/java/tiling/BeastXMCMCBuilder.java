@@ -2,6 +2,7 @@ package tiling;
 
 import dr.evomodel.tree.TreeLogger;
 import dr.evomodel.tree.TreeModel;
+import dr.inference.loggers.Loggable;
 import dr.inference.loggers.Logger;
 import dr.inference.loggers.MCLogger;
 import dr.inference.loggers.TabDelimitedFormatter;
@@ -9,6 +10,7 @@ import dr.inference.mcmc.MCMC;
 import dr.inference.mcmc.MCMCOptions;
 import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
+import dr.inference.model.Statistic;
 import dr.inference.operators.MCMCOperator;
 import dr.inference.operators.SimpleOperatorSchedule;
 import tiling.operators.BeastXOperatorBuilder;
@@ -73,8 +75,8 @@ public class BeastXMCMCBuilder {
             MCLogger logger =
                     new MCLogger(new TabDelimitedFormatter(System.out), spec.logEvery, true);
 
-            for (Parameter parameter : getLoggedParameters(beastState, spec.parameterNames)) {
-                logger.add(parameter);
+            for (Loggable loggable : getLoggedLoggables(beastState, spec.parameterNames)) {
+                logger.add(loggable);
             }
 
             loggers.add(logger);
@@ -84,8 +86,8 @@ public class BeastXMCMCBuilder {
             MCLogger logger =
                     buildFileLogger(spec);
 
-            for (Parameter parameter : getLoggedParameters(beastState, spec.parameterNames)) {
-                logger.add(parameter);
+            for (Loggable loggable : getLoggedLoggables(beastState, spec.parameterNames)) {
+                logger.add(loggable);
             }
 
             loggers.add(logger);
@@ -129,7 +131,7 @@ public class BeastXMCMCBuilder {
         }
     }
 
-    private List<Parameter> getLoggedParameters(
+    private List<Loggable> getLoggedLoggables(
             BeastXState beastState,
             List<String> parameterNames
     ) {
@@ -137,14 +139,46 @@ public class BeastXMCMCBuilder {
             return new ArrayList<>(beastState.stateNodes.keySet());
         }
 
-        List<Parameter> parameters =
+        List<Loggable> loggables =
                 new ArrayList<>();
 
         for (String parameterName : parameterNames) {
-            parameters.add(findStateNode(beastState, parameterName));
+            loggables.add(findLoggable(beastState, parameterName));
         }
 
-        return parameters;
+        return loggables;
+    }
+
+    private Loggable findLoggable(BeastXState beastState, String parameterName) {
+        Parameter parameter =
+                beastState.stateNodesByPhyloSpecName.get(parameterName);
+
+        if (parameter != null) {
+            return parameter;
+        }
+
+        for (Parameter candidate : beastState.stateNodes.keySet()) {
+            if (parameterName.equals(candidate.getId())) {
+                return candidate;
+            }
+        }
+
+        Statistic statistic =
+                beastState.calculationNodesByPhyloSpecName.get(parameterName);
+
+        if (statistic != null) {
+            return statistic;
+        }
+
+        for (Statistic candidate : beastState.calculationNodes.keySet()) {
+            if (parameterName.equals(candidate.getId())) {
+                return candidate;
+            }
+        }
+
+        throw new IllegalArgumentException(
+                "No BEAST X state node or calculation node named '" + parameterName + "' exists for logger."
+        );
     }
 
     private List<TreeModel> getLoggedTrees(
@@ -159,25 +193,6 @@ public class BeastXMCMCBuilder {
         }
 
         return trees;
-    }
-
-    private Parameter findStateNode(BeastXState beastState, String parameterName) {
-        Parameter parameter =
-                beastState.stateNodesByPhyloSpecName.get(parameterName);
-
-        if (parameter != null) {
-            return parameter;
-        }
-
-        for (Parameter candidate : beastState.stateNodes.keySet()) {
-            if (parameterName.equals(candidate.getId())) {
-                return candidate;
-            }
-        }
-
-        throw new IllegalArgumentException(
-                "No BEAST X state node named '" + parameterName + "' exists for logger."
-        );
     }
 
     private TreeModel findTreeModel(BeastXState beastState, String treeName) {

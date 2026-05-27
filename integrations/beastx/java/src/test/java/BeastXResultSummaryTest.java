@@ -130,4 +130,38 @@ public class BeastXResultSummaryTest {
                 .takeWhile(line -> !line.trim().startsWith("// EXPECTED_"))
                 .collect(Collectors.joining("\n"));
     }
+
+    @Test
+    public void summarizesDeterministicRPNCalculation() throws Exception {
+        String source =
+                """
+                PositiveReal x ~ LogNormal(logMean=0.0, logSd=1.0)
+                PositiveReal y ~ LogNormal(logMean=0.0, logSd=1.0)
+                Real z = x + y
+                """;
+
+        PhyloSpecRunner runner =
+                new PhyloSpecRunner(source);
+
+        BeastXModel model =
+                runner.buildModel("test");
+
+        BeastXModelSummary summary =
+                BeastXModelSummary.from(model);
+
+        assertEquals(2, summary.stateNodes.size());
+        assertEquals(1, summary.calculationNodes.size());
+        assertEquals(2, summary.parameterPriors.size());
+
+        assertTrue(summary.stateNodes.contains("x"));
+        assertTrue(summary.stateNodes.contains("y"));
+        assertTrue(summary.calculationNodes.contains("z"));
+
+        assertTrue(
+                summary.calculationNodeTypes.stream()
+                        .anyMatch(type -> type.contains("z: dr.inference.model.RPNcalculatorStatistic"))
+        );
+
+        System.out.println(summary.toReportString("Deterministic RPN calculation"));
+    }
 }

@@ -1,7 +1,5 @@
 package tiles.trees;
 
-import dr.evolution.tree.SimpleNode;
-import dr.evolution.tree.SimpleTree;
 import dr.evolution.util.Taxa;
 import dr.evolution.util.Units;
 import dr.evomodel.speciation.BirthDeathGernhard08Model;
@@ -9,6 +7,7 @@ import dr.evomodel.speciation.SpeciationLikelihood;
 import dr.evomodel.tree.DefaultTreeModel;
 import dr.inference.model.Parameter;
 import org.phylospec.ast.Expr;
+import org.phylospec.domain.NonNegativeReal;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.domain.UnitInterval;
 import org.phylospec.tiling.tiles.GeneratorTile;
@@ -38,6 +37,9 @@ public class BirthDeathTile extends GeneratorTile<
     GeneratorTileInput<RealScalar<UnitInterval>, BeastXState> samplingProbabilityInput =
             new GeneratorTileInput<>("samplingProbability", false);
 
+    GeneratorTileInput<RealScalar<? extends NonNegativeReal>, BeastXState> rootAgeInput =
+            new GeneratorTileInput<>("rootAge", false);
+
     GeneratorTileInput<Taxa, BeastXState> taxaInput =
             new GeneratorTileInput<>("taxa");
 
@@ -55,11 +57,17 @@ public class BirthDeathTile extends GeneratorTile<
         RealScalar<UnitInterval> samplingProbability =
                 this.samplingProbabilityInput.apply(beastState, indexVariables);
 
+        RealScalar<? extends NonNegativeReal> rootAge =
+                this.rootAgeInput.apply(beastState, indexVariables);
+
         Taxa taxa =
                 this.taxaInput.apply(beastState, indexVariables);
 
         DefaultTreeModel defaultTreeModel =
-                new DefaultTreeModel("tree", createInitialTree(taxa));
+                new DefaultTreeModel(
+                        "tree",
+                        InitialTreeBuilder.balancedTree(taxa, "BirthDeath", rootAge)
+                );
 
         Parameter samplingProbabilityParameter =
                 samplingProbability == null
@@ -97,52 +105,5 @@ public class BirthDeathTile extends GeneratorTile<
         }
 
         return new Parameter.Default(scalar.get());
-    }
-
-    private static SimpleTree createInitialTree(Taxa taxa) {
-        if (taxa.getTaxonCount() < 2) {
-            throw new IllegalArgumentException("BirthDeath requires at least two taxa.");
-        }
-
-        SimpleNode root =
-                buildBalancedSubtree(taxa, 0, taxa.getTaxonCount());
-
-        root.setHeight(Math.max(root.getHeight(), 1.0));
-
-        return new SimpleTree(root);
-    }
-
-    private static SimpleNode buildBalancedSubtree(
-            Taxa taxa,
-            int from,
-            int to
-    ) {
-        if (to - from == 1) {
-            SimpleNode leaf =
-                    new SimpleNode();
-
-            leaf.setTaxon(taxa.getTaxon(from));
-            leaf.setHeight(0.0);
-
-            return leaf;
-        }
-
-        int mid =
-                from + (to - from) / 2;
-
-        SimpleNode left =
-                buildBalancedSubtree(taxa, from, mid);
-
-        SimpleNode right =
-                buildBalancedSubtree(taxa, mid, to);
-
-        SimpleNode parent =
-                new SimpleNode();
-
-        parent.addChild(left);
-        parent.addChild(right);
-        parent.setHeight(Math.max(left.getHeight(), right.getHeight()) + 1.0);
-
-        return parent;
     }
 }

@@ -42,6 +42,49 @@ public class BeastXMCMCRunSmokeTest {
 
         mcmc.run();
 
+        assertLogFileContainsMultipleSamples(logPath, "x");
+    }
+
+    @Test
+    public void runsShortMCMCAndWritesDeterministicRPNCalculation() throws Exception {
+        Path logPath =
+                uniqueTargetPath("rpnCalculationMCMC", ".log");
+
+        String source =
+                """
+                PositiveReal x ~ LogNormal(logMean=0.0, logSd=1.0)
+                PositiveReal y ~ LogNormal(logMean=0.0, logSd=1.0)
+                Real z = x + y
+
+                mcmc {
+                    Integer chainLength = 5
+
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[z]
+                    )
+                }
+                """.formatted(toPhyloSpecPath(logPath));
+
+        PhyloSpecRunner runner =
+                new PhyloSpecRunner(source);
+
+        BeastXModel model =
+                runner.buildModel("test");
+
+        MCMC mcmc =
+                new BeastXMCMCBuilder().build(model);
+
+        mcmc.run();
+
+        assertLogFileContainsMultipleSamples(logPath, "z");
+    }
+
+    private void assertLogFileContainsMultipleSamples(
+            Path logPath,
+            String expectedColumn
+    ) throws Exception {
         assertTrue(
                 Files.exists(logPath),
                 "Expected MCMC log file to exist: " + logPath
@@ -56,8 +99,8 @@ public class BeastXMCMCRunSmokeTest {
                 Files.readAllLines(logPath);
 
         assertTrue(
-                lines.stream().anyMatch(line -> line.contains("state") && line.contains("x")),
-                "Expected log header to contain state and x columns."
+                lines.stream().anyMatch(line -> line.contains("state") && line.contains(expectedColumn)),
+                "Expected log header to contain state and " + expectedColumn + " columns."
         );
 
         long sampleLineCount =

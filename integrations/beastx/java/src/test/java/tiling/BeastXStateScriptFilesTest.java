@@ -5,6 +5,7 @@ import dr.inference.distribution.AbstractDistributionLikelihood;
 import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
+import dr.inference.model.Statistic;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.phylospec.ast.Stmt;
@@ -130,6 +131,11 @@ public class BeastXStateScriptFilesTest {
                             .map(Parameter::getId)
                             .collect(Collectors.toSet());
 
+            Set<String> actualCalculationNodeIds =
+                    beastState.calculationNodes.keySet().stream()
+                            .map(Statistic::getId)
+                            .collect(Collectors.toSet());
+
             Set<String> actualPriorIds =
                     beastState.priorDistributions.values().stream()
                             .map(AbstractDistributionLikelihood::getId)
@@ -162,6 +168,12 @@ public class BeastXStateScriptFilesTest {
                     expected.stateNodeIds,
                     actualStateNodeIds,
                     "State node ID mismatch for: " + psPath
+            );
+
+            assertEquals(
+                    expected.calculationNodeIds,
+                    actualCalculationNodeIds,
+                    "Calculation node ID mismatch for: " + psPath
             );
 
             assertEquals(
@@ -223,6 +235,8 @@ public class BeastXStateScriptFilesTest {
 
             if (trimmed.startsWith("SN: ")) {
                 parseCommaSeparated(trimmed.substring(4), expected.stateNodeIds);
+            } else if (trimmed.startsWith("CN: ")) {
+                parseCommaSeparated(trimmed.substring(4), expected.calculationNodeIds);
             } else if (trimmed.startsWith("P: ")) {
                 parseCommaSeparated(trimmed.substring(3), expected.priorIds);
             } else if (trimmed.startsWith("TM: ")) {
@@ -313,6 +327,7 @@ public class BeastXStateScriptFilesTest {
 
     private static class ExpectedBeastXState {
         private final Set<String> stateNodeIds = new HashSet<>();
+        private final Set<String> calculationNodeIds = new HashSet<>();
         private final Set<String> priorIds = new HashSet<>();
         private final Set<String> treeModelIds = new HashSet<>();
         private final Set<String> treePriorIds = new HashSet<>();

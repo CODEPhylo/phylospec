@@ -5,6 +5,7 @@ import dr.inference.distribution.AbstractDistributionLikelihood;
 import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
+import dr.inference.model.Statistic;
 import dr.inference.operators.MCMCOperator;
 import org.phylospec.tiling.TypeToken;
 
@@ -19,6 +20,8 @@ public class BeastXModelSummary {
 
     public final List<String> stateNodes;
     public final List<String> stateNodeTypes;
+    public final List<String> calculationNodes;
+    public final List<String> calculationNodeTypes;
     public final List<String> parameterPriors;
     public final List<String> treeModels;
     public final List<String> treePriors;
@@ -34,6 +37,8 @@ public class BeastXModelSummary {
     public BeastXModelSummary(
             List<String> stateNodes,
             List<String> stateNodeTypes,
+            List<String> calculationNodes,
+            List<String> calculationNodeTypes,
             List<String> parameterPriors,
             List<String> treeModels,
             List<String> treePriors,
@@ -47,6 +52,8 @@ public class BeastXModelSummary {
     ) {
         this.stateNodes = stateNodes;
         this.stateNodeTypes = stateNodeTypes;
+        this.calculationNodes = calculationNodes;
+        this.calculationNodeTypes = calculationNodeTypes;
         this.parameterPriors = parameterPriors;
         this.treeModels = treeModels;
         this.treePriors = treePriors;
@@ -69,6 +76,17 @@ public class BeastXModelSummary {
 
             stateNodes.add(parameter.getId());
             stateNodeTypes.add(parameter.getId() + ": " + typeToken.getType().getTypeName());
+        }
+
+        List<String> calculationNodes = new ArrayList<>();
+        List<String> calculationNodeTypes = new ArrayList<>();
+
+        for (Map.Entry<Statistic, TypeToken<?>> entry : model.beastState.calculationNodes.entrySet()) {
+            Statistic statistic = entry.getKey();
+            TypeToken<?> typeToken = entry.getValue();
+
+            calculationNodes.add(statistic.getId());
+            calculationNodeTypes.add(statistic.getId() + ": " + typeToken.getType().getTypeName());
         }
 
         List<String> parameterPriors = new ArrayList<>();
@@ -141,6 +159,8 @@ public class BeastXModelSummary {
         return new BeastXModelSummary(
                 sorted(stateNodes),
                 sorted(stateNodeTypes),
+                sorted(calculationNodes),
+                sorted(calculationNodeTypes),
                 sorted(parameterPriors),
                 sorted(treeModels),
                 sorted(treePriors),
@@ -159,6 +179,8 @@ public class BeastXModelSummary {
                 %s
                 state nodes: %s
                 state node types: %s
+                calculation nodes: %s
+                calculation node types: %s
                 parameter priors: %s
                 tree models: %s
                 tree priors: %s
@@ -173,6 +195,8 @@ public class BeastXModelSummary {
                 title,
                 this.stateNodes,
                 this.stateNodeTypes,
+                this.calculationNodes,
+                this.calculationNodeTypes,
                 this.parameterPriors,
                 this.treeModels,
                 this.treePriors,
