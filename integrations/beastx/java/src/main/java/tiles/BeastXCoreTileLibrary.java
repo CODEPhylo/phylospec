@@ -11,6 +11,9 @@ import tiles.misc.TreeDrawTile;
 import tiles.misc.VectorTile;
 import tiles.misc.DrawnArgumentTile;
 import tiles.misc.ListVectorTile;
+import tiles.misc.IndexVariableTile;
+import tiles.misc.IndexedTile;
+import tiles.misc.IndexedStatementTile;
 
 import tiles.input.FromNexusTile;
 import tiles.input.FromFastaTile;
@@ -116,6 +119,10 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new AssignedArgumentTile());
         tiles.add(new DrawnArgumentTile());
         tiles.add(new ListVectorTile());
+        tiles.add(new tiles.misc.RangeTile());
+        tiles.add(new IndexVariableTile());
+        tiles.add(new IndexedTile());
+        tiles.add(new IndexedStatementTile());
 
         // Input/accessor support
         tiles.add(new FromNexusTile());
