@@ -36,6 +36,9 @@ import tiles.distributions.DiscreteUniformTile;
 import tiles.distributions.PhyloCTMCTile;
 import tiles.distributions.OffsetTile;
 
+import tiles.errors.VectorBranchRatesErrorTile;
+import tiles.errors.VectorSiteRatesErrorTile;
+
 import tiles.functions.AlignmentTaxaTile;
 import tiles.functions.RepeatSimplexTile;
 import tiles.functions.RepeatRealTile;
@@ -43,6 +46,7 @@ import tiles.functions.RepeatIntTile;
 import tiles.functions.LogTile;
 import tiles.functions.ExpTile;
 import tiles.functions.SqrtTile;
+import tiles.functions.EnvTile;
 import tiles.functions.RangeTile;
 import tiles.functions.NumVectorTile;
 import tiles.functions.NumListTile;
@@ -57,6 +61,8 @@ import tiles.functions.AgeTaxonTile;
 import tiles.functions.AgeNodeTreeTile;
 import tiles.functions.MRCATile;
 import tiles.functions.TreeTaxaTile;
+import tiles.functions.NumRowsTile;
+import tiles.functions.NumColsTile;
 
 import tiles.branchmodels.DrawnBranchRatesTile;
 import tiles.branchmodels.StrictClockTile;
@@ -68,6 +74,11 @@ import tiles.observations.MRCAObservedBetweenTile;
 import tiles.observations.ObservedAsTile;
 import tiles.observations.ObservedAsNonNegativeIntTile;
 import tiles.observations.ObservedAsIntTile;
+
+import tiles.rpn.BinaryTile;
+import tiles.rpn.ExpRPNTile;
+import tiles.rpn.LogRPNTile;
+import tiles.rpn.RPNAssignmentTile;
 
 import tiles.mcmc.ChainLengthTile;
 import tiles.mcmc.ScreenLoggerTile;
@@ -124,6 +135,17 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new IndexedTile());
         tiles.add(new IndexedStatementTile());
 
+        //rpn
+        tiles.add(new BinaryTile.RpnRpn());
+        tiles.add(new BinaryTile.RpnReal());
+        tiles.add(new BinaryTile.RealRpn());
+        tiles.add(new BinaryTile.RealReal());
+        tiles.add(new ExpRPNTile.Rpn());
+        tiles.add(new ExpRPNTile.Real());
+        tiles.add(new LogRPNTile.Rpn());
+        tiles.add(new LogRPNTile.Real());
+        tiles.add(new RPNAssignmentTile());
+
         // Input/accessor support
         tiles.add(new FromNexusTile());
         tiles.add(new FromFastaTile());
@@ -140,8 +162,11 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new LogTile());
         tiles.add(new ExpTile());
         tiles.add(new SqrtTile());
+        tiles.add(new EnvTile());
         tiles.add(new RangeTile());
         tiles.add(new NumVectorTile());
+        tiles.add(new NumRowsTile());
+        tiles.add(new NumColsTile());
         tiles.add(new NumListTile());
         tiles.add(new NumSitesTile());
         tiles.add(new NumTaxaAlignmentTile());
@@ -190,6 +215,8 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new RelaxedClockTile());
 
         // BEAST X sequence likelihoods
+        tiles.add(new VectorBranchRatesErrorTile());
+        tiles.add(new VectorSiteRatesErrorTile());
         tiles.add(new PhyloCTMCTile());
 
         // BEAST X substitution models

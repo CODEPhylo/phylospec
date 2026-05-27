@@ -1,0 +1,7 @@
+Integer rows = numRows(matrix=[[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+Integer cols = numCols(matrix=[[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES
