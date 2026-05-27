@@ -21,32 +21,50 @@ public class BeastXExpressivenessReportTest {
                     new ModelExample(
                             "HKY + parameter priors + PhyloCTMC",
                             "substitution model + sequence likelihood",
-                            "src/test/java/tiling/phyloctmc/withInlinePriors.phylospec",
-                            "Shows stochastic substitution parameters, a Yule tree prior, and an alignment likelihood."
+                            "src/test/java/tiling/representative/hkyPhyloCTMC.phylospec",
+                            "Shows stochastic HKY substitution parameters, a Yule tree prior, and an alignment likelihood."
                     ),
                     new ModelExample(
-                            "Strict clock + clock-rate prior + PhyloCTMC",
-                            "clock model + sequence likelihood",
-                            "src/test/java/tiling/phyloctmc/withStrictClockPrior.phylospec",
-                            "Shows a stochastic molecular clock rate connected to a PhyloCTMC likelihood."
+                            "GTR + parameter priors + PhyloCTMC",
+                            "substitution model + sequence likelihood",
+                            "src/test/java/tiling/representative/gtrPhyloCTMC.phylospec",
+                            "Shows a richer nucleotide substitution model with multiple stochastic rate parameters."
+                    ),
+                    new ModelExample(
+                            "Strict clock + clock-rate prior + PhyloCTMC + MCMC config",
+                            "clock model + sequence likelihood + runner config",
+                            "src/test/java/tiling/representative/strictClockPhyloCTMCWithMCMC.phylospec",
+                            "Shows a strict-clock PhyloCTMC model with explicit chain length, screen logger, file logger, and tree logger."
+                    ),
+                    new ModelExample(
+                            "Relaxed clock + PhyloCTMC",
+                            "branch-rate model + sequence likelihood",
+                            "src/test/java/tiling/representative/relaxedClockPhyloCTMC.phylospec",
+                            "Shows branch-specific rate variation through a relaxed-clock model."
                     ),
                     new ModelExample(
                             "Discrete gamma/invariant site model + PhyloCTMC",
                             "site model + sequence likelihood",
-                            "src/test/java/tiling/phyloctmc/withDiscreteGammaInv.phylospec",
+                            "src/test/java/tiling/representative/siteModelPhyloCTMC.phylospec",
                             "Shows site-rate heterogeneity tiled into the sequence likelihood model."
                     ),
                     new ModelExample(
-                            "Coalescent + stochastic exponential population function",
-                            "tree prior + demographic model",
-                            "src/test/java/tiling/treepriors/coalescentWithExponentialPopulationFunctionPrior.phylospec",
+                            "Coalescent + stochastic exponential population function + PhyloCTMC",
+                            "tree prior + demographic model + sequence likelihood",
+                            "src/test/java/tiling/representative/coalescentExponentialPopulationPhyloCTMC.phylospec",
                             "Shows stochastic demographic parameters inside a coalescent tree prior."
                     ),
                     new ModelExample(
-                            "Relaxed clock",
-                            "branch-rate model",
-                            "src/test/java/tiling/branchmodels/relaxedClock.phylospec",
-                            "Shows branch-specific rate variation through a relaxed-clock model."
+                            "Calibrated Yule + PhyloCTMC",
+                            "tree prior + calibration prior + sequence likelihood",
+                            "src/test/java/tiling/representative/calibratedYulePhyloCTMC.phylospec",
+                            "Shows a tree prior combined with a root-age calibration prior."
+                    ),
+                    new ModelExample(
+                            "Partitioned subset PhyloCTMC",
+                            "partitioned data + multiple sequence likelihoods",
+                            "src/test/java/tiling/representative/partitionedSubsetPhyloCTMC.phylospec",
+                            "Shows that one alignment can be subset into multiple PhyloCTMC likelihood components."
                     )
             );
 
@@ -63,21 +81,28 @@ public class BeastXExpressivenessReportTest {
         report.append("## Current BeastX Coverage\n\n");
         report.append("| Component axis | Current BeastX support |\n");
         report.append("| --- | --- |\n");
-        report.append("| Scalar/vector stochastic parameters | yes |\n");
+        report.append("| Scalar/vector stochastic parameters | Supported |\n");
         report.append("| Prior distributions | Normal, LogNormal, LogNormalRealSpace, Exponential, Gamma, Beta, Uniform, Cauchy, Poisson, DiscreteUniform, Dirichlet, Offset |\n");
+        report.append("| Input | Nexus, FASTA, Newick, existing tree object, parser helpers, alignment subset |\n");
         report.append("| Tree priors | Yule, BirthDeath, Coalescent, constant population, exponential population |\n");
+        report.append("| Calibration priors | Root-age calibration and MRCA-style calibration support |\n");
         report.append("| Substitution models | JC69, K80, F81, HKY, GTR, JTT, WAG, LG |\n");
-        report.append("| Site models | discrete gamma / invariant-site style site-rate model |\n");
-        report.append("| Branch-rate models | strict clock, relaxed clock |\n");
-        report.append("| Input | Nexus, FASTA, Newick, existing tree object |\n");
-        report.append("| Sequence likelihood | PhyloCTMC likelihood specification |\n");
-        report.append("| Runtime structure | BeastXState, prior, likelihood, posterior, default parameter/tree operators |\n\n");
+        report.append("| Site models | Discrete gamma / invariant-site style site-rate model |\n");
+        report.append("| Branch-rate models | Strict clock, relaxed clock |\n");
+        report.append("| Sequence likelihood | PhyloCTMC tiled into BeastXPhyloCTMCLikelihoodSpec |\n");
+        report.append("| Likelihood materialization | Optional BeastXPhyloCTMCLikelihoodSpec -> BeagleTreeLikelihood path; requires native BEAGLE |\n");
+        report.append("| MCMC operators | Default parameter operators and tree operators generated from BeastXState |\n");
+        report.append("| MCMC runner config | chainLength, screenLogger, fileLogger, treeLogger |\n");
+        report.append("| MCMC execution | Prior-only short MCMC run writes real samples; PhyloCTMC MCMC run is BEAGLE-dependent |\n\n");
 
         report.append("## Non-trivial Model Examples\n\n");
-        report.append("| Model | Category | State nodes | Parameter priors | Tree priors | Likelihoods | Operators | Interpretation |\n");
-        report.append("| --- | --- | --- | --- | --- | --- | --- | --- |\n");
+        report.append("| Model | Category | State nodes | Parameter priors | Tree priors | Calibration priors | Likelihoods | Operators | MCMC config | Interpretation |\n");
+        report.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n");
 
         int builtExamples =
+                0;
+
+        int examplesWithMCMCConfig =
                 0;
 
         for (ModelExample example : EXAMPLES) {
@@ -92,6 +117,10 @@ public class BeastXExpressivenessReportTest {
             BeastXModelSummary summary =
                     BeastXModelSummary.from(model);
 
+            if (hasMCMCConfig(summary)) {
+                examplesWithMCMCConfig++;
+            }
+
             report.append("| ")
                     .append(escape(example.name))
                     .append(" | ")
@@ -103,9 +132,13 @@ public class BeastXExpressivenessReportTest {
                     .append(" | ")
                     .append(escape(summary.treePriors.toString()))
                     .append(" | ")
+                    .append(escape(summary.calibrationPriors.toString()))
+                    .append(" | ")
                     .append(escape(summary.likelihoods.toString()))
                     .append(" | ")
                     .append(escape(summary.operators.toString()))
+                    .append(" | ")
+                    .append(escape(formatMCMCConfig(summary)))
                     .append(" | ")
                     .append(escape(example.interpretation))
                     .append(" |\n");
@@ -113,22 +146,41 @@ public class BeastXExpressivenessReportTest {
             builtExamples++;
         }
 
-        report.append("\n## Summary\n\n");
+        report.append("\n## Runtime Validation\n\n");
+        report.append("| Runtime path | Status |\n");
+        report.append("| --- | --- |\n");
+        report.append("| PhyloSpec -> BeastXState | Implemented and covered by script-state tests |\n");
+        report.append("| PhyloSpec -> BeastXModel | Implemented and covered by runner/model tests |\n");
+        report.append("| Prior-only MCMC execution | Implemented; short chain writes multiple logger samples |\n");
+        report.append("| fileLogger/treeLogger output | Implemented; logger smoke tests write non-empty log/tree files |\n");
+        report.append("| PhyloCTMC materialization | Implemented as optional BeagleTreeLikelihood materialization path |\n");
+        report.append("| PhyloCTMC MCMC execution | Implemented as BEAGLE-dependent smoke test; skipped when native BEAGLE is unavailable |\n\n");
+
+        report.append("## Summary\n\n");
         report.append("Curated non-trivial BeastX model examples: ")
                 .append(builtExamples)
                 .append("\n\n");
 
-        report.append("These examples show that the BeastX backend can tile PhyloSpec models across multiple model axes: ");
-        report.append("tree priors, demographic models, substitution models, site-rate models, branch-rate models, sequence likelihoods, ");
-        report.append("parameter priors, and default MCMC operators.\n\n");
+        report.append("Examples with explicit MCMC configuration: ")
+                .append(examplesWithMCMCConfig)
+                .append("\n\n");
 
-        report.append("Current limitation: PhyloCTMC is tiled into a BeastX likelihood specification, ");
-        report.append("but full BeagleTreeLikelihood materialization and complete sequence-likelihood MCMC execution are still ongoing.\n");
+        report.append("These examples show that the BeastX backend can tile PhyloSpec models across multiple model axes: ");
+        report.append("tree priors, calibration priors, demographic models, substitution models, site-rate models, ");
+        report.append("branch-rate models, sequence likelihoods, parameter priors, default MCMC operators, and MCMC logging configuration.\n\n");
+
+        report.append("Current engine-level limitation: full PhyloCTMC likelihood evaluation and PhyloCTMC MCMC execution ");
+        report.append("require the native BEAGLE library to be installed and available on java.library.path. ");
+        report.append("On machines without BEAGLE, those tests are skipped rather than failed.\n");
 
         Files.createDirectories(REPORT_PATH.getParent());
         Files.writeString(REPORT_PATH, report.toString(), StandardCharsets.UTF_8);
 
         assertEquals(EXAMPLES.size(), builtExamples);
+        assertTrue(
+                examplesWithMCMCConfig >= 1,
+                "Expected at least one representative model with explicit MCMC configuration."
+        );
     }
 
     private BeastXModel buildModelFromFile(String path) throws Exception {
@@ -146,6 +198,28 @@ public class BeastXExpressivenessReportTest {
                 .lines()
                 .takeWhile(line -> !line.trim().startsWith("// EXPECTED_"))
                 .collect(Collectors.joining("\n"));
+    }
+
+    private boolean hasMCMCConfig(BeastXModelSummary summary) {
+        return summary.chainLength != 1
+                || !summary.screenLoggers.isEmpty()
+                || !summary.fileLoggers.isEmpty()
+                || !summary.treeLoggers.isEmpty();
+    }
+
+    private String formatMCMCConfig(BeastXModelSummary summary) {
+        if (!hasMCMCConfig(summary)) {
+            return "none";
+        }
+
+        return "chainLength="
+                + summary.chainLength
+                + "; screenLoggers="
+                + summary.screenLoggers
+                + "; fileLoggers="
+                + summary.fileLoggers
+                + "; treeLoggers="
+                + summary.treeLoggers;
     }
 
     private String escape(String value) {

@@ -1,0 +1,11 @@
+Vector<PositiveReal> means = [1.0, 2.0, 3.0]
+Real x[i] ~ Normal(mean=means[i], sd=1.0) for i in 1:3
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: x_1, x_2, x_3
+// P: x_1_prior, x_2_prior, x_3_prior
+// EXPECTED BEASTX STATE
