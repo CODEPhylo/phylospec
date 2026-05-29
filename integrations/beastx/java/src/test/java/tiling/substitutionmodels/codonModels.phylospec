@@ -1,0 +1,12 @@
+QMatrix gy94Model = gy94(
+    kappa = 2.0,
+    omega = 0.5,
+    baseFrequencies = repeat(0.01639344262295082, num=61)
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// EXPECTED BEASTX STATE
