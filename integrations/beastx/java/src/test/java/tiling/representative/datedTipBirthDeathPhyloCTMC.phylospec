@@ -1,0 +1,49 @@
+Alignment data = fromNexus(
+    file="src/test/java/resources/dated-simple.nex",
+    age=parse(regex=".*_(\d+(?:\.\d+)?)$")
+)
+
+Taxa taxa = taxa(data)
+
+Rate diversificationRate ~ LogNormal(
+    logMean=0.0,
+    logSd=0.5
+)
+
+Rate turnover ~ LogNormal(
+    logMean=-1.0,
+    logSd=0.25
+)
+
+Tree tree ~ BirthDeath(
+    diversificationRate=diversificationRate,
+    turnover=turnover,
+    rootAge=5.0,
+    taxa=taxa
+)
+
+Rate clockRate ~ LogNormal(
+    logMean=0.0,
+    logSd=0.5
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=jc69(),
+    branchRates~StrictClock(
+        clockRate=clockRate,
+        tree=tree
+    )
+) observed as data
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: diversificationRate, turnover, clockRate
+// P: diversificationRate_prior, turnover_prior, clockRate_prior
+// TM: tree
+// TP: tree_prior
+// L: alignment_likelihood
+// EXPECTED BEASTX STATE

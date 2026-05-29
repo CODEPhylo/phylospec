@@ -37,6 +37,18 @@ public class BeastXExpressivenessReportTest {
                             "Shows a strict-clock PhyloCTMC model with explicit chain length, screen logger, file logger, and tree logger."
                     ),
                     new ModelExample(
+                            "Dated-tip strict clock + PhyloCTMC",
+                            "dated tips + clock model + sequence likelihood",
+                            "src/test/java/tiling/representative/datedTipStrictClockPhyloCTMC.phylospec",
+                            "Shows Nexus tip-age parsing, dated taxa, a root-age initialized tree, a strict clock, and an alignment likelihood."
+                    ),
+                    new ModelExample(
+                            "Dated-tip BirthDeath + strict clock + PhyloCTMC",
+                            "dated tips + birth-death tree prior + clock model + sequence likelihood",
+                            "src/test/java/tiling/representative/datedTipBirthDeathPhyloCTMC.phylospec",
+                            "Shows dated taxa with a stochastic BirthDeath tree prior, root-age initialization, a strict clock, and an alignment likelihood."
+                    ),
+                    new ModelExample(
                             "Relaxed clock + PhyloCTMC",
                             "branch-rate model + sequence likelihood",
                             "src/test/java/tiling/representative/relaxedClockPhyloCTMC.phylospec",
@@ -84,7 +96,6 @@ public class BeastXExpressivenessReportTest {
         report.append("| Scalar/vector stochastic parameters | Supported |\n");
         report.append("| Deterministic calculations | Supported through RPNcalculatorStatistic calculation nodes |\n");
         report.append("| Prior distributions | Normal, LogNormal, LogNormalRealSpace, Exponential, Gamma, Beta, Uniform, Cauchy, Poisson, DiscreteUniform, Dirichlet, Offset |\n");
-        report.append("| Input | Nexus, FASTA, Newick, existing tree object, parser helpers, alignment subset |\n");
         report.append("| Tree priors | Yule, BirthDeath, Coalescent, constant population, exponential population |\n");
         report.append("| Calibration priors | Root-age calibration and MRCA-style calibration support |\n");
         report.append("| Substitution models | JC69, K80, F81, HKY, GTR, JTT, WAG, LG |\n");

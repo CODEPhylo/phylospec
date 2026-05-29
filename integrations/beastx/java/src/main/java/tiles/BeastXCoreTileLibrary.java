@@ -96,6 +96,7 @@ import tiles.substitutionmodels.GTRTile;
 import tiles.substitutionmodels.JTTTile;
 import tiles.substitutionmodels.WAGTile;
 import tiles.substitutionmodels.LGTile;
+import tiles.substitutionmodels.GY94Tile;
 
 import tiles.trees.YuleTile;
 import tiles.trees.BirthDeathTile;
@@ -103,6 +104,7 @@ import tiles.trees.CoalescentTile;
 import tiles.trees.ConstantPopulationFunctionTile;
 import tiles.trees.ExponentialPopulationFunctionTile;
 import tiles.trees.CoalescentPopulationFunctionTile;
+import tiles.trees.LogisticPopulationFunctionTile;
 
 import tiling.BeastXState;
 
@@ -206,6 +208,7 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new BirthDeathTile());
         tiles.add(new CoalescentTile());
         tiles.add(new ConstantPopulationFunctionTile());
+        tiles.add(new LogisticPopulationFunctionTile());
         tiles.add(new ExponentialPopulationFunctionTile());
         tiles.add(new CoalescentPopulationFunctionTile());
 
@@ -228,6 +231,7 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new JTTTile());
         tiles.add(new WAGTile());
         tiles.add(new LGTile());
+        tiles.add(new GY94Tile());
 
         // BEAST X site models
         tiles.add(new DrawnSiteRatesTile());
