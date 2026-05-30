@@ -1,0 +1,32 @@
+Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+Taxa taxa = taxa(data)
+
+PopulationFunction earlyPopulation = exponentialPopulationFunction(
+    populationSize=100.0,
+    growthRate=0.1
+)
+
+PopulationFunction laterPopulation = logisticPopulationFunction(
+    inflectionAge=2.0,
+    carryingCapacity=200.0,
+    growthRate=0.2
+)
+
+PopulationFunction populationFunction = compoundPopulationFunction(
+    functions=[earlyPopulation, laterPopulation],
+    changeTimes=[1.0]
+)
+
+Tree tree ~ Coalescent(
+    populationSize=populationFunction,
+    taxa=taxa
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// TM: tree
+// TP: tree_prior
+// EXPECTED BEASTX STATE

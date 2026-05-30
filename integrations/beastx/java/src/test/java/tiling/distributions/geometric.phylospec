@@ -1,0 +1,12 @@
+NonNegativeInt failures ~ Geometric(
+    p=0.25
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: failures
+// P: failures_prior
+// EXPECTED BEASTX STATE

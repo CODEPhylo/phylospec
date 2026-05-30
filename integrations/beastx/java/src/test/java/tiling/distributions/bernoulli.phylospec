@@ -1,0 +1,12 @@
+NonNegativeInt success ~ Bernoulli(
+    p=0.25
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: success
+// P: success_prior
+// EXPECTED BEASTX STATE

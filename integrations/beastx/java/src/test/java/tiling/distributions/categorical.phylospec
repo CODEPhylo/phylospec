@@ -1,0 +1,12 @@
+PositiveInteger category ~ Categorical(
+    probabilities=[0.1, 0.2, 0.7]
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: category
+// P: category_prior
+// EXPECTED BEASTX STATE
