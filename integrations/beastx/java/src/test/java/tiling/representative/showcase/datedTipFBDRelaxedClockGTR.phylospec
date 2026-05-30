@@ -1,0 +1,78 @@
+Alignment data = fromNexus(
+    file="src/test/java/resources/dated-simple.nex",
+    age=parse(regex=".*_(\d+(?:\.\d+)?)$")
+)
+
+Taxa taxa = taxa(data)
+
+Rate diversificationRate ~ LogNormal(
+    logMean=0.0,
+    logSd=0.5
+)
+
+Rate turnover ~ LogNormal(
+    logMean=-1.0,
+    logSd=0.25
+)
+
+Rate serialSamplingRate ~ LogNormal(
+    logMean=-2.0,
+    logSd=0.5
+)
+
+Tree tree ~ FossilizedBirthDeath(
+    diversificationRate=diversificationRate,
+    turnover=turnover,
+    serialSamplingRate=serialSamplingRate,
+    samplingProbability=0.8,
+    rootAge=5.0,
+    taxa=taxa
+)
+
+Rate clockRate ~ LogNormal(
+    logMean=0.0,
+    logSd=0.5
+)
+
+PositiveReal rateAC ~ LogNormal(logMean=0.0, logSd=0.4)
+PositiveReal rateAG ~ LogNormal(logMean=0.0, logSd=0.4)
+PositiveReal rateAT ~ LogNormal(logMean=0.0, logSd=0.4)
+PositiveReal rateCG ~ LogNormal(logMean=0.0, logSd=0.4)
+PositiveReal rateCT ~ LogNormal(logMean=0.0, logSd=0.4)
+PositiveReal rateGT ~ LogNormal(logMean=0.0, logSd=0.4)
+
+Simplex baseFrequencies ~ Dirichlet(
+    concentration=repeat(1.0, num=4)
+)
+
+QMatrix qMatrix = gtr(
+    rateAC=rateAC,
+    rateAG=rateAG,
+    rateAT=rateAT,
+    rateCG=rateCG,
+    rateCT=rateCT,
+    rateGT=rateGT,
+    baseFrequencies=baseFrequencies
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix,
+    branchRates~RelaxedClock(
+        clockRate=clockRate,
+        base=LogNormal(mean=1.0, logSd=0.1),
+        tree=tree
+    )
+) observed as data
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: diversificationRate, turnover, serialSamplingRate, clockRate, rateAC, rateAG, rateAT, rateCG, rateCT, rateGT, baseFrequencies, branchRateCategories
+// P: diversificationRate_prior, turnover_prior, serialSamplingRate_prior, clockRate_prior, rateAC_prior, rateAG_prior, rateAT_prior, rateCG_prior, rateCT_prior, rateGT_prior, baseFrequencies_prior
+// TM: tree
+// TP: tree_prior
+// L: alignment_likelihood
+// EXPECTED BEASTX STATE
