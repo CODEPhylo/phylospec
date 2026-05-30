@@ -1,0 +1,17 @@
+Rate mkRate ~ LogNormal(
+    logMean=0.0,
+    logSd=0.5
+)
+
+QMatrix traitQ = mk(
+    rate=mkRate
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: mkRate
+// P: mkRate_prior
+// EXPECTED BEASTX STATE

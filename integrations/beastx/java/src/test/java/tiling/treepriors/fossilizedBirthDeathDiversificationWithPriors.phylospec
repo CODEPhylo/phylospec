@@ -1,0 +1,36 @@
+Alignment data = fromNexus(
+    file="src/test/java/resources/dated-simple.nex",
+    age=parse(delimiter="_", part=2)
+)
+
+Taxa taxa = taxa(data)
+
+Rate diversificationRate ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+Rate turnover ~ LogNormal(
+    logMean=-1.0,
+    logSd=0.2
+)
+
+Tree tree ~ FossilizedBirthDeath(
+    diversificationRate=diversificationRate,
+    turnover=turnover,
+    serialSamplingRate=0.1,
+    samplingProbability=0.8,
+    rootAge=5.0,
+    taxa=taxa
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: diversificationRate, turnover
+// P: diversificationRate_prior, turnover_prior
+// TM: tree
+// TP: tree_prior
+// EXPECTED BEASTX STATE

@@ -1,0 +1,18 @@
+UnitInterval p ~ Beta(
+    alpha=2.0,
+    beta=8.0
+)
+
+NonNegativeInt successes ~ Binomial(
+    numTrials=10,
+    p=p
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: p, successes
+// P: p_prior, successes_prior
+// EXPECTED BEASTX STATE
