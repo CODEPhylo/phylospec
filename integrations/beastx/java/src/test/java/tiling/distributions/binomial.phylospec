@@ -1,0 +1,13 @@
+NonNegativeInt successes ~ Binomial(
+    numTrials=10,
+    p=0.25
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: successes
+// P: successes_prior
+// EXPECTED BEASTX STATE

@@ -1,0 +1,17 @@
+UnitInterval p ~ Beta(
+    alpha=2.0,
+    beta=8.0
+)
+
+NonNegativeInt success ~ Bernoulli(
+    p=p
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: p, success
+// P: p_prior, success_prior
+// EXPECTED BEASTX STATE

@@ -1,0 +1,24 @@
+Alignment data = fromNexus(
+    file="src/test/java/resources/dated-simple.nex",
+    age=parse(delimiter="_", part=2)
+)
+
+Taxa taxa = taxa(data)
+
+Tree tree ~ FossilizedBirthDeath(
+    speciationRate=1.0,
+    extinctionRate=0.2,
+    serialSamplingRate=0.1,
+    samplingProbability=0.8,
+    rootAge=5.0,
+    taxa=taxa
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// TM: tree
+// TP: tree_prior
+// EXPECTED BEASTX STATE
