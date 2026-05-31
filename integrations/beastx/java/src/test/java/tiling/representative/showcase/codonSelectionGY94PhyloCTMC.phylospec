@@ -1,0 +1,65 @@
+Alignment fullData = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+
+Alignment codonData = subset(
+    alignment=fullData,
+    start=1,
+    end=600
+)
+
+Taxa taxa = taxa(codonData)
+
+Rate birthRate ~ LogNormal(
+    logMean=0.0,
+    logSd=0.5
+)
+
+Tree tree ~ Yule(
+    birthRate=birthRate,
+    taxa=taxa
+)
+
+Rate clockRate ~ LogNormal(
+    logMean=0.0,
+    logSd=0.5
+)
+
+PositiveReal kappa ~ LogNormal(
+    logMean=1.0,
+    logSd=0.4
+)
+
+PositiveReal omega ~ LogNormal(
+    logMean=-0.5,
+    logSd=0.5
+)
+
+Simplex codonFrequencies ~ Dirichlet(
+    concentration=repeat(1.0, num=61)
+)
+
+QMatrix qMatrix = gy94(
+    kappa=kappa,
+    omega=omega,
+    baseFrequencies=codonFrequencies
+)
+
+Alignment codonAlignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix,
+    branchRates~StrictClock(
+        clockRate=clockRate,
+        tree=tree
+    )
+) observed as codonData
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: birthRate, clockRate, kappa, omega, codonFrequencies
+// P: birthRate_prior, clockRate_prior, kappa_prior, omega_prior, codonFrequencies_prior
+// TM: tree
+// TP: tree_prior
+// L: codonAlignment_likelihood
+// EXPECTED BEASTX STATE
