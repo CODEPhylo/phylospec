@@ -28,6 +28,7 @@ public class BeastXModelSummary {
     public final List<String> calibrationPriors;
     public final List<String> likelihoods;
     public final List<String> operators;
+    public final List<String> operatorDetails;
 
     public final long chainLength;
     public final List<String> screenLoggers;
@@ -45,6 +46,7 @@ public class BeastXModelSummary {
             List<String> calibrationPriors,
             List<String> likelihoods,
             List<String> operators,
+            List<String> operatorDetails,
             long chainLength,
             List<String> screenLoggers,
             List<String> fileLoggers,
@@ -60,6 +62,7 @@ public class BeastXModelSummary {
         this.calibrationPriors = calibrationPriors;
         this.likelihoods = likelihoods;
         this.operators = operators;
+        this.operatorDetails = operatorDetails;
         this.chainLength = chainLength;
         this.screenLoggers = screenLoggers;
         this.fileLoggers = fileLoggers;
@@ -115,11 +118,17 @@ public class BeastXModelSummary {
             likelihoods.add(likelihood.getId());
         }
 
+        BeastXOperatorBuilder operatorBuilder =
+                new BeastXOperatorBuilder();
+
         List<String> operators = new ArrayList<>();
 
-        for (MCMCOperator operator : new BeastXOperatorBuilder().build(model.beastState)) {
+        for (MCMCOperator operator : operatorBuilder.build(model.beastState)) {
             operators.add(operator.getClass().getSimpleName());
         }
+
+        List<String> operatorDetails =
+                operatorBuilder.summarize(model.beastState);
 
         List<String> screenLoggers = new ArrayList<>();
 
@@ -167,6 +176,7 @@ public class BeastXModelSummary {
                 sorted(calibrationPriors),
                 sorted(likelihoods),
                 sorted(operators),
+                sorted(operatorDetails),
                 model.beastState.chainLength,
                 sorted(screenLoggers),
                 sorted(fileLoggers),
@@ -187,6 +197,7 @@ public class BeastXModelSummary {
                 calibration priors: %s
                 likelihoods: %s
                 operators: %s
+                operator details: %s
                 chain length: %d
                 screen loggers: %s
                 file loggers: %s
@@ -203,6 +214,7 @@ public class BeastXModelSummary {
                 this.calibrationPriors,
                 this.likelihoods,
                 this.operators,
+                this.operatorDetails,
                 this.chainLength,
                 this.screenLoggers,
                 this.fileLoggers,

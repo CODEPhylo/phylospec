@@ -5,8 +5,8 @@ import tiling.BeastXModelSummary;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -16,100 +16,56 @@ public class BeastXExpressivenessReportTest {
     private static final Path REPORT_PATH =
             Path.of("target", "beastx-results", "beastx-expressiveness-report.md");
 
-    private static final List<ModelExample> EXAMPLES =
-            List.of(
-                    new ModelExample(
-                            "HKY + parameter priors + PhyloCTMC",
-                            "substitution model + sequence likelihood",
-                            "src/test/java/tiling/representative/hkyPhyloCTMC.phylospec",
-                            "Shows stochastic HKY substitution parameters, a Yule tree prior, and an alignment likelihood."
-                    ),
-                    new ModelExample(
-                            "GTR + parameter priors + PhyloCTMC",
-                            "substitution model + sequence likelihood",
-                            "src/test/java/tiling/representative/gtrPhyloCTMC.phylospec",
-                            "Shows a richer nucleotide substitution model with multiple stochastic rate parameters."
-                    ),
-                    new ModelExample(
-                            "Strict clock + clock-rate prior + PhyloCTMC + MCMC config",
-                            "clock model + sequence likelihood + runner config",
-                            "src/test/java/tiling/representative/strictClockPhyloCTMCWithMCMC.phylospec",
-                            "Shows a strict-clock PhyloCTMC model with explicit chain length, screen logger, file logger, and tree logger."
-                    ),
-                    new ModelExample(
-                            "Dated-tip strict clock + PhyloCTMC",
-                            "dated tips + clock model + sequence likelihood",
-                            "src/test/java/tiling/representative/datedTipStrictClockPhyloCTMC.phylospec",
-                            "Shows Nexus tip-age parsing, dated taxa, a root-age initialized tree, a strict clock, and an alignment likelihood."
-                    ),
-                    new ModelExample(
-                            "Dated-tip BirthDeath + strict clock + PhyloCTMC",
-                            "dated tips + birth-death tree prior + clock model + sequence likelihood",
-                            "src/test/java/tiling/representative/datedTipBirthDeathPhyloCTMC.phylospec",
-                            "Shows dated taxa with a stochastic BirthDeath tree prior, root-age initialization, a strict clock, and an alignment likelihood."
-                    ),
-                    new ModelExample(
-                            "Relaxed clock + PhyloCTMC",
-                            "branch-rate model + sequence likelihood",
-                            "src/test/java/tiling/representative/relaxedClockPhyloCTMC.phylospec",
-                            "Shows branch-specific rate variation through a relaxed-clock model."
-                    ),
-                    new ModelExample(
-                            "Discrete gamma/invariant site model + PhyloCTMC",
-                            "site model + sequence likelihood",
-                            "src/test/java/tiling/representative/siteModelPhyloCTMC.phylospec",
-                            "Shows site-rate heterogeneity tiled into the sequence likelihood model."
-                    ),
-                    new ModelExample(
-                            "Coalescent + stochastic exponential population function + PhyloCTMC",
-                            "tree prior + demographic model + sequence likelihood",
-                            "src/test/java/tiling/representative/coalescentExponentialPopulationPhyloCTMC.phylospec",
-                            "Shows stochastic demographic parameters inside a coalescent tree prior."
-                    ),
-                    new ModelExample(
-                            "Calibrated Yule + PhyloCTMC",
-                            "tree prior + calibration prior + sequence likelihood",
-                            "src/test/java/tiling/representative/calibratedYulePhyloCTMC.phylospec",
-                            "Shows a tree prior combined with a root-age calibration prior."
-                    ),
-                    new ModelExample(
-                            "Partitioned subset PhyloCTMC",
-                            "partitioned data + multiple sequence likelihoods",
-                            "src/test/java/tiling/representative/partitionedSubsetPhyloCTMC.phylospec",
-                            "Shows that one alignment can be subset into multiple PhyloCTMC likelihood components."
-                    )
-            );
+    private static final List<String> EXAMPLES = List.of(
+            "src/test/java/tiling/representative/coverage/hkyPhyloCTMC.phylospec",
+            "src/test/java/tiling/representative/coverage/gtrPhyloCTMC.phylospec",
+            "src/test/java/tiling/representative/coverage/strictClockPhyloCTMCWithMCMC.phylospec",
+            "src/test/java/tiling/representative/coverage/datedTipStrictClockPhyloCTMC.phylospec",
+            "src/test/java/tiling/representative/coverage/datedTipBirthDeathPhyloCTMC.phylospec",
+            "src/test/java/tiling/representative/coverage/relaxedClockPhyloCTMC.phylospec",
+            "src/test/java/tiling/representative/coverage/siteModelPhyloCTMC.phylospec",
+            "src/test/java/tiling/representative/coverage/coalescentExponentialPopulationPhyloCTMC.phylospec",
+            "src/test/java/tiling/representative/coverage/coalescentLogisticPopulationPhyloCTMC.phylospec",
+            "src/test/java/tiling/representative/coverage/calibratedYulePhyloCTMC.phylospec",
+            "src/test/java/tiling/representative/coverage/mrcaCalibratedYulePhyloCTMC.phylospec",
+            "src/test/java/tiling/representative/coverage/partitionedSubsetPhyloCTMC.phylospec",
+            "src/test/java/tiling/representative/coverage/binaryTraitMkPhyloCTMC.phylospec",
+
+            "src/test/java/tiling/representative/showcase/datedTipFBDRelaxedClockGTR.phylospec",
+            "src/test/java/tiling/representative/showcase/jointMolecularTraitMkPhyloCTMC.phylospec",
+            "src/test/java/tiling/representative/showcase/partitionedGtrHkySiteClockMCMC.phylospec",
+            "src/test/java/tiling/representative/showcase/codonSelectionGY94PhyloCTMC.phylospec",
+            "src/test/java/tiling/representative/showcase/priorOnlyFBDMCMC.phylospec"
+    );
 
     @Test
     public void writesBeastXExpressivenessReport() throws Exception {
+        Files.createDirectories(REPORT_PATH.getParent());
+
         StringBuilder report =
                 new StringBuilder();
 
-        report.append("# BeastX PhyloSpec Tiling Expressiveness Report\n\n");
+        report.append("# PhyloSpec BEAST X Expressiveness Report\n\n");
+        report.append("This report summarizes the current BEAST X integration coverage in PhyloSpec.\n\n");
 
-        report.append("This report is generated from BeastX PhyloSpec test models. ");
-        report.append("It summarizes what each PhyloSpec model tiles into on the BeastX backend.\n\n");
-
-        report.append("## Current BeastX Coverage\n\n");
-        report.append("| Component axis | Current BeastX support |\n");
+        report.append("## Supported model components\n\n");
+        report.append("| Area | Current BEAST X support |\n");
         report.append("| --- | --- |\n");
-        report.append("| Scalar/vector stochastic parameters | Supported |\n");
-        report.append("| Deterministic calculations | Supported through RPNcalculatorStatistic calculation nodes |\n");
-        report.append("| Prior distributions | Normal, LogNormal, LogNormalRealSpace, Exponential, Gamma, Beta, Uniform, Cauchy, Poisson, DiscreteUniform, Dirichlet, Offset |\n");
-        report.append("| Tree priors | Yule, BirthDeath, Coalescent, constant population, exponential population |\n");
-        report.append("| Calibration priors | Root-age calibration and MRCA-style calibration support |\n");
-        report.append("| Substitution models | JC69, K80, F81, HKY, GTR, JTT, WAG, LG |\n");
-        report.append("| Site models | Discrete gamma / invariant-site style site-rate model |\n");
-        report.append("| Branch-rate models | Strict clock, relaxed clock |\n");
-        report.append("| Sequence likelihood | PhyloCTMC tiled into BeastXPhyloCTMCLikelihoodSpec |\n");
-        report.append("| Likelihood materialization | Optional BeastXPhyloCTMCLikelihoodSpec -> BeagleTreeLikelihood path; requires native BEAGLE |\n");
-        report.append("| MCMC operators | Default parameter operators and tree operators generated from BeastXState |\n");
-        report.append("| MCMC runner config | chainLength, screenLogger, fileLogger, treeLogger |\n");
-        report.append("| MCMC execution | Prior-only short MCMC run writes real samples; deterministic calculation nodes can be logged; PhyloCTMC MCMC run is BEAGLE-dependent |\n\n");
+        report.append("| Input data | Nexus, FASTA, Newick, imported tree, subset alignments, dated tips, discrete traits |\n");
+        report.append("| Substitution models | HKY, GTR, JC69, Mk, GY94 codon model |\n");
+        report.append("| Site models | Gamma shape site model |\n");
+        report.append("| Clock models | Strict clock and relaxed clock category model |\n");
+        report.append("| Tree priors | Yule, BirthDeath, FossilizedBirthDeath, Coalescent with constant, exponential, logistic, skyline, and compound population functions |\n");
+        report.append("| Calibration | Root age and MRCA calibration priors |\n");
+        report.append("| Priors | Uniform, Normal, LogNormal, Exponential, Gamma, Beta, Dirichlet, Cauchy, Bernoulli, Binomial, Categorical, Geometric, MultivariateNormal, IID |\n");
+        report.append("| Deterministic calculations | RPN-style scalar calculations, indexed calculations, matrix dimensions, log, exp, sqrt |\n");
+        report.append("| MCMC configuration | Chain length, screen logger, file logger, tree logger, selected parameter logging |\n");
+        report.append("| MCMC operators | Automatic parameter, tree, simplex, relaxed-clock, and tree-clock coupled operators with inspectable operator details |\n");
+        report.append("| Runtime execution | Model construction, MCMC construction, and direct MCMC execution through PhyloSpecRunner |\n\n");
 
-        report.append("## Non-trivial Model Examples\n\n");
-        report.append("| Model | Category | State nodes | Calculation nodes | Parameter priors | Tree priors | Calibration priors | Likelihoods | Operators | MCMC config | Interpretation |\n");
-        report.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n");
+        report.append("## Representative examples\n\n");
+        report.append("| Example | State nodes | Priors | Trees | Tree priors | Calibrations | Likelihoods | Operators | MCMC |\n");
+        report.append("| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |\n");
 
         int builtExamples =
                 0;
@@ -117,203 +73,166 @@ public class BeastXExpressivenessReportTest {
         int examplesWithMCMCConfig =
                 0;
 
-        for (ModelExample example : EXAMPLES) {
+        List<ExampleSummary> summaries =
+                new ArrayList<>();
+
+        for (String example : EXAMPLES) {
+            Path path =
+                    Path.of(example);
+
             assertTrue(
-                    Files.exists(Path.of(example.path)),
-                    "Missing example file: " + example.path
+                    Files.exists(path),
+                    "Missing example file: " + example
             );
 
             BeastXModel model =
-                    buildModelFromFile(example.path);
+                    buildModelFromFile(path);
 
             BeastXModelSummary summary =
                     BeastXModelSummary.from(model);
 
-            if (hasMCMCConfig(summary)) {
+            summaries.add(new ExampleSummary(path, summary));
+
+            boolean hasMCMCConfig =
+                    hasMCMCConfig(summary);
+
+            if (hasMCMCConfig) {
                 examplesWithMCMCConfig++;
             }
 
             report.append("| ")
-                    .append(escape(example.name))
+                    .append(path.getFileName())
                     .append(" | ")
-                    .append(escape(example.category))
+                    .append(summary.stateNodes.size())
                     .append(" | ")
-                    .append(escape(summary.stateNodes.toString()))
+                    .append(summary.parameterPriors.size())
                     .append(" | ")
-                    .append(escape(summary.calculationNodes.toString()))
+                    .append(summary.treeModels.size())
                     .append(" | ")
-                    .append(escape(summary.parameterPriors.toString()))
+                    .append(summary.treePriors.size())
                     .append(" | ")
-                    .append(escape(summary.treePriors.toString()))
+                    .append(summary.calibrationPriors.size())
                     .append(" | ")
-                    .append(escape(summary.calibrationPriors.toString()))
+                    .append(summary.likelihoods.size())
                     .append(" | ")
-                    .append(escape(summary.likelihoods.toString()))
+                    .append(summary.operators.size())
                     .append(" | ")
-                    .append(escape(summary.operators.toString()))
-                    .append(" | ")
-                    .append(escape(formatMCMCConfig(summary)))
-                    .append(" | ")
-                    .append(escape(example.interpretation))
+                    .append(hasMCMCConfig ? "yes" : "no")
                     .append(" |\n");
 
             builtExamples++;
         }
 
-        BeastXModel deterministicModel =
-                buildModelFromSource(
-                        """
-                        PositiveReal x ~ LogNormal(logMean=0.0, logSd=1.0)
-                        PositiveReal y ~ LogNormal(logMean=0.0, logSd=1.0)
-                        Real z = x + y
+        report.append("\n");
+        report.append("## Operator detail examples\n\n");
+        report.append("The BEAST X backend now exposes operator-level summaries so representative models can be inspected beyond class names.\n\n");
 
-                        mcmc {
-                            Integer chainLength = 5
+        for (ExampleSummary exampleSummary : summaries) {
+            if (!isShowcaseExample(exampleSummary.path)) {
+                continue;
+            }
 
-                            Logger fileLogger = fileLogger(
-                                logEvery=1,
-                                file="target/beastx-results/deterministic-rpn.log",
-                                parameters=[z]
-                            )
-                        }
-                        """
-                );
+            BeastXModelSummary summary =
+                    exampleSummary.summary;
 
-        BeastXModelSummary deterministicSummary =
-                BeastXModelSummary.from(deterministicModel);
+            report.append("### ")
+                    .append(exampleSummary.path.getFileName())
+                    .append("\n\n");
 
-        assertTrue(deterministicSummary.calculationNodes.contains("z"));
+            if (summary.operatorDetails.isEmpty()) {
+                report.append("No MCMC operators were constructed for this example.\n\n");
+                continue;
+            }
 
-        report.append("\n## Deterministic Calculation Example\n\n");
-        report.append("This small model checks the language-level deterministic calculation path separately from sequence likelihoods.\n\n");
-        report.append("| Feature | BeastX result |\n");
-        report.append("| --- | --- |\n");
-        report.append("| State nodes | ")
-                .append(escape(deterministicSummary.stateNodes.toString()))
-                .append(" |\n");
-        report.append("| Calculation nodes | ")
-                .append(escape(deterministicSummary.calculationNodes.toString()))
-                .append(" |\n");
-        report.append("| Calculation node types | ")
-                .append(escape(deterministicSummary.calculationNodeTypes.toString()))
-                .append(" |\n");
-        report.append("| Parameter priors | ")
-                .append(escape(deterministicSummary.parameterPriors.toString()))
-                .append(" |\n");
-        report.append("| MCMC config | ")
-                .append(escape(formatMCMCConfig(deterministicSummary)))
-                .append(" |\n\n");
+            for (String operatorDetail : summary.operatorDetails) {
+                report.append("- `")
+                        .append(operatorDetail)
+                        .append("`\n");
+            }
 
-        report.append("## Runtime Validation\n\n");
-        report.append("| Runtime path | Status |\n");
-        report.append("| --- | --- |\n");
-        report.append("| PhyloSpec -> BeastXState | Implemented and covered by script-state tests |\n");
-        report.append("| PhyloSpec -> BeastXModel | Implemented and covered by runner/model tests |\n");
-        report.append("| Deterministic expression -> RPNcalculatorStatistic | Implemented and covered by RPN smoke tests |\n");
-        report.append("| Deterministic calculation logging | Implemented; MCMC fileLogger can log calculation nodes |\n");
-        report.append("| Prior-only MCMC execution | Implemented; short chain writes multiple logger samples |\n");
-        report.append("| fileLogger/treeLogger output | Implemented; logger smoke tests write non-empty log/tree files |\n");
-        report.append("| PhyloCTMC materialization | Implemented as optional BeagleTreeLikelihood materialization path |\n");
-        report.append("| PhyloCTMC MCMC execution | Implemented as BEAGLE-dependent smoke test; skipped when native BEAGLE is unavailable |\n\n");
+            report.append("\n");
+        }
 
-        report.append("## Summary\n\n");
-        report.append("Curated non-trivial BeastX model examples: ")
-                .append(builtExamples)
-                .append("\n\n");
+        report.append("## Interpretation\n\n");
+        report.append("The BEAST X backend now supports non-trivial Bayesian phylogenetic model construction, ");
+        report.append("including molecular substitution models, dated-tip tree priors, fossilized birth-death priors, ");
+        report.append("partitioned likelihoods, discrete trait Mk models, codon substitution models, MCMC configuration, ");
+        report.append("operator schedule inspection, and direct runtime MCMC execution for supported non-BEAGLE workflows.\n\n");
 
-        report.append("Examples with explicit MCMC configuration: ")
-                .append(examplesWithMCMCConfig)
-                .append("\n\n");
+        report.append("BEAGLE-dependent PhyloCTMC materialization is environment-sensitive because it requires the native ");
+        report.append("BEAGLE library. Those tests may be skipped when hmsbeagle is unavailable, while construction-level ");
+        report.append("coverage remains testable on a plain Java setup.\n");
 
-        report.append("These examples show that the BeastX backend can tile PhyloSpec models across multiple model axes: ");
-        report.append("tree priors, calibration priors, demographic models, substitution models, site-rate models, ");
-        report.append("branch-rate models, sequence likelihoods, parameter priors, deterministic calculations, ");
-        report.append("default MCMC operators, and MCMC logging configuration.\n\n");
+        Files.writeString(
+                REPORT_PATH,
+                report.toString(),
+                StandardCharsets.UTF_8
+        );
 
-        report.append("Current engine-level limitation: full PhyloCTMC likelihood evaluation and PhyloCTMC MCMC execution ");
-        report.append("require the native BEAGLE library to be installed and available on java.library.path. ");
-        report.append("On machines without BEAGLE, those tests are skipped rather than failed.\n");
+        assertEquals(
+                EXAMPLES.size(),
+                builtExamples
+        );
 
-        Files.createDirectories(REPORT_PATH.getParent());
-        Files.writeString(REPORT_PATH, report.toString(), StandardCharsets.UTF_8);
-
-        assertEquals(EXAMPLES.size(), builtExamples);
         assertTrue(
                 examplesWithMCMCConfig >= 1,
-                "Expected at least one representative model with explicit MCMC configuration."
+                "Expected at least one representative model with MCMC config."
         );
+
+        assertTrue(
+                summaries.stream().anyMatch(summary -> !summary.summary.operatorDetails.isEmpty()),
+                "Expected at least one representative model with operator details."
+        );
+
+        assertTrue(Files.exists(REPORT_PATH));
+        assertTrue(Files.size(REPORT_PATH) > 0);
     }
 
-    private BeastXModel buildModelFromFile(String path) throws Exception {
-        String source =
-                readSource(path);
-
-        return buildModelFromSource(source);
+    private static BeastXModel buildModelFromFile(Path path) throws Exception {
+        return new PhyloSpecRunner(readSource(path)).buildModel("test");
     }
 
-    private BeastXModel buildModelFromSource(String source) throws Exception {
-        PhyloSpecRunner runner =
-                new PhyloSpecRunner(source);
+    private static String readSource(Path path) throws Exception {
+        List<String> lines =
+                Files.readAllLines(path, StandardCharsets.UTF_8);
 
-        return runner.buildModel("test");
+        return String.join(System.lineSeparator(), stripExpectedBlocks(lines));
     }
 
-    private String readSource(String path) throws Exception {
-        return Files.readString(Path.of(path), StandardCharsets.UTF_8)
-                .lines()
-                .takeWhile(line -> !line.trim().startsWith("// EXPECTED_"))
-                .collect(Collectors.joining("\n"));
+    private static List<String> stripExpectedBlocks(List<String> lines) {
+        List<String> sourceLines =
+                new ArrayList<>();
+
+        boolean insideExpectedBlock =
+                false;
+
+        for (String line : lines) {
+            if (line.trim().startsWith("// EXPECTED")) {
+                insideExpectedBlock = !insideExpectedBlock;
+                continue;
+            }
+
+            if (!insideExpectedBlock) {
+                sourceLines.add(line);
+            }
+        }
+
+        return sourceLines;
     }
 
-    private boolean hasMCMCConfig(BeastXModelSummary summary) {
+    private static boolean hasMCMCConfig(BeastXModelSummary summary) {
         return summary.chainLength != 1
                 || !summary.screenLoggers.isEmpty()
                 || !summary.fileLoggers.isEmpty()
                 || !summary.treeLoggers.isEmpty();
     }
 
-    private String formatMCMCConfig(BeastXModelSummary summary) {
-        if (!hasMCMCConfig(summary)) {
-            return "none";
-        }
-
-        return "chainLength="
-                + summary.chainLength
-                + "; screenLoggers="
-                + summary.screenLoggers
-                + "; fileLoggers="
-                + summary.fileLoggers
-                + "; treeLoggers="
-                + summary.treeLoggers;
+    private static boolean isShowcaseExample(Path path) {
+        return path.toString().contains("showcase");
     }
 
-    private String escape(String value) {
-        return value.replace("|", "\\|");
-    }
-
-    private static class ModelExample {
-        private final String name;
-        private final String category;
-        private final String path;
-        private final String interpretation;
-
-        private ModelExample(
-                String name,
-                String category,
-                String path,
-                String interpretation
-        ) {
-            this.name =
-                    name;
-
-            this.category =
-                    category;
-
-            this.path =
-                    path;
-
-            this.interpretation =
-                    interpretation;
-        }
-    }
+    private record ExampleSummary(
+            Path path,
+            BeastXModelSummary summary
+    ) {}
 }
