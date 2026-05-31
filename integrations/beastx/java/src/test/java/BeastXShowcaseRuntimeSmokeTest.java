@@ -1,7 +1,5 @@
 import dr.inference.mcmc.MCMC;
 import org.junit.jupiter.api.Test;
-import tiling.BeastXMCMCBuilder;
-import tiling.BeastXModel;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -64,13 +62,13 @@ public class BeastXShowcaseRuntimeSmokeTest {
         PhyloSpecRunner runner =
                 new PhyloSpecRunner(source);
 
-        BeastXModel model =
-                runner.buildModel("test");
-
         MCMC mcmc =
-                new BeastXMCMCBuilder().build(model);
+                runner.runMCMC("test");
 
-        mcmc.run();
+        assertTrue(
+                mcmc != null,
+                "Expected PhyloSpecRunner.runMCMC to return the executed MCMC object."
+        );
 
         assertLogFileContainsMultipleSamples(
                 logPath,

@@ -22,6 +22,7 @@ public class BeastXMCMCRepresentativeModelTest {
                     "java",
                     "tiling",
                     "representative",
+                    "coverage",
                     "strictClockPhyloCTMCWithMCMC.phylospec"
             );
 

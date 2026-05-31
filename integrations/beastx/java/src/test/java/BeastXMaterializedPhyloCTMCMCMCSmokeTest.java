@@ -21,6 +21,7 @@ public class BeastXMaterializedPhyloCTMCMCMCSmokeTest {
                     "java",
                     "tiling",
                     "representative",
+                    "coverage",
                     "strictClockPhyloCTMCWithMCMC.phylospec"
             );
 

@@ -5,9 +5,9 @@ import tiling.BeastXModelSummary;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -79,6 +79,13 @@ public class BeastXShowcaseModelsSmokeTest {
                 "WilsonBalding"
         );
 
+        assertAnyContains(summary.operatorDetails, "DeltaExchangeOperator(parameter=baseFrequencies");
+        assertAnyContains(summary.operatorDetails, "RandomWalkOperator(parameter=branchRateCategories");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=clockRate");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=diversificationRate");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=serialSamplingRate");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=turnover");
+
         assertEquals(
                 1,
                 summary.chainLength
@@ -140,6 +147,13 @@ public class BeastXShowcaseModelsSmokeTest {
                 "UpDownOperator",
                 "WilsonBalding"
         );
+
+        assertAnyContains(summary.operatorDetails, "DeltaExchangeOperator(parameter=baseFrequencies");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=birthRate");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=clockRate");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=kappa");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=traitRate");
+        assertAnyContains(summary.operatorDetails, "UpDownOperator(up=[clockRate], down=[tree]");
 
         assertEquals(
                 1,
@@ -212,6 +226,14 @@ public class BeastXShowcaseModelsSmokeTest {
                 "Partitioned clock/site model should have coupled clock-tree operators."
         );
 
+        assertAnyContains(summary.operatorDetails, "DeltaExchangeOperator(parameter=firstBaseFrequencies");
+        assertAnyContains(summary.operatorDetails, "DeltaExchangeOperator(parameter=secondBaseFrequencies");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=clockRate");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=firstShape");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=secondShape");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=secondKappa");
+        assertAnyContains(summary.operatorDetails, "UpDownOperator(up=[clockRate], down=[tree]");
+
         assertEquals(
                 50000,
                 summary.chainLength
@@ -256,10 +278,31 @@ public class BeastXShowcaseModelsSmokeTest {
     }
 
     private String readSource(Path path) throws Exception {
-        return Files.readString(path, StandardCharsets.UTF_8)
-                .lines()
-                .takeWhile(line -> !line.trim().startsWith("// EXPECTED_"))
-                .collect(Collectors.joining("\n"));
+        List<String> lines =
+                Files.readAllLines(path, StandardCharsets.UTF_8);
+
+        return String.join(System.lineSeparator(), stripExpectedBlocks(lines));
+    }
+
+    private List<String> stripExpectedBlocks(List<String> lines) {
+        List<String> sourceLines =
+                new ArrayList<>();
+
+        boolean insideExpectedBlock =
+                false;
+
+        for (String line : lines) {
+            if (line.trim().startsWith("// EXPECTED")) {
+                insideExpectedBlock = !insideExpectedBlock;
+                continue;
+            }
+
+            if (!insideExpectedBlock) {
+                sourceLines.add(line);
+            }
+        }
+
+        return sourceLines;
     }
 
     private void assertContainsAll(
@@ -270,6 +313,19 @@ public class BeastXShowcaseModelsSmokeTest {
                 actual.containsAll(List.of(expected)),
                 "Expected values were not all present.\nExpected: "
                         + List.of(expected)
+                        + "\nActual: "
+                        + actual
+        );
+    }
+
+    private void assertAnyContains(
+            List<String> actual,
+            String expectedFragment
+    ) {
+        assertTrue(
+                actual.stream().anyMatch(value -> value.contains(expectedFragment)),
+                "Expected at least one value containing: "
+                        + expectedFragment
                         + "\nActual: "
                         + actual
         );
