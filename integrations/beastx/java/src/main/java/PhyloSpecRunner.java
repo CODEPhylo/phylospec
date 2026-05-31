@@ -89,6 +89,14 @@ public class PhyloSpecRunner implements ErrorEventListener {
         return new BeastXModelBuilder(true).build(beastState);
     }
 
+    public MCMC buildMCMC(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        BeastXModel model =
+                buildModel(runName);
+
+        return buildMCMC(model);
+    }
+
     public MCMC buildMCMC(String runName, long chainLength)
             throws IOException, ParserConfigurationException, SAXException {
         BeastXModel model =
@@ -97,8 +105,50 @@ public class PhyloSpecRunner implements ErrorEventListener {
         return buildMCMC(model, chainLength);
     }
 
+    public MCMC buildMCMC(BeastXModel model) {
+        return new BeastXMCMCBuilder().build(model);
+    }
+
     public MCMC buildMCMC(BeastXModel model, long chainLength) {
         return new BeastXMCMCBuilder(chainLength).build(model);
+    }
+
+    public MCMC runMCMC(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        MCMC mcmc =
+                buildMCMC(runName);
+
+        mcmc.run();
+
+        return mcmc;
+    }
+
+    public MCMC runMCMC(String runName, long chainLength)
+            throws IOException, ParserConfigurationException, SAXException {
+        MCMC mcmc =
+                buildMCMC(runName, chainLength);
+
+        mcmc.run();
+
+        return mcmc;
+    }
+
+    public MCMC runMCMC(BeastXModel model) {
+        MCMC mcmc =
+                buildMCMC(model);
+
+        mcmc.run();
+
+        return mcmc;
+    }
+
+    public MCMC runMCMC(BeastXModel model, long chainLength) {
+        MCMC mcmc =
+                buildMCMC(model, chainLength);
+
+        mcmc.run();
+
+        return mcmc;
     }
 
     public void runPhyloSpec(String runName)

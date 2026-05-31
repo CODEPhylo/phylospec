@@ -1,0 +1,65 @@
+Alignment data = fromNexus(
+    file="src/test/java/resources/dated-simple.nex",
+    age=parse(regex=".*_(\d+(?:\.\d+)?)$")
+)
+
+Taxa taxa = taxa(data)
+
+Rate diversificationRate ~ LogNormal(
+    logMean=0.0,
+    logSd=0.5
+)
+
+Rate turnover ~ LogNormal(
+    logMean=-1.0,
+    logSd=0.25
+)
+
+Rate serialSamplingRate ~ LogNormal(
+    logMean=-2.0,
+    logSd=0.5
+)
+
+Tree tree ~ FossilizedBirthDeath(
+    diversificationRate=diversificationRate,
+    turnover=turnover,
+    serialSamplingRate=serialSamplingRate,
+    samplingProbability=0.8,
+    rootAge=5.0,
+    taxa=taxa
+)
+
+mcmc {
+    Integer chainLength = 100
+
+    Logger screenLogger = screenLogger(
+        logEvery=10,
+        parameters=[diversificationRate, turnover, serialSamplingRate]
+    )
+
+    Logger fileLogger = fileLogger(
+        logEvery=10,
+        file="target/priorOnlyFBDMCMC.log",
+        parameters=[diversificationRate, turnover, serialSamplingRate]
+    )
+
+    Logger treeLogger = treeLogger(
+        logEvery=10,
+        file="target/priorOnlyFBDMCMC.trees",
+        trees=[tree]
+    )
+}
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: diversificationRate, turnover, serialSamplingRate
+// P: diversificationRate_prior, turnover_prior, serialSamplingRate_prior
+// TM: tree
+// TP: tree_prior
+// EXPECTED BEASTX STATE
