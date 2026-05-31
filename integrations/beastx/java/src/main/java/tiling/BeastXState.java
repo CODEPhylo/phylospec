@@ -34,6 +34,7 @@ public class BeastXState {
     public final List<ScreenLoggerSpec> screenLoggerSpecs;
     public final List<FileLoggerSpec> fileLoggerSpecs;
     public final List<TreeLoggerSpec> treeLoggerSpecs;
+    public final OperatorConfig operatorConfig;
 
     public long chainLength = 1;
 
@@ -55,6 +56,7 @@ public class BeastXState {
         this.screenLoggerSpecs = new ArrayList<>();
         this.fileLoggerSpecs = new ArrayList<>();
         this.treeLoggerSpecs = new ArrayList<>();
+        this.operatorConfig = new OperatorConfig();
         this.ids = new HashSet<>();
     }
 
@@ -159,6 +161,71 @@ public class BeastXState {
 
     public void addTreeLoggerSpec(long logEvery, String fileName, List<String> treeNames) {
         this.treeLoggerSpecs.add(new TreeLoggerSpec(logEvery, fileName, treeNames));
+    }
+
+    public static class OperatorConfig {
+        public double parameterOperatorWeight = 1.0;
+        public double parameterScaleFactor = 0.75;
+        public double randomWalkWindowSize = 1.0;
+
+        public double treeScaleWeight = 5.0;
+        public double treeSubtreeSlideSize = 15.0;
+        public double treeSubtreeSlideWeight = 15.0;
+        public double treeNarrowExchangeWeight = 15.0;
+        public double treeWideExchangeWeight = 5.0;
+        public double treeWilsonBaldingWeight = 5.0;
+
+        public double treeClockUpDownWeight = 5.0;
+        public double treeClockUpDownScaleFactor = 0.75;
+
+        public void set(String settingName, double value) {
+            switch (settingName) {
+                case "parameterOperatorWeight" -> this.parameterOperatorWeight = value;
+                case "parameterScaleFactor" -> this.parameterScaleFactor = value;
+                case "randomWalkWindowSize" -> this.randomWalkWindowSize = value;
+                case "treeScaleWeight" -> this.treeScaleWeight = value;
+                case "treeSubtreeSlideSize" -> this.treeSubtreeSlideSize = value;
+                case "treeSubtreeSlideWeight" -> this.treeSubtreeSlideWeight = value;
+                case "treeNarrowExchangeWeight" -> this.treeNarrowExchangeWeight = value;
+                case "treeWideExchangeWeight" -> this.treeWideExchangeWeight = value;
+                case "treeWilsonBaldingWeight" -> this.treeWilsonBaldingWeight = value;
+                case "treeClockUpDownWeight" -> this.treeClockUpDownWeight = value;
+                case "treeClockUpDownScaleFactor" -> this.treeClockUpDownScaleFactor = value;
+                default -> throw new IllegalArgumentException("Unsupported BEAST X operator setting: " + settingName);
+            }
+        }
+
+        public static boolean isSupportedSetting(String settingName) {
+            return isWeight(settingName)
+                    || isScaleFactor(settingName)
+                    || isPositiveSetting(settingName);
+        }
+
+        public static boolean isWeight(String settingName) {
+            return Set.of(
+                    "parameterOperatorWeight",
+                    "treeScaleWeight",
+                    "treeSubtreeSlideWeight",
+                    "treeNarrowExchangeWeight",
+                    "treeWideExchangeWeight",
+                    "treeWilsonBaldingWeight",
+                    "treeClockUpDownWeight"
+            ).contains(settingName);
+        }
+
+        public static boolean isScaleFactor(String settingName) {
+            return Set.of(
+                    "parameterScaleFactor",
+                    "treeClockUpDownScaleFactor"
+            ).contains(settingName);
+        }
+
+        public static boolean isPositiveSetting(String settingName) {
+            return Set.of(
+                    "randomWalkWindowSize",
+                    "treeSubtreeSlideSize"
+            ).contains(settingName);
+        }
     }
 
     public static class ScreenLoggerSpec {

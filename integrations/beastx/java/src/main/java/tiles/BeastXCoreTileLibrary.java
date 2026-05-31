@@ -87,6 +87,7 @@ import tiles.rpn.ExpRPNTile;
 import tiles.rpn.LogRPNTile;
 import tiles.rpn.RPNAssignmentTile;
 
+import tiles.mcmc.AutoOperatorConfigTile;
 import tiles.mcmc.ChainLengthTile;
 import tiles.mcmc.ScreenLoggerTile;
 import tiles.mcmc.FileLoggerTile;
@@ -148,7 +149,7 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new IndexedTile());
         tiles.add(new IndexedStatementTile());
 
-        //rpn
+        // RPN deterministic calculations
         tiles.add(new BinaryTile.RpnRpn());
         tiles.add(new BinaryTile.RpnReal());
         tiles.add(new BinaryTile.RealRpn());
@@ -197,6 +198,7 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
 
         // BEAST X MCMC configuration
         tiles.add(new ChainLengthTile());
+        tiles.add(new AutoOperatorConfigTile());
         tiles.add(new ScreenLoggerTile());
         tiles.add(new FileLoggerTile());
         tiles.add(new TreeLoggerTile());

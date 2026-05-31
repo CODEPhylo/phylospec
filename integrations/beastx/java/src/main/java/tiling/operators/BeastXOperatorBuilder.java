@@ -16,7 +16,6 @@ import dr.inference.operators.ScaleOperator;
 import dr.inference.operators.UpDownOperator;
 import org.phylospec.domain.NonNegativeReal;
 import org.phylospec.domain.PositiveReal;
-import org.phylospec.domain.UnitInterval;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.types.RealScalar;
 import org.phylospec.types.RealVector;
@@ -28,20 +27,6 @@ import java.util.List;
 import java.util.Map;
 
 public class BeastXOperatorBuilder {
-
-    private static final double PARAMETER_OPERATOR_WEIGHT = 1.0;
-    private static final double PARAMETER_RANDOM_WALK_WINDOW_SIZE = 1.0;
-    private static final double PARAMETER_SCALE_FACTOR = 0.75;
-
-    private static final double TREE_SCALE_WEIGHT = 5.0;
-    private static final double TREE_SUBTREE_SLIDE_SIZE = 15.0;
-    private static final double TREE_SUBTREE_SLIDE_WEIGHT = 15.0;
-    private static final double TREE_NARROW_EXCHANGE_WEIGHT = 15.0;
-    private static final double TREE_WIDE_EXCHANGE_WEIGHT = 5.0;
-    private static final double TREE_WILSON_BALDING_WEIGHT = 5.0;
-
-    private static final double TREE_CLOCK_UP_DOWN_WEIGHT = 5.0;
-    private static final double TREE_CLOCK_UP_DOWN_SCALE_FACTOR = 0.75;
 
     private static final TypeToken<?> SIMPLEX =
             new TypeToken<Simplex>() {};
@@ -55,9 +40,6 @@ public class BeastXOperatorBuilder {
     private static final TypeToken<?> NON_NEGATIVE_REAL_SCALAR =
             new TypeToken<RealScalar<? extends NonNegativeReal>>() {};
 
-    private static final TypeToken<?> UNIT_INTERVAL_REAL_SCALAR =
-            new TypeToken<RealScalar<UnitInterval>>() {};
-
     public List<MCMCOperator> build(BeastXState beastState) {
         List<MCMCOperator> operators =
                 new ArrayList<>();
@@ -69,15 +51,45 @@ public class BeastXOperatorBuilder {
         return operators;
     }
 
+    public List<String> summarize(BeastXState beastState) {
+        List<String> summaries =
+                new ArrayList<>();
+
+        summaries.addAll(summarizeParameterOperators(beastState));
+        summaries.addAll(summarizeTreeOperators(beastState));
+        summaries.addAll(summarizeTreeClockJointOperators(beastState));
+
+        return summaries;
+    }
+
     private List<MCMCOperator> buildParameterOperators(BeastXState beastState) {
         List<MCMCOperator> operators =
                 new ArrayList<>();
 
         for (Map.Entry<Parameter, TypeToken<?>> entry : beastState.stateNodes.entrySet()) {
-            operators.add(buildParameterOperator(entry.getKey(), entry.getValue()));
+            operators.add(buildParameterOperator(
+                    entry.getKey(),
+                    entry.getValue(),
+                    beastState.operatorConfig
+            ));
         }
 
         return operators;
+    }
+
+    private List<String> summarizeParameterOperators(BeastXState beastState) {
+        List<String> summaries =
+                new ArrayList<>();
+
+        for (Map.Entry<Parameter, TypeToken<?>> entry : beastState.stateNodes.entrySet()) {
+            summaries.add(summarizeParameterOperator(
+                    entry.getKey(),
+                    entry.getValue(),
+                    beastState.operatorConfig
+            ));
+        }
+
+        return summaries;
     }
 
     private List<MCMCOperator> buildTreeOperators(BeastXState beastState) {
@@ -85,10 +97,27 @@ public class BeastXOperatorBuilder {
                 new ArrayList<>();
 
         for (TreeModel treeModel : beastState.treePriorDistributions.keySet()) {
-            operators.addAll(buildDefaultTreeOperators(treeModel));
+            operators.addAll(buildDefaultTreeOperators(
+                    treeModel,
+                    beastState.operatorConfig
+            ));
         }
 
         return operators;
+    }
+
+    private List<String> summarizeTreeOperators(BeastXState beastState) {
+        List<String> summaries =
+                new ArrayList<>();
+
+        for (TreeModel treeModel : beastState.treePriorDistributions.keySet()) {
+            summaries.addAll(summarizeDefaultTreeOperators(
+                    treeModel,
+                    beastState.operatorConfig
+            ));
+        }
+
+        return summaries;
     }
 
     private List<MCMCOperator> buildTreeClockJointOperators(BeastXState beastState) {
@@ -108,7 +137,11 @@ public class BeastXOperatorBuilder {
                         beastState.stateNodes.get(clockRateParameter);
 
                 if (typeToken != null && POSITIVE_REAL_SCALAR.isAssignableFrom(typeToken)) {
-                    operators.add(buildTreeClockUpDownOperator(treeModel, clockRateParameter));
+                    operators.add(buildTreeClockUpDownOperator(
+                            treeModel,
+                            clockRateParameter,
+                            beastState.operatorConfig
+                    ));
                 }
             }
         }
@@ -116,58 +149,125 @@ public class BeastXOperatorBuilder {
         return operators;
     }
 
-    private MCMCOperator buildParameterOperator(Parameter parameter, TypeToken<?> typeToken) {
+    private List<String> summarizeTreeClockJointOperators(BeastXState beastState) {
+        List<String> summaries =
+                new ArrayList<>();
+
+        for (Map.Entry<TreeModel, List<Parameter>> entry : beastState.treeClockRateParameters.entrySet()) {
+            TreeModel treeModel =
+                    entry.getKey();
+
+            if (!beastState.treePriorDistributions.containsKey(treeModel)) {
+                continue;
+            }
+
+            for (Parameter clockRateParameter : entry.getValue()) {
+                TypeToken<?> typeToken =
+                        beastState.stateNodes.get(clockRateParameter);
+
+                if (typeToken != null && POSITIVE_REAL_SCALAR.isAssignableFrom(typeToken)) {
+                    summaries.add(summarizeTreeClockUpDownOperator(
+                            treeModel,
+                            clockRateParameter,
+                            beastState.operatorConfig
+                    ));
+                }
+            }
+        }
+
+        return summaries;
+    }
+
+    private MCMCOperator buildParameterOperator(
+            Parameter parameter,
+            TypeToken<?> typeToken,
+            BeastXState.OperatorConfig config
+    ) {
         if (SIMPLEX.isAssignableFrom(typeToken)) {
-            return new DeltaExchangeOperator(parameter, PARAMETER_OPERATOR_WEIGHT);
+            return new DeltaExchangeOperator(
+                    parameter,
+                    config.parameterOperatorWeight
+            );
         }
 
         if (POSITIVE_REAL_SCALAR.isAssignableFrom(typeToken)
                 || POSITIVE_REAL_VECTOR.isAssignableFrom(typeToken)) {
             return new ScaleOperator(
                     parameter,
-                    PARAMETER_SCALE_FACTOR,
+                    config.parameterScaleFactor,
                     AdaptationMode.DEFAULT,
-                    PARAMETER_OPERATOR_WEIGHT
+                    config.parameterOperatorWeight
             );
         }
 
         return new RandomWalkOperator(
                 parameter,
-                PARAMETER_RANDOM_WALK_WINDOW_SIZE,
+                config.randomWalkWindowSize,
                 RandomWalkOperator.BoundaryCondition.reflecting,
-                PARAMETER_OPERATOR_WEIGHT,
+                config.parameterOperatorWeight,
                 AdaptationMode.DEFAULT
         );
     }
 
-    private List<MCMCOperator> buildDefaultTreeOperators(TreeModel treeModel) {
+    private String summarizeParameterOperator(
+            Parameter parameter,
+            TypeToken<?> typeToken,
+            BeastXState.OperatorConfig config
+    ) {
+        if (SIMPLEX.isAssignableFrom(typeToken)) {
+            return "DeltaExchangeOperator(parameter=%s, weight=%s)".formatted(
+                    parameter.getId(),
+                    format(config.parameterOperatorWeight)
+            );
+        }
+
+        if (POSITIVE_REAL_SCALAR.isAssignableFrom(typeToken)
+                || POSITIVE_REAL_VECTOR.isAssignableFrom(typeToken)) {
+            return "ScaleOperator(parameter=%s, weight=%s, scaleFactor=%s)".formatted(
+                    parameter.getId(),
+                    format(config.parameterOperatorWeight),
+                    format(config.parameterScaleFactor)
+            );
+        }
+
+        return "RandomWalkOperator(parameter=%s, weight=%s, windowSize=%s, boundary=reflecting)".formatted(
+                parameter.getId(),
+                format(config.parameterOperatorWeight),
+                format(config.randomWalkWindowSize)
+        );
+    }
+
+    private List<MCMCOperator> buildDefaultTreeOperators(
+            TreeModel treeModel,
+            BeastXState.OperatorConfig config
+    ) {
         List<MCMCOperator> operators =
                 new ArrayList<>();
 
-        operators.add(buildTreeScaleOperator(treeModel));
+        operators.add(buildTreeScaleOperator(treeModel, config));
 
         operators.add(new ExchangeOperator(
                 ExchangeOperator.NARROW,
                 treeModel,
-                TREE_NARROW_EXCHANGE_WEIGHT
+                config.treeNarrowExchangeWeight
         ));
 
         operators.add(new ExchangeOperator(
                 ExchangeOperator.WIDE,
                 treeModel,
-                TREE_WIDE_EXCHANGE_WEIGHT
+                config.treeWideExchangeWeight
         ));
 
         operators.add(new WilsonBalding(
                 treeModel,
-                TREE_WILSON_BALDING_WEIGHT
+                config.treeWilsonBaldingWeight
         ));
 
         if (treeModel instanceof DefaultTreeModel defaultTreeModel) {
             operators.add(new SubtreeSlideOperator(
                     defaultTreeModel,
-                    TREE_SUBTREE_SLIDE_SIZE,
-                    TREE_SUBTREE_SLIDE_WEIGHT,
+                    config.treeSubtreeSlideSize,
+                    config.treeSubtreeSlideWeight,
                     true,
                     false,
                     false,
@@ -180,23 +280,66 @@ public class BeastXOperatorBuilder {
         return operators;
     }
 
-    private MCMCOperator buildTreeScaleOperator(TreeModel treeModel) {
+    private List<String> summarizeDefaultTreeOperators(
+            TreeModel treeModel,
+            BeastXState.OperatorConfig config
+    ) {
+        List<String> summaries =
+                new ArrayList<>();
+
+        summaries.add("NodeHeightScaleOperator(tree=%s, weight=%s, scaleFactor=%s)".formatted(
+                treeModel.getId(),
+                format(config.treeScaleWeight),
+                format(config.parameterScaleFactor)
+        ));
+
+        summaries.add("ExchangeOperator(tree=%s, mode=narrow, weight=%s)".formatted(
+                treeModel.getId(),
+                format(config.treeNarrowExchangeWeight)
+        ));
+
+        summaries.add("ExchangeOperator(tree=%s, mode=wide, weight=%s)".formatted(
+                treeModel.getId(),
+                format(config.treeWideExchangeWeight)
+        ));
+
+        summaries.add("WilsonBalding(tree=%s, weight=%s)".formatted(
+                treeModel.getId(),
+                format(config.treeWilsonBaldingWeight)
+        ));
+
+        if (treeModel instanceof DefaultTreeModel) {
+            summaries.add("SubtreeSlideOperator(tree=%s, weight=%s, size=%s)".formatted(
+                    treeModel.getId(),
+                    format(config.treeSubtreeSlideWeight),
+                    format(config.treeSubtreeSlideSize)
+            ));
+        }
+
+        return summaries;
+    }
+
+    private MCMCOperator buildTreeScaleOperator(
+            TreeModel treeModel,
+            BeastXState.OperatorConfig config
+    ) {
         NodeHeightScaleOperator operator =
                 new NodeHeightScaleOperator(
                         treeModel,
-                        PARAMETER_SCALE_FACTOR,
+                        config.parameterScaleFactor,
                         true,
                         AdaptationMode.DEFAULT
                 );
 
-        operator.setWeight(TREE_SCALE_WEIGHT);
+        operator.setWeight(config.treeScaleWeight);
 
         return operator;
     }
 
     private MCMCOperator buildTreeClockUpDownOperator(
             TreeModel treeModel,
-            Parameter clockRateParameter
+            Parameter clockRateParameter,
+            BeastXState.OperatorConfig config
     ) {
         Scalable[] up =
                 new Scalable[] {
@@ -211,9 +354,26 @@ public class BeastXOperatorBuilder {
         return new UpDownOperator(
                 up,
                 down,
-                TREE_CLOCK_UP_DOWN_SCALE_FACTOR,
-                TREE_CLOCK_UP_DOWN_WEIGHT,
+                config.treeClockUpDownScaleFactor,
+                config.treeClockUpDownWeight,
                 AdaptationMode.DEFAULT
         );
+    }
+
+    private String summarizeTreeClockUpDownOperator(
+            TreeModel treeModel,
+            Parameter clockRateParameter,
+            BeastXState.OperatorConfig config
+    ) {
+        return "UpDownOperator(up=[%s], down=[%s], weight=%s, scaleFactor=%s)".formatted(
+                clockRateParameter.getId(),
+                treeModel.getId(),
+                format(config.treeClockUpDownWeight),
+                format(config.treeClockUpDownScaleFactor)
+        );
+    }
+
+    private static String format(double value) {
+        return Double.toString(value);
     }
 }
