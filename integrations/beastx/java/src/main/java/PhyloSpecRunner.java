@@ -113,6 +113,36 @@ public class PhyloSpecRunner implements ErrorEventListener {
         return new BeastXMCMCBuilder(chainLength).build(model);
     }
 
+    public MCMC buildMaterializedMCMC(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        BeastXModel model =
+                buildMaterializedModel(runName);
+
+        return buildMCMC(model);
+    }
+
+    public MCMC buildMaterializedMCMC(String runName, long chainLength)
+            throws IOException, ParserConfigurationException, SAXException {
+        BeastXModel model =
+                buildMaterializedModel(runName);
+
+        return buildMCMC(model, chainLength);
+    }
+
+    public MCMC buildMaterializedMCMC(BeastXState beastState) {
+        BeastXModel model =
+                buildMaterializedModel(beastState);
+
+        return buildMCMC(model);
+    }
+
+    public MCMC buildMaterializedMCMC(BeastXState beastState, long chainLength) {
+        BeastXModel model =
+                buildMaterializedModel(beastState);
+
+        return buildMCMC(model, chainLength);
+    }
+
     public MCMC runMCMC(String runName)
             throws IOException, ParserConfigurationException, SAXException {
         MCMC mcmc =
@@ -145,6 +175,44 @@ public class PhyloSpecRunner implements ErrorEventListener {
     public MCMC runMCMC(BeastXModel model, long chainLength) {
         MCMC mcmc =
                 buildMCMC(model, chainLength);
+
+        mcmc.run();
+
+        return mcmc;
+    }
+
+    public MCMC runMaterializedMCMC(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        MCMC mcmc =
+                buildMaterializedMCMC(runName);
+
+        mcmc.run();
+
+        return mcmc;
+    }
+
+    public MCMC runMaterializedMCMC(String runName, long chainLength)
+            throws IOException, ParserConfigurationException, SAXException {
+        MCMC mcmc =
+                buildMaterializedMCMC(runName, chainLength);
+
+        mcmc.run();
+
+        return mcmc;
+    }
+
+    public MCMC runMaterializedMCMC(BeastXState beastState) {
+        MCMC mcmc =
+                buildMaterializedMCMC(beastState);
+
+        mcmc.run();
+
+        return mcmc;
+    }
+
+    public MCMC runMaterializedMCMC(BeastXState beastState, long chainLength) {
+        MCMC mcmc =
+                buildMaterializedMCMC(beastState, chainLength);
 
         mcmc.run();
 

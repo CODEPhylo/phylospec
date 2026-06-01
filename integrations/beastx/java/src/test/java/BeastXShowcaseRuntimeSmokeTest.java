@@ -79,6 +79,69 @@ public class BeastXShowcaseRuntimeSmokeTest {
         assertTreeFileContainsMultipleTrees(treePath);
     }
 
+    @Test
+    public void runsPriorOnlySkylineMCMCWithOutputPrefixAndWritesAutoLogs() throws Exception {
+        Path outputPrefix =
+                uniqueTargetPrefix("priorOnlySkylineMCMC");
+
+        Path logPath =
+                Path.of(outputPrefix + ".log");
+
+        Path treePath =
+                Path.of(outputPrefix + ".trees");
+
+        String source =
+                """
+                Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+                Taxa taxa = taxa(data)
+
+                Vector<PositiveReal> populationSizes ~ IID(
+                    base=LogNormal(logMean=4.5, logSd=0.75),
+                    num=4
+                )
+
+                Real totalPopulationSize = sum(vector=populationSizes)
+                Real meanPopulationSize = totalPopulationSize / 4.0
+
+                Tree tree ~ SkylineCoalescent(
+                    populationSizes=populationSizes,
+                    changeTimes=[0.5, 1.5, 3.0],
+                    taxa=taxa
+                )
+
+                mcmc {
+                    Integer chainLength = 5
+                    Integer randomSeed = 20260601
+                    Integer defaultLogEvery = 1
+                    String outputPrefix = "%s"
+                }
+                """.formatted(
+                        toPhyloSpecPath(outputPrefix)
+                );
+
+        PhyloSpecRunner runner =
+                new PhyloSpecRunner(source);
+
+        MCMC mcmc =
+                runner.runMCMC("test");
+
+        assertTrue(
+                mcmc != null,
+                "Expected PhyloSpecRunner.runMCMC to return the executed MCMC object."
+        );
+
+        assertLogFileContainsMultipleSamples(
+                logPath,
+                "posterior",
+                "prior",
+                "populationSizes",
+                "totalPopulationSize",
+                "meanPopulationSize"
+        );
+
+        assertTreeFileContainsMultipleTrees(treePath);
+    }
+
     private void assertLogFileContainsMultipleSamples(
             Path logPath,
             String... expectedColumns
@@ -154,6 +217,16 @@ public class BeastXShowcaseRuntimeSmokeTest {
                 "target",
                 "showcase-runtime-smoke",
                 prefix + "-" + System.nanoTime() + suffix
+        );
+    }
+
+    private Path uniqueTargetPrefix(String prefix) throws Exception {
+        Files.createDirectories(Path.of("target", "showcase-runtime-smoke"));
+
+        return Path.of(
+                "target",
+                "showcase-runtime-smoke",
+                prefix + "-" + System.nanoTime()
         );
     }
 
