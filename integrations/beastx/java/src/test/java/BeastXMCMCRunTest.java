@@ -9,7 +9,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class BeastXMCMCRunSmokeTest {
+public class BeastXMCMCRunTest {
 
     @Test
     public void runsShortPriorOnlyMCMCAndWritesMultipleSamples() throws Exception {
