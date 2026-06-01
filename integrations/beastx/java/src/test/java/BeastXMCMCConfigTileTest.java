@@ -2,13 +2,15 @@ import dr.inference.loggers.Logger;
 import dr.inference.loggers.MCLogger;
 import org.junit.jupiter.api.Test;
 import tiling.BeastXMCMCBuilder;
+import tiling.BeastXModel;
 import tiling.BeastXState;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-
+import static org.junit.jupiter.api.Assertions.assertTrue;
 public class BeastXMCMCConfigTileTest {
 
     @Test
@@ -263,5 +265,98 @@ public class BeastXMCMCConfigTileTest {
         assertEquals(1000, logger.getLogEvery());
         assertEquals(1, logger.getColumnCount());
         assertEquals("z", logger.getColumnLabel(0));
+    }
+
+    @Test
+    public void readsRandomSeedFromMCMCBlock() throws Exception {
+        String source = """
+            mcmc {
+                Int randomSeed = 12345
+            }
+            """;
+
+        BeastXState state =
+                new PhyloSpecRunner(source).buildState("test");
+
+        assertEquals(12345L, state.randomSeed);
+    }
+
+    @Test
+    public void rejectsNegativeRandomSeed() throws Exception {
+        String source = """
+            mcmc {
+                Int randomSeed = -1
+            }
+            """;
+
+        try {
+            new PhyloSpecRunner(source).buildState("test");
+        } catch (PhyloSpecRunnerException exception) {
+            assertTrue(
+                    exception.getMessage().contains("MCMC random seed must not be negative"),
+                    exception.getMessage()
+            );
+            return;
+        }
+
+        throw new AssertionError("Expected negative randomSeed to fail.");
+    }
+
+    @Test
+    public void buildMCMCUsesConfiguredRandomSeed() throws Exception {
+        String source = """
+            Real x ~ LogNormal(logMean=0.0, logSd=1.0)
+
+            mcmc {
+                Int randomSeed = 24680
+            }
+            """;
+
+        BeastXModel model =
+                new PhyloSpecRunner(source).buildModel("test");
+
+        new BeastXMCMCBuilder().build(model);
+
+        assertEquals(24680L, dr.math.MathUtils.getSeed());
+    }
+
+    @Test
+    public void defaultFileLoggerIncludesPosteriorPriorLikelihoodWhenBuiltFromModel() throws Exception {
+        String source = """
+            PositiveReal x ~ LogNormal(logMean=0.0, logSd=1.0)
+
+            mcmc {
+                Logger fileLogger = fileLogger(
+                    logEvery=1000,
+                    file="target/test-fileLogger-default-model.log"
+                )
+            }
+            """;
+
+        BeastXModel model =
+                new PhyloSpecRunner(source).buildModel("test");
+
+        List<Logger> loggers =
+                new BeastXMCMCBuilder().buildLoggers(model);
+
+        assertEquals(1, loggers.size());
+
+        MCLogger logger =
+                assertInstanceOf(MCLogger.class, loggers.getFirst());
+
+        assertEquals(1000, logger.getLogEvery());
+        assertTrue(logger.getColumnCount() >= 4);
+
+        List<String> labels =
+                new ArrayList<>();
+
+        for (int i = 0; i < logger.getColumnCount(); i++) {
+            labels.add(logger.getColumnLabel(i));
+        }
+
+        assertTrue(labels.contains("posterior"), labels.toString());
+        assertTrue(labels.contains("prior"), labels.toString());
+        assertTrue(labels.contains("likelihood"), labels.toString());
+        assertTrue(labels.contains("x"), labels.toString());
     }
 }

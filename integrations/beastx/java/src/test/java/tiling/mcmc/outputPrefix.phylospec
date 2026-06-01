@@ -1,0 +1,16 @@
+PositiveReal x ~ LogNormal(logMean=0.0, logSd=1.0)
+
+mcmc {
+    Integer chainLength = 1000
+    Integer defaultLogEvery = 100
+    String outputPrefix = "target/output-prefix-smoke/run"
+}
+
+// EXPECTED_TILES:
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+
+// EXPECTED_BEASTX_STATE:
+// SN: x

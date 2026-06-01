@@ -1,0 +1,11 @@
+Vector<Map<String, String>> metadata = fromCSV(
+    file="src/test/java/resources/metadata.tsv",
+    delimiter="\t"
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// EXPECTED BEASTX STATE

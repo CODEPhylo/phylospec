@@ -22,6 +22,7 @@ import tiles.input.FromTreeTile;
 import tiles.input.ParserTile;
 import tiles.input.SubsetTile;
 import tiles.input.DiscreteTraitsFromTaxaTile;
+import tiles.input.FromCSVTile;
 
 import tiles.distributions.ExponentialTile;
 import tiles.distributions.LogNormalTile;
@@ -42,6 +43,7 @@ import tiles.distributions.MultivariateNormalTile;
 import tiles.distributions.CategoricalTile;
 import tiles.distributions.GeometricTile;
 import tiles.distributions.IIDTile;
+import tiles.distributions.TruncatedTile;
 
 import tiles.errors.VectorBranchRatesErrorTile;
 import tiles.errors.VectorSiteRatesErrorTile;
@@ -70,6 +72,7 @@ import tiles.functions.MRCATile;
 import tiles.functions.TreeTaxaTile;
 import tiles.functions.NumRowsTile;
 import tiles.functions.NumColsTile;
+import tiles.functions.SumRealVectorTile;
 
 import tiles.branchmodels.DrawnBranchRatesTile;
 import tiles.branchmodels.StrictClockTile;
@@ -89,9 +92,12 @@ import tiles.rpn.RPNAssignmentTile;
 
 import tiles.mcmc.AutoOperatorConfigTile;
 import tiles.mcmc.ChainLengthTile;
+import tiles.mcmc.DefaultLogEveryTile;
+import tiles.mcmc.OutputPrefixTile;
 import tiles.mcmc.ScreenLoggerTile;
 import tiles.mcmc.FileLoggerTile;
 import tiles.mcmc.TreeLoggerTile;
+import tiles.mcmc.RandomSeedTile;
 
 import tiles.sitemodels.SiteModelTile;
 import tiles.sitemodels.DrawnSiteRatesTile;
@@ -163,6 +169,7 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         // Input/accessor support
         tiles.add(new FromNexusTile());
         tiles.add(new FromFastaTile());
+        tiles.add(new FromCSVTile());
         tiles.add(new FromNewickTile());
         tiles.add(new FromTreeTile());
         tiles.add(new DiscreteTraitsFromTaxaTile());
@@ -195,9 +202,13 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new MRCATile());
         tiles.add(new AlignmentTaxaTile());
         tiles.add(new TreeTaxaTile());
+        tiles.add(new SumRealVectorTile());
 
         // BEAST X MCMC configuration
         tiles.add(new ChainLengthTile());
+        tiles.add(new RandomSeedTile());
+        tiles.add(new DefaultLogEveryTile());
+        tiles.add(new OutputPrefixTile());
         tiles.add(new AutoOperatorConfigTile());
         tiles.add(new ScreenLoggerTile());
         tiles.add(new FileLoggerTile());
@@ -220,7 +231,9 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new GeometricTile());
         tiles.add(new DirichletTile());
         tiles.add(new MultivariateNormalTile());
-        tiles.add(new IIDTile());
+        tiles.add(new IIDTile.RealIID());
+        tiles.add(new IIDTile.PositiveRealIID());
+        tiles.add(new TruncatedTile());
         tiles.add(new OffsetTile());
 
         // BEAST X tree priors

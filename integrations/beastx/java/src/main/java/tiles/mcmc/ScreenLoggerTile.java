@@ -22,20 +22,20 @@ import java.util.Set;
 
 public class ScreenLoggerTile extends Tile<Void, BeastXState> implements CandidateTile<BeastXState> {
 
-    private final List<String> parameterNames;
-    private final List<Tile<?, BeastXState>> parameterInputTiles;
+    private final List<String> loggableNames;
+    private final List<Tile<?, BeastXState>> loggableInputTiles;
 
     public ScreenLoggerTile() {
-        this.parameterNames = null;
-        this.parameterInputTiles = List.of();
+        this.loggableNames = null;
+        this.loggableInputTiles = List.of();
     }
 
     private ScreenLoggerTile(
-            List<String> parameterNames,
-            List<Tile<?, BeastXState>> parameterInputTiles
+            List<String> loggableNames,
+            List<Tile<?, BeastXState>> loggableInputTiles
     ) {
-        this.parameterNames = parameterNames;
-        this.parameterInputTiles = parameterInputTiles;
+        this.loggableNames = loggableNames;
+        this.loggableInputTiles = loggableInputTiles;
     }
 
     @Override
@@ -65,10 +65,10 @@ public class ScreenLoggerTile extends Tile<Void, BeastXState> implements Candida
             );
         }
 
-        List<Expr.Variable> parameterVariables =
-                getParameterVariables(assignment);
+        LoggableInputs loggableInputs =
+                getLoggableInputs(assignment, allInputTiles);
 
-        if (parameterVariables == null) {
+        if (loggableInputs == null) {
             ScreenLoggerTile tile =
                     new ScreenLoggerTile(null, List.of());
 
@@ -78,41 +78,32 @@ public class ScreenLoggerTile extends Tile<Void, BeastXState> implements Candida
             return Set.of(tile);
         }
 
-        List<String> parameterNames =
-                parameterVariables.stream()
-                        .map(variable -> variable.variableName)
-                        .toList();
+        if (loggableInputs.possibleInputTiles.isEmpty()) {
+            ScreenLoggerTile tile =
+                    new ScreenLoggerTile(loggableInputs.names, List.of());
 
-        List<Set<Tile<?, BeastXState>>> possibleParameterTiles =
-                new ArrayList<>();
+            tile.setRootNode(node);
+            tile.setWeight(getPriority().getWeight());
 
-        for (Expr.Variable parameterVariable : parameterVariables) {
-            Set<Tile<?, BeastXState>> tiles =
-                    allInputTiles.get(parameterVariable);
-
-            if (tiles == null || tiles.isEmpty()) {
-                throw new FailedTilingAttempt.RejectedCascade(parameterVariable);
-            }
-
-            possibleParameterTiles.add(tiles);
+            return Set.of(tile);
         }
 
         Set<Tile<?, BeastXState>> screenLoggerTiles =
                 new HashSet<>();
 
         Utils.visitCombinations(
-                possibleParameterTiles,
-                selectedParameterTiles -> {
+                loggableInputs.possibleInputTiles,
+                selectedInputTiles -> {
                     ScreenLoggerTile tile =
                             new ScreenLoggerTile(
-                                    parameterNames,
-                                    new ArrayList<>(selectedParameterTiles)
+                                    loggableInputs.names,
+                                    new ArrayList<>(selectedInputTiles)
                             );
 
                     tile.setRootNode(node);
 
                     int inputWeight =
-                            selectedParameterTiles.stream()
+                            selectedInputTiles.stream()
                                     .mapToInt(Tile::getWeight)
                                     .sum();
 
@@ -141,11 +132,11 @@ public class ScreenLoggerTile extends Tile<Void, BeastXState> implements Candida
             );
         }
 
-        for (Tile<?, BeastXState> parameterInputTile : this.parameterInputTiles) {
-            parameterInputTile.apply(beastState, indexVariables);
+        for (Tile<?, BeastXState> inputTile : this.loggableInputTiles) {
+            inputTile.apply(beastState, indexVariables);
         }
 
-        beastState.addScreenLoggerSpec(logEvery, this.parameterNames);
+        beastState.addScreenLoggerSpec(logEvery, this.loggableNames);
         return null;
     }
 
@@ -166,44 +157,78 @@ public class ScreenLoggerTile extends Tile<Void, BeastXState> implements Candida
         );
     }
 
-    private static List<Expr.Variable> getParameterVariables(Stmt.Assignment assignment) {
+    private static LoggableInputs getLoggableInputs(
+            Stmt.Assignment assignment,
+            Map<AstNode, Set<Tile<?, BeastXState>>> allInputTiles
+    ) throws FailedTilingAttempt {
         Expr.Call call =
                 (Expr.Call) assignment.expression;
 
         for (Expr.Argument argument : call.arguments) {
             if (argument.name != null && argument.name.equals("parameters")) {
-                return getVariableList(argument.expression, assignment);
+                return getNameInputs(argument.expression, assignment, allInputTiles);
             }
         }
 
         return null;
     }
 
-    private static List<Expr.Variable> getVariableList(Expr expression, Stmt.Assignment assignment) {
+    private static LoggableInputs getNameInputs(
+            Expr expression,
+            Stmt.Assignment assignment,
+            Map<AstNode, Set<Tile<?, BeastXState>>> allInputTiles
+    ) throws FailedTilingAttempt {
         if (!(expression instanceof Expr.Array array)) {
             throw new TileApplicationError(
                     assignment,
-                    "screenLogger parameters must be a list of parameter names.",
-                    "Use parameters=[kappa, clockRate]."
+                    "screenLogger parameters must be a list of loggable names.",
+                    "Use parameters=[clockRate] or parameters=[\"posterior\", \"prior\", \"likelihood\", \"clockRate\"]."
             );
         }
 
-        List<Expr.Variable> variables =
+        List<String> names =
+                new ArrayList<>();
+
+        List<Set<Tile<?, BeastXState>>> possibleInputTiles =
                 new ArrayList<>();
 
         for (Expr element : array.elements) {
-            if (!(element instanceof Expr.Variable variable)) {
-                throw new TileApplicationError(
-                        assignment,
-                        "screenLogger parameters must be a list of parameter names.",
-                        "Use parameters=[kappa, clockRate]."
-                );
+            if (element instanceof Expr.Variable variable) {
+                names.add(variable.variableName);
+
+                if (!isModelLevelLoggable(variable.variableName)) {
+                    Set<Tile<?, BeastXState>> tiles =
+                            allInputTiles.get(variable);
+
+                    if (tiles == null || tiles.isEmpty()) {
+                        throw new FailedTilingAttempt.RejectedCascade(variable);
+                    }
+
+                    possibleInputTiles.add(tiles);
+                }
+
+                continue;
             }
 
-            variables.add(variable);
+            if (element instanceof Expr.Literal literal && literal.value instanceof String string) {
+                names.add(string);
+                continue;
+            }
+
+            throw new TileApplicationError(
+                    assignment,
+                    "screenLogger parameters must contain names.",
+                    "Use bare parameter names such as clockRate, or strings such as \"posterior\"."
+            );
         }
 
-        return variables;
+        return new LoggableInputs(names, possibleInputTiles);
+    }
+
+    private static boolean isModelLevelLoggable(String name) {
+        return name.equals("posterior")
+                || name.equals("prior")
+                || name.equals("likelihood");
     }
 
     private static int getIntegerLiteral(Expr expression, Stmt.Assignment assignment) {
@@ -235,6 +260,12 @@ public class ScreenLoggerTile extends Tile<Void, BeastXState> implements Candida
         }
 
         return (int) value;
+    }
+
+    private record LoggableInputs(
+            List<String> names,
+            List<Set<Tile<?, BeastXState>>> possibleInputTiles
+    ) {
     }
 
     @Override

@@ -31,11 +31,12 @@ public class BeastXExpressivenessReportTest {
             "src/test/java/tiling/representative/coverage/partitionedSubsetPhyloCTMC.phylospec",
             "src/test/java/tiling/representative/coverage/binaryTraitMkPhyloCTMC.phylospec",
 
+            "src/test/java/tiling/representative/showcase/codonSelectionGY94PhyloCTMC.phylospec",
             "src/test/java/tiling/representative/showcase/datedTipFBDRelaxedClockGTR.phylospec",
             "src/test/java/tiling/representative/showcase/jointMolecularTraitMkPhyloCTMC.phylospec",
             "src/test/java/tiling/representative/showcase/partitionedGtrHkySiteClockMCMC.phylospec",
-            "src/test/java/tiling/representative/showcase/codonSelectionGY94PhyloCTMC.phylospec",
-            "src/test/java/tiling/representative/showcase/priorOnlyFBDMCMC.phylospec"
+            "src/test/java/tiling/representative/showcase/priorOnlyFBDMCMC.phylospec",
+            "src/test/java/tiling/representative/showcase/skylineHKYStrictClockMCMC.phylospec"
     );
 
     @Test
@@ -51,17 +52,18 @@ public class BeastXExpressivenessReportTest {
         report.append("## Supported model components\n\n");
         report.append("| Area | Current BEAST X support |\n");
         report.append("| --- | --- |\n");
-        report.append("| Input data | Nexus, FASTA, Newick, imported tree, subset alignments, dated tips, discrete traits |\n");
-        report.append("| Substitution models | HKY, GTR, JC69, Mk, GY94 codon model |\n");
-        report.append("| Site models | Gamma shape site model |\n");
-        report.append("| Clock models | Strict clock and relaxed clock category model |\n");
-        report.append("| Tree priors | Yule, BirthDeath, FossilizedBirthDeath, Coalescent with constant, exponential, logistic, skyline, and compound population functions |\n");
-        report.append("| Calibration | Root age and MRCA calibration priors |\n");
-        report.append("| Priors | Uniform, Normal, LogNormal, Exponential, Gamma, Beta, Dirichlet, Cauchy, Bernoulli, Binomial, Categorical, Geometric, MultivariateNormal, IID |\n");
-        report.append("| Deterministic calculations | RPN-style scalar calculations, indexed calculations, matrix dimensions, log, exp, sqrt |\n");
-        report.append("| MCMC configuration | Chain length, screen logger, file logger, tree logger, selected parameter logging |\n");
-        report.append("| MCMC operators | Automatic parameter, tree, simplex, relaxed-clock, and tree-clock coupled operators with inspectable operator details |\n");
-        report.append("| Runtime execution | Model construction, MCMC construction, and direct MCMC execution through PhyloSpecRunner |\n\n");
+        report.append("| Input data | Nexus, FASTA, Newick, imported tree, subset alignments, dated tips, discrete traits from taxa |\n");
+        report.append("| Core language / data handling | Assignments, draws, tree draws, vectors, lists, indexed statements, indexed vector access, ranges |\n");
+        report.append("| Scalar and vector functions | repeat, range, linspace, log, exp, sqrt, sum, numSites, numTaxa, numBranches, numRows, numCols, rootAge, MRCA, taxon age access |\n");
+        report.append("| Prior distributions | Uniform, Normal, LogNormal, LogNormalRealSpace, Exponential, Gamma, Beta, Dirichlet, Cauchy, Poisson, Bernoulli, Binomial, Categorical, Geometric, DiscreteUniform, MultivariateNormal, IID, Truncated, Offset |\n");
+        report.append("| Tree priors | Yule, BirthDeath, FossilizedBirthDeath, Coalescent, SkylineCoalescent, and coalescent population functions including constant, exponential, logistic, and compound population functions |\n");
+        report.append("| Substitution models | JC69, K80, F81, HKY, GTR, JTT, WAG, LG, Mk, GY94 codon model |\n");
+        report.append("| Site models | SiteModel, drawn site rates, discrete gamma / invariant-site style site-rate vectors |\n");
+        report.append("| Clock / branch models | StrictClock, RelaxedClock, drawn branch rates |\n");
+        report.append("| Observations and calibration | observed-as alignment/scalar/int handling, root-age calibration, MRCA calibration, dated-tip handling |\n");
+        report.append("| MCMC configuration | chainLength, randomSeed, defaultLogEvery, outputPrefix, screenLogger, fileLogger, treeLogger, selected parameter logging, operator tuning settings |\n");
+        report.append("| MCMC operators | Automatic parameter operators, tree operators, simplex operators, relaxed-clock operators, and tree-clock coupled UpDown operators with inspectable details |\n");
+        report.append("| Runtime execution | Model construction, materialized model construction where supported, MCMC construction, and direct MCMC execution for supported non-BEAGLE workflows |\n\n");
 
         report.append("## Representative examples\n\n");
         report.append("| Example | State nodes | Priors | Trees | Tree priors | Calibrations | Likelihoods | Operators | MCMC |\n");
@@ -124,8 +126,18 @@ public class BeastXExpressivenessReportTest {
         }
 
         report.append("\n");
+        report.append("## Showcase examples\n\n");
+        report.append("| Example | What it demonstrates |\n");
+        report.append("| --- | --- |\n");
+        report.append("| `partitionedGtrHkySiteClockMCMC.phylospec` | Partitioned molecular model with GTR/HKY partitions, site-rate variation, shared tree/clock, MCMC loggers |\n");
+        report.append("| `datedTipFBDRelaxedClockGTR.phylospec` | Dated-tip FBD model with relaxed clock, GTR, serial sampling, and dated-tip parsing from Nexus |\n");
+        report.append("| `jointMolecularTraitMkPhyloCTMC.phylospec` | Joint molecular and discrete-trait likelihoods using HKY and Mk on a shared tree |\n");
+        report.append("| `codonSelectionGY94PhyloCTMC.phylospec` | Codon substitution model using GY94 with codon frequencies and omega/kappa parameters |\n");
+        report.append("| `skylineHKYStrictClockMCMC.phylospec` | Skyline coalescent model with HKY, strict clock, MCMC configuration, and loggers |\n");
+        report.append("| `priorOnlyFBDMCMC.phylospec` | Prior-only FBD MCMC workflow with parameter and tree logging |\n\n");
+
         report.append("## Operator detail examples\n\n");
-        report.append("The BEAST X backend now exposes operator-level summaries so representative models can be inspected beyond class names.\n\n");
+        report.append("The BEAST X backend exposes operator-level summaries so representative models can be inspected beyond class names.\n\n");
 
         for (ExampleSummary exampleSummary : summaries) {
             if (!isShowcaseExample(exampleSummary.path)) {
@@ -153,15 +165,9 @@ public class BeastXExpressivenessReportTest {
             report.append("\n");
         }
 
-        report.append("## Interpretation\n\n");
-        report.append("The BEAST X backend now supports non-trivial Bayesian phylogenetic model construction, ");
-        report.append("including molecular substitution models, dated-tip tree priors, fossilized birth-death priors, ");
-        report.append("partitioned likelihoods, discrete trait Mk models, codon substitution models, MCMC configuration, ");
-        report.append("operator schedule inspection, and direct runtime MCMC execution for supported non-BEAGLE workflows.\n\n");
-
-        report.append("BEAGLE-dependent PhyloCTMC materialization is environment-sensitive because it requires the native ");
-        report.append("BEAGLE library. Those tests may be skipped when hmsbeagle is unavailable, while construction-level ");
-        report.append("coverage remains testable on a plain Java setup.\n");
+        report.append("## Notes\n\n");
+        report.append("The table above is construction-level coverage. It checks that representative PhyloSpec scripts can be tiled and converted into BEAST X model objects.\n\n");
+        report.append("BEAGLE-dependent PhyloCTMC materialization is environment-sensitive because it requires the native BEAGLE library. Those tests may be skipped when hmsbeagle is unavailable, while construction-level coverage remains testable on a plain Java setup.\n");
 
         Files.writeString(
                 REPORT_PATH,
