@@ -1,0 +1,69 @@
+Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+Taxa taxa = taxa(data)
+
+Vector<PositiveReal> populationSizes ~ IID(
+    base=LogNormal(logMean=4.5, logSd=0.75),
+    num=4
+)
+
+Real totalPopulationSize = sum(vector=populationSizes)
+Real meanPopulationSize = totalPopulationSize / 4.0
+
+Rate clockRate ~ LogNormal(
+    logMean=0.0,
+    logSd=0.5
+)
+
+PositiveReal kappa ~ LogNormal(
+    logMean=1.0,
+    logSd=0.4
+)
+
+Simplex baseFrequencies ~ Dirichlet(
+    concentration=repeat(1.0, num=4)
+)
+
+Tree tree ~ SkylineCoalescent(
+    populationSizes=populationSizes,
+    changeTimes=[0.5, 1.5, 3.0],
+    taxa=taxa
+)
+
+QMatrix qMatrix = hky(
+    kappa=kappa,
+    baseFrequencies=baseFrequencies
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix,
+    branchRates~StrictClock(
+        clockRate=clockRate,
+        tree=tree
+    )
+) observed as data
+
+mcmc {
+    Integer chainLength = 50000
+    Integer randomSeed = 20260601
+    Integer defaultLogEvery = 5000
+    String outputPrefix = "target/showcase-runtime-smoke/skylineHKYStrictClockMCMC"
+}
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: populationSizes, clockRate, kappa, baseFrequencies
+// CN: totalPopulationSize, meanPopulationSize
+// P: populationSizes_prior, clockRate_prior, kappa_prior, baseFrequencies_prior
+// TM: tree
+// TP: tree_prior
+// L: alignment_likelihood
+// EXPECTED BEASTX STATE

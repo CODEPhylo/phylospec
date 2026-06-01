@@ -5,7 +5,6 @@ import dr.inference.model.Parameter;
 import dr.util.Attribute;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveInt;
-import org.phylospec.domain.Real;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.IntScalar;
@@ -17,36 +16,151 @@ import tiling.BoundDistribution;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
 
-public class IIDTile extends GeneratorTile<
-        BoundDistribution<BeastXRealVectorParam<Real>, DistributionLikelihood>,
-        BeastXState
-        > {
+public final class IIDTile {
 
-    @Override
-    public String getPhyloSpecGeneratorName() {
-        return "IID";
+    private IIDTile() {
     }
 
-    GeneratorTileInput<
-            BoundDistribution<BeastXRealScalarParam<Real>, DistributionLikelihood>,
+    public static final class RealIID extends GeneratorTile<
+            BoundDistribution<
+                    BeastXRealVectorParam<org.phylospec.domain.Real>,
+                    DistributionLikelihood
+                    >,
             BeastXState
-            > baseInput =
-            new GeneratorTileInput<>("base");
+            > {
 
-    GeneratorTileInput<IntScalar<? extends PositiveInt>, BeastXState> numInput =
-            new GeneratorTileInput<>("num");
+        @Override
+        public String getPhyloSpecGeneratorName() {
+            return "IID";
+        }
 
-    @Override
-    public BoundDistribution<BeastXRealVectorParam<Real>, DistributionLikelihood> applyTile(
-            BeastXState beastState,
-            IdentityHashMap<Expr.Variable, Integer> indexVariables
-    ) {
-        BoundDistribution<BeastXRealScalarParam<Real>, DistributionLikelihood> base =
-                this.baseInput.apply(beastState, indexVariables);
+        GeneratorTileInput<
+                BoundDistribution<
+                        BeastXRealScalarParam<org.phylospec.domain.Real>,
+                        DistributionLikelihood
+                        >,
+                BeastXState
+                > baseInput =
+                new GeneratorTileInput<>("base");
 
-        IntScalar<? extends PositiveInt> num =
-                this.numInput.apply(beastState, indexVariables);
+        GeneratorTileInput<IntScalar<? extends PositiveInt>, BeastXState> numInput =
+                new GeneratorTileInput<>("num");
 
+        @Override
+        public BoundDistribution<
+                BeastXRealVectorParam<org.phylospec.domain.Real>,
+                DistributionLikelihood
+                > applyTile(
+                BeastXState beastState,
+                IdentityHashMap<Expr.Variable, Integer> indexVariables
+        ) {
+            BoundDistribution<
+                    BeastXRealScalarParam<org.phylospec.domain.Real>,
+                    DistributionLikelihood
+                    > base =
+                    this.baseInput.apply(beastState, indexVariables);
+
+            int dimension =
+                    getDimension(this.numInput.apply(beastState, indexVariables));
+
+            double[] defaultValues =
+                    repeatedDefaultValues(
+                            base.stateNode.getParameter().getParameterValue(0),
+                            dimension
+                    );
+
+            BeastXRealVectorParam<org.phylospec.domain.Real> defaultState =
+                    new BeastXRealVectorParam<>(
+                            new Parameter.Default(defaultValues),
+                            org.phylospec.domain.Real.INSTANCE
+                    );
+
+            return new BoundDistribution<>(
+                    base.distribution,
+                    defaultState,
+                    state -> base.distribution.addData(new Attribute.Default<>(
+                            state.getParameter().getParameterName(),
+                            state.getParameter().getParameterValues()
+                    ))
+            );
+        }
+    }
+
+    public static final class PositiveRealIID extends GeneratorTile<
+            BoundDistribution<
+                    BeastXRealVectorParam<org.phylospec.domain.PositiveReal>,
+                    DistributionLikelihood
+                    >,
+            BeastXState
+            > {
+
+        @Override
+        public String getPhyloSpecGeneratorName() {
+            return "IID";
+        }
+
+        GeneratorTileInput<
+                BoundDistribution<
+                        BeastXRealScalarParam<org.phylospec.domain.PositiveReal>,
+                        DistributionLikelihood
+                        >,
+                BeastXState
+                > baseInput =
+                new GeneratorTileInput<>("base");
+
+        GeneratorTileInput<IntScalar<? extends PositiveInt>, BeastXState> numInput =
+                new GeneratorTileInput<>("num");
+
+        @Override
+        public BoundDistribution<
+                BeastXRealVectorParam<org.phylospec.domain.PositiveReal>,
+                DistributionLikelihood
+                > applyTile(
+                BeastXState beastState,
+                IdentityHashMap<Expr.Variable, Integer> indexVariables
+        ) {
+            BoundDistribution<
+                    BeastXRealScalarParam<org.phylospec.domain.PositiveReal>,
+                    DistributionLikelihood
+                    > base =
+                    this.baseInput.apply(beastState, indexVariables);
+
+            int dimension =
+                    getDimension(this.numInput.apply(beastState, indexVariables));
+
+            double[] defaultValues =
+                    repeatedDefaultValues(
+                            base.stateNode.getParameter().getParameterValue(0),
+                            dimension
+                    );
+
+            Parameter parameter =
+                    new Parameter.Default(defaultValues);
+
+            parameter.addBounds(new Parameter.DefaultBounds(
+                    Double.POSITIVE_INFINITY,
+                    0.0,
+                    dimension
+            ));
+
+            BeastXRealVectorParam<org.phylospec.domain.PositiveReal> defaultState =
+                    new BeastXRealVectorParam<>(
+                            parameter,
+                            org.phylospec.domain.PositiveReal.INSTANCE
+                    );
+
+            return new BoundDistribution<>(
+                    base.distribution,
+                    defaultState,
+                    state -> base.distribution.addData(new Attribute.Default<>(
+                            state.getParameter().getParameterName(),
+                            state.getParameter().getParameterValues()
+                    ))
+            );
+        }
+    }
+
+    private static int getDimension(IntScalar<? extends PositiveInt> num) {
         int dimension =
                 num.get();
 
@@ -57,9 +171,10 @@ public class IIDTile extends GeneratorTile<
             );
         }
 
-        double defaultValue =
-                base.stateNode.getParameter().getParameterValue(0);
+        return dimension;
+    }
 
+    private static double[] repeatedDefaultValues(double defaultValue, int dimension) {
         double[] defaultValues =
                 new double[dimension];
 
@@ -68,19 +183,6 @@ public class IIDTile extends GeneratorTile<
                 defaultValue
         );
 
-        BeastXRealVectorParam<Real> defaultState =
-                new BeastXRealVectorParam<>(
-                        new Parameter.Default(defaultValues),
-                        Real.INSTANCE
-                );
-
-        return new BoundDistribution<>(
-                base.distribution,
-                defaultState,
-                state -> base.distribution.addData(new Attribute.Default<>(
-                        state.getParameter().getParameterName(),
-                        state.getParameter().getParameterValues()
-                ))
-        );
+        return defaultValues;
     }
 }

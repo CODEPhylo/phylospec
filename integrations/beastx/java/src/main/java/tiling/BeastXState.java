@@ -37,6 +37,9 @@ public class BeastXState {
     public final OperatorConfig operatorConfig;
 
     public long chainLength = 1;
+    public Long randomSeed = null;
+    public String outputPrefix = null;
+    public long defaultLogEvery = 1;
 
     private final Set<String> ids;
 
