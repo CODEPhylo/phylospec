@@ -12,7 +12,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class BeastXShowcaseModelsSmokeTest {
+public class BeastXShowcaseModelsTest {
 
     private static final Path SHOWCASE_MODEL_DIR =
             Path.of("src", "test", "java", "tiling", "representative", "showcase");

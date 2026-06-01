@@ -1,0 +1,27 @@
+Tree sourceTree = fromTree("src/test/java/resources/valid.newick")
+Taxa rawTaxa = taxa(sourceTree)
+
+Vector<Map<String, String>> metadata = fromCSV(
+    file="src/test/java/resources/dated-metadata.csv"
+)
+
+Taxa datedTaxa = taxaWithAgesFromTable(
+    taxa=rawTaxa,
+    table=metadata,
+    taxonColumn="taxon",
+    ageColumn="age"
+)
+
+Tree tree ~ Yule(
+    birthRate=1.0,
+    taxa=datedTaxa
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// TM: tree
+// TP: tree_prior
+// EXPECTED BEASTX STATE

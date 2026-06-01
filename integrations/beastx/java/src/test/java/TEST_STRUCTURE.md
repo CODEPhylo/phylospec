@@ -22,7 +22,7 @@ These are broad regression tests. They are intentionally data-driven and cover m
 These tests verify that non-trivial Bayesian phylogenetic models can be constructed from PhyloSpec into BEAST X model summaries.
 
 - `BeastXRepresentativeModelsTest`
-- `BeastXShowcaseModelsSmokeTest`
+- `BeastXShowcaseModelsTest`
 - `BeastXExpressivenessReportTest`
 
 Representative scripts are organized into:
@@ -39,8 +39,8 @@ These tests verify MCMC configuration, logger construction, and direct runtime e
 
 - `BeastXMCMCConfigTileTest`
 - `BeastXMCMCRepresentativeModelTest`
-- `BeastXMCMCRunSmokeTest`
-- `BeastXShowcaseRuntimeSmokeTest`
+- `BeastXMCMCRunTest`
+- `BeastXShowcaseRuntimeTest`
 
 These tests cover:
 
@@ -55,8 +55,8 @@ These tests cover:
 
 These tests verify whether constructed PhyloCTMC likelihood specifications can be materialized into BEAST X likelihood objects.
 
-- `BeastXPhyloCTMCMaterializationSmokeTest`
-- `BeastXMaterializedPhyloCTMCMCMCSmokeTest`
+- `BeastXPhyloCTMCMaterializationTest`
+- `BeastXMaterializedPhyloCTMCMCMCTest`
 
 Some of these tests depend on the native BEAGLE library. If BEAGLE is not available locally, the relevant tests may be skipped.
 
@@ -70,9 +70,9 @@ These tests verify automatic MCMC operator construction for BEAST X state nodes 
 
 These tests verify specific BEAST X feature extensions.
 
-- `BeastXCalibrationPriorSmokeTest`
+- `BeastXCalibrationPriorTest`
 - `BeastXMatrixDimensionTileTest`
-- `BeastXRPNCalculationSmokeTest`
+- `BeastXRPNCalculationTest`
 - `BeastXTipAgeInitialTreeTest`
 
 ## Recommended Test Commands
@@ -86,7 +86,7 @@ mvn -pl integrations/beastx/java "-Dtest=BeastXRepresentativeModelsTest,TilingSc
 Run materialization checks:
 
 ```bash
-mvn -pl integrations/beastx/java "-Dtest=BeastXPhyloCTMCMaterializationSmokeTest,BeastXMaterializedPhyloCTMCMCMCSmokeTest" test
+mvn -pl integrations/beastx/java "-Dtest=BeastXPhyloCTMCMaterializationTest,BeastXMaterializedPhyloCTMCMCMCTest" test
 ```
 
 Run the full BEAST X module test suite:

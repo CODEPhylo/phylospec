@@ -5,7 +5,7 @@ import tiling.BeastXModelSummary;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class BeastXCalibrationPriorSmokeTest {
+public class BeastXCalibrationPriorTest {
 
     @Test
     public void buildsRootAgeCalibrationPrior() throws Exception {

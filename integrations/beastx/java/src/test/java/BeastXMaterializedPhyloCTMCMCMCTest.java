@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class BeastXMaterializedPhyloCTMCMCMCSmokeTest {
+public class BeastXMaterializedPhyloCTMCMCMCTest {
 
     private static final Path MODEL_PATH =
             Path.of(
