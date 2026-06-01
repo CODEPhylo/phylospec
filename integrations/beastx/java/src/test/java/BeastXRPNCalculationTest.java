@@ -5,7 +5,7 @@ import tiling.BeastXModel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class BeastXRPNCalculationSmokeTest {
+public class BeastXRPNCalculationTest {
 
     @Test
     public void buildsAndEvaluatesDeterministicRPNCalculation() throws Exception {

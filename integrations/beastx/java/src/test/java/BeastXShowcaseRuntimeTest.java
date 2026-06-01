@@ -7,7 +7,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class BeastXShowcaseRuntimeSmokeTest {
+public class BeastXShowcaseRuntimeTest {
 
     @Test
     public void runsPriorOnlyBirthDeathMCMCAndWritesParameterAndTreeLogs() throws Exception {

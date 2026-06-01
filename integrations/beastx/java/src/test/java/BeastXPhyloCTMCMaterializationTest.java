@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class BeastXPhyloCTMCMaterializationSmokeTest {
+public class BeastXPhyloCTMCMaterializationTest {
 
     private static final Path MODEL_PATH =
             Path.of(
