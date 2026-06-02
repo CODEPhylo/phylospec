@@ -1,0 +1,17 @@
+Real x ~ Normal(mean=1.0, sd=2.0)
+PositiveReal y ~ LogNormal(logMean=0.0, logSd=1.0)
+NonNegativeReal c = 4.0
+
+Real transformed = sqrt(x * x + c)
+Real nested = exp(sqrt(x * x + c)) + log(y)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: x, y
+// P: x_prior, y_prior
+// CN: transformed, nested
+// EXPECTED BEASTX STATE
