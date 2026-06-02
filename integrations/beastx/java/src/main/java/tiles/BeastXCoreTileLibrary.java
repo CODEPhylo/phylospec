@@ -25,6 +25,7 @@ import tiles.input.DiscreteTraitsFromTaxaTile;
 import tiles.input.FromCSVTile;
 import tiles.input.DiscreteTraitsFromTableTile;
 import tiles.input.TaxaWithAgesFromTableTile;
+import tiles.input.ContinuousTraitsFromTaxaTile;
 
 import tiles.distributions.ExponentialTile;
 import tiles.distributions.LogNormalTile;
@@ -91,6 +92,8 @@ import tiles.rpn.BinaryTile;
 import tiles.rpn.ExpRPNTile;
 import tiles.rpn.LogRPNTile;
 import tiles.rpn.RPNAssignmentTile;
+import tiles.rpn.SqrtRPNTile;
+import tiles.rpn.UnaryRPNTile;
 
 import tiles.mcmc.AutoOperatorConfigTile;
 import tiles.mcmc.ChainLengthTile;
@@ -162,10 +165,13 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new BinaryTile.RpnReal());
         tiles.add(new BinaryTile.RealRpn());
         tiles.add(new BinaryTile.RealReal());
+        tiles.add(new UnaryRPNTile.Rpn());
+        tiles.add(new UnaryRPNTile.RealScalarInput());
         tiles.add(new ExpRPNTile.Rpn());
         tiles.add(new ExpRPNTile.Real());
         tiles.add(new LogRPNTile.Rpn());
         tiles.add(new LogRPNTile.Real());
+        tiles.add(new SqrtRPNTile());
         tiles.add(new RPNAssignmentTile());
 
         // Input/accessor support
@@ -175,6 +181,7 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new FromNewickTile());
         tiles.add(new FromTreeTile());
         tiles.add(new DiscreteTraitsFromTaxaTile());
+        tiles.add(new ContinuousTraitsFromTaxaTile());
         tiles.add(new DiscreteTraitsFromTableTile());
         tiles.add(new TaxaWithAgesFromTableTile());
         tiles.add(new SubsetTile());

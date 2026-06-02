@@ -1,0 +1,18 @@
+Real x ~ Normal(mean=1.0, sd=2.0)
+PositiveReal y ~ LogNormal(logMean=0.0, logSd=1.0)
+
+Real negatedParameter = -x
+Real negatedExpression = -(x * y + 4.0)
+Real mixed = exp(-(x * x + 1.0)) + log(y)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// TILING_SUCCESS
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: x, y
+// P: x_prior, y_prior
+// CN: negatedParameter, negatedExpression, mixed
+// EXPECTED BEASTX STATE

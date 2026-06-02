@@ -1,5 +1,8 @@
 package tiling.xml;
 
+import dr.evomodel.coalescent.CoalescentLikelihood;
+import dr.evomodel.coalescent.demographicmodel.ConstantPopulationModel;
+import dr.evomodel.coalescent.demographicmodel.DemographicModel;
 import dr.evomodel.speciation.BirthDeathGernhard08Model;
 import dr.evomodel.speciation.SpeciationLikelihood;
 import dr.evomodel.speciation.SpeciationModel;
@@ -11,6 +14,7 @@ import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Bounds;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
+import dr.inference.distribution.BetaDistributionModel;
 import dr.math.distributions.Distribution;
 import tiling.BeastXModel;
 import tiling.BeastXState;
@@ -29,8 +33,7 @@ import java.util.Set;
 public class BeastXXmlWriter {
 
     public void write(BeastXModel model, Path path) throws IOException {
-        Path parent =
-                path.getParent();
+        Path parent = path.getParent();
 
         if (parent != null) {
             Files.createDirectories(parent);
@@ -42,8 +45,7 @@ public class BeastXXmlWriter {
     public String toXml(BeastXModel model) {
         validateSupportedModel(model);
 
-        StringBuilder xml =
-                new StringBuilder();
+        StringBuilder xml = new StringBuilder();
 
         xml.append("<?xml version=\"1.0\" standalone=\"yes\"?>\n");
         xml.append("<beast version=\"10.5.0\">\n");
@@ -67,8 +69,7 @@ public class BeastXXmlWriter {
     }
 
     private void validateSupportedModel(BeastXModel model) {
-        BeastXState state =
-                model.beastState;
+        BeastXState state = model.beastState;
 
         if (!state.calibrationPriorDistributions.isEmpty()) {
             throw unsupported("Calibration priors are not supported by this BEAST X XML writer yet.");
@@ -113,22 +114,31 @@ public class BeastXXmlWriter {
             Distribution distribution =
                     distributionLikelihood.getDistribution();
 
-            if (!(distribution instanceof LogNormalDistributionModel)) {
-                throw unsupported("Only LogNormal scalar priors are supported by this BEAST X XML writer.");
+            if (
+                    !(distribution instanceof LogNormalDistributionModel)
+                            && !(distribution instanceof BetaDistributionModel)
+            ) {
+                throw unsupported("Only LogNormal and Beta scalar priors are supported by this BEAST X XML writer.");
             }
         }
     }
 
     private void validateTreePriors(BeastXState state) {
         for (AbstractModelLikelihood treePrior : state.treePriorDistributions.values()) {
-            SpeciationLikelihood speciationLikelihood =
-                    asSpeciationLikelihood(treePrior);
+            if (treePrior instanceof SpeciationLikelihood speciationLikelihood) {
+                SpeciationModel speciationModel = speciationLikelihood.getSpeciationModel();
 
-            SpeciationModel speciationModel =
-                    speciationLikelihood.getSpeciationModel();
+                if (!(speciationModel instanceof BirthDeathGernhard08Model)) {
+                    throw unsupported("Only Yule and BirthDeath speciation tree priors are supported by this BEAST X XML writer.");
+                }
+            } else if (treePrior instanceof CoalescentLikelihood coalescentLikelihood) {
+                DemographicModel demographicModel = coalescentLikelihood.getDemoModel();
 
-            if (!(speciationModel instanceof BirthDeathGernhard08Model)) {
-                throw unsupported("Only Yule and BirthDeath tree priors are supported by this BEAST X XML writer.");
+                if (!(demographicModel instanceof ConstantPopulationModel)) {
+                    throw unsupported("Only constant-population Coalescent tree priors are supported by this BEAST X XML writer.");
+                }
+            } else {
+                throw unsupported("Only SpeciationLikelihood and CoalescentLikelihood tree priors are supported by this BEAST X XML writer.");
             }
         }
     }
@@ -141,8 +151,7 @@ public class BeastXXmlWriter {
 
         treeEntries.sort(Comparator.comparing(entry -> treeId(entry.getKey())));
 
-        Set<String> emittedTaxonIds =
-                new HashSet<>();
+        Set<String> emittedTaxonIds = new HashSet<>();
 
         for (Map.Entry<TreeModel, AbstractModelLikelihood> entry : treeEntries) {
             appendTaxonDefinitions(xml, entry.getKey(), emittedTaxonIds);
@@ -153,8 +162,7 @@ public class BeastXXmlWriter {
     }
 
     private void appendBeastLevelStateParameterDefinitions(StringBuilder xml, BeastXState state) {
-        List<Parameter> parameters =
-                new ArrayList<>(state.stateNodes.keySet());
+        List<Parameter> parameters = new ArrayList<>(state.stateNodes.keySet());
 
         parameters.sort(Comparator.comparing(BeastXXmlWriter::parameterId));
 
@@ -169,8 +177,7 @@ public class BeastXXmlWriter {
             Set<String> emittedTaxonIds
     ) {
         for (int i = 0; i < treeModel.getTaxonCount(); i++) {
-            String taxonId =
-                    treeModel.getTaxonId(i);
+            String taxonId = treeModel.getTaxonId(i);
 
             if (taxonId == null || taxonId.isBlank()) {
                 throw new IllegalArgumentException("Cannot serialize unnamed BEAST X taxon.");
@@ -195,8 +202,7 @@ public class BeastXXmlWriter {
     }
 
     private void appendTreeModelDefinition(StringBuilder xml, TreeModel treeModel) {
-        String id =
-                treeId(treeModel);
+        String id = treeId(treeModel);
 
         xml.append("    <treeModel id=\"")
                 .append(escape(id))
@@ -232,14 +238,24 @@ public class BeastXXmlWriter {
             BeastXState state,
             AbstractModelLikelihood treePrior
     ) {
-        BirthDeathGernhard08Model birthDeathModel =
-                getBirthDeathModel(treePrior);
+        if (treePrior instanceof SpeciationLikelihood) {
+            BirthDeathGernhard08Model birthDeathModel =
+                    getBirthDeathModel(treePrior);
 
-        if (isYuleCompatible(birthDeathModel)) {
-            appendYuleModelDefinition(xml, state, treePrior, birthDeathModel);
-        } else {
-            appendBirthDeathModelDefinition(xml, state, treePrior, birthDeathModel);
+            if (isYuleCompatible(birthDeathModel)) {
+                appendYuleModelDefinition(xml, state, treePrior, birthDeathModel);
+            } else {
+                appendBirthDeathModelDefinition(xml, state, treePrior, birthDeathModel);
+            }
+            return;
         }
+
+        if (treePrior instanceof CoalescentLikelihood) {
+            appendConstantPopulationModelDefinition(xml, state, treePrior);
+            return;
+        }
+
+        throw unsupported("Only SpeciationLikelihood and CoalescentLikelihood tree priors are supported by this BEAST X XML writer.");
     }
 
     private void appendYuleModelDefinition(
@@ -252,7 +268,7 @@ public class BeastXXmlWriter {
                 .append(escape(treePriorModelId(treePrior)))
                 .append("\" units=\"years\">\n");
 
-        appendBirthDeathParameterElement(
+        appendParameterElement(
                 xml,
                 state,
                 "birthRate",
@@ -276,7 +292,7 @@ public class BeastXXmlWriter {
                 .append(escape(treePriorModelId(treePrior)))
                 .append("\" type=\"LABELED\" units=\"years\">\n");
 
-        appendBirthDeathParameterElement(
+        appendParameterElement(
                 xml,
                 state,
                 "birthMinusDeathRate",
@@ -287,7 +303,7 @@ public class BeastXXmlWriter {
                 null
         );
 
-        appendBirthDeathParameterElement(
+        appendParameterElement(
                 xml,
                 state,
                 "relativeDeathRate",
@@ -298,7 +314,7 @@ public class BeastXXmlWriter {
                 1.0
         );
 
-        appendBirthDeathParameterElement(
+        appendParameterElement(
                 xml,
                 state,
                 "sampleProbability",
@@ -312,7 +328,36 @@ public class BeastXXmlWriter {
         xml.append("    </birthDeathModel>\n");
     }
 
-    private void appendBirthDeathParameterElement(
+    private void appendConstantPopulationModelDefinition(
+            StringBuilder xml,
+            BeastXState state,
+            AbstractModelLikelihood treePrior
+    ) {
+        ConstantPopulationModel constantPopulationModel =
+                getConstantPopulationModel(treePrior);
+
+        Parameter populationSize =
+                constantPopulationVariable(constantPopulationModel);
+
+        xml.append("    <constantSize id=\"")
+                .append(escape(treePriorModelId(treePrior)))
+                .append("\" units=\"years\">\n");
+
+        appendParameterElement(
+                xml,
+                state,
+                "populationSize",
+                populationSize,
+                priorId(treePrior) + "_populationSize",
+                populationSize.getParameterValue(0),
+                0.0,
+                null
+        );
+
+        xml.append("    </constantSize>\n");
+    }
+
+    private void appendParameterElement(
             StringBuilder xml,
             BeastXState state,
             String elementName,
@@ -355,7 +400,19 @@ public class BeastXXmlWriter {
         entries.sort(Comparator.comparing(entry -> parameterId(entry.getKey())));
 
         for (Map.Entry<Parameter, AbstractDistributionLikelihood> entry : entries) {
-            appendLogNormalPrior(xml, entry.getKey(), (DistributionLikelihood) entry.getValue());
+            DistributionLikelihood likelihood =
+                    (DistributionLikelihood) entry.getValue();
+
+            Distribution distribution =
+                    likelihood.getDistribution();
+
+            if (distribution instanceof LogNormalDistributionModel) {
+                appendLogNormalPrior(xml, entry.getKey(), likelihood);
+            } else if (distribution instanceof BetaDistributionModel) {
+                appendBetaPrior(xml, entry.getKey(), likelihood);
+            } else {
+                throw unsupported("Only LogNormal and Beta scalar priors are supported by this BEAST X XML writer.");
+            }
         }
     }
 
@@ -416,7 +473,69 @@ public class BeastXXmlWriter {
         xml.append("                </distributionLikelihood>\n");
     }
 
+    private void appendBetaPrior(
+            StringBuilder xml,
+            Parameter parameter,
+            DistributionLikelihood likelihood
+    ) {
+        BetaDistributionModel distribution =
+                (BetaDistributionModel) likelihood.getDistribution();
+
+        String priorId =
+                likelihood.getId();
+
+        xml.append("                <distributionLikelihood id=\"")
+                .append(escape(priorId))
+                .append("\">\n");
+
+        xml.append("                    <distribution>\n");
+        xml.append("                        <betaDistributionModel id=\"")
+                .append(escape(priorId))
+                .append("_distribution\">\n");
+
+        appendBetaShapeParameter(
+                xml,
+                "alpha",
+                betaDistributionVariable(distribution, 0),
+                priorId + "_alpha"
+        );
+
+        appendBetaShapeParameter(
+                xml,
+                "beta",
+                betaDistributionVariable(distribution, 1),
+                priorId + "_beta"
+        );
+
+        xml.append("                        </betaDistributionModel>\n");
+        xml.append("                    </distribution>\n");
+
+        xml.append("                    <data>\n");
+        appendParameterReference(xml, parameter, 24);
+        xml.append("                    </data>\n");
+
+        xml.append("                </distributionLikelihood>\n");
+    }
+
     private void appendTreePrior(
+            StringBuilder xml,
+            TreeModel treeModel,
+            AbstractModelLikelihood treePrior
+    ) {
+        if (treePrior instanceof SpeciationLikelihood) {
+            appendSpeciationTreePrior(xml, treeModel, treePrior);
+            return;
+        }
+
+        if (treePrior instanceof CoalescentLikelihood) {
+            appendCoalescentTreePrior(xml, treeModel, treePrior);
+            return;
+        }
+
+        throw unsupported("Only SpeciationLikelihood and CoalescentLikelihood tree priors are supported by this BEAST X XML writer.");
+    }
+
+    private void appendSpeciationTreePrior(
             StringBuilder xml,
             TreeModel treeModel,
             AbstractModelLikelihood treePrior
@@ -446,6 +565,28 @@ public class BeastXXmlWriter {
         xml.append("                    </speciesTree>\n");
 
         xml.append("                </speciationLikelihood>\n");
+    }
+
+    private void appendCoalescentTreePrior(
+            StringBuilder xml,
+            TreeModel treeModel,
+            AbstractModelLikelihood treePrior
+    ) {
+        xml.append("                <coalescentLikelihood id=\"")
+                .append(escape(priorId(treePrior)))
+                .append("\">\n");
+
+        xml.append("                    <model>\n");
+        xml.append("                        <constantSize idref=\"")
+                .append(escape(treePriorModelId(treePrior)))
+                .append("\"/>\n");
+        xml.append("                    </model>\n");
+
+        xml.append("                    <populationTree>\n");
+        appendTreeReference(xml, treeModel, 24);
+        xml.append("                    </populationTree>\n");
+
+        xml.append("                </coalescentLikelihood>\n");
     }
 
     private void appendOperators(StringBuilder xml, BeastXState state) {
@@ -869,17 +1010,10 @@ public class BeastXXmlWriter {
                 .append("\"/>\n");
     }
 
-    private static SpeciationLikelihood asSpeciationLikelihood(AbstractModelLikelihood treePrior) {
-        if (!(treePrior instanceof SpeciationLikelihood speciationLikelihood)) {
-            throw unsupported("Only SpeciationLikelihood tree priors are supported by this BEAST X XML writer.");
-        }
-
-        return speciationLikelihood;
-    }
-
     private static BirthDeathGernhard08Model getBirthDeathModel(AbstractModelLikelihood treePrior) {
-        SpeciationLikelihood speciationLikelihood =
-                asSpeciationLikelihood(treePrior);
+        if (!(treePrior instanceof SpeciationLikelihood speciationLikelihood)) {
+            throw unsupported("Only SpeciationLikelihood tree priors can be serialized as Yule or BirthDeath XML.");
+        }
 
         SpeciationModel speciationModel =
                 speciationLikelihood.getSpeciationModel();
@@ -889,6 +1023,21 @@ public class BeastXXmlWriter {
         }
 
         return birthDeathModel;
+    }
+
+    private static ConstantPopulationModel getConstantPopulationModel(AbstractModelLikelihood treePrior) {
+        if (!(treePrior instanceof CoalescentLikelihood coalescentLikelihood)) {
+            throw unsupported("Only CoalescentLikelihood tree priors can be serialized as coalescent XML.");
+        }
+
+        DemographicModel demographicModel =
+                coalescentLikelihood.getDemoModel();
+
+        if (!(demographicModel instanceof ConstantPopulationModel constantPopulationModel)) {
+            throw unsupported("Only constant-population Coalescent tree priors are supported by this BEAST X XML writer.");
+        }
+
+        return constantPopulationModel;
     }
 
     private static Parameter birthDeathVariable(
@@ -907,6 +1056,63 @@ public class BeastXXmlWriter {
         }
 
         return null;
+    }
+
+    private static void appendBetaShapeParameter(
+            StringBuilder xml,
+            String elementName,
+            Parameter parameter,
+            String fallbackId
+    ) {
+        xml.append("                            <")
+                .append(elementName)
+                .append(">\n");
+
+        appendInlineParameterDefinition(
+                xml,
+                fallbackId,
+                parameter.getParameterValue(0),
+                0.0,
+                null,
+                32
+        );
+
+        xml.append("                            </")
+                .append(elementName)
+                .append(">\n");
+    }
+
+    private static Parameter betaDistributionVariable(
+            BetaDistributionModel distribution,
+            int variableIndex
+    ) {
+        if (variableIndex >= distribution.getVariableCount()) {
+            throw unsupported("Beta XML export requires alpha and beta parameters.");
+        }
+
+        Variable<?> variable =
+                distribution.getVariable(variableIndex);
+
+        if (variable instanceof Parameter parameter) {
+            return parameter;
+        }
+
+        throw unsupported("Beta XML export requires alpha and beta parameters.");
+    }
+
+    private static Parameter constantPopulationVariable(ConstantPopulationModel populationModel) {
+        if (populationModel.getVariableCount() < 1) {
+            throw unsupported("Constant-population Coalescent XML export requires a population size parameter.");
+        }
+
+        Variable<?> variable =
+                populationModel.getVariable(0);
+
+        if (!(variable instanceof Parameter parameter)) {
+            throw unsupported("Constant-population Coalescent XML export requires a population size parameter.");
+        }
+
+        return parameter;
     }
 
     private static boolean isYuleCompatible(BirthDeathGernhard08Model model) {

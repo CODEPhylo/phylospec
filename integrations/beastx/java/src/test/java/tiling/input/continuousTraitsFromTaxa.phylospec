@@ -1,0 +1,14 @@
+Alignment molecularData = fromNexus("src/test/java/resources/binary-traits.nex")
+Taxa taxa = taxa(molecularData)
+
+Alignment traitData = continuousTraitsFromTaxa(
+    taxa=taxa,
+    trait=parse(regex=".*_([01])$")
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// EXPECTED BEASTX STATE
