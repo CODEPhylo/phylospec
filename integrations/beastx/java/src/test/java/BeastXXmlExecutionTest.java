@@ -6,6 +6,7 @@ import tiling.xml.BeastXXmlWriter;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -15,17 +16,11 @@ public class BeastXXmlExecutionTest {
 
     @Test
     public void writesAndRunsPriorOnlyLogNormalMCMCXml() throws Exception {
-        long suffix =
-                System.nanoTime();
+        long suffix = System.nanoTime();
 
-        Path outputDirectory =
-                Path.of("target", "beastx-xml-execution");
-
-        Path xmlPath =
-                outputDirectory.resolve("priorOnlyLogNormal-" + suffix + ".xml");
-
-        Path logPath =
-                outputDirectory.resolve("priorOnlyLogNormal-" + suffix + ".log");
+        Path outputDirectory = Path.of("target", "beastx-xml-execution");
+        Path xmlPath = outputDirectory.resolve("priorOnlyLogNormal-" + suffix + ".xml");
+        Path logPath = outputDirectory.resolve("priorOnlyLogNormal-" + suffix + ".log");
 
         Files.createDirectories(outputDirectory);
         Files.deleteIfExists(xmlPath);
@@ -58,11 +53,9 @@ public class BeastXXmlExecutionTest {
 
         assertTrue(Files.exists(xmlPath), "Expected BEAST X XML file to be written.");
 
-        BeastXXmlRunner runner =
-                new BeastXXmlRunner();
+        BeastXXmlRunner runner = new BeastXXmlRunner();
 
-        MCMC mcmc =
-                runner.parse(xmlPath);
+        MCMC mcmc = runner.parse(xmlPath);
 
         assertNotNull(mcmc, "Expected BEAST X XML to parse into an MCMC object.");
 
@@ -81,17 +74,11 @@ public class BeastXXmlExecutionTest {
 
     @Test
     public void writesParsesAndRunsPriorOnlyYuleTreeMCMCXml() throws Exception {
-        long suffix =
-                System.nanoTime();
+        long suffix = System.nanoTime();
 
-        Path outputDirectory =
-                Path.of("target", "beastx-xml-execution");
-
-        Path xmlPath =
-                outputDirectory.resolve("priorOnlyYuleTree-" + suffix + ".xml");
-
-        Path treeLogPath =
-                outputDirectory.resolve("priorOnlyYuleTree-" + suffix + ".trees");
+        Path outputDirectory = Path.of("target", "beastx-xml-execution");
+        Path xmlPath = outputDirectory.resolve("priorOnlyYuleTree-" + suffix + ".xml");
+        Path treeLogPath = outputDirectory.resolve("priorOnlyYuleTree-" + suffix + ".trees");
 
         Files.createDirectories(outputDirectory);
         Files.deleteIfExists(xmlPath);
@@ -127,8 +114,7 @@ public class BeastXXmlExecutionTest {
 
         assertTrue(Files.exists(xmlPath), "Expected BEAST X XML file to be written.");
 
-        String xml =
-                Files.readString(xmlPath);
+        String xml = Files.readString(xmlPath);
 
         assertTrue(xml.contains("<taxon id=\"Lemur_catta\"/>"), xml);
         assertTrue(xml.contains("<newick id=\"tree_startingTree\""), xml);
@@ -137,11 +123,9 @@ public class BeastXXmlExecutionTest {
         assertTrue(xml.contains("<speciationLikelihood id=\"tree_prior\">"), xml);
         assertTrue(xml.contains("<logTree"), xml);
 
-        BeastXXmlRunner runner =
-                new BeastXXmlRunner();
+        BeastXXmlRunner runner = new BeastXXmlRunner();
 
-        MCMC mcmc =
-                runner.parse(xmlPath);
+        MCMC mcmc = runner.parse(xmlPath);
 
         assertNotNull(mcmc, "Expected BEAST X tree XML to parse into an MCMC object.");
 
@@ -150,8 +134,7 @@ public class BeastXXmlExecutionTest {
         assertTrue(Files.exists(treeLogPath), "Expected BEAST X XML execution to write a tree log.");
         assertTrue(Files.size(treeLogPath) > 0, "Expected BEAST X XML execution tree log to be non-empty.");
 
-        String treeLog =
-                Files.readString(treeLogPath);
+        String treeLog = Files.readString(treeLogPath);
 
         assertTrue(treeLog.contains("#NEXUS"), treeLog);
         assertTrue(treeLog.contains("Begin taxa;"), treeLog);
@@ -161,17 +144,11 @@ public class BeastXXmlExecutionTest {
 
     @Test
     public void writesParsesAndRunsPriorOnlyBirthDeathTreeMCMCXml() throws Exception {
-        long suffix =
-                System.nanoTime();
+        long suffix = System.nanoTime();
 
-        Path outputDirectory =
-                Path.of("target", "beastx-xml-execution");
-
-        Path xmlPath =
-                outputDirectory.resolve("priorOnlyBirthDeathTree-" + suffix + ".xml");
-
-        Path treeLogPath =
-                outputDirectory.resolve("priorOnlyBirthDeathTree-" + suffix + ".trees");
+        Path outputDirectory = Path.of("target", "beastx-xml-execution");
+        Path xmlPath = outputDirectory.resolve("priorOnlyBirthDeathTree-" + suffix + ".xml");
+        Path treeLogPath = outputDirectory.resolve("priorOnlyBirthDeathTree-" + suffix + ".trees");
 
         Files.createDirectories(outputDirectory);
         Files.deleteIfExists(xmlPath);
@@ -209,8 +186,7 @@ public class BeastXXmlExecutionTest {
 
         assertTrue(Files.exists(xmlPath), "Expected BEAST X XML file to be written.");
 
-        String xml =
-                Files.readString(xmlPath);
+        String xml = Files.readString(xmlPath);
 
         assertTrue(xml.contains("<taxon id=\"Lemur_catta\"/>"), xml);
         assertTrue(xml.contains("<newick id=\"tree_startingTree\""), xml);
@@ -222,11 +198,9 @@ public class BeastXXmlExecutionTest {
         assertTrue(xml.contains("<speciationLikelihood id=\"tree_prior\">"), xml);
         assertTrue(xml.contains("<logTree"), xml);
 
-        BeastXXmlRunner runner =
-                new BeastXXmlRunner();
+        BeastXXmlRunner runner = new BeastXXmlRunner();
 
-        MCMC mcmc =
-                runner.parse(xmlPath);
+        MCMC mcmc = runner.parse(xmlPath);
 
         assertNotNull(mcmc, "Expected BEAST X BirthDeath tree XML to parse into an MCMC object.");
 
@@ -235,8 +209,7 @@ public class BeastXXmlExecutionTest {
         assertTrue(Files.exists(treeLogPath), "Expected BEAST X XML execution to write a tree log.");
         assertTrue(Files.size(treeLogPath) > 0, "Expected BEAST X XML execution tree log to be non-empty.");
 
-        String treeLog =
-                Files.readString(treeLogPath);
+        String treeLog = Files.readString(treeLogPath);
 
         assertTrue(treeLog.contains("#NEXUS"), treeLog);
         assertTrue(treeLog.contains("Begin taxa;"), treeLog);
@@ -246,20 +219,12 @@ public class BeastXXmlExecutionTest {
 
     @Test
     public void writesParsesAndRunsParameterizedBirthDeathTreeMCMCXml() throws Exception {
-        long suffix =
-                System.nanoTime();
+        long suffix = System.nanoTime();
 
-        Path outputDirectory =
-                Path.of("target", "beastx-xml-execution");
-
-        Path xmlPath =
-                outputDirectory.resolve("parameterizedBirthDeathTree-" + suffix + ".xml");
-
-        Path parameterLogPath =
-                outputDirectory.resolve("parameterizedBirthDeathTree-" + suffix + ".log");
-
-        Path treeLogPath =
-                outputDirectory.resolve("parameterizedBirthDeathTree-" + suffix + ".trees");
+        Path outputDirectory = Path.of("target", "beastx-xml-execution");
+        Path xmlPath = outputDirectory.resolve("parameterizedBirthDeathTree-" + suffix + ".xml");
+        Path parameterLogPath = outputDirectory.resolve("parameterizedBirthDeathTree-" + suffix + ".log");
+        Path treeLogPath = outputDirectory.resolve("parameterizedBirthDeathTree-" + suffix + ".trees");
 
         Files.createDirectories(outputDirectory);
         Files.deleteIfExists(xmlPath);
@@ -275,9 +240,9 @@ public class BeastXXmlExecutionTest {
                     logSd=1.0
                 )
 
-                PositiveReal turnover ~ LogNormal(
-                    logMean=-2.0,
-                    logSd=1.0
+                Probability turnover ~ Beta(
+                    alpha=2.0,
+                    beta=5.0
                 )
 
                 Tree tree ~ BirthDeath(
@@ -317,8 +282,7 @@ public class BeastXXmlExecutionTest {
 
         assertTrue(Files.exists(xmlPath), "Expected BEAST X XML file to be written.");
 
-        String xml =
-                Files.readString(xmlPath);
+        String xml = Files.readString(xmlPath);
 
         assertTrue(xml.contains("<parameter id=\"diversificationRate\""), xml);
         assertTrue(xml.contains("<parameter id=\"turnover\""), xml);
@@ -331,11 +295,9 @@ public class BeastXXmlExecutionTest {
         assertTrue(xml.contains("<speciationLikelihood id=\"tree_prior\">"), xml);
         assertTrue(xml.contains("<logTree"), xml);
 
-        BeastXXmlRunner runner =
-                new BeastXXmlRunner();
+        BeastXXmlRunner runner = new BeastXXmlRunner();
 
-        MCMC mcmc =
-                runner.parse(xmlPath);
+        MCMC mcmc = runner.parse(xmlPath);
 
         assertNotNull(mcmc, "Expected parameterized BEAST X BirthDeath XML to parse into an MCMC object.");
 
@@ -346,6 +308,186 @@ public class BeastXXmlExecutionTest {
 
         assertTrue(Files.exists(treeLogPath), "Expected BEAST X XML execution to write a tree log.");
         assertTrue(Files.size(treeLogPath) > 0, "Expected tree log to be non-empty.");
+
+        String treeLog = Files.readString(treeLogPath);
+
+        assertTrue(treeLog.contains("#NEXUS"), treeLog);
+        assertTrue(treeLog.contains("Begin trees;"), treeLog);
+        assertTrue(treeLog.contains("STATE_"), treeLog);
+    }
+
+    @Test
+    public void writesParsesAndRunsParameterizedCoalescentTreeMCMCXml() throws Exception {
+        long suffix = System.nanoTime();
+
+        Path outputDirectory = Path.of("target", "beastx-xml-execution");
+        Path xmlPath = outputDirectory.resolve("parameterizedCoalescentTree-" + suffix + ".xml");
+        Path parameterLogPath = outputDirectory.resolve("parameterizedCoalescentTree-" + suffix + ".log");
+        Path treeLogPath = outputDirectory.resolve("parameterizedCoalescentTree-" + suffix + ".trees");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
+        Files.deleteIfExists(parameterLogPath);
+        Files.deleteIfExists(treeLogPath);
+
+        String source = """
+                Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+                Taxa taxa = taxa(data)
+
+                PositiveReal populationSize ~ LogNormal(
+                    logMean=1.0,
+                    logSd=1.0
+                )
+
+                Tree tree ~ Coalescent(
+                    populationSize=populationSize,
+                    taxa=taxa
+                )
+
+                mcmc {
+                    Integer chainLength = 5
+                    Integer randomSeed = 1234
+
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[populationSize]
+                    )
+
+                    Logger treeLogger = treeLogger(
+                        logEvery=1,
+                        file="%s",
+                        trees=[tree]
+                    )
+                }
+                """.formatted(
+                parameterLogPath.toString().replace("\\", "/"),
+                treeLogPath.toString().replace("\\", "/")
+        );
+
+        BeastXModel model =
+                new PhyloSpecRunner(source)
+                        .buildModel("xmlParameterizedCoalescentTree");
+
+        new BeastXXmlWriter()
+                .write(model, xmlPath);
+
+        assertTrue(Files.exists(xmlPath), "Expected BEAST X XML file to be written.");
+
+        String xml = Files.readString(xmlPath);
+
+        assertTrue(xml.contains("<parameter id=\"populationSize\""), xml);
+        assertTrue(xml.contains("<constantSize id=\"tree_prior_model\""), xml);
+        assertTrue(xml.contains("<populationSize>"), xml);
+        assertTrue(xml.contains("<parameter idref=\"populationSize\"/>"), xml);
+        assertTrue(xml.contains("<coalescentLikelihood id=\"tree_prior\">"), xml);
+        assertTrue(xml.contains("<populationTree>"), xml);
+        assertTrue(xml.contains("<treeModel idref=\"tree\"/>"), xml);
+        assertTrue(xml.contains("<logTree"), xml);
+
+        BeastXXmlRunner runner = new BeastXXmlRunner();
+
+        MCMC mcmc = runner.parse(xmlPath);
+
+        assertNotNull(mcmc, "Expected parameterized BEAST X Coalescent XML to parse into an MCMC object.");
+
+        mcmc.run();
+
+        assertTrue(Files.exists(parameterLogPath), "Expected BEAST X XML execution to write a parameter log.");
+        assertTrue(Files.size(parameterLogPath) > 0, "Expected parameter log to be non-empty.");
+
+        assertTrue(Files.exists(treeLogPath), "Expected BEAST X XML execution to write a tree log.");
+        assertTrue(Files.size(treeLogPath) > 0, "Expected tree log to be non-empty.");
+
+        String treeLog = Files.readString(treeLogPath);
+
+        assertTrue(treeLog.contains("#NEXUS"), treeLog);
+        assertTrue(treeLog.contains("Begin trees;"), treeLog);
+        assertTrue(treeLog.contains("STATE_"), treeLog);
+    }
+
+    @Test
+    public void writesParsesAndRunsBirthDeathBenchmarkWithBetaTurnoverXml() throws Exception {
+        long suffix =
+                System.nanoTime();
+
+        Path outputDirectory =
+                Path.of("target", "beastx-xml-execution");
+
+        Path xmlPath =
+                outputDirectory.resolve("birthDeathXmlBenchmark-" + suffix + ".xml");
+
+        Path parameterLogPath =
+                outputDirectory.resolve("birthDeathXmlBenchmark-" + suffix + ".log");
+
+        Path treeLogPath =
+                outputDirectory.resolve("birthDeathXmlBenchmark-" + suffix + ".trees");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
+        Files.deleteIfExists(parameterLogPath);
+        Files.deleteIfExists(treeLogPath);
+
+        String source =
+                Files.readString(
+                                Path.of(
+                                        "src",
+                                        "test",
+                                        "java",
+                                        "resources",
+                                        "benchmarks",
+                                        "birthDeathXmlBenchmark.phylospec"
+                                ),
+                                StandardCharsets.UTF_8
+                        )
+                        .replace("{{PARAMETER_LOG}}", parameterLogPath.toString().replace("\\", "/"))
+                        .replace("{{TREE_LOG}}", treeLogPath.toString().replace("\\", "/"));
+
+        BeastXModel model =
+                new PhyloSpecRunner(source)
+                        .buildModel("xmlBirthDeathBenchmark");
+
+        new BeastXXmlWriter()
+                .write(model, xmlPath);
+
+        assertTrue(Files.exists(xmlPath), "Expected BEAST X XML file to be written.");
+
+        String xml =
+                Files.readString(xmlPath);
+
+        assertTrue(xml.contains("<parameter id=\"diversificationRate\""), xml);
+        assertTrue(xml.contains("<parameter id=\"turnover\""), xml);
+        assertTrue(xml.contains("<logNormalDistributionModel id=\"diversificationRate_prior_distribution\""), xml);
+        assertTrue(xml.contains("<logNormalDistributionModel id=\"turnover_prior_distribution\""), xml);
+        assertTrue(xml.contains("<alpha>"), xml);
+        assertTrue(xml.contains("<beta>"), xml);
+        assertTrue(xml.contains("<birthDeathModel id=\"tree_prior_model\""), xml);
+        assertTrue(xml.contains("<parameter idref=\"diversificationRate\"/>"), xml);
+        assertTrue(xml.contains("<parameter idref=\"turnover\"/>"), xml);
+        assertTrue(xml.contains("<speciationLikelihood id=\"tree_prior\">"), xml);
+        assertTrue(xml.contains("<logTree"), xml);
+
+        BeastXXmlRunner runner =
+                new BeastXXmlRunner();
+
+        MCMC mcmc =
+                runner.parse(xmlPath);
+
+        assertNotNull(mcmc, "Expected benchmark BEAST X XML to parse into an MCMC object.");
+
+        mcmc.run();
+
+        assertTrue(Files.exists(parameterLogPath), "Expected benchmark XML execution to write a parameter log.");
+        assertTrue(Files.size(parameterLogPath) > 0, "Expected benchmark parameter log to be non-empty.");
+
+        assertTrue(Files.exists(treeLogPath), "Expected benchmark XML execution to write a tree log.");
+        assertTrue(Files.size(treeLogPath) > 0, "Expected benchmark tree log to be non-empty.");
+
+        String parameterLog =
+                Files.readString(parameterLogPath);
+
+        assertTrue(parameterLog.contains("diversificationRate"), parameterLog);
+        assertTrue(parameterLog.contains("turnover"), parameterLog);
 
         String treeLog =
                 Files.readString(treeLogPath);

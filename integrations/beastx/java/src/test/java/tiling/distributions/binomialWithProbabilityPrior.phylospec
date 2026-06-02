@@ -1,4 +1,4 @@
-UnitInterval p ~ Beta(
+Probability p ~ Beta(
     alpha=2.0,
     beta=8.0
 )
