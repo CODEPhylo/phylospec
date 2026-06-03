@@ -7,9 +7,9 @@ import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealVector;
-import tiling.BeastXSimplexParam;
+import tiling.params.BeastXSimplexParam;
 import tiling.BeastXState;
-import tiling.BoundDistribution;
+import tiling.model.BoundDistribution;
 
 import java.util.Arrays;
 import java.util.IdentityHashMap;

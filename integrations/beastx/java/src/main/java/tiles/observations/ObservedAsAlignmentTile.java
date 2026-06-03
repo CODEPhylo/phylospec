@@ -5,7 +5,7 @@ import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.tiling.tiles.TemplateTile;
 import tiling.BeastXState;
-import tiling.UnboundDistribution;
+import tiling.model.UnboundDistribution;
 
 import java.util.IdentityHashMap;
 

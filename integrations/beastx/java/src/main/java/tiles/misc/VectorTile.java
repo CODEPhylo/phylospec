@@ -13,8 +13,8 @@ import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import org.phylospec.types.RealScalar;
 import org.phylospec.types.RealVector;
-import tiling.BeastXRealVectorParam;
-import tiling.BeastXSimplexParam;
+import tiling.params.BeastXRealVectorParam;
+import tiling.params.BeastXSimplexParam;
 import tiling.BeastXState;
 
 import java.lang.reflect.ParameterizedType;

@@ -20,9 +20,12 @@ import org.phylospec.typeresolver.VariableResolver;
 import org.xml.sax.SAXException;
 import tiles.BeastXCoreTileLibrary;
 import tiling.BeastXModel;
-import tiling.BeastXModelBuilder;
-import tiling.BeastXMCMCBuilder;
+import tiling.model.BeastXModelBuilder;
+import tiling.mcmc.BeastXMCMCBuilder;
 import tiling.BeastXState;
+import tiling.runner.BeastXRunMode;
+import tiling.runner.BeastXRunResult;
+import tiling.runner.BeastXRunnerOptions;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
@@ -42,27 +45,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         ParsedPhyloSpec parsed =
                 parseAndResolve();
 
-        EvaluateTiles<BeastXState> applyTiles =
-                new EvaluateTiles<>(
-                        new BeastXCoreTileLibrary().getTiles(),
-                        new ArrayList<>(),
-                        parsed.variableResolver,
-                        parsed.stochasticityResolver
-                );
-
-        BeastXState beastState =
-                new BeastXState(runName);
-
-        try {
-            applyTiles.getBestTiling(parsed.statements);
-            return applyTiles.applyBestTiling(beastState);
-        } catch (TileApplicationError error) {
-            Range range =
-                    parsed.parser.getRangeForAstNode(error.getAstNode());
-
-            this.errorDetected(error.toError(range));
-            throw new IllegalStateException("Unreachable after errorDetected.");
-        }
+        return tile(parsed, runName);
     }
 
     public BeastXModel buildModel(String runName)
@@ -74,7 +57,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
     }
 
     public BeastXModel buildModel(BeastXState beastState) {
-        return new BeastXModelBuilder().build(beastState);
+        return new BeastXModelBuilder(false).build(beastState);
     }
 
     public BeastXModel buildMaterializedModel(String runName)
@@ -143,24 +126,178 @@ public class PhyloSpecRunner implements ErrorEventListener {
         return buildMCMC(model, chainLength);
     }
 
+    public BeastXRunResult run(BeastXRunnerOptions options)
+            throws IOException, ParserConfigurationException, SAXException {
+        ParsedPhyloSpec parsed =
+                parseAndResolve();
+
+        BeastXState beastState =
+                tile(parsed, options.runName());
+
+        if (options.mode() == BeastXRunMode.BUILD_STATE) {
+            return new BeastXRunResult(
+                    options.runName(),
+                    options,
+                    beastState,
+                    null,
+                    null,
+                    options.materializePhyloCTMC(),
+                    false
+            );
+        }
+
+        BeastXModel model =
+                buildModelForOptions(beastState, options);
+
+        if (options.mode() == BeastXRunMode.BUILD_MODEL) {
+            return new BeastXRunResult(
+                    options.runName(),
+                    options,
+                    beastState,
+                    model,
+                    null,
+                    options.materializePhyloCTMC(),
+                    false
+            );
+        }
+
+        MCMC mcmc =
+                buildMCMCForOptions(model, options);
+
+        BeastXRunResult run =
+                new BeastXRunResult(
+                        options.runName(),
+                        options,
+                        beastState,
+                        model,
+                        mcmc,
+                        options.materializePhyloCTMC(),
+                        false
+                );
+
+        if (options.mode() == BeastXRunMode.BUILD_MCMC) {
+            return run;
+        }
+
+        if (options.mode() == BeastXRunMode.EXECUTE_MCMC) {
+            mcmc.run();
+            return run.asExecuted();
+        }
+
+        throw new IllegalStateException("Unsupported BEAST X run mode: " + options.mode());
+    }
+
+    public BeastXRunResult buildRun(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        return run(
+                BeastXRunnerOptions.builder(runName)
+                        .mode(BeastXRunMode.BUILD_MCMC)
+                        .build()
+        );
+    }
+
+    public BeastXRunResult buildRun(String runName, long chainLength)
+            throws IOException, ParserConfigurationException, SAXException {
+        return run(
+                BeastXRunnerOptions.builder(runName)
+                        .mode(BeastXRunMode.BUILD_MCMC)
+                        .chainLengthOverride(chainLength)
+                        .build()
+        );
+    }
+
+    public BeastXRunResult buildRun(BeastXRunnerOptions options)
+            throws IOException, ParserConfigurationException, SAXException {
+        return run(
+                options.toBuilder()
+                        .mode(BeastXRunMode.BUILD_MCMC)
+                        .build()
+        );
+    }
+
+    public BeastXRunResult buildMaterializedRun(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        return run(
+                BeastXRunnerOptions.builder(runName)
+                        .mode(BeastXRunMode.BUILD_MCMC)
+                        .materializePhyloCTMC(true)
+                        .build()
+        );
+    }
+
+    public BeastXRunResult buildMaterializedRun(String runName, long chainLength)
+            throws IOException, ParserConfigurationException, SAXException {
+        return run(
+                BeastXRunnerOptions.builder(runName)
+                        .mode(BeastXRunMode.BUILD_MCMC)
+                        .chainLengthOverride(chainLength)
+                        .materializePhyloCTMC(true)
+                        .build()
+        );
+    }
+
+    public BeastXRunResult execute(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        return run(
+                BeastXRunnerOptions.builder(runName)
+                        .mode(BeastXRunMode.EXECUTE_MCMC)
+                        .build()
+        );
+    }
+
+    public BeastXRunResult execute(String runName, long chainLength)
+            throws IOException, ParserConfigurationException, SAXException {
+        return run(
+                BeastXRunnerOptions.builder(runName)
+                        .mode(BeastXRunMode.EXECUTE_MCMC)
+                        .chainLengthOverride(chainLength)
+                        .build()
+        );
+    }
+
+    public BeastXRunResult execute(BeastXRunnerOptions options)
+            throws IOException, ParserConfigurationException, SAXException {
+        return run(
+                options.toBuilder()
+                        .mode(BeastXRunMode.EXECUTE_MCMC)
+                        .build()
+        );
+    }
+
+    public BeastXRunResult executeMaterialized(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        return run(
+                BeastXRunnerOptions.builder(runName)
+                        .mode(BeastXRunMode.EXECUTE_MCMC)
+                        .materializePhyloCTMC(true)
+                        .build()
+        );
+    }
+
+    public BeastXRunResult executeMaterialized(String runName, long chainLength)
+            throws IOException, ParserConfigurationException, SAXException {
+        return run(
+                BeastXRunnerOptions.builder(runName)
+                        .mode(BeastXRunMode.EXECUTE_MCMC)
+                        .chainLengthOverride(chainLength)
+                        .materializePhyloCTMC(true)
+                        .build()
+        );
+    }
+
     public MCMC runMCMC(String runName)
             throws IOException, ParserConfigurationException, SAXException {
-        MCMC mcmc =
-                buildMCMC(runName);
-
-        mcmc.run();
-
-        return mcmc;
+        return execute(runName).mcmc();
     }
 
     public MCMC runMCMC(String runName, long chainLength)
             throws IOException, ParserConfigurationException, SAXException {
-        MCMC mcmc =
-                buildMCMC(runName, chainLength);
+        return execute(runName, chainLength).mcmc();
+    }
 
-        mcmc.run();
-
-        return mcmc;
+    public MCMC runMCMC(BeastXRunnerOptions options)
+            throws IOException, ParserConfigurationException, SAXException {
+        return execute(options).mcmc();
     }
 
     public MCMC runMCMC(BeastXModel model) {
@@ -183,22 +320,12 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
     public MCMC runMaterializedMCMC(String runName)
             throws IOException, ParserConfigurationException, SAXException {
-        MCMC mcmc =
-                buildMaterializedMCMC(runName);
-
-        mcmc.run();
-
-        return mcmc;
+        return executeMaterialized(runName).mcmc();
     }
 
     public MCMC runMaterializedMCMC(String runName, long chainLength)
             throws IOException, ParserConfigurationException, SAXException {
-        MCMC mcmc =
-                buildMaterializedMCMC(runName, chainLength);
-
-        mcmc.run();
-
-        return mcmc;
+        return executeMaterialized(runName, chainLength).mcmc();
     }
 
     public MCMC runMaterializedMCMC(BeastXState beastState) {
@@ -221,7 +348,66 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
     public void runPhyloSpec(String runName)
             throws IOException, ParserConfigurationException, SAXException {
-        buildModel(runName);
+        execute(runName);
+    }
+
+    public void runPhyloSpec(BeastXRunnerOptions options)
+            throws IOException, ParserConfigurationException, SAXException {
+        execute(options);
+    }
+
+    public void runMaterializedPhyloSpec(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        executeMaterialized(runName);
+    }
+
+    private BeastXState tile(
+            ParsedPhyloSpec parsed,
+            String runName
+    ) {
+        EvaluateTiles<BeastXState> applyTiles =
+                new EvaluateTiles<>(
+                        new BeastXCoreTileLibrary().getTiles(),
+                        new ArrayList<>(),
+                        parsed.variableResolver,
+                        parsed.stochasticityResolver
+                );
+
+        BeastXState beastState =
+                new BeastXState(runName);
+
+        try {
+            applyTiles.getBestTiling(parsed.statements);
+            return applyTiles.applyBestTiling(beastState);
+        } catch (TileApplicationError error) {
+            Range range =
+                    parsed.parser.getRangeForAstNode(error.getAstNode());
+
+            this.errorDetected(error.toError(range));
+            throw new IllegalStateException("Unreachable after errorDetected.");
+        }
+    }
+
+    private BeastXModel buildModelForOptions(
+            BeastXState beastState,
+            BeastXRunnerOptions options
+    ) {
+        if (options.materializePhyloCTMC()) {
+            return buildMaterializedModel(beastState);
+        }
+
+        return buildModel(beastState);
+    }
+
+    private MCMC buildMCMCForOptions(
+            BeastXModel model,
+            BeastXRunnerOptions options
+    ) {
+        if (options.chainLengthOverride() == null) {
+            return buildMCMC(model);
+        }
+
+        return buildMCMC(model, options.chainLengthOverride());
     }
 
     private ParsedPhyloSpec parseAndResolve()

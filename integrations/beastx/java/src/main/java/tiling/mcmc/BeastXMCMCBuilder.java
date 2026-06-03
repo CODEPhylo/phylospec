@@ -1,4 +1,4 @@
-package tiling;
+package tiling.mcmc;
 
 import dr.evomodel.tree.TreeLogger;
 import dr.evomodel.tree.TreeModel;
@@ -14,6 +14,9 @@ import dr.inference.model.Statistic;
 import dr.inference.operators.MCMCOperator;
 import dr.inference.operators.SimpleOperatorSchedule;
 import dr.math.MathUtils;
+import tiling.BeastXModel;
+import tiling.BeastXState;
+import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
 import tiling.operators.BeastXOperatorBuilder;
 
 import java.io.FileWriter;

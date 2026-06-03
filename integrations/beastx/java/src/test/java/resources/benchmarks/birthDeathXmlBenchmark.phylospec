@@ -6,7 +6,7 @@ PositiveReal diversificationRate ~ LogNormal(
     logSd=1.0
 )
 
-Rate turnover~LogNormal(
+Rate turnover ~ LogNormal(
     mean=1.0,
     logSd=0.5
 )
@@ -24,14 +24,13 @@ mcmc {
 
     Logger fileLogger = fileLogger(
         logEvery=1,
-        file="%s",
+        file="{{PARAMETER_LOG}}",
         parameters=[diversificationRate, turnover]
     )
 
     Logger treeLogger = treeLogger(
         logEvery=1,
-        file="%s",
+        file="{{TREE_LOG}}",
         trees=[tree]
     )
 }
-

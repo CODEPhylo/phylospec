@@ -12,7 +12,7 @@ import org.phylospec.domain.NonNegativeReal;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.types.RealScalar;
-import tiling.BeastXRealScalarParam;
+import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;

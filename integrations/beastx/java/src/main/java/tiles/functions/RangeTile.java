@@ -7,7 +7,7 @@ import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.types.IntScalar;
 import org.phylospec.types.IntVector;
-import tiling.BeastXIntVectorParam;
+import tiling.params.BeastXIntVectorParam;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;

@@ -1,6 +1,6 @@
 import dr.inference.mcmc.MCMC;
 import org.junit.jupiter.api.Test;
-import tiling.BeastXMCMCBuilder;
+import tiling.mcmc.BeastXMCMCBuilder;
 import tiling.BeastXModel;
 
 import java.nio.file.Files;

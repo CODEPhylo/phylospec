@@ -4,9 +4,9 @@ import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.tiles.AstNodeTile;
-import tiling.BeastXParam;
+import tiling.params.BeastXParam;
 import tiling.BeastXState;
-import tiling.BoundDistribution;
+import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
 

@@ -10,13 +10,12 @@ import org.phylospec.domain.PositiveInt;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.Simplex;
-import tiling.BeastXIntScalarParam;
-import tiling.BeastXSimplexParam;
+import tiling.params.BeastXIntScalarParam;
+import tiling.params.BeastXSimplexParam;
 import tiling.BeastXState;
-import tiling.BoundDistribution;
+import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
-import java.util.List;
 
 public class CategoricalTile extends GeneratorTile<
         BoundDistribution<BeastXIntScalarParam<PositiveInt>, DistributionLikelihood>,

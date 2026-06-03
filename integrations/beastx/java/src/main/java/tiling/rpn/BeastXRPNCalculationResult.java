@@ -1,9 +1,11 @@
-package tiling;
+package tiling.rpn;
 
 import dr.inference.model.Parameter;
 import dr.inference.model.Statistic;
 import org.phylospec.lexer.TokenType;
 import org.phylospec.types.RealScalar;
+import tiling.BeastXState;
+import tiling.params.BeastXRealScalarParam;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
