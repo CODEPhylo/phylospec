@@ -7,9 +7,9 @@ import org.phylospec.domain.NonNegativeInt;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.types.IntScalar;
-import tiling.BeastXIntScalarParam;
+import tiling.params.BeastXIntScalarParam;
 import tiling.BeastXState;
-import tiling.BoundDistribution;
+import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
 

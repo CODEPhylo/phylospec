@@ -8,7 +8,7 @@ import dr.evomodel.tree.DefaultTreeModel;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiling.BeastXState;
-import tiling.BeastXTreeDistribution;
+import tiling.model.BeastXTreeDistribution;
 
 import java.util.IdentityHashMap;
 

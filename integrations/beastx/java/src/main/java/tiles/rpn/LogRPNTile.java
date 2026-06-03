@@ -10,7 +10,7 @@ import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.IntScalar;
 import org.phylospec.types.RealScalar;
-import tiling.BeastXRPNCalculationResult;
+import tiling.rpn.BeastXRPNCalculationResult;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;

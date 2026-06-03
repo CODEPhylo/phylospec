@@ -6,7 +6,7 @@ import org.phylospec.ast.Stmt;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.tiles.AstNodeTile;
 import org.phylospec.tiling.tiles.TilePriority;
-import tiling.BeastXRPNCalculationResult;
+import tiling.rpn.BeastXRPNCalculationResult;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;

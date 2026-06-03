@@ -7,7 +7,7 @@ import dr.inference.operators.RandomWalkOperator;
 import dr.inference.operators.ScaleOperator;
 import org.junit.jupiter.api.Test;
 import tiling.BeastXModel;
-import tiling.BeastXMCMCBuilder;
+import tiling.mcmc.BeastXMCMCBuilder;
 import tiling.operators.BeastXOperatorBuilder;
 import tiling.BeastXState;
 

@@ -12,10 +12,10 @@ import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
-import tiling.BeastXIntVectorParam;
-import tiling.BeastXRealScalarParam;
+import tiling.params.BeastXIntVectorParam;
+import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
-import tiling.BoundDistribution;
+import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
 import java.util.List;

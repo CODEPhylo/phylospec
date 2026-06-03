@@ -1,7 +1,9 @@
-package tiling;
+package tiling.model;
 
 import dr.inference.model.CompoundLikelihood;
 import dr.inference.model.Likelihood;
+import tiling.BeastXModel;
+import tiling.BeastXState;
 
 import java.util.ArrayList;
 import java.util.List;

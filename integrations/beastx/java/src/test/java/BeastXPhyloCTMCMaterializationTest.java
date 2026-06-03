@@ -3,7 +3,7 @@ import dr.inference.model.Likelihood;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import tiling.BeastXModel;
-import tiling.BeastXPhyloCTMCLikelihoodSpec;
+import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

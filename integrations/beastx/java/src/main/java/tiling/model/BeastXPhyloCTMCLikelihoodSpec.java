@@ -1,4 +1,4 @@
-package tiling;
+package tiling.model;
 
 import dr.evolution.alignment.Alignment;
 import dr.evolution.alignment.SitePatterns;

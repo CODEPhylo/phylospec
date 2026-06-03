@@ -11,7 +11,7 @@ import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import org.phylospec.types.RealScalar;
-import tiling.BeastXRPNCalculationResult;
+import tiling.rpn.BeastXRPNCalculationResult;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;

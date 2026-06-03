@@ -11,9 +11,9 @@ import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.types.RealScalar;
 import org.phylospec.types.RealVector;
 import org.phylospec.types.Tensor;
-import tiling.BeastXRealVectorParam;
+import tiling.params.BeastXRealVectorParam;
 import tiling.BeastXState;
-import tiling.BoundDistribution;
+import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
 import java.util.List;

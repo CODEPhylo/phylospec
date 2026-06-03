@@ -6,7 +6,7 @@ import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealVector;
-import tiling.BeastXCompoundPopulationModel;
+import tiling.population.BeastXCompoundPopulationModel;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;

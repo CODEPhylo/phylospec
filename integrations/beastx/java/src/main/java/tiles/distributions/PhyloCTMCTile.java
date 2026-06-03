@@ -11,9 +11,9 @@ import dr.inference.model.Parameter;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.Partial;
 import org.phylospec.tiling.tiles.GeneratorTile;
-import tiling.BeastXPhyloCTMCLikelihoodSpec;
+import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
 import tiling.BeastXState;
-import tiling.UnboundDistribution;
+import tiling.model.UnboundDistribution;
 
 import java.util.IdentityHashMap;
 

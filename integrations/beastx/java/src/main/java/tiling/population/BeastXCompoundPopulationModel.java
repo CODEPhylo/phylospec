@@ -1,4 +1,4 @@
-package tiling;
+package tiling.population;
 
 import dr.evolution.coalescent.DemographicFunction;
 import dr.evolution.util.Units;

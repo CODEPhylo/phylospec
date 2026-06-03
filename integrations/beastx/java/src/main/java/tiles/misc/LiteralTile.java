@@ -17,8 +17,8 @@ import org.phylospec.types.IntScalar;
 import org.phylospec.types.RealScalar;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
-import tiling.BeastXIntScalarParam;
-import tiling.BeastXRealScalarParam;
+import tiling.params.BeastXIntScalarParam;
+import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 
 import java.util.HashSet;

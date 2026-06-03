@@ -1,4 +1,4 @@
-package tiling;
+package tiling.params;
 
 import dr.inference.model.Parameter;
 import org.phylospec.domain.Int;

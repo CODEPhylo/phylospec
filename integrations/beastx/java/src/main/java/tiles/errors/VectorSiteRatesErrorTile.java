@@ -10,7 +10,7 @@ import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.tiling.tiles.TilePriority;
 import org.phylospec.types.RealVector;
 import tiling.BeastXState;
-import tiling.UnboundDistribution;
+import tiling.model.UnboundDistribution;
 
 import java.util.IdentityHashMap;
 import java.util.List;

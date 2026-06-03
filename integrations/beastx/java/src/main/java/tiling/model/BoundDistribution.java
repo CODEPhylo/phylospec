@@ -1,6 +1,7 @@
-package tiling;
+package tiling.model;
 
 import dr.inference.distribution.AbstractDistributionLikelihood;
+import tiling.params.BeastXParam;
 
 import java.util.function.Consumer;
 

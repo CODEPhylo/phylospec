@@ -9,8 +9,8 @@ import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.types.RealVector;
-import tiling.BeastXParam;
-import tiling.BeastXRPNCalculationResult;
+import tiling.params.BeastXParam;
+import tiling.rpn.BeastXRPNCalculationResult;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;
