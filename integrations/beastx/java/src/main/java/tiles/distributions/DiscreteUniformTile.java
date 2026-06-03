@@ -8,9 +8,9 @@ import org.phylospec.ast.Expr;
 import org.phylospec.domain.Int;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.IntScalar;
-import tiling.BeastXIntScalarParam;
+import tiling.params.BeastXIntScalarParam;
 import tiling.BeastXState;
-import tiling.BoundDistribution;
+import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
 

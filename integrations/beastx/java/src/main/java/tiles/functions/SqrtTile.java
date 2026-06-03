@@ -5,7 +5,7 @@ import org.phylospec.domain.NonNegativeReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.types.RealScalar;
-import tiling.BeastXRealScalarParam;
+import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;

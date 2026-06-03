@@ -9,9 +9,9 @@ import org.phylospec.domain.NonNegativeInt;
 import org.phylospec.domain.NonNegativeReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
-import tiling.BeastXIntScalarParam;
+import tiling.params.BeastXIntScalarParam;
 import tiling.BeastXState;
-import tiling.BoundDistribution;
+import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
 

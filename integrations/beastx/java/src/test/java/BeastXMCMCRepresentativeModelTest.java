@@ -1,7 +1,7 @@
 import dr.inference.loggers.Logger;
 import dr.inference.loggers.MCLogger;
 import org.junit.jupiter.api.Test;
-import tiling.BeastXMCMCBuilder;
+import tiling.mcmc.BeastXMCMCBuilder;
 import tiling.BeastXState;
 
 import java.nio.charset.StandardCharsets;

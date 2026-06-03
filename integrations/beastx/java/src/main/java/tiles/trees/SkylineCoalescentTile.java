@@ -12,9 +12,9 @@ import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealVector;
-import tiling.BeastXRealVectorParam;
+import tiling.params.BeastXRealVectorParam;
 import tiling.BeastXState;
-import tiling.BeastXTreeDistribution;
+import tiling.model.BeastXTreeDistribution;
 
 import java.util.IdentityHashMap;
 import java.util.List;

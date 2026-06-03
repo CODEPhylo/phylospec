@@ -5,7 +5,7 @@ import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.tiling.tiles.AstNodeTile;
 import tiling.BeastXState;
-import tiling.BeastXTreeDistribution;
+import tiling.model.BeastXTreeDistribution;
 
 import java.util.IdentityHashMap;
 

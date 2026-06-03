@@ -1,6 +1,6 @@
 import org.junit.jupiter.api.Test;
 import tiling.BeastXModel;
-import tiling.BeastXModelSummary;
+import tiling.summary.BeastXModelSummary;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

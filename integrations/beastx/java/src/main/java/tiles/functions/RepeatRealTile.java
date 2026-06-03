@@ -6,7 +6,7 @@ import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.types.RealScalar;
 import org.phylospec.types.RealVector;
-import tiling.BeastXRealVectorParam;
+import tiling.params.BeastXRealVectorParam;
 import tiling.BeastXState;
 
 import java.util.Arrays;

@@ -1,4 +1,4 @@
-package tiling;
+package tiling.summary;
 
 import dr.evomodel.tree.TreeModel;
 import dr.inference.distribution.AbstractDistributionLikelihood;
@@ -9,6 +9,8 @@ import dr.inference.model.Statistic;
 import dr.inference.operators.MCMCOperator;
 import org.phylospec.tiling.TypeToken;
 
+import tiling.BeastXModel;
+import tiling.BeastXState;
 import tiling.operators.BeastXOperatorBuilder;
 
 import java.util.ArrayList;

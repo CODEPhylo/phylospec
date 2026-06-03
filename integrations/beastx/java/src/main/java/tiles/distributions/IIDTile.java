@@ -8,10 +8,10 @@ import org.phylospec.domain.PositiveInt;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.IntScalar;
-import tiling.BeastXRealScalarParam;
-import tiling.BeastXRealVectorParam;
+import tiling.params.BeastXRealScalarParam;
+import tiling.params.BeastXRealVectorParam;
 import tiling.BeastXState;
-import tiling.BoundDistribution;
+import tiling.model.BoundDistribution;
 
 import java.util.Arrays;
 import java.util.IdentityHashMap;

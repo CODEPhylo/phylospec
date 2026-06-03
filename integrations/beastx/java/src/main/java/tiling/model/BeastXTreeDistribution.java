@@ -1,4 +1,4 @@
-package tiling;
+package tiling.model;
 
 import dr.evomodel.tree.TreeModel;
 import dr.inference.model.AbstractModelLikelihood;

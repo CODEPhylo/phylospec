@@ -7,9 +7,9 @@ import org.phylospec.domain.Real;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.types.RealScalar;
-import tiling.BeastXRealScalarParam;
+import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
-import tiling.BoundDistribution;
+import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
 

@@ -4,7 +4,7 @@ import org.phylospec.ast.Expr;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
-import tiling.BeastXRPNCalculationResult;
+import tiling.rpn.BeastXRPNCalculationResult;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;
