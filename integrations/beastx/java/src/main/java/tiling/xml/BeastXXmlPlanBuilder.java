@@ -22,13 +22,18 @@ import dr.inference.model.Variable;
 import dr.math.distributions.Distribution;
 import dr.evomodel.branchmodel.HomogeneousBranchModel;
 import dr.evomodel.substmodel.SubstitutionModel;
+import dr.inference.distribution.MultivariateDistributionLikelihood;
+import dr.math.distributions.DirichletDistribution;
+
 import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
 import tiling.BeastXModel;
 import tiling.BeastXState;
 import tiling.xml.builders.BeastXSiteModelXmlBuilder;
 import tiling.xml.builders.BeastXAlignmentXmlBuilder;
 import tiling.xml.builders.BeastXSubstitutionModelXmlBuilder;
+import tiling.xml.builders.BeastXTreeLikelihoodXmlBuilder;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -46,6 +51,9 @@ public class BeastXXmlPlanBuilder {
     private final BeastXSiteModelXmlBuilder siteModelXmlBuilder =
             new BeastXSiteModelXmlBuilder();
 
+    private final BeastXTreeLikelihoodXmlBuilder treeLikelihoodXmlBuilder =
+            new BeastXTreeLikelihoodXmlBuilder();
+
     public BeastXXmlPlan build(BeastXModel model) {
         validateSupportedModel(model);
 
@@ -58,7 +66,13 @@ public class BeastXXmlPlanBuilder {
         addStateParameters(plan, state);
         addTreeDefinitions(plan, state);
         addBranchRateModels(plan, state);
-        addScalarPriors(plan, state);
+
+        addPhyloCTMCDataDefinitions(plan, state);
+        addPhyloCTMCSubstitutionModels(plan, state);
+        addPhyloCTMCSiteRateModels(plan, state);
+        addPhyloCTMCTreeLikelihoods(plan, state);
+
+        addParameterPriors(plan, state);
         addTreePriors(plan, state);
         addCalibrationPriors(plan, state);
         addOperators(plan, state);
@@ -74,6 +88,7 @@ public class BeastXXmlPlanBuilder {
         addPhyloCTMCDataDefinitions(plan, model.beastState);
         addPhyloCTMCSubstitutionModels(plan, model.beastState);
         addPhyloCTMCSiteRateModels(plan, model.beastState);
+        addPhyloCTMCTreeLikelihoods(plan, model.beastState);
 
         return plan;
     }
@@ -135,14 +150,8 @@ public class BeastXXmlPlanBuilder {
         likelihoodSpecs.sort(Comparator.comparing(BeastXXmlPlanBuilder::likelihoodId));
 
         for (BeastXPhyloCTMCLikelihoodSpec spec : likelihoodSpecs) {
-            if (!(spec.getBranchModel() instanceof HomogeneousBranchModel branchModel)) {
-                throw unsupported(
-                        "Only homogeneous branch substitution models are supported for PhyloCTMC XML export at this stage."
-                );
-            }
-
             SubstitutionModel substitutionModel =
-                    branchModel.getRootSubstitutionModel();
+                    homogeneousSubstitutionModel(spec);
 
             String substitutionModelId =
                     likelihoodId(spec) + "_substitutionModel";
@@ -176,8 +185,14 @@ public class BeastXXmlPlanBuilder {
             String likelihoodId =
                     likelihoodId(spec);
 
+            SubstitutionModel substitutionModel =
+                    homogeneousSubstitutionModel(spec);
+
             String substitutionModelId =
                     likelihoodId + "_substitutionModel";
+
+            String substitutionModelTag =
+                    substitutionModelXmlBuilder.substitutionModelTag(substitutionModel);
 
             String siteRateModelId =
                     likelihoodId + "_siteRateModel";
@@ -187,10 +202,104 @@ public class BeastXXmlPlanBuilder {
                     siteModelXmlBuilder.buildSiteRateModel(
                             spec.getSiteRateModel(),
                             siteRateModelId,
+                            substitutionModelTag,
                             substitutionModelId
                     )
             );
         }
+    }
+
+    private SubstitutionModel homogeneousSubstitutionModel(
+            BeastXPhyloCTMCLikelihoodSpec spec
+    ) {
+        if (!(spec.getBranchModel() instanceof HomogeneousBranchModel branchModel)) {
+            throw unsupported(
+                    "Only homogeneous branch substitution models are supported for PhyloCTMC XML export at this stage."
+            );
+        }
+
+        return branchModel.getRootSubstitutionModel();
+    }
+
+    private void addPhyloCTMCTreeLikelihoods(
+            BeastXXmlPlan plan,
+            BeastXState state
+    ) {
+        List<BeastXPhyloCTMCLikelihoodSpec> likelihoodSpecs =
+                new ArrayList<>();
+
+        for (dr.inference.model.Likelihood likelihood : state.likelihoodDistributions) {
+            if (likelihood instanceof BeastXPhyloCTMCLikelihoodSpec spec) {
+                likelihoodSpecs.add(spec);
+            }
+        }
+
+        likelihoodSpecs.sort(Comparator.comparing(BeastXXmlPlanBuilder::likelihoodId));
+
+        for (BeastXPhyloCTMCLikelihoodSpec spec : likelihoodSpecs) {
+            String likelihoodId =
+                    likelihoodId(spec);
+
+            String patternsId =
+                    likelihoodId + "_patterns";
+
+            TreeModel treeModel =
+                    spec.getTreeModel();
+
+            String treeModelId =
+                    treeModel.getId();
+
+            if (treeModelId == null || treeModelId.isBlank()) {
+                throw new IllegalArgumentException(
+                        "Cannot serialize PhyloCTMC treeLikelihood without a named tree model."
+                );
+            }
+
+            String siteRateModelId =
+                    likelihoodId + "_siteRateModel";
+
+            String branchRateModelId =
+                    branchRateModelIdForTree(
+                            state,
+                            treeModel
+                    );
+
+            plan.add(
+                    BeastXXmlPlan.Section.TREE_LIKELIHOODS,
+                    treeLikelihoodXmlBuilder.buildTreeLikelihood(
+                            likelihoodId,
+                            patternsId,
+                            treeModelId,
+                            siteRateModelId,
+                            branchRateModelId
+                    )
+            );
+
+            plan.add(
+                    BeastXXmlPlan.Section.MCMC_LIKELIHOOD,
+                    treeLikelihoodXmlBuilder.treeLikelihoodReference(likelihoodId)
+            );
+        }
+    }
+
+    private String branchRateModelIdForTree(
+            BeastXState state,
+            TreeModel treeModel
+    ) {
+        if (state.treeClockRateParameters.containsKey(treeModel)) {
+            return treeId(treeModel) + "_strictClockBranchRates";
+        }
+
+        String treeModelId =
+                treeId(treeModel);
+
+        for (TreeModel registeredTreeModel : state.treeClockRateParameters.keySet()) {
+            if (treeModelId.equals(treeId(registeredTreeModel))) {
+                return treeModelId + "_strictClockBranchRates";
+            }
+        }
+
+        return null;
     }
 
     private static String likelihoodId(dr.inference.model.Likelihood likelihood) {
@@ -213,8 +322,12 @@ public class BeastXXmlPlanBuilder {
         validateCalibrationPriors(state);
         validateLikelihoodExportBoundary(state);
 
-        if (state.priorDistributions.isEmpty() && state.treePriorDistributions.isEmpty()) {
-            throw unsupported("At least one scalar prior or tree prior is required.");
+        if (
+                state.priorDistributions.isEmpty()
+                        && state.treePriorDistributions.isEmpty()
+                        && state.likelihoodDistributions.isEmpty()
+        ) {
+            throw unsupported("At least one scalar prior, tree prior, or likelihood is required.");
         }
 
         if (
@@ -225,32 +338,20 @@ public class BeastXXmlPlanBuilder {
             throw unsupported("At least one logger is required for XML MCMC execution.");
         }
 
-        validateScalarPriors(state);
+        validateParameterPriors(state);
         validateTreePriors(state);
     }
 
     private void validateLikelihoodExportBoundary(BeastXState state) {
-        if (state.likelihoodDistributions.isEmpty()) {
-            return;
-        }
+        for (dr.inference.model.Likelihood likelihood : state.likelihoodDistributions) {
+            if (likelihood instanceof BeastXPhyloCTMCLikelihoodSpec) {
+                continue;
+            }
 
-        boolean hasBranchRateModel =
-                !state.treeClockRateParameters.isEmpty();
-
-        if (hasBranchRateModel) {
             throw unsupported(
-                    "PhyloCTMC likelihood XML export is not supported yet. "
-                            + "StrictClock branch-rate XML can currently be exported as a standalone branch-rate model, "
-                            + "but full XML execution of PhyloCTMC still requires alignment, pattern list, "
-                            + "substitution model, site model, branch-rate model, and tree-likelihood XML serialization."
+                    "Only PhyloCTMC likelihood XML export is supported at this stage."
             );
         }
-
-        throw unsupported(
-                "Likelihood XML export is not supported yet. "
-                        + "Current XML export supports scalar priors, tree priors, calibration priors, "
-                        + "strict-clock branch-rate definitions, operators, and loggers."
-        );
     }
 
     private void validateCalibrationPriors(BeastXState state) {
@@ -446,7 +547,7 @@ public class BeastXXmlPlanBuilder {
         return id;
     }
 
-    private void validateScalarPriors(BeastXState state) {
+    private void validateParameterPriors(BeastXState state) {
         for (Map.Entry<Parameter, AbstractDistributionLikelihood> entry : state.priorDistributions.entrySet()) {
             Parameter parameter =
                     entry.getKey();
@@ -454,22 +555,37 @@ public class BeastXXmlPlanBuilder {
             AbstractDistributionLikelihood likelihood =
                     entry.getValue();
 
-            if (parameter.getDimension() != 1) {
-                throw unsupported("Only scalar parameters are supported.");
+            if (parameter.getDimension() == 1) {
+                if (!(likelihood instanceof DistributionLikelihood distributionLikelihood)) {
+                    throw unsupported("Only DistributionLikelihood scalar priors are supported.");
+                }
+
+                Distribution distribution =
+                        distributionLikelihood.getDistribution();
+
+                if (
+                        !(distribution instanceof LogNormalDistributionModel)
+                                && !(distribution instanceof BetaDistributionModel)
+                ) {
+                    throw unsupported("Only LogNormal and Beta scalar priors are supported.");
+                }
+
+                continue;
             }
 
-            if (!(likelihood instanceof DistributionLikelihood distributionLikelihood)) {
-                throw unsupported("Only DistributionLikelihood scalar priors are supported.");
+            if (!(likelihood instanceof MultivariateDistributionLikelihood multivariateLikelihood)) {
+                throw unsupported("Only Dirichlet multivariate priors are supported for non-scalar parameters.");
             }
 
-            Distribution distribution =
-                    distributionLikelihood.getDistribution();
+            if (!(multivariateLikelihood.getDistribution() instanceof DirichletDistribution dirichletDistribution)) {
+                throw unsupported("Only Dirichlet multivariate priors are supported for non-scalar parameters.");
+            }
 
-            if (
-                    !(distribution instanceof LogNormalDistributionModel)
-                            && !(distribution instanceof BetaDistributionModel)
-            ) {
-                throw unsupported("Only LogNormal and Beta scalar priors are supported.");
+            double[] counts =
+                    dirichletCounts(dirichletDistribution);
+
+            if (counts.length != parameter.getDimension()) {
+                throw unsupported("Dirichlet prior dimension must match the simplex parameter dimension.");
             }
         }
     }
@@ -813,7 +929,7 @@ public class BeastXXmlPlanBuilder {
                 .withChild(child);
     }
 
-    private void addScalarPriors(
+    private void addParameterPriors(
             BeastXXmlPlan plan,
             BeastXState state
     ) {
@@ -823,25 +939,41 @@ public class BeastXXmlPlanBuilder {
         entries.sort(Comparator.comparing(entry -> parameterId(entry.getKey())));
 
         for (Map.Entry<Parameter, AbstractDistributionLikelihood> entry : entries) {
-            DistributionLikelihood likelihood =
-                    (DistributionLikelihood) entry.getValue();
+            AbstractDistributionLikelihood likelihood =
+                    entry.getValue();
 
-            Distribution distribution =
-                    likelihood.getDistribution();
+            if (likelihood instanceof DistributionLikelihood distributionLikelihood) {
+                Distribution distribution =
+                        distributionLikelihood.getDistribution();
 
-            if (distribution instanceof LogNormalDistributionModel logNormalDistribution) {
-                plan.add(
-                        BeastXXmlPlan.Section.MCMC_PRIOR,
-                        logNormalPrior(entry.getKey(), likelihood, logNormalDistribution)
-                );
-            } else if (distribution instanceof BetaDistributionModel betaDistribution) {
-                plan.add(
-                        BeastXXmlPlan.Section.MCMC_PRIOR,
-                        betaPrior(entry.getKey(), likelihood, betaDistribution)
-                );
-            } else {
-                throw unsupported("Only LogNormal and Beta scalar priors are supported.");
+                if (distribution instanceof LogNormalDistributionModel logNormalDistribution) {
+                    plan.add(
+                            BeastXXmlPlan.Section.MCMC_PRIOR,
+                            logNormalPrior(entry.getKey(), distributionLikelihood, logNormalDistribution)
+                    );
+                } else if (distribution instanceof BetaDistributionModel betaDistribution) {
+                    plan.add(
+                            BeastXXmlPlan.Section.MCMC_PRIOR,
+                            betaPrior(entry.getKey(), distributionLikelihood, betaDistribution)
+                    );
+                } else {
+                    throw unsupported("Only LogNormal and Beta scalar priors are supported.");
+                }
+
+                continue;
             }
+
+            if (likelihood instanceof MultivariateDistributionLikelihood multivariateLikelihood) {
+                if (multivariateLikelihood.getDistribution() instanceof DirichletDistribution dirichletDistribution) {
+                    plan.add(
+                            BeastXXmlPlan.Section.MCMC_PRIOR,
+                            dirichletPrior(entry.getKey(), multivariateLikelihood, dirichletDistribution)
+                    );
+                    continue;
+                }
+            }
+
+            throw unsupported("Only scalar DistributionLikelihood and Dirichlet multivariate priors are supported.");
         }
     }
 
@@ -919,6 +1051,34 @@ public class BeastXXmlPlanBuilder {
                                                                 priorId + "_beta"
                                                         )
                                                 )
+                                )
+                )
+                .withChild(
+                        BeastXXmlElement.element("data")
+                                .withChild(parameterReference(parameter))
+                );
+    }
+
+    private BeastXXmlElement dirichletPrior(
+            Parameter parameter,
+            MultivariateDistributionLikelihood likelihood,
+            DirichletDistribution distribution
+    ) {
+        String priorId =
+                likelihood.getId();
+
+        return BeastXXmlElement.element("dirichletParameterPrior")
+                .withId(priorId)
+                .withAttribute("sumToNumberOfElements", Boolean.toString(dirichletSumToNumberOfElements(distribution)))
+                .withChild(
+                        BeastXXmlElement.element("countsParameter")
+                                .withChild(
+                                        inlineVectorParameterDefinition(
+                                                priorId + "_counts",
+                                                dirichletCounts(distribution),
+                                                0.0,
+                                                null
+                                        )
                                 )
                 )
                 .withChild(
@@ -1037,7 +1197,12 @@ public class BeastXXmlPlanBuilder {
         parameters.sort(Comparator.comparing(BeastXXmlPlanBuilder::parameterId));
 
         for (Parameter parameter : parameters) {
-            if (hasFiniteLowerAndUpperBounds(parameter)) {
+            if (isSimplexParameter(parameter)) {
+                plan.add(
+                        BeastXXmlPlan.Section.OPERATORS,
+                        deltaExchangeOperator(state, parameter)
+                );
+            } else if (hasFiniteLowerAndUpperBounds(parameter)) {
                 plan.add(
                         BeastXXmlPlan.Section.OPERATORS,
                         randomWalkOperator(state, parameter)
@@ -1077,6 +1242,20 @@ public class BeastXXmlPlanBuilder {
                 .withAttribute("windowSize", format(state.operatorConfig.randomWalkWindowSize))
                 .withAttribute("weight", format(state.operatorConfig.parameterOperatorWeight))
                 .withAttribute("boundaryCondition", "reflecting")
+                .withChild(parameterReference(parameter));
+    }
+
+    private BeastXXmlElement deltaExchangeOperator(
+            BeastXState state,
+            Parameter parameter
+    ) {
+        String id =
+                parameterId(parameter);
+
+        return BeastXXmlElement.element("deltaExchange")
+                .withId(id + "_deltaExchange")
+                .withAttribute("delta", "0.01")
+                .withAttribute("weight", format(state.operatorConfig.parameterOperatorWeight))
                 .withChild(parameterReference(parameter));
     }
 
@@ -1319,7 +1498,7 @@ public class BeastXXmlPlanBuilder {
         BeastXXmlElement element =
                 BeastXXmlElement.element("parameter")
                         .withId(parameterId(parameter))
-                        .withAttribute("value", format(parameter.getParameterValue(0)));
+                        .withAttribute("value", parameterValues(parameter));
 
         Bounds<Double> bounds =
                 parameter.getBounds();
@@ -1355,6 +1534,30 @@ public class BeastXXmlPlanBuilder {
                 BeastXXmlElement.element("parameter")
                         .withId(id)
                         .withAttribute("value", format(value));
+
+        if (lower != null) {
+            element =
+                    element.withAttribute("lower", format(lower));
+        }
+
+        if (upper != null) {
+            element =
+                    element.withAttribute("upper", format(upper));
+        }
+
+        return element;
+    }
+
+    private BeastXXmlElement inlineVectorParameterDefinition(
+            String id,
+            double[] values,
+            Double lower,
+            Double upper
+    ) {
+        BeastXXmlElement element =
+                BeastXXmlElement.element("parameter")
+                        .withId(id)
+                        .withAttribute("value", formatValues(values));
 
         if (lower != null) {
             element =
@@ -1483,6 +1686,38 @@ public class BeastXXmlPlanBuilder {
         return Double.isFinite(lower) && Double.isFinite(upper);
     }
 
+    private static boolean isSimplexParameter(Parameter parameter) {
+        if (parameter.getDimension() <= 1) {
+            return false;
+        }
+
+        Bounds<Double> bounds =
+                parameter.getBounds();
+
+        if (bounds == null) {
+            return false;
+        }
+
+        double sum =
+                0.0;
+
+        for (int i = 0; i < parameter.getDimension(); i++) {
+            double lower =
+                    bounds.getLowerLimit(i);
+
+            double upper =
+                    bounds.getUpperLimit(i);
+
+            if (!approximatelyZero(lower) || !approximatelyOne(upper)) {
+                return false;
+            }
+
+            sum += parameter.getParameterValue(i);
+        }
+
+        return approximatelyOne(sum);
+    }
+
     private static boolean approximatelyZero(double value) {
         return Math.abs(value) < 1.0e-12;
     }
@@ -1552,6 +1787,52 @@ public class BeastXXmlPlanBuilder {
         return new UnsupportedOperationException(
                 message + " Extend BeastXXmlPlanBuilder before exporting this model class to XML."
         );
+    }
+
+    private static String parameterValues(Parameter parameter) {
+        List<String> values =
+                new ArrayList<>();
+
+        for (int i = 0; i < parameter.getDimension(); i++) {
+            values.add(format(parameter.getParameterValue(i)));
+        }
+
+        return String.join(" ", values);
+    }
+
+    private static String formatValues(double[] values) {
+        List<String> formatted =
+                new ArrayList<>();
+
+        for (double value : values) {
+            formatted.add(format(value));
+        }
+
+        return String.join(" ", formatted);
+    }
+
+    private static double[] dirichletCounts(DirichletDistribution distribution) {
+        return ((double[]) readPrivateField(distribution, "counts")).clone();
+    }
+
+    private static boolean dirichletSumToNumberOfElements(DirichletDistribution distribution) {
+        return (boolean) readPrivateField(distribution, "sumToNumberOfElements");
+    }
+
+    private static Object readPrivateField(Object object, String fieldName) {
+        try {
+            Field field =
+                    object.getClass().getDeclaredField(fieldName);
+
+            field.setAccessible(true);
+
+            return field.get(object);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException(
+                    "Could not read BEAST X field '" + fieldName + "' from " + object.getClass().getName() + ".",
+                    exception
+            );
+        }
     }
 
     private static String format(double value) {
