@@ -3,18 +3,22 @@ import org.junit.jupiter.api.Test;
 import tiling.BeastXModel;
 import tiling.xml.BeastXStateXmlGenerator;
 import tiling.xml.BeastXXmlRunner;
-import tiling.xml.BeastXXmlPlan;
+import tiling.runner.BeastXXmlRunResult;
+import tiling.runner.BeastXXmlRunnerOptions;
+import tiling.runner.BeastXFileRunPaths;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class BeastXXmlExecutionTest {
+public class BeastXXmlTest {
 
     @Test
     public void writesAndRunsPriorOnlyLogNormalMCMCXml() throws Exception {
@@ -744,7 +748,7 @@ public class BeastXXmlExecutionTest {
     }
 
     @Test
-    public void writesParsesAndRunsPriorOnlyStrictClockYuleTreeMCMCXml() throws Exception {
+    public void writesParsesAndRunsFullPhyloCTMCXmlWithTreeLikelihood() throws Exception {
         long suffix =
                 System.nanoTime();
 
@@ -752,31 +756,37 @@ public class BeastXXmlExecutionTest {
                 Path.of("target", "beastx-xml-execution");
 
         Path xmlPath =
-                outputDirectory.resolve("strictClockYuleTree-" + suffix + ".xml");
+                outputDirectory.resolve("phyloCTMCFullRun2-" + suffix + ".xml");
 
-        Path parameterLogPath =
-                outputDirectory.resolve("strictClockYuleTree-" + suffix + ".log");
+        Path logPath =
+                outputDirectory.resolve("phyloCTMCFullRun2-" + suffix + ".log");
 
         Path treeLogPath =
-                outputDirectory.resolve("strictClockYuleTree-" + suffix + ".trees");
+                outputDirectory.resolve("phyloCTMCFullRun2-" + suffix + ".trees");
 
         Files.createDirectories(outputDirectory);
         Files.deleteIfExists(xmlPath);
-        Files.deleteIfExists(parameterLogPath);
+        Files.deleteIfExists(logPath);
         Files.deleteIfExists(treeLogPath);
 
         String source =
                 """
                 Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+    
                 Taxa taxa = taxa(data)
     
-                Rate clockRate ~ LogNormal(
+                PositiveReal birthRate ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
+                )
+    
+                PositiveReal clockRate ~ LogNormal(
                     logMean=0.0,
                     logSd=1.0
                 )
     
                 Tree tree ~ Yule(
-                    birthRate=1.0,
+                    birthRate=birthRate,
                     taxa=taxa
                 )
     
@@ -785,6 +795,14 @@ public class BeastXXmlExecutionTest {
                     tree=tree
                 )
     
+                QMatrix q = jc69()
+    
+                Alignment alignment ~ PhyloCTMC(
+                    tree=tree,
+                    qMatrix=q,
+                    branchRates=branchRates
+                ) observed as data
+    
                 mcmc {
                     Integer chainLength = 5
                     Integer randomSeed = 1234
@@ -792,7 +810,7 @@ public class BeastXXmlExecutionTest {
                     Logger fileLogger = fileLogger(
                         logEvery=1,
                         file="%s",
-                        parameters=[clockRate]
+                        parameters=[birthRate, clockRate]
                     )
     
                     Logger treeLogger = treeLogger(
@@ -802,49 +820,243 @@ public class BeastXXmlExecutionTest {
                     )
                 }
                 """.formatted(
-                        parameterLogPath.toString().replace("\\", "/"),
+                        logPath.toString().replace("\\", "/"),
                         treeLogPath.toString().replace("\\", "/")
                 );
 
         BeastXModel model =
                 new PhyloSpecRunner(source)
-                        .buildModel("xmlStrictClockYuleTree");
+                        .buildModel("xmlFullPhyloCTMCParseOnly");
 
         new BeastXStateXmlGenerator()
                 .write(model, xmlPath);
 
-        assertTrue(Files.exists(xmlPath), "Expected strict-clock BEAST X XML file to be written.");
+        assertTrue(Files.exists(xmlPath), "Expected full PhyloCTMC XML file to be written.");
+
+        MCMC mcmc =
+                new BeastXXmlRunner()
+                        .parse(xmlPath);
+
+        assertNotNull(
+                mcmc,
+                "Expected BEAST X parser to parse full PhyloCTMC XML into an MCMC object."
+        );
+
+        mcmc.run();
+
+        assertTrue(Files.exists(logPath), "Expected parameter log file to be written.");
+        assertTrue(Files.exists(treeLogPath), "Expected tree log file to be written.");
+        assertTrue(Files.size(logPath) > 0, "Expected parameter log file to be non-empty.");
+        assertTrue(Files.size(treeLogPath) > 0, "Expected tree log file to be non-empty.");
+    }
+
+    private static boolean isMissingBeagleLibrary(Throwable throwable) {
+        Throwable current =
+                throwable;
+
+        while (current != null) {
+            String message =
+                    current.getMessage();
+
+            if (
+                    message != null
+                            && message.contains("No acceptable BEAGLE library plugins found")
+            ) {
+                return true;
+            }
+
+            current =
+                    current.getCause();
+        }
+
+        return false;
+    }
+
+    @Test
+    public void writesParsesAndRunsFixedGTRPhyloCTMCXmlWithTreeLikelihood() throws Exception {
+        long suffix =
+                System.nanoTime();
+
+        Path outputDirectory =
+                Path.of("target", "beastx-xml-execution");
+
+        Path xmlPath =
+                outputDirectory.resolve("gtrPhyloCTMCFullRun-" + suffix + ".xml");
+
+        Path logPath =
+                outputDirectory.resolve("gtrPhyloCTMCFullRun-" + suffix + ".log");
+
+        Path treeLogPath =
+                outputDirectory.resolve("gtrPhyloCTMCFullRun-" + suffix + ".trees");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
+        Files.deleteIfExists(logPath);
+        Files.deleteIfExists(treeLogPath);
+
+        String source =
+                """
+                Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+        
+                Taxa taxa = taxa(data)
+        
+                PositiveReal birthRate ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
+                )
+        
+                PositiveReal clockRate ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
+                )
+        
+                PositiveReal rateAC ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
+                )
+        
+                PositiveReal rateAG ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
+                )
+        
+                PositiveReal rateAT ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
+                )
+        
+                PositiveReal rateCG ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
+                )
+        
+                PositiveReal rateCT ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
+                )
+        
+                Simplex baseFrequencies ~ Dirichlet(
+                    concentration=[1.0, 1.0, 1.0, 1.0]
+                )
+        
+                Tree tree ~ Yule(
+                    birthRate=birthRate,
+                    taxa=taxa
+                )
+        
+                Vector<Rate> branchRates ~ StrictClock(
+                    clockRate=clockRate,
+                    tree=tree
+                )
+        
+                QMatrix q = gtr(
+                    rateAC=rateAC,
+                    rateAG=rateAG,
+                    rateAT=rateAT,
+                    rateCG=rateCG,
+                    rateCT=rateCT,
+                    rateGT=1.0,
+                    baseFrequencies=baseFrequencies
+                )
+        
+                Alignment alignment ~ PhyloCTMC(
+                    tree=tree,
+                    qMatrix=q,
+                    branchRates=branchRates
+                ) observed as data
+        
+                mcmc {
+                    Integer chainLength = 10000
+                    Integer randomSeed = 1234
+        
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[
+                            birthRate,
+                            clockRate,
+                            rateAC,
+                            rateAG,
+                            rateAT,
+                            rateCG,
+                            rateCT,
+                            baseFrequencies
+                        ]
+                    )
+        
+                    Logger treeLogger = treeLogger(
+                        logEvery=1,
+                        file="%s",
+                        trees=[tree]
+                    )
+                }
+                """.formatted(
+                        logPath.toString().replace("\\", "/"),
+                        treeLogPath.toString().replace("\\", "/")
+                );
+
+        BeastXModel model =
+                new PhyloSpecRunner(source)
+                        .buildModel("xmlFixedGTRPhyloCTMC");
+
+        new BeastXStateXmlGenerator()
+                .write(model, xmlPath);
+
+        assertTrue(Files.exists(xmlPath), "Expected fixed-GTR PhyloCTMC XML file to be written.");
 
         String xml =
                 Files.readString(xmlPath);
 
-        assertTrue(xml.contains("<parameter id=\"clockRate\""), xml);
-        assertTrue(xml.contains("<strictClockBranchRates id=\"tree_strictClockBranchRates\""), xml);
-        assertTrue(xml.contains("<rate>"), xml);
-        assertTrue(xml.contains("<parameter idref=\"clockRate\"/>"), xml);
-        assertTrue(xml.contains("<yuleModel id=\"tree_prior_model\""), xml);
-        assertTrue(xml.contains("<speciationLikelihood id=\"tree_prior\">"), xml);
-        assertTrue(xml.contains("<logTree"), xml);
+        assertTrue(xml.contains("<gtrModel id=\"alignment_likelihood_substitutionModel\""), xml);
 
-        BeastXXmlRunner runner =
-                new BeastXXmlRunner();
+        assertTrue(xml.contains("<rateAC>"), xml);
+        assertTrue(xml.contains("<parameter idref=\"rateAC\""), xml);
+
+        assertTrue(xml.contains("<rateAG>"), xml);
+        assertTrue(xml.contains("<parameter idref=\"rateAG\""), xml);
+
+        assertTrue(xml.contains("<rateAT>"), xml);
+        assertTrue(xml.contains("<parameter idref=\"rateAT\""), xml);
+
+        assertTrue(xml.contains("<rateCG>"), xml);
+        assertTrue(xml.contains("<parameter idref=\"rateCG\""), xml);
+
+        assertTrue(xml.contains("<rateCT>"), xml);
+        assertTrue(xml.contains("<parameter idref=\"rateCT\""), xml);
+
+        assertTrue(
+                !xml.contains("<rateGT>"),
+                "rateGT should be omitted because BEAST X GTR XML requires exactly five named rates and one implied reference rate."
+        );
+
+        assertTrue(xml.contains("<dirichletParameterPrior id=\"baseFrequencies_prior\""), xml);
+        assertTrue(xml.contains("<deltaExchange id=\"baseFrequencies_deltaExchange\""), xml);
+
+        assertTrue(xml.contains("<siteModel id=\"alignment_likelihood_siteRateModel\""), xml);
+        assertTrue(xml.contains("<gtrModel idref=\"alignment_likelihood_substitutionModel\""), xml);
+        assertTrue(xml.contains("<treeLikelihood id=\"alignment_likelihood\""), xml);
+        assertTrue(xml.contains("<strictClockBranchRates idref=\"tree_strictClockBranchRates\""), xml);
 
         MCMC mcmc =
-                runner.parse(xmlPath);
+                new BeastXXmlRunner()
+                        .parse(xmlPath);
 
-        assertNotNull(mcmc, "Expected strict-clock BEAST X XML to parse into an MCMC object.");
+        assertNotNull(
+                mcmc,
+                "Expected BEAST X parser to parse fixed-GTR PhyloCTMC XML into an MCMC object."
+        );
 
         mcmc.run();
 
-        assertTrue(Files.exists(parameterLogPath), "Expected strict-clock XML execution to write a parameter log.");
-        assertTrue(Files.size(parameterLogPath) > 0, "Expected strict-clock parameter log to be non-empty.");
-
-        assertTrue(Files.exists(treeLogPath), "Expected strict-clock XML execution to write a tree log.");
-        assertTrue(Files.size(treeLogPath) > 0, "Expected strict-clock tree log to be non-empty.");
+        assertTrue(Files.exists(logPath), "Expected fixed-GTR parameter log file to be written.");
+        assertTrue(Files.exists(treeLogPath), "Expected fixed-GTR tree log file to be written.");
+        assertTrue(Files.size(logPath) > 0, "Expected fixed-GTR parameter log file to be non-empty.");
+        assertTrue(Files.size(treeLogPath) > 0, "Expected fixed-GTR tree log file to be non-empty.");
 
         String parameterLog =
-                Files.readString(parameterLogPath);
+                Files.readString(logPath);
 
+        assertTrue(parameterLog.contains("birthRate"), parameterLog);
         assertTrue(parameterLog.contains("clockRate"), parameterLog);
 
         String treeLog =
@@ -856,250 +1068,437 @@ public class BeastXXmlExecutionTest {
     }
 
     @Test
-    public void rejectsFullPhyloCTMCStrictClockXmlExportWithClearBoundaryMessage() throws Exception {
+    public void writesParsesAndRunsPartitionedPhyloCTMCXmlWithSharedTreeClockAndSiteModels() throws Exception {
+        long suffix =
+                System.nanoTime();
+
+        Path outputDirectory =
+                Path.of("target", "beastx-xml-execution");
+
+        Path xmlPath =
+                outputDirectory.resolve("partitionedSiteGtrHkyPhyloCTMCFullRun-" + suffix + ".xml");
+
+        Path logPath =
+                outputDirectory.resolve("partitionedSiteGtrHkyPhyloCTMCFullRun-" + suffix + ".log");
+
+        Path treeLogPath =
+                outputDirectory.resolve("partitionedSiteGtrHkyPhyloCTMCFullRun-" + suffix + ".trees");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
+        Files.deleteIfExists(logPath);
+        Files.deleteIfExists(treeLogPath);
+
         String source =
                 """
                 Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+    
+                Alignment firstPartition = subset(
+                    alignment=data,
+                    start=1,
+                    end=300
+                )
+    
+                Alignment secondPartition = subset(
+                    alignment=data,
+                    start=301,
+                    end=600
+                )
+    
                 Taxa taxa = taxa(data)
     
-                Rate clockRate ~ LogNormal(
+                PositiveReal birthRate ~ LogNormal(
                     logMean=0.0,
-                    logSd=1.0
+                    logSd=0.5
+                )
+    
+                PositiveReal clockRate ~ LogNormal(
+                    logMean=0.0,
+                    logSd=0.5
+                )
+    
+                PositiveReal firstShape ~ LogNormal(
+                    logMean=0.0,
+                    logSd=0.5
+                )
+    
+                PositiveReal secondShape ~ LogNormal(
+                    logMean=0.0,
+                    logSd=0.5
+                )
+    
+                Vector<Rate> firstSiteRates ~ DiscreteGammaInv(
+                    shape=firstShape,
+                    numCategories=4,
+                    invariantProportion=0.05,
+                    numSites=numSites(firstPartition)
+                )
+    
+                Vector<Rate> secondSiteRates ~ DiscreteGammaInv(
+                    shape=secondShape,
+                    numCategories=4,
+                    invariantProportion=0.10,
+                    numSites=numSites(secondPartition)
+                )
+    
+                PositiveReal firstRateAC ~ LogNormal(logMean=0.0, logSd=0.4)
+                PositiveReal firstRateAG ~ LogNormal(logMean=0.0, logSd=0.4)
+                PositiveReal firstRateAT ~ LogNormal(logMean=0.0, logSd=0.4)
+                PositiveReal firstRateCG ~ LogNormal(logMean=0.0, logSd=0.4)
+                PositiveReal firstRateCT ~ LogNormal(logMean=0.0, logSd=0.4)
+    
+                Simplex firstBaseFrequencies ~ Dirichlet(
+                    concentration=[1.0, 1.0, 1.0, 1.0]
+                )
+    
+                PositiveReal secondKappa ~ LogNormal(
+                    logMean=1.0,
+                    logSd=0.5
+                )
+    
+                Simplex secondBaseFrequencies ~ Dirichlet(
+                    concentration=[1.0, 1.0, 1.0, 1.0]
                 )
     
                 Tree tree ~ Yule(
-                    birthRate=1.0,
+                    birthRate=birthRate,
                     taxa=taxa
                 )
     
-                QMatrix q = jc69()
+                Vector<Rate> branchRates ~ StrictClock(
+                    clockRate=clockRate,
+                    tree=tree
+                )
     
-                Alignment alignment ~ PhyloCTMC(
+                QMatrix firstQ = gtr(
+                    rateAC=firstRateAC,
+                    rateAG=firstRateAG,
+                    rateAT=firstRateAT,
+                    rateCG=firstRateCG,
+                    rateCT=firstRateCT,
+                    rateGT=1.0,
+                    baseFrequencies=firstBaseFrequencies
+                )
+    
+                QMatrix secondQ = hky(
+                    kappa=secondKappa,
+                    baseFrequencies=secondBaseFrequencies
+                )
+    
+                Alignment firstAlignment ~ PhyloCTMC(
                     tree=tree,
-                    qMatrix=q,
-                    branchRates~StrictClock(
-                        clockRate=clockRate,
-                        tree=tree
-                    )
-                ) observed as data
+                    qMatrix=firstQ,
+                    branchRates=branchRates,
+                    siteRates=firstSiteRates
+                ) observed as firstPartition
+    
+                Alignment secondAlignment ~ PhyloCTMC(
+                    tree=tree,
+                    qMatrix=secondQ,
+                    branchRates=branchRates,
+                    siteRates=secondSiteRates
+                ) observed as secondPartition
     
                 mcmc {
-                    Integer chainLength = 5
+                    Integer chainLength = 10000
                     Integer randomSeed = 1234
     
                     Logger fileLogger = fileLogger(
                         logEvery=1,
-                        file="target/beastx-xml-execution/rejected-full-phyloctmc.log",
-                        parameters=[clockRate]
+                        file="%s",
+                        parameters=[
+                            birthRate,
+                            clockRate,
+                            firstShape,
+                            secondShape,
+                            firstRateAC,
+                            firstRateAG,
+                            firstRateAT,
+                            firstRateCG,
+                            firstRateCT,
+                            firstBaseFrequencies,
+                            secondKappa,
+                            secondBaseFrequencies
+                        ]
                     )
     
                     Logger treeLogger = treeLogger(
                         logEvery=1,
-                        file="target/beastx-xml-execution/rejected-full-phyloctmc.trees",
+                        file="%s",
                         trees=[tree]
                     )
                 }
-                """;
-
-        BeastXModel model =
-                new PhyloSpecRunner(source)
-                        .buildModel("xmlRejectedFullPhyloCTMC");
-
-        UnsupportedOperationException error =
-                assertThrows(
-                        UnsupportedOperationException.class,
-                        () -> new BeastXStateXmlGenerator().toXml(model)
+                """.formatted(
+                        logPath.toString().replace("\\", "/"),
+                        treeLogPath.toString().replace("\\", "/")
                 );
 
-        assertTrue(
-                error.getMessage().contains("PhyloCTMC likelihood XML export is not supported yet"),
-                error.getMessage()
-        );
+        BeastXModel model =
+                new PhyloSpecRunner(source)
+                        .buildModel("xmlPartitionedSiteGtrHkyPhyloCTMC");
+
+        new BeastXStateXmlGenerator()
+                .write(model, xmlPath);
 
         assertTrue(
-                error.getMessage().contains("StrictClock branch-rate XML can currently be exported"),
-                error.getMessage()
+                Files.exists(xmlPath),
+                "Expected partitioned site-model PhyloCTMC XML file to be written."
         );
 
-        assertTrue(
-                error.getMessage().contains("tree-likelihood XML serialization"),
-                error.getMessage()
+        String xml =
+                Files.readString(xmlPath);
+
+        assertTrue(xml.contains("<treeLikelihood id=\"firstAlignment_likelihood\""), xml);
+        assertTrue(xml.contains("<treeLikelihood id=\"secondAlignment_likelihood\""), xml);
+
+        assertTrue(xml.contains("<gtrModel id=\"firstAlignment_likelihood_substitutionModel\""), xml);
+        assertTrue(xml.contains("<hkyModel id=\"secondAlignment_likelihood_substitutionModel\""), xml);
+
+        assertTrue(xml.contains("<rateAC>"), xml);
+        assertTrue(xml.contains("<parameter idref=\"firstRateAC\""), xml);
+        assertTrue(xml.contains("<rateCT>"), xml);
+        assertTrue(xml.contains("<parameter idref=\"firstRateCT\""), xml);
+        assertTrue(!xml.contains("<rateGT>"), xml);
+
+        assertTrue(xml.contains("<dirichletParameterPrior id=\"firstBaseFrequencies_prior\""), xml);
+        assertTrue(xml.contains("<dirichletParameterPrior id=\"secondBaseFrequencies_prior\""), xml);
+
+        assertTrue(xml.contains("<siteModel id=\"firstAlignment_likelihood_siteRateModel\""), xml);
+        assertTrue(xml.contains("<siteModel id=\"secondAlignment_likelihood_siteRateModel\""), xml);
+
+        assertTrue(xml.contains("<gammaShape gammaCategories=\"5\""), xml);
+
+        assertTrue(xml.contains("<parameter idref=\"firstShape\""), xml);
+        assertTrue(xml.contains("<parameter idref=\"secondShape\""), xml);
+
+        assertTrue(xml.contains("<proportionInvariant>"), xml);
+        assertTrue(xml.contains("value=\"0.05\""), xml);
+        assertTrue(xml.contains("value=\"0.1\""), xml);
+
+        assertTrue(xml.contains("<strictClockBranchRates id=\"tree_strictClockBranchRates\""), xml);
+        assertTrue(xml.contains("<strictClockBranchRates idref=\"tree_strictClockBranchRates\""), xml);
+
+        MCMC mcmc =
+                new BeastXXmlRunner()
+                        .parse(xmlPath);
+
+        assertNotNull(
+                mcmc,
+                "Expected BEAST X parser to parse partitioned site-model PhyloCTMC XML into an MCMC object."
         );
+
+        mcmc.run();
+
+        assertTrue(Files.exists(logPath), "Expected partitioned parameter log file to be written.");
+        assertTrue(Files.exists(treeLogPath), "Expected partitioned tree log file to be written.");
+        assertTrue(Files.size(logPath) > 0, "Expected partitioned parameter log file to be non-empty.");
+        assertTrue(Files.size(treeLogPath) > 0, "Expected partitioned tree log file to be non-empty.");
+
+        String parameterLog =
+                Files.readString(logPath);
+
+        assertTrue(parameterLog.contains("birthRate"), parameterLog);
+        assertTrue(parameterLog.contains("clockRate"), parameterLog);
+        assertTrue(parameterLog.contains("firstShape"), parameterLog);
+        assertTrue(parameterLog.contains("secondShape"), parameterLog);
+        assertTrue(parameterLog.contains("firstRateAC"), parameterLog);
+        assertTrue(parameterLog.contains("secondKappa"), parameterLog);
+
+        String treeLog =
+                Files.readString(treeLogPath);
+
+        assertTrue(treeLog.contains("#NEXUS"), treeLog);
+        assertTrue(treeLog.contains("Begin trees;"), treeLog);
+        assertTrue(treeLog.contains("STATE_"), treeLog);
     }
 
     @Test
-    public void buildsPhyloCTMCAlignmentAndPatternXmlDataLayer() throws Exception {
+    public void phyloSpecRunnerWritesAndRunsXmlMCMCThroughSingleEntryPoint() throws Exception {
+        long suffix =
+                System.nanoTime();
+
+        Path outputDirectory =
+                Path.of("target", "beastx-xml-execution");
+
+        Path xmlPath =
+                outputDirectory.resolve("runnerEntryPoint-" + suffix + ".xml");
+
+        Path logPath =
+                outputDirectory.resolve("runnerEntryPoint-" + suffix + ".log");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
+        Files.deleteIfExists(logPath);
+
         String source =
                 """
-                Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
-                Taxa taxa = taxa(data)
-    
-                Tree tree ~ Yule(
-                    birthRate=1.0,
-                    taxa=taxa
+                PositiveReal x ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
                 )
-    
-                QMatrix q = jc69()
-    
-                Alignment alignment ~ PhyloCTMC(
-                    tree=tree,
-                    qMatrix=q
-                ) observed as data
-                """;
 
-        BeastXModel model =
+                mcmc {
+                    Integer chainLength = 5
+                    Integer randomSeed = 1234
+
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[x]
+                    )
+                }
+                """.formatted(logPath.toString().replace("\\", "/"));
+
+        MCMC mcmc =
                 new PhyloSpecRunner(source)
-                        .buildModel("xmlPhyloCTMCDataLayer");
+                        .writeAndRunXmlMCMC("runnerEntryPoint", xmlPath);
 
-        BeastXXmlPlan plan =
-                new tiling.xml.BeastXXmlPlanBuilder()
-                        .buildPhyloCTMCComponentLayer(model);
-
-        assertTrue(
-                plan.has(BeastXXmlPlan.Section.ALIGNMENTS),
-                "Expected PhyloCTMC XML data layer to contain alignment XML."
-        );
-
-        assertTrue(
-                plan.has(BeastXXmlPlan.Section.PATTERN_LISTS),
-                "Expected PhyloCTMC XML data layer to contain patterns XML."
-        );
-
-        assertTrue(
-                plan.get(BeastXXmlPlan.Section.ALIGNMENTS).size() == 1,
-                "Expected exactly one alignment XML element."
-        );
-
-        assertTrue(
-                plan.get(BeastXXmlPlan.Section.PATTERN_LISTS).size() == 1,
-                "Expected exactly one patterns XML element."
-        );
+        assertNotNull(mcmc);
+        assertTrue(Files.exists(xmlPath), "Expected XML file to be written.");
+        assertTrue(Files.exists(logPath), "Expected XML-run parameter log to be written.");
+        assertTrue(Files.size(logPath) > 0, "Expected XML-run parameter log to be non-empty.");
     }
 
     @Test
-    public void buildsPhyloCTMCJC69SubstitutionModelXmlComponentLayer() throws Exception {
+    public void phyloSpecRunnerReturnsStructuredXmlExecutionResult() throws Exception {
+        long suffix =
+                System.nanoTime();
+
+        Path outputDirectory =
+                Path.of("target", "beastx-xml-execution");
+
+        Path xmlPath =
+                outputDirectory.resolve("structuredXmlRun-" + suffix + ".xml");
+
+        Path logPath =
+                outputDirectory.resolve("structuredXmlRun-" + suffix + ".log");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
+        Files.deleteIfExists(logPath);
+
         String source =
                 """
-                Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
-                Taxa taxa = taxa(data)
-    
-                Tree tree ~ Yule(
-                    birthRate=1.0,
-                    taxa=taxa
+                PositiveReal x ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
                 )
-    
-                QMatrix q = jc69()
-    
-                Alignment alignment ~ PhyloCTMC(
-                    tree=tree,
-                    qMatrix=q
-                ) observed as data
-                """;
 
-        BeastXModel model =
+                mcmc {
+                    Integer chainLength = 5
+                    Integer randomSeed = 1234
+
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[x]
+                    )
+                }
+                """.formatted(logPath.toString().replace("\\", "/"));
+
+        BeastXXmlRunResult result =
                 new PhyloSpecRunner(source)
-                        .buildModel("xmlPhyloCTMCJC69ComponentLayer");
+                        .executeXmlRun("structuredXmlRun", xmlPath);
 
-        BeastXXmlPlan plan =
-                new tiling.xml.BeastXXmlPlanBuilder()
-                        .buildPhyloCTMCComponentLayer(model);
-
-        assertTrue(
-                plan.has(BeastXXmlPlan.Section.ALIGNMENTS),
-                "Expected PhyloCTMC XML component layer to contain alignment XML."
-        );
-
-        assertTrue(
-                plan.has(BeastXXmlPlan.Section.PATTERN_LISTS),
-                "Expected PhyloCTMC XML component layer to contain patterns XML."
-        );
-
-        assertTrue(
-                plan.has(BeastXXmlPlan.Section.SUBSTITUTION_SITE_MODELS),
-                "Expected PhyloCTMC XML component layer to contain substitution-model XML."
-        );
-
-        String substitutionXml =
-                plan.get(BeastXXmlPlan.Section.SUBSTITUTION_SITE_MODELS)
-                        .toString();
-
-        assertTrue(
-                substitutionXml.contains("frequencyModel"),
-                substitutionXml
-        );
-
-        assertTrue(
-                substitutionXml.contains("hkyModel"),
-                substitutionXml
-        );
+        assertEquals("structuredXmlRun", result.runName());
+        assertEquals(xmlPath, result.xmlPath());
+        assertEquals(outputDirectory, result.outputDirectory());
+        assertTrue(result.executed());
+        assertNotNull(result.model());
+        assertNotNull(result.mcmc());
+        assertTrue(Files.exists(xmlPath));
+        assertTrue(Files.exists(logPath));
+        assertTrue(Files.size(logPath) > 0);
     }
 
     @Test
-    public void buildsPhyloCTMCDefaultGammaSiteRateModelXmlComponentLayer() throws Exception {
+    public void phyloSpecRunnerExecutesXmlRunFromOptions() throws Exception {
+        long suffix =
+                System.nanoTime();
+
+        Path outputDirectory =
+                Path.of("target", "beastx-xml-execution");
+
+        Path xmlPath =
+                outputDirectory.resolve("xmlOptionsRun-" + suffix + ".xml");
+
+        Path logPath =
+                outputDirectory.resolve("xmlOptionsRun-" + suffix + ".log");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
+        Files.deleteIfExists(logPath);
+
         String source =
                 """
-                Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
-    
-                Taxa taxa = taxa(data)
-    
-                Tree tree ~ Yule(
-                    birthRate=1.0,
-                    taxa=taxa
+                PositiveReal x ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
                 )
-    
-                QMatrix q = jc69()
-    
-                Alignment alignment ~ PhyloCTMC(
-                    tree=tree,
-                    qMatrix=q
-                ) observed as data
-                """;
 
-        BeastXModel model =
+                mcmc {
+                    Integer chainLength = 5
+                    Integer randomSeed = 1234
+
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[x]
+                    )
+                }
+                """.formatted(logPath.toString().replace("\\", "/"));
+
+        BeastXXmlRunnerOptions options =
+                BeastXXmlRunnerOptions.builder("xmlOptionsRun", xmlPath)
+                        .execute(true)
+                        .build();
+
+        BeastXXmlRunResult result =
                 new PhyloSpecRunner(source)
-                        .buildModel("xmlPhyloCTMCGammaSiteRateComponentLayer");
+                        .executeXmlRun(options);
 
-        BeastXXmlPlan plan =
-                new tiling.xml.BeastXXmlPlanBuilder()
-                        .buildPhyloCTMCComponentLayer(model);
+        assertEquals("xmlOptionsRun", result.runName());
+        assertEquals(xmlPath, result.xmlPath());
+        assertTrue(result.executed());
+        assertTrue(Files.exists(xmlPath));
+        assertTrue(Files.exists(logPath));
+        assertTrue(Files.size(logPath) > 0);
+    }
 
-        assertTrue(
-                plan.has(BeastXXmlPlan.Section.SUBSTITUTION_SITE_MODELS),
-                "Expected PhyloCTMC XML component layer to contain substitution/site model XML."
-        );
+    @Test
+    public void phyloSpecRunnerExecutesXmlRunFromPhyloSpecFile() throws Exception {
+        long suffix =
+                System.nanoTime();
 
-        String substitutionAndSiteModelXml =
-                plan.get(BeastXXmlPlan.Section.SUBSTITUTION_SITE_MODELS)
-                        .toString();
+        Path sourcePath =
+                Path.of(
+                        "src",
+                        "test",
+                        "java",
+                        "tiling",
+                        "representative",
+                        "coverage",
+                        "strictClockPhyloCTMCWithMCMC2.phylospec"
+                );
 
-        assertTrue(
-                substitutionAndSiteModelXml.contains("frequencyModel"),
-                substitutionAndSiteModelXml
-        );
+        Path outputDirectory =
+                Path.of("target", "beastx-xml-execution");
 
-        assertTrue(
-                substitutionAndSiteModelXml.contains("hkyModel"),
-                substitutionAndSiteModelXml
-        );
+        Path xmlPath =
+                outputDirectory.resolve("fromFileStrictClock-" + suffix + ".xml");
 
-        assertTrue(
-                substitutionAndSiteModelXml.contains("gammaSiteRateModel"),
-                substitutionAndSiteModelXml
-        );
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
 
-        assertTrue(
-                substitutionAndSiteModelXml.contains("substitutionModel"),
-                substitutionAndSiteModelXml
-        );
+        BeastXXmlRunResult result =
+                PhyloSpecRunner.buildXmlRunFromFile(sourcePath, xmlPath);
 
-        assertTrue(
-                substitutionAndSiteModelXml.contains("alignment_likelihood_substitutionModel"),
-                substitutionAndSiteModelXml
-        );
-
-        assertTrue(
-                substitutionAndSiteModelXml.contains("alignment_likelihood_siteRateModel"),
-                substitutionAndSiteModelXml
-        );
+        assertEquals("strictClockPhyloCTMCWithMCMC2", result.runName());
+        assertEquals(xmlPath, result.xmlPath());
+        assertFalse(result.executed());
+        assertNotNull(result.model());
+        assertNotNull(result.mcmc());
+        assertTrue(Files.exists(xmlPath));
+        assertTrue(Files.size(xmlPath) > 0);
     }
 }

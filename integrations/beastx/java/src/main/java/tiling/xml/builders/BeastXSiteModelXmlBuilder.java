@@ -12,12 +12,14 @@ public class BeastXSiteModelXmlBuilder {
     public BeastXXmlElement buildSiteRateModel(
             SiteRateModel siteRateModel,
             String siteRateModelId,
+            String substitutionModelTag,
             String substitutionModelId
     ) {
         if (siteRateModel instanceof GammaSiteRateModel gammaSiteRateModel) {
             return buildGammaSiteRateModel(
                     gammaSiteRateModel,
                     siteRateModelId,
+                    substitutionModelTag,
                     substitutionModelId
             );
         }
@@ -30,16 +32,16 @@ public class BeastXSiteModelXmlBuilder {
     private BeastXXmlElement buildGammaSiteRateModel(
             GammaSiteRateModel siteRateModel,
             String siteRateModelId,
+            String substitutionModelTag,
             String substitutionModelId
     ) {
         BeastXXmlElement element =
-                BeastXXmlElement.element("gammaSiteRateModel")
+                BeastXXmlElement.element("siteModel")
                         .withId(siteRateModelId)
-                        .withAttribute("categories", siteRateModel.getCategoryCount())
                         .withChild(
                                 BeastXXmlElement.element("substitutionModel")
                                         .withChild(
-                                                BeastXXmlElement.ref("hkyModel", substitutionModelId)
+                                                BeastXXmlElement.ref(substitutionModelTag, substitutionModelId)
                                         )
                         );
 
@@ -74,6 +76,7 @@ public class BeastXSiteModelXmlBuilder {
             element =
                     element.withChild(
                             BeastXXmlElement.element("gammaShape")
+                                    .withAttribute("gammaCategories", siteRateModel.getCategoryCount())
                                     .withChild(
                                             parameterOrInlineDefinition(
                                                     siteRateModelId + "_shape",
