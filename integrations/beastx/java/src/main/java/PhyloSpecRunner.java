@@ -26,10 +26,19 @@ import tiling.BeastXState;
 import tiling.runner.BeastXRunMode;
 import tiling.runner.BeastXRunResult;
 import tiling.runner.BeastXRunnerOptions;
+import tiling.runner.BeastXXmlRunResult;
+import tiling.runner.BeastXXmlRunnerOptions;
+import tiling.runner.BeastXFileRunPaths;
+import tiling.xml.BeastXStateXmlGenerator;
+import tiling.xml.BeastXXmlRunner;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.nio.file.Path;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 
 public class PhyloSpecRunner implements ErrorEventListener {
@@ -38,6 +47,166 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
     public PhyloSpecRunner(String source) {
         this.source = source;
+    }
+
+    public static PhyloSpecRunner fromFile(Path sourcePath)
+            throws IOException {
+        return fromFile(sourcePath, StandardCharsets.UTF_8);
+    }
+
+    public static PhyloSpecRunner fromFile(
+            Path sourcePath,
+            Charset charset
+    ) throws IOException {
+        if (sourcePath == null) {
+            throw new IllegalArgumentException("sourcePath must not be null.");
+        }
+
+        if (charset == null) {
+            throw new IllegalArgumentException("charset must not be null.");
+        }
+
+        return new PhyloSpecRunner(
+                Files.readString(sourcePath, charset)
+        );
+    }
+
+    public static String defaultRunName(Path sourcePath) {
+        if (sourcePath == null) {
+            throw new IllegalArgumentException("sourcePath must not be null.");
+        }
+
+        String fileName =
+                sourcePath.getFileName().toString();
+
+        int extensionStart =
+                fileName.lastIndexOf('.');
+
+        if (extensionStart <= 0) {
+            return fileName;
+        }
+
+        return fileName.substring(0, extensionStart);
+    }
+
+    public static BeastXRunResult buildRunFromFile(Path sourcePath)
+            throws IOException, ParserConfigurationException, SAXException {
+        String runName =
+                defaultRunName(sourcePath);
+
+        return fromFile(sourcePath)
+                .buildRun(runName);
+    }
+
+    public static BeastXRunResult executeFromFile(Path sourcePath)
+            throws IOException, ParserConfigurationException, SAXException {
+        String runName =
+                defaultRunName(sourcePath);
+
+        return fromFile(sourcePath)
+                .execute(runName);
+    }
+
+    public static BeastXXmlRunResult buildXmlRunFromFile(
+            Path sourcePath,
+            Path xmlPath
+    ) throws Exception {
+        String runName =
+                defaultRunName(sourcePath);
+
+        return fromFile(sourcePath)
+                .buildXmlRun(
+                        BeastXXmlRunnerOptions.builder(runName, xmlPath)
+                                .build()
+                );
+    }
+
+    public static BeastXFileRunPaths defaultOutputPathsForFile(Path sourcePath) {
+        return BeastXFileRunPaths.forSource(
+                sourcePath,
+                Path.of("target", "beastx-runs")
+        );
+    }
+
+    public static BeastXXmlRunResult buildDefaultXmlRunFromFile(Path sourcePath)
+            throws Exception {
+        BeastXFileRunPaths paths =
+                defaultOutputPathsForFile(sourcePath);
+
+        return fromFile(sourcePath)
+                .buildXmlRun(
+                        BeastXXmlRunnerOptions.builder(
+                                        paths.runName(),
+                                        paths.xmlPath()
+                                )
+                                .build()
+                );
+    }
+
+    public static BeastXXmlRunResult executeDefaultXmlRunFromFile(Path sourcePath)
+            throws Exception {
+        BeastXFileRunPaths paths =
+                defaultOutputPathsForFile(sourcePath);
+
+        return fromFile(sourcePath)
+                .executeXmlRun(
+                        BeastXXmlRunnerOptions.builder(
+                                        paths.runName(),
+                                        paths.xmlPath()
+                                )
+                                .execute(true)
+                                .build()
+                );
+    }
+
+    public static BeastXXmlRunResult buildXmlRunFromFileInOutputRoot(
+            Path sourcePath,
+            Path outputRoot
+    ) throws Exception {
+        BeastXFileRunPaths paths =
+                BeastXFileRunPaths.forSource(sourcePath, outputRoot);
+
+        return fromFile(sourcePath)
+                .buildXmlRun(
+                        BeastXXmlRunnerOptions.builder(
+                                        paths.runName(),
+                                        paths.xmlPath()
+                                )
+                                .build()
+                );
+    }
+
+    public static BeastXXmlRunResult executeXmlRunFromFileInOutputRoot(
+            Path sourcePath,
+            Path outputRoot
+    ) throws Exception {
+        BeastXFileRunPaths paths =
+                BeastXFileRunPaths.forSource(sourcePath, outputRoot);
+
+        return fromFile(sourcePath)
+                .executeXmlRun(
+                        BeastXXmlRunnerOptions.builder(
+                                        paths.runName(),
+                                        paths.xmlPath()
+                                )
+                                .execute(true)
+                                .build()
+                );
+    }
+
+    public static BeastXXmlRunResult executeXmlRunFromFile(
+            Path sourcePath,
+            Path xmlPath
+    ) throws Exception {
+        String runName =
+                defaultRunName(sourcePath);
+
+        return fromFile(sourcePath)
+                .executeXmlRun(
+                        BeastXXmlRunnerOptions.builder(runName, xmlPath)
+                                .execute(true)
+                                .build()
+                );
     }
 
     public BeastXState buildState(String runName)
@@ -344,6 +513,187 @@ public class PhyloSpecRunner implements ErrorEventListener {
         mcmc.run();
 
         return mcmc;
+    }
+
+    public String toXml(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        BeastXModel model =
+                buildModel(runName);
+
+        return toXml(model);
+    }
+
+    public String toXml(BeastXModel model) {
+        return new BeastXStateXmlGenerator()
+                .toXml(model);
+    }
+
+    public BeastXModel writeXml(
+            String runName,
+            Path xmlPath
+    ) throws IOException, ParserConfigurationException, SAXException {
+        BeastXModel model =
+                buildModel(runName);
+
+        writeXml(model, xmlPath);
+
+        return model;
+    }
+
+    public void writeXml(
+            BeastXModel model,
+            Path xmlPath
+    ) throws IOException {
+        new BeastXStateXmlGenerator()
+                .write(model, xmlPath);
+    }
+
+    public MCMC parseXmlMCMC(Path xmlPath) throws Exception {
+        return new BeastXXmlRunner()
+                .parse(xmlPath);
+    }
+
+    public MCMC runXmlMCMC(Path xmlPath) throws Exception {
+        return new BeastXXmlRunner()
+                .run(xmlPath);
+    }
+
+    public MCMC writeAndParseXmlMCMC(
+            String runName,
+            Path xmlPath
+    ) throws Exception {
+        writeXml(runName, xmlPath);
+
+        return parseXmlMCMC(xmlPath);
+    }
+
+    public MCMC writeAndRunXmlMCMC(
+            String runName,
+            Path xmlPath
+    ) throws Exception {
+        writeXml(runName, xmlPath);
+
+        return runXmlMCMC(xmlPath);
+    }
+
+    public MCMC writeAndRunXmlMCMC(
+            BeastXModel model,
+            Path xmlPath
+    ) throws Exception {
+        writeXml(model, xmlPath);
+
+        return runXmlMCMC(xmlPath);
+    }
+
+    public BeastXXmlRunResult buildXmlRun(
+            String runName,
+            Path xmlPath
+    ) throws Exception {
+        BeastXModel model =
+                writeXml(runName, xmlPath);
+
+        MCMC mcmc =
+                parseXmlMCMC(xmlPath);
+
+        return new BeastXXmlRunResult(
+                runName,
+                model,
+                xmlPath,
+                mcmc,
+                false
+        );
+    }
+
+    public BeastXXmlRunResult executeXmlRun(
+            String runName,
+            Path xmlPath
+    ) throws Exception {
+        BeastXXmlRunResult run =
+                buildXmlRun(runName, xmlPath);
+
+        run.mcmc().run();
+
+        return run.asExecuted();
+    }
+
+    public BeastXXmlRunResult buildXmlRun(
+            BeastXModel model,
+            String runName,
+            Path xmlPath
+    ) throws Exception {
+        writeXml(model, xmlPath);
+
+        MCMC mcmc =
+                parseXmlMCMC(xmlPath);
+
+        return new BeastXXmlRunResult(
+                runName,
+                model,
+                xmlPath,
+                mcmc,
+                false
+        );
+    }
+
+    public BeastXXmlRunResult executeXmlRun(
+            BeastXModel model,
+            String runName,
+            Path xmlPath
+    ) throws Exception {
+        BeastXXmlRunResult run =
+                buildXmlRun(model, runName, xmlPath);
+
+        run.mcmc().run();
+
+        return run.asExecuted();
+    }
+
+    public BeastXXmlRunResult runXml(BeastXXmlRunnerOptions options)
+            throws Exception {
+        BeastXModel model =
+                options.materializePhyloCTMC()
+                        ? buildMaterializedModel(options.runName())
+                        : buildModel(options.runName());
+
+        writeXml(model, options.xmlPath());
+
+        MCMC mcmc =
+                parseXmlMCMC(options.xmlPath());
+
+        BeastXXmlRunResult run =
+                new BeastXXmlRunResult(
+                        options.runName(),
+                        model,
+                        options.xmlPath(),
+                        mcmc,
+                        false
+                );
+
+        if (!options.execute()) {
+            return run;
+        }
+
+        mcmc.run();
+
+        return run.asExecuted();
+    }
+
+    public BeastXXmlRunResult buildXmlRun(BeastXXmlRunnerOptions options)
+            throws Exception {
+        return runXml(
+                options.toBuilder()
+                        .execute(false)
+                        .build()
+        );
+    }
+
+    public BeastXXmlRunResult executeXmlRun(BeastXXmlRunnerOptions options)
+            throws Exception {
+        return runXml(
+                options.toBuilder()
+                        .execute(true)
+                        .build()
+        );
     }
 
     public void runPhyloSpec(String runName)

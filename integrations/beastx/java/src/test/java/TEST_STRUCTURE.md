@@ -155,7 +155,7 @@ Some tests depend on the native BEAGLE library. If BEAGLE is unavailable, BEAGLE
 These tests validate the current BEAST X XML pipeline.
 
 - `BeastXStateXmlGeneratorTest`
-- `BeastXXmlExecutionTest`
+- `BeastXXmlTest`
 
 This layer answers:
 
@@ -285,7 +285,7 @@ mvn -pl integrations/beastx/java "-Dtest=BeastXPhyloCTMCMaterializationTest,Beas
 Run XML-related checks:
 
 ```bash
-mvn -pl integrations/beastx/java "-Dtest=BeastXStateXmlGeneratorTest,BeastXXmlExecutionTest" test
+mvn -pl integrations/beastx/java "-Dtest=BeastXStateXmlGeneratorTest,BeastXXmlTest" test
 ```
 
 Run the full BEAST X module test suite:
