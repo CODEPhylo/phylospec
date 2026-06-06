@@ -42,8 +42,11 @@ public class NormalTile extends GeneratorTile<
         RealScalar<PositiveReal> sd =
                 this.sdInput.apply(beastState, indexVariables);
 
-        Parameter meanParameter = new Parameter.Default(mean.get());
-        Parameter sdParameter = new Parameter.Default(sd.get());
+        Parameter meanParameter =
+                new Parameter.Default(mean.get());
+
+        Parameter sdParameter =
+                new Parameter.Default(sd.get());
 
         NormalDistributionModel distributionModel =
                 new NormalDistributionModel(meanParameter, sdParameter);
@@ -51,8 +54,19 @@ public class NormalTile extends GeneratorTile<
         DistributionLikelihood likelihood =
                 new DistributionLikelihood(distributionModel);
 
+        Parameter.Default defaultParameter =
+                new Parameter.Default(mean.get());
+
+        defaultParameter.addBounds(
+                Double.NEGATIVE_INFINITY,
+                Double.POSITIVE_INFINITY
+        );
+
         BeastXRealScalarParam<Real> defaultState =
-                new BeastXRealScalarParam<>(0.1, Real.INSTANCE);
+                new BeastXRealScalarParam<>(
+                        defaultParameter,
+                        Real.INSTANCE
+                );
 
         return new BoundDistribution<>(
                 likelihood,
