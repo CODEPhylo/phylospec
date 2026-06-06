@@ -9,7 +9,7 @@ public class BeastXTreeLikelihoodXmlBuilder {
             String patternsId,
             String treeModelId,
             String siteRateModelId,
-            String branchRateModelId
+            BeastXXmlElement branchRateModelReference
     ) {
         BeastXXmlElement treeLikelihood =
                 BeastXXmlElement.element("treeLikelihood")
@@ -25,11 +25,9 @@ public class BeastXTreeLikelihoodXmlBuilder {
                                 BeastXXmlElement.ref("siteModel", siteRateModelId)
                         );
 
-        if (branchRateModelId != null && !branchRateModelId.isBlank()) {
+        if (branchRateModelReference != null) {
             treeLikelihood =
-                    treeLikelihood.withChild(
-                            BeastXXmlElement.ref("strictClockBranchRates", branchRateModelId)
-                    );
+                    treeLikelihood.withChild(branchRateModelReference);
         }
 
         return treeLikelihood;

@@ -1,7 +1,9 @@
 package tiling;
 
+import dr.evomodel.branchratemodel.DiscretizedBranchRates;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.distribution.AbstractDistributionLikelihood;
+import dr.inference.distribution.ParametricDistributionModel;
 import dr.inference.loggers.Logger;
 import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Likelihood;
@@ -32,6 +34,7 @@ public class BeastXState {
     public final List<AbstractDistributionLikelihood> calibrationPriorDistributions;
     public final List<Likelihood> likelihoodDistributions;
     public final Map<TreeModel, List<Parameter>> treeClockRateParameters;
+    public final Map<TreeModel, RelaxedClockSpec> treeRelaxedClockModels;
     public final List<Logger> mcmcLoggers;
     public final List<ScreenLoggerSpec> screenLoggerSpecs;
     public final List<FileLoggerSpec> fileLoggerSpecs;
@@ -58,6 +61,7 @@ public class BeastXState {
         this.calibrationPriorDistributions = new ArrayList<>();
         this.likelihoodDistributions = new ArrayList<>();
         this.treeClockRateParameters = new HashMap<>();
+        this.treeRelaxedClockModels = new HashMap<>();
         this.mcmcLoggers = new ArrayList<>();
         this.screenLoggerSpecs = new ArrayList<>();
         this.fileLoggerSpecs = new ArrayList<>();
@@ -146,6 +150,25 @@ public class BeastXState {
                 .add(clockRateParameter);
     }
 
+    public void addTreeRelaxedClockModel(
+            TreeModel treeModel,
+            DiscretizedBranchRates relaxedClock,
+            Parameter rateCategoriesParameter,
+            ParametricDistributionModel distributionModel,
+            double normalizeBranchRateTo
+    ) {
+        this.treeRelaxedClockModels.put(
+                treeModel,
+                new RelaxedClockSpec(
+                        treeModel,
+                        relaxedClock,
+                        rateCategoriesParameter,
+                        distributionModel,
+                        normalizeBranchRateTo
+                )
+        );
+    }
+
     public void addMCMCLogger(Logger logger) {
         this.mcmcLoggers.add(logger);
     }
@@ -168,6 +191,15 @@ public class BeastXState {
 
     public void addTreeLoggerSpec(long logEvery, String fileName, List<String> treeNames) {
         this.treeLoggerSpecs.add(new TreeLoggerSpec(logEvery, fileName, treeNames));
+    }
+
+    public record RelaxedClockSpec(
+            TreeModel treeModel,
+            DiscretizedBranchRates relaxedClock,
+            Parameter rateCategoriesParameter,
+            ParametricDistributionModel distributionModel,
+            double normalizeBranchRateTo
+    ) {
     }
 
     public static class OperatorConfig {
@@ -264,8 +296,8 @@ public class BeastXState {
 
         public TreeLoggerSpec(long logEvery, String fileName, List<String> treeNames) {
             this.logEvery = logEvery;
-            this.fileName = fileName;
             this.treeNames = treeNames;
+            this.fileName = fileName;
         }
     }
 }

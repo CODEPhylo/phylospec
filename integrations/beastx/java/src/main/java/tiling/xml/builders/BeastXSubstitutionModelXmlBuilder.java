@@ -1,9 +1,15 @@
 package tiling.xml.builders;
 
 import dr.evolution.datatype.DataType;
+import dr.evolution.datatype.Codons;
+import dr.evomodel.substmodel.codon.GY94CodonModel;
 import dr.evomodel.substmodel.BaseSubstitutionModel;
+import dr.evomodel.substmodel.GeneralSubstitutionModel;
+import dr.evomodel.substmodel.EmpiricalRateMatrix;
 import dr.evomodel.substmodel.FrequencyModel;
 import dr.evomodel.substmodel.SubstitutionModel;
+import dr.evomodel.substmodel.aminoacid.AminoAcidModelType;
+import dr.evomodel.substmodel.aminoacid.EmpiricalAminoAcidModel;
 import dr.evomodel.substmodel.nucleotide.GTR;
 import dr.evomodel.substmodel.nucleotide.HKY;
 import dr.inference.model.Parameter;
@@ -12,6 +18,7 @@ import tiling.xml.BeastXXmlElement;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.lang.reflect.Field;
 
 public class BeastXSubstitutionModelXmlBuilder {
 
@@ -30,8 +37,20 @@ public class BeastXSubstitutionModelXmlBuilder {
             return buildGTRModel(gtr, substitutionModelId);
         }
 
+        if (substitutionModel instanceof EmpiricalAminoAcidModel aminoAcidModel) {
+            return buildEmpiricalAminoAcidModel(aminoAcidModel, substitutionModelId);
+        }
+
+        if (substitutionModel instanceof GeneralSubstitutionModel generalSubstitutionModel) {
+            return buildGeneralSubstitutionModel(generalSubstitutionModel, substitutionModelId);
+        }
+
+        if (substitutionModel instanceof GY94CodonModel gy94CodonModel) {
+            return buildGY94CodonModel(gy94CodonModel, substitutionModelId);
+        }
+
         throw unsupported(
-                "Only HKY-compatible and GTR nucleotide substitution models are supported for XML export at this stage."
+                "Only HKY-compatible, GTR nucleotide, empirical amino-acid, and GY94 codon substitution models are supported for XML export at this stage."
         );
     }
 
@@ -42,6 +61,18 @@ public class BeastXSubstitutionModelXmlBuilder {
 
         if (substitutionModel instanceof GTR) {
             return "gtrModel";
+        }
+
+        if (substitutionModel instanceof EmpiricalAminoAcidModel) {
+            return "aminoAcidModel";
+        }
+
+        if (substitutionModel instanceof GeneralSubstitutionModel) {
+            return "generalSubstitutionModel";
+        }
+
+        if (substitutionModel instanceof GY94CodonModel) {
+            return "yangCodonModel";
         }
 
         throw unsupported(
@@ -104,6 +135,131 @@ public class BeastXSubstitutionModelXmlBuilder {
         elements.add(
                 gtrModelDefinition(
                         gtr,
+                        substitutionModelId,
+                        frequencyModelId
+                )
+        );
+
+        return elements;
+    }
+
+    private List<BeastXXmlElement> buildEmpiricalAminoAcidModel(
+            EmpiricalAminoAcidModel aminoAcidModel,
+            String substitutionModelId
+    ) {
+        List<BeastXXmlElement> elements =
+                new ArrayList<>();
+
+        FrequencyModel frequencyModel =
+                frequencyModel(aminoAcidModel);
+
+        String frequencyModelId =
+                substitutionModelId + "_frequencies";
+
+        elements.add(
+                frequencyModelDefinition(
+                        frequencyModel,
+                        frequencyModelId
+                )
+        );
+
+        elements.add(
+                aminoAcidModelDefinition(
+                        aminoAcidModel,
+                        substitutionModelId,
+                        frequencyModelId
+                )
+        );
+
+        return elements;
+    }
+
+    private List<BeastXXmlElement> buildGeneralSubstitutionModel(
+            GeneralSubstitutionModel generalSubstitutionModel,
+            String substitutionModelId
+    ) {
+        List<BeastXXmlElement> elements =
+                new ArrayList<>();
+
+        FrequencyModel frequencyModel =
+                frequencyModel(generalSubstitutionModel);
+
+        String frequencyModelId =
+                substitutionModelId + "_frequencies";
+
+        elements.add(
+                frequencyModelDefinition(
+                        frequencyModel,
+                        frequencyModelId
+                )
+        );
+
+        elements.add(
+                generalSubstitutionModelDefinition(
+                        generalSubstitutionModel,
+                        substitutionModelId,
+                        frequencyModelId
+                )
+        );
+
+        return elements;
+    }
+
+    private BeastXXmlElement generalSubstitutionModelDefinition(
+            GeneralSubstitutionModel generalSubstitutionModel,
+            String substitutionModelId,
+            String frequencyModelId
+    ) {
+        Parameter ratesParameter =
+                generalSubstitutionModelRatesParameter(generalSubstitutionModel);
+
+        return BeastXXmlElement.element("generalSubstitutionModel")
+                .withId(substitutionModelId)
+                .withAttribute(
+                        "dataType",
+                        dataTypeName(generalSubstitutionModel.getDataType())
+                )
+                .withAttribute("normalized", "false")
+                .withChild(
+                        BeastXXmlElement.element("frequencies")
+                                .withChild(
+                                        BeastXXmlElement.ref("frequencyModel", frequencyModelId)
+                                )
+                )
+                .withChild(
+                        BeastXXmlElement.element("rates")
+                                .withChild(
+                                        parameterOrInlineDefinition(
+                                                substitutionModelId + "_rates",
+                                                ratesParameter
+                                        )
+                                )
+                );
+    }
+
+    private List<BeastXXmlElement> buildGY94CodonModel(
+            GY94CodonModel gy94CodonModel,
+            String substitutionModelId
+    ) {
+        List<BeastXXmlElement> elements =
+                new ArrayList<>();
+
+        FrequencyModel frequencyModel =
+                frequencyModel(gy94CodonModel);
+
+        String frequencyModelId =
+                substitutionModelId + "_frequencies";
+
+        elements.add(
+                frequencyModelDefinition(
+                        frequencyModel,
+                        frequencyModelId
+                )
+        );
+
+        elements.add(
+                yangCodonModelDefinition(
+                        gy94CodonModel,
                         substitutionModelId,
                         frequencyModelId
                 )
@@ -211,6 +367,86 @@ public class BeastXSubstitutionModelXmlBuilder {
         }
 
         return model;
+    }
+
+    private BeastXXmlElement aminoAcidModelDefinition(
+            EmpiricalAminoAcidModel aminoAcidModel,
+            String substitutionModelId,
+            String frequencyModelId
+    ) {
+        return BeastXXmlElement.element("aminoAcidModel")
+                .withId(substitutionModelId)
+                .withAttribute("type", aminoAcidModelType(aminoAcidModel))
+                .withChild(
+                        BeastXXmlElement.element("frequencies")
+                                .withChild(
+                                        BeastXXmlElement.ref("frequencyModel", frequencyModelId)
+                                )
+                );
+    }
+
+    private BeastXXmlElement yangCodonModelDefinition(
+            GY94CodonModel gy94CodonModel,
+            String substitutionModelId,
+            String frequencyModelId
+    ) {
+        Parameter omega =
+                gy94ParameterField(
+                        gy94CodonModel,
+                        "omegaParameter"
+                );
+
+        Parameter kappa =
+                gy94ParameterField(
+                        gy94CodonModel,
+                        "kappaParameter"
+                );
+
+        return BeastXXmlElement.element("yangCodonModel")
+                .withId(substitutionModelId)
+                .withChild(
+                        BeastXXmlElement.element("omega")
+                                .withChild(
+                                        parameterOrInlineDefinition(
+                                                substitutionModelId + "_omega",
+                                                omega
+                                        )
+                                )
+                )
+                .withChild(
+                        BeastXXmlElement.element("kappa")
+                                .withChild(
+                                        parameterOrInlineDefinition(
+                                                substitutionModelId + "_kappa",
+                                                kappa
+                                        )
+                                )
+                )
+                .withChild(
+                        BeastXXmlElement.ref("frequencyModel", frequencyModelId)
+                );
+    }
+
+    private String aminoAcidModelType(EmpiricalAminoAcidModel aminoAcidModel) {
+        EmpiricalRateMatrix rateMatrix =
+                aminoAcidModel.getEmpiricalRateMatrix();
+
+        for (AminoAcidModelType type : AminoAcidModelType.values()) {
+            EmpiricalRateMatrix candidate =
+                    type.getRateMatrixInstance();
+
+            if (
+                    rateMatrix == candidate
+                            || rateMatrix.getClass().equals(candidate.getClass())
+            ) {
+                return type.getXMLName();
+            }
+        }
+
+        throw unsupported(
+                "Unsupported empirical amino-acid rate matrix: "
+                        + rateMatrix.getClass().getName()
+        );
     }
 
     private BeastXXmlElement fixedGTRRatesParameter(
@@ -356,6 +592,59 @@ public class BeastXSubstitutionModelXmlBuilder {
         throw unsupported("Cannot extract kappa parameter from HKY substitution model.");
     }
 
+    private Parameter generalSubstitutionModelRatesParameter(
+            GeneralSubstitutionModel generalSubstitutionModel
+    ) {
+        try {
+            Field field =
+                    GeneralSubstitutionModel.class.getDeclaredField("ratesParameter");
+
+            field.setAccessible(true);
+
+            Object value =
+                    field.get(generalSubstitutionModel);
+
+            if (value instanceof Parameter parameter) {
+                return parameter;
+            }
+
+            throw unsupported(
+                    "GeneralSubstitutionModel field 'ratesParameter' is not a Parameter."
+            );
+        } catch (NoSuchFieldException | IllegalAccessException exception) {
+            throw unsupported(
+                    "Cannot extract ratesParameter field from GeneralSubstitutionModel."
+            );
+        }
+    }
+
+    private Parameter gy94ParameterField(
+            GY94CodonModel gy94CodonModel,
+            String fieldName
+    ) {
+        try {
+            Field field =
+                    GY94CodonModel.class.getDeclaredField(fieldName);
+
+            field.setAccessible(true);
+
+            Object value =
+                    field.get(gy94CodonModel);
+
+            if (value instanceof Parameter parameter) {
+                return parameter;
+            }
+
+            throw unsupported(
+                    "GY94 field '" + fieldName + "' is not a Parameter."
+            );
+        } catch (NoSuchFieldException | IllegalAccessException exception) {
+            throw unsupported(
+                    "Cannot extract GY94 parameter field '" + fieldName + "'."
+            );
+        }
+    }
+
     private String dataTypeName(DataType dataType) {
         if (dataType == null) {
             throw new IllegalArgumentException(
@@ -374,9 +663,16 @@ public class BeastXSubstitutionModelXmlBuilder {
 
         return switch (description.toLowerCase()) {
             case "nucleotide", "nucleotides", "dna" -> "nucleotide";
-            case "amino acid", "amino acids", "aminoacid", "aminoacids", "protein" -> "aminoacid";
-            case "two states", "binary", "boolean" -> "twoState";
-            default -> description;
+            case "amino acid", "amino acids", "aminoacid", "aminoacids", "protein" -> "amino acid";
+            case "codon", "codons", "universal codons", "codon-universal" -> "codon-universal";
+            case "two states", "binary", "boolean" -> "binary";
+            default -> {
+                if (dataType instanceof Codons) {
+                    yield "codon-universal";
+                }
+
+                yield description;
+            }
         };
     }
 
@@ -389,6 +685,13 @@ public class BeastXSubstitutionModelXmlBuilder {
 
     private static boolean approximatelyOne(double value) {
         return Math.abs(value - 1.0) < 1.0e-12;
+    }
+
+    private static boolean approximatelyEqual(
+            double left,
+            double right
+    ) {
+        return Math.abs(left - right) < 1.0e-12;
     }
 
     private static RuntimeException unsupported(String message) {
