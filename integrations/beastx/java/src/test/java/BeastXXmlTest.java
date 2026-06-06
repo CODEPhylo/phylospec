@@ -22,7 +22,6 @@ import tiling.xml.BeastXXmlElement;
 import tiling.xml.builders.BeastXAlignmentXmlBuilder;
 import tiling.xml.builders.BeastXSubstitutionModelXmlBuilder;
 
-
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,6 +31,7 @@ import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -1493,11 +1493,10 @@ public class BeastXXmlTest {
         Path sourcePath =
                 Path.of(
                         "src",
-                        "test",
+                        "main",
                         "java",
                         "tiling",
-                        "representative",
-                        "coverage",
+                        "runner",
                         "strictClockPhyloCTMCWithMCMC2.phylospec"
                 );
 
@@ -1527,11 +1526,10 @@ public class BeastXXmlTest {
         Path sourcePath =
                 Path.of(
                         "src",
-                        "test",
+                        "main",
                         "java",
                         "tiling",
-                        "representative",
-                        "coverage",
+                        "runner",
                         "strictClockPhyloCTMCWithMCMC2.phylospec"
                 );
 
@@ -1573,6 +1571,54 @@ public class BeastXXmlTest {
     }
 
     @Test
+    public void buildsWAGEmpiricalAminoAcidSubstitutionModelXmlComponentLayer() {
+        assertEmpiricalAminoAcidSubstitutionModelXml(
+                AminoAcidModelType.WAG,
+                "WAG"
+        );
+    }
+
+    @Test
+    public void buildsLGEmpiricalAminoAcidSubstitutionModelXmlComponentLayer() {
+        assertEmpiricalAminoAcidSubstitutionModelXml(
+                AminoAcidModelType.LG,
+                "LG"
+        );
+    }
+
+    private void assertEmpiricalAminoAcidSubstitutionModelXml(
+            AminoAcidModelType aminoAcidModelType,
+            String expectedXmlType
+    ) {
+        EmpiricalAminoAcidModel model =
+                new EmpiricalAminoAcidModel(
+                        aminoAcidModelType.getRateMatrixInstance(),
+                        new FrequencyModel(
+                                AminoAcids.INSTANCE,
+                                aminoAcidModelType.getRateMatrixInstance().getEmpiricalFrequencies()
+                        )
+                );
+
+        List<BeastXXmlElement> elements =
+                new BeastXSubstitutionModelXmlBuilder()
+                        .buildSubstitutionModel(
+                                model,
+                                "protein_likelihood_substitutionModel"
+                        );
+
+        String xml =
+                elements.stream()
+                        .map(Object::toString)
+                        .collect(Collectors.joining("\n"));
+
+        assertTrue(xml.contains("<frequencyModel"), xml);
+        assertTrue(xml.contains("dataType=\"amino acid\""), xml);
+        assertTrue(xml.contains("<aminoAcidModel"), xml);
+        assertTrue(xml.contains("type=\"" + expectedXmlType + "\""), xml);
+        assertTrue(xml.contains("<frequencyModel idref=\"protein_likelihood_substitutionModel_frequencies\"/>"), xml);
+    }
+
+    @Test
     public void buildsEmpiricalAminoAcidSubstitutionModelXmlComponentLayer() {
         EmpiricalAminoAcidModel model =
                 new EmpiricalAminoAcidModel(
@@ -1596,12 +1642,13 @@ public class BeastXXmlTest {
                         .collect(Collectors.joining("\n"));
 
         assertTrue(xml.contains("<frequencyModel"), xml);
-        assertTrue(xml.contains("dataType=\"aminoacid\""), xml);
+        assertTrue(xml.contains("dataType=\"amino acid\""), xml);
         assertTrue(xml.contains("<aminoAcidModel"), xml);
         assertTrue(xml.contains("type=\"JTT\""), xml);
     }
 
     @Test
+    @Tag("beagle")
     public void writesParsesAndRunsRelaxedClockPhyloCTMCXml() throws Exception {
         long suffix =
                 System.nanoTime();
@@ -1710,6 +1757,7 @@ public class BeastXXmlTest {
     }
 
     @Test
+    @Tag("beagle")
     public void writesParsesAndRunsProteinJTTPhyloCTMCXml() throws Exception {
         long suffix =
                 System.nanoTime();
@@ -2029,6 +2077,7 @@ public class BeastXXmlTest {
     }
 
     @Test
+    @Tag("beagle")
     public void writesParsesAndRunsBinaryTraitMkPhyloCTMCXml() throws Exception {
         long suffix =
                 System.nanoTime();
@@ -2145,5 +2194,460 @@ public class BeastXXmlTest {
 
         assertTrue(Files.exists(treeLogPath), "Expected binary trait Mk tree log to be written.");
         assertTrue(Files.size(treeLogPath) > 0, "Expected binary trait Mk tree log to be non-empty.");
+    }
+
+    @Test
+    @Tag("beagle")
+    public void writesParsesAndRunsJointMolecularTraitMkPhyloCTMCXml() throws Exception {
+        long suffix =
+                System.nanoTime();
+
+        Path outputDirectory =
+                Path.of("target", "beastx-xml-execution");
+
+        Path xmlPath =
+                outputDirectory.resolve("jointMolecularTraitMkPhyloCTMC-" + suffix + ".xml");
+
+        Path logPath =
+                outputDirectory.resolve("jointMolecularTraitMkPhyloCTMC-" + suffix + ".log");
+
+        Path treeLogPath =
+                outputDirectory.resolve("jointMolecularTraitMkPhyloCTMC-" + suffix + ".trees");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
+        Files.deleteIfExists(logPath);
+        Files.deleteIfExists(treeLogPath);
+
+        String source =
+                """
+                Alignment molecularData = fromNexus("src/test/java/resources/binary-traits.nex")
+    
+                Taxa taxa = taxa(molecularData)
+    
+                Alignment traitData = discreteTraitsFromTaxa(
+                    taxa=taxa,
+                    trait=parse(regex=".*_([01])$")
+                )
+    
+                Rate birthRate ~ LogNormal(
+                    logMean=0.0,
+                    logSd=0.5
+                )
+    
+                Rate clockRate ~ LogNormal(
+                    logMean=0.0,
+                    logSd=0.5
+                )
+    
+                PositiveReal kappa ~ LogNormal(
+                    logMean=1.0,
+                    logSd=0.4
+                )
+    
+                Simplex baseFrequencies ~ Dirichlet(
+                    concentration=repeat(1.0, num=4)
+                )
+    
+                Rate traitRate ~ LogNormal(
+                    logMean=-1.0,
+                    logSd=0.5
+                )
+    
+                Tree tree ~ Yule(
+                    birthRate=birthRate,
+                    taxa=taxa
+                )
+    
+                Vector<Rate> branchRates ~ StrictClock(
+                    clockRate=clockRate,
+                    tree=tree
+                )
+    
+                QMatrix molecularQ = hky(
+                    kappa=kappa,
+                    baseFrequencies=baseFrequencies
+                )
+    
+                QMatrix traitQ = mk(
+                    rate=traitRate
+                )
+    
+                Alignment molecularAlignment ~ PhyloCTMC(
+                    tree=tree,
+                    qMatrix=molecularQ,
+                    branchRates=branchRates
+                ) observed as molecularData
+    
+                Alignment traitAlignment ~ PhyloCTMC(
+                    tree=tree,
+                    qMatrix=traitQ,
+                    branchRates=branchRates
+                ) observed as traitData
+    
+                mcmc {
+                    Integer chainLength = 1000
+                    Integer randomSeed = 1234
+    
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[birthRate, clockRate, kappa, traitRate]
+                    )
+    
+                    Logger treeLogger = treeLogger(
+                        logEvery=1,
+                        file="%s",
+                        trees=[tree]
+                    )
+                }
+                """.formatted(
+                        logPath.toString().replace("\\", "/"),
+                        treeLogPath.toString().replace("\\", "/")
+                );
+
+        BeastXModel model =
+                new PhyloSpecRunner(source)
+                        .buildModel("xmlJointMolecularTraitMkPhyloCTMC");
+
+        new BeastXStateXmlGenerator()
+                .write(model, xmlPath);
+
+        assertTrue(
+                Files.exists(xmlPath),
+                "Expected joint molecular + trait Mk PhyloCTMC XML file to be written."
+        );
+
+        String xml =
+                Files.readString(xmlPath);
+
+        assertTrue(xml.contains("molecularAlignment_likelihood"), xml);
+        assertTrue(xml.contains("traitAlignment_likelihood"), xml);
+        assertTrue(xml.contains("<hkyModel"), xml);
+        assertTrue(xml.contains("<generalSubstitutionModel"), xml);
+        assertTrue(xml.contains("<strictClockBranchRates"), xml);
+        assertTrue(xml.contains("<treeLikelihood id=\"molecularAlignment_likelihood\""), xml);
+        assertTrue(xml.contains("<treeLikelihood id=\"traitAlignment_likelihood\""), xml);
+
+        new BeastXXmlRunner()
+                .run(xmlPath);
+
+        assertTrue(
+                Files.exists(logPath),
+                "Expected joint molecular + trait Mk parameter log to be written."
+        );
+        assertTrue(
+                Files.size(logPath) > 0,
+                "Expected joint molecular + trait Mk parameter log to be non-empty."
+        );
+
+        assertTrue(
+                Files.exists(treeLogPath),
+                "Expected joint molecular + trait Mk tree log to be written."
+        );
+        assertTrue(
+                Files.size(treeLogPath) > 0,
+                "Expected joint molecular + trait Mk tree log to be non-empty."
+        );
+    }
+
+    @Test
+    @Tag("beagle")
+    public void writesParsesAndRunsGammaPriorStrictClockPhyloCTMCXml() throws Exception {
+        long suffix =
+                System.nanoTime();
+
+        Path outputDirectory =
+                Path.of("target", "beastx-xml-execution");
+
+        Path xmlPath =
+                outputDirectory.resolve("gammaPriorStrictClockPhyloCTMC-" + suffix + ".xml");
+
+        Path logPath =
+                outputDirectory.resolve("gammaPriorStrictClockPhyloCTMC-" + suffix + ".log");
+
+        Path treeLogPath =
+                outputDirectory.resolve("gammaPriorStrictClockPhyloCTMC-" + suffix + ".trees");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
+        Files.deleteIfExists(logPath);
+        Files.deleteIfExists(treeLogPath);
+
+        String source =
+                """
+                Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+    
+                Taxa taxa = taxa(data)
+    
+                PositiveReal birthRate ~ Gamma(
+                    shape=2.0,
+                    rate=4.0
+                )
+    
+                PositiveReal clockRate ~ Gamma(
+                    shape=2.0,
+                    rate=4.0
+                )
+    
+                Tree tree ~ Yule(
+                    birthRate=birthRate,
+                    taxa=taxa
+                )
+    
+                Vector<Rate> branchRates ~ StrictClock(
+                    clockRate=clockRate,
+                    tree=tree
+                )
+    
+                QMatrix q = jc69()
+    
+                Alignment alignment ~ PhyloCTMC(
+                    tree=tree,
+                    qMatrix=q,
+                    branchRates=branchRates
+                ) observed as data
+    
+                mcmc {
+                    Integer chainLength = 10000
+                    Integer randomSeed = 1234
+    
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[birthRate, clockRate]
+                    )
+    
+                    Logger treeLogger = treeLogger(
+                        logEvery=1,
+                        file="%s",
+                        trees=[tree]
+                    )
+                }
+                """.formatted(
+                        logPath.toString().replace("\\", "/"),
+                        treeLogPath.toString().replace("\\", "/")
+                );
+
+        BeastXModel model =
+                new PhyloSpecRunner(source)
+                        .buildModel("gammaPriorStrictClockPhyloCTMC");
+
+        new BeastXStateXmlGenerator()
+                .write(model, xmlPath);
+
+        String xml =
+                Files.readString(xmlPath);
+
+        assertTrue(Files.exists(xmlPath), "Expected XML file to be written.");
+        assertTrue(xml.contains("<gammaDistributionModel"), xml);
+        assertTrue(xml.contains("birthRate_prior_distribution"), xml);
+        assertTrue(xml.contains("clockRate_prior_distribution"), xml);
+        assertTrue(xml.contains("<shape>"), xml);
+        assertTrue(xml.contains("<rate>"), xml);
+
+        new BeastXXmlRunner()
+                .run(xmlPath);
+
+        assertTrue(Files.exists(logPath), "Expected parameter log file to be written.");
+        assertTrue(Files.size(logPath) > 0, "Expected parameter log file to be non-empty.");
+
+        assertTrue(Files.exists(treeLogPath), "Expected tree log file to be written.");
+        assertTrue(Files.size(treeLogPath) > 0, "Expected tree log file to be non-empty.");
+    }
+
+    @Test
+    public void writesParsesAndRunsExponentialPriorMCMCXml() throws Exception {
+        long suffix =
+                System.nanoTime();
+
+        Path outputDirectory =
+                Path.of("target", "beastx-xml-execution");
+
+        Path xmlPath =
+                outputDirectory.resolve("exponentialPriorMCMC-" + suffix + ".xml");
+
+        Path logPath =
+                outputDirectory.resolve("exponentialPriorMCMC-" + suffix + ".log");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
+        Files.deleteIfExists(logPath);
+
+        String source =
+                """
+                PositiveReal x ~ Exponential(
+                    rate=2.0
+                )
+    
+                mcmc {
+                    Integer chainLength = 5
+                    Integer randomSeed = 1234
+    
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[x]
+                    )
+                }
+                """.formatted(
+                        logPath.toString().replace("\\", "/")
+                );
+
+        BeastXModel model =
+                new PhyloSpecRunner(source)
+                        .buildModel("exponentialPriorMCMC");
+
+        new BeastXStateXmlGenerator()
+                .write(model, xmlPath);
+
+        String xml =
+                Files.readString(xmlPath);
+
+        assertTrue(Files.exists(xmlPath), "Expected XML file to be written.");
+        assertTrue(xml.contains("<exponentialDistributionModel"), xml);
+        assertTrue(xml.contains("x_prior_distribution"), xml);
+        assertTrue(xml.contains("<mean>"), xml);
+        assertTrue(xml.contains("x_prior_mean"), xml);
+        assertTrue(xml.contains("<parameter idref=\"x\"/>"), xml);
+
+        new BeastXXmlRunner()
+                .run(xmlPath);
+
+        assertTrue(Files.exists(logPath), "Expected parameter log file to be written.");
+        assertTrue(Files.size(logPath) > 0, "Expected parameter log file to be non-empty.");
+    }
+
+    @Test
+    public void writesParsesAndRunsUniformPriorMCMCXml() throws Exception {
+        long suffix =
+                System.nanoTime();
+
+        Path outputDirectory =
+                Path.of("target", "beastx-xml-execution");
+
+        Path xmlPath =
+                outputDirectory.resolve("uniformPriorMCMC-" + suffix + ".xml");
+
+        Path logPath =
+                outputDirectory.resolve("uniformPriorMCMC-" + suffix + ".log");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
+        Files.deleteIfExists(logPath);
+
+        String source =
+                """
+                Real x ~ Uniform(
+                    lower=-2.0,
+                    upper=2.0
+                )
+    
+                mcmc {
+                    Integer chainLength = 5
+                    Integer randomSeed = 1234
+    
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[x]
+                    )
+                }
+                """.formatted(
+                        logPath.toString().replace("\\", "/")
+                );
+
+        BeastXModel model =
+                new PhyloSpecRunner(source)
+                        .buildModel("uniformPriorMCMC");
+
+        new BeastXStateXmlGenerator()
+                .write(model, xmlPath);
+
+        String xml =
+                Files.readString(xmlPath);
+
+        assertTrue(Files.exists(xmlPath), "Expected XML file to be written.");
+        assertTrue(xml.contains("<uniformDistributionModel"), xml);
+        assertTrue(xml.contains("x_prior_distribution"), xml);
+        assertTrue(xml.contains("<lower>"), xml);
+        assertTrue(xml.contains("<upper>"), xml);
+        assertTrue(xml.contains("x_prior_lower"), xml);
+        assertTrue(xml.contains("x_prior_upper"), xml);
+        assertTrue(xml.contains("<parameter idref=\"x\"/>"), xml);
+
+        new BeastXXmlRunner()
+                .run(xmlPath);
+
+        assertTrue(Files.exists(logPath), "Expected parameter log file to be written.");
+        assertTrue(Files.size(logPath) > 0, "Expected parameter log file to be non-empty.");
+    }
+
+    @Test
+    public void writesParsesAndRunsNormalPriorMCMCXml() throws Exception {
+        long suffix =
+                System.nanoTime();
+
+        Path outputDirectory =
+                Path.of("target", "beastx-xml-execution");
+
+        Path xmlPath =
+                outputDirectory.resolve("normalPriorMCMC-" + suffix + ".xml");
+
+        Path logPath =
+                outputDirectory.resolve("normalPriorMCMC-" + suffix + ".log");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
+        Files.deleteIfExists(logPath);
+
+        String source =
+                """
+                Real x ~ Normal(
+                    mean=0.0,
+                    sd=1.0
+                )
+    
+                mcmc {
+                    Integer chainLength = 5
+                    Integer randomSeed = 1234
+    
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[x]
+                    )
+                }
+                """.formatted(
+                        logPath.toString().replace("\\", "/")
+                );
+
+        BeastXModel model =
+                new PhyloSpecRunner(source)
+                        .buildModel("normalPriorMCMC");
+
+        new BeastXStateXmlGenerator()
+                .write(model, xmlPath);
+
+        String xml =
+                Files.readString(xmlPath);
+
+        assertTrue(Files.exists(xmlPath), "Expected XML file to be written.");
+        assertTrue(xml.contains("<normalDistributionModel"), xml);
+        assertTrue(xml.contains("<randomWalkOperator"), xml);
+        assertTrue(xml.contains("x_randomWalk"), xml);
+        assertFalse(xml.contains("x_scale"), xml);
+        assertTrue(xml.contains("x_prior_distribution"), xml);
+        assertTrue(xml.contains("<mean>"), xml);
+        assertTrue(xml.contains("<stdev>"), xml);
+        assertTrue(xml.contains("x_prior_mean"), xml);
+        assertTrue(xml.contains("x_prior_stdev"), xml);
+        assertTrue(xml.contains("<parameter idref=\"x\"/>"), xml);
+
+        new BeastXXmlRunner()
+                .run(xmlPath);
+
+        assertTrue(Files.exists(logPath), "Expected parameter log file to be written.");
+        assertTrue(Files.size(logPath) > 0, "Expected parameter log file to be non-empty.");
     }
 }
