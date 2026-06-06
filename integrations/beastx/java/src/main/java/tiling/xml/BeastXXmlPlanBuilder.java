@@ -12,9 +12,7 @@ import dr.inference.distribution.UniformDistributionModel;
 import dr.inference.model.Statistic;
 import dr.util.Attribute;
 import dr.inference.distribution.AbstractDistributionLikelihood;
-import dr.inference.distribution.BetaDistributionModel;
 import dr.inference.distribution.DistributionLikelihood;
-import dr.inference.distribution.LogNormalDistributionModel;
 import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Bounds;
 import dr.inference.model.Parameter;
@@ -22,8 +20,6 @@ import dr.inference.model.Variable;
 import dr.math.distributions.Distribution;
 import dr.evomodel.branchmodel.HomogeneousBranchModel;
 import dr.evomodel.substmodel.SubstitutionModel;
-import dr.evomodel.branchratemodel.DiscretizedBranchRates;
-import dr.inference.distribution.ParametricDistributionModel;
 import dr.inference.distribution.MultivariateDistributionLikelihood;
 import dr.math.distributions.DirichletDistribution;
 import dr.evolution.datatype.Codons;
@@ -36,6 +32,9 @@ import tiling.xml.builders.BeastXSiteModelXmlBuilder;
 import tiling.xml.builders.BeastXAlignmentXmlBuilder;
 import tiling.xml.builders.BeastXSubstitutionModelXmlBuilder;
 import tiling.xml.builders.BeastXTreeLikelihoodXmlBuilder;
+import tiling.xml.builders.BeastXScalarPriorXmlBuilder;
+import tiling.xml.builders.BeastXTreePriorXmlBuilder;
+import tiling.xml.builders.BeastXBranchRateModelXmlBuilder;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -57,6 +56,15 @@ public class BeastXXmlPlanBuilder {
 
     private final BeastXTreeLikelihoodXmlBuilder treeLikelihoodXmlBuilder =
             new BeastXTreeLikelihoodXmlBuilder();
+
+    private final BeastXScalarPriorXmlBuilder scalarPriorXmlBuilder =
+            new BeastXScalarPriorXmlBuilder();
+
+    private final BeastXTreePriorXmlBuilder treePriorXmlBuilder =
+            new BeastXTreePriorXmlBuilder();
+
+    private final BeastXBranchRateModelXmlBuilder branchRateModelXmlBuilder =
+            new BeastXBranchRateModelXmlBuilder();
 
     public BeastXXmlPlan build(BeastXModel model) {
         validateSupportedModel(model);
@@ -296,7 +304,7 @@ public class BeastXXmlPlanBuilder {
         if (relaxedClockSpec != null) {
             return BeastXXmlElement.ref(
                     "discretizedBranchRates",
-                    relaxedClockBranchRateModelId(treeModel, relaxedClockSpec)
+                    branchRateModelXmlBuilder.relaxedClockBranchRateModelId(treeModel, relaxedClockSpec)
             );
         }
 
@@ -317,7 +325,7 @@ public class BeastXXmlPlanBuilder {
             if (treeModelId.equals(treeId(registeredTreeModel))) {
                 return BeastXXmlElement.ref(
                         "discretizedBranchRates",
-                        relaxedClockBranchRateModelId(registeredTreeModel, entry.getValue())
+                        branchRateModelXmlBuilder.relaxedClockBranchRateModelId(treeModel, relaxedClockSpec)
                 );
             }
         }
@@ -614,11 +622,8 @@ public class BeastXXmlPlanBuilder {
                 Distribution distribution =
                         distributionLikelihood.getDistribution();
 
-                if (
-                        !(distribution instanceof LogNormalDistributionModel)
-                                && !(distribution instanceof BetaDistributionModel)
-                ) {
-                    throw unsupported("Only LogNormal and Beta scalar priors are supported.");
+                if (!scalarPriorXmlBuilder.supports(distribution)) {
+                    throw unsupported("Only Normal, LogNormal, Gamma, Exponential, Uniform, and Beta scalar priors are supported.");
                 }
 
                 continue;
@@ -753,7 +758,7 @@ public class BeastXXmlPlanBuilder {
 
             plan.add(
                     BeastXXmlPlan.Section.BRANCH_RATE_MODELS,
-                    strictClockBranchRatesDefinition(
+                    branchRateModelXmlBuilder.buildStrictClockBranchRates(
                             state,
                             treeModel,
                             clockRateParameters.getFirst()
@@ -780,127 +785,12 @@ public class BeastXXmlPlanBuilder {
 
             plan.add(
                     BeastXXmlPlan.Section.BRANCH_RATE_MODELS,
-                    relaxedClockBranchRatesDefinition(
+                    branchRateModelXmlBuilder.buildRelaxedClockBranchRates(
                             treeModel,
                             spec
                     )
             );
         }
-    }
-
-    private BeastXXmlElement strictClockBranchRatesDefinition(
-            BeastXState state,
-            TreeModel treeModel,
-            Parameter clockRateParameter
-    ) {
-        String id =
-                treeId(treeModel) + "_strictClockBranchRates";
-
-        return BeastXXmlElement.element("strictClockBranchRates")
-                .withId(id)
-                .withChild(
-                        parameterElement(
-                                state,
-                                "rate",
-                                clockRateParameter,
-                                id + "_rate",
-                                clockRateParameter.getParameterValue(0),
-                                0.0,
-                                null
-                        )
-                );
-    }
-
-    private String relaxedClockBranchRateModelId(
-            TreeModel treeModel,
-            BeastXState.RelaxedClockSpec spec
-    ) {
-        DiscretizedBranchRates relaxedClock =
-                spec.relaxedClock();
-
-        String relaxedClockId =
-                relaxedClock.getId();
-
-        if (relaxedClockId != null && !relaxedClockId.isBlank()) {
-            return relaxedClockId;
-        }
-
-        return treeId(treeModel) + "_relaxedClockBranchRates";
-    }
-
-    private BeastXXmlElement relaxedClockBranchRatesDefinition(
-            TreeModel treeModel,
-            BeastXState.RelaxedClockSpec spec
-    ) {
-        String id =
-                relaxedClockBranchRateModelId(treeModel, spec);
-
-        return BeastXXmlElement.element("discretizedBranchRates")
-                .withId(id)
-                .withAttribute("overSampling", "1")
-                .withAttribute("normalize", "true")
-                .withAttribute("normalizeBranchRateTo", format(spec.normalizeBranchRateTo()))
-                .withAttribute("randomizeRates", "false")
-                .withAttribute("keepRates", "true")
-                .withChild(treeReference(treeModel))
-                .withChild(
-                        BeastXXmlElement.element("distribution")
-                                .withChild(
-                                        parametricDistributionDefinition(
-                                                id + "_distribution",
-                                                spec.distributionModel()
-                                        )
-                                )
-                )
-                .withChild(
-                        BeastXXmlElement.element("rateCategories")
-                                .withChild(
-                                        parameterReference(spec.rateCategoriesParameter())
-                                )
-                );
-    }
-
-    private BeastXXmlElement parametricDistributionDefinition(
-            String id,
-            ParametricDistributionModel distribution
-    ) {
-        if (distribution instanceof LogNormalDistributionModel logNormalDistribution) {
-            return logNormalDistributionModelDefinition(id, logNormalDistribution);
-        }
-
-        throw unsupported(
-                "Only LogNormal relaxed-clock base distributions are supported for XML export at this stage."
-        );
-    }
-
-    private BeastXXmlElement logNormalDistributionModelDefinition(
-            String id,
-            LogNormalDistributionModel distribution
-    ) {
-        return BeastXXmlElement.element("logNormalDistributionModel")
-                .withId(id)
-                .withChild(
-                        BeastXXmlElement.element("mu")
-                                .withChild(
-                                        inlineParameterDefinition(
-                                                id + "_mu",
-                                                distribution.getMu(),
-                                                null,
-                                                null
-                                        )
-                                )
-                )
-                .withChild(
-                        BeastXXmlElement.element("precision")
-                                .withChild(
-                                        inlineParameterDefinition(
-                                                id + "_precision",
-                                                distribution.getPrecision(),
-                                                null,
-                                                null
-                                        )
-                                )
-                );
     }
 
     private void addTaxonDefinitions(
@@ -975,113 +865,7 @@ public class BeastXXmlPlanBuilder {
             BeastXState state,
             AbstractModelLikelihood treePrior
     ) {
-        if (treePrior instanceof SpeciationLikelihood) {
-            BirthDeathGernhard08Model birthDeathModel =
-                    getBirthDeathModel(treePrior);
-
-            if (isYuleCompatible(birthDeathModel)) {
-                return yuleModelDefinition(state, treePrior, birthDeathModel);
-            }
-
-            return birthDeathModelDefinition(state, treePrior, birthDeathModel);
-        }
-
-        if (treePrior instanceof CoalescentLikelihood) {
-            return constantPopulationModelDefinition(state, treePrior);
-        }
-
-        throw unsupported("Only SpeciationLikelihood and CoalescentLikelihood tree priors are supported.");
-    }
-
-    private BeastXXmlElement yuleModelDefinition(
-            BeastXState state,
-            AbstractModelLikelihood treePrior,
-            BirthDeathGernhard08Model yuleModel
-    ) {
-        return BeastXXmlElement.element("yuleModel")
-                .withId(treePriorModelId(treePrior))
-                .withAttribute("units", "years")
-                .withChild(
-                        parameterElement(
-                                state,
-                                "birthRate",
-                                birthDeathVariable(yuleModel, 0),
-                                priorId(treePrior) + "_birthRate",
-                                yuleModel.getR(),
-                                0.0,
-                                null
-                        )
-                );
-    }
-
-    private BeastXXmlElement birthDeathModelDefinition(
-            BeastXState state,
-            AbstractModelLikelihood treePrior,
-            BirthDeathGernhard08Model birthDeathModel
-    ) {
-        return BeastXXmlElement.element("birthDeathModel")
-                .withId(treePriorModelId(treePrior))
-                .withAttribute("type", "LABELED")
-                .withAttribute("units", "years")
-                .withChild(
-                        parameterElement(
-                                state,
-                                "birthMinusDeathRate",
-                                birthDeathVariable(birthDeathModel, 0),
-                                priorId(treePrior) + "_birthMinusDeathRate",
-                                birthDeathModel.getR(),
-                                0.0,
-                                null
-                        )
-                )
-                .withChild(
-                        parameterElement(
-                                state,
-                                "relativeDeathRate",
-                                birthDeathVariable(birthDeathModel, 1),
-                                priorId(treePrior) + "_relativeDeathRate",
-                                birthDeathModel.getA(),
-                                0.0,
-                                1.0
-                        )
-                )
-                .withChild(
-                        parameterElement(
-                                state,
-                                "sampleProbability",
-                                birthDeathVariable(birthDeathModel, 2),
-                                priorId(treePrior) + "_sampleProbability",
-                                birthDeathModel.getRho(),
-                                0.0,
-                                1.0
-                        )
-                );
-    }
-
-    private BeastXXmlElement constantPopulationModelDefinition(
-            BeastXState state,
-            AbstractModelLikelihood treePrior
-    ) {
-        ConstantPopulationModel constantPopulationModel =
-                getConstantPopulationModel(treePrior);
-
-        Parameter populationSize =
-                constantPopulationVariable(constantPopulationModel);
-
-        return BeastXXmlElement.element("constantSize")
-                .withId(treePriorModelId(treePrior))
-                .withAttribute("units", "years")
-                .withChild(
-                        parameterElement(
-                                state,
-                                "populationSize",
-                                populationSize,
-                                priorId(treePrior) + "_populationSize",
-                                populationSize.getParameterValue(0),
-                                0.0,
-                                null
-                        )
-                );
+        return treePriorXmlBuilder.buildModelDefinition(state, treePrior);
     }
 
     private BeastXXmlElement parameterElement(
@@ -1126,22 +910,10 @@ public class BeastXXmlPlanBuilder {
                     entry.getValue();
 
             if (likelihood instanceof DistributionLikelihood distributionLikelihood) {
-                Distribution distribution =
-                        distributionLikelihood.getDistribution();
-
-                if (distribution instanceof LogNormalDistributionModel logNormalDistribution) {
-                    plan.add(
-                            BeastXXmlPlan.Section.MCMC_PRIOR,
-                            logNormalPrior(entry.getKey(), distributionLikelihood, logNormalDistribution)
-                    );
-                } else if (distribution instanceof BetaDistributionModel betaDistribution) {
-                    plan.add(
-                            BeastXXmlPlan.Section.MCMC_PRIOR,
-                            betaPrior(entry.getKey(), distributionLikelihood, betaDistribution)
-                    );
-                } else {
-                    throw unsupported("Only LogNormal and Beta scalar priors are supported.");
-                }
+                plan.add(
+                        BeastXXmlPlan.Section.MCMC_PRIOR,
+                        scalarPriorXmlBuilder.buildPrior(entry.getKey(), distributionLikelihood)
+                );
 
                 continue;
             }
@@ -1158,88 +930,6 @@ public class BeastXXmlPlanBuilder {
 
             throw unsupported("Only scalar DistributionLikelihood and Dirichlet multivariate priors are supported.");
         }
-    }
-
-    private BeastXXmlElement logNormalPrior(
-            Parameter parameter,
-            DistributionLikelihood likelihood,
-            LogNormalDistributionModel distribution
-    ) {
-        String priorId =
-                likelihood.getId();
-
-        return BeastXXmlElement.element("distributionLikelihood")
-                .withId(priorId)
-                .withChild(
-                        BeastXXmlElement.element("distribution")
-                                .withChild(
-                                        BeastXXmlElement.element("logNormalDistributionModel")
-                                                .withId(priorId + "_distribution")
-                                                .withChild(
-                                                        BeastXXmlElement.element("mu")
-                                                                .withChild(
-                                                                        inlineParameterDefinition(
-                                                                                priorId + "_mu",
-                                                                                distribution.getMu(),
-                                                                                null,
-                                                                                null
-                                                                        )
-                                                                )
-                                                )
-                                                .withChild(
-                                                        BeastXXmlElement.element("precision")
-                                                                .withChild(
-                                                                        inlineParameterDefinition(
-                                                                                priorId + "_precision",
-                                                                                distribution.getPrecision(),
-                                                                                null,
-                                                                                null
-                                                                        )
-                                                                )
-                                                )
-                                )
-                )
-                .withChild(
-                        BeastXXmlElement.element("data")
-                                .withChild(parameterReference(parameter))
-                );
-    }
-
-    private BeastXXmlElement betaPrior(
-            Parameter parameter,
-            DistributionLikelihood likelihood,
-            BetaDistributionModel distribution
-    ) {
-        String priorId =
-                likelihood.getId();
-
-        return BeastXXmlElement.element("distributionLikelihood")
-                .withId(priorId)
-                .withChild(
-                        BeastXXmlElement.element("distribution")
-                                .withChild(
-                                        BeastXXmlElement.element("betaDistributionModel")
-                                                .withId(priorId + "_distribution")
-                                                .withChild(
-                                                        betaShapeParameter(
-                                                                "alpha",
-                                                                betaDistributionVariable(distribution, 0),
-                                                                priorId + "_alpha"
-                                                        )
-                                                )
-                                                .withChild(
-                                                        betaShapeParameter(
-                                                                "beta",
-                                                                betaDistributionVariable(distribution, 1),
-                                                                priorId + "_beta"
-                                                        )
-                                                )
-                                )
-                )
-                .withChild(
-                        BeastXXmlElement.element("data")
-                                .withChild(parameterReference(parameter))
-                );
     }
 
     private BeastXXmlElement dirichletPrior(
@@ -1270,22 +960,6 @@ public class BeastXXmlPlanBuilder {
                 );
     }
 
-    private BeastXXmlElement betaShapeParameter(
-            String elementName,
-            Parameter parameter,
-            String fallbackId
-    ) {
-        return BeastXXmlElement.element(elementName)
-                .withChild(
-                        inlineParameterDefinition(
-                                fallbackId,
-                                parameter.getParameterValue(0),
-                                0.0,
-                                null
-                        )
-                );
-    }
-
     private void addTreePriors(
             BeastXXmlPlan plan,
             BeastXState state
@@ -1307,59 +981,7 @@ public class BeastXXmlPlanBuilder {
             TreeModel treeModel,
             AbstractModelLikelihood treePrior
     ) {
-        if (treePrior instanceof SpeciationLikelihood) {
-            return speciationTreePrior(treeModel, treePrior);
-        }
-
-        if (treePrior instanceof CoalescentLikelihood) {
-            return coalescentTreePrior(treeModel, treePrior);
-        }
-
-        throw unsupported("Only SpeciationLikelihood and CoalescentLikelihood tree priors are supported.");
-    }
-
-    private BeastXXmlElement speciationTreePrior(
-            TreeModel treeModel,
-            AbstractModelLikelihood treePrior
-    ) {
-        BirthDeathGernhard08Model birthDeathModel =
-                getBirthDeathModel(treePrior);
-
-        String modelTag =
-                isYuleCompatible(birthDeathModel)
-                        ? "yuleModel"
-                        : "birthDeathModel";
-
-        return BeastXXmlElement.element("speciationLikelihood")
-                .withId(priorId(treePrior))
-                .withChild(
-                        BeastXXmlElement.element("model")
-                                .withChild(
-                                        BeastXXmlElement.ref(modelTag, treePriorModelId(treePrior))
-                                )
-                )
-                .withChild(
-                        BeastXXmlElement.element("speciesTree")
-                                .withChild(treeReference(treeModel))
-                );
-    }
-
-    private BeastXXmlElement coalescentTreePrior(
-            TreeModel treeModel,
-            AbstractModelLikelihood treePrior
-    ) {
-        return BeastXXmlElement.element("coalescentLikelihood")
-                .withId(priorId(treePrior))
-                .withChild(
-                        BeastXXmlElement.element("model")
-                                .withChild(
-                                        BeastXXmlElement.ref("constantSize", treePriorModelId(treePrior))
-                                )
-                )
-                .withChild(
-                        BeastXXmlElement.element("populationTree")
-                                .withChild(treeReference(treeModel))
-                );
+        return treePriorXmlBuilder.buildPrior(treeModel, treePrior);
     }
 
     private void addOperators(
@@ -1392,10 +1014,15 @@ public class BeastXXmlPlanBuilder {
                         BeastXXmlPlan.Section.OPERATORS,
                         randomWalkOperator(state, parameter)
                 );
-            } else {
+            } else if (supportsScaleOperator(parameter)) {
                 plan.add(
                         BeastXXmlPlan.Section.OPERATORS,
                         scaleOperator(state, parameter)
+                );
+            } else {
+                plan.add(
+                        BeastXXmlPlan.Section.OPERATORS,
+                        randomWalkOperator(state, parameter)
                 );
             }
         }
@@ -1819,94 +1446,43 @@ public class BeastXXmlPlanBuilder {
         return BeastXXmlElement.ref("treeModel", treeId(treeModel));
     }
 
-    private static BirthDeathGernhard08Model getBirthDeathModel(AbstractModelLikelihood treePrior) {
-        if (!(treePrior instanceof SpeciationLikelihood speciationLikelihood)) {
-            throw unsupported("Only SpeciationLikelihood tree priors can be serialized as Yule or BirthDeath XML.");
-        }
+private static boolean supportsScaleOperator(Parameter parameter) {
+    Bounds<Double> bounds =
+            parameter.getBounds();
 
-        SpeciationModel speciationModel =
-                speciationLikelihood.getSpeciationModel();
-
-        if (!(speciationModel instanceof BirthDeathGernhard08Model birthDeathModel)) {
-            throw unsupported("Only Yule and BirthDeath tree priors are supported.");
-        }
-
-        return birthDeathModel;
+    if (bounds == null) {
+        return false;
     }
 
-    private static ConstantPopulationModel getConstantPopulationModel(AbstractModelLikelihood treePrior) {
-        if (!(treePrior instanceof CoalescentLikelihood coalescentLikelihood)) {
-            throw unsupported("Only CoalescentLikelihood tree priors can be serialized as coalescent XML.");
+    boolean strictlyPositive =
+            true;
+
+    boolean strictlyNegative =
+            true;
+
+    for (int i = 0; i < parameter.getDimension(); i++) {
+        double lower =
+                bounds.getLowerLimit(i);
+
+        double upper =
+                bounds.getUpperLimit(i);
+
+        double value =
+                parameter.getParameterValue(i);
+
+        if (!(lower >= 0.0 && value > 0.0)) {
+            strictlyPositive =
+                    false;
         }
 
-        DemographicModel demographicModel =
-                coalescentLikelihood.getDemoModel();
-
-        if (!(demographicModel instanceof ConstantPopulationModel constantPopulationModel)) {
-            throw unsupported("Only constant-population Coalescent tree priors are supported.");
+        if (!(upper <= 0.0 && value < 0.0)) {
+            strictlyNegative =
+                    false;
         }
-
-        return constantPopulationModel;
     }
 
-    private static Parameter birthDeathVariable(
-            BirthDeathGernhard08Model birthDeathModel,
-            int variableIndex
-    ) {
-        if (variableIndex >= birthDeathModel.getVariableCount()) {
-            return null;
-        }
-
-        Variable<?> variable =
-                birthDeathModel.getVariable(variableIndex);
-
-        if (variable instanceof Parameter parameter) {
-            return parameter;
-        }
-
-        return null;
-    }
-
-    private static Parameter betaDistributionVariable(
-            BetaDistributionModel distribution,
-            int variableIndex
-    ) {
-        if (variableIndex >= distribution.getVariableCount()) {
-            throw unsupported("Beta XML export requires alpha and beta parameters.");
-        }
-
-        Variable<?> variable =
-                distribution.getVariable(variableIndex);
-
-        if (variable instanceof Parameter parameter) {
-            return parameter;
-        }
-
-        throw unsupported("Beta XML export requires alpha and beta parameters.");
-    }
-
-    private static Parameter constantPopulationVariable(ConstantPopulationModel populationModel) {
-        if (populationModel.getVariableCount() < 1) {
-            throw unsupported("Constant-population Coalescent XML export requires a population size parameter.");
-        }
-
-        Variable<?> variable =
-                populationModel.getVariable(0);
-
-        if (!(variable instanceof Parameter parameter)) {
-            throw unsupported("Constant-population Coalescent XML export requires a population size parameter.");
-        }
-
-        return parameter;
-    }
-
-    private static boolean isYuleCompatible(BirthDeathGernhard08Model model) {
-        return model.isYule()
-                || (
-                approximatelyZero(model.getA())
-                        && approximatelyOne(model.getRho())
-        );
-    }
+    return strictlyPositive || strictlyNegative;
+}
 
     private static boolean hasFiniteLowerAndUpperBounds(Parameter parameter) {
         Bounds<Double> bounds =
