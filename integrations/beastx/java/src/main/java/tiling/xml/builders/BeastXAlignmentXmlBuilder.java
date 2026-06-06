@@ -1,6 +1,7 @@
 package tiling.xml.builders;
 
 import dr.evolution.alignment.Alignment;
+import dr.evolution.datatype.Codons;
 import dr.evolution.datatype.DataType;
 import dr.evolution.sequence.Sequence;
 import dr.evolution.util.Taxon;
@@ -98,9 +99,16 @@ public class BeastXAlignmentXmlBuilder {
 
         return switch (description.toLowerCase()) {
             case "nucleotide", "nucleotides", "dna" -> "nucleotide";
-            case "amino acid", "amino acids", "aminoacid", "aminoacids", "protein" -> "aminoacid";
-            case "two states", "binary", "boolean" -> "twoState";
-            default -> description;
+            case "amino acid", "amino acids", "aminoacid", "aminoacids", "protein" -> "amino acid";
+            case "codon", "codons", "universal codons", "codon-universal" -> "codon-universal";
+            case "two states", "binary", "boolean" -> "binary";
+            default -> {
+                if (dataType instanceof Codons) {
+                    yield "codon-universal";
+                }
+
+                yield description;
+            }
         };
     }
 }

@@ -22,8 +22,12 @@ import dr.inference.model.Variable;
 import dr.math.distributions.Distribution;
 import dr.evomodel.branchmodel.HomogeneousBranchModel;
 import dr.evomodel.substmodel.SubstitutionModel;
+import dr.evomodel.branchratemodel.DiscretizedBranchRates;
+import dr.inference.distribution.ParametricDistributionModel;
 import dr.inference.distribution.MultivariateDistributionLikelihood;
 import dr.math.distributions.DirichletDistribution;
+import dr.evolution.datatype.Codons;
+import dr.evomodel.substmodel.codon.GY94CodonModel;
 
 import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
 import tiling.BeastXModel;
@@ -258,8 +262,8 @@ public class BeastXXmlPlanBuilder {
             String siteRateModelId =
                     likelihoodId + "_siteRateModel";
 
-            String branchRateModelId =
-                    branchRateModelIdForTree(
+            BeastXXmlElement branchRateModelReference =
+                    branchRateModelReferenceForTree(
                             state,
                             treeModel
                     );
@@ -271,7 +275,7 @@ public class BeastXXmlPlanBuilder {
                             patternsId,
                             treeModelId,
                             siteRateModelId,
-                            branchRateModelId
+                            branchRateModelReference
                     )
             );
 
@@ -282,20 +286,48 @@ public class BeastXXmlPlanBuilder {
         }
     }
 
-    private String branchRateModelIdForTree(
+    private BeastXXmlElement branchRateModelReferenceForTree(
             BeastXState state,
             TreeModel treeModel
     ) {
+        BeastXState.RelaxedClockSpec relaxedClockSpec =
+                state.treeRelaxedClockModels.get(treeModel);
+
+        if (relaxedClockSpec != null) {
+            return BeastXXmlElement.ref(
+                    "discretizedBranchRates",
+                    relaxedClockBranchRateModelId(treeModel, relaxedClockSpec)
+            );
+        }
+
         if (state.treeClockRateParameters.containsKey(treeModel)) {
-            return treeId(treeModel) + "_strictClockBranchRates";
+            return BeastXXmlElement.ref(
+                    "strictClockBranchRates",
+                    treeId(treeModel) + "_strictClockBranchRates"
+            );
         }
 
         String treeModelId =
                 treeId(treeModel);
 
+        for (Map.Entry<TreeModel, BeastXState.RelaxedClockSpec> entry : state.treeRelaxedClockModels.entrySet()) {
+            TreeModel registeredTreeModel =
+                    entry.getKey();
+
+            if (treeModelId.equals(treeId(registeredTreeModel))) {
+                return BeastXXmlElement.ref(
+                        "discretizedBranchRates",
+                        relaxedClockBranchRateModelId(registeredTreeModel, entry.getValue())
+                );
+            }
+        }
+
         for (TreeModel registeredTreeModel : state.treeClockRateParameters.keySet()) {
             if (treeModelId.equals(treeId(registeredTreeModel))) {
-                return treeModelId + "_strictClockBranchRates";
+                return BeastXXmlElement.ref(
+                        "strictClockBranchRates",
+                        treeModelId + "_strictClockBranchRates"
+                );
             }
         }
 
@@ -344,12 +376,31 @@ public class BeastXXmlPlanBuilder {
 
     private void validateLikelihoodExportBoundary(BeastXState state) {
         for (dr.inference.model.Likelihood likelihood : state.likelihoodDistributions) {
-            if (likelihood instanceof BeastXPhyloCTMCLikelihoodSpec) {
-                continue;
+            if (!(likelihood instanceof BeastXPhyloCTMCLikelihoodSpec spec)) {
+                throw unsupported(
+                        "Only PhyloCTMC likelihood XML export is supported at this stage."
+                );
             }
 
+            validatePhyloCTMCLikelihoodExportBoundary(spec);
+        }
+    }
+
+    private void validatePhyloCTMCLikelihoodExportBoundary(
+            BeastXPhyloCTMCLikelihoodSpec spec
+    ) {
+        SubstitutionModel substitutionModel =
+                homogeneousSubstitutionModel(spec);
+
+        if (substitutionModel instanceof GY94CodonModel) {
             throw unsupported(
-                    "Only PhyloCTMC likelihood XML export is supported at this stage."
+                    "Full GY94 codon PhyloCTMC XML export is not supported yet because BEAST X XML SequenceParser cannot materialize codon alignments from plain sequence text."
+            );
+        }
+
+        if (spec.getObservedAlignment().getDataType() instanceof Codons) {
+            throw unsupported(
+                    "Full codon PhyloCTMC XML export is not supported yet because BEAST X XML SequenceParser cannot materialize codon alignments from plain sequence text."
             );
         }
     }
@@ -668,6 +719,14 @@ public class BeastXXmlPlanBuilder {
             BeastXXmlPlan plan,
             BeastXState state
     ) {
+        addStrictClockBranchRateModels(plan, state);
+        addRelaxedClockBranchRateModels(plan, state);
+    }
+
+    private void addStrictClockBranchRateModels(
+            BeastXXmlPlan plan,
+            BeastXState state
+    ) {
         List<Map.Entry<TreeModel, List<Parameter>>> entries =
                 new ArrayList<>(state.treeClockRateParameters.entrySet());
 
@@ -676,6 +735,12 @@ public class BeastXXmlPlanBuilder {
         for (Map.Entry<TreeModel, List<Parameter>> entry : entries) {
             TreeModel treeModel =
                     entry.getKey();
+
+            if (state.treeRelaxedClockModels.containsKey(treeModel)) {
+                throw unsupported(
+                        "A tree cannot use both StrictClock and RelaxedClock for XML export."
+                );
+            }
 
             List<Parameter> clockRateParameters =
                     entry.getValue();
@@ -692,6 +757,32 @@ public class BeastXXmlPlanBuilder {
                             state,
                             treeModel,
                             clockRateParameters.getFirst()
+                    )
+            );
+        }
+    }
+
+    private void addRelaxedClockBranchRateModels(
+            BeastXXmlPlan plan,
+            BeastXState state
+    ) {
+        List<Map.Entry<TreeModel, BeastXState.RelaxedClockSpec>> entries =
+                new ArrayList<>(state.treeRelaxedClockModels.entrySet());
+
+        entries.sort(Comparator.comparing(entry -> treeId(entry.getKey())));
+
+        for (Map.Entry<TreeModel, BeastXState.RelaxedClockSpec> entry : entries) {
+            TreeModel treeModel =
+                    entry.getKey();
+
+            BeastXState.RelaxedClockSpec spec =
+                    entry.getValue();
+
+            plan.add(
+                    BeastXXmlPlan.Section.BRANCH_RATE_MODELS,
+                    relaxedClockBranchRatesDefinition(
+                            treeModel,
+                            spec
                     )
             );
         }
@@ -717,6 +808,98 @@ public class BeastXXmlPlanBuilder {
                                 0.0,
                                 null
                         )
+                );
+    }
+
+    private String relaxedClockBranchRateModelId(
+            TreeModel treeModel,
+            BeastXState.RelaxedClockSpec spec
+    ) {
+        DiscretizedBranchRates relaxedClock =
+                spec.relaxedClock();
+
+        String relaxedClockId =
+                relaxedClock.getId();
+
+        if (relaxedClockId != null && !relaxedClockId.isBlank()) {
+            return relaxedClockId;
+        }
+
+        return treeId(treeModel) + "_relaxedClockBranchRates";
+    }
+
+    private BeastXXmlElement relaxedClockBranchRatesDefinition(
+            TreeModel treeModel,
+            BeastXState.RelaxedClockSpec spec
+    ) {
+        String id =
+                relaxedClockBranchRateModelId(treeModel, spec);
+
+        return BeastXXmlElement.element("discretizedBranchRates")
+                .withId(id)
+                .withAttribute("overSampling", "1")
+                .withAttribute("normalize", "true")
+                .withAttribute("normalizeBranchRateTo", format(spec.normalizeBranchRateTo()))
+                .withAttribute("randomizeRates", "false")
+                .withAttribute("keepRates", "true")
+                .withChild(treeReference(treeModel))
+                .withChild(
+                        BeastXXmlElement.element("distribution")
+                                .withChild(
+                                        parametricDistributionDefinition(
+                                                id + "_distribution",
+                                                spec.distributionModel()
+                                        )
+                                )
+                )
+                .withChild(
+                        BeastXXmlElement.element("rateCategories")
+                                .withChild(
+                                        parameterReference(spec.rateCategoriesParameter())
+                                )
+                );
+    }
+
+    private BeastXXmlElement parametricDistributionDefinition(
+            String id,
+            ParametricDistributionModel distribution
+    ) {
+        if (distribution instanceof LogNormalDistributionModel logNormalDistribution) {
+            return logNormalDistributionModelDefinition(id, logNormalDistribution);
+        }
+
+        throw unsupported(
+                "Only LogNormal relaxed-clock base distributions are supported for XML export at this stage."
+        );
+    }
+
+    private BeastXXmlElement logNormalDistributionModelDefinition(
+            String id,
+            LogNormalDistributionModel distribution
+    ) {
+        return BeastXXmlElement.element("logNormalDistributionModel")
+                .withId(id)
+                .withChild(
+                        BeastXXmlElement.element("mu")
+                                .withChild(
+                                        inlineParameterDefinition(
+                                                id + "_mu",
+                                                distribution.getMu(),
+                                                null,
+                                                null
+                                        )
+                                )
+                )
+                .withChild(
+                        BeastXXmlElement.element("precision")
+                                .withChild(
+                                        inlineParameterDefinition(
+                                                id + "_precision",
+                                                distribution.getPrecision(),
+                                                null,
+                                                null
+                                        )
+                                )
                 );
     }
 
@@ -1194,6 +1377,8 @@ public class BeastXXmlPlanBuilder {
         List<Parameter> parameters =
                 new ArrayList<>(state.stateNodes.keySet());
 
+        parameters.removeIf(parameter -> isRelaxedClockRateCategoriesParameter(state, parameter));
+
         parameters.sort(Comparator.comparing(BeastXXmlPlanBuilder::parameterId));
 
         for (Parameter parameter : parameters) {
@@ -1214,6 +1399,36 @@ public class BeastXXmlPlanBuilder {
                 );
             }
         }
+    }
+
+    private boolean isRelaxedClockRateCategoriesParameter(
+            BeastXState state,
+            Parameter parameter
+    ) {
+        String parameterId =
+                parameter.getId();
+
+        for (BeastXState.RelaxedClockSpec spec : state.treeRelaxedClockModels.values()) {
+            Parameter rateCategoriesParameter =
+                    spec.rateCategoriesParameter();
+
+            if (rateCategoriesParameter == parameter) {
+                return true;
+            }
+
+            String rateCategoriesParameterId =
+                    rateCategoriesParameter.getId();
+
+            if (
+                    parameterId != null
+                            && rateCategoriesParameterId != null
+                            && parameterId.equals(rateCategoriesParameterId)
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private BeastXXmlElement scaleOperator(
@@ -1269,6 +1484,10 @@ public class BeastXXmlPlanBuilder {
         trees.sort(Comparator.comparing(BeastXXmlPlanBuilder::treeId));
 
         for (TreeModel treeModel : trees) {
+            if (hasRelaxedClockBranchRateModel(state, treeModel)) {
+                continue;
+            }
+
             String id =
                     treeId(treeModel);
 
@@ -1307,6 +1526,26 @@ public class BeastXXmlPlanBuilder {
                     )
             );
         }
+    }
+
+    private boolean hasRelaxedClockBranchRateModel(
+            BeastXState state,
+            TreeModel treeModel
+    ) {
+        if (state.treeRelaxedClockModels.containsKey(treeModel)) {
+            return true;
+        }
+
+        String treeModelId =
+                treeId(treeModel);
+
+        for (TreeModel registeredTreeModel : state.treeRelaxedClockModels.keySet()) {
+            if (treeModelId.equals(treeId(registeredTreeModel))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private BeastXXmlElement treeOperator(

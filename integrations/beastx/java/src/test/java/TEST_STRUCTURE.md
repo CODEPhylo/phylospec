@@ -66,7 +66,7 @@ These tests verify that non-trivial PhyloSpec models produce coherent `BeastXMod
 
 - `BeastXRepresentativeModelsTest`
 - `BeastXShowcaseModelsTest`
-- `BeastXExpressivenessReportTest`
+- `BeastXCoverageTableTest`
 
 Representative scripts are organized under:
 

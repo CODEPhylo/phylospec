@@ -12,10 +12,10 @@ import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
-import tiling.params.BeastXIntVectorParam;
-import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
+import tiling.params.BeastXIntVectorParam;
+import tiling.params.BeastXRealScalarParam;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -129,6 +129,14 @@ public class RelaxedClockTile extends GeneratorTile<DiscretizedBranchRates, Beas
                 beastState.getAvailableID(
                         this.getId("relaxedClock", indexVariables, "")
                 )
+        );
+
+        beastState.addTreeRelaxedClockModel(
+                tree,
+                relaxedClock,
+                rateCategories.getParameter(),
+                parametricDistribution,
+                clockRate.get()
         );
 
         return relaxedClock;
