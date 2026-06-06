@@ -1,0 +1,12 @@
+#NEXUS
+
+Begin data;
+    Dimensions ntax=4 nchar=30;
+    Format datatype=protein gap=- missing=?;
+    Matrix
+        taxon1  ACDEFGHIKLMNPQRSTVWYACDEFGHIKL
+        taxon2  ACDEFGHIKLMNPQRSTVWYACDEFGHIKM
+        taxon3  ACDEFGHIKLMNPQRSTVWYACDEFGHIKF
+        taxon4  ACDEFGHIKLMNPQRSTVWYACDEFGHIKY
+    ;
+End;
