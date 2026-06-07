@@ -169,7 +169,7 @@ public class SiteModelXmlBuilder {
 
     private static RuntimeException unsupported(String message) {
         return new UnsupportedOperationException(
-                message + " Extend BeastXSiteModelXmlBuilder before exporting this site model to XML."
+                message + " Extend SiteModelXmlBuilder before exporting this site model to XML."
         );
     }
 

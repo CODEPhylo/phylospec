@@ -214,7 +214,7 @@ public class BranchRateModelXmlBuilder {
 
     private static RuntimeException unsupported(String message) {
         return new UnsupportedOperationException(
-                message + " Extend BeastXBranchRateModelXmlBuilder before exporting this branch-rate model to XML."
+                message + " Extend BranchRateModelXmlBuilder before exporting this branch-rate model to XML."
         );
     }
 
