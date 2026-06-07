@@ -5,19 +5,19 @@ import dr.evolution.datatype.Codons;
 import dr.evolution.datatype.DataType;
 import dr.evolution.sequence.Sequence;
 import dr.evolution.util.Taxon;
-import tiling.xml.BeastXXmlElement;
+import tiling.xml.XmlElement;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BeastXAlignmentXmlBuilder {
+public class AlignmentXmlBuilder {
 
-    public List<BeastXXmlElement> buildAlignmentAndPatterns(
+    public List<XmlElement> buildAlignmentAndPatterns(
             Alignment alignment,
             String alignmentId,
             String patternsId
     ) {
-        List<BeastXXmlElement> elements =
+        List<XmlElement> elements =
                 new ArrayList<>();
 
         elements.add(alignmentDefinition(alignment, alignmentId));
@@ -26,12 +26,12 @@ public class BeastXAlignmentXmlBuilder {
         return elements;
     }
 
-    public BeastXXmlElement alignmentDefinition(
+    public XmlElement alignmentDefinition(
             Alignment alignment,
             String alignmentId
     ) {
-        BeastXXmlElement element =
-                BeastXXmlElement.element("alignment")
+        XmlElement element =
+                XmlElement.element("alignment")
                         .withId(alignmentId)
                         .withAttribute("dataType", dataTypeName(alignment.getDataType()));
 
@@ -46,18 +46,18 @@ public class BeastXAlignmentXmlBuilder {
         return element;
     }
 
-    public BeastXXmlElement patternsDefinition(
+    public XmlElement patternsDefinition(
             String alignmentId,
             String patternsId
     ) {
-        return BeastXXmlElement.element("patterns")
+        return XmlElement.element("patterns")
                 .withId(patternsId)
                 .withAttribute("from", 1)
                 .withAttribute("strip", "false")
-                .withChild(BeastXXmlElement.ref("alignment", alignmentId));
+                .withChild(XmlElement.ref("alignment", alignmentId));
     }
 
-    private BeastXXmlElement sequenceDefinition(Sequence sequence) {
+    private XmlElement sequenceDefinition(Sequence sequence) {
         Taxon taxon =
                 sequence.getTaxon();
 
@@ -76,8 +76,8 @@ public class BeastXAlignmentXmlBuilder {
             );
         }
 
-        return BeastXXmlElement.element("sequence")
-                .withChild(BeastXXmlElement.ref("taxon", taxon.getId()))
+        return XmlElement.element("sequence")
+                .withChild(XmlElement.ref("taxon", taxon.getId()))
                 .withText(sequenceString);
     }
 

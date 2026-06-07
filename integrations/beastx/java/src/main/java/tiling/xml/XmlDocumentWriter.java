@@ -5,46 +5,17 @@ import dr.inferencexml.model.CompoundLikelihoodParser;
 import dr.inferencexml.operators.SimpleOperatorScheduleParser;
 import dr.util.Attribute;
 import dr.xml.XMLParser;
-import tiling.BeastXModel;
 import tiling.BeastXState;
 
-import java.io.IOException;
 import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BeastXStateXmlGenerator {
+public class XmlDocumentWriter {
 
-    public void write(BeastXModel model, Path path) throws IOException {
-        Path parent =
-                path.getParent();
-
-        if (parent != null) {
-            Files.createDirectories(parent);
-        }
-
-        Files.writeString(path, toXml(model), StandardCharsets.UTF_8);
-    }
-
-    public String toXml(BeastXModel model) {
-        BeastXXmlPlan plan =
-                model.beastState.xmlPlan.isEmpty()
-                        ? new BeastXXmlPlanBuilder().build(model)
-                        : model.beastState.xmlPlan;
-
-        return toXml(model.beastState, plan);
-    }
-
-    public String toXml(BeastXState state) {
-        return toXml(state, state.xmlPlan);
-    }
-
-    private String toXml(
+    public String write(
             BeastXState state,
-            BeastXXmlPlan plan
+            XmlPlan plan
     ) {
         validatePlan(plan);
 
@@ -66,7 +37,7 @@ public class BeastXStateXmlGenerator {
         writeOperators(writer, plan);
         writeMCMC(writer, state, plan);
 
-        writeSection(writer, plan, BeastXXmlPlan.Section.AFTER_MCMC);
+        writeSection(writer, plan, XmlPlan.Section.AFTER_MCMC);
 
         writer.writeCloseTag("beast");
         writer.flush();
@@ -74,21 +45,23 @@ public class BeastXStateXmlGenerator {
         return output.toString();
     }
 
-    private void validatePlan(BeastXXmlPlan plan) {
+    private void validatePlan(XmlPlan plan) {
         if (plan.isEmpty()) {
             throw new IllegalArgumentException(
                     "Cannot generate BEAST X XML from an empty XML plan."
             );
         }
 
-        if (!plan.has(BeastXXmlPlan.Section.MCMC_PRIOR)
-                && !plan.has(BeastXXmlPlan.Section.MCMC_LIKELIHOOD)) {
+        if (
+                !plan.has(XmlPlan.Section.MCMC_PRIOR)
+                        && !plan.has(XmlPlan.Section.MCMC_LIKELIHOOD)
+        ) {
             throw new IllegalArgumentException(
                     "BEAST X XML generation requires at least one MCMC prior or likelihood element."
             );
         }
 
-        if (!plan.has(BeastXXmlPlan.Section.OPERATORS)) {
+        if (!plan.has(XmlPlan.Section.OPERATORS)) {
             throw new IllegalArgumentException(
                     "BEAST X XML generation requires an operator schedule in the OPERATORS section."
             );
@@ -97,28 +70,28 @@ public class BeastXStateXmlGenerator {
 
     private void writeBeastLevelDefinitions(
             XMLWriter writer,
-            BeastXXmlPlan plan
+            XmlPlan plan
     ) {
-        writeSection(writer, plan, BeastXXmlPlan.Section.BEFORE_TAXA);
-        writeSection(writer, plan, BeastXXmlPlan.Section.PARAMETERS);
-        writeSection(writer, plan, BeastXXmlPlan.Section.TAXA);
-        writeSection(writer, plan, BeastXXmlPlan.Section.TAXON_SETS);
-        writeSection(writer, plan, BeastXXmlPlan.Section.ALIGNMENTS);
-        writeSection(writer, plan, BeastXXmlPlan.Section.PATTERN_LISTS);
-        writeSection(writer, plan, BeastXXmlPlan.Section.TREE_PRIOR_MODELS);
-        writeSection(writer, plan, BeastXXmlPlan.Section.STARTING_TREES);
-        writeSection(writer, plan, BeastXXmlPlan.Section.TREE_MODELS);
-        writeSection(writer, plan, BeastXXmlPlan.Section.STATISTICS);
-        writeSection(writer, plan, BeastXXmlPlan.Section.TREE_PRIOR_LIKELIHOODS);
-        writeSection(writer, plan, BeastXXmlPlan.Section.BRANCH_RATE_MODELS);
-        writeSection(writer, plan, BeastXXmlPlan.Section.SUBSTITUTION_SITE_MODELS);
-        writeSection(writer, plan, BeastXXmlPlan.Section.CLOCK_PARAMETERS);
-        writeSection(writer, plan, BeastXXmlPlan.Section.TREE_LIKELIHOODS);
+        writeSection(writer, plan, XmlPlan.Section.BEFORE_TAXA);
+        writeSection(writer, plan, XmlPlan.Section.PARAMETERS);
+        writeSection(writer, plan, XmlPlan.Section.TAXA);
+        writeSection(writer, plan, XmlPlan.Section.TAXON_SETS);
+        writeSection(writer, plan, XmlPlan.Section.ALIGNMENTS);
+        writeSection(writer, plan, XmlPlan.Section.PATTERN_LISTS);
+        writeSection(writer, plan, XmlPlan.Section.TREE_PRIOR_MODELS);
+        writeSection(writer, plan, XmlPlan.Section.STARTING_TREES);
+        writeSection(writer, plan, XmlPlan.Section.TREE_MODELS);
+        writeSection(writer, plan, XmlPlan.Section.STATISTICS);
+        writeSection(writer, plan, XmlPlan.Section.TREE_PRIOR_LIKELIHOODS);
+        writeSection(writer, plan, XmlPlan.Section.BRANCH_RATE_MODELS);
+        writeSection(writer, plan, XmlPlan.Section.SUBSTITUTION_SITE_MODELS);
+        writeSection(writer, plan, XmlPlan.Section.CLOCK_PARAMETERS);
+        writeSection(writer, plan, XmlPlan.Section.TREE_LIKELIHOODS);
     }
 
     private void writeOperators(
             XMLWriter writer,
-            BeastXXmlPlan plan
+            XmlPlan plan
     ) {
         writer.writeComment("Define operators");
         writer.writeOpenTag(
@@ -126,7 +99,7 @@ public class BeastXStateXmlGenerator {
                 new Attribute.Default<>(XMLParser.ID, "operators")
         );
 
-        writeSection(writer, plan, BeastXXmlPlan.Section.OPERATORS);
+        writeSection(writer, plan, XmlPlan.Section.OPERATORS);
 
         writer.writeCloseTag(SimpleOperatorScheduleParser.OPERATOR_SCHEDULE);
         writer.writeText("");
@@ -135,7 +108,7 @@ public class BeastXStateXmlGenerator {
     private void writeMCMC(
             XMLWriter writer,
             BeastXState state,
-            BeastXXmlPlan plan
+            XmlPlan plan
     ) {
         writer.writeComment("Define MCMC");
 
@@ -148,7 +121,7 @@ public class BeastXStateXmlGenerator {
 
         writer.writeOpenTag("mcmc", attributes);
 
-        if (plan.has(BeastXXmlPlan.Section.MCMC_LIKELIHOOD)) {
+        if (plan.has(XmlPlan.Section.MCMC_LIKELIHOOD)) {
             writer.writeOpenTag(
                     CompoundLikelihoodParser.JOINT,
                     new Attribute.Default<>(XMLParser.ID, "joint")
@@ -159,21 +132,21 @@ public class BeastXStateXmlGenerator {
                 CompoundLikelihoodParser.PRIOR,
                 new Attribute.Default<>(XMLParser.ID, "prior")
         );
-        writeSection(writer, plan, BeastXXmlPlan.Section.MCMC_PRIOR);
+        writeSection(writer, plan, XmlPlan.Section.MCMC_PRIOR);
         writer.writeCloseTag(CompoundLikelihoodParser.PRIOR);
 
-        if (plan.has(BeastXXmlPlan.Section.MCMC_LIKELIHOOD)) {
+        if (plan.has(XmlPlan.Section.MCMC_LIKELIHOOD)) {
             writer.writeOpenTag(
                     CompoundLikelihoodParser.LIKELIHOOD,
                     new Attribute.Default<>(XMLParser.ID, "likelihood")
             );
-            writeSection(writer, plan, BeastXXmlPlan.Section.MCMC_LIKELIHOOD);
+            writeSection(writer, plan, XmlPlan.Section.MCMC_LIKELIHOOD);
             writer.writeCloseTag(CompoundLikelihoodParser.LIKELIHOOD);
             writer.writeCloseTag(CompoundLikelihoodParser.JOINT);
         }
 
         writer.writeIDref(SimpleOperatorScheduleParser.OPERATOR_SCHEDULE, "operators");
-        writeSection(writer, plan, BeastXXmlPlan.Section.MCMC_LOGGERS);
+        writeSection(writer, plan, XmlPlan.Section.MCMC_LOGGERS);
 
         writer.writeCloseTag("mcmc");
         writer.writeText("");
@@ -181,10 +154,10 @@ public class BeastXStateXmlGenerator {
 
     private void writeSection(
             XMLWriter writer,
-            BeastXXmlPlan plan,
-            BeastXXmlPlan.Section section
+            XmlPlan plan,
+            XmlPlan.Section section
     ) {
-        for (BeastXXmlElement element : plan.get(section)) {
+        for (XmlElement element : plan.get(section)) {
             element.write(writer);
         }
     }
