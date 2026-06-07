@@ -6,11 +6,11 @@ import dr.inference.distribution.LogNormalDistributionModel;
 import dr.inference.distribution.ParametricDistributionModel;
 import dr.inference.model.Parameter;
 import tiling.BeastXState;
-import tiling.xml.BeastXXmlElement;
+import tiling.xml.XmlElement;
 
-public class BeastXBranchRateModelXmlBuilder {
+public class BranchRateModelXmlBuilder {
 
-    public BeastXXmlElement buildStrictClockBranchRates(
+    public XmlElement buildStrictClockBranchRates(
             BeastXState state,
             TreeModel treeModel,
             Parameter clockRateParameter
@@ -18,7 +18,7 @@ public class BeastXBranchRateModelXmlBuilder {
         String id =
                 treeId(treeModel) + "_strictClockBranchRates";
 
-        return BeastXXmlElement.element("strictClockBranchRates")
+        return XmlElement.element("strictClockBranchRates")
                 .withId(id)
                 .withChild(
                         parameterElement(
@@ -33,14 +33,14 @@ public class BeastXBranchRateModelXmlBuilder {
                 );
     }
 
-    public BeastXXmlElement buildRelaxedClockBranchRates(
+    public XmlElement buildRelaxedClockBranchRates(
             TreeModel treeModel,
             BeastXState.RelaxedClockSpec spec
     ) {
         String id =
                 relaxedClockBranchRateModelId(treeModel, spec);
 
-        return BeastXXmlElement.element("discretizedBranchRates")
+        return XmlElement.element("discretizedBranchRates")
                 .withId(id)
                 .withAttribute("overSampling", "1")
                 .withAttribute("normalize", "true")
@@ -49,7 +49,7 @@ public class BeastXBranchRateModelXmlBuilder {
                 .withAttribute("keepRates", "true")
                 .withChild(treeReference(treeModel))
                 .withChild(
-                        BeastXXmlElement.element("distribution")
+                        XmlElement.element("distribution")
                                 .withChild(
                                         parametricDistributionDefinition(
                                                 id + "_distribution",
@@ -58,7 +58,7 @@ public class BeastXBranchRateModelXmlBuilder {
                                 )
                 )
                 .withChild(
-                        BeastXXmlElement.element("rateCategories")
+                        XmlElement.element("rateCategories")
                                 .withChild(
                                         parameterReference(spec.rateCategoriesParameter())
                                 )
@@ -82,7 +82,7 @@ public class BeastXBranchRateModelXmlBuilder {
         return treeId(treeModel) + "_relaxedClockBranchRates";
     }
 
-    private BeastXXmlElement parametricDistributionDefinition(
+    private XmlElement parametricDistributionDefinition(
             String id,
             ParametricDistributionModel distribution
     ) {
@@ -95,14 +95,14 @@ public class BeastXBranchRateModelXmlBuilder {
         );
     }
 
-    private BeastXXmlElement logNormalDistributionModelDefinition(
+    private XmlElement logNormalDistributionModelDefinition(
             String id,
             LogNormalDistributionModel distribution
     ) {
-        return BeastXXmlElement.element("logNormalDistributionModel")
+        return XmlElement.element("logNormalDistributionModel")
                 .withId(id)
                 .withChild(
-                        BeastXXmlElement.element("mu")
+                        XmlElement.element("mu")
                                 .withChild(
                                         inlineParameterDefinition(
                                                 id + "_mu",
@@ -113,7 +113,7 @@ public class BeastXBranchRateModelXmlBuilder {
                                 )
                 )
                 .withChild(
-                        BeastXXmlElement.element("precision")
+                        XmlElement.element("precision")
                                 .withChild(
                                         inlineParameterDefinition(
                                                 id + "_precision",
@@ -125,7 +125,7 @@ public class BeastXBranchRateModelXmlBuilder {
                 );
     }
 
-    private BeastXXmlElement parameterElement(
+    private XmlElement parameterElement(
             BeastXState state,
             String elementName,
             Parameter parameter,
@@ -134,7 +134,7 @@ public class BeastXBranchRateModelXmlBuilder {
             Double lower,
             Double upper
     ) {
-        BeastXXmlElement child;
+        XmlElement child;
 
         if (parameter != null && state.stateNodes.containsKey(parameter)) {
             child =
@@ -149,18 +149,18 @@ public class BeastXBranchRateModelXmlBuilder {
                     );
         }
 
-        return BeastXXmlElement.element(elementName)
+        return XmlElement.element(elementName)
                 .withChild(child);
     }
 
-    private BeastXXmlElement inlineParameterDefinition(
+    private XmlElement inlineParameterDefinition(
             String id,
             double value,
             Double lower,
             Double upper
     ) {
-        BeastXXmlElement element =
-                BeastXXmlElement.element("parameter")
+        XmlElement element =
+                XmlElement.element("parameter")
                         .withId(id)
                         .withAttribute("value", format(value));
 
@@ -177,12 +177,12 @@ public class BeastXBranchRateModelXmlBuilder {
         return element;
     }
 
-    private BeastXXmlElement parameterReference(Parameter parameter) {
-        return BeastXXmlElement.ref("parameter", parameterId(parameter));
+    private XmlElement parameterReference(Parameter parameter) {
+        return XmlElement.ref("parameter", parameterId(parameter));
     }
 
-    private BeastXXmlElement treeReference(TreeModel treeModel) {
-        return BeastXXmlElement.ref("treeModel", treeId(treeModel));
+    private XmlElement treeReference(TreeModel treeModel) {
+        return XmlElement.ref("treeModel", treeId(treeModel));
     }
 
     private static String parameterId(Parameter parameter) {

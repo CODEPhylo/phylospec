@@ -11,7 +11,7 @@ import dr.inference.model.Parameter;
 import dr.inference.model.Statistic;
 import org.phylospec.tiling.TypeToken;
 import tiling.params.BeastXParam;
-import tiling.xml.BeastXXmlPlan;
+import tiling.xml.XmlPlan;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,7 +40,7 @@ public class BeastXState {
     public final List<FileLoggerSpec> fileLoggerSpecs;
     public final List<TreeLoggerSpec> treeLoggerSpecs;
     public final OperatorConfig operatorConfig;
-    public final BeastXXmlPlan xmlPlan;
+    public final XmlPlan xmlPlan;
 
     public long chainLength = 1;
     public Long randomSeed = null;
@@ -67,7 +67,7 @@ public class BeastXState {
         this.fileLoggerSpecs = new ArrayList<>();
         this.treeLoggerSpecs = new ArrayList<>();
         this.operatorConfig = new OperatorConfig();
-        this.xmlPlan = new BeastXXmlPlan();
+        this.xmlPlan = new XmlPlan();
         this.ids = new HashSet<>();
     }
 

@@ -8,21 +8,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class BeastXXmlElement {
+public class XmlElement {
 
     private final String tag;
     private final List<Attribute> attributes;
-    private final List<BeastXXmlElement> children;
+    private final List<XmlElement> children;
     private final String text;
 
-    public BeastXXmlElement(String tag) {
+    public XmlElement(String tag) {
         this(tag, List.of(), List.of(), null);
     }
 
-    public BeastXXmlElement(
+    public XmlElement(
             String tag,
             List<Attribute> attributes,
-            List<BeastXXmlElement> children,
+            List<XmlElement> children,
             String text
     ) {
         if (tag == null || tag.isBlank()) {
@@ -35,12 +35,12 @@ public class BeastXXmlElement {
         this.text = text;
     }
 
-    public static BeastXXmlElement element(String tag) {
-        return new BeastXXmlElement(tag);
+    public static XmlElement element(String tag) {
+        return new XmlElement(tag);
     }
 
-    public static BeastXXmlElement ref(String tag, String id) {
-        return new BeastXXmlElement(
+    public static XmlElement ref(String tag, String id) {
+        return new XmlElement(
                 tag,
                 List.of(new Attribute.Default<>("idref", id)),
                 List.of(),
@@ -48,34 +48,34 @@ public class BeastXXmlElement {
         );
     }
 
-    public BeastXXmlElement withAttribute(String name, Object value) {
+    public XmlElement withAttribute(String name, Object value) {
         List<Attribute> updated =
                 new ArrayList<>(attributes);
 
         updated.add(new Attribute.Default<>(name, value));
 
-        return new BeastXXmlElement(tag, updated, children, text);
+        return new XmlElement(tag, updated, children, text);
     }
 
-    public BeastXXmlElement withId(String id) {
+    public XmlElement withId(String id) {
         return withAttribute("id", id);
     }
 
-    public BeastXXmlElement withText(String text) {
-        return new BeastXXmlElement(tag, attributes, children, text);
+    public XmlElement withText(String text) {
+        return new XmlElement(tag, attributes, children, text);
     }
 
-    public BeastXXmlElement withChild(BeastXXmlElement child) {
-        List<BeastXXmlElement> updated =
+    public XmlElement withChild(XmlElement child) {
+        List<XmlElement> updated =
                 new ArrayList<>(children);
 
         updated.add(child);
 
-        return new BeastXXmlElement(tag, attributes, updated, text);
+        return new XmlElement(tag, attributes, updated, text);
     }
 
-    public BeastXXmlElement withChildren(List<BeastXXmlElement> children) {
-        return new BeastXXmlElement(tag, attributes, children, text);
+    public XmlElement withChildren(List<XmlElement> children) {
+        return new XmlElement(tag, attributes, children, text);
     }
 
     public String tag() {
@@ -86,7 +86,7 @@ public class BeastXXmlElement {
         return Collections.unmodifiableList(attributes);
     }
 
-    public List<BeastXXmlElement> children() {
+    public List<XmlElement> children() {
         return Collections.unmodifiableList(children);
     }
 
@@ -106,7 +106,7 @@ public class BeastXXmlElement {
             writer.writeText(text);
         }
 
-        for (BeastXXmlElement child : children) {
+        for (XmlElement child : children) {
             child.write(writer);
         }
 

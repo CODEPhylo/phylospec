@@ -29,8 +29,8 @@ import tiling.runner.BeastXRunnerOptions;
 import tiling.runner.BeastXXmlRunResult;
 import tiling.runner.BeastXXmlRunnerOptions;
 import tiling.runner.BeastXFileRunPaths;
-import tiling.xml.BeastXStateXmlGenerator;
-import tiling.xml.BeastXXmlRunner;
+import tiling.xml.StateXmlGenerator;
+import tiling.xml.XmlRunner;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
@@ -524,7 +524,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
     }
 
     public String toXml(BeastXModel model) {
-        return new BeastXStateXmlGenerator()
+        return new StateXmlGenerator()
                 .toXml(model);
     }
 
@@ -544,17 +544,17 @@ public class PhyloSpecRunner implements ErrorEventListener {
             BeastXModel model,
             Path xmlPath
     ) throws IOException {
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
     }
 
     public MCMC parseXmlMCMC(Path xmlPath) throws Exception {
-        return new BeastXXmlRunner()
+        return new XmlRunner()
                 .parse(xmlPath);
     }
 
     public MCMC runXmlMCMC(Path xmlPath) throws Exception {
-        return new BeastXXmlRunner()
+        return new XmlRunner()
                 .run(xmlPath);
     }
 

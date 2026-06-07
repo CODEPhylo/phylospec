@@ -9,9 +9,9 @@ import dr.inference.distribution.LogNormalDistributionModel;
 import dr.inference.distribution.NormalDistributionModel;
 import dr.inference.distribution.UniformDistributionModel;
 import dr.inference.model.Parameter;
-import tiling.xml.BeastXXmlElement;
+import tiling.xml.XmlElement;
 
-public class BeastXScalarPriorXmlBuilder {
+public class ScalarPriorXmlBuilder {
 
     public boolean supports(Distribution distribution) {
         return distribution instanceof NormalDistributionModel
@@ -22,7 +22,7 @@ public class BeastXScalarPriorXmlBuilder {
                 || distribution instanceof BetaDistributionModel;
     }
 
-    public BeastXXmlElement buildPrior(
+    public XmlElement buildPrior(
             Parameter parameter,
             DistributionLikelihood likelihood
     ) {
@@ -58,7 +58,7 @@ public class BeastXScalarPriorXmlBuilder {
         );
     }
 
-    private BeastXXmlElement normalPrior(
+    private XmlElement normalPrior(
             Parameter parameter,
             DistributionLikelihood likelihood,
             NormalDistributionModel distribution
@@ -66,15 +66,15 @@ public class BeastXScalarPriorXmlBuilder {
         String priorId =
                 likelihood.getId();
 
-        return BeastXXmlElement.element("distributionLikelihood")
+        return XmlElement.element("distributionLikelihood")
                 .withId(priorId)
                 .withChild(
-                        BeastXXmlElement.element("distribution")
+                        XmlElement.element("distribution")
                                 .withChild(
-                                        BeastXXmlElement.element("normalDistributionModel")
+                                        XmlElement.element("normalDistributionModel")
                                                 .withId(priorId + "_distribution")
                                                 .withChild(
-                                                        BeastXXmlElement.element("mean")
+                                                        XmlElement.element("mean")
                                                                 .withChild(
                                                                         inlineParameterDefinition(
                                                                                 priorId + "_mean",
@@ -85,7 +85,7 @@ public class BeastXScalarPriorXmlBuilder {
                                                                 )
                                                 )
                                                 .withChild(
-                                                        BeastXXmlElement.element("stdev")
+                                                        XmlElement.element("stdev")
                                                                 .withChild(
                                                                         inlineParameterDefinition(
                                                                                 priorId + "_stdev",
@@ -98,12 +98,12 @@ public class BeastXScalarPriorXmlBuilder {
                                 )
                 )
                 .withChild(
-                        BeastXXmlElement.element("data")
+                        XmlElement.element("data")
                                 .withChild(parameterReference(parameter))
                 );
     }
 
-    private BeastXXmlElement logNormalPrior(
+    private XmlElement logNormalPrior(
             Parameter parameter,
             DistributionLikelihood likelihood,
             LogNormalDistributionModel distribution
@@ -111,15 +111,15 @@ public class BeastXScalarPriorXmlBuilder {
         String priorId =
                 likelihood.getId();
 
-        return BeastXXmlElement.element("distributionLikelihood")
+        return XmlElement.element("distributionLikelihood")
                 .withId(priorId)
                 .withChild(
-                        BeastXXmlElement.element("distribution")
+                        XmlElement.element("distribution")
                                 .withChild(
-                                        BeastXXmlElement.element("logNormalDistributionModel")
+                                        XmlElement.element("logNormalDistributionModel")
                                                 .withId(priorId + "_distribution")
                                                 .withChild(
-                                                        BeastXXmlElement.element("mu")
+                                                        XmlElement.element("mu")
                                                                 .withChild(
                                                                         inlineParameterDefinition(
                                                                                 priorId + "_mu",
@@ -130,7 +130,7 @@ public class BeastXScalarPriorXmlBuilder {
                                                                 )
                                                 )
                                                 .withChild(
-                                                        BeastXXmlElement.element("precision")
+                                                        XmlElement.element("precision")
                                                                 .withChild(
                                                                         inlineParameterDefinition(
                                                                                 priorId + "_precision",
@@ -143,12 +143,12 @@ public class BeastXScalarPriorXmlBuilder {
                                 )
                 )
                 .withChild(
-                        BeastXXmlElement.element("data")
+                        XmlElement.element("data")
                                 .withChild(parameterReference(parameter))
                 );
     }
 
-    private BeastXXmlElement gammaPrior(
+    private XmlElement gammaPrior(
             Parameter parameter,
             DistributionLikelihood likelihood,
             GammaDistributionModel distribution
@@ -162,16 +162,16 @@ public class BeastXScalarPriorXmlBuilder {
         double rate =
                 1.0 / distribution.getScale();
 
-        return BeastXXmlElement.element("distributionLikelihood")
+        return XmlElement.element("distributionLikelihood")
                 .withId(priorId)
                 .withChild(
-                        BeastXXmlElement.element("distribution")
+                        XmlElement.element("distribution")
                                 .withChild(
-                                        BeastXXmlElement.element("gammaDistributionModel")
+                                        XmlElement.element("gammaDistributionModel")
                                                 .withId(priorId + "_distribution")
                                                 .withAttribute("offset", "0.0")
                                                 .withChild(
-                                                        BeastXXmlElement.element("shape")
+                                                        XmlElement.element("shape")
                                                                 .withChild(
                                                                         inlineParameterDefinition(
                                                                                 priorId + "_shape",
@@ -182,7 +182,7 @@ public class BeastXScalarPriorXmlBuilder {
                                                                 )
                                                 )
                                                 .withChild(
-                                                        BeastXXmlElement.element("rate")
+                                                        XmlElement.element("rate")
                                                                 .withChild(
                                                                         inlineParameterDefinition(
                                                                                 priorId + "_rate",
@@ -195,12 +195,12 @@ public class BeastXScalarPriorXmlBuilder {
                                 )
                 )
                 .withChild(
-                        BeastXXmlElement.element("data")
+                        XmlElement.element("data")
                                 .withChild(parameterReference(parameter))
                 );
     }
 
-    private BeastXXmlElement exponentialPrior(
+    private XmlElement exponentialPrior(
             Parameter parameter,
             DistributionLikelihood likelihood,
             ExponentialDistributionModel distribution
@@ -208,16 +208,16 @@ public class BeastXScalarPriorXmlBuilder {
         String priorId =
                 likelihood.getId();
 
-        return BeastXXmlElement.element("distributionLikelihood")
+        return XmlElement.element("distributionLikelihood")
                 .withId(priorId)
                 .withChild(
-                        BeastXXmlElement.element("distribution")
+                        XmlElement.element("distribution")
                                 .withChild(
-                                        BeastXXmlElement.element("exponentialDistributionModel")
+                                        XmlElement.element("exponentialDistributionModel")
                                                 .withId(priorId + "_distribution")
                                                 .withAttribute("offset", "0.0")
                                                 .withChild(
-                                                        BeastXXmlElement.element("mean")
+                                                        XmlElement.element("mean")
                                                                 .withChild(
                                                                         inlineParameterDefinition(
                                                                                 priorId + "_mean",
@@ -230,12 +230,12 @@ public class BeastXScalarPriorXmlBuilder {
                                 )
                 )
                 .withChild(
-                        BeastXXmlElement.element("data")
+                        XmlElement.element("data")
                                 .withChild(parameterReference(parameter))
                 );
     }
 
-    private BeastXXmlElement uniformPrior(
+    private XmlElement uniformPrior(
             Parameter parameter,
             DistributionLikelihood likelihood,
             UniformDistributionModel distribution
@@ -243,15 +243,15 @@ public class BeastXScalarPriorXmlBuilder {
         String priorId =
                 likelihood.getId();
 
-        return BeastXXmlElement.element("distributionLikelihood")
+        return XmlElement.element("distributionLikelihood")
                 .withId(priorId)
                 .withChild(
-                        BeastXXmlElement.element("distribution")
+                        XmlElement.element("distribution")
                                 .withChild(
-                                        BeastXXmlElement.element("uniformDistributionModel")
+                                        XmlElement.element("uniformDistributionModel")
                                                 .withId(priorId + "_distribution")
                                                 .withChild(
-                                                        BeastXXmlElement.element("lower")
+                                                        XmlElement.element("lower")
                                                                 .withChild(
                                                                         inlineParameterDefinition(
                                                                                 priorId + "_lower",
@@ -262,7 +262,7 @@ public class BeastXScalarPriorXmlBuilder {
                                                                 )
                                                 )
                                                 .withChild(
-                                                        BeastXXmlElement.element("upper")
+                                                        XmlElement.element("upper")
                                                                 .withChild(
                                                                         inlineParameterDefinition(
                                                                                 priorId + "_upper",
@@ -275,12 +275,12 @@ public class BeastXScalarPriorXmlBuilder {
                                 )
                 )
                 .withChild(
-                        BeastXXmlElement.element("data")
+                        XmlElement.element("data")
                                 .withChild(parameterReference(parameter))
                 );
     }
 
-    private BeastXXmlElement betaPrior(
+    private XmlElement betaPrior(
             Parameter parameter,
             DistributionLikelihood likelihood,
             BetaDistributionModel distribution
@@ -288,12 +288,12 @@ public class BeastXScalarPriorXmlBuilder {
         String priorId =
                 likelihood.getId();
 
-        return BeastXXmlElement.element("distributionLikelihood")
+        return XmlElement.element("distributionLikelihood")
                 .withId(priorId)
                 .withChild(
-                        BeastXXmlElement.element("distribution")
+                        XmlElement.element("distribution")
                                 .withChild(
-                                        BeastXXmlElement.element("betaDistributionModel")
+                                        XmlElement.element("betaDistributionModel")
                                                 .withId(priorId + "_distribution")
                                                 .withChild(
                                                         betaShapeParameter(
@@ -312,17 +312,17 @@ public class BeastXScalarPriorXmlBuilder {
                                 )
                 )
                 .withChild(
-                        BeastXXmlElement.element("data")
+                        XmlElement.element("data")
                                 .withChild(parameterReference(parameter))
                 );
     }
 
-    private BeastXXmlElement betaShapeParameter(
+    private XmlElement betaShapeParameter(
             String elementName,
             String parameterId,
             Parameter parameter
     ) {
-        return BeastXXmlElement.element(elementName)
+        return XmlElement.element(elementName)
                 .withChild(
                         inlineParameterDefinition(
                                 parameterId,
@@ -333,18 +333,18 @@ public class BeastXScalarPriorXmlBuilder {
                 );
     }
 
-    private BeastXXmlElement parameterReference(Parameter parameter) {
-        return BeastXXmlElement.ref("parameter", parameterId(parameter));
+    private XmlElement parameterReference(Parameter parameter) {
+        return XmlElement.ref("parameter", parameterId(parameter));
     }
 
-    private BeastXXmlElement inlineParameterDefinition(
+    private XmlElement inlineParameterDefinition(
             String id,
             double value,
             Double lower,
             Double upper
     ) {
-        BeastXXmlElement element =
-                BeastXXmlElement.element("parameter")
+        XmlElement element =
+                XmlElement.element("parameter")
                         .withId(id)
                         .withAttribute("value", format(value));
 
