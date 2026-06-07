@@ -370,7 +370,7 @@ public class TreePriorXmlBuilder {
 
     private static RuntimeException unsupported(String message) {
         return new UnsupportedOperationException(
-                message + " Extend BeastXTreePriorXmlBuilder before exporting this tree prior to XML."
+                message + " Extend TreePriorXmlBuilder before exporting this tree prior to XML."
         );
     }
 

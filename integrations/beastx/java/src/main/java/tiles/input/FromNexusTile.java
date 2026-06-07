@@ -59,13 +59,6 @@ public class FromNexusTile extends GeneratorTile<Alignment, BeastXState> {
             );
         }
 
-        if (dateParser != null) {
-            throw new TileApplicationError(
-                    "fromNexus date parsing is not implemented for BEAST X yet.",
-                    "Use age=parse(...) for BEAST X tip ages."
-            );
-        }
-
         File file =
                 new File(path);
 
@@ -78,6 +71,10 @@ public class FromNexusTile extends GeneratorTile<Alignment, BeastXState> {
 
             if (ageParser != null) {
                 applyTaxonAges(alignment, ageParser);
+            }
+
+            if (dateParser != null) {
+                applyTaxonDates(alignment, dateParser);
             }
 
             return alignment;
@@ -122,26 +119,102 @@ public class FromNexusTile extends GeneratorTile<Alignment, BeastXState> {
         }
     }
 
+    private static void applyTaxonDates(
+            Alignment alignment,
+            ParserTile.Parser dateParser
+    ) {
+        double[] dates =
+                new double[alignment.getTaxonCount()];
+
+        double mostRecentDate =
+                Double.NEGATIVE_INFINITY;
+
+        for (int i = 0; i < alignment.getTaxonCount(); i++) {
+            Taxon taxon =
+                    alignment.getTaxon(i);
+
+            String parsedDate =
+                    dateParser.parse(taxon.getId());
+
+            double date =
+                    parseDate(taxon.getId(), parsedDate);
+
+            dates[i] =
+                    date;
+
+            mostRecentDate =
+                    Math.max(mostRecentDate, date);
+        }
+
+        for (int i = 0; i < alignment.getTaxonCount(); i++) {
+            Taxon taxon =
+                    alignment.getTaxon(i);
+
+            double age =
+                    mostRecentDate - dates[i];
+
+            taxon.setDate(
+                    Date.createRelativeAge(
+                            age,
+                            Units.Type.YEARS
+                    )
+            );
+        }
+    }
+
     private static double parseAge(
             String taxonName,
             String parsedAge
     ) {
-        try {
-            double age =
-                    Double.parseDouble(parsedAge);
+        double age =
+                parseFiniteDouble(
+                        taxonName,
+                        parsedAge,
+                        "age"
+                );
 
-            if (age < 0.0) {
+        if (age < 0.0) {
+            throw new TileApplicationError(
+                    "Parsed taxon age is negative for taxon '" + taxonName + "'.",
+                    "Use an age parser that returns non-negative numeric ages."
+            );
+        }
+
+        return age;
+    }
+
+    private static double parseDate(
+            String taxonName,
+            String parsedDate
+    ) {
+        return parseFiniteDouble(
+                taxonName,
+                parsedDate,
+                "date"
+        );
+    }
+
+    private static double parseFiniteDouble(
+            String taxonName,
+            String parsedValue,
+            String valueName
+    ) {
+        try {
+            double value =
+                    Double.parseDouble(parsedValue);
+
+            if (!Double.isFinite(value)) {
                 throw new TileApplicationError(
-                        "Parsed taxon age is negative for taxon '" + taxonName + "'.",
-                        "Use an age parser that returns non-negative numeric ages."
+                        "Parsed taxon " + valueName + " is not finite for taxon '" + taxonName + "'.",
+                        "Check the " + valueName + " parser. It returned '" + parsedValue + "'."
                 );
             }
 
-            return age;
+            return value;
         } catch (NumberFormatException e) {
             throw new TileApplicationError(
-                    "Parsed taxon age is not numeric for taxon '" + taxonName + "'.",
-                    "Check the age parser. It returned '" + parsedAge + "'."
+                    "Parsed taxon " + valueName + " is not numeric for taxon '" + taxonName + "'.",
+                    "Check the " + valueName + " parser. It returned '" + parsedValue + "'."
             );
         }
     }
