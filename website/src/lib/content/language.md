@@ -31,7 +31,6 @@ Tree tree ~ Yule(
 Alignment sequences ~ PhyloCTMC(
     tree, 
     qMatrix,
-    numSequences=numTaxa(observedSequences)
 ) observed as observedSequences
 ```
 
@@ -58,15 +57,16 @@ Vector<String> taxonNames = ["Chimpanzee", "Human"]
 We can apply functions and the usual numerical expressions:
 
 ```phylospec
+Rate birthRate = 1.5
 Rate deathRate = 0.5 * birthRate
-Rate diversificationRate = birthRate - deathRate
-Real logDiversificationRate = log(diversificationRate)
+Real diversificationRate = birthRate - deathRate
+Real logDiversificationRate = log(birthRate)
 ```
 
 Functions can create more sophisticated types:
 
 ```phylospec
-Alignment alignment = nexus(file="sequences.nex")
+Alignment alignment = fromNexus("sequences.nex")
 Integer numTaxa = numTaxa(alignment)
 Taxa taxa = taxa(alignment)
 ```
@@ -103,7 +103,7 @@ Real e ~ log(Normal(mean=0.0, sd=1.0))
 // ✅ the function IID takes a distribution object and creates a new distribution object
 Vector<Real> f ~ IID(
     base=Normal(mean=0.0, sd=1.0), 
-    n=5
+    num=5
 )
 ```
 
@@ -144,12 +144,7 @@ If type `A` is an alias of type `B`, the two of them can be used interchangeably
 
 Every type can have one or more type parameters. Examples of parameterized types are `Vector<T>`, `Map<K,V>`, and `Sequence<T>`.
 
-From the perspective of an object, its type parameter is *fixed upon generation*. The type of an object attribute can dependent on the type parameters:
-
-```phylospec
-Vector<Real> numbers = [0.5, 0.1]
-Real last = numbers.first         // for Vector<T>, .first has type T
-```
+From the perspective of an object, its type parameter is *fixed upon generation*.
 
 Some languages allow to set *bounds* to a type parameter. However, we only ever interact with objects through generators. Hence, it is sufficient (and more flexible) to specify type parameter bounds there.
 
@@ -170,8 +165,8 @@ Real b = a  // this still works, as PositiveReal extends Real
 
 ```phylospec
 PositiveReal mean ~ Exponential(1.0)
-Real y ~ Normal(mean=mean, sd=2.0)
-Real y ~ Normal(mean=mean, sd=2.0, offset=1.0)
+PositiveReal y ~ LogNormal(logMean=mean, logSd=2.0)
+PositiveReal z ~ LogNormal(mean, logSd=2.0)
 ```
 
 If there is only one argument, it can be passed directly (e.g., `Exponential(1.0)`). If there are multiple arguments, all but the first one must be named explicitly (e.g., `Normal(mean=1.0, sd=2.0)` or `Normal(1.0, sd=2.0)`).
@@ -200,7 +195,7 @@ is equivalent to:
 
 ```phylospec
 Real mean = log(100)
-Real y = Normal(mean=mean, sd=2.0)
+Real y ~ Normal(mean=mean, sd=2.0)
 ```
 
 Whereas
@@ -213,7 +208,7 @@ is equivalent to:
 
 ```phylospec
 Real mean ~ Exponential(1.0)
-Real y = Normal(mean=mean, sd=2.0)
+Real y ~ Normal(mean=mean, sd=2.0)
 ```
 
 ### Vectorization
@@ -222,8 +217,8 @@ Instead of overly flexible loops, PhyloSpec supports indexed assignments:
 
 ```phylospec
 Vector<Real> x = [1.0, 2.0, 3.0]
-Real logX[i] = log(x[i]) for i in 1:num(x)  // logX[i] is a Real, logX a Vector<Real>
-Real xTimesLogX[i] = x[i] * logX[i] for i in 1:num(x)
+Real expX[i] = exp(x[i]) for i in 1:num(x)  // logX[i] is a Real, logX a Vector<Real>
+Real xTimesLogX[i] = x[i] * expX[i] for i in 1:num(x)
 ```
 
 **Justification for indexed assignments:**
@@ -284,7 +279,7 @@ Vector<Real> weights = [0.3, 0.5, 0.2]
 Mixture mixture = Mixture(components=components, weights=weights)
 
 Distribution<Real> components[i] = Normal(mean=i*2.0, sd=1.0) for i in 1:10
-Vector<Real> weights = repeat(x=0.1, rep=10)
+Vector<Real> weights = repeat(0.1, num=10)
 Mixture mixture = Mixture(components=components, weights=weights)
 
 // Sample from the mixture
@@ -326,8 +321,7 @@ Every rate and age in a model is implicitly tied to a time scale. This change ma
 Adding explicit units to every variable can get complicated pretty quickly (what is the unit of the log mean?). However, we allow to indicate the global time scale by adding units to `Age`-typed literals:
 
 ```phylospec
-Tree tree ~ Yule(birthRate=1.0, rootAge=20 Ma)
-
+Tree tree ~ Yule(birthRate=1.0, rootAge=20 Ma, taxa)
 Age cladeAge = age(["humans", "chimpanzees"], tree) observed as 7 Ma
 ```
 
@@ -345,8 +339,8 @@ data {
 }
 
 model {
-  PositiveInteger numAffectedSites ~ Binomial(
-    p=0.1, n=numSites(alignment)
+  NonNegativeInteger numAffectedSites ~ Binomial(
+    p=0.1, numTrials=numSites(alignment)
   )
 }
 
