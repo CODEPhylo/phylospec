@@ -1,28 +1,28 @@
 package tiling.xml.builders;
 
-import tiling.xml.BeastXXmlElement;
+import tiling.xml.XmlElement;
 
-public class BeastXTreeLikelihoodXmlBuilder {
+public class TreeLikelihoodXmlBuilder {
 
-    public BeastXXmlElement buildTreeLikelihood(
+    public XmlElement buildTreeLikelihood(
             String likelihoodId,
             String patternsId,
             String treeModelId,
             String siteRateModelId,
-            BeastXXmlElement branchRateModelReference
+            XmlElement branchRateModelReference
     ) {
-        BeastXXmlElement treeLikelihood =
-                BeastXXmlElement.element("treeLikelihood")
+        XmlElement treeLikelihood =
+                XmlElement.element("treeLikelihood")
                         .withId(likelihoodId)
                         .withAttribute("useAmbiguities", false)
                         .withChild(
-                                BeastXXmlElement.ref("patterns", patternsId)
+                                XmlElement.ref("patterns", patternsId)
                         )
                         .withChild(
-                                BeastXXmlElement.ref("treeModel", treeModelId)
+                                XmlElement.ref("treeModel", treeModelId)
                         )
                         .withChild(
-                                BeastXXmlElement.ref("siteModel", siteRateModelId)
+                                XmlElement.ref("siteModel", siteRateModelId)
                         );
 
         if (branchRateModelReference != null) {
@@ -33,7 +33,7 @@ public class BeastXTreeLikelihoodXmlBuilder {
         return treeLikelihood;
     }
 
-    public BeastXXmlElement treeLikelihoodReference(String likelihoodId) {
-        return BeastXXmlElement.ref("treeLikelihood", likelihoodId);
+    public XmlElement treeLikelihoodReference(String likelihoodId) {
+        return XmlElement.ref("treeLikelihood", likelihoodId);
     }
 }

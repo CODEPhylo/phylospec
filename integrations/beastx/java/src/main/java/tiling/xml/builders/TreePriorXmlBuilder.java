@@ -11,11 +11,11 @@ import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import tiling.BeastXState;
-import tiling.xml.BeastXXmlElement;
+import tiling.xml.XmlElement;
 
-public class BeastXTreePriorXmlBuilder {
+public class TreePriorXmlBuilder {
 
-    public BeastXXmlElement buildModelDefinition(
+    public XmlElement buildModelDefinition(
             BeastXState state,
             AbstractModelLikelihood treePrior
     ) {
@@ -37,7 +37,7 @@ public class BeastXTreePriorXmlBuilder {
         throw unsupported("Only SpeciationLikelihood and CoalescentLikelihood tree priors are supported.");
     }
 
-    public BeastXXmlElement buildPrior(
+    public XmlElement buildPrior(
             TreeModel treeModel,
             AbstractModelLikelihood treePrior
     ) {
@@ -52,12 +52,12 @@ public class BeastXTreePriorXmlBuilder {
         throw unsupported("Only SpeciationLikelihood and CoalescentLikelihood tree priors are supported.");
     }
 
-    private BeastXXmlElement yuleModelDefinition(
+    private XmlElement yuleModelDefinition(
             BeastXState state,
             AbstractModelLikelihood treePrior,
             BirthDeathGernhard08Model yuleModel
     ) {
-        return BeastXXmlElement.element("yuleModel")
+        return XmlElement.element("yuleModel")
                 .withId(treePriorModelId(treePrior))
                 .withAttribute("units", "years")
                 .withChild(
@@ -73,12 +73,12 @@ public class BeastXTreePriorXmlBuilder {
                 );
     }
 
-    private BeastXXmlElement birthDeathModelDefinition(
+    private XmlElement birthDeathModelDefinition(
             BeastXState state,
             AbstractModelLikelihood treePrior,
             BirthDeathGernhard08Model birthDeathModel
     ) {
-        return BeastXXmlElement.element("birthDeathModel")
+        return XmlElement.element("birthDeathModel")
                 .withId(treePriorModelId(treePrior))
                 .withAttribute("type", "LABELED")
                 .withAttribute("units", "years")
@@ -117,7 +117,7 @@ public class BeastXTreePriorXmlBuilder {
                 );
     }
 
-    private BeastXXmlElement constantPopulationModelDefinition(
+    private XmlElement constantPopulationModelDefinition(
             BeastXState state,
             AbstractModelLikelihood treePrior
     ) {
@@ -127,7 +127,7 @@ public class BeastXTreePriorXmlBuilder {
         Parameter populationSize =
                 constantPopulationVariable(constantPopulationModel);
 
-        return BeastXXmlElement.element("constantSize")
+        return XmlElement.element("constantSize")
                 .withId(treePriorModelId(treePrior))
                 .withAttribute("units", "years")
                 .withChild(
@@ -143,7 +143,7 @@ public class BeastXTreePriorXmlBuilder {
                 );
     }
 
-    private BeastXXmlElement speciationTreePrior(
+    private XmlElement speciationTreePrior(
             TreeModel treeModel,
             AbstractModelLikelihood treePrior
     ) {
@@ -155,39 +155,39 @@ public class BeastXTreePriorXmlBuilder {
                         ? "yuleModel"
                         : "birthDeathModel";
 
-        return BeastXXmlElement.element("speciationLikelihood")
+        return XmlElement.element("speciationLikelihood")
                 .withId(priorId(treePrior))
                 .withChild(
-                        BeastXXmlElement.element("model")
+                        XmlElement.element("model")
                                 .withChild(
-                                        BeastXXmlElement.ref(modelTag, treePriorModelId(treePrior))
+                                        XmlElement.ref(modelTag, treePriorModelId(treePrior))
                                 )
                 )
                 .withChild(
-                        BeastXXmlElement.element("speciesTree")
+                        XmlElement.element("speciesTree")
                                 .withChild(treeReference(treeModel))
                 );
     }
 
-    private BeastXXmlElement coalescentTreePrior(
+    private XmlElement coalescentTreePrior(
             TreeModel treeModel,
             AbstractModelLikelihood treePrior
     ) {
-        return BeastXXmlElement.element("coalescentLikelihood")
+        return XmlElement.element("coalescentLikelihood")
                 .withId(priorId(treePrior))
                 .withChild(
-                        BeastXXmlElement.element("model")
+                        XmlElement.element("model")
                                 .withChild(
-                                        BeastXXmlElement.ref("constantSize", treePriorModelId(treePrior))
+                                        XmlElement.ref("constantSize", treePriorModelId(treePrior))
                                 )
                 )
                 .withChild(
-                        BeastXXmlElement.element("populationTree")
+                        XmlElement.element("populationTree")
                                 .withChild(treeReference(treeModel))
                 );
     }
 
-    private BeastXXmlElement parameterElement(
+    private XmlElement parameterElement(
             BeastXState state,
             String elementName,
             Parameter parameter,
@@ -196,7 +196,7 @@ public class BeastXTreePriorXmlBuilder {
             Double lower,
             Double upper
     ) {
-        BeastXXmlElement child;
+        XmlElement child;
 
         if (parameter != null && state.stateNodes.containsKey(parameter)) {
             child =
@@ -211,18 +211,18 @@ public class BeastXTreePriorXmlBuilder {
                     );
         }
 
-        return BeastXXmlElement.element(elementName)
+        return XmlElement.element(elementName)
                 .withChild(child);
     }
 
-    private BeastXXmlElement inlineParameterDefinition(
+    private XmlElement inlineParameterDefinition(
             String id,
             double value,
             Double lower,
             Double upper
     ) {
-        BeastXXmlElement element =
-                BeastXXmlElement.element("parameter")
+        XmlElement element =
+                XmlElement.element("parameter")
                         .withId(id)
                         .withAttribute("value", format(value));
 
@@ -239,12 +239,12 @@ public class BeastXTreePriorXmlBuilder {
         return element;
     }
 
-    private BeastXXmlElement parameterReference(Parameter parameter) {
-        return BeastXXmlElement.ref("parameter", parameterId(parameter));
+    private XmlElement parameterReference(Parameter parameter) {
+        return XmlElement.ref("parameter", parameterId(parameter));
     }
 
-    private BeastXXmlElement treeReference(TreeModel treeModel) {
-        return BeastXXmlElement.ref("treeModel", treeId(treeModel));
+    private XmlElement treeReference(TreeModel treeModel) {
+        return XmlElement.ref("treeModel", treeId(treeModel));
     }
 
     private static BirthDeathGernhard08Model getBirthDeathModel(AbstractModelLikelihood treePrior) {

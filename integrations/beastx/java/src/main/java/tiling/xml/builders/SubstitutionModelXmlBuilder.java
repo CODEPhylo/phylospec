@@ -14,18 +14,18 @@ import dr.evomodel.substmodel.nucleotide.GTR;
 import dr.evomodel.substmodel.nucleotide.HKY;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
-import tiling.xml.BeastXXmlElement;
+import tiling.xml.XmlElement;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.lang.reflect.Field;
 
-public class BeastXSubstitutionModelXmlBuilder {
+public class SubstitutionModelXmlBuilder {
 
     private static final List<String> GTR_RATE_NAMES =
             List.of("rateAC", "rateAG", "rateAT", "rateCG", "rateCT", "rateGT");
 
-    public List<BeastXXmlElement> buildSubstitutionModel(
+    public List<XmlElement> buildSubstitutionModel(
             SubstitutionModel substitutionModel,
             String substitutionModelId
     ) {
@@ -81,11 +81,11 @@ public class BeastXSubstitutionModelXmlBuilder {
         );
     }
 
-    private List<BeastXXmlElement> buildHKYModel(
+    private List<XmlElement> buildHKYModel(
             HKY hky,
             String substitutionModelId
     ) {
-        List<BeastXXmlElement> elements =
+        List<XmlElement> elements =
                 new ArrayList<>();
 
         FrequencyModel frequencyModel =
@@ -112,11 +112,11 @@ public class BeastXSubstitutionModelXmlBuilder {
         return elements;
     }
 
-    private List<BeastXXmlElement> buildGTRModel(
+    private List<XmlElement> buildGTRModel(
             GTR gtr,
             String substitutionModelId
     ) {
-        List<BeastXXmlElement> elements =
+        List<XmlElement> elements =
                 new ArrayList<>();
 
         FrequencyModel frequencyModel =
@@ -143,11 +143,11 @@ public class BeastXSubstitutionModelXmlBuilder {
         return elements;
     }
 
-    private List<BeastXXmlElement> buildEmpiricalAminoAcidModel(
+    private List<XmlElement> buildEmpiricalAminoAcidModel(
             EmpiricalAminoAcidModel aminoAcidModel,
             String substitutionModelId
     ) {
-        List<BeastXXmlElement> elements =
+        List<XmlElement> elements =
                 new ArrayList<>();
 
         FrequencyModel frequencyModel =
@@ -174,11 +174,11 @@ public class BeastXSubstitutionModelXmlBuilder {
         return elements;
     }
 
-    private List<BeastXXmlElement> buildGeneralSubstitutionModel(
+    private List<XmlElement> buildGeneralSubstitutionModel(
             GeneralSubstitutionModel generalSubstitutionModel,
             String substitutionModelId
     ) {
-        List<BeastXXmlElement> elements =
+        List<XmlElement> elements =
                 new ArrayList<>();
 
         FrequencyModel frequencyModel =
@@ -205,7 +205,7 @@ public class BeastXSubstitutionModelXmlBuilder {
         return elements;
     }
 
-    private BeastXXmlElement generalSubstitutionModelDefinition(
+    private XmlElement generalSubstitutionModelDefinition(
             GeneralSubstitutionModel generalSubstitutionModel,
             String substitutionModelId,
             String frequencyModelId
@@ -213,7 +213,7 @@ public class BeastXSubstitutionModelXmlBuilder {
         Parameter ratesParameter =
                 generalSubstitutionModelRatesParameter(generalSubstitutionModel);
 
-        return BeastXXmlElement.element("generalSubstitutionModel")
+        return XmlElement.element("generalSubstitutionModel")
                 .withId(substitutionModelId)
                 .withAttribute(
                         "dataType",
@@ -221,13 +221,13 @@ public class BeastXSubstitutionModelXmlBuilder {
                 )
                 .withAttribute("normalized", "false")
                 .withChild(
-                        BeastXXmlElement.element("frequencies")
+                        XmlElement.element("frequencies")
                                 .withChild(
-                                        BeastXXmlElement.ref("frequencyModel", frequencyModelId)
+                                        XmlElement.ref("frequencyModel", frequencyModelId)
                                 )
                 )
                 .withChild(
-                        BeastXXmlElement.element("rates")
+                        XmlElement.element("rates")
                                 .withChild(
                                         parameterOrInlineDefinition(
                                                 substitutionModelId + "_rates",
@@ -237,11 +237,11 @@ public class BeastXSubstitutionModelXmlBuilder {
                 );
     }
 
-    private List<BeastXXmlElement> buildGY94CodonModel(
+    private List<XmlElement> buildGY94CodonModel(
             GY94CodonModel gy94CodonModel,
             String substitutionModelId
     ) {
-        List<BeastXXmlElement> elements =
+        List<XmlElement> elements =
                 new ArrayList<>();
 
         FrequencyModel frequencyModel =
@@ -268,18 +268,18 @@ public class BeastXSubstitutionModelXmlBuilder {
         return elements;
     }
 
-    private BeastXXmlElement frequencyModelDefinition(
+    private XmlElement frequencyModelDefinition(
             FrequencyModel frequencyModel,
             String frequencyModelId
     ) {
         Parameter frequencies =
                 frequencyModel.getFrequencyParameter();
 
-        return BeastXXmlElement.element("frequencyModel")
+        return XmlElement.element("frequencyModel")
                 .withId(frequencyModelId)
                 .withAttribute("dataType", dataTypeName(frequencyModel.getDataType()))
                 .withChild(
-                        BeastXXmlElement.element("frequencies")
+                        XmlElement.element("frequencies")
                                 .withChild(
                                         vectorParameterDefinition(
                                                 frequencyModelId + "_parameter",
@@ -289,7 +289,7 @@ public class BeastXSubstitutionModelXmlBuilder {
                 );
     }
 
-    private BeastXXmlElement hkyModelDefinition(
+    private XmlElement hkyModelDefinition(
             HKY hky,
             String substitutionModelId,
             String frequencyModelId
@@ -297,16 +297,16 @@ public class BeastXSubstitutionModelXmlBuilder {
         Parameter kappa =
                 kappaParameter(hky);
 
-        return BeastXXmlElement.element("hkyModel")
+        return XmlElement.element("hkyModel")
                 .withId(substitutionModelId)
                 .withChild(
-                        BeastXXmlElement.element("frequencies")
+                        XmlElement.element("frequencies")
                                 .withChild(
-                                        BeastXXmlElement.ref("frequencyModel", frequencyModelId)
+                                        XmlElement.ref("frequencyModel", frequencyModelId)
                                 )
                 )
                 .withChild(
-                        BeastXXmlElement.element("kappa")
+                        XmlElement.element("kappa")
                                 .withChild(
                                         parameterOrInlineDefinition(
                                                 substitutionModelId + "_kappa",
@@ -316,18 +316,18 @@ public class BeastXSubstitutionModelXmlBuilder {
                 );
     }
 
-    private BeastXXmlElement gtrModelDefinition(
+    private XmlElement gtrModelDefinition(
             GTR gtr,
             String substitutionModelId,
             String frequencyModelId
     ) {
-        BeastXXmlElement model =
-                BeastXXmlElement.element("gtrModel")
+        XmlElement model =
+                XmlElement.element("gtrModel")
                         .withId(substitutionModelId)
                         .withChild(
-                                BeastXXmlElement.element("frequencies")
+                                XmlElement.element("frequencies")
                                         .withChild(
-                                                BeastXXmlElement.ref("frequencyModel", frequencyModelId)
+                                                XmlElement.ref("frequencyModel", frequencyModelId)
                                         )
                         );
 
@@ -336,7 +336,7 @@ public class BeastXSubstitutionModelXmlBuilder {
 
         if (allGTRRatesAreInline(rateParameters)) {
             return model.withChild(
-                    BeastXXmlElement.element("rates")
+                    XmlElement.element("rates")
                             .withChild(
                                     fixedGTRRatesParameter(
                                             rateParameters,
@@ -356,7 +356,7 @@ public class BeastXSubstitutionModelXmlBuilder {
 
             model =
                     model.withChild(
-                            BeastXXmlElement.element(GTR_RATE_NAMES.get(i))
+                            XmlElement.element(GTR_RATE_NAMES.get(i))
                                     .withChild(
                                             parameterOrInlineDefinition(
                                                     substitutionModelId + "_" + GTR_RATE_NAMES.get(i),
@@ -369,23 +369,23 @@ public class BeastXSubstitutionModelXmlBuilder {
         return model;
     }
 
-    private BeastXXmlElement aminoAcidModelDefinition(
+    private XmlElement aminoAcidModelDefinition(
             EmpiricalAminoAcidModel aminoAcidModel,
             String substitutionModelId,
             String frequencyModelId
     ) {
-        return BeastXXmlElement.element("aminoAcidModel")
+        return XmlElement.element("aminoAcidModel")
                 .withId(substitutionModelId)
                 .withAttribute("type", aminoAcidModelType(aminoAcidModel))
                 .withChild(
-                        BeastXXmlElement.element("frequencies")
+                        XmlElement.element("frequencies")
                                 .withChild(
-                                        BeastXXmlElement.ref("frequencyModel", frequencyModelId)
+                                        XmlElement.ref("frequencyModel", frequencyModelId)
                                 )
                 );
     }
 
-    private BeastXXmlElement yangCodonModelDefinition(
+    private XmlElement yangCodonModelDefinition(
             GY94CodonModel gy94CodonModel,
             String substitutionModelId,
             String frequencyModelId
@@ -402,10 +402,10 @@ public class BeastXSubstitutionModelXmlBuilder {
                         "kappaParameter"
                 );
 
-        return BeastXXmlElement.element("yangCodonModel")
+        return XmlElement.element("yangCodonModel")
                 .withId(substitutionModelId)
                 .withChild(
-                        BeastXXmlElement.element("omega")
+                        XmlElement.element("omega")
                                 .withChild(
                                         parameterOrInlineDefinition(
                                                 substitutionModelId + "_omega",
@@ -414,7 +414,7 @@ public class BeastXSubstitutionModelXmlBuilder {
                                 )
                 )
                 .withChild(
-                        BeastXXmlElement.element("kappa")
+                        XmlElement.element("kappa")
                                 .withChild(
                                         parameterOrInlineDefinition(
                                                 substitutionModelId + "_kappa",
@@ -423,7 +423,7 @@ public class BeastXSubstitutionModelXmlBuilder {
                                 )
                 )
                 .withChild(
-                        BeastXXmlElement.ref("frequencyModel", frequencyModelId)
+                        XmlElement.ref("frequencyModel", frequencyModelId)
                 );
     }
 
@@ -449,7 +449,7 @@ public class BeastXSubstitutionModelXmlBuilder {
         );
     }
 
-    private BeastXXmlElement fixedGTRRatesParameter(
+    private XmlElement fixedGTRRatesParameter(
             List<Parameter> rateParameters,
             String fallbackId
     ) {
@@ -460,7 +460,7 @@ public class BeastXSubstitutionModelXmlBuilder {
             values.add(format(parameter.getParameterValue(0)));
         }
 
-        return BeastXXmlElement.element("parameter")
+        return XmlElement.element("parameter")
                 .withId(fallbackId)
                 .withAttribute("value", String.join(" ", values));
     }
@@ -529,7 +529,7 @@ public class BeastXSubstitutionModelXmlBuilder {
         return impliedRateIndex;
     }
 
-    private BeastXXmlElement parameterOrInlineDefinition(
+    private XmlElement parameterOrInlineDefinition(
             String fallbackId,
             Parameter parameter
     ) {
@@ -537,22 +537,22 @@ public class BeastXSubstitutionModelXmlBuilder {
                 parameter.getId();
 
         if (id != null && !id.isBlank()) {
-            return BeastXXmlElement.ref("parameter", id);
+            return XmlElement.ref("parameter", id);
         }
 
-        return BeastXXmlElement.element("parameter")
+        return XmlElement.element("parameter")
                 .withId(fallbackId)
                 .withAttribute("value", format(parameter.getParameterValue(0)));
     }
 
-    private BeastXXmlElement vectorParameterDefinition(
+    private XmlElement vectorParameterDefinition(
             String fallbackId,
             Parameter parameter
     ) {
         String id =
                 parameter.getId();
 
-        return BeastXXmlElement.element("parameter")
+        return XmlElement.element("parameter")
                 .withId(id == null || id.isBlank() ? fallbackId : id)
                 .withAttribute("value", vectorValue(parameter));
     }

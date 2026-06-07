@@ -3,13 +3,13 @@ package tiling.xml.builders;
 import dr.evomodel.siteratemodel.GammaSiteRateModel;
 import dr.evomodel.siteratemodel.SiteRateModel;
 import dr.inference.model.Parameter;
-import tiling.xml.BeastXXmlElement;
+import tiling.xml.XmlElement;
 
 import java.lang.reflect.Field;
 
-public class BeastXSiteModelXmlBuilder {
+public class SiteModelXmlBuilder {
 
-    public BeastXXmlElement buildSiteRateModel(
+    public XmlElement buildSiteRateModel(
             SiteRateModel siteRateModel,
             String siteRateModelId,
             String substitutionModelTag,
@@ -29,19 +29,19 @@ public class BeastXSiteModelXmlBuilder {
         );
     }
 
-    private BeastXXmlElement buildGammaSiteRateModel(
+    private XmlElement buildGammaSiteRateModel(
             GammaSiteRateModel siteRateModel,
             String siteRateModelId,
             String substitutionModelTag,
             String substitutionModelId
     ) {
-        BeastXXmlElement element =
-                BeastXXmlElement.element("siteModel")
+        XmlElement element =
+                XmlElement.element("siteModel")
                         .withId(siteRateModelId)
                         .withChild(
-                                BeastXXmlElement.element("substitutionModel")
+                                XmlElement.element("substitutionModel")
                                         .withChild(
-                                                BeastXXmlElement.ref(substitutionModelTag, substitutionModelId)
+                                                XmlElement.ref(substitutionModelTag, substitutionModelId)
                                         )
                         );
 
@@ -55,7 +55,7 @@ public class BeastXSiteModelXmlBuilder {
         if (relativeRateParameter != null) {
             element =
                     element.withChild(
-                            BeastXXmlElement.element("relativeRate")
+                            XmlElement.element("relativeRate")
                                     .withChild(
                                             parameterOrInlineDefinition(
                                                     siteRateModelId + "_relativeRate",
@@ -75,7 +75,7 @@ public class BeastXSiteModelXmlBuilder {
         if (shapeParameter != null) {
             element =
                     element.withChild(
-                            BeastXXmlElement.element("gammaShape")
+                            XmlElement.element("gammaShape")
                                     .withAttribute("gammaCategories", siteRateModel.getCategoryCount())
                                     .withChild(
                                             parameterOrInlineDefinition(
@@ -96,7 +96,7 @@ public class BeastXSiteModelXmlBuilder {
         if (invariantParameter != null) {
             element =
                     element.withChild(
-                            BeastXXmlElement.element("proportionInvariant")
+                            XmlElement.element("proportionInvariant")
                                     .withChild(
                                             parameterOrInlineDefinition(
                                                     siteRateModelId + "_proportionInvariant",
@@ -151,7 +151,7 @@ public class BeastXSiteModelXmlBuilder {
         }
     }
 
-    private BeastXXmlElement parameterOrInlineDefinition(
+    private XmlElement parameterOrInlineDefinition(
             String fallbackId,
             Parameter parameter
     ) {
@@ -159,10 +159,10 @@ public class BeastXSiteModelXmlBuilder {
                 parameter.getId();
 
         if (id != null && !id.isBlank()) {
-            return BeastXXmlElement.ref("parameter", id);
+            return XmlElement.ref("parameter", id);
         }
 
-        return BeastXXmlElement.element("parameter")
+        return XmlElement.element("parameter")
                 .withId(fallbackId)
                 .withAttribute("value", format(parameter.getParameterValue(0)));
     }

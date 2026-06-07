@@ -181,11 +181,11 @@ PhyloSpec script
 
 The XML implementation classes are:
 
-- `tiling.xml.BeastXXmlElement`
-- `tiling.xml.BeastXXmlPlan`
-- `tiling.xml.BeastXXmlPlanBuilder`
-- `tiling.xml.BeastXStateXmlGenerator`
-- `tiling.xml.BeastXXmlRunner`
+- `tiling.xml.XmlElement`
+- `tiling.xml.XmlPlan`
+- `tiling.xml.XmlPlanBuilder`
+- `tiling.xml.StateXmlGenerator`
+- `tiling.xml.XmlRunner`
 
 The current XML generator supports selected prior-only and tree-prior models:
 

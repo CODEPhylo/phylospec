@@ -2,7 +2,6 @@ import dr.inference.mcmc.MCMC;
 import dr.evolution.datatype.AminoAcids;
 import dr.evolution.datatype.Codons;
 import dr.evolution.alignment.SimpleAlignment;
-import dr.evolution.datatype.Codons;
 import dr.evolution.sequence.Sequence;
 import dr.evolution.util.Taxon;
 import dr.evomodel.substmodel.FrequencyModel;
@@ -11,16 +10,14 @@ import dr.evomodel.substmodel.aminoacid.EmpiricalAminoAcidModel;
 import dr.evomodel.substmodel.codon.GY94CodonModel;
 import dr.inference.model.Parameter;
 import tiling.BeastXModel;
-import tiling.xml.BeastXStateXmlGenerator;
-import tiling.xml.BeastXXmlRunner;
+import tiling.xml.StateXmlGenerator;
+import tiling.xml.XmlRunner;
 import tiling.runner.BeastXXmlRunResult;
 import tiling.runner.BeastXXmlRunnerOptions;
 import tiling.runner.BeastXRunResult;
-import tiling.runner.BeastXXmlRunResult;
-import tiling.runner.BeastXXmlRunnerOptions;
-import tiling.xml.BeastXXmlElement;
-import tiling.xml.builders.BeastXAlignmentXmlBuilder;
-import tiling.xml.builders.BeastXSubstitutionModelXmlBuilder;
+import tiling.xml.XmlElement;
+import tiling.xml.builders.AlignmentXmlBuilder;
+import tiling.xml.builders.SubstitutionModelXmlBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -81,7 +78,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("xmlPriorOnly");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         assertTrue(Files.exists(xmlPath), "Expected BEAST X XML file to be written.");
@@ -95,8 +92,8 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("<scaleOperator id=\"x_scale\""), xml);
         assertTrue(xml.contains("<log id=\"fileLogger"), xml);
 
-        BeastXXmlRunner runner =
-                new BeastXXmlRunner();
+        XmlRunner runner =
+                new XmlRunner();
 
         MCMC mcmc =
                 runner.parse(xmlPath);
@@ -160,7 +157,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("xmlYuleTree");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         assertTrue(Files.exists(xmlPath), "Expected BEAST X XML file to be written.");
@@ -175,8 +172,8 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("<speciationLikelihood id=\"tree_prior\">"), xml);
         assertTrue(xml.contains("<logTree"), xml);
 
-        BeastXXmlRunner runner =
-                new BeastXXmlRunner();
+        XmlRunner runner =
+                new XmlRunner();
 
         MCMC mcmc =
                 runner.parse(xmlPath);
@@ -243,7 +240,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("xmlBirthDeathTree");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         assertTrue(Files.exists(xmlPath), "Expected BEAST X XML file to be written.");
@@ -261,8 +258,8 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("<speciationLikelihood id=\"tree_prior\">"), xml);
         assertTrue(xml.contains("<logTree"), xml);
 
-        BeastXXmlRunner runner =
-                new BeastXXmlRunner();
+        XmlRunner runner =
+                new XmlRunner();
 
         MCMC mcmc =
                 runner.parse(xmlPath);
@@ -352,7 +349,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("xmlParameterizedBirthDeathTree");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         assertTrue(Files.exists(xmlPath), "Expected BEAST X XML file to be written.");
@@ -373,8 +370,8 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("<speciationLikelihood id=\"tree_prior\">"), xml);
         assertTrue(xml.contains("<logTree"), xml);
 
-        BeastXXmlRunner runner =
-                new BeastXXmlRunner();
+        XmlRunner runner =
+                new XmlRunner();
 
         MCMC mcmc =
                 runner.parse(xmlPath);
@@ -459,7 +456,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("xmlParameterizedCoalescentTree");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         assertTrue(Files.exists(xmlPath), "Expected BEAST X XML file to be written.");
@@ -476,8 +473,8 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("<treeModel idref=\"tree\"/>"), xml);
         assertTrue(xml.contains("<logTree"), xml);
 
-        BeastXXmlRunner runner =
-                new BeastXXmlRunner();
+        XmlRunner runner =
+                new XmlRunner();
 
         MCMC mcmc =
                 runner.parse(xmlPath);
@@ -541,7 +538,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("xmlBirthDeathBenchmark");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         assertTrue(Files.exists(xmlPath), "Expected BEAST X XML file to be written.");
@@ -559,8 +556,8 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("<speciationLikelihood id=\"tree_prior\">"), xml);
         assertTrue(xml.contains("<logTree"), xml);
 
-        BeastXXmlRunner runner =
-                new BeastXXmlRunner();
+        XmlRunner runner =
+                new XmlRunner();
 
         MCMC mcmc =
                 runner.parse(xmlPath);
@@ -635,7 +632,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("xmlRootCalibrationYuleTree");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         assertTrue(Files.exists(xmlPath), "Expected root-calibrated BEAST X XML file to be written.");
@@ -655,8 +652,8 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("<tmrcaStatistic idref=\"rootAge\"/>"), xml);
         assertTrue(xml.contains("<logTree"), xml);
 
-        BeastXXmlRunner runner =
-                new BeastXXmlRunner();
+        XmlRunner runner =
+                new XmlRunner();
 
         MCMC mcmc =
                 runner.parse(xmlPath);
@@ -725,7 +722,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("xmlMRCACalibrationYuleTree");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         assertTrue(Files.exists(xmlPath), "Expected MRCA-calibrated BEAST X XML file to be written.");
@@ -746,8 +743,8 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("<tmrcaStatistic idref=\"mrcaAge\"/>"), xml);
         assertTrue(xml.contains("<logTree"), xml);
 
-        BeastXXmlRunner runner =
-                new BeastXXmlRunner();
+        XmlRunner runner =
+                new XmlRunner();
 
         MCMC mcmc =
                 runner.parse(xmlPath);
@@ -848,13 +845,13 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("xmlFullPhyloCTMCParseOnly");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         assertTrue(Files.exists(xmlPath), "Expected full PhyloCTMC XML file to be written.");
 
         MCMC mcmc =
-                new BeastXXmlRunner()
+                new XmlRunner()
                         .parse(xmlPath);
 
         assertNotNull(
@@ -1019,7 +1016,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("xmlFixedGTRPhyloCTMC");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         assertTrue(Files.exists(xmlPath), "Expected fixed-GTR PhyloCTMC XML file to be written.");
@@ -1058,7 +1055,7 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("<strictClockBranchRates idref=\"tree_strictClockBranchRates\""), xml);
 
         MCMC mcmc =
-                new BeastXXmlRunner()
+                new XmlRunner()
                         .parse(xmlPath);
 
         assertNotNull(
@@ -1257,7 +1254,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("xmlPartitionedSiteGtrHkyPhyloCTMC");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         assertTrue(
@@ -1299,7 +1296,7 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("<strictClockBranchRates idref=\"tree_strictClockBranchRates\""), xml);
 
         MCMC mcmc =
-                new BeastXXmlRunner()
+                new XmlRunner()
                         .parse(xmlPath);
 
         assertNotNull(
@@ -1599,8 +1596,8 @@ public class BeastXXmlTest {
                         )
                 );
 
-        List<BeastXXmlElement> elements =
-                new BeastXSubstitutionModelXmlBuilder()
+        List<XmlElement> elements =
+                new SubstitutionModelXmlBuilder()
                         .buildSubstitutionModel(
                                 model,
                                 "protein_likelihood_substitutionModel"
@@ -1629,8 +1626,8 @@ public class BeastXXmlTest {
                         )
                 );
 
-        List<BeastXXmlElement> elements =
-                new BeastXSubstitutionModelXmlBuilder()
+        List<XmlElement> elements =
+                new SubstitutionModelXmlBuilder()
                         .buildSubstitutionModel(
                                 model,
                                 "protein_likelihood_substitutionModel"
@@ -1728,7 +1725,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("xmlRelaxedClockPhyloCTMC");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         assertTrue(Files.exists(xmlPath), "Expected relaxed-clock PhyloCTMC XML file to be written.");
@@ -1746,7 +1743,7 @@ public class BeastXXmlTest {
         assertFalse(xml.contains("<subtreeSlide"), xml);
         assertFalse(xml.contains("<wilsonBalding"), xml);
 
-        new BeastXXmlRunner()
+        new XmlRunner()
                 .run(xmlPath);
 
         assertTrue(Files.exists(logPath), "Expected relaxed-clock parameter log to be written.");
@@ -1838,7 +1835,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("xmlProteinJTTPhyloCTMC");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         assertTrue(Files.exists(xmlPath), "Expected protein PhyloCTMC XML file to be written.");
@@ -1853,7 +1850,7 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("<treeLikelihood"), xml);
         assertTrue(xml.contains("<strictClockBranchRates"), xml);
 
-        new BeastXXmlRunner()
+        new XmlRunner()
                 .run(xmlPath);
 
         assertTrue(Files.exists(logPath), "Expected protein parameter log to be written.");
@@ -1897,8 +1894,8 @@ public class BeastXXmlTest {
                         frequencyModel
                 );
 
-        List<BeastXXmlElement> elements =
-                new BeastXSubstitutionModelXmlBuilder()
+        List<XmlElement> elements =
+                new SubstitutionModelXmlBuilder()
                         .buildSubstitutionModel(
                                 model,
                                 "codon_likelihood_substitutionModel"
@@ -1946,8 +1943,8 @@ public class BeastXXmlTest {
         alignment.addSequence(secondSequence);
         alignment.updateSiteCount();
 
-        List<BeastXXmlElement> elements =
-                new BeastXAlignmentXmlBuilder()
+        List<XmlElement> elements =
+                new AlignmentXmlBuilder()
                         .buildAlignmentAndPatterns(
                                 alignment,
                                 "codon_likelihood_alignment",
@@ -2064,7 +2061,7 @@ public class BeastXXmlTest {
         UnsupportedOperationException exception =
                 assertThrows(
                         UnsupportedOperationException.class,
-                        () -> new BeastXStateXmlGenerator()
+                        () -> new StateXmlGenerator()
                                 .write(model, xmlPath)
                 );
 
@@ -2170,7 +2167,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("xmlBinaryTraitMkPhyloCTMC");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         assertTrue(Files.exists(xmlPath), "Expected binary trait Mk PhyloCTMC XML file to be written.");
@@ -2186,7 +2183,7 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("<treeLikelihood"), xml);
         assertTrue(xml.contains("<strictClockBranchRates"), xml);
 
-        new BeastXXmlRunner()
+        new XmlRunner()
                 .run(xmlPath);
 
         assertTrue(Files.exists(logPath), "Expected binary trait Mk parameter log to be written.");
@@ -2310,7 +2307,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("xmlJointMolecularTraitMkPhyloCTMC");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         assertTrue(
@@ -2329,7 +2326,7 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("<treeLikelihood id=\"molecularAlignment_likelihood\""), xml);
         assertTrue(xml.contains("<treeLikelihood id=\"traitAlignment_likelihood\""), xml);
 
-        new BeastXXmlRunner()
+        new XmlRunner()
                 .run(xmlPath);
 
         assertTrue(
@@ -2433,7 +2430,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("gammaPriorStrictClockPhyloCTMC");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         String xml =
@@ -2446,7 +2443,7 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("<shape>"), xml);
         assertTrue(xml.contains("<rate>"), xml);
 
-        new BeastXXmlRunner()
+        new XmlRunner()
                 .run(xmlPath);
 
         assertTrue(Files.exists(logPath), "Expected parameter log file to be written.");
@@ -2498,7 +2495,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("exponentialPriorMCMC");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         String xml =
@@ -2511,7 +2508,7 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("x_prior_mean"), xml);
         assertTrue(xml.contains("<parameter idref=\"x\"/>"), xml);
 
-        new BeastXXmlRunner()
+        new XmlRunner()
                 .run(xmlPath);
 
         assertTrue(Files.exists(logPath), "Expected parameter log file to be written.");
@@ -2561,7 +2558,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("uniformPriorMCMC");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         String xml =
@@ -2576,7 +2573,7 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("x_prior_upper"), xml);
         assertTrue(xml.contains("<parameter idref=\"x\"/>"), xml);
 
-        new BeastXXmlRunner()
+        new XmlRunner()
                 .run(xmlPath);
 
         assertTrue(Files.exists(logPath), "Expected parameter log file to be written.");
@@ -2626,7 +2623,7 @@ public class BeastXXmlTest {
                 new PhyloSpecRunner(source)
                         .buildModel("normalPriorMCMC");
 
-        new BeastXStateXmlGenerator()
+        new StateXmlGenerator()
                 .write(model, xmlPath);
 
         String xml =
@@ -2644,7 +2641,7 @@ public class BeastXXmlTest {
         assertTrue(xml.contains("x_prior_stdev"), xml);
         assertTrue(xml.contains("<parameter idref=\"x\"/>"), xml);
 
-        new BeastXXmlRunner()
+        new XmlRunner()
                 .run(xmlPath);
 
         assertTrue(Files.exists(logPath), "Expected parameter log file to be written.");

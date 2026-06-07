@@ -6,26 +6,26 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-public class BeastXXmlPlan {
+public class XmlPlan {
 
-    private final Map<Section, List<BeastXXmlElement>> sections =
+    private final Map<Section, List<XmlElement>> sections =
             new EnumMap<>(Section.class);
 
-    public BeastXXmlPlan() {
+    public XmlPlan() {
         for (Section section : Section.values()) {
             sections.put(section, new ArrayList<>());
         }
     }
 
-    public void add(Section section, BeastXXmlElement element) {
+    public void add(Section section, XmlElement element) {
         sections.get(section).add(element);
     }
 
-    public void addAll(Section section, List<BeastXXmlElement> elements) {
+    public void addAll(Section section, List<XmlElement> elements) {
         sections.get(section).addAll(elements);
     }
 
-    public List<BeastXXmlElement> get(Section section) {
+    public List<XmlElement> get(Section section) {
         return Collections.unmodifiableList(sections.get(section));
     }
 
@@ -34,7 +34,7 @@ public class BeastXXmlPlan {
     }
 
     public boolean isEmpty() {
-        for (List<BeastXXmlElement> elements : sections.values()) {
+        for (List<XmlElement> elements : sections.values()) {
             if (!elements.isEmpty()) {
                 return false;
             }
