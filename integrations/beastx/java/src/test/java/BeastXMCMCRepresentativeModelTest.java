@@ -1,7 +1,7 @@
 import dr.inference.loggers.Logger;
 import dr.inference.loggers.MCLogger;
 import org.junit.jupiter.api.Test;
-import tiling.mcmc.BeastXMCMCBuilder;
+import tiling.mcmc.MCMCBuilder;
 import tiling.BeastXState;
 
 import java.nio.charset.StandardCharsets;
@@ -70,7 +70,7 @@ public class BeastXMCMCRepresentativeModelTest {
         assertEquals(1, state.likelihoodDistributions.size());
 
         List<Logger> loggers =
-                new BeastXMCMCBuilder().buildLoggers(state);
+                new MCMCBuilder().buildLoggers(state);
 
         try {
             assertEquals(3, loggers.size());
@@ -119,7 +119,7 @@ public class BeastXMCMCRepresentativeModelTest {
                 runner.buildState("test");
 
         List<Logger> loggers =
-                new BeastXMCMCBuilder().buildLoggers(state);
+                new MCMCBuilder().buildLoggers(state);
 
         try {
             for (Logger logger : loggers) {

@@ -15,6 +15,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Writes XML for PhyloCTMC likelihood components.
+ *
+ * Connects the alignment, tree, substitution model, site model, and
+ * branch-rate model in the BEAST X XML format.
+ */
 public class PhyloCTMCXmlBuilder {
     private final AlignmentXmlBuilder alignmentXmlBuilder =
             new AlignmentXmlBuilder();

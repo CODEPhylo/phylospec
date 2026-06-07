@@ -6,7 +6,7 @@ import tiling.BeastXState;
 
 public record BeastXRunResult(
         String runName,
-        BeastXRunnerOptions options,
+        RunnerOptions options,
         BeastXState beastState,
         BeastXModel model,
         MCMC mcmc,

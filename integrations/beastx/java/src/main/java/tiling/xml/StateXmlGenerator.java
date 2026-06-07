@@ -8,6 +8,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * Writes the BEAST X XML state section.
+ *
+ * Handles stateful objects such as parameters, trees, and other model
+ * variables that need to appear inside the XML state block.
+ */
 public class StateXmlGenerator {
 
     private final XmlPlanBuilder planBuilder =

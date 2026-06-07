@@ -1,6 +1,6 @@
 package tiling.runner;
 
-public enum BeastXRunMode {
+public enum RunMode {
     BUILD_STATE,
     BUILD_MODEL,
     BUILD_MCMC,

@@ -8,15 +8,15 @@ import tiling.BeastXState;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BeastXModelBuilder {
+public class ModelBuilder {
 
     private final boolean materializePhyloCTMC;
 
-    public BeastXModelBuilder() {
+    public ModelBuilder() {
         this(false);
     }
 
-    public BeastXModelBuilder(boolean materializePhyloCTMC) {
+    public ModelBuilder(boolean materializePhyloCTMC) {
         this.materializePhyloCTMC = materializePhyloCTMC;
     }
 

@@ -17,7 +17,7 @@ import dr.math.MathUtils;
 import tiling.BeastXModel;
 import tiling.BeastXState;
 import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
-import tiling.operators.BeastXOperatorBuilder;
+import tiling.operators.OperatorBuilder;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -27,15 +27,21 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BeastXMCMCBuilder {
+/**
+ * Builds runnable BEAST X MCMC objects from an in-memory BeastXModel.
+ *
+ * Connects the model, operators, loggers, chain length, and random seed
+ * into the MCMC structure expected by BEAST X.
+ */
+public class MCMCBuilder {
 
     private final Long chainLengthOverride;
 
-    public BeastXMCMCBuilder() {
+    public MCMCBuilder() {
         this.chainLengthOverride = null;
     }
 
-    public BeastXMCMCBuilder(long chainLength) {
+    public MCMCBuilder(long chainLength) {
         if (chainLength < 0) {
             throw new IllegalArgumentException("chainLength must be non-negative.");
         }
@@ -57,7 +63,7 @@ public class BeastXMCMCBuilder {
                 new SimpleOperatorSchedule();
 
         List<MCMCOperator> operators =
-                new BeastXOperatorBuilder().build(model.beastState);
+                new OperatorBuilder().build(model.beastState);
 
         operatorSchedule.addOperators(operators);
 

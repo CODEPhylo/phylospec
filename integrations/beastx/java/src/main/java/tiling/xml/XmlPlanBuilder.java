@@ -27,6 +27,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Builds an XmlPlan from the BEAST X backend state.
+ *
+ * Selects the model components that can be exported to XML and prepares
+ * the structured information used by the XML generators.
+ */
 public class XmlPlanBuilder {
     private final XmlExportValidator validator =
             new XmlExportValidator();

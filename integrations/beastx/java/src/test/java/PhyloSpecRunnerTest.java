@@ -7,8 +7,8 @@ import dr.inference.operators.RandomWalkOperator;
 import dr.inference.operators.ScaleOperator;
 import org.junit.jupiter.api.Test;
 import tiling.BeastXModel;
-import tiling.mcmc.BeastXMCMCBuilder;
-import tiling.operators.BeastXOperatorBuilder;
+import tiling.mcmc.MCMCBuilder;
+import tiling.operators.OperatorBuilder;
 import tiling.BeastXState;
 
 import java.nio.charset.StandardCharsets;
@@ -298,7 +298,7 @@ public class PhyloSpecRunnerTest {
                 buildStateFromSource(source);
 
         List<MCMCOperator> operators =
-                new BeastXOperatorBuilder().build(beastState);
+                new OperatorBuilder().build(beastState);
 
         assertEquals(1, operators.size());
         assertTrue(operators.get(0) instanceof ScaleOperator);
@@ -315,7 +315,7 @@ public class PhyloSpecRunnerTest {
                 buildStateFromSource(source);
 
         List<MCMCOperator> operators =
-                new BeastXOperatorBuilder().build(beastState);
+                new OperatorBuilder().build(beastState);
 
         assertEquals(1, operators.size());
         assertTrue(operators.get(0) instanceof RandomWalkOperator);
@@ -332,7 +332,7 @@ public class PhyloSpecRunnerTest {
                 buildStateFromSource(source);
 
         List<MCMCOperator> operators =
-                new BeastXOperatorBuilder().build(beastState);
+                new OperatorBuilder().build(beastState);
 
         assertEquals(1, operators.size());
         assertTrue(operators.get(0) instanceof DeltaExchangeOperator);
@@ -349,7 +349,7 @@ public class PhyloSpecRunnerTest {
                 buildModelFromSource(source);
 
         MCMC mcmc =
-                new BeastXMCMCBuilder(1).build(model);
+                new MCMCBuilder(1).build(model);
 
         assertEquals("mcmc", mcmc.getId());
         assertEquals(1, mcmc.getChainLength());
@@ -402,7 +402,7 @@ public class PhyloSpecRunnerTest {
         IllegalStateException error =
                 assertThrows(
                         IllegalStateException.class,
-                        () -> new BeastXMCMCBuilder(1).build(model)
+                        () -> new MCMCBuilder(1).build(model)
                 );
 
         assertTrue(error.getMessage().contains("unmaterialized PhyloCTMC likelihood"));
@@ -421,7 +421,7 @@ public class PhyloSpecRunnerTest {
                 buildModelFromSource(source);
 
         MCMC mcmc =
-                new BeastXMCMCBuilder(1).build(model);
+                new MCMCBuilder(1).build(model);
 
         assertEquals(3, model.beastState.stateNodes.size());
         assertEquals(3, mcmc.getOperatorSchedule().getOperatorCount());

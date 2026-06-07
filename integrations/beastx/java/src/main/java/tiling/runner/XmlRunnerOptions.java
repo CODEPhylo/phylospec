@@ -2,14 +2,14 @@ package tiling.runner;
 
 import java.nio.file.Path;
 
-public record BeastXXmlRunnerOptions(
+public record XmlRunnerOptions(
         String runName,
         Path xmlPath,
         boolean execute,
         boolean materializePhyloCTMC
 ) {
 
-    public BeastXXmlRunnerOptions {
+    public XmlRunnerOptions {
         if (runName == null || runName.isBlank()) {
             throw new IllegalArgumentException("runName must not be blank.");
         }
@@ -19,7 +19,7 @@ public record BeastXXmlRunnerOptions(
         }
     }
 
-    public static BeastXXmlRunnerOptions of(
+    public static XmlRunnerOptions of(
             String runName,
             Path xmlPath
     ) {
@@ -71,8 +71,8 @@ public record BeastXXmlRunnerOptions(
             return this;
         }
 
-        public BeastXXmlRunnerOptions build() {
-            return new BeastXXmlRunnerOptions(
+        public XmlRunnerOptions build() {
+            return new XmlRunnerOptions(
                     this.runName,
                     this.xmlPath,
                     this.execute,
