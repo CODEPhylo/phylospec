@@ -6,6 +6,12 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Planned XML representation of a BEAST X model.
+ *
+ * Stores the information needed to write BEAST X XML. This is built during
+ * backend construction rather than recovered from runtime BEAST X objects.
+ */
 public class XmlPlan {
 
     private final Map<Section, List<XmlElement>> sections =

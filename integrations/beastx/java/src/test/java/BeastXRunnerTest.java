@@ -1,7 +1,7 @@
 import org.junit.jupiter.api.Test;
-import tiling.runner.BeastXRunMode;
+import tiling.runner.RunMode;
 import tiling.runner.BeastXRunResult;
-import tiling.runner.BeastXRunnerOptions;
+import tiling.runner.RunnerOptions;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,8 +25,8 @@ public class BeastXRunnerTest {
         BeastXRunResult result =
                 new PhyloSpecRunner(source)
                         .run(
-                                BeastXRunnerOptions.builder("runnerFacadeState")
-                                        .mode(BeastXRunMode.BUILD_STATE)
+                                RunnerOptions.builder("runnerFacadeState")
+                                        .mode(RunMode.BUILD_STATE)
                                         .build()
                         );
 
@@ -48,8 +48,8 @@ public class BeastXRunnerTest {
         BeastXRunResult result =
                 new PhyloSpecRunner(source)
                         .run(
-                                BeastXRunnerOptions.builder("runnerFacadeModel")
-                                        .mode(BeastXRunMode.BUILD_MODEL)
+                                RunnerOptions.builder("runnerFacadeModel")
+                                        .mode(RunMode.BUILD_MODEL)
                                         .build()
                         );
 
@@ -94,8 +94,8 @@ public class BeastXRunnerTest {
         BeastXRunResult result =
                 new PhyloSpecRunner(source)
                         .run(
-                                BeastXRunnerOptions.builder("runnerFacadeExecution")
-                                        .mode(BeastXRunMode.EXECUTE_MCMC)
+                                RunnerOptions.builder("runnerFacadeExecution")
+                                        .mode(RunMode.EXECUTE_MCMC)
                                         .chainLengthOverride(5)
                                         .build()
                         );

@@ -19,7 +19,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+/**
+ * Intermediate state produced while evaluating BEAST X tiles.
+ *
+ * Tiles add parameters, trees, priors, likelihoods, operators, loggers,
+ * and XML export information before the final model is built.
+ */
 public class BeastXState {
 
     public final String runName;

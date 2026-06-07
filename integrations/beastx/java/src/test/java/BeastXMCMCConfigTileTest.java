@@ -1,7 +1,7 @@
 import dr.inference.loggers.Logger;
 import dr.inference.loggers.MCLogger;
 import org.junit.jupiter.api.Test;
-import tiling.mcmc.BeastXMCMCBuilder;
+import tiling.mcmc.MCMCBuilder;
 import tiling.BeastXModel;
 import tiling.BeastXState;
 
@@ -84,7 +84,7 @@ public class BeastXMCMCConfigTileTest {
         BeastXState state = runner.buildState("test");
 
         List<Logger> loggers =
-                new BeastXMCMCBuilder().buildLoggers(state);
+                new MCMCBuilder().buildLoggers(state);
 
         assertEquals(1, loggers.size());
 
@@ -111,7 +111,7 @@ public class BeastXMCMCConfigTileTest {
         BeastXState state = runner.buildState("test");
 
         List<Logger> loggers =
-                new BeastXMCMCBuilder().buildLoggers(state);
+                new MCMCBuilder().buildLoggers(state);
 
         assertEquals(1, loggers.size());
 
@@ -164,7 +164,7 @@ public class BeastXMCMCConfigTileTest {
         BeastXState state = runner.buildState("test");
 
         List<Logger> loggers =
-                new BeastXMCMCBuilder().buildLoggers(state);
+                new MCMCBuilder().buildLoggers(state);
 
         assertEquals(1, loggers.size());
 
@@ -229,7 +229,7 @@ public class BeastXMCMCConfigTileTest {
         BeastXState state = runner.buildState("test");
 
         List<Logger> loggers =
-                new BeastXMCMCBuilder().buildLoggers(state);
+                new MCMCBuilder().buildLoggers(state);
 
         assertEquals(1, loggers.size());
         assertInstanceOf(dr.evomodel.tree.TreeLogger.class, loggers.getFirst());
@@ -255,7 +255,7 @@ public class BeastXMCMCConfigTileTest {
         BeastXState state = runner.buildState("test");
 
         List<Logger> loggers =
-                new BeastXMCMCBuilder().buildLoggers(state);
+                new MCMCBuilder().buildLoggers(state);
 
         assertEquals(1, loggers.size());
 
@@ -315,7 +315,7 @@ public class BeastXMCMCConfigTileTest {
         BeastXModel model =
                 new PhyloSpecRunner(source).buildModel("test");
 
-        new BeastXMCMCBuilder().build(model);
+        new MCMCBuilder().build(model);
 
         assertEquals(24680L, dr.math.MathUtils.getSeed());
     }
@@ -337,7 +337,7 @@ public class BeastXMCMCConfigTileTest {
                 new PhyloSpecRunner(source).buildModel("test");
 
         List<Logger> loggers =
-                new BeastXMCMCBuilder().buildLoggers(model);
+                new MCMCBuilder().buildLoggers(model);
 
         assertEquals(1, loggers.size());
 

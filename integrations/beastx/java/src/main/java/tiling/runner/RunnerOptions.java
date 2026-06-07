@@ -1,13 +1,13 @@
 package tiling.runner;
 
-public record BeastXRunnerOptions(
+public record RunnerOptions(
         String runName,
-        BeastXRunMode mode,
+        RunMode mode,
         Long chainLengthOverride,
         boolean materializePhyloCTMC
 ) {
 
-    public BeastXRunnerOptions {
+    public RunnerOptions {
         if (runName == null || runName.isBlank()) {
             throw new IllegalArgumentException("runName must not be blank.");
         }
@@ -21,7 +21,7 @@ public record BeastXRunnerOptions(
         }
     }
 
-    public static BeastXRunnerOptions of(String runName) {
+    public static RunnerOptions of(String runName) {
         return builder(runName).build();
     }
 
@@ -38,7 +38,7 @@ public record BeastXRunnerOptions(
 
     public static class Builder {
         private final String runName;
-        private BeastXRunMode mode = BeastXRunMode.BUILD_MCMC;
+        private RunMode mode = RunMode.BUILD_MCMC;
         private Long chainLengthOverride;
         private boolean materializePhyloCTMC;
 
@@ -47,7 +47,7 @@ public record BeastXRunnerOptions(
                     runName;
         }
 
-        public Builder mode(BeastXRunMode mode) {
+        public Builder mode(RunMode mode) {
             this.mode =
                     mode;
 
@@ -75,8 +75,8 @@ public record BeastXRunnerOptions(
             return this;
         }
 
-        public BeastXRunnerOptions build() {
-            return new BeastXRunnerOptions(
+        public RunnerOptions build() {
+            return new RunnerOptions(
                     this.runName,
                     this.mode,
                     this.chainLengthOverride,

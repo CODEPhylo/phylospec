@@ -2,14 +2,14 @@ package tiling.runner;
 
 import java.nio.file.Path;
 
-public record BeastXFileRunPaths(
+public record FileRunPaths(
         Path sourcePath,
         String runName,
         Path outputDirectory,
         Path xmlPath
 ) {
 
-    public BeastXFileRunPaths {
+    public FileRunPaths {
         if (sourcePath == null) {
             throw new IllegalArgumentException("sourcePath must not be null.");
         }
@@ -27,7 +27,7 @@ public record BeastXFileRunPaths(
         }
     }
 
-    public static BeastXFileRunPaths forSource(
+    public static FileRunPaths forSource(
             Path sourcePath,
             Path outputRoot
     ) {
@@ -45,7 +45,7 @@ public record BeastXFileRunPaths(
         Path outputDirectory =
                 outputRoot.resolve(runName);
 
-        return new BeastXFileRunPaths(
+        return new FileRunPaths(
                 sourcePath,
                 runName,
                 outputDirectory,

@@ -20,15 +20,15 @@ import org.phylospec.typeresolver.VariableResolver;
 import org.xml.sax.SAXException;
 import tiles.BeastXCoreTileLibrary;
 import tiling.BeastXModel;
-import tiling.model.BeastXModelBuilder;
-import tiling.mcmc.BeastXMCMCBuilder;
+import tiling.model.ModelBuilder;
+import tiling.mcmc.MCMCBuilder;
 import tiling.BeastXState;
-import tiling.runner.BeastXRunMode;
+import tiling.runner.RunMode;
 import tiling.runner.BeastXRunResult;
-import tiling.runner.BeastXRunnerOptions;
-import tiling.runner.BeastXXmlRunResult;
-import tiling.runner.BeastXXmlRunnerOptions;
-import tiling.runner.BeastXFileRunPaths;
+import tiling.runner.RunnerOptions;
+import tiling.runner.XmlRunResult;
+import tiling.runner.XmlRunnerOptions;
+import tiling.runner.FileRunPaths;
 import tiling.xml.StateXmlGenerator;
 import tiling.xml.XmlRunner;
 
@@ -41,6 +41,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 
+/**
+ * Entry point for running PhyloSpec models with the BEAST X backend.
+ *
+ * Parses PhyloSpec source, evaluates BEAST X tiles, and then builds either
+ * an in-memory BEAST X MCMC or BEAST X XML.
+ */
 public class PhyloSpecRunner implements ErrorEventListener {
 
     private final String source;
@@ -107,7 +113,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 .execute(runName);
     }
 
-    public static BeastXXmlRunResult buildXmlRunFromFile(
+    public static XmlRunResult buildXmlRunFromFile(
             Path sourcePath,
             Path xmlPath
     ) throws Exception {
@@ -116,26 +122,26 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         return fromFile(sourcePath)
                 .buildXmlRun(
-                        BeastXXmlRunnerOptions.builder(runName, xmlPath)
+                        XmlRunnerOptions.builder(runName, xmlPath)
                                 .build()
                 );
     }
 
-    public static BeastXFileRunPaths defaultOutputPathsForFile(Path sourcePath) {
-        return BeastXFileRunPaths.forSource(
+    public static FileRunPaths defaultOutputPathsForFile(Path sourcePath) {
+        return FileRunPaths.forSource(
                 sourcePath,
                 Path.of("target", "beastx-runs")
         );
     }
 
-    public static BeastXXmlRunResult buildDefaultXmlRunFromFile(Path sourcePath)
+    public static XmlRunResult buildDefaultXmlRunFromFile(Path sourcePath)
             throws Exception {
-        BeastXFileRunPaths paths =
+        FileRunPaths paths =
                 defaultOutputPathsForFile(sourcePath);
 
         return fromFile(sourcePath)
                 .buildXmlRun(
-                        BeastXXmlRunnerOptions.builder(
+                        XmlRunnerOptions.builder(
                                         paths.runName(),
                                         paths.xmlPath()
                                 )
@@ -143,14 +149,14 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 );
     }
 
-    public static BeastXXmlRunResult executeDefaultXmlRunFromFile(Path sourcePath)
+    public static XmlRunResult executeDefaultXmlRunFromFile(Path sourcePath)
             throws Exception {
-        BeastXFileRunPaths paths =
+        FileRunPaths paths =
                 defaultOutputPathsForFile(sourcePath);
 
         return fromFile(sourcePath)
                 .executeXmlRun(
-                        BeastXXmlRunnerOptions.builder(
+                        XmlRunnerOptions.builder(
                                         paths.runName(),
                                         paths.xmlPath()
                                 )
@@ -159,16 +165,16 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 );
     }
 
-    public static BeastXXmlRunResult buildXmlRunFromFileInOutputRoot(
+    public static XmlRunResult buildXmlRunFromFileInOutputRoot(
             Path sourcePath,
             Path outputRoot
     ) throws Exception {
-        BeastXFileRunPaths paths =
-                BeastXFileRunPaths.forSource(sourcePath, outputRoot);
+        FileRunPaths paths =
+                FileRunPaths.forSource(sourcePath, outputRoot);
 
         return fromFile(sourcePath)
                 .buildXmlRun(
-                        BeastXXmlRunnerOptions.builder(
+                        XmlRunnerOptions.builder(
                                         paths.runName(),
                                         paths.xmlPath()
                                 )
@@ -176,16 +182,16 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 );
     }
 
-    public static BeastXXmlRunResult executeXmlRunFromFileInOutputRoot(
+    public static XmlRunResult executeXmlRunFromFileInOutputRoot(
             Path sourcePath,
             Path outputRoot
     ) throws Exception {
-        BeastXFileRunPaths paths =
-                BeastXFileRunPaths.forSource(sourcePath, outputRoot);
+        FileRunPaths paths =
+                FileRunPaths.forSource(sourcePath, outputRoot);
 
         return fromFile(sourcePath)
                 .executeXmlRun(
-                        BeastXXmlRunnerOptions.builder(
+                        XmlRunnerOptions.builder(
                                         paths.runName(),
                                         paths.xmlPath()
                                 )
@@ -194,7 +200,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 );
     }
 
-    public static BeastXXmlRunResult executeXmlRunFromFile(
+    public static XmlRunResult executeXmlRunFromFile(
             Path sourcePath,
             Path xmlPath
     ) throws Exception {
@@ -203,7 +209,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         return fromFile(sourcePath)
                 .executeXmlRun(
-                        BeastXXmlRunnerOptions.builder(runName, xmlPath)
+                        XmlRunnerOptions.builder(runName, xmlPath)
                                 .execute(true)
                                 .build()
                 );
@@ -226,7 +232,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
     }
 
     public BeastXModel buildModel(BeastXState beastState) {
-        return new BeastXModelBuilder(false).build(beastState);
+        return new ModelBuilder(false).build(beastState);
     }
 
     public BeastXModel buildMaterializedModel(String runName)
@@ -238,7 +244,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
     }
 
     public BeastXModel buildMaterializedModel(BeastXState beastState) {
-        return new BeastXModelBuilder(true).build(beastState);
+        return new ModelBuilder(true).build(beastState);
     }
 
     public MCMC buildMCMC(String runName)
@@ -258,11 +264,11 @@ public class PhyloSpecRunner implements ErrorEventListener {
     }
 
     public MCMC buildMCMC(BeastXModel model) {
-        return new BeastXMCMCBuilder().build(model);
+        return new MCMCBuilder().build(model);
     }
 
     public MCMC buildMCMC(BeastXModel model, long chainLength) {
-        return new BeastXMCMCBuilder(chainLength).build(model);
+        return new MCMCBuilder(chainLength).build(model);
     }
 
     public MCMC buildMaterializedMCMC(String runName)
@@ -295,7 +301,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         return buildMCMC(model, chainLength);
     }
 
-    public BeastXRunResult run(BeastXRunnerOptions options)
+    public BeastXRunResult run(RunnerOptions options)
             throws IOException, ParserConfigurationException, SAXException {
         ParsedPhyloSpec parsed =
                 parseAndResolve();
@@ -303,7 +309,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         BeastXState beastState =
                 tile(parsed, options.runName());
 
-        if (options.mode() == BeastXRunMode.BUILD_STATE) {
+        if (options.mode() == RunMode.BUILD_STATE) {
             return new BeastXRunResult(
                     options.runName(),
                     options,
@@ -318,7 +324,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         BeastXModel model =
                 buildModelForOptions(beastState, options);
 
-        if (options.mode() == BeastXRunMode.BUILD_MODEL) {
+        if (options.mode() == RunMode.BUILD_MODEL) {
             return new BeastXRunResult(
                     options.runName(),
                     options,
@@ -344,11 +350,11 @@ public class PhyloSpecRunner implements ErrorEventListener {
                         false
                 );
 
-        if (options.mode() == BeastXRunMode.BUILD_MCMC) {
+        if (options.mode() == RunMode.BUILD_MCMC) {
             return run;
         }
 
-        if (options.mode() == BeastXRunMode.EXECUTE_MCMC) {
+        if (options.mode() == RunMode.EXECUTE_MCMC) {
             mcmc.run();
             return run.asExecuted();
         }
@@ -359,8 +365,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
     public BeastXRunResult buildRun(String runName)
             throws IOException, ParserConfigurationException, SAXException {
         return run(
-                BeastXRunnerOptions.builder(runName)
-                        .mode(BeastXRunMode.BUILD_MCMC)
+                RunnerOptions.builder(runName)
+                        .mode(RunMode.BUILD_MCMC)
                         .build()
         );
     }
@@ -368,18 +374,18 @@ public class PhyloSpecRunner implements ErrorEventListener {
     public BeastXRunResult buildRun(String runName, long chainLength)
             throws IOException, ParserConfigurationException, SAXException {
         return run(
-                BeastXRunnerOptions.builder(runName)
-                        .mode(BeastXRunMode.BUILD_MCMC)
+                RunnerOptions.builder(runName)
+                        .mode(RunMode.BUILD_MCMC)
                         .chainLengthOverride(chainLength)
                         .build()
         );
     }
 
-    public BeastXRunResult buildRun(BeastXRunnerOptions options)
+    public BeastXRunResult buildRun(RunnerOptions options)
             throws IOException, ParserConfigurationException, SAXException {
         return run(
                 options.toBuilder()
-                        .mode(BeastXRunMode.BUILD_MCMC)
+                        .mode(RunMode.BUILD_MCMC)
                         .build()
         );
     }
@@ -387,8 +393,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
     public BeastXRunResult buildMaterializedRun(String runName)
             throws IOException, ParserConfigurationException, SAXException {
         return run(
-                BeastXRunnerOptions.builder(runName)
-                        .mode(BeastXRunMode.BUILD_MCMC)
+                RunnerOptions.builder(runName)
+                        .mode(RunMode.BUILD_MCMC)
                         .materializePhyloCTMC(true)
                         .build()
         );
@@ -397,8 +403,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
     public BeastXRunResult buildMaterializedRun(String runName, long chainLength)
             throws IOException, ParserConfigurationException, SAXException {
         return run(
-                BeastXRunnerOptions.builder(runName)
-                        .mode(BeastXRunMode.BUILD_MCMC)
+                RunnerOptions.builder(runName)
+                        .mode(RunMode.BUILD_MCMC)
                         .chainLengthOverride(chainLength)
                         .materializePhyloCTMC(true)
                         .build()
@@ -408,8 +414,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
     public BeastXRunResult execute(String runName)
             throws IOException, ParserConfigurationException, SAXException {
         return run(
-                BeastXRunnerOptions.builder(runName)
-                        .mode(BeastXRunMode.EXECUTE_MCMC)
+                RunnerOptions.builder(runName)
+                        .mode(RunMode.EXECUTE_MCMC)
                         .build()
         );
     }
@@ -417,18 +423,18 @@ public class PhyloSpecRunner implements ErrorEventListener {
     public BeastXRunResult execute(String runName, long chainLength)
             throws IOException, ParserConfigurationException, SAXException {
         return run(
-                BeastXRunnerOptions.builder(runName)
-                        .mode(BeastXRunMode.EXECUTE_MCMC)
+                RunnerOptions.builder(runName)
+                        .mode(RunMode.EXECUTE_MCMC)
                         .chainLengthOverride(chainLength)
                         .build()
         );
     }
 
-    public BeastXRunResult execute(BeastXRunnerOptions options)
+    public BeastXRunResult execute(RunnerOptions options)
             throws IOException, ParserConfigurationException, SAXException {
         return run(
                 options.toBuilder()
-                        .mode(BeastXRunMode.EXECUTE_MCMC)
+                        .mode(RunMode.EXECUTE_MCMC)
                         .build()
         );
     }
@@ -436,8 +442,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
     public BeastXRunResult executeMaterialized(String runName)
             throws IOException, ParserConfigurationException, SAXException {
         return run(
-                BeastXRunnerOptions.builder(runName)
-                        .mode(BeastXRunMode.EXECUTE_MCMC)
+                RunnerOptions.builder(runName)
+                        .mode(RunMode.EXECUTE_MCMC)
                         .materializePhyloCTMC(true)
                         .build()
         );
@@ -446,8 +452,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
     public BeastXRunResult executeMaterialized(String runName, long chainLength)
             throws IOException, ParserConfigurationException, SAXException {
         return run(
-                BeastXRunnerOptions.builder(runName)
-                        .mode(BeastXRunMode.EXECUTE_MCMC)
+                RunnerOptions.builder(runName)
+                        .mode(RunMode.EXECUTE_MCMC)
                         .chainLengthOverride(chainLength)
                         .materializePhyloCTMC(true)
                         .build()
@@ -464,7 +470,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         return execute(runName, chainLength).mcmc();
     }
 
-    public MCMC runMCMC(BeastXRunnerOptions options)
+    public MCMC runMCMC(RunnerOptions options)
             throws IOException, ParserConfigurationException, SAXException {
         return execute(options).mcmc();
     }
@@ -585,7 +591,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         return runXmlMCMC(xmlPath);
     }
 
-    public BeastXXmlRunResult buildXmlRun(
+    public XmlRunResult buildXmlRun(
             String runName,
             Path xmlPath
     ) throws Exception {
@@ -595,7 +601,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         MCMC mcmc =
                 parseXmlMCMC(xmlPath);
 
-        return new BeastXXmlRunResult(
+        return new XmlRunResult(
                 runName,
                 model,
                 xmlPath,
@@ -604,11 +610,11 @@ public class PhyloSpecRunner implements ErrorEventListener {
         );
     }
 
-    public BeastXXmlRunResult executeXmlRun(
+    public XmlRunResult executeXmlRun(
             String runName,
             Path xmlPath
     ) throws Exception {
-        BeastXXmlRunResult run =
+        XmlRunResult run =
                 buildXmlRun(runName, xmlPath);
 
         run.mcmc().run();
@@ -616,7 +622,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         return run.asExecuted();
     }
 
-    public BeastXXmlRunResult buildXmlRun(
+    public XmlRunResult buildXmlRun(
             BeastXModel model,
             String runName,
             Path xmlPath
@@ -626,7 +632,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         MCMC mcmc =
                 parseXmlMCMC(xmlPath);
 
-        return new BeastXXmlRunResult(
+        return new XmlRunResult(
                 runName,
                 model,
                 xmlPath,
@@ -635,12 +641,12 @@ public class PhyloSpecRunner implements ErrorEventListener {
         );
     }
 
-    public BeastXXmlRunResult executeXmlRun(
+    public XmlRunResult executeXmlRun(
             BeastXModel model,
             String runName,
             Path xmlPath
     ) throws Exception {
-        BeastXXmlRunResult run =
+        XmlRunResult run =
                 buildXmlRun(model, runName, xmlPath);
 
         run.mcmc().run();
@@ -648,7 +654,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         return run.asExecuted();
     }
 
-    public BeastXXmlRunResult runXml(BeastXXmlRunnerOptions options)
+    public XmlRunResult runXml(XmlRunnerOptions options)
             throws Exception {
         BeastXModel model =
                 options.materializePhyloCTMC()
@@ -660,8 +666,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
         MCMC mcmc =
                 parseXmlMCMC(options.xmlPath());
 
-        BeastXXmlRunResult run =
-                new BeastXXmlRunResult(
+        XmlRunResult run =
+                new XmlRunResult(
                         options.runName(),
                         model,
                         options.xmlPath(),
@@ -678,7 +684,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         return run.asExecuted();
     }
 
-    public BeastXXmlRunResult buildXmlRun(BeastXXmlRunnerOptions options)
+    public XmlRunResult buildXmlRun(XmlRunnerOptions options)
             throws Exception {
         return runXml(
                 options.toBuilder()
@@ -687,7 +693,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         );
     }
 
-    public BeastXXmlRunResult executeXmlRun(BeastXXmlRunnerOptions options)
+    public XmlRunResult executeXmlRun(XmlRunnerOptions options)
             throws Exception {
         return runXml(
                 options.toBuilder()
@@ -701,7 +707,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         execute(runName);
     }
 
-    public void runPhyloSpec(BeastXRunnerOptions options)
+    public void runPhyloSpec(RunnerOptions options)
             throws IOException, ParserConfigurationException, SAXException {
         execute(options);
     }
@@ -740,7 +746,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
     private BeastXModel buildModelForOptions(
             BeastXState beastState,
-            BeastXRunnerOptions options
+            RunnerOptions options
     ) {
         if (options.materializePhyloCTMC()) {
             return buildMaterializedModel(beastState);
@@ -751,7 +757,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
     private MCMC buildMCMCForOptions(
             BeastXModel model,
-            BeastXRunnerOptions options
+            RunnerOptions options
     ) {
         if (options.chainLengthOverride() == null) {
             return buildMCMC(model);

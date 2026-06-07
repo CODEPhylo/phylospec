@@ -10,6 +10,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+/**
+ * Runs BEAST X XML through the XML parser and MCMC execution path.
+ *
+ * Used to check that exported XML can be parsed and executed by BEAST X.
+ */
 public class XmlRunner {
 
     public MCMC parse(Path xmlPath) throws Exception {

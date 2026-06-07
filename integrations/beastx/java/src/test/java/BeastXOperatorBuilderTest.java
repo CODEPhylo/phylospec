@@ -9,7 +9,7 @@ import dr.inference.operators.ScaleOperator;
 import dr.inference.operators.UpDownOperator;
 import org.junit.jupiter.api.Test;
 import tiling.BeastXModel;
-import tiling.operators.BeastXOperatorBuilder;
+import tiling.operators.OperatorBuilder;
 import tiling.BeastXState;
 
 import java.util.List;
@@ -131,7 +131,7 @@ public class BeastXOperatorBuilderTest {
         BeastXState beastState =
                 model.beastState;
 
-        return new BeastXOperatorBuilder().build(beastState);
+        return new OperatorBuilder().build(beastState);
     }
 
     private boolean containsOperator(

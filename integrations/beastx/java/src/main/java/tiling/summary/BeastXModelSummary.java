@@ -11,7 +11,7 @@ import org.phylospec.tiling.TypeToken;
 
 import tiling.BeastXModel;
 import tiling.BeastXState;
-import tiling.operators.BeastXOperatorBuilder;
+import tiling.operators.OperatorBuilder;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -120,8 +120,8 @@ public class BeastXModelSummary {
             likelihoods.add(likelihood.getId());
         }
 
-        BeastXOperatorBuilder operatorBuilder =
-                new BeastXOperatorBuilder();
+        OperatorBuilder operatorBuilder =
+                new OperatorBuilder();
 
         List<String> operators = new ArrayList<>();
 

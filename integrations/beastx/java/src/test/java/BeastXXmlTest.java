@@ -12,8 +12,8 @@ import dr.inference.model.Parameter;
 import tiling.BeastXModel;
 import tiling.xml.StateXmlGenerator;
 import tiling.xml.XmlRunner;
-import tiling.runner.BeastXXmlRunResult;
-import tiling.runner.BeastXXmlRunnerOptions;
+import tiling.runner.XmlRunResult;
+import tiling.runner.XmlRunnerOptions;
 import tiling.runner.BeastXRunResult;
 import tiling.xml.XmlElement;
 import tiling.xml.builders.AlignmentXmlBuilder;
@@ -1413,7 +1413,7 @@ public class BeastXXmlTest {
                 }
                 """.formatted(logPath.toString().replace("\\", "/"));
 
-        BeastXXmlRunResult result =
+        XmlRunResult result =
                 new PhyloSpecRunner(source)
                         .executeXmlRun("structuredXmlRun", xmlPath);
 
@@ -1465,12 +1465,12 @@ public class BeastXXmlTest {
                 }
                 """.formatted(logPath.toString().replace("\\", "/"));
 
-        BeastXXmlRunnerOptions options =
-                BeastXXmlRunnerOptions.builder("xmlOptionsRun", xmlPath)
+        XmlRunnerOptions options =
+                XmlRunnerOptions.builder("xmlOptionsRun", xmlPath)
                         .execute(true)
                         .build();
 
-        BeastXXmlRunResult result =
+        XmlRunResult result =
                 new PhyloSpecRunner(source)
                         .executeXmlRun(options);
 
@@ -1506,7 +1506,7 @@ public class BeastXXmlTest {
         Files.createDirectories(outputDirectory);
         Files.deleteIfExists(xmlPath);
 
-        BeastXXmlRunResult result =
+        XmlRunResult result =
                 PhyloSpecRunner.buildXmlRunFromFile(sourcePath, xmlPath);
 
         assertEquals("strictClockPhyloCTMCWithMCMC2", result.runName());
@@ -1545,9 +1545,9 @@ public class BeastXXmlTest {
         BeastXRunResult inMemoryRun =
                 runner.buildMaterializedRun("strictClockPhyloCTMCWithMCMC2");
 
-        BeastXXmlRunResult xmlRun =
+        XmlRunResult xmlRun =
                 runner.buildXmlRun(
-                        BeastXXmlRunnerOptions.builder(
+                        XmlRunnerOptions.builder(
                                         "strictClockPhyloCTMCWithMCMC2",
                                         xmlPath
                                 )

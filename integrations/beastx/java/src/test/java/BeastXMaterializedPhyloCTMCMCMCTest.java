@@ -1,7 +1,7 @@
 import dr.inference.mcmc.MCMC;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
-import tiling.mcmc.BeastXMCMCBuilder;
+import tiling.mcmc.MCMCBuilder;
 import tiling.BeastXModel;
 
 import java.nio.charset.StandardCharsets;
@@ -42,7 +42,7 @@ public class BeastXMaterializedPhyloCTMCMCMCTest {
                 assumeMaterializedModelCanBeBuilt(source);
 
         MCMC mcmc =
-                new BeastXMCMCBuilder(3).build(model);
+                new MCMCBuilder(3).build(model);
 
         mcmc.run();
 

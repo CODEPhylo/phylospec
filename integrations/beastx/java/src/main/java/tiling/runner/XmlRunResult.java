@@ -5,7 +5,7 @@ import tiling.BeastXModel;
 
 import java.nio.file.Path;
 
-public record BeastXXmlRunResult(
+public record XmlRunResult(
         String runName,
         BeastXModel model,
         Path xmlPath,
@@ -13,7 +13,7 @@ public record BeastXXmlRunResult(
         boolean executed
 ) {
 
-    public BeastXXmlRunResult {
+    public XmlRunResult {
         if (runName == null || runName.isBlank()) {
             throw new IllegalArgumentException("runName must not be blank.");
         }
@@ -42,8 +42,8 @@ public record BeastXXmlRunResult(
         return parent;
     }
 
-    public BeastXXmlRunResult asExecuted() {
-        return new BeastXXmlRunResult(
+    public XmlRunResult asExecuted() {
+        return new XmlRunResult(
                 this.runName,
                 this.model,
                 this.xmlPath,
