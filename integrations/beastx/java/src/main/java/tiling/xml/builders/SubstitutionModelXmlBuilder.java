@@ -696,7 +696,7 @@ public class SubstitutionModelXmlBuilder {
 
     private static RuntimeException unsupported(String message) {
         return new UnsupportedOperationException(
-                message + " Extend BeastXSubstitutionModelXmlBuilder before exporting this substitution model to XML."
+                message + " Extend SubstitutionModelXmlBuilder before exporting this substitution model to XML."
         );
     }
 

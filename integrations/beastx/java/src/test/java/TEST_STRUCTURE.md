@@ -154,7 +154,6 @@ Some tests depend on the native BEAGLE library. If BEAGLE is unavailable, BEAGLE
 
 These tests validate the current BEAST X XML pipeline.
 
-- `BeastXStateXmlGeneratorTest`
 - `BeastXXmlTest`
 
 This layer answers:
@@ -172,10 +171,10 @@ The current XML pipeline is:
 PhyloSpec script
 -> BeastXState
 -> BeastXModel
--> BeastXXmlPlanBuilder
--> BeastXStateXmlGenerator
+-> XmlPlanBuilder
+-> StateXmlGenerator
 -> BEAST X XML
--> BeastXXmlRunner
+-> XmlRunner
 -> BEAST X MCMC execution
 ```
 
@@ -184,22 +183,32 @@ The XML implementation classes are:
 - `tiling.xml.XmlElement`
 - `tiling.xml.XmlPlan`
 - `tiling.xml.XmlPlanBuilder`
+- `tiling.xml.XmlDocumentWriter`
 - `tiling.xml.StateXmlGenerator`
 - `tiling.xml.XmlRunner`
+- `tiling.xml.XmlExportValidator`
 
-The current XML generator supports selected prior-only and tree-prior models:
+Most XML component generation is delegated to builders under:
+
+```text
+tiling.xml.builders
+```
+
+The current XML generator supports selected prior-only, tree-prior, and PhyloCTMC models:
 
 - scalar state parameters
-- `LogNormal` scalar priors
-- `Beta` scalar priors
-- `Yule` tree priors
-- `BirthDeath` tree priors
-- constant-population `Coalescent` tree priors
+- simplex parameters with Dirichlet priors
+- `Normal`, `LogNormal`, `Gamma`, `Exponential`, `Uniform`, and `Beta` scalar priors
+- `Yule`, `BirthDeath`, and constant-population `Coalescent` tree priors
+- root/MRCA calibration priors
+- strict clock and selected relaxed clock branch-rate models
+- nucleotide and amino-acid PhyloCTMC likelihoods
+- selected substitution models including JC69, HKY, GTR, F81, K80, JTT, and WAG
 - parameter loggers
 - tree loggers
 - XML parsing and execution through BEAST X
 
-PhyloCTMC likelihood XML export is not implemented yet.
+Full codon PhyloCTMC XML execution is currently treated as an explicit boundary because BEAST X XML parsing cannot materialize the codon alignment from the generated plain sequence representation yet.
 
 ## Feature-Specific Tests
 
@@ -243,6 +252,12 @@ tiling/representative/showcase
 ```
 
 Small feature examples belong in feature folders. Larger models belong in `representative`.
+
+Some runner-specific fixtures may intentionally live outside `src/test/java/tiling`.
+These are used by direct runner or MCMC tests and are not meant to be scanned by
+`TilingScriptFilesTest` or `BeastXStateScriptFilesTest`, because those scan-based
+tests require embedded `EXPECTED_TILES` / `EXPECTED BEASTX STATE` metadata.
+Keep this exception narrow and documented when it is used.
 
 ## Naming Guidance
 
