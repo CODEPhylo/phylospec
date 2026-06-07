@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class BeastXOperatorBuilder {
+public class OperatorBuilder {
 
     private static final TypeToken<?> SIMPLEX =
             new TypeToken<Simplex>() {};
