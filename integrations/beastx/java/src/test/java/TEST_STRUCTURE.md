@@ -100,7 +100,7 @@ These tests build BEAST X Java objects and call the BEAST X MCMC engine directly
 
 - `BeastXMCMCConfigTileTest`
 - `BeastXMCMCRepresentativeModelTest`
-- `BeastXMCMCRunTest`
+- `BeastXRunnerTest`
 - `BeastXShowcaseExecutionTest`
 
 This layer answers:
@@ -128,12 +128,14 @@ Execution outputs are generally written under:
 
 ```text
 target/showcase-execution
-target/mcmc-run-smoke
-target/mcmc-logger-smoke
-target/materialized-phylctmc-mcmc-smoke
+target/mcmc-run
+target/mcmc-logger
+target/materialized-phylctmc-mcmc
 ```
 
-Older output directory names may still contain `smoke`. New test names and reports should prefer `execution`.
+Older local output directories may still contain `smoke` if they were created by
+earlier test versions. New test names and output paths should prefer `execution`
+or the specific feature name.
 
 ## Layer 5: Materialized PhyloCTMC Execution
 
@@ -154,7 +156,7 @@ Some tests depend on the native BEAGLE library. If BEAGLE is unavailable, BEAGLE
 
 These tests validate the current BEAST X XML pipeline.
 
-- `BeastXXmlTest`
+- `BeastXXmlPhyloCTMCTest`
 
 This layer answers:
 
@@ -216,7 +218,6 @@ These tests focus on individual BEAST X backend features.
 
 - `BeastXAutoOperatorConfigTileTest`
 - `BeastXCalibrationPriorTest`
-- `BeastXEnvTileTest`
 - `BeastXMatrixDimensionTileTest`
 - `BeastXOperatorBuilderTest`
 - `BeastXRPNCalculationTest`
@@ -288,7 +289,7 @@ mvn -pl integrations/beastx/java "-Dtest=BeastXRepresentativeModelsTest,BeastXSh
 Run selected object-level MCMC execution checks:
 
 ```bash
-mvn -pl integrations/beastx/java "-Dtest=BeastXShowcaseExecutionTest,BeastXMCMCRunTest" test
+mvn -pl integrations/beastx/java "-Dtest=BeastXShowcaseExecutionTest,BeastXRunnerTest" test
 ```
 
 Run materialized PhyloCTMC checks:
@@ -300,7 +301,7 @@ mvn -pl integrations/beastx/java "-Dtest=BeastXPhyloCTMCMaterializationTest,Beas
 Run XML-related checks:
 
 ```bash
-mvn -pl integrations/beastx/java "-Dtest=BeastXStateXmlGeneratorTest,BeastXXmlTest" test
+mvn -pl integrations/beastx/java "-Dtest=BeastXXmlPhyloCTMCTest" test
 ```
 
 Run the full BEAST X module test suite:
