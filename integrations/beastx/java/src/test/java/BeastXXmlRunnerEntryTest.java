@@ -1,0 +1,217 @@
+import dr.inference.mcmc.MCMC;
+import org.junit.jupiter.api.Test;
+import tiling.runner.BeastXRunResult;
+import tiling.runner.XmlRunResult;
+import tiling.runner.XmlRunnerOptions;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class BeastXXmlRunnerEntryTest {
+
+    @Test
+    public void phyloSpecRunnerWritesAndRunsXmlMCMCThroughSingleEntryPoint() throws Exception {
+        Path xmlPath =
+                XmlTestSupport.xmlPath("runnerEntryPoint");
+
+        Path logPath =
+                XmlTestSupport.logPath("runnerEntryPoint");
+
+        XmlTestSupport.prepare(xmlPath, logPath);
+
+        String source =
+                """
+                PositiveReal x ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
+                )
+
+                mcmc {
+                    Integer chainLength = 5
+                    Integer randomSeed = 1234
+
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[x]
+                    )
+                }
+                """.formatted(XmlTestSupport.unixPath(logPath));
+
+        MCMC mcmc =
+                new PhyloSpecRunner(source)
+                        .writeAndRunXmlMCMC("runnerEntryPoint", xmlPath);
+
+        assertNotNull(mcmc);
+        assertTrue(Files.exists(xmlPath), "Expected XML file to be written.");
+        XmlTestSupport.assertNonEmptyFile(logPath, "XML-run parameter log");
+    }
+
+    @Test
+    public void phyloSpecRunnerReturnsStructuredXmlExecutionResult() throws Exception {
+        Path xmlPath =
+                XmlTestSupport.xmlPath("structuredXmlRun");
+
+        Path logPath =
+                XmlTestSupport.logPath("structuredXmlRun");
+
+        XmlTestSupport.prepare(xmlPath, logPath);
+
+        String source =
+                """
+                PositiveReal x ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
+                )
+
+                mcmc {
+                    Integer chainLength = 5
+                    Integer randomSeed = 1234
+
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[x]
+                    )
+                }
+                """.formatted(XmlTestSupport.unixPath(logPath));
+
+        XmlRunResult result =
+                new PhyloSpecRunner(source)
+                        .executeXmlRun("structuredXmlRun", xmlPath);
+
+        assertEquals("structuredXmlRun", result.runName());
+        assertEquals(xmlPath, result.xmlPath());
+        assertEquals(XmlTestSupport.XML_OUTPUT_DIRECTORY, result.outputDirectory());
+        assertTrue(result.executed());
+        assertNotNull(result.model());
+        assertNotNull(result.mcmc());
+        assertTrue(Files.exists(xmlPath));
+        XmlTestSupport.assertNonEmptyFile(logPath, "structured XML-run parameter log");
+    }
+
+    @Test
+    public void phyloSpecRunnerExecutesXmlRunFromOptions() throws Exception {
+        Path xmlPath =
+                XmlTestSupport.xmlPath("xmlOptionsRun");
+
+        Path logPath =
+                XmlTestSupport.logPath("xmlOptionsRun");
+
+        XmlTestSupport.prepare(xmlPath, logPath);
+
+        String source =
+                """
+                PositiveReal x ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
+                )
+
+                mcmc {
+                    Integer chainLength = 5
+                    Integer randomSeed = 1234
+
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[x]
+                    )
+                }
+                """.formatted(XmlTestSupport.unixPath(logPath));
+
+        XmlRunnerOptions options =
+                XmlRunnerOptions.builder("xmlOptionsRun", xmlPath)
+                        .execute(true)
+                        .build();
+
+        XmlRunResult result =
+                new PhyloSpecRunner(source)
+                        .executeXmlRun(options);
+
+        assertEquals("xmlOptionsRun", result.runName());
+        assertEquals(xmlPath, result.xmlPath());
+        assertTrue(result.executed());
+        assertTrue(Files.exists(xmlPath));
+        XmlTestSupport.assertNonEmptyFile(logPath, "XML options-run parameter log");
+    }
+
+    @Test
+    public void phyloSpecRunnerExecutesXmlRunFromPhyloSpecFile() throws Exception {
+        Path sourcePath =
+                runnerFixturePath();
+
+        Path xmlPath =
+                XmlTestSupport.xmlPath("fromFileStrictClock");
+
+        XmlTestSupport.prepare(xmlPath);
+
+        XmlRunResult result =
+                PhyloSpecRunner.buildXmlRunFromFile(sourcePath, xmlPath);
+
+        assertEquals("strictClockPhyloCTMCWithMCMC2", result.runName());
+        assertEquals(xmlPath, result.xmlPath());
+        assertFalse(result.executed());
+        assertNotNull(result.model());
+        assertNotNull(result.mcmc());
+        assertTrue(Files.exists(xmlPath));
+        assertTrue(Files.size(xmlPath) > 0);
+    }
+
+    @Test
+    public void samePhyloSpecFileBuildsBothInMemoryAndXmlMCMC() throws Exception {
+        Path sourcePath =
+                runnerFixturePath();
+
+        Path outputDirectory =
+                Path.of("target", "beastx-backend-comparison");
+
+        Path xmlPath =
+                outputDirectory.resolve("strictClockPhyloCTMCWithMCMC2.xml");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
+
+        PhyloSpecRunner runner =
+                PhyloSpecRunner.fromFile(sourcePath);
+
+        BeastXRunResult inMemoryRun =
+                runner.buildMaterializedRun("strictClockPhyloCTMCWithMCMC2");
+
+        XmlRunResult xmlRun =
+                runner.buildXmlRun(
+                        XmlRunnerOptions.builder(
+                                        "strictClockPhyloCTMCWithMCMC2",
+                                        xmlPath
+                                )
+                                .build()
+                );
+
+        assertNotNull(inMemoryRun);
+        assertNotNull(xmlRun);
+
+        assertTrue(inMemoryRun.hasModel());
+        assertTrue(inMemoryRun.hasMCMC());
+
+        assertNotNull(xmlRun.model());
+        assertNotNull(xmlRun.mcmc());
+
+        assertTrue(Files.exists(xmlPath));
+        assertTrue(Files.size(xmlPath) > 0);
+    }
+
+    private static Path runnerFixturePath() {
+        return Path.of(
+                "src",
+                "main",
+                "java",
+                "tiling",
+                "runner",
+                "strictClockPhyloCTMCWithMCMC2.phylospec"
+        );
+    }
+}
