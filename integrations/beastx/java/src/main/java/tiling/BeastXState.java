@@ -19,31 +19,47 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 /**
  * Intermediate state produced while evaluating BEAST X tiles.
  *
- * Tiles add parameters, trees, priors, likelihoods, operators, loggers,
- * and XML export information before the final model is built.
+ * Each tile adds the BEAST X objects or export metadata it creates, such as
+ * state nodes, priors, tree priors, likelihoods, operators, loggers, and XML
+ * generation information.
+ *
+ * This state is later consumed by `ModelBuilder`, `MCMCBuilder`, or
+ * `StateXmlGenerator`.
  */
 public class BeastXState {
 
     public final String runName;
 
+    // BEAST X parameters that are part of the MCMC state.
     public final Map<Parameter, TypeToken<?>> stateNodes;
     public final Map<String, Parameter> stateNodesByPhyloSpecName;
+
+    // Deterministic or derived calculation nodes created by helper tiles.
     public final Map<Statistic, TypeToken<?>> calculationNodes;
     public final Map<String, Statistic> calculationNodesByPhyloSpecName;
+
+    // Tree models keyed by their original PhyloSpec variable names.
     public final Map<String, TreeModel> treeModelsByPhyloSpecName;
     public final Map<Parameter, AbstractDistributionLikelihood> priorDistributions;
     public final Map<TreeModel, AbstractModelLikelihood> treePriorDistributions;
     public final List<AbstractDistributionLikelihood> calibrationPriorDistributions;
     public final List<Likelihood> likelihoodDistributions;
+
+    // Prior and likelihood components collected during tiling.
     public final Map<TreeModel, List<Parameter>> treeClockRateParameters;
     public final Map<TreeModel, RelaxedClockSpec> treeRelaxedClockModels;
+
+    // Clock models associated with each tree.
     public final List<Logger> mcmcLoggers;
     public final List<ScreenLoggerSpec> screenLoggerSpecs;
     public final List<FileLoggerSpec> fileLoggerSpecs;
     public final List<TreeLoggerSpec> treeLoggerSpecs;
+
+    // Logger configuration collected from MCMC logger tiles.
     public final OperatorConfig operatorConfig;
     public final XmlPlan xmlPlan;
 
@@ -76,6 +92,11 @@ public class BeastXState {
         this.ids = new HashSet<>();
     }
 
+    /*
+    * Returns a unique BEAST X object ID based on the proposed name.
+    *
+    * If the proposed ID has already been used, a numeric suffix is appended,
+    * */
     public String getAvailableID(String proposal) {
         if (!this.ids.contains(proposal)) {
             this.ids.add(proposal);
@@ -92,6 +113,12 @@ public class BeastXState {
         return proposal;
     }
 
+    /*
+    * Registers a BEAST X parameter as an MCMC state node.
+    *
+    * The parameter is stored both by BEAST X object identity and by its original
+    * PhyloSpec variable name, so later tiles can refer back to it.
+    * */
     public void addStateNode(BeastXParam stateNode, TypeToken<?> typeToken, String id) {
         Parameter parameter = stateNode.getParameter();
         parameter.setId(this.getAvailableID(id));
@@ -99,6 +126,7 @@ public class BeastXState {
         this.stateNodesByPhyloSpecName.put(id, parameter);
     }
 
+    // Registers a deterministic or derived statistic created during tiling.
     public void addCalculationNode(
             Statistic statistic,
             TypeToken<?> typeToken,
@@ -109,6 +137,7 @@ public class BeastXState {
         this.calculationNodesByPhyloSpecName.put(id, statistic);
     }
 
+    // Associates a parameter state node with its prior distribution.
     public void addPriorDistribution(
             BeastXParam stateNode,
             AbstractDistributionLikelihood distribution,
@@ -119,17 +148,28 @@ public class BeastXState {
         this.priorDistributions.put(parameter, distribution);
     }
 
-    public void addTreePriorDistribution(
+    // Registers a tree model and its tree prior likelihood.
+    public TreeModel addTreePriorDistribution(
             TreeModel treeModel,
             AbstractModelLikelihood likelihood,
             String id
     ) {
+        TreeModel existingTreeModel =
+                this.treeModelsByPhyloSpecName.get(id);
+
+        if (existingTreeModel != null) {
+            return existingTreeModel;
+        }
+
         treeModel.setId(this.getAvailableID(id));
         likelihood.setId(this.getAvailableID(id + "_prior"));
         this.treePriorDistributions.put(treeModel, likelihood);
         this.treeModelsByPhyloSpecName.put(id, treeModel);
+
+        return treeModel;
     }
 
+    // Adds a calibration prior, such as an MRCA or root-age calibration.
     public void addCalibrationPriorDistribution(
             AbstractDistributionLikelihood likelihood,
             String id
@@ -138,6 +178,7 @@ public class BeastXState {
         this.calibrationPriorDistributions.add(likelihood);
     }
 
+    // Adds a data likelihood component to the model.
     public void addLikelihoodDistribution(
             Likelihood likelihood,
             String id
@@ -146,6 +187,7 @@ public class BeastXState {
         this.likelihoodDistributions.add(likelihood);
     }
 
+    // Records a clock-rate parameter associated with a tree.
     public void addTreeClockRateParameter(
             TreeModel treeModel,
             Parameter clockRateParameter
@@ -155,6 +197,7 @@ public class BeastXState {
                 .add(clockRateParameter);
     }
 
+    // Records the relaxed-clock model associated with a tree.
     public void addTreeRelaxedClockModel(
             TreeModel treeModel,
             DiscretizedBranchRates relaxedClock,
@@ -198,6 +241,7 @@ public class BeastXState {
         this.treeLoggerSpecs.add(new TreeLoggerSpec(logEvery, fileName, treeNames));
     }
 
+    // Complete BEAST X object bundle needed to represent a relaxed clock model.
     public record RelaxedClockSpec(
             TreeModel treeModel,
             DiscretizedBranchRates relaxedClock,
@@ -206,7 +250,11 @@ public class BeastXState {
             double normalizeBranchRateTo
     ) {
     }
-
+    /*
+    * Default operator settings used when constructing BEAST X MCMC operators.
+    *
+    * These values can be overridden by operator-configuration tiles.
+    * */
     public static class OperatorConfig {
         public double parameterOperatorWeight = 1.0;
         public double parameterScaleFactor = 0.75;
@@ -222,6 +270,7 @@ public class BeastXState {
         public double treeClockUpDownWeight = 5.0;
         public double treeClockUpDownScaleFactor = 0.75;
 
+        // Updates one supported operator setting by name.
         public void set(String settingName, double value) {
             switch (settingName) {
                 case "parameterOperatorWeight" -> this.parameterOperatorWeight = value;
@@ -239,6 +288,7 @@ public class BeastXState {
             }
         }
 
+        // Returns whether the given setting name is recognized by this config.
         public static boolean isSupportedSetting(String settingName) {
             return isWeight(settingName)
                     || isScaleFactor(settingName)

@@ -483,4 +483,107 @@ public class BeastXXmlTreePriorTest {
         XmlTestSupport.assertXmlContains(treeLog, "Begin trees;");
         XmlTestSupport.assertXmlContains(treeLog, "STATE_");
     }
+
+    @Test
+    public void writesParsesAndRunsPriorOnlyFossilizedBirthDeathTreeMCMCXml() throws Exception {
+        Path xmlPath =
+                XmlTestSupport.xmlPath("priorOnlyFBDTree");
+
+        Path parameterLogPath =
+                XmlTestSupport.logPath("priorOnlyFBDTree");
+
+        Path treeLogPath =
+                XmlTestSupport.treeLogPath("priorOnlyFBDTree");
+
+        XmlTestSupport.prepare(xmlPath, parameterLogPath, treeLogPath);
+
+        String source =
+                """
+                Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+                Taxa taxa = taxa(data)
+
+                Rate speciationRate ~ LogNormal(
+                    logMean=0.0,
+                    logSd=0.5
+                )
+
+                Rate extinctionRate ~ LogNormal(
+                    logMean=-2.0,
+                    logSd=0.3
+                )
+
+                Rate serialSamplingRate ~ LogNormal(
+                    logMean=-2.0,
+                    logSd=0.3
+                )
+
+                Tree tree ~ FossilizedBirthDeath(
+                    speciationRate=speciationRate,
+                    extinctionRate=extinctionRate,
+                    serialSamplingRate=serialSamplingRate,
+                    samplingProbability=0.9,
+                    rootAge=5.0,
+                    taxa=taxa
+                )
+
+                mcmc {
+                    Integer chainLength = 100000
+                    Integer randomSeed = 1234
+
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[speciationRate, extinctionRate, serialSamplingRate]
+                    )
+
+                    Logger treeLogger = treeLogger(
+                        logEvery=1,
+                        file="%s",
+                        trees=[tree]
+                    )
+                }
+                """.formatted(
+                        XmlTestSupport.unixPath(parameterLogPath),
+                        XmlTestSupport.unixPath(treeLogPath)
+                );
+
+        BeastXModel model =
+                XmlTestSupport.buildModel("xmlPriorOnlyFBDTree", source);
+
+        String xml =
+                XmlTestSupport.writeXml(model, xmlPath);
+
+        XmlTestSupport.assertXmlContains(xml, "<birthDeathSerialSampling id=\"tree_prior_model\"");
+        XmlTestSupport.assertXmlContains(xml, "hasFinalSample=\"false\"");
+        XmlTestSupport.assertXmlContains(xml, "<birthRate>");
+        XmlTestSupport.assertXmlContains(xml, "<parameter idref=\"speciationRate\"/>");
+        XmlTestSupport.assertXmlContains(xml, "<deathRate>");
+        XmlTestSupport.assertXmlContains(xml, "<parameter idref=\"extinctionRate\"/>");
+        XmlTestSupport.assertXmlContains(xml, "<psi>");
+        XmlTestSupport.assertXmlContains(xml, "<parameter idref=\"serialSamplingRate\"/>");
+        XmlTestSupport.assertXmlContains(xml, "<sampleProbability>");
+        XmlTestSupport.assertXmlContains(xml, "<origin>");
+        XmlTestSupport.assertXmlContains(xml, "<parameter id=\"tree_prior_origin\"");
+        XmlTestSupport.assertXmlContains(xml, "<speciationLikelihood id=\"tree_prior\">");
+        XmlTestSupport.assertXmlContains(xml, "<birthDeathSerialSampling idref=\"tree_prior_model\"/>");
+
+        XmlTestSupport.runXml(xmlPath);
+
+        XmlTestSupport.assertNonEmptyFile(parameterLogPath, "FossilizedBirthDeath parameter log");
+        XmlTestSupport.assertNonEmptyFile(treeLogPath, "FossilizedBirthDeath tree log");
+
+        String parameterLog =
+                Files.readString(parameterLogPath);
+
+        XmlTestSupport.assertXmlContains(parameterLog, "speciationRate");
+        XmlTestSupport.assertXmlContains(parameterLog, "extinctionRate");
+        XmlTestSupport.assertXmlContains(parameterLog, "serialSamplingRate");
+
+        String treeLog =
+                Files.readString(treeLogPath);
+
+        XmlTestSupport.assertXmlContains(treeLog, "#NEXUS");
+        XmlTestSupport.assertXmlContains(treeLog, "Begin trees;");
+        XmlTestSupport.assertXmlContains(treeLog, "STATE_");
+    }
 }

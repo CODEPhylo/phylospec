@@ -3,6 +3,9 @@ package tiling.xml;
 import dr.evomodel.coalescent.CoalescentLikelihood;
 import dr.evomodel.coalescent.demographicmodel.ConstantPopulationModel;
 import dr.evomodel.coalescent.demographicmodel.DemographicModel;
+import dr.evomodel.coalescent.demographicmodel.ExponentialGrowthModel;
+import dr.evomodel.coalescent.demographicmodel.LogisticGrowthModel;
+import dr.evomodel.speciation.BirthDeathSerialSamplingModel;
 import dr.evomodel.speciation.BirthDeathGernhard08Model;
 import dr.evomodel.speciation.SpeciationLikelihood;
 import dr.evomodel.speciation.SpeciationModel;
@@ -149,18 +152,31 @@ public class XmlExportValidator {
         SpeciationModel speciationModel =
                 speciationLikelihood.getSpeciationModel();
 
-        if (!(speciationModel instanceof BirthDeathGernhard08Model)) {
-            throw unsupported("Only Yule and BirthDeath speciation tree priors are supported.");
+        if (
+                speciationModel instanceof BirthDeathGernhard08Model
+                        || speciationModel instanceof BirthDeathSerialSamplingModel
+        ) {
+            return;
         }
+
+        throw unsupported("Only Yule, BirthDeath, and FossilizedBirthDeath speciation tree priors are supported.");
     }
 
     private void validateCoalescentTreePrior(CoalescentLikelihood coalescentLikelihood) {
         DemographicModel demographicModel =
                 coalescentLikelihood.getDemoModel();
 
-        if (!(demographicModel instanceof ConstantPopulationModel)) {
-            throw unsupported("Only constant-population Coalescent tree priors are supported.");
+        if (
+                demographicModel instanceof ConstantPopulationModel
+                        || demographicModel instanceof ExponentialGrowthModel
+                        || demographicModel instanceof LogisticGrowthModel
+        ) {
+            return;
         }
+
+        throw unsupported(
+                "Only constant-population, exponential-growth, and logistic-growth Coalescent tree priors are supported."
+        );
     }
 
     private static RuntimeException unsupported(String message) {

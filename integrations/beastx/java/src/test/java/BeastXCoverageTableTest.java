@@ -1,5 +1,6 @@
 import org.junit.jupiter.api.Test;
 import tiling.BeastXModel;
+import tiling.summary.BeastXCapabilityMatrix;
 import tiling.summary.BeastXModelSummary;
 
 import java.nio.charset.StandardCharsets;
@@ -61,11 +62,9 @@ public class BeastXCoverageTableTest {
         String report =
                 reportHeader()
                         + "\n"
-                        + componentCoverageTable()
+                        + BeastXCapabilityMatrix.current().toMarkdown()
                         + "\n"
                         + selectedModelCoverageTable()
-                        + "\n"
-                        + xmlCoverageTable()
                         + "\n"
                         + beastXXmlExportQuestionTable();
 
@@ -73,6 +72,11 @@ public class BeastXCoverageTableTest {
                 REPORT_PATH,
                 report,
                 StandardCharsets.UTF_8
+        );
+
+        assertTrue(
+                BeastXCapabilityMatrix.current().capabilities().size() >= 15,
+                "Expected capability matrix to cover the main BEAST X backend areas."
         );
 
         assertTrue(
@@ -85,6 +89,16 @@ public class BeastXCoverageTableTest {
                 "Expected the selected model coverage table to include the dated-tip FBD showcase model."
         );
 
+        assertTrue(
+                report.contains("PhyloCTMC"),
+                "Expected the capability matrix to describe PhyloCTMC support."
+        );
+
+        assertTrue(
+                report.contains("XML export"),
+                "Expected the capability matrix to describe XML export support."
+        );
+
         assertTrue(Files.exists(REPORT_PATH));
         assertTrue(Files.size(REPORT_PATH) > 0);
     }
@@ -94,24 +108,6 @@ public class BeastXCoverageTableTest {
                 # BEAST X Coverage Tables
 
                 Compact coverage snapshot for the current PhyloSpec BEAST X backend. The model table lists selected examples, not every test fixture.
-                """;
-    }
-
-    private static String componentCoverageTable() {
-        return """
-                ## Component Coverage
-
-                | Area | Current BEAST X tile coverage |
-                | --- | --- |
-                | Input data | Nexus, FASTA, CSV/table data, Newick, imported trees, alignment subsets, dated tips, discrete/continuous traits |
-                | Core language/data handling | Assignments, draws, tree draws, vectors, lists, ranges, indexed statements, indexed access |
-                | Functions/calculations | repeat, range, linspace, log/exp/sqrt, sum, dimensions/counts, taxa/tree accessors, MRCA/root-age/taxon-age helpers, RPN calculations |
-                | Scalar/vector priors | Uniform, Normal, LogNormal, LogNormalRealSpace, Exponential, Gamma, Beta, Dirichlet, Cauchy, Poisson, Bernoulli, Binomial, Categorical, Geometric, DiscreteUniform, MultivariateNormal, IID, Truncated, Offset |
-                | Tree priors | Yule, BirthDeath, FossilizedBirthDeath, Coalescent, SkylineCoalescent, constant/exponential/logistic/compound population functions |
-                | Substitution models | JC69, K80, F81, HKY, GTR, JTT, WAG, LG, Mk, GY94 |
-                | Site/branch models | SiteModel, drawn site rates, strict clock, relaxed clock, drawn branch rates |
-                | Observations/calibration | observed-as alignment/scalar/int handling, root-age calibration, MRCA calibration, dated-tip handling |
-                | MCMC/logging/operators | chainLength, randomSeed, defaultLogEvery, outputPrefix, screen/file/tree loggers, automatic parameter/tree/simplex/clock operators |
                 """;
     }
 
@@ -156,20 +152,6 @@ public class BeastXCoverageTableTest {
         }
 
         return table.toString();
-    }
-
-    private static String xmlCoverageTable() {
-        return """
-                ## XML Coverage
-
-                | XML area | Current tested coverage |
-                | --- | --- |
-                | Scalar-prior MCMC | LogNormal scalar parameter XML, parameter logger, BEAST X parse/run |
-                | Tree-prior MCMC | Yule, BirthDeath, parameterized BirthDeath, constant-population Coalescent |
-                | Calibration XML | Uniform root calibration and MRCA calibration |
-                | PhyloCTMC XML | strict-clock treeLikelihood, fixed GTR, partitioned GTR/HKY likelihoods, shared tree/clock, site models |
-                | Runner entry points | write-and-run XML, structured XML run result, options-based XML run, build XML run from `.phylospec` file |
-                """;
     }
 
     private static String beastXXmlExportQuestionTable() {
