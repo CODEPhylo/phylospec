@@ -8,6 +8,12 @@ import tiling.BeastXState;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Assembles an in-memory BEAST X model from a completed {@link BeastXState}.
+ *
+ * <p>The resulting {@link BeastXModel} contains the compound prior, likelihood,
+ * and posterior objects, and can later be passed to the MCMC builder.</p>
+ */
 public class ModelBuilder {
 
     private final boolean materializePhyloCTMC;
@@ -20,6 +26,10 @@ public class ModelBuilder {
         this.materializePhyloCTMC = materializePhyloCTMC;
     }
 
+    /**
+     * Builds the compound prior, likelihood, and posterior objects from the
+     * completed backend state.
+     */
     public BeastXModel build(BeastXState beastState) {
         if (this.materializePhyloCTMC) {
             materializePhyloCTMCLikelihoods(beastState);
@@ -42,6 +52,10 @@ public class ModelBuilder {
         );
     }
 
+    /**
+     * Converts deferred PhyloCTMC likelihood specifications into concrete
+     * BEAST X tree likelihood objects.
+     */
     private void materializePhyloCTMCLikelihoods(BeastXState beastState) {
         List<Likelihood> materializedLikelihoods =
                 new ArrayList<>();
@@ -62,6 +76,10 @@ public class ModelBuilder {
         beastState.likelihoodDistributions.addAll(materializedLikelihoods);
     }
 
+    /**
+     * Combines parameter priors, tree priors, and calibration priors into one
+     * compound prior likelihood.
+     */
     private CompoundLikelihood buildPrior(BeastXState beastState) {
         List<Likelihood> priorLikelihoods =
                 new ArrayList<>();
@@ -78,6 +96,9 @@ public class ModelBuilder {
         return prior;
     }
 
+    /**
+     * Combines all data likelihood components into one compound likelihood.
+     */
     private CompoundLikelihood buildLikelihood(BeastXState beastState) {
         CompoundLikelihood likelihood =
                 new CompoundLikelihood(new ArrayList<>(beastState.likelihoodDistributions));
@@ -87,6 +108,10 @@ public class ModelBuilder {
         return likelihood;
     }
 
+    /**
+     * Combines the compound prior and compound likelihood into the posterior
+     * target used by BEAST X MCMC.
+     */
     private CompoundLikelihood buildPosterior(
             BeastXState beastState,
             CompoundLikelihood prior,

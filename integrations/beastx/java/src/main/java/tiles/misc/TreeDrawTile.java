@@ -19,20 +19,25 @@ public class TreeDrawTile extends AstNodeTile<TreeModel, Stmt.Draw, BeastXState>
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
-        BeastXTreeDistribution<?> evaluatedDistribution =
-                this.expressionInput.apply(beastState, indexVariables);
-
         String id =
                 this.getId(this.getRootNode().name, indexVariables, "");
 
+        TreeModel existingTreeModel =
+                beastState.treeModelsByPhyloSpecName.get(id);
+
+        if (existingTreeModel != null) {
+            return existingTreeModel;
+        }
+
+        BeastXTreeDistribution<?> evaluatedDistribution =
+                this.expressionInput.apply(beastState, indexVariables);
+
         evaluatedDistribution.bind();
 
-        beastState.addTreePriorDistribution(
+        return beastState.addTreePriorDistribution(
                 evaluatedDistribution.treeModel,
                 evaluatedDistribution.likelihood,
                 id
         );
-
-        return evaluatedDistribution.treeModel;
     }
 }

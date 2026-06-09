@@ -3,6 +3,9 @@ package tiling.xml.builders;
 import dr.evomodel.coalescent.CoalescentLikelihood;
 import dr.evomodel.coalescent.demographicmodel.ConstantPopulationModel;
 import dr.evomodel.coalescent.demographicmodel.DemographicModel;
+import dr.evomodel.coalescent.demographicmodel.ExponentialGrowthModel;
+import dr.evomodel.coalescent.demographicmodel.LogisticGrowthModel;
+import dr.evomodel.speciation.BirthDeathSerialSamplingModel;
 import dr.evomodel.speciation.BirthDeathGernhard08Model;
 import dr.evomodel.speciation.SpeciationLikelihood;
 import dr.evomodel.speciation.SpeciationModel;
@@ -20,18 +23,53 @@ public class TreePriorXmlBuilder {
             AbstractModelLikelihood treePrior
     ) {
         if (treePrior instanceof SpeciationLikelihood) {
-            BirthDeathGernhard08Model birthDeathModel =
-                    getBirthDeathModel(treePrior);
+            SpeciationModel speciationModel =
+                    getSpeciationModel(treePrior);
 
-            if (isYuleCompatible(birthDeathModel)) {
-                return yuleModelDefinition(state, treePrior, birthDeathModel);
+            if (speciationModel instanceof BirthDeathGernhard08Model birthDeathModel) {
+                if (isYuleCompatible(birthDeathModel)) {
+                    return yuleModelDefinition(state, treePrior, birthDeathModel);
+                }
+
+                return birthDeathModelDefinition(state, treePrior, birthDeathModel);
             }
 
-            return birthDeathModelDefinition(state, treePrior, birthDeathModel);
+            if (speciationModel instanceof BirthDeathSerialSamplingModel fbdModel) {
+                return fossilizedBirthDeathModelDefinition(state, treePrior, fbdModel);
+            }
+
+            throw unsupported("Only Yule, BirthDeath, and FossilizedBirthDeath tree priors are supported.");
         }
 
         if (treePrior instanceof CoalescentLikelihood) {
-            return constantPopulationModelDefinition(state, treePrior);
+            DemographicModel demographicModel =
+                    getDemographicModel(treePrior);
+
+            if (demographicModel instanceof ConstantPopulationModel constantPopulationModel) {
+                return constantPopulationModelDefinition(
+                        state,
+                        treePrior,
+                        constantPopulationModel
+                );
+            }
+
+            if (demographicModel instanceof ExponentialGrowthModel exponentialGrowthModel) {
+                return exponentialGrowthModelDefinition(
+                        state,
+                        treePrior,
+                        exponentialGrowthModel
+                );
+            }
+
+            if (demographicModel instanceof LogisticGrowthModel logisticGrowthModel) {
+                return logisticGrowthModelDefinition(
+                        state,
+                        treePrior,
+                        logisticGrowthModel
+                );
+            }
+
+            throw unsupported("Only constant, exponential, and logistic Coalescent demographic models are supported.");
         }
 
         throw unsupported("Only SpeciationLikelihood and CoalescentLikelihood tree priors are supported.");
@@ -117,13 +155,93 @@ public class TreePriorXmlBuilder {
                 );
     }
 
+    private XmlElement fossilizedBirthDeathModelDefinition(
+            BeastXState state,
+            AbstractModelLikelihood treePrior,
+            BirthDeathSerialSamplingModel fbdModel
+    ) {
+        Parameter birthRate =
+                speciationVariable(fbdModel, 0, "birth rate");
+
+        Parameter deathRate =
+                speciationVariable(fbdModel, 1, "death rate");
+
+        Parameter serialSamplingRate =
+                speciationVariable(fbdModel, 2, "serial sampling rate");
+
+        Parameter samplingProbability =
+                speciationVariable(fbdModel, 3, "sampling probability");
+
+        double origin =
+                fossilizedBirthDeathOrigin(state, treePrior);
+
+        return XmlElement.element("birthDeathSerialSampling")
+                .withId(treePriorModelId(treePrior))
+                .withAttribute("type", "LABELED")
+                .withAttribute("units", "years")
+                .withAttribute("hasFinalSample", "false")
+                .withChild(
+                        parameterElement(
+                                state,
+                                "birthRate",
+                                birthRate,
+                                priorId(treePrior) + "_birthRate",
+                                birthRate.getParameterValue(0),
+                                0.0,
+                                null
+                        )
+                )
+                .withChild(
+                        parameterElement(
+                                state,
+                                "deathRate",
+                                deathRate,
+                                priorId(treePrior) + "_deathRate",
+                                deathRate.getParameterValue(0),
+                                0.0,
+                                null
+                        )
+                )
+                .withChild(
+                        parameterElement(
+                                state,
+                                "psi",
+                                serialSamplingRate,
+                                priorId(treePrior) + "_psi",
+                                serialSamplingRate.getParameterValue(0),
+                                0.0,
+                                null
+                        )
+                )
+                .withChild(
+                        parameterElement(
+                                state,
+                                "sampleProbability",
+                                samplingProbability,
+                                priorId(treePrior) + "_sampleProbability",
+                                samplingProbability.getParameterValue(0),
+                                0.0,
+                                1.0
+                        )
+                )
+                .withChild(
+                        XmlElement.element("origin")
+                                .withChild(
+                                        inlineParameterDefinition(
+                                                priorId(treePrior) + "_origin",
+                                                origin,
+                                                0.0,
+                                                null
+                                        )
+                                )
+                );
+    }
+
     private XmlElement constantPopulationModelDefinition(
             BeastXState state,
-            AbstractModelLikelihood treePrior
+            AbstractModelLikelihood treePrior,
+            ConstantPopulationModel constantPopulationModel
     ) {
-        ConstantPopulationModel constantPopulationModel =
-                getConstantPopulationModel(treePrior);
-
         Parameter populationSize =
                 constantPopulationVariable(constantPopulationModel);
 
@@ -143,17 +261,102 @@ public class TreePriorXmlBuilder {
                 );
     }
 
+    private XmlElement exponentialGrowthModelDefinition(
+            BeastXState state,
+            AbstractModelLikelihood treePrior,
+            ExponentialGrowthModel exponentialGrowthModel
+    ) {
+        Parameter populationSize =
+                demographicVariable(exponentialGrowthModel, 0, "population size");
+
+        Parameter growthRate =
+                demographicVariable(exponentialGrowthModel, 1, "growth rate");
+
+        return XmlElement.element("exponentialGrowth")
+                .withId(treePriorModelId(treePrior))
+                .withAttribute("units", "years")
+                .withChild(
+                        parameterElement(
+                                state,
+                                "populationSize",
+                                populationSize,
+                                priorId(treePrior) + "_populationSize",
+                                populationSize.getParameterValue(0),
+                                0.0,
+                                null
+                        )
+                )
+                .withChild(
+                        parameterElement(
+                                state,
+                                "growthRate",
+                                growthRate,
+                                priorId(treePrior) + "_growthRate",
+                                growthRate.getParameterValue(0),
+                                null,
+                                null
+                        )
+                );
+    }
+
+    private XmlElement logisticGrowthModelDefinition(
+            BeastXState state,
+            AbstractModelLikelihood treePrior,
+            LogisticGrowthModel logisticGrowthModel
+    ) {
+        Parameter carryingCapacity =
+                demographicVariable(logisticGrowthModel, 0, "carrying capacity");
+
+        Parameter growthRate =
+                demographicVariable(logisticGrowthModel, 1, "growth rate");
+
+        Parameter inflectionAge =
+                demographicVariable(logisticGrowthModel, 2, "inflection age");
+
+        return XmlElement.element("logisticGrowth")
+                .withId(treePriorModelId(treePrior))
+                .withAttribute("units", "years")
+                .withChild(
+                        parameterElement(
+                                state,
+                                "populationSize",
+                                carryingCapacity,
+                                priorId(treePrior) + "_populationSize",
+                                carryingCapacity.getParameterValue(0),
+                                0.0,
+                                null
+                        )
+                )
+                .withChild(
+                        parameterElement(
+                                state,
+                                "growthRate",
+                                growthRate,
+                                priorId(treePrior) + "_growthRate",
+                                growthRate.getParameterValue(0),
+                                null,
+                                null
+                        )
+                )
+                .withChild(
+                        parameterElement(
+                                state,
+                                "t50",
+                                inflectionAge,
+                                priorId(treePrior) + "_t50",
+                                inflectionAge.getParameterValue(0),
+                                0.0,
+                                null
+                        )
+                );
+    }
+
     private XmlElement speciationTreePrior(
             TreeModel treeModel,
             AbstractModelLikelihood treePrior
     ) {
-        BirthDeathGernhard08Model birthDeathModel =
-                getBirthDeathModel(treePrior);
-
         String modelTag =
-                isYuleCompatible(birthDeathModel)
-                        ? "yuleModel"
-                        : "birthDeathModel";
+                speciationModelTag(treePrior);
 
         return XmlElement.element("speciationLikelihood")
                 .withId(priorId(treePrior))
@@ -169,22 +372,61 @@ public class TreePriorXmlBuilder {
                 );
     }
 
+    private String speciationModelTag(AbstractModelLikelihood treePrior) {
+        SpeciationModel speciationModel =
+                getSpeciationModel(treePrior);
+
+        if (speciationModel instanceof BirthDeathGernhard08Model birthDeathModel) {
+            return isYuleCompatible(birthDeathModel)
+                    ? "yuleModel"
+                    : "birthDeathModel";
+        }
+
+        if (speciationModel instanceof BirthDeathSerialSamplingModel) {
+            return "birthDeathSerialSampling";
+        }
+
+        throw unsupported("Only Yule, BirthDeath, and FossilizedBirthDeath tree priors are supported.");
+    }
+
     private XmlElement coalescentTreePrior(
             TreeModel treeModel,
             AbstractModelLikelihood treePrior
     ) {
+        String modelTag =
+                coalescentModelTag(treePrior);
+
         return XmlElement.element("coalescentLikelihood")
                 .withId(priorId(treePrior))
                 .withChild(
                         XmlElement.element("model")
                                 .withChild(
-                                        XmlElement.ref("constantSize", treePriorModelId(treePrior))
+                                        XmlElement.ref(modelTag, treePriorModelId(treePrior))
                                 )
                 )
                 .withChild(
                         XmlElement.element("populationTree")
                                 .withChild(treeReference(treeModel))
                 );
+    }
+
+    private String coalescentModelTag(AbstractModelLikelihood treePrior) {
+        DemographicModel demographicModel =
+                getDemographicModel(treePrior);
+
+        if (demographicModel instanceof ConstantPopulationModel) {
+            return "constantSize";
+        }
+
+        if (demographicModel instanceof ExponentialGrowthModel) {
+            return "exponentialGrowth";
+        }
+
+        if (demographicModel instanceof LogisticGrowthModel) {
+            return "logisticGrowth";
+        }
+
+        throw unsupported("Only constant and exponential Coalescent demographic models are supported.");
     }
 
     private XmlElement parameterElement(
@@ -262,19 +504,12 @@ public class TreePriorXmlBuilder {
         return birthDeathModel;
     }
 
-    private static ConstantPopulationModel getConstantPopulationModel(AbstractModelLikelihood treePrior) {
+    private static DemographicModel getDemographicModel(AbstractModelLikelihood treePrior) {
         if (!(treePrior instanceof CoalescentLikelihood coalescentLikelihood)) {
             throw unsupported("Only CoalescentLikelihood tree priors can be serialized as coalescent XML.");
         }
 
-        DemographicModel demographicModel =
-                coalescentLikelihood.getDemoModel();
-
-        if (!(demographicModel instanceof ConstantPopulationModel constantPopulationModel)) {
-            throw unsupported("Only constant-population Coalescent tree priors are supported.");
-        }
-
-        return constantPopulationModel;
+        return coalescentLikelihood.getDemoModel();
     }
 
     private static Parameter birthDeathVariable(
@@ -296,18 +531,26 @@ public class TreePriorXmlBuilder {
     }
 
     private static Parameter constantPopulationVariable(ConstantPopulationModel populationModel) {
-        if (populationModel.getVariableCount() < 1) {
-            throw unsupported("Constant-population Coalescent XML export requires a population size parameter.");
+        return demographicVariable(populationModel, 0, "population size");
+    }
+
+    private static Parameter demographicVariable(
+            DemographicModel demographicModel,
+            int variableIndex,
+            String label
+    ) {
+        if (variableIndex >= demographicModel.getVariableCount()) {
+            throw unsupported("Coalescent XML export requires a " + label + " parameter.");
         }
 
         Variable<?> variable =
-                populationModel.getVariable(0);
+                demographicModel.getVariable(variableIndex);
 
-        if (!(variable instanceof Parameter parameter)) {
-            throw unsupported("Constant-population Coalescent XML export requires a population size parameter.");
+        if (variable instanceof Parameter parameter) {
+            return parameter;
         }
 
-        return parameter;
+        throw unsupported("Coalescent XML export requires a " + label + " parameter.");
     }
 
     private static boolean isYuleCompatible(BirthDeathGernhard08Model model) {
@@ -372,6 +615,59 @@ public class TreePriorXmlBuilder {
         return new UnsupportedOperationException(
                 message + " Extend TreePriorXmlBuilder before exporting this tree prior to XML."
         );
+    }
+
+    private static SpeciationModel getSpeciationModel(AbstractModelLikelihood treePrior) {
+        if (!(treePrior instanceof SpeciationLikelihood speciationLikelihood)) {
+            throw unsupported("Only SpeciationLikelihood tree priors can be serialized as speciation XML.");
+        }
+
+        return speciationLikelihood.getSpeciationModel();
+    }
+
+    private static Parameter speciationVariable(
+            SpeciationModel speciationModel,
+            int variableIndex,
+            String label
+    ) {
+        if (variableIndex >= speciationModel.getVariableCount()) {
+            throw unsupported("Speciation XML export requires a " + label + " parameter.");
+        }
+
+        Variable<?> variable =
+                speciationModel.getVariable(variableIndex);
+
+        if (variable instanceof Parameter parameter) {
+            return parameter;
+        }
+
+        throw unsupported("Speciation XML export requires a " + label + " parameter.");
+    }
+
+    private static double fossilizedBirthDeathOrigin(
+            BeastXState state,
+            AbstractModelLikelihood treePrior
+    ) {
+        TreeModel treeModel =
+                treeModelForPrior(state, treePrior);
+
+        double rootHeight =
+                treeModel.getNodeHeight(treeModel.getRoot());
+
+        return rootHeight + Math.max(1.0, rootHeight * 0.25);
+    }
+
+    private static TreeModel treeModelForPrior(
+            BeastXState state,
+            AbstractModelLikelihood treePrior
+    ) {
+        for (java.util.Map.Entry<TreeModel, AbstractModelLikelihood> entry : state.treePriorDistributions.entrySet()) {
+            if (entry.getValue() == treePrior) {
+                return entry.getKey();
+            }
+        }
+
+        throw unsupported("Tree prior XML export requires the tree associated with the prior.");
     }
 
     private static String format(double value) {

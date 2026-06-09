@@ -132,6 +132,10 @@ public class MCMCBuilder {
         }
     }
 
+    /**
+     * Adds default loggers when an output prefix is provided and no explicit
+     * logger of that type has been configured.
+     */
     private void addOutputPrefixLoggers(
             BeastXModel model,
             BeastXState beastState,
@@ -384,7 +388,11 @@ public class MCMCBuilder {
 
         return model.beastState.chainLength;
     }
-
+    
+    /**
+     * Ensures that all PhyloCTMC likelihood specifications have been converted
+     * into concrete BEAST X likelihood objects before MCMC initialization.
+     */
     private void rejectUnmaterializedPhyloCTMCLikelihoods(BeastXModel model) {
         for (Likelihood likelihood : model.beastState.likelihoodDistributions) {
             if (likelihood instanceof BeastXPhyloCTMCLikelihoodSpec) {

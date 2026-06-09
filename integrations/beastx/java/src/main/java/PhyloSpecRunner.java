@@ -41,12 +41,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 
-/**
- * Entry point for running PhyloSpec models with the BEAST X backend.
- *
- * Parses PhyloSpec source, evaluates BEAST X tiles, and then builds either
- * an in-memory BEAST X MCMC or BEAST X XML.
- */
+/*
+* Entry point for running PhyloSpec models with the BEAST X backend.
+*
+* This class coordinates the full pipeline:
+* PhyloSpec source -> lexer/parser -> AST transforms -> type resolution
+* BEAST X tiling -> BeastXModel -> MCMC or XML execution.
+* */
 public class PhyloSpecRunner implements ErrorEventListener {
 
     private final String source;
@@ -55,6 +56,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         this.source = source;
     }
 
+    // Creates a runner from a PhyloSpec source file using UTF-8 encoding.
     public static PhyloSpecRunner fromFile(Path sourcePath)
             throws IOException {
         return fromFile(sourcePath, StandardCharsets.UTF_8);
@@ -76,7 +78,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 Files.readString(sourcePath, charset)
         );
     }
-
+    //  Uses the source file name without its extension as the default run name.
     public static String defaultRunName(Path sourcePath) {
         if (sourcePath == null) {
             throw new IllegalArgumentException("sourcePath must not be null.");
@@ -215,6 +217,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 );
     }
 
+    /// Parses, resolves, and tiles the PhyloSpec source into a BEAST X state.
     public BeastXState buildState(String runName)
             throws IOException, ParserConfigurationException, SAXException {
         ParsedPhyloSpec parsed =
@@ -301,6 +304,10 @@ public class PhyloSpecRunner implements ErrorEventListener {
         return buildMCMC(model, chainLength);
     }
 
+    /// Runs the PhyloSpec-to-BEAST X pipeline according to the requested run mode.
+    ///
+    /// The pipeline can stop after building the backend state, model, or MCMC object,
+    /// or it can execute the MCMC immediately.
     public BeastXRunResult run(RunnerOptions options)
             throws IOException, ParserConfigurationException, SAXException {
         ParsedPhyloSpec parsed =
@@ -309,6 +316,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         BeastXState beastState =
                 tile(parsed, options.runName());
 
+        // Stop after tiling if only the backend state is requested.
         if (options.mode() == RunMode.BUILD_STATE) {
             return new BeastXRunResult(
                     options.runName(),
@@ -321,6 +329,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
             );
         }
 
+        // Convert the tiled backend state into a BEAST X model.
         BeastXModel model =
                 buildModelForOptions(beastState, options);
 
@@ -336,6 +345,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
             );
         }
 
+        // Build the BEAST X MCMC object from the model.
         MCMC mcmc =
                 buildMCMCForOptions(model, options);
 
@@ -354,6 +364,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
             return run;
         }
 
+        // Execute the BEAST X MCMC only in EXECUTE_MCMC mode.
         if (options.mode() == RunMode.EXECUTE_MCMC) {
             mcmc.run();
             return run.asExecuted();
@@ -529,11 +540,17 @@ public class PhyloSpecRunner implements ErrorEventListener {
         return toXml(model);
     }
 
+    /**
+     * Serializes a BEAST X model into BEAST X XML.
+     */
     public String toXml(BeastXModel model) {
         return new StateXmlGenerator()
                 .toXml(model);
     }
 
+    /**
+     * Writes the generated BEAST X XML to disk.
+     */
     public BeastXModel writeXml(
             String runName,
             Path xmlPath
@@ -554,6 +571,9 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 .write(model, xmlPath);
     }
 
+    /**
+     * Parses a BEAST X XML file into an executable MCMC object.
+     */
     public MCMC parseXmlMCMC(Path xmlPath) throws Exception {
         return new XmlRunner()
                 .parse(xmlPath);
@@ -654,15 +674,21 @@ public class PhyloSpecRunner implements ErrorEventListener {
         return run.asExecuted();
     }
 
+    /**
+     * Writes XML, parses it through the BEAST X XML parser, and optionally executes it.
+     */
     public XmlRunResult runXml(XmlRunnerOptions options)
             throws Exception {
+        // Build the model that will be exported to XML.
         BeastXModel model =
                 options.materializePhyloCTMC()
                         ? buildMaterializedModel(options.runName())
                         : buildModel(options.runName());
 
+        // Export the model before asking BEAST X to parse it back.
         writeXml(model, options.xmlPath());
 
+        // Validate the generated XML by parsing it into a BEAST X MCMC object.
         MCMC mcmc =
                 parseXmlMCMC(options.xmlPath());
 
@@ -717,10 +743,17 @@ public class PhyloSpecRunner implements ErrorEventListener {
         executeMaterialized(runName);
     }
 
+    /**
+     * Applies the BEAST X tile library to the resolved PhyloSpec AST.
+     *
+     * The resulting BeastXState is the backend-specific intermediate state used
+     * later to build a BEAST X model, MCMC object, or XML file.
+     */
     private BeastXState tile(
             ParsedPhyloSpec parsed,
             String runName
     ) {
+        // Load all BEAST X backend tiles and prepare the tiling evaluator.
         EvaluateTiles<BeastXState> applyTiles =
                 new EvaluateTiles<>(
                         new BeastXCoreTileLibrary().getTiles(),
@@ -733,6 +766,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 new BeastXState(runName);
 
         try {
+            // Find and apply the best tile sequence for the parsed PhyloSpec statements.
             applyTiles.getBestTiling(parsed.statements);
             return applyTiles.applyBestTiling(beastState);
         } catch (TileApplicationError error) {
@@ -766,11 +800,18 @@ public class PhyloSpecRunner implements ErrorEventListener {
         return buildMCMC(model, options.chainLengthOverride());
     }
 
+    /**
+     * Parses the PhyloSpec source and prepares it for tiling.
+     *
+     * This includes lexical scanning, parsing, AST simplification, variable
+     * resolution, type checking, and stochasticity analysis.
+     */
     private ParsedPhyloSpec parseAndResolve()
             throws IOException {
         ComponentResolver componentResolver =
                 loadComponentResolver();
 
+        // Tokenize the PhyloSpec source.
         Lexer lexer =
                 new Lexer(this.source);
 
@@ -779,6 +820,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         List<Token> tokens =
                 lexer.scanTokens();
 
+        // Parse tokens into PhyloSpec AST statements.
         Parser parser =
                 new Parser(tokens);
 
@@ -787,6 +829,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         List<Stmt> statements =
                 parser.parse();
 
+        // Simplify the AST before type checking and tiling.
         statements =
                 new RemoveGroupings().transform(statements);
 
@@ -796,6 +839,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         statements =
                 new EvaluateScalarFunctions().transform(statements);
 
+        // Resolve variable references and validate component types.
         VariableResolver variableResolver =
                 new VariableResolver(statements);
 
@@ -812,6 +856,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
             throw new IllegalStateException("Unreachable after errorDetected.");
         }
 
+        // Determine which statements or expressions are stochastic.
         StochasticityResolver stochasticityResolver =
                 new StochasticityResolver();
 
@@ -836,11 +881,21 @@ public class PhyloSpecRunner implements ErrorEventListener {
         }
     }
 
+    /**
+     * Converts frontend or tiling errors into runner-level exceptions with
+     * source-location information.
+     */
     @Override
     public void errorDetected(Error error) {
         throw new PhyloSpecRunnerException(error.toStdOutString(this.source));
     }
 
+    /**
+     * Internal container for the parsed and resolved PhyloSpec program.
+     *
+     * It keeps the parser so that later tiling errors can still be mapped back
+     * to source-code ranges.
+     */
     private static class ParsedPhyloSpec {
         private final Parser parser;
         private final List<Stmt> statements;
