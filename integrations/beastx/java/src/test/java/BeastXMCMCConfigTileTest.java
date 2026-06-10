@@ -4,7 +4,12 @@ import org.junit.jupiter.api.Test;
 import tiling.mcmc.MCMCBuilder;
 import tiling.BeastXModel;
 import tiling.BeastXState;
+import tiling.runner.BeastXRunResult;
+import tiling.runner.RunMode;
+import tiling.runner.RunnerOptions;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -358,5 +363,91 @@ public class BeastXMCMCConfigTileTest {
         assertTrue(labels.contains("prior"), labels.toString());
         assertTrue(labels.contains("likelihood"), labels.toString());
         assertTrue(labels.contains("x"), labels.toString());
+    }
+
+    @Test
+    public void runnerOptionsApplyChainLengthLogEveryAndOutputPrefix() throws Exception {
+        String source = """
+            PositiveReal x ~ LogNormal(
+                logMean=0.0,
+                logSd=1.0
+            )
+            """;
+
+        Path outputDirectory =
+                Path.of("target", "runner-mcmc-output", "scalar-" + System.nanoTime());
+
+        RunnerOptions options =
+                RunnerOptions.builder("scalarMCMC")
+                        .mode(RunMode.EXECUTE_MCMC)
+                        .chainLengthOverride(10)
+                        .defaultLogEveryOverride(2)
+                        .outputPrefix(outputDirectory, "scalar")
+                        .build();
+
+        BeastXRunResult result =
+                new PhyloSpecRunner(source).run(options);
+
+        Path logPath =
+                outputDirectory.resolve("scalar.log");
+
+        assertTrue(result.hasMCMC());
+        assertTrue(result.executed());
+        assertEquals(10, result.beastState().chainLength);
+        assertEquals(2, result.beastState().defaultLogEvery);
+        assertEquals(outputDirectory.resolve("scalar").toString(), result.beastState().outputPrefix);
+
+        assertTrue(Files.exists(logPath), "Expected default parameter log to be written.");
+        assertTrue(Files.size(logPath) > 0, "Expected parameter log to be non-empty.");
+    }
+
+    @Test
+    public void runnerOptionsWriteDefaultParameterAndTreeLogs() throws Exception {
+        String source = """
+            Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+            Taxa taxa = taxa(data)
+
+            Tree tree ~ Yule(
+                birthRate=1.0,
+                taxa=taxa
+            )
+            """;
+
+        Path outputDirectory =
+                Path.of("target", "runner-mcmc-output", "tree-" + System.nanoTime());
+
+        RunnerOptions options =
+                RunnerOptions.builder("treeMCMC")
+                        .mode(RunMode.EXECUTE_MCMC)
+                        .chainLengthOverride(10)
+                        .defaultLogEveryOverride(2)
+                        .outputPrefix(outputDirectory, "tree")
+                        .build();
+
+        BeastXRunResult result =
+                new PhyloSpecRunner(source).run(options);
+
+        Path logPath =
+                outputDirectory.resolve("tree.log");
+
+        Path treePath =
+                outputDirectory.resolve("tree.trees");
+
+        assertTrue(result.hasMCMC());
+        assertTrue(result.executed());
+
+        assertTrue(Files.exists(logPath), "Expected default parameter log to be written.");
+        assertTrue(Files.size(logPath) > 0, "Expected parameter log to be non-empty.");
+
+        assertTrue(Files.exists(treePath), "Expected default tree log to be written.");
+        assertTrue(Files.size(treePath) > 0, "Expected tree log to be non-empty.");
+
+        String treeLog =
+                Files.readString(treePath);
+
+        assertTrue(
+                treeLog.contains("STATE_"),
+                "Expected tree log to contain sampled STATE trees."
+        );
     }
 }

@@ -316,6 +316,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
         BeastXState beastState =
                 tile(parsed, options.runName());
 
+        options.applyTo(beastState);
+
         // Stop after tiling if only the backend state is requested.
         if (options.mode() == RunMode.BUILD_STATE) {
             return new BeastXRunResult(
