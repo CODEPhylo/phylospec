@@ -5,13 +5,13 @@ import dr.inference.model.AbstractModelLikelihood;
 
 import java.util.function.Consumer;
 
-public class BeastXTreeDistribution<L extends AbstractModelLikelihood> {
+public class TreeDistribution<L extends AbstractModelLikelihood> {
 
     public final L likelihood;
     public TreeModel treeModel;
     private final Consumer<TreeModel> bindTreeFunc;
 
-    public BeastXTreeDistribution(
+    public TreeDistribution(
             L likelihood,
             TreeModel defaultTreeModel,
             Consumer<TreeModel> bindTreeFunc

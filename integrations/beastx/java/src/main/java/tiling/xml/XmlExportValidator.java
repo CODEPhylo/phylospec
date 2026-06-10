@@ -5,8 +5,9 @@ import dr.evomodel.coalescent.demographicmodel.ConstantPopulationModel;
 import dr.evomodel.coalescent.demographicmodel.DemographicModel;
 import dr.evomodel.coalescent.demographicmodel.ExponentialGrowthModel;
 import dr.evomodel.coalescent.demographicmodel.LogisticGrowthModel;
-import dr.evomodel.speciation.BirthDeathSerialSamplingModel;
+import dr.evomodel.coalescent.demographicmodel.PiecewisePopulationModel;
 import dr.evomodel.speciation.BirthDeathGernhard08Model;
+import dr.evomodel.speciation.BirthDeathSerialSamplingModel;
 import dr.evomodel.speciation.SpeciationLikelihood;
 import dr.evomodel.speciation.SpeciationModel;
 import dr.inference.distribution.AbstractDistributionLikelihood;
@@ -92,8 +93,8 @@ public class XmlExportValidator {
             AbstractDistributionLikelihood likelihood =
                     entry.getValue();
 
-            if (parameter.getDimension() == 1) {
-                validateScalarPrior(likelihood);
+            if (likelihood instanceof DistributionLikelihood distributionLikelihood) {
+                validateIndependentDistributionPrior(distributionLikelihood);
                 continue;
             }
 
@@ -101,17 +102,13 @@ public class XmlExportValidator {
         }
     }
 
-    private void validateScalarPrior(AbstractDistributionLikelihood likelihood) {
-        if (!(likelihood instanceof DistributionLikelihood distributionLikelihood)) {
-            throw unsupported("Only DistributionLikelihood scalar priors are supported.");
-        }
-
+    private void validateIndependentDistributionPrior(DistributionLikelihood likelihood) {
         Distribution distribution =
-                distributionLikelihood.getDistribution();
+                likelihood.getDistribution();
 
         if (!scalarPriorXmlBuilder.supports(distribution)) {
             throw unsupported(
-                    "Only Normal, LogNormal, Gamma, Exponential, Uniform, and Beta scalar priors are supported."
+                    "Only Normal, LogNormal, Gamma, Exponential, Uniform, and Beta independent distribution priors are supported."
             );
         }
     }
@@ -121,11 +118,13 @@ public class XmlExportValidator {
             AbstractDistributionLikelihood likelihood
     ) {
         if (!(likelihood instanceof MultivariateDistributionLikelihood multivariateLikelihood)) {
-            throw unsupported("Only Dirichlet multivariate priors are supported for non-scalar parameters.");
+            throw unsupported(
+                    "Only independent DistributionLikelihood priors and Dirichlet multivariate priors are supported for parameters."
+            );
         }
 
         if (!(multivariateLikelihood.getDistribution() instanceof DirichletDistribution dirichletDistribution)) {
-            throw unsupported("Only Dirichlet multivariate priors are supported for non-scalar parameters.");
+            throw unsupported("Only Dirichlet multivariate priors are supported for non-scalar multivariate parameters.");
         }
 
         double[] counts =
@@ -170,12 +169,13 @@ public class XmlExportValidator {
                 demographicModel instanceof ConstantPopulationModel
                         || demographicModel instanceof ExponentialGrowthModel
                         || demographicModel instanceof LogisticGrowthModel
+                        || demographicModel instanceof PiecewisePopulationModel
         ) {
             return;
         }
 
         throw unsupported(
-                "Only constant-population, exponential-growth, and logistic-growth Coalescent tree priors are supported."
+                "Only constant-population, exponential-growth, logistic-growth, and piecewise-population Coalescent tree priors are supported."
         );
     }
 

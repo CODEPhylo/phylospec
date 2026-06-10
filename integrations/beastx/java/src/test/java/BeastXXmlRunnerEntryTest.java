@@ -1,5 +1,6 @@
 import dr.inference.mcmc.MCMC;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assumptions;
 import tiling.runner.BeastXRunResult;
 import tiling.runner.XmlRunResult;
 import tiling.runner.XmlRunnerOptions;
@@ -213,5 +214,87 @@ public class BeastXXmlRunnerEntryTest {
                 "runner",
                 "strictClockPhyloCTMCWithMCMC2.phylospec"
         );
+    }
+
+    private static boolean isMissingBeagleLibrary(Throwable throwable) {
+        Throwable current =
+                throwable;
+
+        while (current != null) {
+            String message =
+                    current.getMessage();
+
+            if (
+                    message != null
+                            && message.contains("No acceptable BEAGLE library plugins found")
+            ) {
+                return true;
+            }
+
+            current =
+                    current.getCause();
+        }
+
+        return false;
+    }
+
+    @Test
+    public void phyloSpecRunnerExecutesComplexXmlRunFromPhyloSpecFile() throws Exception {
+        Path sourcePath =
+                Path.of(
+                        "src",
+                        "main",
+                        "java",
+                        "tiling",
+                        "runner",
+                        "skylineHKYStrictClockXmlRun.phylospec"
+                );
+
+        Path outputDirectory =
+                Path.of(
+                        "target",
+                        "beastx-runs",
+                        "skylineHKYStrictClockXmlRun"
+                );
+
+        Path xmlPath =
+                outputDirectory.resolve("skylineHKYStrictClockXmlRun.xml");
+
+        Path logPath =
+                outputDirectory.resolve("skylineHKYStrictClockXmlRun.log");
+
+        Path treeLogPath =
+                outputDirectory.resolve("skylineHKYStrictClockXmlRun.trees");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
+        Files.deleteIfExists(logPath);
+        Files.deleteIfExists(treeLogPath);
+
+        XmlRunResult result;
+
+        try {
+            result =
+                    PhyloSpecRunner.executeDefaultXmlRunFromFile(sourcePath);
+        } catch (RuntimeException exception) {
+            Assumptions.assumeFalse(
+                    isMissingBeagleLibrary(exception),
+                    "Skipping complex PhyloSpec-file XML execution because BEAGLE native library is not available."
+            );
+
+            throw exception;
+        }
+
+        assertEquals("skylineHKYStrictClockXmlRun", result.runName());
+        assertEquals(xmlPath, result.xmlPath());
+        assertTrue(result.executed());
+        assertNotNull(result.model());
+        assertNotNull(result.mcmc());
+
+        assertTrue(Files.exists(xmlPath));
+        assertTrue(Files.size(xmlPath) > 0);
+
+        XmlTestSupport.assertNonEmptyFile(logPath, "complex runner-entry parameter log");
+        XmlTestSupport.assertNonEmptyFile(treeLogPath, "complex runner-entry tree log");
     }
 }
