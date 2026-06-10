@@ -1,5 +1,7 @@
 package tiling.xml.builders;
 
+import dr.evolution.util.Date;
+import dr.evolution.util.Taxon;
 import dr.evomodel.tree.TreeModel;
 import tiling.xml.XmlElement;
 import tiling.xml.XmlPlan;
@@ -32,8 +34,11 @@ public class TreeModelXmlBuilder {
             Set<String> emittedTaxonIds
     ) {
         for (int i = 0; i < treeModel.getTaxonCount(); i++) {
+            Taxon taxon =
+                    treeModel.getTaxon(i);
+
             String taxonId =
-                    treeModel.getTaxonId(i);
+                    taxon.getId();
 
             if (taxonId == null || taxonId.isBlank()) {
                 throw new IllegalArgumentException("Cannot serialize unnamed BEAST X taxon.");
@@ -45,17 +50,39 @@ public class TreeModelXmlBuilder {
 
             plan.add(
                     XmlPlan.Section.TAXA,
-                    XmlElement.element("taxon")
-                            .withId(taxonId)
+                    taxonDefinition(taxon)
             );
         }
     }
 
+    private XmlElement taxonDefinition(Taxon taxon) {
+        XmlElement taxonElement =
+                XmlElement.element("taxon")
+                        .withId(taxon.getId());
+
+        Date date =
+                taxon.getDate();
+
+        if (date == null) {
+            return taxonElement;
+        }
+
+        return taxonElement.withChild(
+                XmlElement.element("date")
+                        .withAttribute("value", format(date.getTimeValue()))
+                        .withAttribute("direction", "backwards")
+                        .withAttribute("units", "years")
+        );
+    }
+
     private XmlElement startingTreeDefinition(TreeModel treeModel) {
+        boolean hasDatedTips =
+                hasDatedTips(treeModel);
+
         return XmlElement.element("newick")
                 .withId(startingTreeId(treeModel))
                 .withAttribute("units", "years")
-                .withAttribute("usingDates", "false")
+                .withAttribute("usingDates", Boolean.toString(hasDatedTips))
                 .withAttribute("usingHeights", "false")
                 .withText(ensureTrailingSemicolon(treeModel.getNewick()));
     }
@@ -94,6 +121,19 @@ public class TreeModelXmlBuilder {
                 );
     }
 
+    private static boolean hasDatedTips(TreeModel treeModel) {
+        for (int i = 0; i < treeModel.getTaxonCount(); i++) {
+            Taxon taxon =
+                    treeModel.getTaxon(i);
+
+            if (taxon.getDate() != null) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static String treeId(TreeModel treeModel) {
         String id =
                 treeModel.getId();
@@ -118,5 +158,9 @@ public class TreeModelXmlBuilder {
         }
 
         return trimmed + ";";
+    }
+
+    private static String format(double value) {
+        return Double.toString(value);
     }
 }

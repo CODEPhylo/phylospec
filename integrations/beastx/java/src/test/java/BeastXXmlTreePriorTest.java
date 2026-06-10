@@ -5,6 +5,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class BeastXXmlTreePriorTest {
 
     @Test
@@ -585,5 +587,73 @@ public class BeastXXmlTreePriorTest {
         XmlTestSupport.assertXmlContains(treeLog, "#NEXUS");
         XmlTestSupport.assertXmlContains(treeLog, "Begin trees;");
         XmlTestSupport.assertXmlContains(treeLog, "STATE_");
+    }
+
+    @Test
+    public void writesParsesAndRunsPriorOnlySkylineCoalescentTreeMCMCXml() throws Exception {
+        Path xmlPath =
+                XmlTestSupport.xmlPath("priorOnlySkylineMCMC");
+
+        Path logPath =
+                XmlTestSupport.logPath("priorOnlySkylineMCMC");
+
+        Path treeLogPath =
+                XmlTestSupport.treeLogPath("priorOnlySkylineMCMC");
+
+        XmlTestSupport.prepare(xmlPath, logPath, treeLogPath);
+
+        String source =
+                """
+                Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+        
+                Taxa taxa = taxa(data)
+        
+                Vector<PositiveReal> populationSizes ~ IID(
+                    base=LogNormal(
+                        logMean=5.0,
+                        logSd=0.5
+                    ),
+                    num=3
+                )
+        
+                Tree tree ~ SkylineCoalescent(
+                    populationSizes=populationSizes,
+                    changeTimes=[1.0, 2.0],
+                    taxa=taxa
+                )
+        
+                mcmc {
+                    Integer chainLength = 1000
+                    Integer randomSeed = 1234
+        
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[populationSizes]
+                    )
+        
+                    Logger treeLogger = treeLogger(
+                        logEvery=1,
+                        file="%s",
+                        trees=[tree]
+                    )
+                }
+                """.formatted(
+                        XmlTestSupport.unixPath(logPath),
+                        XmlTestSupport.unixPath(treeLogPath)
+                );
+
+        XmlTestSupport.buildWriteAndRunXml(
+                "priorOnlySkylineMCMC",
+                source,
+                xmlPath
+        );
+
+        assertTrue(Files.exists(xmlPath));
+        assertTrue(Files.exists(logPath));
+        assertTrue(Files.exists(treeLogPath));
+        assertTrue(Files.size(xmlPath) > 0);
+        assertTrue(Files.size(logPath) > 0);
+        assertTrue(Files.size(treeLogPath) > 0);
     }
 }

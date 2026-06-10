@@ -1,0 +1,21 @@
+Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+Taxa taxa = taxa(data)
+Tree tree ~ Yule(birthRate=1.0, taxa=taxa)
+
+Vector<Rate> branchRates ~ RelaxedClock(
+    clockRate=1.0,
+    base=LogNormal(mean=2.0, logSd=0.1),
+    tree=tree
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED_APPLICATION_ERRORS
+// RelaxedClock base distribution must have mean 1.0. Use a base distribution with mean 1.0 so the mean branch rate is controlled by clockRate.
+// EXPECTED_APPLICATION_ERRORS
+
+// EXPECTED BEASTX STATE
+// NO_STATE
+// EXPECTED BEASTX STATE

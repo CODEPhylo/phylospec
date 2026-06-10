@@ -47,6 +47,8 @@ import tiles.distributions.CategoricalTile;
 import tiles.distributions.GeometricTile;
 import tiles.distributions.IIDTile;
 import tiles.distributions.TruncatedTile;
+import tiles.distributions.PhyloBMTile;
+import tiles.distributions.PhyloOUTile;
 
 import tiles.errors.VectorBranchRatesErrorTile;
 import tiles.errors.VectorSiteRatesErrorTile;
@@ -268,6 +270,8 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new VectorBranchRatesErrorTile());
         tiles.add(new VectorSiteRatesErrorTile());
         tiles.add(new PhyloCTMCTile());
+        tiles.add(new PhyloBMTile());
+        tiles.add(new PhyloOUTile());
 
         // BEAST X substitution models
         tiles.add(new JC69Tile());

@@ -13,12 +13,12 @@ import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
-import tiling.model.BeastXTreeDistribution;
+import tiling.model.TreeDistribution;
 
 import java.util.IdentityHashMap;
 
 public class CoalescentTile extends GeneratorTile<
-        BeastXTreeDistribution<CoalescentLikelihood>,
+        TreeDistribution<CoalescentLikelihood>,
         BeastXState
         > {
 
@@ -34,7 +34,7 @@ public class CoalescentTile extends GeneratorTile<
             new GeneratorTileInput<>("taxa");
 
     @Override
-    public BeastXTreeDistribution<CoalescentLikelihood> applyTile(
+    public TreeDistribution<CoalescentLikelihood> applyTile(
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
@@ -66,7 +66,7 @@ public class CoalescentTile extends GeneratorTile<
                         populationModel
                 );
 
-        return new BeastXTreeDistribution<>(
+        return new TreeDistribution<>(
                 likelihood,
                 defaultTreeModel,
                 treeModel -> {

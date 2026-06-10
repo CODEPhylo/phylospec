@@ -1,12 +1,14 @@
 package tiling.xml.builders;
 
+import dr.evolution.coalescent.PiecewiseConstantPopulation;
 import dr.evomodel.coalescent.CoalescentLikelihood;
 import dr.evomodel.coalescent.demographicmodel.ConstantPopulationModel;
 import dr.evomodel.coalescent.demographicmodel.DemographicModel;
 import dr.evomodel.coalescent.demographicmodel.ExponentialGrowthModel;
 import dr.evomodel.coalescent.demographicmodel.LogisticGrowthModel;
-import dr.evomodel.speciation.BirthDeathSerialSamplingModel;
+import dr.evomodel.coalescent.demographicmodel.PiecewisePopulationModel;
 import dr.evomodel.speciation.BirthDeathGernhard08Model;
+import dr.evomodel.speciation.BirthDeathSerialSamplingModel;
 import dr.evomodel.speciation.SpeciationLikelihood;
 import dr.evomodel.speciation.SpeciationModel;
 import dr.evomodel.tree.TreeModel;
@@ -69,7 +71,15 @@ public class TreePriorXmlBuilder {
                 );
             }
 
-            throw unsupported("Only constant, exponential, and logistic Coalescent demographic models are supported.");
+            if (demographicModel instanceof PiecewisePopulationModel piecewisePopulationModel) {
+                return piecewisePopulationModelDefinition(
+                        state,
+                        treePrior,
+                        piecewisePopulationModel
+                );
+            }
+
+            throw unsupported("Only constant, exponential, logistic, and piecewise Coalescent demographic models are supported.");
         }
 
         throw unsupported("Only SpeciationLikelihood and CoalescentLikelihood tree priors are supported.");
@@ -351,6 +361,40 @@ public class TreePriorXmlBuilder {
                 );
     }
 
+    private XmlElement piecewisePopulationModelDefinition(
+            BeastXState state,
+            AbstractModelLikelihood treePrior,
+            PiecewisePopulationModel piecewisePopulationModel
+    ) {
+        Parameter populationSizes =
+                demographicVariable(piecewisePopulationModel, 0, "population sizes");
+
+        double[] epochWidths =
+                piecewiseEpochWidths(piecewisePopulationModel, populationSizes.getDimension());
+
+        return XmlElement.element("piecewisePopulation")
+                .withId(treePriorModelId(treePrior))
+                .withAttribute("units", "years")
+                .withAttribute("linear", "false")
+                .withChild(
+                        XmlElement.element("epochSizes")
+                                .withChild(
+                                        state.stateNodes.containsKey(populationSizes)
+                                                ? parameterReference(populationSizes)
+                                                : inlineParameterDefinition(
+                                                priorId(treePrior) + "_epochSizes",
+                                                populationSizes,
+                                                0.0,
+                                                null
+                                        )
+                                )
+                )
+                .withChild(
+                        XmlElement.element("epochWidths")
+                                .withAttribute("widths", format(epochWidths))
+                );
+    }
+
     private XmlElement speciationTreePrior(
             TreeModel treeModel,
             AbstractModelLikelihood treePrior
@@ -370,23 +414,6 @@ public class TreePriorXmlBuilder {
                         XmlElement.element("speciesTree")
                                 .withChild(treeReference(treeModel))
                 );
-    }
-
-    private String speciationModelTag(AbstractModelLikelihood treePrior) {
-        SpeciationModel speciationModel =
-                getSpeciationModel(treePrior);
-
-        if (speciationModel instanceof BirthDeathGernhard08Model birthDeathModel) {
-            return isYuleCompatible(birthDeathModel)
-                    ? "yuleModel"
-                    : "birthDeathModel";
-        }
-
-        if (speciationModel instanceof BirthDeathSerialSamplingModel) {
-            return "birthDeathSerialSampling";
-        }
-
-        throw unsupported("Only Yule, BirthDeath, and FossilizedBirthDeath tree priors are supported.");
     }
 
     private XmlElement coalescentTreePrior(
@@ -410,6 +437,23 @@ public class TreePriorXmlBuilder {
                 );
     }
 
+    private String speciationModelTag(AbstractModelLikelihood treePrior) {
+        SpeciationModel speciationModel =
+                getSpeciationModel(treePrior);
+
+        if (speciationModel instanceof BirthDeathGernhard08Model birthDeathModel) {
+            return isYuleCompatible(birthDeathModel)
+                    ? "yuleModel"
+                    : "birthDeathModel";
+        }
+
+        if (speciationModel instanceof BirthDeathSerialSamplingModel) {
+            return "birthDeathSerialSampling";
+        }
+
+        throw unsupported("Only Yule, BirthDeath, and FossilizedBirthDeath tree priors are supported.");
+    }
+
     private String coalescentModelTag(AbstractModelLikelihood treePrior) {
         DemographicModel demographicModel =
                 getDemographicModel(treePrior);
@@ -426,7 +470,11 @@ public class TreePriorXmlBuilder {
             return "logisticGrowth";
         }
 
-        throw unsupported("Only constant and exponential Coalescent demographic models are supported.");
+        if (demographicModel instanceof PiecewisePopulationModel) {
+            return "piecewisePopulation";
+        }
+
+        throw unsupported("Only constant, exponential, logistic, and piecewise Coalescent demographic models are supported.");
     }
 
     private XmlElement parameterElement(
@@ -481,6 +529,30 @@ public class TreePriorXmlBuilder {
         return element;
     }
 
+    private XmlElement inlineParameterDefinition(
+            String id,
+            Parameter parameter,
+            Double lower,
+            Double upper
+    ) {
+        XmlElement element =
+                XmlElement.element("parameter")
+                        .withId(id)
+                        .withAttribute("value", format(parameterValues(parameter)));
+
+        if (lower != null) {
+            element =
+                    element.withAttribute("lower", format(lower));
+        }
+
+        if (upper != null) {
+            element =
+                    element.withAttribute("upper", format(upper));
+        }
+
+        return element;
+    }
+
     private XmlElement parameterReference(Parameter parameter) {
         return XmlElement.ref("parameter", parameterId(parameter));
     }
@@ -489,19 +561,12 @@ public class TreePriorXmlBuilder {
         return XmlElement.ref("treeModel", treeId(treeModel));
     }
 
-    private static BirthDeathGernhard08Model getBirthDeathModel(AbstractModelLikelihood treePrior) {
+    private static SpeciationModel getSpeciationModel(AbstractModelLikelihood treePrior) {
         if (!(treePrior instanceof SpeciationLikelihood speciationLikelihood)) {
-            throw unsupported("Only SpeciationLikelihood tree priors can be serialized as Yule or BirthDeath XML.");
+            throw unsupported("Only SpeciationLikelihood tree priors can be serialized as speciation XML.");
         }
 
-        SpeciationModel speciationModel =
-                speciationLikelihood.getSpeciationModel();
-
-        if (!(speciationModel instanceof BirthDeathGernhard08Model birthDeathModel)) {
-            throw unsupported("Only Yule and BirthDeath tree priors are supported.");
-        }
-
-        return birthDeathModel;
+        return speciationLikelihood.getSpeciationModel();
     }
 
     private static DemographicModel getDemographicModel(AbstractModelLikelihood treePrior) {
@@ -530,6 +595,25 @@ public class TreePriorXmlBuilder {
         return null;
     }
 
+    private static Parameter speciationVariable(
+            SpeciationModel speciationModel,
+            int variableIndex,
+            String label
+    ) {
+        if (variableIndex >= speciationModel.getVariableCount()) {
+            throw unsupported("Speciation XML export requires a " + label + " parameter.");
+        }
+
+        Variable<?> variable =
+                speciationModel.getVariable(variableIndex);
+
+        if (variable instanceof Parameter parameter) {
+            return parameter;
+        }
+
+        throw unsupported("Speciation XML export requires a " + label + " parameter.");
+    }
+
     private static Parameter constantPopulationVariable(ConstantPopulationModel populationModel) {
         return demographicVariable(populationModel, 0, "population size");
     }
@@ -553,6 +637,45 @@ public class TreePriorXmlBuilder {
         throw unsupported("Coalescent XML export requires a " + label + " parameter.");
     }
 
+    private static double[] piecewiseEpochWidths(
+            PiecewisePopulationModel piecewisePopulationModel,
+            int populationSizeDimension
+    ) {
+        if (populationSizeDimension < 2) {
+            throw unsupported("Piecewise Coalescent XML export requires at least two population sizes.");
+        }
+
+        if (!(piecewisePopulationModel.getDemographicFunction() instanceof PiecewiseConstantPopulation piecewisePopulation)) {
+            throw unsupported("Piecewise Coalescent XML export requires a PiecewiseConstantPopulation demographic function.");
+        }
+
+        double[] widths =
+                new double[populationSizeDimension - 1];
+
+        for (int i = 0; i < widths.length; i++) {
+            widths[i] =
+                    piecewisePopulation.getEpochDuration(i);
+
+            if (!(widths[i] > 0.0)) {
+                throw unsupported("Piecewise Coalescent XML export requires positive epoch widths.");
+            }
+        }
+
+        return widths;
+    }
+
+    private static double[] parameterValues(Parameter parameter) {
+        double[] values =
+                new double[parameter.getDimension()];
+
+        for (int i = 0; i < values.length; i++) {
+            values[i] =
+                    parameter.getParameterValue(i);
+        }
+
+        return values;
+    }
+
     private static boolean isYuleCompatible(BirthDeathGernhard08Model model) {
         return model.isYule()
                 || (
@@ -567,6 +690,32 @@ public class TreePriorXmlBuilder {
 
     private static boolean approximatelyOne(double value) {
         return Math.abs(value - 1.0) < 1.0e-12;
+    }
+
+    private static double fossilizedBirthDeathOrigin(
+            BeastXState state,
+            AbstractModelLikelihood treePrior
+    ) {
+        TreeModel treeModel =
+                treeModelForPrior(state, treePrior);
+
+        double rootHeight =
+                treeModel.getNodeHeight(treeModel.getRoot());
+
+        return rootHeight + Math.max(1.0, rootHeight * 0.25);
+    }
+
+    private static TreeModel treeModelForPrior(
+            BeastXState state,
+            AbstractModelLikelihood treePrior
+    ) {
+        for (java.util.Map.Entry<TreeModel, AbstractModelLikelihood> entry : state.treePriorDistributions.entrySet()) {
+            if (entry.getValue() == treePrior) {
+                return entry.getKey();
+            }
+        }
+
+        throw unsupported("Tree prior XML export requires the tree associated with the prior.");
     }
 
     private static String parameterId(Parameter parameter) {
@@ -611,63 +760,19 @@ public class TreePriorXmlBuilder {
         return priorId(treePrior) + "_model";
     }
 
-    private static RuntimeException unsupported(String message) {
-        return new UnsupportedOperationException(
-                message + " Extend TreePriorXmlBuilder before exporting this tree prior to XML."
-        );
-    }
+    private static String format(double[] values) {
+        StringBuilder builder =
+                new StringBuilder();
 
-    private static SpeciationModel getSpeciationModel(AbstractModelLikelihood treePrior) {
-        if (!(treePrior instanceof SpeciationLikelihood speciationLikelihood)) {
-            throw unsupported("Only SpeciationLikelihood tree priors can be serialized as speciation XML.");
-        }
-
-        return speciationLikelihood.getSpeciationModel();
-    }
-
-    private static Parameter speciationVariable(
-            SpeciationModel speciationModel,
-            int variableIndex,
-            String label
-    ) {
-        if (variableIndex >= speciationModel.getVariableCount()) {
-            throw unsupported("Speciation XML export requires a " + label + " parameter.");
-        }
-
-        Variable<?> variable =
-                speciationModel.getVariable(variableIndex);
-
-        if (variable instanceof Parameter parameter) {
-            return parameter;
-        }
-
-        throw unsupported("Speciation XML export requires a " + label + " parameter.");
-    }
-
-    private static double fossilizedBirthDeathOrigin(
-            BeastXState state,
-            AbstractModelLikelihood treePrior
-    ) {
-        TreeModel treeModel =
-                treeModelForPrior(state, treePrior);
-
-        double rootHeight =
-                treeModel.getNodeHeight(treeModel.getRoot());
-
-        return rootHeight + Math.max(1.0, rootHeight * 0.25);
-    }
-
-    private static TreeModel treeModelForPrior(
-            BeastXState state,
-            AbstractModelLikelihood treePrior
-    ) {
-        for (java.util.Map.Entry<TreeModel, AbstractModelLikelihood> entry : state.treePriorDistributions.entrySet()) {
-            if (entry.getValue() == treePrior) {
-                return entry.getKey();
+        for (int i = 0; i < values.length; i++) {
+            if (i > 0) {
+                builder.append(' ');
             }
+
+            builder.append(format(values[i]));
         }
 
-        throw unsupported("Tree prior XML export requires the tree associated with the prior.");
+        return builder.toString();
     }
 
     private static String format(double value) {
@@ -684,5 +789,11 @@ public class TreePriorXmlBuilder {
         }
 
         return Double.toString(value);
+    }
+
+    private static RuntimeException unsupported(String message) {
+        return new UnsupportedOperationException(
+                message + " Extend TreePriorXmlBuilder before exporting this tree prior to XML."
+        );
     }
 }
