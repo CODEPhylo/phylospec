@@ -5,13 +5,13 @@ import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.tiling.tiles.AstNodeTile;
 import tiling.BeastXState;
-import tiling.model.BeastXTreeDistribution;
+import tiling.model.TreeDistribution;
 
 import java.util.IdentityHashMap;
 
 public class TreeDrawTile extends AstNodeTile<TreeModel, Stmt.Draw, BeastXState> {
 
-    AstNodeTileInput<BeastXTreeDistribution<?>, Stmt.Draw, BeastXState> expressionInput =
+    AstNodeTileInput<TreeDistribution<?>, Stmt.Draw, BeastXState> expressionInput =
             new AstNodeTileInput<>("expression", stmt -> stmt.expression);
 
     @Override
@@ -29,7 +29,7 @@ public class TreeDrawTile extends AstNodeTile<TreeModel, Stmt.Draw, BeastXState>
             return existingTreeModel;
         }
 
-        BeastXTreeDistribution<?> evaluatedDistribution =
+        TreeDistribution<?> evaluatedDistribution =
                 this.expressionInput.apply(beastState, indexVariables);
 
         evaluatedDistribution.bind();

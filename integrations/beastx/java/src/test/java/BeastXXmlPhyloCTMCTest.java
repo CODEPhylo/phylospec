@@ -2276,4 +2276,435 @@ public class BeastXXmlPhyloCTMCTest {
         XmlTestSupport.assertXmlContains(treeLog, "Begin trees;");
         XmlTestSupport.assertXmlContains(treeLog, "STATE_");
     }
+
+    @Test
+    @Tag("beagle")
+    public void writesParsesAndRunsDatedTipFossilizedBirthDeathPhyloCTMCXml() throws Exception {
+        Path xmlPath =
+                XmlTestSupport.xmlPath("datedTipFBDPhyloCTMC");
+
+        Path logPath =
+                XmlTestSupport.logPath("datedTipFBDPhyloCTMC");
+
+        Path treeLogPath =
+                XmlTestSupport.treeLogPath("datedTipFBDPhyloCTMC");
+
+        XmlTestSupport.prepare(xmlPath, logPath, treeLogPath);
+
+        String source =
+                """
+                Alignment data = fromNexus(
+                    file="src/test/java/resources/dated-simple.nex",
+                    age=parse(regex=".*_(\\d+(?:\\.\\d+)?)$")
+                )
+    
+                Taxa taxa = taxa(data)
+    
+                Rate speciationRate ~ LogNormal(
+                    logMean=0.0,
+                    logSd=0.5
+                )
+    
+                Rate extinctionRate ~ LogNormal(
+                    logMean=-2.0,
+                    logSd=0.3
+                )
+    
+                Rate serialSamplingRate ~ LogNormal(
+                    logMean=-2.0,
+                    logSd=0.3
+                )
+    
+                Rate clockRate ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
+                )
+    
+                Tree tree ~ FossilizedBirthDeath(
+                    speciationRate=speciationRate,
+                    extinctionRate=extinctionRate,
+                    serialSamplingRate=serialSamplingRate,
+                    samplingProbability=0.9,
+                    rootAge=5.0,
+                    taxa=taxa
+                )
+    
+                Vector<Rate> branchRates ~ StrictClock(
+                    clockRate=clockRate,
+                    tree=tree
+                )
+    
+                QMatrix q = jc69()
+    
+                Alignment alignment ~ PhyloCTMC(
+                    tree=tree,
+                    qMatrix=q,
+                    branchRates=branchRates
+                ) observed as data
+    
+                mcmc {
+                    Integer chainLength = 10000
+                    Integer randomSeed = 1234
+    
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[speciationRate, extinctionRate, serialSamplingRate, clockRate]
+                    )
+    
+                    Logger treeLogger = treeLogger(
+                        logEvery=1,
+                        file="%s",
+                        trees=[tree]
+                    )
+                }
+                """.formatted(
+                        XmlTestSupport.unixPath(logPath),
+                        XmlTestSupport.unixPath(treeLogPath)
+                );
+
+        String xml =
+                XmlTestSupport.buildAndWriteXml(
+                        "xmlDatedTipFBDPhyloCTMC",
+                        source,
+                        xmlPath
+                );
+
+        XmlTestSupport.assertXmlContains(xml, "<taxon id=\"taxon1_0.0\">");
+        XmlTestSupport.assertXmlContains(xml, "<date value=\"0.0\" direction=\"backwards\" units=\"years\"/>");
+        XmlTestSupport.assertXmlContains(xml, "<taxon id=\"taxon4_3.0\">");
+        XmlTestSupport.assertXmlContains(xml, "<date value=\"3.0\" direction=\"backwards\" units=\"years\"/>");
+        XmlTestSupport.assertXmlContains(xml, "usingDates=\"true\"");
+        XmlTestSupport.assertXmlContains(xml, "<birthDeathSerialSampling id=\"tree_prior_model\"");
+        XmlTestSupport.assertXmlContains(xml, "<strictClockBranchRates id=\"tree_strictClockBranchRates\"");
+        XmlTestSupport.assertXmlContains(xml, "<treeLikelihood id=\"alignment_likelihood\"");
+        XmlTestSupport.assertXmlContains(xml, "<treeModel idref=\"tree\"/>");
+
+        assertFalse(xml.contains("tree_2"), xml);
+        assertFalse(xml.contains("tree_prior_2"), xml);
+
+        try {
+            XmlTestSupport.runXml(xmlPath);
+        } catch (RuntimeException exception) {
+            Assumptions.assumeFalse(
+                    isMissingBeagleLibrary(exception),
+                    "Skipping dated-tip FBD PhyloCTMC XML run because BEAGLE native library is not available."
+            );
+
+            throw exception;
+        }
+
+        XmlTestSupport.assertNonEmptyFile(logPath, "dated-tip FBD PhyloCTMC parameter log");
+        XmlTestSupport.assertNonEmptyFile(treeLogPath, "dated-tip FBD PhyloCTMC tree log");
+
+        String parameterLog =
+                Files.readString(logPath);
+
+        XmlTestSupport.assertXmlContains(parameterLog, "speciationRate");
+        XmlTestSupport.assertXmlContains(parameterLog, "extinctionRate");
+        XmlTestSupport.assertXmlContains(parameterLog, "serialSamplingRate");
+        XmlTestSupport.assertXmlContains(parameterLog, "clockRate");
+
+        String treeLog =
+                Files.readString(treeLogPath);
+
+        XmlTestSupport.assertXmlContains(treeLog, "#NEXUS");
+        XmlTestSupport.assertXmlContains(treeLog, "Begin trees;");
+        XmlTestSupport.assertXmlContains(treeLog, "STATE_");
+    }
+
+    @Test
+    @Tag("beagle")
+    public void writesParsesAndRunsDatedTipFBDRelaxedClockGTRPhyloCTMCXml() throws Exception {
+        Path xmlPath =
+                XmlTestSupport.xmlPath("datedTipFBDRelaxedClockGTRPhyloCTMC");
+
+        Path logPath =
+                XmlTestSupport.logPath("datedTipFBDRelaxedClockGTRPhyloCTMC");
+
+        Path treeLogPath =
+                XmlTestSupport.treeLogPath("datedTipFBDRelaxedClockGTRPhyloCTMC");
+
+        XmlTestSupport.prepare(xmlPath, logPath, treeLogPath);
+
+        String source =
+                """
+                Alignment data = fromNexus(
+                    file="src/test/java/resources/dated-simple.nex",
+                    age=parse(regex=".*_(\\d+(?:\\.\\d+)?)$")
+                )
+    
+                Taxa taxa = taxa(data)
+    
+                Rate diversificationRate ~ LogNormal(
+                    logMean=0.0,
+                    logSd=0.5
+                )
+    
+                Rate turnover ~ LogNormal(
+                    logMean=-1.0,
+                    logSd=0.25
+                )
+    
+                Rate serialSamplingRate ~ LogNormal(
+                    logMean=-2.0,
+                    logSd=0.5
+                )
+    
+                Rate clockRate ~ LogNormal(
+                    logMean=0.0,
+                    logSd=0.5
+                )
+    
+                PositiveReal rateAC ~ LogNormal(logMean=0.0, logSd=0.4)
+                PositiveReal rateAG ~ LogNormal(logMean=0.0, logSd=0.4)
+                PositiveReal rateAT ~ LogNormal(logMean=0.0, logSd=0.4)
+                PositiveReal rateCG ~ LogNormal(logMean=0.0, logSd=0.4)
+                PositiveReal rateCT ~ LogNormal(logMean=0.0, logSd=0.4)
+    
+                Simplex baseFrequencies ~ Dirichlet(
+                    concentration=repeat(1.0, num=4)
+                )
+    
+                Tree tree ~ FossilizedBirthDeath(
+                    diversificationRate=diversificationRate,
+                    turnover=turnover,
+                    serialSamplingRate=serialSamplingRate,
+                    samplingProbability=0.8,
+                    rootAge=5.0,
+                    taxa=taxa
+                )
+    
+                Vector<Rate> branchRates ~ RelaxedClock(
+                    clockRate=clockRate,
+                    base=LogNormal(mean=1.0, logSd=0.1),
+                    tree=tree
+                )
+    
+                QMatrix qMatrix = gtr(
+                    rateAC=rateAC,
+                    rateAG=rateAG,
+                    rateAT=rateAT,
+                    rateCG=rateCG,
+                    rateCT=rateCT,
+                    rateGT=1.0,
+                    baseFrequencies=baseFrequencies
+                )
+    
+                Alignment alignment ~ PhyloCTMC(
+                    tree=tree,
+                    qMatrix=qMatrix,
+                    branchRates=branchRates
+                ) observed as data
+    
+                mcmc {
+                    Integer chainLength = 10000
+                    Integer randomSeed = 1234
+    
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[
+                            diversificationRate,
+                            turnover,
+                            serialSamplingRate,
+                            clockRate,
+                            rateAC,
+                            rateAG,
+                            rateAT,
+                            rateCG,
+                            rateCT,
+                            baseFrequencies
+                        ]
+                    )
+    
+                    Logger treeLogger = treeLogger(
+                        logEvery=1,
+                        file="%s",
+                        trees=[tree]
+                    )
+                }
+                """.formatted(
+                        XmlTestSupport.unixPath(logPath),
+                        XmlTestSupport.unixPath(treeLogPath)
+                );
+
+        String xml =
+                XmlTestSupport.buildAndWriteXml(
+                        "xmlDatedTipFBDRelaxedClockGTRPhyloCTMC",
+                        source,
+                        xmlPath
+                );
+
+        XmlTestSupport.assertXmlContains(xml, "usingDates=\"true\"");
+        XmlTestSupport.assertXmlContains(xml, "<date value=\"0.0\" direction=\"backwards\" units=\"years\"/>");
+        XmlTestSupport.assertXmlContains(xml, "<birthDeathSerialSampling id=\"tree_prior_model\"");
+        XmlTestSupport.assertXmlContains(xml, "<gtrModel id=\"alignment_likelihood_substitutionModel\"");
+        XmlTestSupport.assertXmlContains(xml, "<frequencyModel id=\"alignment_likelihood_substitutionModel_frequencies\"");
+        XmlTestSupport.assertXmlContains(xml, "<discretizedBranchRates");
+        XmlTestSupport.assertXmlContains(xml, "<treeLikelihood id=\"alignment_likelihood\"");
+        XmlTestSupport.assertXmlContains(xml, "<log id=\"fileLogger");
+        XmlTestSupport.assertXmlContains(xml, "<logTree");
+
+        XmlTestSupport.assertXmlContains(xml, "<rateAC>");
+        XmlTestSupport.assertXmlContains(xml, "<rateAG>");
+        XmlTestSupport.assertXmlContains(xml, "<rateAT>");
+        XmlTestSupport.assertXmlContains(xml, "<rateCG>");
+        XmlTestSupport.assertXmlContains(xml, "<rateCT>");
+        assertFalse(xml.contains("<rateGT>"), xml);
+        assertFalse(xml.contains("idref=\"rateGT\""), xml);
+
+        assertFalse(xml.contains("<strictClockBranchRates"), xml);
+        assertFalse(xml.contains("tree_2"), xml);
+        assertFalse(xml.contains("tree_prior_2"), xml);
+
+        try {
+            XmlTestSupport.runXml(xmlPath);
+        } catch (RuntimeException exception) {
+            Assumptions.assumeFalse(
+                    isMissingBeagleLibrary(exception),
+                    "Skipping dated-tip FBD relaxed-clock GTR XML run because BEAGLE native library is not available."
+            );
+
+            throw exception;
+        }
+
+        XmlTestSupport.assertNonEmptyFile(logPath, "dated-tip FBD relaxed-clock GTR parameter log");
+        XmlTestSupport.assertNonEmptyFile(treeLogPath, "dated-tip FBD relaxed-clock GTR tree log");
+
+        String parameterLog =
+                Files.readString(logPath);
+
+        XmlTestSupport.assertXmlContains(parameterLog, "diversificationRate");
+        XmlTestSupport.assertXmlContains(parameterLog, "turnover");
+        XmlTestSupport.assertXmlContains(parameterLog, "serialSamplingRate");
+        XmlTestSupport.assertXmlContains(parameterLog, "clockRate");
+        XmlTestSupport.assertXmlContains(parameterLog, "rateAC");
+        XmlTestSupport.assertXmlContains(parameterLog, "rateAG");
+        XmlTestSupport.assertXmlContains(parameterLog, "rateAT");
+        XmlTestSupport.assertXmlContains(parameterLog, "rateCG");
+        XmlTestSupport.assertXmlContains(parameterLog, "rateCT");
+        XmlTestSupport.assertXmlContains(parameterLog, "baseFrequencies");
+
+        assertFalse(parameterLog.contains("rateGT"), parameterLog);
+
+        String treeLog =
+                Files.readString(treeLogPath);
+
+        XmlTestSupport.assertXmlContains(treeLog, "#NEXUS");
+        XmlTestSupport.assertXmlContains(treeLog, "Begin trees;");
+        XmlTestSupport.assertXmlContains(treeLog, "STATE_");
+    }
+
+    @Test
+    public void writesParsesAndRunsSkylineHKYStrictClockPhyloCTMCXml() throws Exception {
+        Path xmlPath =
+                XmlTestSupport.xmlPath("skylineHKYStrictClockPhyloCTMC");
+
+        Path logPath =
+                XmlTestSupport.logPath("skylineHKYStrictClockPhyloCTMC");
+
+        Path treeLogPath =
+                XmlTestSupport.treeLogPath("skylineHKYStrictClockPhyloCTMC");
+
+        XmlTestSupport.prepare(xmlPath, logPath, treeLogPath);
+
+        String source =
+                """
+                Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+    
+                Taxa taxa = taxa(data)
+    
+                Vector<PositiveReal> populationSizes ~ IID(
+                    base=LogNormal(
+                        logMean=5.0,
+                        logSd=0.5
+                    ),
+                    num=3
+                )
+    
+                PositiveReal clockRate ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
+                )
+    
+                PositiveReal kappa ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
+                )
+    
+                Simplex baseFrequencies ~ Dirichlet(
+                    concentration=[1.0, 1.0, 1.0, 1.0]
+                )
+    
+                Tree tree ~ SkylineCoalescent(
+                    populationSizes=populationSizes,
+                    changeTimes=[1.0, 2.0],
+                    taxa=taxa
+                )
+    
+                Vector<Rate> branchRates ~ StrictClock(
+                    clockRate=clockRate,
+                    tree=tree
+                )
+    
+                QMatrix qMatrix = hky(
+                    kappa=kappa,
+                    baseFrequencies=baseFrequencies
+                )
+    
+                Alignment alignment ~ PhyloCTMC(
+                    tree=tree,
+                    qMatrix=qMatrix,
+                    branchRates=branchRates
+                ) observed as data
+    
+                mcmc {
+                    Integer chainLength = 10000
+                    Integer randomSeed = 1234
+    
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s",
+                        parameters=[populationSizes, clockRate, kappa, baseFrequencies]
+                    )
+    
+                    Logger treeLogger = treeLogger(
+                        logEvery=1,
+                        file="%s",
+                        trees=[tree]
+                    )
+                }
+                """.formatted(
+                        XmlTestSupport.unixPath(logPath),
+                        XmlTestSupport.unixPath(treeLogPath)
+                );
+
+        String xml =
+                XmlTestSupport.buildAndWriteXml(
+                        "skylineHKYStrictClockPhyloCTMC",
+                        source,
+                        xmlPath
+                );
+
+        XmlTestSupport.assertXmlContains(xml, "<piecewisePopulation");
+        XmlTestSupport.assertXmlContains(xml, "populationSizes_prior");
+        XmlTestSupport.assertXmlContains(xml, "<hkyModel");
+        XmlTestSupport.assertXmlContains(xml, "<strictClockBranchRates");
+        XmlTestSupport.assertXmlContains(xml, "<treeLikelihood");
+
+        try {
+            XmlTestSupport.runXml(xmlPath);
+        } catch (RuntimeException exception) {
+            Assumptions.assumeFalse(
+                    isMissingBeagleLibrary(exception),
+                    "Skipping skyline HKY strict-clock PhyloCTMC XML run because BEAGLE native library is not available."
+            );
+
+            throw exception;
+        }
+
+        XmlTestSupport.assertNonEmptyFile(logPath, "skyline HKY strict-clock parameter log");
+        XmlTestSupport.assertNonEmptyFile(treeLogPath, "skyline HKY strict-clock tree log");
+    }
 }
