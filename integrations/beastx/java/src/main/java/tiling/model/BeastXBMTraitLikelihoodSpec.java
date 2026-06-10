@@ -1,7 +1,6 @@
 package tiling.model;
 
 import dr.evolution.alignment.Alignment;
-import dr.evolution.continuous.Continuous;
 import dr.evolution.tree.NodeRef;
 import dr.evolution.util.Taxon;
 import dr.evomodel.branchratemodel.BranchRateModel;
@@ -15,8 +14,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class BeastXBMTraitLikelihoodSpec extends AbstractModelLikelihood {
-
-    private static final String TRAIT_ATTRIBUTE = "continuousTrait";
 
     private final Alignment observedTraits;
     private final TreeModel treeModel;
@@ -41,6 +38,24 @@ public class BeastXBMTraitLikelihoodSpec extends AbstractModelLikelihood {
         this.branchRateModel = branchRateModel;
         this.siteRates = siteRates;
         this.rootValues = rootValues;
+
+        ContinuousTraitValidation.validateObservedTraits(
+                "PhyloBM",
+                observedTraits,
+                treeModel
+        );
+
+        ContinuousTraitValidation.requireSingleTraitParameter(
+                "PhyloBM",
+                siteRates,
+                "siteRates"
+        );
+
+        ContinuousTraitValidation.requireSingleTraitParameter(
+                "PhyloBM",
+                rootValues,
+                "rootValues"
+        );
 
         this.addModel(treeModel);
         this.addModel(branchRateModel);
@@ -118,17 +133,10 @@ public class BeastXBMTraitLikelihoodSpec extends AbstractModelLikelihood {
     }
 
     private NodeRef externalNodeForTaxon(String taxonId) {
-        for (int i = 0; i < treeModel.getExternalNodeCount(); i++) {
-            NodeRef node = treeModel.getExternalNode(i);
-            Taxon nodeTaxon = treeModel.getNodeTaxon(node);
-
-            if (nodeTaxon != null && taxonId.equals(nodeTaxon.getId())) {
-                return node;
-            }
-        }
-
-        throw new IllegalArgumentException(
-                "Continuous trait taxon '" + taxonId + "' is not present as a tree tip."
+        return ContinuousTraitValidation.externalNodeForTaxon(
+                "PhyloBM",
+                treeModel,
+                taxonId
         );
     }
 
@@ -345,26 +353,10 @@ public class BeastXBMTraitLikelihoodSpec extends AbstractModelLikelihood {
     }
 
     private double readTraitValue(int sequenceIndex, Taxon taxon) {
-        Object value = observedTraits.getSequenceAttribute(sequenceIndex, TRAIT_ATTRIBUTE);
-
-        if (value == null) {
-            value = taxon.getAttribute(TRAIT_ATTRIBUTE);
-        }
-
-        if (value instanceof Number number) {
-            return number.doubleValue();
-        }
-
-        if (value instanceof Continuous continuous) {
-            return continuous.getValue();
-        }
-
-        if (value instanceof String string) {
-            return Double.parseDouble(string);
-        }
-
-        throw new IllegalArgumentException(
-                "No numeric continuous trait value found for taxon '" + taxon.getId() + "'."
+        return ContinuousTraitValidation.readTraitValue(
+                "PhyloBM",
+                observedTraits,
+                sequenceIndex
         );
     }
 
