@@ -1,4 +1,5 @@
 import dr.inference.mcmc.MCMC;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assumptions;
 import tiling.runner.BeastXRunResult;
@@ -88,7 +89,7 @@ public class BeastXXmlRunnerEntryTest {
 
         assertEquals("structuredXmlRun", result.runName());
         assertEquals(xmlPath, result.xmlPath());
-        assertEquals(XmlTestSupport.XML_OUTPUT_DIRECTORY, result.outputDirectory());
+        Assertions.assertEquals(XmlTestSupport.XML_OUTPUT_DIRECTORY, result.outputDirectory());
         assertTrue(result.executed());
         assertNotNull(result.model());
         assertNotNull(result.mcmc());
