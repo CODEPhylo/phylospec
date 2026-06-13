@@ -1,0 +1,13 @@
+// TEMPLATE
+$a + ($b + $c)
+// TEMPLATE
+
+// QUERY
+Real a = 10
+Real b = 100
+a + (b * a)
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH

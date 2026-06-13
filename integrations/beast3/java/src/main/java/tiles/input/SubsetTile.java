@@ -3,28 +3,28 @@ package tiles.input;
 import beast.base.spec.evolution.alignment.FilteredAlignment;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
-import org.phylospec.tiling.tiles.GeneratorTile;
+import tiles.GeneratorTile;
 import beastconfig.BEASTState;
-import org.phylospec.tiling.errors.TileApplicationError;
+import tiling.TileApplicationError;
 
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-public class SubsetTile extends GeneratorTile<DecoratedAlignment, BEASTState> {
+public class SubsetTile extends GeneratorTile<DecoratedAlignment> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "subset";
     }
 
-    GeneratorTileInput<DecoratedAlignment, BEASTState> alignmentInput = new GeneratorTileInput<>("alignment");
-    GeneratorTileInput<Integer, BEASTState> startInput = new GeneratorTileInput<>(
+    GeneratorTileInput<DecoratedAlignment> alignmentInput = new GeneratorTileInput<>("alignment");
+    GeneratorTileInput<Integer> startInput = new GeneratorTileInput<>(
             "start", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
-    GeneratorTileInput<Integer, BEASTState> endInput = new GeneratorTileInput<>(
+    GeneratorTileInput<Integer> endInput = new GeneratorTileInput<>(
             "end", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
-    GeneratorTileInput<Integer, BEASTState> codonPositionInput = new GeneratorTileInput<>(
+    GeneratorTileInput<Integer> codonPositionInput = new GeneratorTileInput<>(
             "codonPosition", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
 

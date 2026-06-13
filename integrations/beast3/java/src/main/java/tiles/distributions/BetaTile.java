@@ -6,21 +6,21 @@ import beast.base.spec.inference.distribution.Beta;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.phylospec.ast.Expr;
-import org.phylospec.tiling.tiles.GeneratorTile;
+import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 import java.util.IdentityHashMap;
 
-public class BetaTile extends GeneratorTile<BoundDistribution<RealScalarParam<UnitInterval>, Beta>, BEASTState> {
+public class BetaTile extends GeneratorTile<BoundDistribution<RealScalarParam<UnitInterval>, Beta>> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "Beta";
     }
 
-    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> alphaInput = new GeneratorTileInput<>("alpha");
-    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> betaInput = new GeneratorTileInput<>("beta");
+    GeneratorTileInput<RealScalar<PositiveReal>> alphaInput = new GeneratorTileInput<>("alpha");
+    GeneratorTileInput<RealScalar<PositiveReal>> betaInput = new GeneratorTileInput<>("beta");
 
     @Override
     public BoundDistribution<RealScalarParam<UnitInterval>, Beta> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

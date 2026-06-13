@@ -1,0 +1,14 @@
+// TEMPLATE
+[$a, $b]
+// TEMPLATE
+
+// QUERY
+Real x = 10
+Real y = 20
+[x, y]
+// QUERY
+
+// MATCH
+// $a -> x
+// $b -> y
+// MATCH

@@ -1,0 +1,12 @@
+// TEMPLATE
+Real a ~ exp(x~$dist)
+// TEMPLATE
+
+// QUERY
+Real x ~ Exponential(1.0)
+Real y ~ exp(x)
+// QUERY
+
+// MATCH
+// $dist -> (CA Exponential (AA null 1.0))
+// MATCH

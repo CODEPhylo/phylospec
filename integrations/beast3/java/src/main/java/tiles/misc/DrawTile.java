@@ -4,15 +4,16 @@ import beast.base.inference.StateNode;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
-import org.phylospec.tiling.TypeToken;
-import tiling.BoundDistribution;
-import org.phylospec.tiling.tiles.AstNodeTile;
+import tiling.*;
+import tiles.AstNodeTile;
 
 import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
-public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw, BEASTState> {
+public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw> {
 
-    AstNodeTileInput<BoundDistribution<?, ?>, Stmt.Draw, BEASTState> expressionInput = new AstNodeTileInput<>(
+    AstNodeTileInput<BoundDistribution<?, ?>, Stmt.Draw> expressionInput = new AstNodeTileInput<>(
             "expression", expr -> expr.expression
     );
 

@@ -1,0 +1,11 @@
+// TEMPLATE
+!$bool
+// TEMPLATE
+
+// QUERY
+true == true
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH

@@ -1,0 +1,11 @@
+// TEMPLATE
+Any<Any> x = $x
+// TEMPLATE
+
+// QUERY
+Vector<String> a = ["100"]
+// QUERY
+
+// MATCH
+// $x -> (AR "100")
+// MATCH

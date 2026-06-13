@@ -1,0 +1,16 @@
+// TEMPLATE
+Matrix a = [[$a, $b], [1.0, 2.0]]
+Real c = a[$idx1, $idx2]
+// TEMPLATE
+
+// QUERY
+Matrix a = [[1.0, 2.0], [1.0, 2.0]]
+Real c = a[1, 2]
+// QUERY
+
+// MATCH
+// $a -> 1.0
+// $b -> 2.0
+// $idx1 -> 1
+// $idx2 -> 2
+// MATCH
