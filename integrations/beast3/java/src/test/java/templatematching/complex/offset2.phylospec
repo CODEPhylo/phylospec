@@ -1,0 +1,15 @@
+// TEMPLATE
+Real x ~ $distribution
+x + $offset
+// TEMPLATE
+
+// QUERY
+Real normal ~ Normal(mean=1.0, sd=2.0)
+Real offset = 10
+offset + normal
+// QUERY
+
+// MATCH
+// $distribution -> (CA Normal (AA mean 1.0) (AA sd 2.0))
+// $offset -> offset
+// MATCH

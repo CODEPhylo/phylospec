@@ -1,0 +1,13 @@
+// TEMPLATE
+Real x[i] ~ $dist for i in $from:$to
+// TEMPLATE
+
+// QUERY
+Real x[i] ~ Exponential(rate=1.0) for i in 1:100
+// QUERY
+
+// MATCH
+// $dist -> (CA Exponential (AA rate 1.0))
+// $from -> 1
+// $to -> 100
+// MATCH

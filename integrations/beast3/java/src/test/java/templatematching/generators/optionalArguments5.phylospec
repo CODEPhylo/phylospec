@@ -1,0 +1,13 @@
+// TEMPLATE
+Normal(sd=$sd, mean~$mean, optional=$$optional)
+// TEMPLATE
+
+// QUERY
+Normal(mean~Exponential(0.0), sd=1.0, optional=1)
+// QUERY
+
+// MATCH
+// $mean -> (CA Exponential (AA null 0.0))
+// $sd -> 1.0
+// $$optional -> 1
+// MATCH

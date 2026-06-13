@@ -1,0 +1,11 @@
+// TEMPLATE
+Real x ~ $dist observed between [$from, $to]
+// TEMPLATE
+
+// QUERY
+Real x ~ Normal(mean=1.0, sd=2.0)
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH

@@ -1,0 +1,12 @@
+// TEMPLATE
+exp(x=$x)
+// TEMPLATE
+
+// QUERY
+Real a = 100
+exp(a)
+// QUERY
+
+// MATCH
+// $x -> a
+// MATCH

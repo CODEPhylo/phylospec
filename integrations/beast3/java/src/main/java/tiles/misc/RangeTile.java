@@ -2,11 +2,12 @@ package tiles.misc;
 
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.NonNegativeInt;
+import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.type.IntScalar;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
-import org.phylospec.tiling.tiles.AstNodeTile;
-import org.phylospec.tiling.errors.TileApplicationError;
+import tiles.AstNodeTile;
+import tiling.TileApplicationError;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -15,12 +16,12 @@ import java.util.List;
  * This tile matches range statements like 1:5. Only ranges starting from 1 are supported. The result of this tile
  * is the upper bound (e.g. 5 for 1:5).
  */
-public class RangeTile extends AstNodeTile<Integer, Expr.Range, BEASTState> {
+public class RangeTile extends AstNodeTile<Integer, Expr.Range> {
 
-    AstNodeTileInput<? extends IntScalar<NonNegativeInt>, Expr.Range, BEASTState> fromInput = new AstNodeTileInput<>(
+    AstNodeTileInput<? extends IntScalar<NonNegativeInt>, Expr.Range> fromInput = new AstNodeTileInput<>(
             "from", expr -> expr.from
     );
-    AstNodeTileInput<? extends IntScalar<NonNegativeInt>, Expr.Range, BEASTState> toInput = new AstNodeTileInput<>(
+    AstNodeTileInput<? extends IntScalar<NonNegativeInt>, Expr.Range> toInput = new AstNodeTileInput<>(
             "to", expr -> expr.to
     );
 

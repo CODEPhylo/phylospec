@@ -1,0 +1,11 @@
+// TEMPLATE
+Real x ~ $dist
+// TEMPLATE
+
+// QUERY
+Real x ~ Normal(mean=1.0, sd=2.0) observed as 5.0
+// QUERY
+
+// MATCH
+// $dist -> (CA Normal (AA mean 1.0) (AA sd 2.0))
+// MATCH

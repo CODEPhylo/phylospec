@@ -1,0 +1,11 @@
+// TEMPLATE
+$vec[$i, $j]
+// TEMPLATE
+
+// QUERY
+[1.0, 2.0][1]
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH

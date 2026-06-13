@@ -11,11 +11,11 @@ import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
-import org.phylospec.tiling.tiles.AstNodeTile;
+import tiles.AstNodeTile;
 import beastconfig.BEASTState;
-import org.phylospec.tiling.errors.FailedTilingAttempt;
-import org.phylospec.tiling.tiles.Tile;
-import org.phylospec.tiling.TypeToken;
+import tiling.FailedTilingAttempt;
+import tiling.Tile;
+import tiling.TypeToken;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -25,7 +25,7 @@ import java.util.*;
  * This tile matches vectors where every element is a RealScalarParam or a IntScalarParam and produces a
  * RealVectorParam or IntVectorParam.
  */
-public class VectorTile<T> extends AstNodeTile<T, Expr.Array, BEASTState> {
+public class VectorTile<T> extends AstNodeTile<T, Expr.Array> {
     private final TypeToken<T> typeToken;
     private final T value;
 
@@ -45,7 +45,7 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array, BEASTState> {
     }
 
     @Override
-    public Set<Tile<?, BEASTState>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?, BEASTState>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
+    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
         if (!(node instanceof Expr.Array array)) throw new FailedTilingAttempt.Irrelevant();
 
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
@@ -61,11 +61,11 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array, BEASTState> {
 
         // for each element, build a map from scalar-param type token to tile
 
-        List<Map<TypeToken<?>, Tile<?, BEASTState>>> elementMaps = new ArrayList<>();
+        List<Map<TypeToken<?>, Tile<?>>> elementMaps = new ArrayList<>();
         for (Expr element : array.elements) {
-            Map<TypeToken<?>, Tile<?, BEASTState>> typeToTile = new LinkedHashMap<>();
+            Map<TypeToken<?>, Tile<?>> typeToTile = new LinkedHashMap<>();
 
-            for (Tile<?, BEASTState> tile : allInputTiles.get(element)) {
+            for (Tile<?> tile : allInputTiles.get(element)) {
                 TypeToken<?> tt = tile.getTypeToken();
                 if (isScalarParamType(tt)) typeToTile.put(tt, tile);
             }
@@ -86,9 +86,9 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array, BEASTState> {
 
         // for each common type token, we create a VectorTile tile
 
-        Set<Tile<?, BEASTState>> vectorTiles = new HashSet<>();
+        Set<Tile<?>> vectorTiles = new HashSet<>();
         for (TypeToken<?> elementType : commonTypes) {
-            List<? extends Tile<?, BEASTState>> elementTiles = elementMaps.stream()
+            List<? extends Tile<?>> elementTiles = elementMaps.stream()
                     .map(m -> m.get(elementType))
                     .toList();
             vectorTiles.addAll(buildVectorTile(array, elementType, elementTiles));
@@ -108,7 +108,7 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array, BEASTState> {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static List<Tile<?, BEASTState>> buildVectorTile(Expr.Array array, TypeToken<?> elementType, List<? extends Tile<?, BEASTState>> elementTiles) {
+    private static List<Tile<?>> buildVectorTile(Expr.Array array, TypeToken<?> elementType, List<? extends Tile<?>> elementTiles) {
         ParameterizedType pt = (ParameterizedType) elementType.getType();
         Class<?> raw = (Class<?>) pt.getRawType();
         Type domainType = pt.getActualTypeArguments()[0];
@@ -124,7 +124,7 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array, BEASTState> {
                 if (domain == null) domain = scalar.getDomain();
             }
 
-            List<Tile<?, BEASTState>> tiles = new ArrayList<>();
+            List<Tile<?>> tiles = new ArrayList<>();
 
             // always produce the plain real vector
             VectorTile vectorTile = new VectorTile(TypeToken.parameterized(RealVectorParam.class, domainType), new RealVectorParam<>(values, domain));
@@ -178,7 +178,7 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array, BEASTState> {
     }
 
     @Override
-    public Tile<?, BEASTState> createInstance() {
+    public Tile<?> createInstance() {
         return new VectorTile<>(new TypeToken<>() {
         }, null);
     }

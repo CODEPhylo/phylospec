@@ -13,7 +13,6 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import org.junit.jupiter.api.Test;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.domain.Real;
-import org.phylospec.tiling.TypeToken;
 import org.phylospec.types.RealScalar;
 import org.phylospec.types.Scalar;
 

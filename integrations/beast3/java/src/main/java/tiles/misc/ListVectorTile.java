@@ -5,11 +5,11 @@ import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
-import org.phylospec.tiling.tiles.AstNodeTile;
+import tiles.AstNodeTile;
 import beastconfig.BEASTState;
-import org.phylospec.tiling.errors.FailedTilingAttempt;
-import org.phylospec.tiling.tiles.Tile;
-import org.phylospec.tiling.TypeToken;
+import tiling.FailedTilingAttempt;
+import tiling.Tile;
+import tiling.TypeToken;
 
 import java.util.*;
 
@@ -17,41 +17,41 @@ import java.util.*;
  * This tile matches an array and simply creates a Java List with all objects produced by the elements. A vector tile
  * is created for every combination of element tiles which have the same TypeToken.
  */
-public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array, BEASTState> {
+public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array> {
 
-    private final List<Tile<?, BEASTState>> inputTiles;
+    private final List<Tile<?>> inputTiles;
 
     public ListVectorTile() {
         this.inputTiles = new ArrayList<>();
     }
 
-    public ListVectorTile(List<Tile<?, BEASTState>> inputTiles) {
+    public ListVectorTile(List<Tile<?>> inputTiles) {
         this.inputTiles = inputTiles;
     }
 
     @Override
-    public Set<Tile<?, BEASTState>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?, BEASTState>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
+    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
         if (!(node instanceof Expr.Array array)) throw new FailedTilingAttempt.Irrelevant();
 
         // we gather at all possible input tiles for each element
 
-        List<Set<Tile<?, BEASTState>>> allPossibleInputTiles = new ArrayList<>();
+        List<Set<Tile<?>>> allPossibleInputTiles = new ArrayList<>();
         for (Expr element : array.elements) {
-            Set<Tile<?, BEASTState>> elementTiles = allInputTiles.get(element);
+            Set<Tile<?>> elementTiles = allInputTiles.get(element);
             allPossibleInputTiles.add(elementTiles);
         }
 
         // we now look at every combination of element tiles. we create a tile for every combination where
         // everything has the same type
 
-        Set<Tile<?, BEASTState>> wiredUpTiles = new HashSet<>();
+        Set<Tile<?>> wiredUpTiles = new HashSet<>();
         Utils.visitCombinations(
                 allPossibleInputTiles, inputTiles -> {
                     // make sure that all input tiles have the same type token
                     TypeToken<?> firstToken = inputTiles.getFirst().getTypeToken();
                     if (inputTiles.stream().anyMatch(t -> !Objects.equals(t.getTypeToken(), firstToken))) return;
 
-                    Tile<?, BEASTState> tile = new ListVectorTile(inputTiles);
+                    Tile<?> tile = new ListVectorTile(inputTiles);
                     tile.setRootNode(node);
 
                     int totalWeight = inputTiles.stream().mapToInt(Tile::getWeight).sum();
@@ -68,7 +68,7 @@ public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array, BEASTS
     public List<Object> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         List<Object> list = new ArrayList<>();
 
-        for (Tile<?, BEASTState> tile : inputTiles) {
+        for (Tile<?> tile : inputTiles) {
             list.add(tile.apply(beastState, indexVariables));
         }
 
