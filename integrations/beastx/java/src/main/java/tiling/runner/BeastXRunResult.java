@@ -4,6 +4,12 @@ import dr.inference.mcmc.MCMC;
 import tiling.BeastXModel;
 import tiling.BeastXState;
 
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+
 public record BeastXRunResult(
         String runName,
         RunnerOptions options,
@@ -50,5 +56,86 @@ public record BeastXRunResult(
                 this.materialized,
                 true
         );
+    }
+
+    public List<Path> fileLogPaths() {
+        LinkedHashSet<Path> paths =
+                new LinkedHashSet<>();
+
+        for (BeastXState.FileLoggerSpec spec : this.beastState.fileLoggerSpecs) {
+            paths.add(Path.of(spec.fileName));
+        }
+
+        if (
+                this.beastState.outputPrefix != null
+                        && this.beastState.fileLoggerSpecs.isEmpty()
+        ) {
+            paths.add(Path.of(this.beastState.outputPrefix + ".log"));
+        }
+
+        return List.copyOf(paths);
+    }
+
+    public List<Path> treeLogPaths() {
+        LinkedHashSet<Path> paths =
+                new LinkedHashSet<>();
+
+        for (BeastXState.TreeLoggerSpec spec : this.beastState.treeLoggerSpecs) {
+            paths.add(Path.of(spec.fileName));
+        }
+
+        if (
+                this.beastState.outputPrefix != null
+                        && this.beastState.treeLoggerSpecs.isEmpty()
+                        && !this.beastState.treePriorDistributions.isEmpty()
+        ) {
+            paths.add(Path.of(this.beastState.outputPrefix + ".trees"));
+        }
+
+        return List.copyOf(paths);
+    }
+
+    public List<Path> outputPaths() {
+        ArrayList<Path> paths =
+                new ArrayList<>();
+
+        paths.addAll(fileLogPaths());
+        paths.addAll(treeLogPaths());
+
+        return List.copyOf(paths);
+    }
+
+    public Optional<Path> firstFileLogPath() {
+        List<Path> paths =
+                fileLogPaths();
+
+        if (paths.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(paths.getFirst());
+    }
+
+    public Optional<Path> firstTreeLogPath() {
+        List<Path> paths =
+                treeLogPaths();
+
+        if (paths.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(paths.getFirst());
+    }
+
+    public boolean hasFileLogs() {
+        return !fileLogPaths().isEmpty();
+    }
+
+    public boolean hasTreeLogs() {
+        return !treeLogPaths().isEmpty();
+    }
+
+    public boolean hasOutputFiles() {
+        return !outputPaths().isEmpty();
     }
 }

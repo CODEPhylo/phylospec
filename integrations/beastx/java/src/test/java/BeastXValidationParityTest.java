@@ -160,4 +160,35 @@ public class BeastXValidationParityTest {
             );
         }
     }
+
+    @Test
+    public void stochasticVectorLiteralRejectsMultipleRandomScalars() {
+        String source = """
+            Real x ~ Normal(mean=0.0, sd=1.0)
+            Real y ~ Normal(mean=0.0, sd=1.0)
+
+            Vector<Real> values = [x, y]
+            """;
+
+        assertInvalidModel(
+                source,
+                "stochastic vector literals",
+                "exactly one"
+        );
+    }
+
+    @Test
+    public void stochasticVectorLiteralRejectsMixedRandomAndConstantElements() {
+        String source = """
+            Real x ~ Normal(mean=0.0, sd=1.0)
+
+            Vector<Real> values = [x, 1.0]
+            """;
+
+        assertInvalidModel(
+                source,
+                "stochastic vector literals",
+                "exactly one"
+        );
+    }
 }

@@ -114,4 +114,26 @@ public final class XmlTestSupport {
                 "Expected XML not to contain: " + unexpected + "\n\nActual XML:\n" + xml
         );
     }
+
+    public static boolean isMissingBeagleLibrary(Throwable throwable) {
+        Throwable current =
+                throwable;
+
+        while (current != null) {
+            String message =
+                    current.getMessage();
+
+            if (
+                    message != null
+                            && message.contains("No acceptable BEAGLE library plugins found")
+            ) {
+                return true;
+            }
+
+            current =
+                    current.getCause();
+        }
+
+        return false;
+    }
 }
