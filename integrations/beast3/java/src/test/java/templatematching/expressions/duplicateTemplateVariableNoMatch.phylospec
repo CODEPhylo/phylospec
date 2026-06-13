@@ -1,0 +1,11 @@
+// TEMPLATE
+$a + $a
+// TEMPLATE
+
+// QUERY
+10.0 + 20.0
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH

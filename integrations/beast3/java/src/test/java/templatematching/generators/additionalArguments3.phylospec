@@ -1,0 +1,11 @@
+// TEMPLATE
+Normal(sd=$sd, anything=10)
+// TEMPLATE
+
+// QUERY
+Normal()
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH

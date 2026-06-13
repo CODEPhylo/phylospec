@@ -1,0 +1,12 @@
+// TEMPLATE
+$vec[$idx]
+// TEMPLATE
+
+// QUERY
+[1.0, 2.0, 3.0][2]
+// QUERY
+
+// MATCH
+// $vec -> (AR 1.0 2.0 3.0)
+// $idx -> 2
+// MATCH

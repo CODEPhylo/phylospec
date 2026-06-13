@@ -1,0 +1,11 @@
+// TEMPLATE
+Normal(sd=$sd, anything=10)
+// TEMPLATE
+
+// QUERY
+Normal(mean=10, sd=20, offset=10)
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH

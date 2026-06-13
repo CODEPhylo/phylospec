@@ -1,0 +1,11 @@
+// TEMPLATE
+$x
+// TEMPLATE
+
+// QUERY
+Real x = 10
+// QUERY
+
+// MATCH
+// $x -> (AS Real x 10)
+// MATCH

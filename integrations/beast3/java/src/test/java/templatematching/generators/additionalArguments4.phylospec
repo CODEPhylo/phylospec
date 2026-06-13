@@ -1,0 +1,11 @@
+// TEMPLATE
+Normal()
+// TEMPLATE
+
+// QUERY
+Normal(mean=0.0, sd=1.0)
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH

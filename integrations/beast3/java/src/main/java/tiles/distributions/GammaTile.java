@@ -5,21 +5,21 @@ import beast.base.spec.inference.distribution.Gamma;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.phylospec.ast.Expr;
-import org.phylospec.tiling.tiles.GeneratorTile;
+import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 import java.util.IdentityHashMap;
 
-public class GammaTile extends GeneratorTile<BoundDistribution<RealScalarParam<PositiveReal>, Gamma>, BEASTState> {
+public class GammaTile extends GeneratorTile<BoundDistribution<RealScalarParam<PositiveReal>, Gamma>> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "Gamma";
     }
 
-    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> shapeInput = new GeneratorTileInput<>("shape");
-    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> rateInput = new GeneratorTileInput<>("rate");
+    GeneratorTileInput<RealScalar<PositiveReal>> shapeInput = new GeneratorTileInput<>("shape");
+    GeneratorTileInput<RealScalar<PositiveReal>> rateInput = new GeneratorTileInput<>("rate");
 
     @Override
     public BoundDistribution<RealScalarParam<PositiveReal>, Gamma> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

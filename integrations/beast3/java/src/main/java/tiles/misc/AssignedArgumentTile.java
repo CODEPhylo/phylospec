@@ -1,15 +1,15 @@
 package tiles.misc;
 
 import org.phylospec.ast.Expr;
-import org.phylospec.tiling.tiles.AstNodeTile;
+import tiles.AstNodeTile;
 import beastconfig.BEASTState;
-import org.phylospec.tiling.TypeToken;
+import tiling.TypeToken;
 
 import java.util.IdentityHashMap;
 
-public class AssignedArgumentTile extends AstNodeTile<Object, Expr.AssignedArgument, BEASTState> {
+public class AssignedArgumentTile extends AstNodeTile<Object, Expr.AssignedArgument> {
 
-    AstNodeTileInput<Object, Expr.AssignedArgument, BEASTState> expressionInput = new AstNodeTileInput<>(
+    AstNodeTileInput<Object, Expr.AssignedArgument> expressionInput = new AstNodeTileInput<>(
             "expression", expr -> expr.expression
     );
 

@@ -2,12 +2,12 @@ package tiles.substitutionmodels;
 
 import beast.base.spec.evolution.substitutionmodel.JukesCantor;
 import org.phylospec.ast.Expr;
-import org.phylospec.tiling.tiles.GeneratorTile;
+import tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
 import java.util.IdentityHashMap;
 
-public class JC69Tile extends GeneratorTile<JukesCantor, BEASTState> {
+public class JC69Tile extends GeneratorTile<JukesCantor> {
 
     @Override
     public String getPhyloSpecGeneratorName() {

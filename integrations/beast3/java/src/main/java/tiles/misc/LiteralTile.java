@@ -8,10 +8,8 @@ import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
-import org.phylospec.tiling.errors.FailedTilingAttempt;
-import org.phylospec.tiling.tiles.Tile;
-import org.phylospec.tiling.TypeToken;
-import org.phylospec.tiling.tiles.AstNodeTile;
+import tiling.*;
+import tiles.AstNodeTile;
 
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -24,7 +22,7 @@ import java.util.Set;
  * For 10.4 for instance, tiles are created with Double, RealScalar<Real>, RealScalar<NonNegativeReal>,
  * and RealScalar<PositiveReal>.
  */
-public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BEASTState> {
+public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal> {
     private final TypeToken<T> typeToken;
     private final T value;
 
@@ -40,7 +38,7 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BEASTState> {
     }
 
     @Override
-    public Set<Tile<?, BEASTState>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?, BEASTState>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
+    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
         if (!(node instanceof Expr.Literal literal)) throw new FailedTilingAttempt.Irrelevant();
 
         // depending on the actual literal, we return different tiles
@@ -51,7 +49,7 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BEASTState> {
         }
 
         if (literal.value instanceof Integer number) {
-            Set<Tile<?, BEASTState>> tiles = new HashSet<>();
+            Set<Tile<?>> tiles = new HashSet<>();
 
             tiles.add(new LiteralTile<>(new TypeToken<>() {
             }, number, literal));
@@ -81,7 +79,7 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BEASTState> {
         }
 
         if (literal.value instanceof Double number) {
-            Set<Tile<?, BEASTState>> tiles = new HashSet<>();
+            Set<Tile<?>> tiles = new HashSet<>();
 
             tiles.add(new LiteralTile<>(new TypeToken<>() {
             }, number, literal));
@@ -121,7 +119,7 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BEASTState> {
     }
 
     @Override
-    public Tile<?, BEASTState> createInstance() {
+    public Tile<?> createInstance() {
         return new LiteralTile<>(new TypeToken<>() {
         }, null, null);
     }

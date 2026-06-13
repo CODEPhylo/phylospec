@@ -5,9 +5,9 @@ import beast.base.evolution.tree.TreeParser;
 import beast.base.parser.NexusParser;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
-import org.phylospec.tiling.tiles.GeneratorTile;
+import tiles.GeneratorTile;
 import beastconfig.BEASTState;
-import org.phylospec.tiling.errors.TileApplicationError;
+import tiling.TileApplicationError;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,14 +17,14 @@ import java.nio.file.Path;
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-public class FromTreeTile extends GeneratorTile<Tree, BEASTState> {
+public class FromTreeTile extends GeneratorTile<Tree> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "fromTree";
     }
 
-    GeneratorTileInput<String, BEASTState> fileInput = new GeneratorTileInput<>(
+    GeneratorTileInput<String> fileInput = new GeneratorTileInput<>(
             "file", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
 

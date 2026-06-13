@@ -1,0 +1,11 @@
+// TEMPLATE
+Real x ~ $dist observed between [0.0, 1.0]
+// TEMPLATE
+
+// QUERY
+Real x ~ Beta(alpha=1.0, beta=1.0) observed between [0.0, 1.0]
+// QUERY
+
+// MATCH
+// $dist -> (CA Beta (AA alpha 1.0) (AA beta 1.0))
+// MATCH

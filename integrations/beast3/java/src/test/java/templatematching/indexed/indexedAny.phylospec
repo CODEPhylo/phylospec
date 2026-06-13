@@ -1,0 +1,13 @@
+// TEMPLATE
+Any rate[i] = $rate for i in 1:numBranches(tree=$tree)
+// TEMPLATE
+
+// QUERY
+Tree myTree = fromNewick("")
+Rate myRate[j] = 1.0 for j in 1:numBranches(myTree)
+// QUERY
+
+// MATCH
+// $tree -> myTree
+// $rate -> 1.0
+// MATCH

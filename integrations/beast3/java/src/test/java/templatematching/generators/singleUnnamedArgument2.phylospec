@@ -1,0 +1,12 @@
+// TEMPLATE
+Normal(mean=$mean, sd=$sd)
+// TEMPLATE
+
+// QUERY
+Normal(100.5, sd=20)
+// QUERY
+
+// MATCH
+// $mean -> 100.5
+// $sd -> 20
+// MATCH

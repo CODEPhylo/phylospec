@@ -5,14 +5,14 @@ import beast.base.inference.Logger;
 import beastconfig.LoggerSelector;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
-import org.phylospec.tiling.tiles.TemplateTile;
+import tiles.TemplateTile;
 import beastconfig.BEASTState;
 
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 
-public class ScreenLoggerTile extends TemplateTile<Void, BEASTState> {
+public class ScreenLoggerTile extends TemplateTile<Void> {
 
     @Override
     protected String getPhyloSpecTemplate() {
@@ -25,10 +25,10 @@ public class ScreenLoggerTile extends TemplateTile<Void, BEASTState> {
                 }""";
     }
 
-    public TemplateTileInput<Integer, BEASTState> logEveryInput = new TemplateTileInput<>(
+    public TemplateTileInput<Integer> logEveryInput = new TemplateTileInput<>(
             "$logEvery", Set.of(Stochasticity.CONSTANT)
     );
-    public TemplateTileInput<List<BEASTObject>, BEASTState> parametersInput = new TemplateTileInput<>(
+    public TemplateTileInput<List<BEASTObject>> parametersInput = new TemplateTileInput<>(
             "$$parameters", false
     );
 
