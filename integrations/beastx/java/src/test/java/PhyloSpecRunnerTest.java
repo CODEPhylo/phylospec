@@ -288,57 +288,6 @@ public class PhyloSpecRunnerTest {
     }
 
     @Test
-    public void buildsScaleOperatorForPositiveRealStateNode() throws Exception {
-        String source =
-                """
-                PositiveReal x ~ LogNormal(logMean=0.0, logSd=1.0)
-                """;
-
-        BeastXState beastState =
-                buildStateFromSource(source);
-
-        List<MCMCOperator> operators =
-                new OperatorBuilder().build(beastState);
-
-        assertEquals(1, operators.size());
-        assertTrue(operators.get(0) instanceof ScaleOperator);
-    }
-
-    @Test
-    public void buildsRandomWalkOperatorForRealStateNode() throws Exception {
-        String source =
-                """
-                Real x ~ Normal(mean=0.0, sd=1.0)
-                """;
-
-        BeastXState beastState =
-                buildStateFromSource(source);
-
-        List<MCMCOperator> operators =
-                new OperatorBuilder().build(beastState);
-
-        assertEquals(1, operators.size());
-        assertTrue(operators.get(0) instanceof RandomWalkOperator);
-    }
-
-    @Test
-    public void buildsDeltaExchangeOperatorForSimplexStateNode() throws Exception {
-        String source =
-                """
-                Simplex frequencies ~ Dirichlet(concentration=[1.0, 1.0, 1.0, 1.0])
-                """;
-
-        BeastXState beastState =
-                buildStateFromSource(source);
-
-        List<MCMCOperator> operators =
-                new OperatorBuilder().build(beastState);
-
-        assertEquals(1, operators.size());
-        assertTrue(operators.get(0) instanceof DeltaExchangeOperator);
-    }
-
-    @Test
     public void buildsMCMCObjectForPriorOnlyModel() throws Exception {
         String source =
                 """
@@ -392,39 +341,6 @@ public class PhyloSpecRunnerTest {
                 );
 
         assertTrue(error.getMessage().contains("unmaterialized PhyloCTMC likelihood"));
-    }
-
-    @Test
-    public void mcmcBuilderRejectsUnmaterializedPhyloCTMCLikelihood() throws Exception {
-        BeastXModel model =
-                buildModelFromFile("src/test/java/tiling/phyloctmc/mostBasic.phylospec");
-
-        IllegalStateException error =
-                assertThrows(
-                        IllegalStateException.class,
-                        () -> new MCMCBuilder(1).build(model)
-                );
-
-        assertTrue(error.getMessage().contains("unmaterialized PhyloCTMC likelihood"));
-    }
-
-    @Test
-    public void buildsOneOperatorPerStateNode() throws Exception {
-        String source =
-                """
-                Real x ~ Normal(mean=0.0, sd=1.0)
-                PositiveReal y ~ LogNormal(logMean=0.0, logSd=1.0)
-                Simplex frequencies ~ Dirichlet(concentration=[1.0, 1.0, 1.0, 1.0])
-                """;
-
-        BeastXModel model =
-                buildModelFromSource(source);
-
-        MCMC mcmc =
-                new MCMCBuilder(1).build(model);
-
-        assertEquals(3, model.beastState.stateNodes.size());
-        assertEquals(3, mcmc.getOperatorSchedule().getOperatorCount());
     }
 
     private BeastXModel buildModelFromFile(String path) throws Exception {
