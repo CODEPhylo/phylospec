@@ -74,7 +74,7 @@
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
                         <manifestEntries>
-                            <Automatic-Module-Name>org.phylospec.beast3</Automatic-Module-Name>
+                            <Automatic-Module-Name>org.phylospec.beastx</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                 </configuration>
