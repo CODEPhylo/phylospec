@@ -18,7 +18,7 @@ import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import org.xml.sax.SAXException;
-import tiles.BeastXCoreTileLibrary;
+import tiles.BeastXTileLibraries;
 import tiling.BeastXModel;
 import tiling.model.ModelBuilder;
 import tiling.mcmc.MCMCBuilder;
@@ -758,7 +758,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         // Load all BEAST X backend tiles and prepare the tiling evaluator.
         EvaluateTiles<BeastXState> applyTiles =
                 new EvaluateTiles<>(
-                        new BeastXCoreTileLibrary().getTiles(),
+                        BeastXTileLibraries.loadAll(),
                         new ArrayList<>(),
                         parsed.variableResolver,
                         parsed.stochasticityResolver
