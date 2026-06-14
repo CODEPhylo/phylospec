@@ -20,8 +20,6 @@ import org.phylospec.typeresolver.VariableResolver;
 import org.xml.sax.SAXException;
 import tiles.BeastXTileLibraries;
 import tiling.BeastXModel;
-import tiling.model.ModelBuilder;
-import tiling.mcmc.MCMCBuilder;
 import tiling.BeastXState;
 import tiling.runner.RunMode;
 import tiling.runner.BeastXRunResult;
@@ -29,8 +27,7 @@ import tiling.runner.RunnerOptions;
 import tiling.runner.XmlRunResult;
 import tiling.runner.XmlRunnerOptions;
 import tiling.runner.FileRunPaths;
-import tiling.xml.StateXmlGenerator;
-import tiling.xml.XmlRunner;
+import tiling.runner.BeastXRunPipeline;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
@@ -52,8 +49,14 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
     private final String source;
 
+    private final BeastXRunPipeline runPipeline;
+
     public PhyloSpecRunner(String source) {
-        this.source = source;
+        this.source =
+                source;
+
+        this.runPipeline =
+                new BeastXRunPipeline();
     }
 
     // Creates a runner from a PhyloSpec source file using UTF-8 encoding.
@@ -235,7 +238,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
     }
 
     public BeastXModel buildModel(BeastXState beastState) {
-        return new ModelBuilder(false).build(beastState);
+        return this.runPipeline
+                .buildModel(beastState, false);
     }
 
     public BeastXModel buildMaterializedModel(String runName)
@@ -247,7 +251,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
     }
 
     public BeastXModel buildMaterializedModel(BeastXState beastState) {
-        return new ModelBuilder(true).build(beastState);
+        return this.runPipeline
+                .buildModel(beastState, true);
     }
 
     public MCMC buildMCMC(String runName)
@@ -267,11 +272,13 @@ public class PhyloSpecRunner implements ErrorEventListener {
     }
 
     public MCMC buildMCMC(BeastXModel model) {
-        return new MCMCBuilder().build(model);
+        return this.runPipeline
+                .buildMCMC(model);
     }
 
     public MCMC buildMCMC(BeastXModel model, long chainLength) {
-        return new MCMCBuilder(chainLength).build(model);
+        return this.runPipeline
+                .buildMCMC(model, chainLength);
     }
 
     public MCMC buildMaterializedMCMC(String runName)
@@ -316,63 +323,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
         BeastXState beastState =
                 tile(parsed, options.runName());
 
-        options.applyTo(beastState);
-
-        // Stop after tiling if only the backend state is requested.
-        if (options.mode() == RunMode.BUILD_STATE) {
-            return new BeastXRunResult(
-                    options.runName(),
-                    options,
-                    beastState,
-                    null,
-                    null,
-                    options.materializePhyloCTMC(),
-                    false
-            );
-        }
-
-        // Convert the tiled backend state into a BEAST X model.
-        BeastXModel model =
-                buildModelForOptions(beastState, options);
-
-        if (options.mode() == RunMode.BUILD_MODEL) {
-            return new BeastXRunResult(
-                    options.runName(),
-                    options,
-                    beastState,
-                    model,
-                    null,
-                    options.materializePhyloCTMC(),
-                    false
-            );
-        }
-
-        // Build the BEAST X MCMC object from the model.
-        MCMC mcmc =
-                buildMCMCForOptions(model, options);
-
-        BeastXRunResult run =
-                new BeastXRunResult(
-                        options.runName(),
-                        options,
-                        beastState,
-                        model,
-                        mcmc,
-                        options.materializePhyloCTMC(),
-                        false
-                );
-
-        if (options.mode() == RunMode.BUILD_MCMC) {
-            return run;
-        }
-
-        // Execute the BEAST X MCMC only in EXECUTE_MCMC mode.
-        if (options.mode() == RunMode.EXECUTE_MCMC) {
-            mcmc.run();
-            return run.asExecuted();
-        }
-
-        throw new IllegalStateException("Unsupported BEAST X run mode: " + options.mode());
+        return this.runPipeline
+                .run(beastState, options);
     }
 
     public BeastXRunResult buildRun(String runName)
@@ -546,7 +498,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
      * Serializes a BEAST X model into BEAST X XML.
      */
     public String toXml(BeastXModel model) {
-        return new StateXmlGenerator()
+        return this.runPipeline
                 .toXml(model);
     }
 
@@ -569,21 +521,21 @@ public class PhyloSpecRunner implements ErrorEventListener {
             BeastXModel model,
             Path xmlPath
     ) throws IOException {
-        new StateXmlGenerator()
-                .write(model, xmlPath);
+        this.runPipeline
+                .writeXml(model, xmlPath);
     }
 
     /**
      * Parses a BEAST X XML file into an executable MCMC object.
      */
     public MCMC parseXmlMCMC(Path xmlPath) throws Exception {
-        return new XmlRunner()
-                .parse(xmlPath);
+        return this.runPipeline
+                .parseXmlMCMC(xmlPath);
     }
 
     public MCMC runXmlMCMC(Path xmlPath) throws Exception {
-        return new XmlRunner()
-                .run(xmlPath);
+        return this.runPipeline
+                .runXmlMCMC(xmlPath);
     }
 
     public MCMC writeAndParseXmlMCMC(
@@ -681,35 +633,13 @@ public class PhyloSpecRunner implements ErrorEventListener {
      */
     public XmlRunResult runXml(XmlRunnerOptions options)
             throws Exception {
-        // Build the model that will be exported to XML.
         BeastXModel model =
                 options.materializePhyloCTMC()
                         ? buildMaterializedModel(options.runName())
                         : buildModel(options.runName());
 
-        // Export the model before asking BEAST X to parse it back.
-        writeXml(model, options.xmlPath());
-
-        // Validate the generated XML by parsing it into a BEAST X MCMC object.
-        MCMC mcmc =
-                parseXmlMCMC(options.xmlPath());
-
-        XmlRunResult run =
-                new XmlRunResult(
-                        options.runName(),
-                        model,
-                        options.xmlPath(),
-                        mcmc,
-                        false
-                );
-
-        if (!options.execute()) {
-            return run;
-        }
-
-        mcmc.run();
-
-        return run.asExecuted();
+        return this.runPipeline
+                .runXml(model, options);
     }
 
     public XmlRunResult buildXmlRun(XmlRunnerOptions options)
