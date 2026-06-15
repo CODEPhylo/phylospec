@@ -361,12 +361,12 @@ public class BeastXMCMCBuilderTest {
         String source = """
             Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
             Taxa taxa = taxa(data)
-        
+
             Tree tree ~ Yule(
                 birthRate=1.0,
                 taxa=taxa
             )
-        
+
             mcmc {
                 Logger treeLogger = treeLogger(
                     logEvery=1000,
@@ -390,12 +390,12 @@ public class BeastXMCMCBuilderTest {
         String source = """
             Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
             Taxa taxa = taxa(data)
-        
+
             Tree tree ~ Yule(
                 birthRate=1.0,
                 taxa=taxa
             )
-        
+
             mcmc {
                 Logger treeLogger = treeLogger(
                     logEvery=1000,
@@ -880,14 +880,14 @@ public class BeastXMCMCBuilderTest {
                 """
                 Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
                 Taxa taxa = taxa(data)
-    
+
                 Tree tree ~ Yule(
                     birthRate=1.0,
                     taxa=taxa
                 )
-    
+
                 Rate clockRate ~ LogNormal(logMean=0.0, logSd=1.0)
-    
+
                 Alignment alignment ~ PhyloCTMC(
                     tree=tree,
                     qMatrix=jc69(),
@@ -911,14 +911,14 @@ public class BeastXMCMCBuilderTest {
                 """
                 Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
                 Taxa taxa = taxa(data)
-    
+
                 Tree tree ~ Yule(
                     birthRate=1.0,
                     taxa=taxa
                 )
-    
+
                 Rate molecularRate ~ LogNormal(logMean=0.0, logSd=1.0)
-    
+
                 Alignment alignment ~ PhyloCTMC(
                     tree=tree,
                     qMatrix=jc69(),
@@ -942,35 +942,35 @@ public class BeastXMCMCBuilderTest {
                 """
                 Alignment molecularData = fromNexus("src/test/java/resources/binary-traits.nex")
                 Taxa taxa = taxa(molecularData)
-    
+
                 Alignment traitData = continuousTraitsFromTaxa(
                     taxa=taxa,
                     trait=parse(regex=".*_([01])$")
                 )
-    
+
                 Tree tree ~ Yule(
                     birthRate=1.0,
                     taxa=taxa
                 )
-    
+
                 Vector<Rate> branchRates ~ StrictClock(
                     clockRate=1.0,
                     tree=tree
                 )
-    
+
                 PositiveReal diffusionRate ~ LogNormal(
                     logMean=0.0,
                     logSd=1.0
                 )
-    
+
                 Real rootValue ~ Normal(
                     mean=0.0,
                     sd=1.0
                 )
-    
+
                 Vector<Rate> siteRates = [diffusionRate]
                 Vector<Real> rootValues = [rootValue]
-    
+
                 Alignment traits ~ PhyloBM(
                     tree=tree,
                     branchRates=branchRates,
@@ -999,41 +999,41 @@ public class BeastXMCMCBuilderTest {
                 """
                 Alignment molecularData = fromNexus("src/test/java/resources/binary-traits.nex")
                 Taxa taxa = taxa(molecularData)
-    
+
                 Alignment traitData = continuousTraitsFromTaxa(
                     taxa=taxa,
                     trait=parse(regex=".*_([01])$")
                 )
-    
+
                 Tree tree ~ Yule(
                     birthRate=1.0,
                     taxa=taxa
                 )
-    
+
                 PositiveReal siteVariance ~ LogNormal(
                     logMean=0.0,
                     logSd=1.0
                 )
-    
+
                 PositiveReal alpha ~ LogNormal(
                     logMean=0.0,
                     logSd=1.0
                 )
-    
+
                 Real optimum ~ Normal(
                     mean=0.0,
                     sd=1.0
                 )
-    
+
                 Real rootValue ~ Normal(
                     mean=0.0,
                     sd=1.0
                 )
-    
+
                 Vector<PositiveReal> siteVariances = [siteVariance]
                 Vector<Real> siteOptima = [optimum]
                 Vector<Real> rootValues = [rootValue]
-    
+
                 Alignment traits ~ PhyloOU(
                     tree=tree,
                     siteVariances=siteVariances,
@@ -1063,30 +1063,30 @@ public class BeastXMCMCBuilderTest {
                 """
                 Tree tree = fromNewick("((taxon1_0:0.1,taxon2_1:0.1):0.2,(taxon3_0:0.1,taxon4_1:0.1):0.2);")
                 Taxa taxa = taxa(tree)
-    
+
                 Alignment traitData = continuousTraitsFromTaxa(
                     taxa=taxa,
                     trait=parse(regex=".*_([01])$")
                 )
-    
+
                 Vector<Rate> branchRates ~ StrictClock(
                     clockRate=1.0,
                     tree=tree
                 )
-    
+
                 PositiveReal diffusionRate ~ LogNormal(
                     logMean=0.0,
                     logSd=1.0
                 )
-    
+
                 Real rootValue ~ Normal(
                     mean=0.0,
                     sd=1.0
                 )
-    
+
                 Vector<Rate> siteRates = [diffusionRate]
                 Vector<Real> rootValues = [rootValue]
-    
+
                 Alignment traits ~ PhyloBM(
                     tree=tree,
                     branchRates=branchRates,
@@ -1116,36 +1116,36 @@ public class BeastXMCMCBuilderTest {
                 """
                 Tree tree = fromNewick("((taxon1_0:0.1,taxon2_1:0.1):0.2,(taxon3_0:0.1,taxon4_1:0.1):0.2);")
                 Taxa taxa = taxa(tree)
-    
+
                 Alignment traitData = continuousTraitsFromTaxa(
                     taxa=taxa,
                     trait=parse(regex=".*_([01])$")
                 )
-    
+
                 PositiveReal siteVariance ~ LogNormal(
                     logMean=0.0,
                     logSd=1.0
                 )
-    
+
                 PositiveReal alpha ~ LogNormal(
                     logMean=0.0,
                     logSd=1.0
                 )
-    
+
                 Real optimum ~ Normal(
                     mean=0.0,
                     sd=1.0
                 )
-    
+
                 Real rootValue ~ Normal(
                     mean=0.0,
                     sd=1.0
                 )
-    
+
                 Vector<PositiveReal> siteVariances = [siteVariance]
                 Vector<Real> siteOptima = [optimum]
                 Vector<Real> rootValues = [rootValue]
-    
+
                 Alignment traits ~ PhyloOU(
                     tree=tree,
                     siteVariances=siteVariances,

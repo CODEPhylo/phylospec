@@ -28,29 +28,29 @@ public class BeastXXmlShowcasePhyloCTMCTest {
         String source =
                 """
                 Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
-        
+
                 Taxa taxa = taxa(data)
-        
+
                 Rate speciationRate ~ LogNormal(
                     logMean=0.0,
                     logSd=0.5
                 )
-        
+
                 Rate extinctionRate ~ LogNormal(
                     logMean=-2.0,
                     logSd=0.3
                 )
-        
+
                 Rate serialSamplingRate ~ LogNormal(
                     logMean=-2.0,
                     logSd=0.3
                 )
-        
+
                 Rate clockRate ~ LogNormal(
                     logMean=0.0,
                     logSd=1.0
                 )
-        
+
                 Tree tree ~ FossilizedBirthDeath(
                     speciationRate=speciationRate,
                     extinctionRate=extinctionRate,
@@ -59,30 +59,30 @@ public class BeastXXmlShowcasePhyloCTMCTest {
                     rootAge=5.0,
                     taxa=taxa
                 )
-        
+
                 Vector<Rate> branchRates ~ StrictClock(
                     clockRate=clockRate,
                     tree=tree
                 )
-        
+
                 QMatrix q = jc69()
-        
+
                 Alignment alignment ~ PhyloCTMC(
                     tree=tree,
                     qMatrix=q,
                     branchRates=branchRates
                 ) observed as data
-        
+
                 mcmc {
                     Integer chainLength = 10000
                     Integer randomSeed = 1234
-        
+
                     Logger fileLogger = fileLogger(
                         logEvery=1,
                         file="%s",
                         parameters=[speciationRate, extinctionRate, serialSamplingRate, clockRate]
                     )
-        
+
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
@@ -168,29 +168,29 @@ public class BeastXXmlShowcasePhyloCTMCTest {
         String source =
                 """
                 Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
-    
+
                 Taxa taxa = taxa(data)
-    
+
                 Rate diversificationRate ~ LogNormal(
                     logMean=0.0,
                     logSd=0.5
                 )
-    
+
                 Rate turnover ~ LogNormal(
                     logMean=-1.0,
                     logSd=0.2
                 )
-    
+
                 Rate serialSamplingRate ~ LogNormal(
                     logMean=-2.0,
                     logSd=0.3
                 )
-    
+
                 Rate clockRate ~ LogNormal(
                     logMean=0.0,
                     logSd=1.0
                 )
-    
+
                 Tree tree ~ FossilizedBirthDeath(
                     diversificationRate=diversificationRate,
                     turnover=turnover,
@@ -199,30 +199,30 @@ public class BeastXXmlShowcasePhyloCTMCTest {
                     rootAge=5.0,
                     taxa=taxa
                 )
-    
+
                 Vector<Rate> branchRates ~ StrictClock(
                     clockRate=clockRate,
                     tree=tree
                 )
-    
+
                 QMatrix q = jc69()
-    
+
                 Alignment alignment ~ PhyloCTMC(
                     tree=tree,
                     qMatrix=q,
                     branchRates=branchRates
                 ) observed as data
-    
+
                 mcmc {
                     Integer chainLength = 5
                     Integer randomSeed = 1234
-    
+
                     Logger fileLogger = fileLogger(
                         logEvery=1,
                         file="%s",
                         parameters=[diversificationRate, turnover, serialSamplingRate, clockRate]
                     )
-    
+
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
@@ -310,29 +310,29 @@ public class BeastXXmlShowcasePhyloCTMCTest {
                     file="src/test/java/resources/dated-simple.nex",
                     age=parse(regex=".*_(\\d+(?:\\.\\d+)?)$")
                 )
-    
+
                 Taxa taxa = taxa(data)
-    
+
                 Rate speciationRate ~ LogNormal(
                     logMean=0.0,
                     logSd=0.5
                 )
-    
+
                 Rate extinctionRate ~ LogNormal(
                     logMean=-2.0,
                     logSd=0.3
                 )
-    
+
                 Rate serialSamplingRate ~ LogNormal(
                     logMean=-2.0,
                     logSd=0.3
                 )
-    
+
                 Rate clockRate ~ LogNormal(
                     logMean=0.0,
                     logSd=1.0
                 )
-    
+
                 Tree tree ~ FossilizedBirthDeath(
                     speciationRate=speciationRate,
                     extinctionRate=extinctionRate,
@@ -341,30 +341,30 @@ public class BeastXXmlShowcasePhyloCTMCTest {
                     rootAge=5.0,
                     taxa=taxa
                 )
-    
+
                 Vector<Rate> branchRates ~ StrictClock(
                     clockRate=clockRate,
                     tree=tree
                 )
-    
+
                 QMatrix q = jc69()
-    
+
                 Alignment alignment ~ PhyloCTMC(
                     tree=tree,
                     qMatrix=q,
                     branchRates=branchRates
                 ) observed as data
-    
+
                 mcmc {
                     Integer chainLength = 10000
                     Integer randomSeed = 1234
-    
+
                     Logger fileLogger = fileLogger(
                         logEvery=1,
                         file="%s",
                         parameters=[speciationRate, extinctionRate, serialSamplingRate, clockRate]
                     )
-    
+
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
@@ -446,39 +446,39 @@ public class BeastXXmlShowcasePhyloCTMCTest {
                     file="src/test/java/resources/dated-simple.nex",
                     age=parse(regex=".*_(\\d+(?:\\.\\d+)?)$")
                 )
-    
+
                 Taxa taxa = taxa(data)
-    
+
                 Rate diversificationRate ~ LogNormal(
                     logMean=0.0,
                     logSd=0.5
                 )
-    
+
                 Rate turnover ~ LogNormal(
                     logMean=-1.0,
                     logSd=0.25
                 )
-    
+
                 Rate serialSamplingRate ~ LogNormal(
                     logMean=-2.0,
                     logSd=0.5
                 )
-    
+
                 Rate clockRate ~ LogNormal(
                     logMean=0.0,
                     logSd=0.5
                 )
-    
+
                 PositiveReal rateAC ~ LogNormal(logMean=0.0, logSd=0.4)
                 PositiveReal rateAG ~ LogNormal(logMean=0.0, logSd=0.4)
                 PositiveReal rateAT ~ LogNormal(logMean=0.0, logSd=0.4)
                 PositiveReal rateCG ~ LogNormal(logMean=0.0, logSd=0.4)
                 PositiveReal rateCT ~ LogNormal(logMean=0.0, logSd=0.4)
-    
+
                 Simplex baseFrequencies ~ Dirichlet(
                     concentration=repeat(1.0, num=4)
                 )
-    
+
                 Tree tree ~ FossilizedBirthDeath(
                     diversificationRate=diversificationRate,
                     turnover=turnover,
@@ -487,13 +487,13 @@ public class BeastXXmlShowcasePhyloCTMCTest {
                     rootAge=5.0,
                     taxa=taxa
                 )
-    
+
                 Vector<Rate> branchRates ~ RelaxedClock(
                     clockRate=clockRate,
                     base=LogNormal(mean=1.0, logSd=0.1),
                     tree=tree
                 )
-    
+
                 QMatrix qMatrix = gtr(
                     rateAC=rateAC,
                     rateAG=rateAG,
@@ -503,17 +503,17 @@ public class BeastXXmlShowcasePhyloCTMCTest {
                     rateGT=1.0,
                     baseFrequencies=baseFrequencies
                 )
-    
+
                 Alignment alignment ~ PhyloCTMC(
                     tree=tree,
                     qMatrix=qMatrix,
                     branchRates=branchRates
                 ) observed as data
-    
+
                 mcmc {
                     Integer chainLength = 10000
                     Integer randomSeed = 1234
-    
+
                     Logger fileLogger = fileLogger(
                         logEvery=1,
                         file="%s",
@@ -530,7 +530,7 @@ public class BeastXXmlShowcasePhyloCTMCTest {
                             baseFrequencies
                         ]
                     )
-    
+
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
@@ -610,5 +610,3 @@ public class BeastXXmlShowcasePhyloCTMCTest {
     }
 
 }
-
-
