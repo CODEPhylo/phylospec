@@ -60,4 +60,3 @@ public class CauchyTile extends GeneratorTile<
         );
     }
 }
-
