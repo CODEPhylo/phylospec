@@ -605,9 +605,9 @@ public class BeastXXmlTreePriorTest {
         String source =
                 """
                 Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
-        
+
                 Taxa taxa = taxa(data)
-        
+
                 Vector<PositiveReal> populationSizes ~ IID(
                     base=LogNormal(
                         logMean=5.0,
@@ -615,23 +615,23 @@ public class BeastXXmlTreePriorTest {
                     ),
                     num=3
                 )
-        
+
                 Tree tree ~ SkylineCoalescent(
                     populationSizes=populationSizes,
                     changeTimes=[1.0, 2.0],
                     taxa=taxa
                 )
-        
+
                 mcmc {
                     Integer chainLength = 1000
                     Integer randomSeed = 1234
-        
+
                     Logger fileLogger = fileLogger(
                         logEvery=1,
                         file="%s",
                         parameters=[populationSizes]
                     )
-        
+
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",

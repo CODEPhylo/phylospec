@@ -78,4 +78,3 @@ public class NormalTile extends GeneratorTile<
         );
     }
 }
-

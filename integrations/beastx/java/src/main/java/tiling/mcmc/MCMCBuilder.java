@@ -388,7 +388,7 @@ public class MCMCBuilder {
 
         return model.beastState.chainLength;
     }
-    
+
     /**
      * Ensures that all PhyloCTMC likelihood specifications have been converted
      * into concrete BEAST X likelihood objects before MCMC initialization.
