@@ -21,6 +21,13 @@ public class F81Tile extends GeneratorTile<HKY, BeastXState> {
     GeneratorTileInput<Simplex, BeastXState> baseFrequenciesInput =
             new GeneratorTileInput<>("baseFrequencies");
 
+    public F81Tile() {
+        this.baseFrequenciesInput.requireSize(
+                4,
+                "F81 requires exactly four nucleotide base frequencies: A, C, G, T."
+        );
+    }
+
     @Override
     public HKY applyTile(BeastXState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Simplex baseFrequencies = this.baseFrequenciesInput.apply(beastState, indexVariables);

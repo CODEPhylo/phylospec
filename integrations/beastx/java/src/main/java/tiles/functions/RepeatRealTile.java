@@ -1,5 +1,7 @@
 package tiles.functions;
 
+import org.phylospec.ast.AstNode;
+import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
@@ -9,6 +11,7 @@ import org.phylospec.types.RealVector;
 import tiling.params.BeastXRealVectorParam;
 import tiling.BeastXState;
 
+import java.util.OptionalLong;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.Set;
@@ -48,5 +51,31 @@ public class RepeatRealTile extends GeneratorTile<RealVector<PositiveReal>, Beas
         Arrays.fill(values, value);
 
         return new BeastXRealVectorParam<>(values, PositiveReal.INSTANCE);
+    }
+
+    @Override
+    public OptionalLong getFixedOutputSize() {
+        return getLiteralIntegerFromTile(this.numInput.getTile());
+    }
+
+    private static OptionalLong getLiteralIntegerFromTile(Tile<?, BeastXState> tile) {
+        if (tile == null) {
+            return OptionalLong.empty();
+        }
+
+        AstNode node = tile.getRootNode();
+
+        if (node instanceof Expr.AssignedArgument argument
+                && argument.expression instanceof Expr.Literal literal
+                && literal.value instanceof Integer value) {
+            return OptionalLong.of(value);
+        }
+
+        if (node instanceof Expr.Literal literal
+                && literal.value instanceof Integer value) {
+            return OptionalLong.of(value);
+        }
+
+        return OptionalLong.empty();
     }
 }

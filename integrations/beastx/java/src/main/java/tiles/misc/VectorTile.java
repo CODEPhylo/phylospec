@@ -21,6 +21,7 @@ import tiling.params.BeastXRealScalarParam;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.OptionalLong;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -344,5 +345,18 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array, BeastXState> {
     @Override
     public Tile<?, BeastXState> createInstance() {
         return new VectorTile<>(new TypeToken<>() {}, null, null);
+    }
+
+    @Override
+    public OptionalLong getFixedOutputSize() {
+        if (this.value instanceof RealVector<?> vector) {
+            return OptionalLong.of(vector.size());
+        }
+
+        if (this.singleElementTile != null) {
+            return OptionalLong.of(1);
+        }
+
+        return OptionalLong.empty();
     }
 }

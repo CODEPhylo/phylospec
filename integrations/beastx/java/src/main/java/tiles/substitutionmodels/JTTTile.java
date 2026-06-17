@@ -23,6 +23,13 @@ public class JTTTile extends GeneratorTile<EmpiricalAminoAcidModel, BeastXState>
     GeneratorTileInput<Simplex, BeastXState> baseFrequenciesInput =
             new GeneratorTileInput<>("baseFrequencies", false);
 
+    public JTTTile() {
+        this.baseFrequenciesInput.requireSize(
+                20,
+                "JTT requires exactly 20 amino-acid base frequencies."
+        );
+    }
+
     @Override
     public EmpiricalAminoAcidModel applyTile(
             BeastXState beastState,

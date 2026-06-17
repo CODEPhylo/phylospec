@@ -7,6 +7,7 @@ import org.phylospec.tiling.tiles.AstNodeTile;
 import org.phylospec.tiling.tiles.TilePriority;
 import tiling.BeastXState;
 
+import java.util.OptionalLong;
 import java.util.IdentityHashMap;
 
 public class AssignmentTile extends AstNodeTile<Object, Stmt.Assignment, BeastXState> {
@@ -28,5 +29,12 @@ public class AssignmentTile extends AstNodeTile<Object, Stmt.Assignment, BeastXS
     @Override
     public TypeToken<?> getTypeToken() {
         return expressionInput.getTypeToken();
+    }
+
+    @Override
+    public OptionalLong getFixedOutputSize() {
+        return this.expressionInput.getTile() == null
+                ? OptionalLong.empty()
+                : this.expressionInput.getTile().getFixedOutputSize();
     }
 }

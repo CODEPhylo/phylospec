@@ -6,6 +6,7 @@ import org.phylospec.tiling.tiles.AstNodeTile;
 import org.phylospec.tiling.tiles.TilePriority;
 import tiling.BeastXState;
 
+import java.util.OptionalLong;
 import java.util.IdentityHashMap;
 
 public class AssignedArgumentTile extends AstNodeTile<Object, Expr.AssignedArgument, BeastXState> {
@@ -27,5 +28,12 @@ public class AssignedArgumentTile extends AstNodeTile<Object, Expr.AssignedArgum
     @Override
     public TilePriority getPriority() {
         return TilePriority.LOW;
+    }
+
+    @Override
+    public OptionalLong getFixedOutputSize() {
+        return this.expressionInput.getTile() == null
+                ? OptionalLong.empty()
+                : this.expressionInput.getTile().getFixedOutputSize();
     }
 }

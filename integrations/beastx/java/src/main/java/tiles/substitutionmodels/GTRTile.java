@@ -31,6 +31,13 @@ public class GTRTile extends GeneratorTile<GTR, BeastXState> {
     GeneratorTileInput<RealScalar<PositiveReal>, BeastXState> rateGTInput = new GeneratorTileInput<>("rateGT");
     GeneratorTileInput<Simplex, BeastXState> baseFrequenciesInput = new GeneratorTileInput<>("baseFrequencies");
 
+    public GTRTile() {
+        this.baseFrequenciesInput.requireSize(
+                4,
+                "GTR requires exactly four nucleotide base frequencies: A, C, G, T."
+        );
+    }
+
     @Override
     public GTR applyTile(BeastXState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<PositiveReal> rateAC = this.rateACInput.apply(beastState, indexVariables);

@@ -5,6 +5,7 @@ import java.lang.reflect.ParameterizedType;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.OptionalLong;
 import java.util.Set;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
@@ -24,9 +25,26 @@ public abstract class TileInput<T, S> {
     private TypeToken<T> typeToken;
     private Tile<T, S> tile;
 
+    private Long requiredSize;
+    private String requiredSizeMessage;
+
     public TileInput(boolean required, Set<Stochasticity> acceptedStochasticities) {
         this.required = required;
         this.acceptedStochasticities = acceptedStochasticities;
+    }
+
+    public TileInput<T, S> requireSize(long requiredSize, String message) {
+        if (requiredSize < 0) {
+            throw new IllegalArgumentException("Required size must be non-negative.");
+        }
+
+        this.requiredSize = requiredSize;
+        this.requiredSizeMessage = message;
+        return this;
+    }
+
+    public TileInput<T, S> requireSize(long requiredSize) {
+        return requireSize(requiredSize, null);
     }
 
     /**
@@ -35,7 +53,7 @@ public abstract class TileInput<T, S> {
      */
     void resolveTypeFromField(Field inputTileField) {
         if (this.typeToken != null) return;
-        // TileInput<T> — T is the first type argument
+
         ParameterizedType fieldType = (ParameterizedType) inputTileField.getGenericType();
         this.typeToken = (TypeToken<T>) TypeToken.of(fieldType.getActualTypeArguments()[0]);
     }
@@ -79,13 +97,47 @@ public abstract class TileInput<T, S> {
         TypeToken<?> expectedTypeToken = this.getTypeToken();
 
         Set<Tile<?, S>> compatibleInputs = new HashSet<>();
+        boolean sawTypeCompatibleInput = false;
+        boolean sawWrongSizedInput = false;
+
         for (Tile<?, S> potentialInput : potentialInputs) {
-            if (expectedTypeToken.isAssignableFrom(potentialInput.getTypeToken())) {
-                compatibleInputs.add(potentialInput);
+            if (!expectedTypeToken.isAssignableFrom(potentialInput.getTypeToken())) {
+                continue;
             }
+
+            sawTypeCompatibleInput = true;
+
+            if (!matchesRequiredSize(potentialInput)) {
+                sawWrongSizedInput = true;
+                continue;
+            }
+
+            compatibleInputs.add(potentialInput);
+        }
+
+        if (compatibleInputs.isEmpty() && sawTypeCompatibleInput && sawWrongSizedInput) {
+            throw new FailedTilingAttempt.RejectedBoundary(getSizeErrorMessage());
         }
 
         return compatibleInputs;
+    }
+
+    private boolean matchesRequiredSize(Tile<?, S> potentialInput) {
+        if (this.requiredSize == null) {
+            return true;
+        }
+
+        OptionalLong actualSize = potentialInput.getFixedOutputSize();
+
+        return actualSize.isPresent() && actualSize.getAsLong() == this.requiredSize;
+    }
+
+    private String getSizeErrorMessage() {
+        if (this.requiredSizeMessage != null && !this.requiredSizeMessage.isBlank()) {
+            return this.requiredSizeMessage;
+        }
+
+        return "BEAST 2.8 expects '" + this.getKey() + "' to have size " + this.requiredSize + ".";
     }
 
     /**

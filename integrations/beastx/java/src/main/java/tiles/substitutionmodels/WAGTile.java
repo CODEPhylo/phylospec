@@ -23,6 +23,13 @@ public class WAGTile extends GeneratorTile<EmpiricalAminoAcidModel, BeastXState>
     GeneratorTileInput<Simplex, BeastXState> baseFrequenciesInput =
             new GeneratorTileInput<>("baseFrequencies", false);
 
+    public WAGTile() {
+        this.baseFrequenciesInput.requireSize(
+                20,
+                "WAG requires exactly 20 amino-acid base frequencies."
+        );
+    }
+
     @Override
     public EmpiricalAminoAcidModel applyTile(
             BeastXState beastState,

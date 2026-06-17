@@ -3,12 +3,8 @@ QMatrix invalidJTT = jtt(
 )
 
 // EXPECTED_TILES
-// TILING_SUCCESS
+// Unsupported operation. JTT requires exactly 20 amino-acid base frequencies.
 // EXPECTED_TILES
-
-// EXPECTED_APPLICATION_ERRORS
-// JTT requires exactly 20 amino-acid base frequencies. Provide a Simplex with 20 values.
-// EXPECTED_APPLICATION_ERRORS
 
 // EXPECTED BEASTX STATE
 // NO_STATE

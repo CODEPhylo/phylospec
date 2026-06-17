@@ -38,6 +38,17 @@ public abstract class Tile<T, S> {
     }
 
     /**
+     * Returns a statically known one-dimensional output size when this tile can
+     * determine it without applying itself.
+     * This is intentionally metadata, not runtime evaluation. Do not call apply()
+     * from matching code just to discover a size, because apply() may create BEAST
+     * objects or mutate backend state.
+     */
+    public OptionalLong getFixedOutputSize() {
+        return OptionalLong.empty();
+    }
+
+    /**
      * Recursively walks this tile's wired sub-tiles and verifies that no AstNode is committed
      * to two different sub-tiles anywhere in the sub-graph.
      * Throws {@link InconsistentTilingException} if an inconsistency is detected at any depth.
