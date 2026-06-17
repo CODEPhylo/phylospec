@@ -3,7 +3,7 @@ QMatrix invalidWAG = wag(
 )
 
 // EXPECTED_TILES
-// Unsupported operation. WAG requires exactly 20 amino-acid base frequencies.
+// Unsupported operation. WAG requires exactly 20 amino-acid base frequencies. Actual dimension: 4.
 // EXPECTED_TILES
 
 // EXPECTED BEASTX STATE

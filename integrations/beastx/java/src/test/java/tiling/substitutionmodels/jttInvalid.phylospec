@@ -3,7 +3,7 @@ QMatrix invalidJTT = jtt(
 )
 
 // EXPECTED_TILES
-// Unsupported operation. JTT requires exactly 20 amino-acid base frequencies.
+// Unsupported operation. JTT requires exactly 20 amino-acid base frequencies. Actual dimension: 4.
 // EXPECTED_TILES
 
 // EXPECTED BEASTX STATE

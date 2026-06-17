@@ -6,6 +6,7 @@ import org.phylospec.ast.Expr;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.tiling.tiles.TileInput;
 import org.phylospec.tiling.tiles.Tile;
+import org.phylospec.typeresolver.DimensionResolver;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import tiling.BeastXState;
@@ -44,7 +45,8 @@ public class LoggerParameterNamesInput extends TileInput<LoggerParameterNames, B
     public Set<Tile<?, BeastXState>> getCompatibleInputTiles(
             AstNode inputAstNode,
             Map<AstNode, Set<Tile<?, BeastXState>>> possibleInputTiles,
-            StochasticityResolver stochasticityResolver
+            StochasticityResolver stochasticityResolver,
+            DimensionResolver dimensionResolver
     ) throws FailedTilingAttempt.RejectedCascade, FailedTilingAttempt.RejectedBoundary {
         if (!(inputAstNode instanceof Expr.Array array)) {
             throw new FailedTilingAttempt.RejectedBoundary(

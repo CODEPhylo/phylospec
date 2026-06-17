@@ -7,6 +7,7 @@ import java.util.*;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.*;
+import org.phylospec.tiling.Dimension;
 import org.phylospec.tiling.errors.InconsistentTilingException;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.errors.WrappedTileApplicationError;
@@ -40,12 +41,29 @@ public abstract class Tile<T, S> {
     /**
      * Returns a statically known one-dimensional output size when this tile can
      * determine it without applying itself.
-     * This is intentionally metadata, not runtime evaluation. Do not call apply()
-     * from matching code just to discover a size, because apply() may create BEAST
-     * objects or mutate backend state.
+     *
+     * This is kept as a compatibility bridge for existing tiles. New code should
+     * prefer getOutputDimension().
      */
     public OptionalLong getFixedOutputSize() {
         return OptionalLong.empty();
+    }
+
+    /**
+     * Returns this tile's output dimension as a size expression.
+     *
+     * The default implementation bridges from getFixedOutputSize(), so existing
+     * BeastX tiles that already override getFixedOutputSize() automatically provide
+     * a literal Dimension.
+     */
+    public Dimension getOutputDimension() {
+        OptionalLong fixedSize = getFixedOutputSize();
+
+        if (fixedSize.isPresent()) {
+            return Dimension.literal(fixedSize.getAsLong());
+        }
+
+        return Dimension.unknown();
     }
 
     /**

@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.typeresolver.DimensionResolver;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
@@ -48,6 +49,8 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
         Map<String, TileInput<?, S>> expectedInputsByArgument =
                 expectedInputs.stream().collect(Collectors.toMap(TileInput::getKey, x -> x));
 
+        DimensionResolver dimensionResolver = new DimensionResolver(variableResolver);
+
         List<Set<Tile<?, S>>> compatibleInputTiles = new ArrayList<>();
         List<TileInput<?, S>> usedInputs = new ArrayList<>();
         Set<String> givenPhyloSpecArgumentNames = new HashSet<>();
@@ -67,12 +70,12 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
                                 + "' argument to run this in BEAST.");
             }
 
-            // for each argument tile, we check if its generated BEAST 2.8 type is compatible with
-            // this input
+            // for each argument tile, we check if its generated BEAST 2.8 type and dimension are
+            // compatible with this input
 
             Set<Tile<?, S>> currentCompatibleInputTiles =
                     argumentInput.getCompatibleInputTiles(
-                            argument, inputTiles, stochasticityResolver);
+                            argument, inputTiles, stochasticityResolver, dimensionResolver);
 
             if (currentCompatibleInputTiles.isEmpty()) {
                 throw new FailedTilingAttempt.RejectedBoundary(
@@ -107,7 +110,7 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
         // we now look at every possible input combination and create a new tile object correctly
         // wired up
 
-        return this.getWiredUpTiles(usedInputs, compatibleInputTiles, node);
+        return this.getWiredUpTiles(usedInputs, compatibleInputTiles, node, dimensionResolver);
     }
 
     private String getArgumentName(
