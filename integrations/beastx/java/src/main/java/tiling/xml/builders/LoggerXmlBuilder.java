@@ -11,6 +11,18 @@ import java.util.List;
 
 public class LoggerXmlBuilder {
 
+    private static final String POSTERIOR_LOG_NAME =
+            "posterior";
+
+    private static final String JOINT_LOG_NAME =
+            "joint";
+
+    private static final String PRIOR_LOG_NAME =
+            "prior";
+
+    private static final String LIKELIHOOD_LOG_NAME =
+            "likelihood";
+
     public List<XmlElement> buildLoggers(BeastXState state) {
         List<XmlElement> loggers =
                 new ArrayList<>();
@@ -24,7 +36,7 @@ public class LoggerXmlBuilder {
                             "screenLogger" + loggerIndex,
                             spec.logEvery,
                             null,
-                            getLoggedParameters(state, spec.parameterNames)
+                            getLoggedElements(state, spec.parameterNames)
                     )
             );
 
@@ -37,7 +49,7 @@ public class LoggerXmlBuilder {
                             "fileLogger" + loggerIndex,
                             spec.logEvery,
                             spec.fileName,
-                            getLoggedParameters(state, spec.parameterNames)
+                            getLoggedElements(state, spec.parameterNames)
                     )
             );
 
@@ -67,7 +79,7 @@ public class LoggerXmlBuilder {
             String id,
             long logEvery,
             String fileName,
-            List<Parameter> parameters
+            List<XmlElement> loggedElements
     ) {
         XmlElement logger =
                 XmlElement.element("log")
@@ -80,9 +92,9 @@ public class LoggerXmlBuilder {
                             .withAttribute("overwrite", "true");
         }
 
-        for (Parameter parameter : parameters) {
+        for (XmlElement loggedElement : loggedElements) {
             logger =
-                    logger.withChild(parameterReference(parameter));
+                    logger.withChild(loggedElement);
         }
 
         return logger;
@@ -110,33 +122,87 @@ public class LoggerXmlBuilder {
         return logger;
     }
 
-    private List<Parameter> getLoggedParameters(
+    private List<XmlElement> getLoggedElements(
             BeastXState state,
             List<String> parameterNames
     ) {
-        List<Parameter> parameters =
+        if (parameterNames == null) {
+            return defaultLoggedElements(state);
+        }
+
+        List<XmlElement> loggedElements =
                 new ArrayList<>();
 
-        if (parameterNames == null) {
-            parameters.addAll(state.stateNodes.keySet());
-        } else {
-            for (String parameterName : parameterNames) {
-                Parameter parameter =
-                        state.stateNodesByPhyloSpecName.get(parameterName);
+        for (String parameterName : parameterNames) {
+            XmlElement compoundLikelihoodReference =
+                    compoundLikelihoodReference(state, parameterName);
 
-                if (parameter == null) {
-                    throw new IllegalArgumentException(
-                            "No BEAST X state node named '" + parameterName + "' exists for XML logger."
-                    );
-                }
-
-                parameters.add(parameter);
+            if (compoundLikelihoodReference != null) {
+                loggedElements.add(compoundLikelihoodReference);
+                continue;
             }
+
+            Parameter parameter =
+                    state.stateNodesByPhyloSpecName.get(parameterName);
+
+            if (parameter == null) {
+                throw new IllegalArgumentException(
+                        "No BEAST X state node or XML loggable named '"
+                                + parameterName
+                                + "' exists for XML logger."
+                );
+            }
+
+            loggedElements.add(parameterReference(parameter));
         }
+
+        return loggedElements;
+    }
+
+    private List<XmlElement> defaultLoggedElements(BeastXState state) {
+        List<Parameter> parameters =
+                new ArrayList<>(state.stateNodes.keySet());
 
         parameters.sort(Comparator.comparing(LoggerXmlBuilder::parameterId));
 
-        return parameters;
+        List<XmlElement> loggedElements =
+                new ArrayList<>();
+
+        for (Parameter parameter : parameters) {
+            loggedElements.add(parameterReference(parameter));
+        }
+
+        return loggedElements;
+    }
+
+    private XmlElement compoundLikelihoodReference(
+            BeastXState state,
+            String loggableName
+    ) {
+        if (loggableName == null) {
+            return null;
+        }
+
+        return switch (loggableName) {
+            case POSTERIOR_LOG_NAME, JOINT_LOG_NAME ->
+                    XmlElement.ref("joint", "joint");
+
+            case PRIOR_LOG_NAME ->
+                    XmlElement.ref("prior", "prior");
+
+            case LIKELIHOOD_LOG_NAME -> {
+                if (state.likelihoodDistributions.isEmpty()) {
+                    throw new IllegalArgumentException(
+                            "Cannot log 'likelihood' because this BEAST X XML model has no likelihood block."
+                    );
+                }
+
+                yield XmlElement.ref("likelihood", "likelihood");
+            }
+
+            default ->
+                    null;
+        };
     }
 
     private List<TreeModel> getLoggedTrees(

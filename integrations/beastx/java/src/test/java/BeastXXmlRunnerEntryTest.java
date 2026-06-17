@@ -8,6 +8,7 @@ import tiling.runner.XmlRunnerOptions;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -297,5 +298,88 @@ public class BeastXXmlRunnerEntryTest {
 
         XmlTestSupport.assertNonEmptyFile(logPath, "complex runner-entry parameter log");
         XmlTestSupport.assertNonEmptyFile(treeLogPath, "complex runner-entry tree log");
+    }
+
+    @Test
+    public void executesCommonYuleJc69StrictClockExampleThroughXmlRunner() throws Exception {
+        Path sourcePath =
+                Path.of(
+                        "src",
+                        "test",
+                        "java",
+                        "resources",
+                        "comparison",
+                        "commonYuleJc69StrictClock.phylospec"
+                );
+
+        Path outputDirectory =
+                Path.of("target", "comparison");
+
+        Path xmlPath =
+                outputDirectory.resolve("common-yule-jc69-strictclock-beastx.xml");
+
+        Path logPath =
+                outputDirectory.resolve("common-yule-jc69-strictclock-beastx.log");
+
+        Path treeLogPath =
+                outputDirectory.resolve("common-yule-jc69-strictclock-beastx.trees");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
+        Files.deleteIfExists(logPath);
+        Files.deleteIfExists(treeLogPath);
+
+        try {
+            PhyloSpecRunner.executeXmlRunFromFile(sourcePath, xmlPath);
+
+            assertTrue(Files.exists(xmlPath), "Expected BEAST X XML file to be written.");
+            assertTrue(Files.size(xmlPath) > 0, "Expected BEAST X XML file to be non-empty.");
+
+            assertTrue(Files.exists(logPath), "Expected BEAST X parameter log to be written.");
+            assertTrue(Files.size(logPath) > 0, "Expected BEAST X parameter log to be non-empty.");
+
+            assertTrue(Files.exists(treeLogPath), "Expected BEAST X tree log to be written.");
+            assertTrue(Files.size(treeLogPath) > 0, "Expected BEAST X tree log to be non-empty.");
+
+            String xml =
+                    Files.readString(xmlPath);
+
+            assertTrue(xml.contains("<beast"), xml);
+            assertTrue(xml.contains("<mcmc"), xml);
+            assertTrue(xml.contains("<joint idref=\"joint\""), xml);
+            assertTrue(xml.contains("<prior idref=\"prior\""), xml);
+            assertTrue(xml.contains("<likelihood idref=\"likelihood\""), xml);
+            assertTrue(xml.contains("<treeLikelihood"), xml);
+            assertTrue(xml.contains("<logTree"), xml);
+
+            String log =
+                    Files.readString(logPath);
+
+            assertTrue(log.contains("posterior") || log.contains("joint"), log);
+            assertTrue(log.contains("prior"), log);
+            assertTrue(log.contains("likelihood"), log);
+            assertTrue(log.contains("clockRate"), log);
+
+            try (Stream<String> lines = Files.lines(logPath)) {
+                assertTrue(
+                        lines.count() >= 2,
+                        "Expected parameter log to contain a header and at least one sample."
+                );
+            }
+
+            try (Stream<String> lines = Files.lines(treeLogPath)) {
+                assertTrue(
+                        lines.anyMatch(line -> line.contains("tree STATE_")),
+                        "Expected tree log to contain sampled trees."
+                );
+            }
+        } catch (RuntimeException exception) {
+            Assumptions.assumeFalse(
+                    XmlTestSupport.isMissingBeagleLibrary(exception),
+                    "Skipping full PhyloCTMC XML execution because BEAGLE native library is not available."
+            );
+
+            throw exception;
+        }
     }
 }
