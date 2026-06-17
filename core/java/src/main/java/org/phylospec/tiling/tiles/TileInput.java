@@ -3,8 +3,11 @@ package org.phylospec.tiling.tiles;
 
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
+import org.phylospec.tiling.Dimension;
+import org.phylospec.tiling.DimensionUnifier;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.typeresolver.DimensionResolver;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 
@@ -13,7 +16,6 @@ import java.lang.reflect.ParameterizedType;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.OptionalLong;
 import java.util.Set;
 
 /**
@@ -27,8 +29,8 @@ public abstract class TileInput<T, S> {
     private TypeToken<T> typeToken;
     private Tile<T, S> tile;
 
-    private Long requiredSize;
-    private String requiredSizeMessage;
+    private Dimension requiredDimension;
+    private String requiredDimensionMessage;
 
     public TileInput(boolean required, Set<Stochasticity> acceptedStochasticities) {
         this.required = required;
@@ -36,17 +38,37 @@ public abstract class TileInput<T, S> {
     }
 
     public TileInput<T, S> requireSize(long requiredSize, String message) {
-        if (requiredSize < 0) {
-            throw new IllegalArgumentException("Required size must be non-negative.");
-        }
-
-        this.requiredSize = requiredSize;
-        this.requiredSizeMessage = message;
-        return this;
+        return requireDimension(Dimension.literal(requiredSize), message);
     }
 
     public TileInput<T, S> requireSize(long requiredSize) {
         return requireSize(requiredSize, null);
+    }
+
+    public TileInput<T, S> requireDimension(Dimension requiredDimension, String message) {
+        if (requiredDimension == null) {
+            throw new IllegalArgumentException("Required dimension must not be null.");
+        }
+
+        if (requiredDimension.isUnknown()) {
+            throw new IllegalArgumentException("Required dimension must be known.");
+        }
+
+        this.requiredDimension = requiredDimension;
+        this.requiredDimensionMessage = message;
+        return this;
+    }
+
+    public TileInput<T, S> requireDimension(Dimension requiredDimension) {
+        return requireDimension(requiredDimension, null);
+    }
+
+    public TileInput<T, S> requireDimensionVariable(String variableName, String message) {
+        return requireDimension(Dimension.variable(variableName), message);
+    }
+
+    public TileInput<T, S> requireDimensionVariable(String variableName) {
+        return requireDimensionVariable(variableName, null);
     }
 
     /**
@@ -61,7 +83,6 @@ public abstract class TileInput<T, S> {
     }
 
     public void setTile(Tile<?, S> tile) {
-        // we assume that the generated type is compatible
         try {
             this.tile = (Tile<T, S>) tile;
         } catch (ClassCastException e) {
@@ -71,17 +92,23 @@ public abstract class TileInput<T, S> {
 
     /**
      * Returns the tiles rooted at 'inputAstNode' which have types compatible with this input.
-     * Also checks that the stochasticity of 'inputAstNode' is accepted by this input.
+     * Also checks that the stochasticity and dimension of 'inputAstNode' are accepted by this input.
      */
     public Set<Tile<?, S>> getCompatibleInputTiles(
             AstNode inputAstNode,
             Map<AstNode, Set<Tile<?, S>>> possibleInputTiles,
-            StochasticityResolver stochasticityResolver
+            StochasticityResolver stochasticityResolver,
+            DimensionResolver dimensionResolver
     ) throws FailedTilingAttempt.RejectedCascade, FailedTilingAttempt.RejectedBoundary {
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(inputAstNode);
         if (!this.acceptedStochasticities.contains(stochasticity)) {
             throw new FailedTilingAttempt.RejectedBoundary(
-                    Stochasticity.getErrorMessage("BEAST 2.8", this.getKey(), stochasticity, this.acceptedStochasticities)
+                    Stochasticity.getErrorMessage(
+                            "BEAST 2.8",
+                            this.getKey(),
+                            stochasticity,
+                            this.acceptedStochasticities
+                    )
             );
         }
 
@@ -94,8 +121,10 @@ public abstract class TileInput<T, S> {
         TypeToken<?> expectedTypeToken = this.getTypeToken();
 
         Set<Tile<?, S>> compatibleInputs = new HashSet<>();
+
         boolean sawTypeCompatibleInput = false;
-        boolean sawWrongSizedInput = false;
+        Dimension mismatchedActualDimension = null;
+        boolean sawUnknownDimensionInput = false;
 
         for (Tile<?, S> potentialInput : potentialInputs) {
             if (!expectedTypeToken.isAssignableFrom(potentialInput.getTypeToken())) {
@@ -104,39 +133,109 @@ public abstract class TileInput<T, S> {
 
             sawTypeCompatibleInput = true;
 
-            if (!matchesRequiredSize(potentialInput)) {
-                sawWrongSizedInput = true;
+            DimensionUnifier probeUnifier =
+                    new DimensionUnifier();
+
+            DimensionUnifier.Result dimensionResult =
+                    unifyRequiredDimension(
+                            potentialInput,
+                            inputAstNode,
+                            dimensionResolver,
+                            probeUnifier
+                    );
+
+            if (dimensionResult == DimensionUnifier.Result.MISMATCH) {
+                mismatchedActualDimension =
+                        inferActualDimension(
+                                potentialInput,
+                                inputAstNode,
+                                dimensionResolver
+                        );
+                continue;
+            }
+
+            if (dimensionResult == DimensionUnifier.Result.UNKNOWN) {
+                sawUnknownDimensionInput = true;
                 continue;
             }
 
             compatibleInputs.add(potentialInput);
         }
 
-        if (compatibleInputs.isEmpty() && sawTypeCompatibleInput && sawWrongSizedInput) {
-            throw new FailedTilingAttempt.RejectedBoundary(getSizeErrorMessage());
+        if (compatibleInputs.isEmpty() && sawTypeCompatibleInput) {
+            if (mismatchedActualDimension != null) {
+                throw new FailedTilingAttempt.RejectedBoundary(
+                        getDimensionMismatchErrorMessage(mismatchedActualDimension)
+                );
+            }
+
+            if (sawUnknownDimensionInput) {
+                throw new FailedTilingAttempt.RejectedBoundary(
+                        getUnknownDimensionErrorMessage()
+                );
+            }
         }
 
         return compatibleInputs;
     }
 
-    private boolean matchesRequiredSize(Tile<?, S> potentialInput) {
-        if (this.requiredSize == null) {
-            return true;
+    /**
+     * Applies this input's dimension requirement to an already selected input
+     * tile. CandidateTile uses this method with one shared DimensionUnifier so
+     * dimensions can be unified across multiple inputs of the same tile.
+     */
+    public DimensionUnifier.Result unifyRequiredDimension(
+            Tile<?, S> inputTile,
+            AstNode inputAstNode,
+            DimensionResolver dimensionResolver,
+            DimensionUnifier dimensionUnifier
+    ) {
+        if (this.requiredDimension == null) {
+            return DimensionUnifier.Result.MATCH;
         }
 
-        OptionalLong actualSize = potentialInput.getFixedOutputSize();
+        Dimension actualDimension =
+                inferActualDimension(
+                        inputTile,
+                        inputAstNode,
+                        dimensionResolver
+                );
 
-        return actualSize.isPresent()
-                && actualSize.getAsLong() == this.requiredSize;
+        return dimensionUnifier.unify(this.requiredDimension, actualDimension);
     }
 
-    private String getSizeErrorMessage() {
-        if (this.requiredSizeMessage != null && !this.requiredSizeMessage.isBlank()) {
-            return this.requiredSizeMessage;
+    private Dimension inferActualDimension(
+            Tile<?, S> inputTile,
+            AstNode inputAstNode,
+            DimensionResolver dimensionResolver
+    ) {
+        Dimension outputDimension =
+                inputTile.getOutputDimension();
+
+        if (!outputDimension.isUnknown()) {
+            return outputDimension;
         }
 
-        return "BEAST 2.8 expects '" + this.getKey()
-                + "' to have size " + this.requiredSize + ".";
+        if (dimensionResolver == null) {
+            return Dimension.unknown();
+        }
+
+        return dimensionResolver.getDimension(inputAstNode);
+    }
+
+    private String getDimensionMismatchErrorMessage(Dimension actualDimension) {
+        String baseMessage = this.requiredDimensionMessage != null && !this.requiredDimensionMessage.isBlank()
+                ? this.requiredDimensionMessage
+                : "The target backend expects '" + this.getKey()
+                + "' to have dimension " + this.requiredDimension.display() + ".";
+
+        return baseMessage + " Actual dimension: " + actualDimension.display() + ".";
+    }
+
+    private String getUnknownDimensionErrorMessage() {
+        return "The target backend expects '" + this.getKey()
+                + "' to have dimension " + this.requiredDimension.display()
+                + ", but the input dimension could not be inferred during tiling.";
     }
 
     /**

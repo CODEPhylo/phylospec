@@ -10,7 +10,7 @@ QMatrix f81 = f81(
 
 QMatrix hky = hky(
     kappa = 2.0,
-    baseFrequencies = repeat(0.25, num=6)
+    baseFrequencies = repeat(0.25, num=4)
 )
 
 QMatrix gtr = gtr(

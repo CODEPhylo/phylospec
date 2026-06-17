@@ -26,7 +26,7 @@ Alignment alignment ~ PhyloCTMC(
 ) observed as data
 
 mcmc {
-    Integer chainLength = 50000000
+    Integer chainLength = 50000
 
     Logger screenLogger = screenLogger(
         logEvery=10000,

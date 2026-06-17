@@ -1,0 +1,12 @@
+QMatrix invalidHKY = hky(
+    kappa = 2.0,
+    baseFrequencies = [0.2, 0.2, 0.2, 0.2, 0.2]
+)
+
+// EXPECTED_TILES
+// Unsupported operation. HKY requires exactly four nucleotide base frequencies: A, C, G, T. Actual dimension: 5.
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// NO_STATE
+// EXPECTED BEASTX STATE

@@ -3,6 +3,7 @@ package org.phylospec.tiling.tiles;
 import org.phylospec.ast.AstNode;
 import org.phylospec.templatematching.AstTemplateMatcher;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.typeresolver.DimensionResolver;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
@@ -21,10 +22,9 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
 
     protected List<String> getPhyloSpecTemplates() {
         return List.of(this.getPhyloSpecTemplate());
-    };
+    }
 
     private List<AstTemplateMatcher> astTemplateMatchers;
-
 
     @Override
     public Set<Tile<?, S>> tryToTile(
@@ -43,8 +43,6 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
             }
         }
 
-        // try to match any of the templates
-
         Map<String, AstNode> matchedTemplateVariables = null;
         for (AstTemplateMatcher templateMatcher : this.astTemplateMatchers) {
             matchedTemplateVariables = templateMatcher.match(node, variableResolver);
@@ -56,8 +54,6 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
             throw new FailedTilingAttempt.Irrelevant();
         }
 
-        // check the stochasticity
-
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
         if (!this.getCompatibleStochasticities().contains(stochasticity)) {
             throw new FailedTilingAttempt.Rejected(
@@ -65,11 +61,10 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
             );
         }
 
-        // collect TileInput fields from this template in declaration order
-
         List<TileInput<?, S>> tileInputs = this.getTileInputs();
 
-        // build ordered list of compatible tiles per input
+        DimensionResolver dimensionResolver =
+                new DimensionResolver(variableResolver);
 
         List<TileInput<?, S>> usedInputs = new ArrayList<>();
         List<Set<Tile<?, S>>> compatibleInputTiles = new ArrayList<>();
@@ -86,7 +81,14 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
                 }
             }
 
-            Set<Tile<?, S>> compatible = tileInput.getCompatibleInputTiles(inputAstNode, allInputTiles, stochasticityResolver);
+            Set<Tile<?, S>> compatible =
+                    tileInput.getCompatibleInputTiles(
+                            inputAstNode,
+                            allInputTiles,
+                            stochasticityResolver,
+                            dimensionResolver
+                    );
+
             if (compatible.isEmpty()) {
                 throw new FailedTilingAttempt.RejectedBoundary(
                         "BEAST 2.8 cannot deal with the value you provided for " + tileInput.getKey().replace("$", "") + "."
@@ -97,8 +99,12 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
             usedInputs.add(tileInput);
         }
 
-        // for each combination, create a freshly wired up tile
-        return this.getWiredUpTiles(usedInputs, compatibleInputTiles, node);
+        return this.getWiredUpTiles(
+                usedInputs,
+                compatibleInputTiles,
+                node,
+                dimensionResolver
+        );
     }
 
     @Override
@@ -112,7 +118,6 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
                     TemplateTileInput<?, S> input = (TemplateTileInput<?, S>) field.get(this);
                     Tile<?, S> child = input.getTile();
                     if (child != null) {
-                        // strip leading $ from template variable name
                         String varName = input.getKey().substring(1);
                         sb.append(" (").append(varName).append(" ").append(child).append(")");
                     }
@@ -150,7 +155,6 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
             }
             this.templateVariable = templateVariable;
         }
-
 
         @Override
         public String getKey() {
