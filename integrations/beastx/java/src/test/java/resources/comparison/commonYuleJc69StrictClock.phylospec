@@ -1,0 +1,59 @@
+Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+Taxa taxa = taxa(data)
+
+PositiveReal birthRate ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+Rate clockRate ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+Tree tree ~ Yule(
+    birthRate=birthRate,
+    taxa=taxa
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=jc69(),
+    branchRates~StrictClock(
+        clockRate=clockRate,
+        tree=tree
+    )
+) observed as data
+
+mcmc {
+    Integer chainLength = 50000000
+
+    Logger screenLogger = screenLogger(
+        logEvery=10000,
+        parameters=[
+            "posterior",
+            "prior",
+            "likelihood",
+            birthRate,
+            clockRate
+        ]
+    )
+
+    Logger fileLogger = fileLogger(
+        logEvery=1000,
+        file="target/comparison/common-yule-jc69-strictclock-beastx.log",
+        parameters=[
+            "posterior",
+            "prior",
+            "likelihood",
+            birthRate,
+            clockRate
+        ]
+    )
+
+    Logger treeLogger = treeLogger(
+        logEvery=1000,
+        file="target/comparison/common-yule-jc69-strictclock-beastx.trees",
+        trees=[tree]
+    )
+}

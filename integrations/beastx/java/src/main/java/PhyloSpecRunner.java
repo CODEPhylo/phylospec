@@ -98,6 +98,27 @@ public class PhyloSpecRunner implements ErrorEventListener {
     /**
      * Executes the default XML run for a source file under target/beastx-runs.
      */
+    public static XmlRunResult executeXmlRunFromFile(Path sourcePath, Path xmlPath)
+            throws Exception {
+        FileRunPaths paths = FileRunPaths.forSource(
+                sourcePath,
+                Path.of("target", "beastx-runs")
+        );
+
+        return fromFile(sourcePath)
+                .executeXmlRun(
+                        XmlRunnerOptions.builder(
+                                        paths.runName(),
+                                        xmlPath
+                                )
+                                .execute(true)
+                                .build()
+                );
+    }
+
+    /**
+     * Executes the default XML run for a source file under target/beastx-runs.
+     */
     public static XmlRunResult executeDefaultXmlRunFromFile(Path sourcePath)
             throws Exception {
         FileRunPaths paths = FileRunPaths.forSource(
