@@ -11,6 +11,7 @@ import tiling.params.BeastXSimplexParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
 
+import java.util.OptionalLong;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
 
@@ -63,5 +64,12 @@ public class DirichletTile extends GeneratorTile<
                         state.getParameter().getParameterValues()
                 ))
         );
+    }
+
+    @Override
+    public OptionalLong getFixedOutputSize() {
+        return this.concentrationInput.getTile() == null
+                ? OptionalLong.empty()
+                : this.concentrationInput.getTile().getFixedOutputSize();
     }
 }

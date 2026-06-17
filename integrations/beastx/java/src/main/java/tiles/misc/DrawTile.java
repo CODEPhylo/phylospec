@@ -8,6 +8,7 @@ import tiling.params.BeastXParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
 
+import java.util.OptionalLong;
 import java.util.IdentityHashMap;
 
 public class DrawTile extends AstNodeTile<BeastXParam, Stmt.Draw, BeastXState> {
@@ -52,5 +53,12 @@ public class DrawTile extends AstNodeTile<BeastXParam, Stmt.Draw, BeastXState> {
         }
 
         return new TypeToken<BeastXParam>() {};
+    }
+
+    @Override
+    public OptionalLong getFixedOutputSize() {
+        return this.expressionInput.getTile() == null
+                ? OptionalLong.empty()
+                : this.expressionInput.getTile().getFixedOutputSize();
     }
 }

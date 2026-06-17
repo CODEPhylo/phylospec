@@ -23,6 +23,13 @@ public class LGTile extends GeneratorTile<EmpiricalAminoAcidModel, BeastXState> 
     GeneratorTileInput<Simplex, BeastXState> baseFrequenciesInput =
             new GeneratorTileInput<>("baseFrequencies", false);
 
+    public LGTile() {
+        this.baseFrequenciesInput.requireSize(
+                20,
+                "LG requires exactly 20 amino-acid base frequencies."
+        );
+    }
+
     @Override
     public EmpiricalAminoAcidModel applyTile(
             BeastXState beastState,

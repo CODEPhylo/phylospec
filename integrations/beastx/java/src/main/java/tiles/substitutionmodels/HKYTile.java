@@ -26,6 +26,13 @@ public class HKYTile extends GeneratorTile<HKY, BeastXState> {
     GeneratorTileInput<Simplex, BeastXState> baseFrequenciesInput =
             new GeneratorTileInput<>("baseFrequencies");
 
+    public HKYTile() {
+        this.baseFrequenciesInput.requireSize(
+                4,
+                "HKY requires exactly four nucleotide base frequencies: A, C, G, T."
+        );
+    }
+
     @Override
     public HKY applyTile(BeastXState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<PositiveReal> kappaScalar =

@@ -14,6 +14,7 @@ import org.phylospec.types.Simplex;
 import tiles.misc.AssignedArgumentTile;
 import tiling.BeastXState;
 
+import java.util.OptionalLong;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -164,5 +165,31 @@ public class RepeatSimplexTile extends GeneratorTile<Simplex, BeastXState> {
                 return UnitInterval.INSTANCE;
             }
         };
+    }
+
+    @Override
+    public OptionalLong getFixedOutputSize() {
+        return getLiteralIntegerFromTile(this.numInput.getTile());
+    }
+
+    private static OptionalLong getLiteralIntegerFromTile(Tile<?, BeastXState> tile) {
+        if (tile == null) {
+            return OptionalLong.empty();
+        }
+
+        AstNode node = tile.getRootNode();
+
+        if (node instanceof Expr.AssignedArgument argument
+                && argument.expression instanceof Expr.Literal literal
+                && literal.value instanceof Integer value) {
+            return OptionalLong.of(value);
+        }
+
+        if (node instanceof Expr.Literal literal
+                && literal.value instanceof Integer value) {
+            return OptionalLong.of(value);
+        }
+
+        return OptionalLong.empty();
     }
 }
