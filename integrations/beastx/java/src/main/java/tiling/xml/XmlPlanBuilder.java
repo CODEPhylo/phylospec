@@ -85,6 +85,7 @@ public class XmlPlanBuilder {
         addParameterPriors(plan, state);
         addTreePriors(plan, state);
         addCalibrationPriors(plan, state);
+        addTreeStatistics(plan, state);
         addOperators(plan, state);
         addLoggers(plan, state);
 
@@ -317,6 +318,94 @@ public class XmlPlanBuilder {
                     operator
             );
         }
+    }
+
+    private void addTreeStatistics(
+            XmlPlan plan,
+            BeastXState state
+    ) {
+        Set<String> emittedStatisticIds =
+                new HashSet<>();
+
+        for (BeastXState.ScreenLoggerSpec spec : state.screenLoggerSpecs) {
+            addTreeStatistics(plan, state, spec.parameterNames, emittedStatisticIds);
+        }
+
+        for (BeastXState.FileLoggerSpec spec : state.fileLoggerSpecs) {
+            addTreeStatistics(plan, state, spec.parameterNames, emittedStatisticIds);
+        }
+    }
+
+    private void addTreeStatistics(
+            XmlPlan plan,
+            BeastXState state,
+            List<String> loggableNames,
+            Set<String> emittedStatisticIds
+    ) {
+        if (loggableNames == null) {
+            return;
+        }
+
+        for (String loggableName : loggableNames) {
+            XmlElement statistic =
+                    treeStatistic(state, loggableName);
+
+            if (statistic == null) {
+                continue;
+            }
+
+            if (emittedStatisticIds.add(loggableName)) {
+                plan.add(
+                        XmlPlan.Section.STATISTICS,
+                        statistic
+                );
+            }
+        }
+    }
+
+    private XmlElement treeStatistic(
+            BeastXState state,
+            String loggableName
+    ) {
+        if (loggableName == null) {
+            return null;
+        }
+
+        if (loggableName.endsWith(".height")) {
+            String treeName =
+                    loggableName.substring(0, loggableName.length() - ".height".length());
+
+            TreeModel treeModel =
+                    state.treeModelsByPhyloSpecName.get(treeName);
+
+            if (treeModel == null) {
+                return null;
+            }
+
+            return XmlElement.element("treeHeightStatistic")
+                    .withId(loggableName)
+                    .withAttribute("name", loggableName)
+                    .withChild(XmlElement.ref("treeModel", treeId(treeModel)));
+        }
+
+        if (loggableName.endsWith(".treeLength")) {
+            String treeName =
+                    loggableName.substring(0, loggableName.length() - ".treeLength".length());
+
+            TreeModel treeModel =
+                    state.treeModelsByPhyloSpecName.get(treeName);
+
+            if (treeModel == null) {
+                return null;
+            }
+
+            return XmlElement.element("treeLengthStatistic")
+                    .withId(loggableName)
+                    .withAttribute("name", loggableName)
+                    .withChild(XmlElement.ref("treeModel", treeId(treeModel)));
+        }
+
+        return null;
     }
 
     private void addLoggers(

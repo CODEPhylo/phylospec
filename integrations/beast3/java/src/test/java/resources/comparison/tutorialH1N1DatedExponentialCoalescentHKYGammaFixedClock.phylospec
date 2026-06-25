@@ -1,0 +1,64 @@
+Alignment data = fromNexus(
+    file="src/test/java/resources/comparison/H1N1pdm_2009.nex",
+    date=parse(regex=".*_(\d+(?:\.\d+)?)$")
+)
+
+Taxa taxa = taxa(data)
+
+PositiveReal populationSize ~ LogNormal(
+    logMean=1.0,
+    logSd=1.0
+)
+
+PositiveReal growthRate ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+Rate clockRate = 0.0003
+
+PositiveReal kappa ~ LogNormal(
+    logMean=1.0,
+    logSd=0.5
+)
+
+Simplex baseFrequencies ~ Dirichlet(
+    concentration=[33.5, 19.3, 24.2, 23.0]
+)
+
+PositiveReal gammaShape ~ LogNormal(
+    logMean=-2.302585092994046,
+    logSd=0.5
+)
+
+Tree tree ~ Coalescent(
+    populationSize=exponentialPopulationFunction(
+        populationSize=populationSize,
+        growthRate=growthRate
+    ),
+    taxa=taxa
+)
+
+QMatrix qMatrix = hky(
+    kappa=kappa,
+    baseFrequencies=baseFrequencies
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix,
+    branchRates~StrictClock(
+        clockRate=clockRate,
+        tree=tree
+    ),
+    siteRates~DiscreteGammaInv(
+        shape=gammaShape,
+        numCategories=4,
+        numSites=numSites(data)
+    )
+) observed as data
+
+mcmc {
+    Integer chainLength = 2000000
+    Integer randomSeed = 1234
+}

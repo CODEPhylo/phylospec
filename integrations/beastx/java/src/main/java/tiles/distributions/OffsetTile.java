@@ -3,7 +3,6 @@ package tiles.distributions;
 import dr.inference.distribution.DistributionLikelihood;
 import dr.math.UnivariateFunction;
 import dr.math.distributions.Distribution;
-import dr.util.Attribute;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.Real;
 import org.phylospec.tiling.tiles.GeneratorTile;
@@ -11,6 +10,7 @@ import org.phylospec.types.RealScalar;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
+import tiling.model.ParameterAttribute;
 
 import java.util.IdentityHashMap;
 
@@ -71,10 +71,7 @@ public class OffsetTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
-                state -> likelihood.addData(new Attribute.Default<>(
-                        state.getParameter().getParameterName(),
-                        new double[] {state.getParameter().getParameterValue(0)}
-                ))
+                state -> likelihood.addData(new ParameterAttribute(state.getParameter()))
         );
     }
 

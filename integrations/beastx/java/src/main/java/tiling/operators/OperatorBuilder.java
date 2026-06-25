@@ -124,6 +124,10 @@ public class OperatorBuilder {
         List<MCMCOperator> operators =
                 new ArrayList<>();
 
+        if (beastState.operatorConfig.treeClockUpDownWeight <= 0.0) {
+            return operators;
+        }
+
         for (Map.Entry<TreeModel, List<Parameter>> entry : beastState.treeClockRateParameters.entrySet()) {
             TreeModel treeModel =
                     entry.getKey();
@@ -152,6 +156,10 @@ public class OperatorBuilder {
     private List<String> summarizeTreeClockJointOperators(BeastXState beastState) {
         List<String> summaries =
                 new ArrayList<>();
+
+        if (beastState.operatorConfig.treeClockUpDownWeight <= 0.0) {
+            return summaries;
+        }
 
         for (Map.Entry<TreeModel, List<Parameter>> entry : beastState.treeClockRateParameters.entrySet()) {
             TreeModel treeModel =
@@ -290,7 +298,7 @@ public class OperatorBuilder {
         summaries.add("NodeHeightScaleOperator(tree=%s, weight=%s, scaleFactor=%s)".formatted(
                 treeModel.getId(),
                 format(config.treeScaleWeight),
-                format(config.parameterScaleFactor)
+                format(config.treeScaleFactor)
         ));
 
         summaries.add("ExchangeOperator(tree=%s, mode=narrow, weight=%s)".formatted(
@@ -326,7 +334,7 @@ public class OperatorBuilder {
         NodeHeightScaleOperator operator =
                 new NodeHeightScaleOperator(
                         treeModel,
-                        config.parameterScaleFactor,
+                        config.treeScaleFactor,
                         true,
                         AdaptationMode.DEFAULT
                 );

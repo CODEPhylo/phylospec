@@ -147,6 +147,7 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
         }
 
         this.bestTiles = bestTiles;
+        this.matchOperatorTiles(statements);
         return bestTiles;
     }
 
@@ -161,7 +162,38 @@ public class EvaluateTiles implements AstVisitor<Void, Void, Void> {
             bestTiling.apply(beastState, new IdentityHashMap<>());
         }
 
+        for (Tile<?> operatorTile : this.matchedOperatorTiles) {
+            operatorTile.apply(beastState, new IdentityHashMap<>());
+        }
+
         return beastState;
+    }
+
+    private void matchOperatorTiles(List<Stmt> statements) {
+        this.matchedOperatorTiles.clear();
+
+        for (Stmt statement : statements) {
+            for (Tile<?> operatorTile : this.operatorTiles) {
+                if (!(operatorTile instanceof CandidateTile candidateTile)) {
+                    continue;
+                }
+
+                try {
+                    Set<Tile<?>> matches =
+                            candidateTile.tryToTile(
+                                    statement,
+                                    this.evaluatedTiles,
+                                    this.variableResolver,
+                                    this.stochasticityResolver
+                            );
+
+                    this.matchedOperatorTiles.addAll(matches);
+                } catch (FailedTilingAttempt ignored) {
+                    // Operator tiles are optional refinements over the model tiling. If an
+                    // operator tile does not match a statement, the model should still run.
+                }
+            }
+        }
     }
 
     /* visitor helpers */

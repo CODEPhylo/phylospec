@@ -1,0 +1,135 @@
+Alignment data = fromNexus(
+    file="src/test/java/resources/comparison/H1N1pdm_2009.nex",
+    date=parse(regex=".*_(\d+(?:\.\d+)?)$")
+)
+
+Taxa taxa = taxa(data)
+
+PositiveReal populationSize ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+PositiveReal growthRate ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+Rate clockRate ~ LogNormal(
+    logMean=-5.8,
+    logSd=1
+)
+
+PositiveReal kappa ~ LogNormal(
+    logMean=1.0,
+    logSd=1.0
+)
+
+Simplex baseFrequencies ~ Dirichlet(
+    concentration=[3,3,3,3]
+)
+
+PositiveReal gammaShape ~ LogNormal(
+    logMean=0,
+    logSd=0.5
+)
+
+Tree tree ~ Coalescent(
+    populationSize=exponentialPopulationFunction(
+        populationSize=populationSize,
+        growthRate=growthRate
+    ),
+    taxa=taxa
+)
+
+Vector<Rate> branchRates ~ StrictClock(
+    clockRate=clockRate,
+    tree=tree
+)
+
+Vector<Rate> siteRates ~ DiscreteGammaInv(
+    shape=gammaShape,
+    numCategories=4,
+    invariantProportion=0.0,
+    numSites=numSites(data)
+)
+
+QMatrix qMatrix = hky(
+    kappa=kappa,
+    baseFrequencies=baseFrequencies
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix,
+    branchRates=branchRates,
+    siteRates=siteRates
+) observed as data
+
+mcmc {
+    Integer chainLength = 10000000
+    Integer randomSeed = 123456
+
+    Logger fileLogger = fileLogger(
+        logEvery=1000,
+        file="target/comparison/phylo-beastx-tutorial-h1n1-dated-exponential-coalescent-hky-gamma.log",
+        parameters=[
+            "posterior",
+            "prior",
+            "likelihood",
+
+            "populationSize_prior",
+            "growthRate_prior",
+            "kappa_prior",
+            "baseFrequencies_prior",
+            "gammaShape_prior",
+            "tree_prior",
+            "clockRate_prior",
+            "alignment_likelihood",
+
+            "tree.height",
+            "tree.treeLength",
+
+            clockRate,
+            populationSize,
+            growthRate,
+            kappa,
+            baseFrequencies,
+            gammaShape
+        ]
+    )
+
+    Logger screenLogger = screenLogger(
+        logEvery= 10000,
+        parameters=[
+            "posterior",
+            "prior",
+            "likelihood",
+
+            "populationSize_prior",
+            "growthRate_prior",
+            "kappa_prior",
+            "baseFrequencies_prior",
+            "gammaShape_prior",
+            "tree_prior",
+            "clockRate_prior",
+            "alignment_likelihood",
+
+            "tree.height",
+            "tree.treeLength",
+
+            clockRate,
+            populationSize,
+            growthRate,
+            kappa,
+            baseFrequencies,
+            gammaShape
+        ]
+    )
+
+    Logger treeLogger = treeLogger(
+        logEvery=1000,
+        file="target/comparison/phylo-beastx-tutorial-h1n1-dated-exponential-coalescent-hky-gamma.trees",
+        trees=[tree]
+    )
+}

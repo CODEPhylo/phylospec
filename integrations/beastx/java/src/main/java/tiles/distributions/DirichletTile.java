@@ -1,7 +1,6 @@
 package tiles.distributions;
 
 import dr.inference.distribution.MultivariateDistributionLikelihood;
-import dr.util.Attribute;
 import dr.math.distributions.DirichletDistribution;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
@@ -10,6 +9,7 @@ import org.phylospec.types.RealVector;
 import tiling.params.BeastXSimplexParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
+import tiling.model.ParameterAttribute;
 
 import java.util.OptionalLong;
 import java.util.Arrays;
@@ -59,10 +59,7 @@ public class DirichletTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
-                state -> likelihood.addData(new Attribute.Default<>(
-                        state.getParameter().getParameterName(),
-                        state.getParameter().getParameterValues()
-                ))
+                state -> likelihood.addData(new ParameterAttribute(state.getParameter()))
         );
     }
 

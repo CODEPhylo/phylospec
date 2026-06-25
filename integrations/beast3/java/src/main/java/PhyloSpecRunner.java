@@ -1,4 +1,5 @@
 import beast.base.inference.*;
+import beast.base.parser.XMLProducer;
 import beastconfig.LoggerSelector;
 import beastconfig.OperatorSelector;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
@@ -27,6 +28,8 @@ import tiling.TileApplicationError;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,6 +55,27 @@ public class PhyloSpecRunner implements ErrorEventListener {
      * via {@link #errorDetected} and terminates the process immediately.
      */
     public void runPhyloSpec(String runName) throws IOException, ParserConfigurationException, SAXException {
+        this.runPhyloSpec(runName, null);
+    }
+
+    public void runPhyloSpec(
+            String runName,
+            Path operatorSummaryPath
+    ) throws IOException, ParserConfigurationException, SAXException {
+        MCMC mcmc =
+                buildMCMC(runName, operatorSummaryPath);
+
+        mcmc.run();
+    }
+
+    public MCMC buildMCMC(String runName) throws IOException, ParserConfigurationException, SAXException {
+        return buildMCMC(runName, null);
+    }
+
+    public MCMC buildMCMC(
+            String runName,
+            Path operatorSummaryPath
+    ) throws IOException, ParserConfigurationException, SAXException {
         ComponentResolver componentResolver = loadComponentResolver();
 
         // run lexer
@@ -127,6 +151,17 @@ public class PhyloSpecRunner implements ErrorEventListener {
             OperatorSelector.addDefaultOperators(stateNode, beastState);
         }
 
+        if (operatorSummaryPath != null) {
+            if (operatorSummaryPath.getParent() != null) {
+                Files.createDirectories(operatorSummaryPath.getParent());
+            }
+
+            Files.write(
+                    operatorSummaryPath,
+                    beastState.getOperatorSummaries()
+            );
+        }
+
         // add loggers
 
         LoggerSelector.addMissingLoggers(beastState, posterior, prior, likelihood);
@@ -140,11 +175,28 @@ public class PhyloSpecRunner implements ErrorEventListener {
         beastState.setInput(mcmc, mcmc.operatorsInput, new ArrayList<>(beastState.operators.keySet()));
         beastState.setInput(mcmc, mcmc.loggersInput, beastState.getLoggers());
 
-        // run
-
         beastState.initializeBEASTObjects();
 
-        mcmc.run();
+        return mcmc;
+    }
+
+    public void writeXml(
+            String runName,
+            Path xmlPath,
+            Path operatorSummaryPath
+    ) throws IOException, ParserConfigurationException, SAXException {
+        if (xmlPath.getParent() != null) {
+            Files.createDirectories(xmlPath.getParent());
+        }
+
+        MCMC mcmc =
+                buildMCMC(runName, operatorSummaryPath);
+
+        String xml =
+                new XMLProducer()
+                        .toXML(mcmc);
+
+        Files.writeString(xmlPath, xml);
     }
 
     /**

@@ -1,9 +1,13 @@
+import dr.evomodel.branchmodel.HomogeneousBranchModel;
 import dr.evomodel.operators.ExchangeOperator;
 import dr.evomodel.operators.NodeHeightScaleOperator;
 import dr.evomodel.operators.SubtreeSlideOperator;
 import dr.evomodel.operators.WilsonBalding;
+import dr.evomodel.substmodel.FrequencyModel;
 import dr.inference.loggers.Logger;
 import dr.inference.loggers.MCLogger;
+import dr.inference.model.Likelihood;
+import dr.inference.model.Parameter;
 import dr.inference.operators.*;
 import dr.inference.operators.DeltaExchangeOperator;
 import dr.inference.operators.MCMCOperator;
@@ -13,6 +17,7 @@ import dr.inference.operators.UpDownOperator;
 import org.junit.jupiter.api.Test;
 import tiling.BeastXModel;
 import tiling.mcmc.MCMCBuilder;
+import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
 import tiling.operators.OperatorBuilder;
 import tiling.runner.BeastXRunResult;
 import tiling.runner.RunMode;
@@ -43,6 +48,7 @@ public class BeastXMCMCBuilderTest {
                     Real randomWalkWindowSize = 0.25
 
                     Real treeScaleWeight = 9.0
+                    Real treeScaleFactor = 0.4
                     Real treeSubtreeSlideSize = 7.0
                     Real treeSubtreeSlideWeight = 11.0
                     Real treeNarrowExchangeWeight = 13.0
@@ -62,6 +68,7 @@ public class BeastXMCMCBuilderTest {
         assertEquals(0.25, state.operatorConfig.randomWalkWindowSize);
 
         assertEquals(9.0, state.operatorConfig.treeScaleWeight);
+        assertEquals(0.4, state.operatorConfig.treeScaleFactor);
         assertEquals(7.0, state.operatorConfig.treeSubtreeSlideSize);
         assertEquals(11.0, state.operatorConfig.treeSubtreeSlideWeight);
         assertEquals(13.0, state.operatorConfig.treeNarrowExchangeWeight);
@@ -1168,5 +1175,60 @@ public class BeastXMCMCBuilderTest {
         assertFalse(containsOperator(operators, ExchangeOperator.class));
         assertFalse(containsOperator(operators, WilsonBalding.class));
         assertFalse(containsOperator(operators, UpDownOperator.class));
+    }
+
+    @Test
+    public void stochasticHkyBaseFrequenciesAreUsedByLikelihoodFrequencyModel() throws Exception {
+        String source =
+                """
+                Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+
+                Taxa taxa = taxa(data)
+
+                PositiveReal kappa ~ LogNormal(
+                    logMean=0.0,
+                    logSd=1.0
+                )
+
+                Simplex baseFrequencies ~ Dirichlet(
+                    concentration=[1.0, 1.0, 1.0, 1.0]
+                )
+
+                Tree tree ~ Yule(
+                    birthRate=1.0,
+                    taxa=taxa
+                )
+
+                Alignment alignment ~ PhyloCTMC(
+                    tree=tree,
+                    qMatrix=hky(
+                        kappa=kappa,
+                        baseFrequencies=baseFrequencies
+                    )
+                ) observed as data
+                """;
+
+        BeastXModel model =
+                new PhyloSpecRunner(source)
+                        .buildModel("stochasticHkyBaseFrequencies");
+
+        Parameter baseFrequencies =
+                model.beastState.stateNodesByPhyloSpecName.get("baseFrequencies");
+
+        assertNotNull(baseFrequencies);
+
+        Likelihood likelihood =
+                model.beastState.likelihoodDistributions.getFirst();
+
+        BeastXPhyloCTMCLikelihoodSpec phyloCTMC =
+                assertInstanceOf(BeastXPhyloCTMCLikelihoodSpec.class, likelihood);
+
+        HomogeneousBranchModel branchModel =
+                assertInstanceOf(HomogeneousBranchModel.class, phyloCTMC.getBranchModel());
+
+        FrequencyModel frequencyModel =
+                branchModel.getRootFrequencyModel();
+
+        assertSame(baseFrequencies, frequencyModel.getFrequencyParameter());
     }
 }

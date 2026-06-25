@@ -1,13 +1,22 @@
 package tiling.xml.builders;
 
+import dr.evomodel.coalescent.CoalescentLikelihood;
+import dr.evomodel.speciation.SpeciationLikelihood;
 import dr.evomodel.tree.TreeModel;
+import dr.inference.distribution.AbstractDistributionLikelihood;
+import dr.inference.distribution.DistributionLikelihood;
+import dr.inference.distribution.MultivariateDistributionLikelihood;
+import dr.inference.model.AbstractModelLikelihood;
+import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
 import tiling.BeastXState;
+import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
 import tiling.xml.XmlElement;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 public class LoggerXmlBuilder {
 
@@ -201,8 +210,111 @@ public class LoggerXmlBuilder {
             }
 
             default ->
-                    null;
+                    componentLikelihoodReference(state, loggableName);
         };
+    }
+
+    private XmlElement componentLikelihoodReference(
+            BeastXState state,
+            String loggableName
+    ) {
+        for (AbstractDistributionLikelihood prior : state.priorDistributions.values()) {
+            XmlElement reference =
+                    priorReference(prior, loggableName);
+
+            if (reference != null) {
+                return reference;
+            }
+        }
+
+        for (AbstractDistributionLikelihood prior : state.calibrationPriorDistributions) {
+            XmlElement reference =
+                    priorReference(prior, loggableName);
+
+            if (reference != null) {
+                return reference;
+            }
+        }
+
+        for (Map.Entry<TreeModel, AbstractModelLikelihood> entry : state.treePriorDistributions.entrySet()) {
+            AbstractModelLikelihood treePrior =
+                    entry.getValue();
+
+            if (!loggableName.equals(likelihoodId(treePrior))) {
+                continue;
+            }
+
+            if (treePrior instanceof CoalescentLikelihood) {
+                return XmlElement.ref("coalescentLikelihood", loggableName);
+            }
+
+            if (treePrior instanceof SpeciationLikelihood) {
+                return XmlElement.ref("speciationLikelihood", loggableName);
+            }
+        }
+
+        for (Likelihood likelihood : state.likelihoodDistributions) {
+            if (!loggableName.equals(likelihoodId(likelihood))) {
+                continue;
+            }
+
+            if (likelihood instanceof BeastXPhyloCTMCLikelihoodSpec) {
+                return XmlElement.ref("treeLikelihood", loggableName);
+            }
+        }
+
+        XmlElement treeStatisticReference =
+                treeStatisticReference(state, loggableName);
+
+        if (treeStatisticReference != null) {
+            return treeStatisticReference;
+        }
+
+        return null;
+    }
+
+    private XmlElement treeStatisticReference(
+            BeastXState state,
+            String loggableName
+    ) {
+        if (loggableName.endsWith(".height")) {
+            String treeName =
+                    loggableName.substring(0, loggableName.length() - ".height".length());
+
+            if (state.treeModelsByPhyloSpecName.containsKey(treeName)) {
+                return XmlElement.ref("treeHeightStatistic", loggableName);
+            }
+        }
+
+        if (loggableName.endsWith(".treeLength")) {
+            String treeName =
+                    loggableName.substring(0, loggableName.length() - ".treeLength".length());
+
+            if (state.treeModelsByPhyloSpecName.containsKey(treeName)) {
+                return XmlElement.ref("treeLengthStatistic", loggableName);
+            }
+        }
+
+        return null;
+    }
+
+    private XmlElement priorReference(
+            AbstractDistributionLikelihood prior,
+            String loggableName
+    ) {
+        if (!loggableName.equals(likelihoodId(prior))) {
+            return null;
+        }
+
+        if (prior instanceof DistributionLikelihood) {
+            return XmlElement.ref("distributionLikelihood", loggableName);
+        }
+
+        if (prior instanceof MultivariateDistributionLikelihood) {
+            return XmlElement.ref("dirichletParameterPrior", loggableName);
+        }
+
+        return null;
     }
 
     private List<TreeModel> getLoggedTrees(
@@ -264,6 +376,17 @@ public class LoggerXmlBuilder {
 
         if (id == null || id.isBlank()) {
             throw new IllegalArgumentException("Cannot serialize unnamed BEAST X tree model.");
+        }
+
+        return id;
+    }
+
+    private static String likelihoodId(Likelihood likelihood) {
+        String id =
+                likelihood.getId();
+
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("Cannot serialize unnamed BEAST X likelihood.");
         }
 
         return id;

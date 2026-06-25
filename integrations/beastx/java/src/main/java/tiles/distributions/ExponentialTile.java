@@ -3,7 +3,6 @@ package tiles.distributions;
 import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.distribution.ExponentialDistributionModel;
 import dr.inference.model.Parameter;
-import dr.util.Attribute;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
@@ -12,6 +11,7 @@ import org.phylospec.typeresolver.Stochasticity;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
+import tiling.model.ParameterAttribute;
 
 import java.util.IdentityHashMap;
 import java.util.Set;
@@ -56,10 +56,7 @@ public class ExponentialTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
-                state -> likelihood.addData(new Attribute.Default<>(
-                        state.getParameter().getParameterName(),
-                        new double[] {state.getParameter().getParameterValue(0)}
-                ))
+                state -> likelihood.addData(new ParameterAttribute(state.getParameter()))
         );
     }
 }

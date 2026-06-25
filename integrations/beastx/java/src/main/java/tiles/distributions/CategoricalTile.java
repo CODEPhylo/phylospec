@@ -4,7 +4,6 @@ import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.model.Parameter;
 import dr.math.UnivariateFunction;
 import dr.math.distributions.Distribution;
-import dr.util.Attribute;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveInt;
 import org.phylospec.tiling.errors.TileApplicationError;
@@ -14,6 +13,7 @@ import tiling.params.BeastXIntScalarParam;
 import tiling.params.BeastXSimplexParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
+import tiling.model.ParameterAttribute;
 
 import java.util.IdentityHashMap;
 
@@ -68,10 +68,7 @@ public class CategoricalTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
-                state -> likelihood.addData(new Attribute.Default<>(
-                        state.getParameter().getParameterName(),
-                        new double[]{state.getParameter().getParameterValue(0)}
-                ))
+                state -> likelihood.addData(new ParameterAttribute(state.getParameter()))
         );
     }
 

@@ -10,8 +10,9 @@ import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import org.phylospec.types.Simplex;
-import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
+import tiling.params.BeastXRealScalarParam;
+import tiling.params.BeastXSimplexParam;
 
 import java.util.IdentityHashMap;
 
@@ -63,10 +64,8 @@ public class GTRTile extends GeneratorTile<GTR, BeastXState> {
             );
         }
 
-        FrequencyModel frequencies = new FrequencyModel(
-                Nucleotides.INSTANCE,
-                baseFrequencies.getDoubleArray()
-        );
+        FrequencyModel frequencies =
+                frequencyModel(baseFrequencies);
 
         return new GTR(
                 toBeastXVariable(rateAC),
@@ -85,5 +84,19 @@ public class GTRTile extends GeneratorTile<GTR, BeastXState> {
         }
 
         return new Parameter.Default(scalar.get());
+    }
+
+    private static FrequencyModel frequencyModel(Simplex baseFrequencies) {
+        if (baseFrequencies instanceof BeastXSimplexParam beastXBaseFrequencies) {
+            return new FrequencyModel(
+                    Nucleotides.INSTANCE,
+                    beastXBaseFrequencies.getParameter()
+            );
+        }
+
+        return new FrequencyModel(
+                Nucleotides.INSTANCE,
+                baseFrequencies.getDoubleArray()
+        );
     }
 }

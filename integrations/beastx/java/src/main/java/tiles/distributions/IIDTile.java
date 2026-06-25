@@ -2,7 +2,6 @@ package tiles.distributions;
 
 import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.model.Parameter;
-import dr.util.Attribute;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveInt;
 import org.phylospec.tiling.errors.TileApplicationError;
@@ -12,6 +11,7 @@ import tiling.params.BeastXRealScalarParam;
 import tiling.params.BeastXRealVectorParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
+import tiling.model.ParameterAttribute;
 
 import java.util.Arrays;
 import java.util.IdentityHashMap;
@@ -78,10 +78,7 @@ public final class IIDTile {
             return new BoundDistribution<>(
                     base.distribution,
                     defaultState,
-                    state -> base.distribution.addData(new Attribute.Default<>(
-                            state.getParameter().getParameterName(),
-                            state.getParameter().getParameterValues()
-                    ))
+                    state -> base.distribution.addData(new ParameterAttribute(state.getParameter()))
             );
         }
     }
@@ -152,10 +149,7 @@ public final class IIDTile {
             return new BoundDistribution<>(
                     base.distribution,
                     defaultState,
-                    state -> base.distribution.addData(new Attribute.Default<>(
-                            state.getParameter().getParameterName(),
-                            state.getParameter().getParameterValues()
-                    ))
+                    state -> base.distribution.addData(new ParameterAttribute(state.getParameter()))
             );
         }
     }

@@ -5,7 +5,6 @@ import dr.inference.model.Parameter;
 import dr.math.Binomial;
 import dr.math.UnivariateFunction;
 import dr.math.distributions.Distribution;
-import dr.util.Attribute;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.NonNegativeInt;
 import org.phylospec.domain.UnitInterval;
@@ -17,6 +16,7 @@ import tiling.params.BeastXIntScalarParam;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
+import tiling.model.ParameterAttribute;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -90,10 +90,7 @@ public class BinomialTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
-                state -> likelihood.addData(new Attribute.Default<>(
-                        state.getParameter().getParameterName(),
-                        new double[]{state.getParameter().getParameterValue(0)}
-                ))
+                state -> likelihood.addData(new ParameterAttribute(state.getParameter()))
         );
     }
 

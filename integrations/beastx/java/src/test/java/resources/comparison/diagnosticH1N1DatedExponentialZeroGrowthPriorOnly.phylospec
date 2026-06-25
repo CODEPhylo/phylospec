@@ -1,0 +1,40 @@
+Alignment data = fromNexus(
+    file="src/test/java/resources/comparison/H1N1pdm_2009.nex",
+    date=parse(regex=".*_(\d+(?:\.\d+)?)$")
+)
+
+Taxa taxa = taxa(data)
+
+PositiveReal populationSize = 0.5
+
+Real growthRate = 0.0
+
+Tree tree ~ Coalescent(
+    populationSize=exponentialPopulationFunction(
+        populationSize=populationSize,
+        growthRate=growthRate
+    ),
+    taxa=taxa
+)
+
+mcmc {
+    Integer chainLength = 1
+    Integer randomSeed = 1234
+
+    Logger fileLogger = fileLogger(
+        logEvery=1,
+        file="target/comparison-diagnostics/beastx-exponential-zero-growth-prior-only.log",
+        parameters=[
+            "posterior",
+            "prior",
+            "tree.height",
+            "tree.treeLength"
+        ]
+    )
+
+    Logger treeLogger = treeLogger(
+        logEvery=1,
+        file="target/comparison-diagnostics/beastx-exponential-zero-growth-prior-only.trees",
+        trees=[tree]
+    )
+}

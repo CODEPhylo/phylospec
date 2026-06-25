@@ -1,8 +1,9 @@
 package tiles.trees;
 
-import dr.evolution.coalescent.TreeIntervals;
+import dr.evomodel.coalescent.TreeIntervals;
 import dr.evolution.util.Taxa;
 import dr.evomodel.coalescent.CoalescentLikelihood;
+import dr.evomodel.coalescent.CoalescentSimulator;
 import dr.evomodel.coalescent.demographicmodel.DemographicModel;
 import dr.evomodel.tree.DefaultTreeModel;
 import org.phylospec.ast.Expr;
@@ -39,10 +40,13 @@ public class CoalescentPopulationFunctionTile extends GeneratorTile<
         Taxa taxa =
                 this.taxaInput.apply(beastState, indexVariables);
 
+        CoalescentSimulator simulator =
+                new CoalescentSimulator();
+
         DefaultTreeModel defaultTreeModel =
                 new DefaultTreeModel(
                         "tree",
-                        InitialTreeBuilder.balancedTree(taxa, "Coalescent")
+                        simulator.simulateTree(taxa, populationSize)
                 );
 
         TreeIntervals intervals =

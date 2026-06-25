@@ -1,0 +1,295 @@
+import org.junit.jupiter.api.Test;
+import tiling.runner.BeastXRunResult;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class BeastXComparisonDiagnosticTest {
+
+    @Test
+    public void writesSingleStepDatedH1N1FixedClockDiagnosticLogs() throws Exception {
+        Path sourcePath =
+                Path.of(
+                        "src",
+                        "test",
+                        "java",
+                        "resources",
+                        "comparison",
+                        "diagnosticH1N1DatedFixedClockHKYGamma.phylospec"
+                );
+
+        Path outputDirectory =
+                Path.of("target", "comparison-diagnostics");
+
+        Path logPath =
+                outputDirectory.resolve("diagnostic-h1n1-fixed-clock-beastx.log");
+
+        Path treeLogPath =
+                outputDirectory.resolve("diagnostic-h1n1-fixed-clock-beastx.trees");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(logPath);
+        Files.deleteIfExists(treeLogPath);
+
+        BeastXRunResult result =
+                new PhyloSpecRunner(Files.readString(sourcePath))
+                        .executeMaterialized(
+                                "diagnosticH1N1DatedFixedClockHKYGamma",
+                                1
+                        );
+
+        assertNotNull(result);
+        assertNotNull(result.model());
+        assertNotNull(result.mcmc());
+        assertTrue(result.executed());
+
+        assertTrue(Files.exists(logPath), "Expected BEAST X diagnostic log file.");
+        assertTrue(Files.size(logPath) > 0, "Expected BEAST X diagnostic log to be non-empty.");
+
+        assertTrue(Files.exists(treeLogPath), "Expected BEAST X diagnostic tree log file.");
+        assertTrue(Files.size(treeLogPath) > 0, "Expected BEAST X diagnostic tree log to be non-empty.");
+
+        String log =
+                Files.readString(logPath);
+
+        String treeLog =
+                Files.readString(treeLogPath);
+
+        assertTrue(treeLog.contains("#NEXUS"), treeLog);
+        assertTrue(treeLog.contains("STATE_0"), treeLog);
+    }
+
+    @Test
+    public void writesPriorOnlyConstantCoalescentDiagnosticLogs() throws Exception {
+        runPriorOnlyDiagnostic(
+                "diagnosticH1N1DatedConstantCoalescentPriorOnly.phylospec",
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "beastx-constant-coalescent-prior-only.log"
+                ),
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "beastx-constant-coalescent-prior-only.trees"
+                )
+        );
+    }
+
+    @Test
+    public void writesPriorOnlyExponentialZeroGrowthDiagnosticLogs() throws Exception {
+        runPriorOnlyDiagnostic(
+                "diagnosticH1N1DatedExponentialZeroGrowthPriorOnly.phylospec",
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "beastx-exponential-zero-growth-prior-only.log"
+                ),
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "beastx-exponential-zero-growth-prior-only.trees"
+                )
+        );
+    }
+
+    @Test
+    public void writesFixedPopulationExponentialCoalescentHKYGammaDiagnosticLogs() throws Exception {
+        Path sourcePath =
+                Path.of(
+                        "src",
+                        "test",
+                        "java",
+                        "resources",
+                        "comparison",
+                        "diagnosticH1N1DatedFixedPopulationExponentialCoalescentHKYGamma.phylospec"
+                );
+
+        Path logPath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "beastx-fixed-population-exponential-coalescent-hky-gamma.log"
+                );
+
+        Path treeLogPath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "beastx-fixed-population-exponential-coalescent-hky-gamma.trees"
+                );
+
+        Files.createDirectories(logPath.getParent());
+        Files.deleteIfExists(logPath);
+        Files.deleteIfExists(treeLogPath);
+
+        BeastXRunResult result =
+                new PhyloSpecRunner(Files.readString(sourcePath))
+                        .executeMaterialized(
+                                "diagnosticH1N1DatedFixedPopulationExponentialCoalescentHKYGamma"
+                        );
+
+        assertNotNull(result);
+        assertTrue(result.executed());
+
+        assertTrue(Files.exists(logPath), "Expected diagnostic log file.");
+        assertTrue(Files.size(logPath) > 0, "Expected diagnostic log to be non-empty.");
+
+        assertTrue(Files.exists(treeLogPath), "Expected diagnostic tree log file.");
+        assertTrue(Files.size(treeLogPath) > 0, "Expected diagnostic tree log to be non-empty.");
+    }
+
+    private static void runPriorOnlyDiagnostic(
+            String sourceFileName,
+            Path logPath,
+            Path treeLogPath
+    ) throws Exception {
+        Path sourcePath =
+                Path.of(
+                        "src",
+                        "test",
+                        "java",
+                        "resources",
+                        "comparison",
+                        sourceFileName
+                );
+
+        Files.createDirectories(logPath.getParent());
+        Files.deleteIfExists(logPath);
+        Files.deleteIfExists(treeLogPath);
+
+        BeastXRunResult result =
+                new PhyloSpecRunner(Files.readString(sourcePath))
+                        .executeMaterialized(
+                                sourceFileName.replace(".phylospec", ""),
+                                1
+                        );
+
+        assertNotNull(result);
+        assertTrue(result.executed());
+
+        assertTrue(Files.exists(logPath), "Expected diagnostic log file.");
+        assertTrue(Files.size(logPath) > 0, "Expected diagnostic log to be non-empty.");
+
+        assertTrue(Files.exists(treeLogPath), "Expected diagnostic tree log file.");
+        assertTrue(Files.size(treeLogPath) > 0, "Expected diagnostic tree log to be non-empty.");
+    }
+
+    @Test
+    public void writesFixedSubstitutionFixedClockExponentialCoalescentDiagnosticLogs() throws Exception {
+        Path sourcePath =
+                Path.of(
+                        "src",
+                        "test",
+                        "java",
+                        "resources",
+                        "comparison",
+                        "diagnosticH1N1DatedFixedSubstitutionFixedClockExponentialCoalescent.phylospec"
+                );
+
+        Path logPath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "beastx-fixed-substitution-fixed-clock-exponential-coalescent.log"
+                );
+
+        Path treeLogPath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "beastx-fixed-substitution-fixed-clock-exponential-coalescent.trees"
+                );
+
+        Files.createDirectories(logPath.getParent());
+        Files.deleteIfExists(logPath);
+        Files.deleteIfExists(treeLogPath);
+
+        BeastXRunResult result =
+                new PhyloSpecRunner(Files.readString(sourcePath))
+                        .executeMaterialized(
+                                "diagnosticH1N1DatedFixedSubstitutionFixedClockExponentialCoalescent"
+                        );
+
+        assertNotNull(result);
+        assertTrue(result.executed());
+
+        assertTrue(Files.exists(logPath), "Expected diagnostic log file.");
+        assertTrue(Files.size(logPath) > 0, "Expected diagnostic log to be non-empty.");
+
+        assertTrue(Files.exists(treeLogPath), "Expected diagnostic tree log file.");
+        assertTrue(Files.size(treeLogPath) > 0, "Expected diagnostic tree log to be non-empty.");
+
+        String log =
+                Files.readString(logPath);
+
+        assertTrue(log.contains("posterior"), log);
+        assertTrue(log.contains("prior"), log);
+        assertTrue(log.contains("likelihood"), log);
+        assertTrue(log.contains("tree.height"), log);
+        assertTrue(log.contains("tree.treeLength"), log);
+        assertTrue(log.contains("populationSize"), log);
+        assertTrue(log.contains("growthRate"), log);
+    }
+
+    @Test
+    public void writesStochasticClockFixedSubstitutionExponentialCoalescentDiagnosticLogs() throws Exception {
+        Path sourcePath =
+                Path.of(
+                        "src",
+                        "test",
+                        "java",
+                        "resources",
+                        "comparison",
+                        "diagnosticH1N1DatedStochasticClockFixedSubstitutionExponentialCoalescent.phylospec"
+                );
+
+        Path logPath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "beastx-stochastic-clock-fixed-substitution-exponential-coalescent.log"
+                );
+
+        Path treeLogPath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "beastx-stochastic-clock-fixed-substitution-exponential-coalescent.trees"
+                );
+
+        Files.createDirectories(logPath.getParent());
+        Files.deleteIfExists(logPath);
+        Files.deleteIfExists(treeLogPath);
+
+        BeastXRunResult result =
+                new PhyloSpecRunner(Files.readString(sourcePath))
+                        .executeMaterialized(
+                                "diagnosticH1N1DatedStochasticClockFixedSubstitutionExponentialCoalescent"
+                        );
+
+        assertNotNull(result);
+        assertTrue(result.executed());
+
+        assertTrue(Files.exists(logPath), "Expected diagnostic log file.");
+        assertTrue(Files.size(logPath) > 0, "Expected diagnostic log to be non-empty.");
+
+        assertTrue(Files.exists(treeLogPath), "Expected diagnostic tree log file.");
+        assertTrue(Files.size(treeLogPath) > 0, "Expected diagnostic tree log to be non-empty.");
+
+        String log =
+                Files.readString(logPath);
+
+        assertTrue(log.contains("posterior"), log);
+        assertTrue(log.contains("prior"), log);
+        assertTrue(log.contains("likelihood"), log);
+        assertTrue(log.contains("tree.height"), log);
+        assertTrue(log.contains("tree.treeLength"), log);
+        assertTrue(log.contains("populationSize"), log);
+        assertTrue(log.contains("growthRate"), log);
+        assertTrue(log.contains("clockRate"), log);
+    }
+}

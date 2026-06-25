@@ -16,6 +16,9 @@ import java.util.Set;
 
 public class BranchRateTreeUpDownOperatorTile extends TemplateTile<Void> {
 
+    private static final double TREE_CLOCK_UP_DOWN_WEIGHT = 5.0;
+    private static final double TREE_CLOCK_UP_DOWN_SCALE_FACTOR = 0.75;
+
     @Override
     protected String getPhyloSpecTemplate() {
         return """
@@ -46,8 +49,8 @@ public class BranchRateTreeUpDownOperatorTile extends TemplateTile<Void> {
             UpDownOperator upDownOperator = new UpDownOperator();
             beastState.setInput(upDownOperator, upDownOperator.downInput, List.of(tree));
             beastState.setInput(upDownOperator, upDownOperator.upInput, List.of(clockRate));
-            beastState.setInput(upDownOperator, upDownOperator.m_pWeight, 5.0);
-            beastState.setInput(upDownOperator, upDownOperator.scaleFactorInput, 0.75);
+            beastState.setInput(upDownOperator, upDownOperator.m_pWeight, TREE_CLOCK_UP_DOWN_WEIGHT);
+            beastState.setInput(upDownOperator, upDownOperator.scaleFactorInput, TREE_CLOCK_UP_DOWN_SCALE_FACTOR);
             beastState.addOperator(upDownOperator, Set.of(tree, clockRate));
         }
 
