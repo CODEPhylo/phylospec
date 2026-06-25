@@ -1,0 +1,83 @@
+Alignment data = fromNexus(
+    file="src/test/java/resources/comparison/H1N1pdm_2009.nex",
+    date=parse(regex=".*_(\d+(?:\.\d+)?)$")
+)
+
+Taxa taxa = taxa(data)
+
+PositiveReal populationSize ~ LogNormal(
+    logMean=1.0,
+    logSd=1.0
+)
+
+PositiveReal growthRate ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+Rate clockRate = 0.0003
+
+PositiveReal kappa = 10.0
+
+Simplex baseFrequencies = [0.335, 0.193, 0.242, 0.230]
+
+PositiveReal gammaShape = 0.1
+
+Tree tree ~ Coalescent(
+    populationSize=exponentialPopulationFunction(
+        populationSize=populationSize,
+        growthRate=growthRate
+    ),
+    taxa=taxa
+)
+
+Vector<Rate> branchRates ~ StrictClock(
+    clockRate=clockRate,
+    tree=tree
+)
+
+Vector<Rate> siteRates ~ DiscreteGammaInv(
+    shape=gammaShape,
+    numCategories=4,
+    invariantProportion=0.0,
+    numSites=numSites(data)
+)
+
+QMatrix qMatrix = hky(
+    kappa=kappa,
+    baseFrequencies=baseFrequencies
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix,
+    branchRates=branchRates,
+    siteRates=siteRates
+) observed as data
+
+mcmc {
+    Integer chainLength = 200000
+    Integer randomSeed = 1234
+    Real treeScaleFactor = 0.1
+    Real treeClockUpDownWeight = 0.0
+
+    Logger fileLogger = fileLogger(
+        logEvery=1000,
+        file="target/comparison-diagnostics/beastx-fixed-substitution-fixed-clock-exponential-coalescent.log",
+        parameters=[
+            "posterior",
+            "prior",
+            "likelihood",
+            "tree.height",
+            "tree.treeLength",
+            populationSize,
+            growthRate
+        ]
+    )
+
+    Logger treeLogger = treeLogger(
+        logEvery=1000,
+        file="target/comparison-diagnostics/beastx-fixed-substitution-fixed-clock-exponential-coalescent.trees",
+        trees=[tree]
+    )
+}

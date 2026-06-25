@@ -1,5 +1,6 @@
 package tiles.trees;
 
+import dr.evomodel.coalescent.TreeIntervals;
 import dr.evolution.util.Taxa;
 import dr.evolution.util.Units;
 import dr.evomodel.coalescent.CoalescentLikelihood;

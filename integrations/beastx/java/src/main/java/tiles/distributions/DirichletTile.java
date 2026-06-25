@@ -9,6 +9,7 @@ import org.phylospec.types.RealVector;
 import tiling.params.BeastXSimplexParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
+import tiling.model.ParameterAttribute;
 
 import java.util.OptionalLong;
 import java.util.Arrays;
@@ -58,7 +59,7 @@ public class DirichletTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
-                state -> likelihood.addData(state.getParameter())
+                state -> likelihood.addData(new ParameterAttribute(state.getParameter()))
         );
     }
 

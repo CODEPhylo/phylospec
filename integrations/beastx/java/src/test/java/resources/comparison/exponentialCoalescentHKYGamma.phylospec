@@ -1,0 +1,87 @@
+Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+
+Taxa taxa = taxa(data)
+
+PositiveReal populationSize ~ LogNormal(
+    logMean=1.0,
+    logSd=1.0
+)
+
+PositiveReal growthRate ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+Rate clockRate = 0.0001
+
+PositiveReal kappa ~ LogNormal(
+    logMean=1.0,
+    logSd=0.5
+)
+
+Simplex baseFrequencies ~ Dirichlet(
+    concentration=[1.0, 1.0, 1.0, 1.0]
+)
+
+PositiveReal gammaShape = 0.1
+
+Tree tree ~ Coalescent(
+    populationSize=exponentialPopulationFunction(
+        populationSize=populationSize,
+        growthRate=growthRate
+    ),
+    taxa=taxa
+)
+
+Vector<Rate> branchRates ~ StrictClock(
+    clockRate=clockRate,
+    tree=tree
+)
+
+Vector<Rate> siteRates ~ DiscreteGammaInv(
+    shape=gammaShape,
+    numCategories=4,
+    invariantProportion=0.0,
+    numSites=numSites(data)
+)
+
+QMatrix qMatrix = hky(
+    kappa=kappa,
+    baseFrequencies=baseFrequencies
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix,
+    branchRates=branchRates,
+    siteRates=siteRates
+) observed as data
+
+mcmc {
+    Integer chainLength = 1000000
+    Integer randomSeed = 1234
+
+    Logger fileLogger = fileLogger(
+                logEvery=1000,
+                file="target/comparison/exponential-coalescent-hky-gamma-beastx.log",
+                parameters=[
+                    "posterior",
+                    "prior",
+                    "likelihood",
+                    "tree.height",
+                    "tree.treeLength",
+                    populationSize,
+                    growthRate,
+                    clockRate,
+                    kappa,
+                    baseFrequencies,
+                    gammaShape
+                ]
+            )
+
+    Logger treeLogger = treeLogger(
+        logEvery=1000,
+        file="target/comparison/exponential-coalescent-hky-gamma-beastx.trees",
+        trees=[tree]
+    )
+}

@@ -209,6 +209,37 @@ public class BEASTState {
     }
 
     /**
+     * Returns a compact description of the operators registered for this MCMC.
+     */
+    public List<String> getOperatorSummaries() {
+        List<String> summaries = new ArrayList<>();
+
+        for (Map.Entry<Operator, Set<StateNode>> entry : this.operators.entrySet()) {
+            Operator operator = entry.getKey();
+            Set<StateNode> stateNodes = entry.getValue();
+
+            String stateNodeIds = stateNodes.stream()
+                    .map(StateNode::getID)
+                    .sorted()
+                    .toList()
+                    .toString();
+
+            summaries.add(
+                    "%s(id=%s, weight=%s, stateNodes=%s)".formatted(
+                            operator.getClass().getSimpleName(),
+                            operator.getID(),
+                            operator.m_pWeight.get(),
+                            stateNodeIds
+                    )
+            );
+        }
+
+        summaries.sort(String::compareTo);
+
+        return summaries;
+    }
+
+    /**
      * Initialized all BEAST objects that have not yet been registered.
      */
     public void initializeBEASTObjects() {

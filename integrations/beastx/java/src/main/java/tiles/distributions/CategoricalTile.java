@@ -13,6 +13,7 @@ import tiling.params.BeastXIntScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
 import tiling.params.BeastXParameters;
+import tiling.model.ParameterAttribute;
 
 import java.util.IdentityHashMap;
 
@@ -67,7 +68,7 @@ public class CategoricalTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
-                state -> likelihood.addData(state.getParameter())
+                state -> likelihood.addData(new ParameterAttribute(state.getParameter()))
         );
     }
 

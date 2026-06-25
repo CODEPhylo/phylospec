@@ -213,8 +213,111 @@ public class LoggerXmlBuilder {
             }
 
             default ->
-                    null;
+                    componentLikelihoodReference(state, loggableName);
         };
+    }
+
+    private XmlElement componentLikelihoodReference(
+            BeastXState state,
+            String loggableName
+    ) {
+        for (AbstractDistributionLikelihood prior : state.priorDistributions.values()) {
+            XmlElement reference =
+                    priorReference(prior, loggableName);
+
+            if (reference != null) {
+                return reference;
+            }
+        }
+
+        for (AbstractDistributionLikelihood prior : state.calibrationPriorDistributions) {
+            XmlElement reference =
+                    priorReference(prior, loggableName);
+
+            if (reference != null) {
+                return reference;
+            }
+        }
+
+        for (Map.Entry<TreeModel, AbstractModelLikelihood> entry : state.treePriorDistributions.entrySet()) {
+            AbstractModelLikelihood treePrior =
+                    entry.getValue();
+
+            if (!loggableName.equals(likelihoodId(treePrior))) {
+                continue;
+            }
+
+            if (treePrior instanceof CoalescentLikelihood) {
+                return XmlElement.ref("coalescentLikelihood", loggableName);
+            }
+
+            if (treePrior instanceof SpeciationLikelihood) {
+                return XmlElement.ref("speciationLikelihood", loggableName);
+            }
+        }
+
+        for (Likelihood likelihood : state.likelihoodDistributions) {
+            if (!loggableName.equals(likelihoodId(likelihood))) {
+                continue;
+            }
+
+            if (likelihood instanceof BeastXPhyloCTMCLikelihoodSpec) {
+                return XmlElement.ref("treeLikelihood", loggableName);
+            }
+        }
+
+        XmlElement treeStatisticReference =
+                treeStatisticReference(state, loggableName);
+
+        if (treeStatisticReference != null) {
+            return treeStatisticReference;
+        }
+
+        return null;
+    }
+
+    private XmlElement treeStatisticReference(
+            BeastXState state,
+            String loggableName
+    ) {
+        if (loggableName.endsWith(".height")) {
+            String treeName =
+                    loggableName.substring(0, loggableName.length() - ".height".length());
+
+            if (state.treeModelsByPhyloSpecName.containsKey(treeName)) {
+                return XmlElement.ref("treeHeightStatistic", loggableName);
+            }
+        }
+
+        if (loggableName.endsWith(".treeLength")) {
+            String treeName =
+                    loggableName.substring(0, loggableName.length() - ".treeLength".length());
+
+            if (state.treeModelsByPhyloSpecName.containsKey(treeName)) {
+                return XmlElement.ref("treeLengthStatistic", loggableName);
+            }
+        }
+
+        return null;
+    }
+
+    private XmlElement priorReference(
+            AbstractDistributionLikelihood prior,
+            String loggableName
+    ) {
+        if (!loggableName.equals(likelihoodId(prior))) {
+            return null;
+        }
+
+        if (prior instanceof DistributionLikelihood) {
+            return XmlElement.ref("distributionLikelihood", loggableName);
+        }
+
+        if (prior instanceof MultivariateDistributionLikelihood) {
+            return XmlElement.ref("dirichletParameterPrior", loggableName);
+        }
+
+        return null;
     }
 
     private List<TreeModel> getLoggedTrees(

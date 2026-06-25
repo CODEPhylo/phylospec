@@ -13,6 +13,7 @@ import tiling.BeastXState;
 import tiling.model.BoundDistribution;
 import tiling.params.BeastXIntScalarParam;
 import tiling.params.BeastXRealScalarParam;
+import tiling.model.ParameterAttribute;
 
 import java.util.IdentityHashMap;
 
@@ -62,7 +63,7 @@ public class BernoulliTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
-                state -> likelihood.addData(state.getParameter())
+                state -> likelihood.addData(new ParameterAttribute(state.getParameter()))
         );
     }
 

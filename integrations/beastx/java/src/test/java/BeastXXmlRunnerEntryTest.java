@@ -1,6 +1,7 @@
 import dr.inference.mcmc.MCMC;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Assumptions;
 import tiling.runner.BeastXRunResult;
 import tiling.runner.XmlRunResult;
@@ -381,5 +382,99 @@ public class BeastXXmlRunnerEntryTest {
 
             throw exception;
         }
+    }
+
+    @Test
+    @Tag("beagle")
+    public void executesTutorialExponentialCoalescentHKYGammaThroughXmlRunner() throws Exception {
+        Path sourcePath =
+                Path.of(
+                        "src",
+                        "test",
+                        "java",
+                        "resources",
+                        "comparison",
+                        "exponentialCoalescentHKYGamma.phylospec"
+                );
+
+        Path outputDirectory =
+                Path.of("target", "comparison");
+
+        Path xmlPath =
+                outputDirectory.resolve("tutorial-exponential-coalescent-hky-gamma-beastx.xml");
+
+        Path logPath =
+                outputDirectory.resolve("tutorial-exponential-coalescent-hky-gamma-beastx.log");
+
+        Path treeLogPath =
+                outputDirectory.resolve("tutorial-exponential-coalescent-hky-gamma-beastx.trees");
+
+        Files.createDirectories(outputDirectory);
+        Files.deleteIfExists(xmlPath);
+        Files.deleteIfExists(logPath);
+        Files.deleteIfExists(treeLogPath);
+
+        XmlRunResult result;
+
+        try {
+            result =
+                    PhyloSpecRunner.executeXmlRunFromFile(
+                            sourcePath,
+                            xmlPath
+                    );
+        } catch (RuntimeException exception) {
+            Assumptions.assumeFalse(
+                    XmlTestSupport.isMissingBeagleLibrary(exception),
+                    "Skipping tutorial exponential-coalescent HKY+Gamma XML run because BEAGLE native library is not available."
+            );
+
+            throw exception;
+        }
+
+        assertEquals("exponentialCoalescentHKYGamma", result.runName());
+        assertEquals(xmlPath, result.xmlPath());
+        assertTrue(result.executed());
+        assertNotNull(result.model());
+        assertNotNull(result.mcmc());
+
+        assertTrue(Files.exists(xmlPath), "Expected BEAST X XML file to be written.");
+        assertTrue(Files.size(xmlPath) > 0, "Expected BEAST X XML file to be non-empty.");
+
+        XmlTestSupport.assertNonEmptyFile(logPath, "tutorial exponential-coalescent HKY+Gamma BEAST X log");
+        XmlTestSupport.assertNonEmptyFile(treeLogPath, "tutorial exponential-coalescent HKY+Gamma BEAST X tree log");
+
+        String xml =
+                Files.readString(xmlPath);
+
+        XmlTestSupport.assertXmlContains(xml, "<exponentialGrowth id=\"tree_prior_model\"");
+        XmlTestSupport.assertXmlContains(xml, "<hkyModel id=\"alignment_likelihood_substitutionModel\"");
+        XmlTestSupport.assertXmlContains(xml, "<gammaSiteRateModel id=\"alignment_likelihood_siteRateModel\"");
+        XmlTestSupport.assertXmlContains(xml, "<strictClockBranchRates id=\"tree_strictClockBranchRates\"");
+        XmlTestSupport.assertXmlContains(xml, "<treeLikelihood id=\"alignment_likelihood\"");
+        XmlTestSupport.assertXmlContains(xml, "<joint id=\"joint\"");
+        XmlTestSupport.assertXmlContains(xml, "<prior id=\"prior\"");
+        XmlTestSupport.assertXmlContains(xml, "<likelihood id=\"likelihood\"");
+        XmlTestSupport.assertXmlContains(xml, "<log id=\"fileLogger");
+        XmlTestSupport.assertXmlContains(xml, "<logTree");
+
+        String parameterLog =
+                Files.readString(logPath);
+
+        XmlTestSupport.assertXmlContains(parameterLog, "joint");
+        XmlTestSupport.assertXmlContains(parameterLog, "prior");
+        XmlTestSupport.assertXmlContains(parameterLog, "likelihood");
+        XmlTestSupport.assertXmlContains(parameterLog, "populationSize");
+        XmlTestSupport.assertXmlContains(parameterLog, "growthRate");
+        XmlTestSupport.assertXmlContains(parameterLog, "clockRate");
+        XmlTestSupport.assertXmlContains(parameterLog, "kappa");
+        XmlTestSupport.assertXmlContains(parameterLog, "baseFrequencies");
+        XmlTestSupport.assertXmlContains(parameterLog, "gammaShape");
+
+        String treeLog =
+                Files.readString(treeLogPath);
+
+        XmlTestSupport.assertXmlContains(treeLog, "#NEXUS");
+        XmlTestSupport.assertXmlContains(treeLog, "Begin trees;");
+        XmlTestSupport.assertXmlContains(treeLog, "STATE_");
     }
 }

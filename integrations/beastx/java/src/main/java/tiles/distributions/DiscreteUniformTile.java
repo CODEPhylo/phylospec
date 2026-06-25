@@ -10,6 +10,7 @@ import org.phylospec.types.IntScalar;
 import tiling.params.BeastXIntScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
+import tiling.model.ParameterAttribute;
 
 import java.util.IdentityHashMap;
 
@@ -64,7 +65,7 @@ public class DiscreteUniformTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
-                state -> likelihood.addData(state.getParameter())
+                state -> likelihood.addData(new ParameterAttribute(state.getParameter()))
         );
     }
 }

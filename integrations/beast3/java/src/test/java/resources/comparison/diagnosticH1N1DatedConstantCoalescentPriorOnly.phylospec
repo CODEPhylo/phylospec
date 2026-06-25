@@ -1,0 +1,20 @@
+Alignment data = fromNexus(
+    file="src/test/java/resources/comparison/H1N1pdm_2009.nex",
+    date=parse(regex=".*_(\d+(?:\.\d+)?)$")
+)
+
+Taxa taxa = taxa(data)
+
+PositiveReal populationSize = 0.5
+
+Tree tree ~ Coalescent(
+    populationSize=constantPopulationFunction(
+        populationSize=populationSize
+    ),
+    taxa=taxa
+)
+
+mcmc {
+    Integer chainLength = 1
+    Integer randomSeed = 1234
+}

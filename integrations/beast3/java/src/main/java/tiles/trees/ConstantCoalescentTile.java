@@ -1,6 +1,7 @@
 package tiles.trees;
 
 import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeIntervals;
 import beast.base.evolution.tree.coalescent.Coalescent;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
@@ -57,7 +58,11 @@ public class ConstantCoalescentTile extends GeneratorTile<BoundDistribution<Tree
         return new BoundDistribution<>(
                 model,
                 defaultState,
-                tree -> beastState.setInput(model, model.treeInput, tree)
+                tree -> {
+                    TreeIntervals intervals = new TreeIntervals();
+                    beastState.setInput(intervals, intervals.treeInput, tree);
+                    beastState.setInput(model, model.treeIntervalsInput, intervals);
+                }
         );
     }
 

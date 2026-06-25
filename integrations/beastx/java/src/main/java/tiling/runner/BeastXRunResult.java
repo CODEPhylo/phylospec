@@ -3,6 +3,7 @@ package tiling.runner;
 import dr.inference.mcmc.MCMC;
 import tiling.BeastXModel;
 import tiling.BeastXState;
+import tiling.operators.OperatorBuilder;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -106,6 +107,11 @@ public record BeastXRunResult(
         paths.addAll(treeLogPaths());
 
         return List.copyOf(paths);
+    }
+
+    public List<String> operatorSummaries() {
+        return new OperatorBuilder()
+                .summarize(this.beastState);
     }
 
     public Optional<Path> firstFileLogPath() {

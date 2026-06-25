@@ -226,6 +226,27 @@ public class PhyloSpecRunner implements ErrorEventListener {
         ).mcmc();
     }
 
+    public BeastXRunResult executeMaterialized(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        return run(
+                RunnerOptions.builder(runName)
+                        .mode(RunMode.EXECUTE_MCMC)
+                        .materializePhyloCTMC(true)
+                        .build()
+        );
+    }
+
+    public BeastXRunResult executeMaterialized(String runName, long chainLength)
+            throws IOException, ParserConfigurationException, SAXException {
+        return run(
+                RunnerOptions.builder(runName)
+                        .mode(RunMode.EXECUTE_MCMC)
+                        .chainLengthOverride(chainLength)
+                        .materializePhyloCTMC(true)
+                        .build()
+        );
+    }
+
     /**
      * Writes XML, parses it through the BEAST X XML parser, and optionally executes it.
      */

@@ -50,6 +50,7 @@ Vector<Rate> branchRates ~ StrictClock(
 Vector<Rate> siteRates ~ DiscreteGammaInv(
     shape=gammaShape,
     numCategories=4,
+    invariantProportion=0.0,
     numSites=numSites(data)
 )
 
@@ -67,7 +68,7 @@ Alignment alignment ~ PhyloCTMC(
 
 mcmc {
     Integer chainLength = 10000000
-    Integer randomSeed = 741852963
+    Integer randomSeed = 123456
 
     Logger fileLogger = fileLogger(
         logEvery=1000,

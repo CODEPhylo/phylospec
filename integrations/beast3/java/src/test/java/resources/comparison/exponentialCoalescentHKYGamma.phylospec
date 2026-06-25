@@ -1,0 +1,64 @@
+Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+
+Taxa taxa = taxa(data)
+
+PositiveReal populationSize ~ LogNormal(
+    logMean=1.0,
+    logSd=1.0
+)
+
+PositiveReal growthRate ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+Rate clockRate ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+PositiveReal kappa ~ LogNormal(
+    logMean=1.0,
+    logSd=0.5
+)
+
+Simplex baseFrequencies ~ Dirichlet(
+    concentration=[1.0, 1.0, 1.0, 1.0]
+)
+
+PositiveReal gammaShape ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+Tree tree ~ Coalescent(
+    populationSize=exponentialPopulationFunction(
+        populationSize=populationSize,
+        growthRate=growthRate
+    ),
+    taxa=taxa
+)
+
+QMatrix qMatrix = hky(
+    kappa=kappa,
+    baseFrequencies=baseFrequencies
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix,
+    branchRates~StrictClock(
+        clockRate=clockRate,
+        tree=tree
+    ),
+    siteRates~DiscreteGammaInv(
+        shape=gammaShape,
+        numCategories=4,
+        numSites=numSites(data)
+    )
+) observed as data
+
+mcmc {
+    Integer chainLength = 10000
+    Integer randomSeed = 1234
+}

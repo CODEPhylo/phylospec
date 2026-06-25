@@ -1,12 +1,10 @@
 package tiles.trees;
 
 import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeIntervals;
 import beast.base.evolution.tree.coalescent.Coalescent;
 import beast.base.evolution.tree.coalescent.PopulationFunction;
-import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
 import beast.base.spec.evolution.tree.coalescent.RandomTree;
-import beast.base.spec.inference.parameter.RealScalarParam;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
@@ -32,13 +30,10 @@ public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coales
 
         // initialize initial state
 
-        ConstantPopulation populationFunction = new ConstantPopulation();
-        beastState.setInput(populationFunction, populationFunction.popSizeParameter, new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
-
         RandomTree defaultState = new RandomTree();
         beastState.setInput(defaultState, defaultState.taxaInput, taxaAlignment.alignment());
         beastState.setInput(defaultState, defaultState.m_taxonset, taxaAlignment.taxonSet());
-        beastState.setInput(defaultState, defaultState.populationFunctionInput, populationFunction);
+        beastState.setInput(defaultState, defaultState.populationFunctionInput, populationSize);
 
         // set tip dates if provided
 
@@ -54,7 +49,11 @@ public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coales
         return new BoundDistribution<>(
                 model,
                 defaultState,
-                tree -> beastState.setInput(model, model.treeInput, tree)
+                tree -> {
+                    TreeIntervals intervals = new TreeIntervals();
+                    beastState.setInput(intervals, intervals.treeInput, tree);
+                    beastState.setInput(model, model.treeIntervalsInput, intervals);
+                }
         );
     }
 
