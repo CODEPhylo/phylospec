@@ -1,31 +1,28 @@
 package tiles.observations;
 
 import beast.base.evolution.alignment.Alignment;
-import beast.base.inference.StateNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
-import tiles.TemplateTile;
+import org.phylospec.tiling.tiles.TemplateTile;
 import tiles.input.DecoratedAlignment;
 import beastconfig.BEASTState;
 import tiling.UnboundDistribution;
 
 import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * This tile is the same as {@code ObservedAsTile}, except that we expect a DecoratedAlignment for the observed value
  * instead of a StateNode.
  */
-public class ObservedAsAlignmentTile extends TemplateTile<DecoratedAlignment> {
+public class ObservedAsAlignmentTile extends TemplateTile<DecoratedAlignment, BEASTState> {
 
     @Override
     protected String getPhyloSpecTemplate() {
         return "Any x ~ $distribution observed as $observation";
     }
 
-    TemplateTileInput<UnboundDistribution<? extends Alignment, ?>> distributionInput = new TemplateTileInput<>("$distribution");
-    TemplateTileInput<DecoratedAlignment> observationInput = new TemplateTileInput<>("$observation");
+    TemplateTileInput<UnboundDistribution<? extends Alignment, ?>, BEASTState> distributionInput = new TemplateTileInput<>("$distribution");
+    TemplateTileInput<DecoratedAlignment, BEASTState> observationInput = new TemplateTileInput<>("$observation");
 
     @Override
     public DecoratedAlignment applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

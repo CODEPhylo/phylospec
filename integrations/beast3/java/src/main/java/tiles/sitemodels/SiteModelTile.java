@@ -6,24 +6,24 @@ import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.IntScalar;
 import org.phylospec.ast.Expr;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
-import tiling.Partial;
+import org.phylospec.tiling.Partial;
 
 import java.util.IdentityHashMap;
 import java.util.Objects;
 
-public class SiteModelTile extends GeneratorTile<Partial<SiteModel, SubstitutionModel>> {
+public class SiteModelTile extends GeneratorTile<Partial<SiteModel, SubstitutionModel>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "DiscreteGammaInv";
     }
 
-    GeneratorTileInput<RealScalarParam<PositiveReal>> shapeInput = new GeneratorTileInput<>("shape");
-    GeneratorTileInput<Integer> numCategoriesInput = new GeneratorTileInput<>("numCategories");
-    GeneratorTileInput<RealScalarParam<UnitInterval>> invariantProportionInput = new GeneratorTileInput<>("invariantProportion", false);
-    GeneratorTileInput<IntScalar<NonNegativeInt>> numSitesInput = new GeneratorTileInput<>("numSites");
+    GeneratorTileInput<RealScalarParam<PositiveReal>, BEASTState> shapeInput = new GeneratorTileInput<>("shape");
+    GeneratorTileInput<Integer, BEASTState> numCategoriesInput = new GeneratorTileInput<>("numCategories");
+    GeneratorTileInput<RealScalarParam<UnitInterval>, BEASTState> invariantProportionInput = new GeneratorTileInput<>("invariantProportion", false);
+    GeneratorTileInput<IntScalar<NonNegativeInt>, BEASTState> numSitesInput = new GeneratorTileInput<>("numSites");
 
     @Override
     public Partial<SiteModel, SubstitutionModel> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

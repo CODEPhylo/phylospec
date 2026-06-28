@@ -6,20 +6,20 @@ import beast.base.spec.inference.distribution.Poisson;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.phylospec.ast.Expr;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 import java.util.IdentityHashMap;
 
-public class PoissonTile extends GeneratorTile<BoundDistribution<IntScalarParam<NonNegativeInt>, Poisson>> {
+public class PoissonTile extends GeneratorTile<BoundDistribution<IntScalarParam<NonNegativeInt>, Poisson>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "Poisson";
     }
 
-    GeneratorTileInput<RealScalar<NonNegativeReal>> rateInput = new GeneratorTileInput<>("rate");
+    GeneratorTileInput<RealScalar<NonNegativeReal>, BEASTState> rateInput = new GeneratorTileInput<>("rate");
 
     @Override
     public BoundDistribution<IntScalarParam<NonNegativeInt>, Poisson> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

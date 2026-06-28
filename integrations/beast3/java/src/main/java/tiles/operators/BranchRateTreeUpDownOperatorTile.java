@@ -7,14 +7,14 @@ import beast.base.spec.evolution.operator.UpDownOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
-import tiles.TemplateTile;
+import org.phylospec.tiling.tiles.TemplateTile;
 import beastconfig.BEASTState;
 
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 
-public class BranchRateTreeUpDownOperatorTile extends TemplateTile<Void> {
+public class BranchRateTreeUpDownOperatorTile extends TemplateTile<Void, BEASTState> {
 
     @Override
     protected String getPhyloSpecTemplate() {
@@ -28,10 +28,10 @@ public class BranchRateTreeUpDownOperatorTile extends TemplateTile<Void> {
                 """;
     }
 
-    TemplateTileInput<Tree> treeInput = new TemplateTileInput<>("$tree", Set.of(Stochasticity.STOCHASTIC));
-    TemplateTileInput<Base> branchRateModelInput = new TemplateTileInput<>("$branchRates", Set.of(Stochasticity.STOCHASTIC));
-    TemplateTileInput<?> substitutionModelInput = new TemplateTileInput<>("$$qMatrix", false);
-    TemplateTileInput<?> partialSiteRateModel = new TemplateTileInput<>("$$siteRates", false);
+    TemplateTileInput<Tree, BEASTState> treeInput = new TemplateTileInput<>("$tree", Set.of(Stochasticity.STOCHASTIC));
+    TemplateTileInput<Base, BEASTState> branchRateModelInput = new TemplateTileInput<>("$branchRates", Set.of(Stochasticity.STOCHASTIC));
+    TemplateTileInput<?, BEASTState> substitutionModelInput = new TemplateTileInput<>("$$qMatrix", false);
+    TemplateTileInput<?, BEASTState> partialSiteRateModel = new TemplateTileInput<>("$$siteRates", false);
 
     @Override
     protected Void applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
