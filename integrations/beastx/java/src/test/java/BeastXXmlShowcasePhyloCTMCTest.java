@@ -554,7 +554,10 @@ public class BeastXXmlShowcasePhyloCTMCTest {
         XmlTestSupport.assertXmlContains(xml, "<birthDeathSerialSampling id=\"tree_prior_model\"");
         XmlTestSupport.assertXmlContains(xml, "<gtrModel id=\"alignment_likelihood_substitutionModel\"");
         XmlTestSupport.assertXmlContains(xml, "<frequencyModel id=\"alignment_likelihood_substitutionModel_frequencies\"");
+        XmlTestSupport.assertXmlContains(xml, "<multiplicativeBranchRates");
+        XmlTestSupport.assertXmlContains(xml, "<strictClockBranchRates");
         XmlTestSupport.assertXmlContains(xml, "<discretizedBranchRates");
+        XmlTestSupport.assertXmlContains(xml, "<multiplicativeBranchRates idref=");
         XmlTestSupport.assertXmlContains(xml, "<treeLikelihood id=\"alignment_likelihood\"");
         XmlTestSupport.assertXmlContains(xml, "<log id=\"fileLogger");
         XmlTestSupport.assertXmlContains(xml, "<logTree");
@@ -567,7 +570,6 @@ public class BeastXXmlShowcasePhyloCTMCTest {
         assertFalse(xml.contains("<rateGT>"), xml);
         assertFalse(xml.contains("idref=\"rateGT\""), xml);
 
-        assertFalse(xml.contains("<strictClockBranchRates"), xml);
         assertFalse(xml.contains("tree_2"), xml);
         assertFalse(xml.contains("tree_prior_2"), xml);
 

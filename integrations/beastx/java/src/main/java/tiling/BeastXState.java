@@ -200,19 +200,19 @@ public class BeastXState {
     // Records the relaxed-clock model associated with a tree.
     public void addTreeRelaxedClockModel(
             TreeModel treeModel,
-            DiscretizedBranchRates relaxedClock,
+            DiscretizedBranchRates relativeRelaxedClock,
             Parameter rateCategoriesParameter,
             ParametricDistributionModel distributionModel,
-            double normalizeBranchRateTo
+            Parameter clockRateParameter
     ) {
         this.treeRelaxedClockModels.put(
                 treeModel,
                 new RelaxedClockSpec(
                         treeModel,
-                        relaxedClock,
+                        relativeRelaxedClock,
                         rateCategoriesParameter,
                         distributionModel,
-                        normalizeBranchRateTo
+                        clockRateParameter
                 )
         );
     }
@@ -244,10 +244,10 @@ public class BeastXState {
     // Complete BEAST X object bundle needed to represent a relaxed clock model.
     public record RelaxedClockSpec(
             TreeModel treeModel,
-            DiscretizedBranchRates relaxedClock,
+            DiscretizedBranchRates relativeRelaxedClock,
             Parameter rateCategoriesParameter,
             ParametricDistributionModel distributionModel,
-            double normalizeBranchRateTo
+            Parameter clockRateParameter
     ) {
     }
     /*
