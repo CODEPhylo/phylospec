@@ -6,25 +6,25 @@ import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
-import tiling.TypeToken;
+import org.phylospec.tiling.TypeToken;
 
 import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-public class RepeatIntTile extends GeneratorTile<IntVectorParam<Int>> {
+public class RepeatIntTile extends GeneratorTile<IntVectorParam<Int>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "repeat";
     }
 
-    GeneratorTileInput<IntScalarParam<? extends Int>> valueInput = new GeneratorTileInput<>(
+    GeneratorTileInput<IntScalarParam<? extends Int>, BEASTState> valueInput = new GeneratorTileInput<>(
             "value", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
-    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>> numInput = new GeneratorTileInput<>(
+    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>, BEASTState> numInput = new GeneratorTileInput<>(
             "num",
             Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );

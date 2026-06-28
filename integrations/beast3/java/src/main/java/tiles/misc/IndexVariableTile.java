@@ -5,11 +5,11 @@ import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.IntScalar;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
-import tiles.AstNodeTile;
+import org.phylospec.tiling.tiles.AstNodeTile;
 
 import java.util.IdentityHashMap;
 
-public class IndexVariableTile extends AstNodeTile<IntScalar<Int>, Expr.Variable> {
+public class IndexVariableTile extends AstNodeTile<IntScalar<Int>, Expr.Variable, BEASTState> {
 
     @Override
     public IntScalar<Int> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

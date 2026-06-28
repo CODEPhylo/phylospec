@@ -8,23 +8,23 @@ import beast.base.spec.evolution.tree.coalescent.RandomTree;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.phylospec.ast.Expr;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
 import beastconfig.BEASTState;
 import tiling.BoundDistribution;
 
 import java.util.IdentityHashMap;
 
-public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>> {
+public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "Yule";
     }
 
-    GeneratorTileInput<RealScalar<? extends PositiveReal>> birthRateInput = new GeneratorTileInput<>("birthRate");
-    GeneratorTileInput<DecoratedAlignment> taxaInput = new GeneratorTileInput<>("taxa", true);
-    GeneratorTileInput<RealScalar<? extends PositiveReal>> rootAgeInput = new GeneratorTileInput<>("rootAge", false);
+    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> birthRateInput = new GeneratorTileInput<>("birthRate");
+    GeneratorTileInput<DecoratedAlignment, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
+    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> rootAgeInput = new GeneratorTileInput<>("rootAge", false);
 
     @Override
     public BoundDistribution<Tree, YuleModel> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

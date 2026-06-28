@@ -6,25 +6,25 @@ import beast.base.spec.evolution.substitutionmodel.GTR;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.Simplex;
 import org.phylospec.ast.Expr;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
 import java.util.IdentityHashMap;
 
-public class GTRTile extends GeneratorTile<GTR> {
+public class GTRTile extends GeneratorTile<GTR, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "gtr";
     }
 
-    GeneratorTileInput<RealScalar<PositiveReal>> rateACInput = new GeneratorTileInput<>("rateAC");
-    GeneratorTileInput<RealScalar<PositiveReal>> rateAGInput = new GeneratorTileInput<>("rateAG");
-    GeneratorTileInput<RealScalar<PositiveReal>> rateATInput = new GeneratorTileInput<>("rateAT");
-    GeneratorTileInput<RealScalar<PositiveReal>> rateCGInput = new GeneratorTileInput<>("rateCG");
-    GeneratorTileInput<RealScalar<PositiveReal>> rateCTInput = new GeneratorTileInput<>("rateCT");
-    GeneratorTileInput<RealScalar<PositiveReal>> rateGTInput = new GeneratorTileInput<>("rateGT");
-    GeneratorTileInput<Simplex> baseFrequenciesInput = new GeneratorTileInput<>("baseFrequencies");
+    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> rateACInput = new GeneratorTileInput<>("rateAC");
+    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> rateAGInput = new GeneratorTileInput<>("rateAG");
+    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> rateATInput = new GeneratorTileInput<>("rateAT");
+    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> rateCGInput = new GeneratorTileInput<>("rateCG");
+    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> rateCTInput = new GeneratorTileInput<>("rateCT");
+    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> rateGTInput = new GeneratorTileInput<>("rateGT");
+    GeneratorTileInput<Simplex, BEASTState> baseFrequenciesInput = new GeneratorTileInput<>("baseFrequencies");
 
     @Override
     public GTR applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

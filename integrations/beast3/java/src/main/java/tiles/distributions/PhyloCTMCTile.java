@@ -11,23 +11,23 @@ import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
-import tiles.GeneratorTile;
-import tiles.TemplateTile;
-import tiling.*;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.tiling.Partial;
+import tiling.UnboundDistribution;
 
 import java.util.IdentityHashMap;
 
-public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, TreeLikelihood>> {
+public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, TreeLikelihood>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "PhyloCTMC";
     }
 
-    GeneratorTileInput<Tree> treeInput = new GeneratorTileInput<>("tree");
-    GeneratorTileInput<SubstitutionModel> substitutionModelInput = new GeneratorTileInput<>("qMatrix", true);
-    GeneratorTileInput<Base> branchRateModelInput = new GeneratorTileInput<>("branchRates", false);
-    GeneratorTileInput<Partial<SiteModel, SubstitutionModel>> partialSiteRateModel = new GeneratorTileInput<>("siteRates", false);
+    GeneratorTileInput<Tree, BEASTState> treeInput = new GeneratorTileInput<>("tree");
+    GeneratorTileInput<SubstitutionModel, BEASTState> substitutionModelInput = new GeneratorTileInput<>("qMatrix", true);
+    GeneratorTileInput<Base, BEASTState> branchRateModelInput = new GeneratorTileInput<>("branchRates", false);
+    GeneratorTileInput<Partial<SiteModel, SubstitutionModel>, BEASTState> partialSiteRateModel = new GeneratorTileInput<>("siteRates", false);
 
     @Override
     public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

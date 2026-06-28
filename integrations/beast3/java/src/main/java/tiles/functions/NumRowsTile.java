@@ -4,19 +4,19 @@ import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.Tensor;
 import org.phylospec.ast.Expr;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
 import java.util.IdentityHashMap;
 
-public class NumRowsTile extends GeneratorTile<IntScalarParam<NonNegativeInt>> {
+public class NumRowsTile extends GeneratorTile<IntScalarParam<NonNegativeInt>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "numRows";
     }
 
-    GeneratorTileInput<Tensor<?, ?>> matrixInput = new GeneratorTileInput<>("matrix");
+    GeneratorTileInput<Tensor<?, ?>, BEASTState> matrixInput = new GeneratorTileInput<>("matrix");
 
     @Override
     public IntScalarParam<NonNegativeInt> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

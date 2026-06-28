@@ -7,10 +7,10 @@ import org.phylospec.ast.Expr;
 import org.phylospec.lexer.TokenType;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
-import tiles.AstNodeTile;
-import tiling.FailedTilingAttempt;
-import tiling.Tile;
-import tiling.TypeToken;
+import org.phylospec.tiling.tiles.AstNodeTile;
+import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.tiling.tiles.Tile;
+import org.phylospec.tiling.TypeToken;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -23,7 +23,7 @@ import java.util.Set;
  * and plain BEAST tensors on the left and right operand positions:
  * {@link RpnRpn}, {@link RpnReal}, {@link RealRpn}, and {@link RealReal}.
  */
-public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.Binary> {
+public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.Binary, BEASTState> {
 
     @Override
     public Class<Expr.Binary> getTargetNodeType() {
@@ -31,7 +31,7 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
     }
 
     @Override
-    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
+    public Set<Tile<?, BEASTState>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?, BEASTState>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
         if (!(node instanceof Expr.Binary binary)) throw new FailedTilingAttempt.Irrelevant();
 
         // check if we support the operator
@@ -50,10 +50,10 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
 
     public static class RpnRpn extends BinaryTile {
 
-        AstNodeTileInput<RPNCalculationResult, Expr.Binary> leftInput = new AstNodeTileInput<>(
+        AstNodeTileInput<RPNCalculationResult, Expr.Binary, BEASTState> leftInput = new AstNodeTileInput<>(
                 "leftExpression", expr -> expr.left
         );
-        AstNodeTileInput<RPNCalculationResult, Expr.Binary> rightInput = new AstNodeTileInput<>(
+        AstNodeTileInput<RPNCalculationResult, Expr.Binary, BEASTState> rightInput = new AstNodeTileInput<>(
                 "rightExpression", expr -> expr.right
         );
 
@@ -70,10 +70,10 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
 
     public static class RpnReal extends BinaryTile {
 
-        AstNodeTileInput<RPNCalculationResult, Expr.Binary> leftInput = new AstNodeTileInput<>(
+        AstNodeTileInput<RPNCalculationResult, Expr.Binary, BEASTState> leftInput = new AstNodeTileInput<>(
                 "leftExpression", expr -> expr.left
         );
-        AstNodeTileInput<? extends Tensor<?, ?>, Expr.Binary> rightInput = new AstNodeTileInput<>(
+        AstNodeTileInput<? extends Tensor<?, ?>, Expr.Binary, BEASTState> rightInput = new AstNodeTileInput<>(
                 "rightExpression", expr -> expr.right
         );
 
@@ -92,10 +92,10 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
 
     public static class RealRpn extends BinaryTile {
 
-        AstNodeTileInput<? extends Tensor<?, ?>, Expr.Binary> leftInput = new AstNodeTileInput<>(
+        AstNodeTileInput<? extends Tensor<?, ?>, Expr.Binary, BEASTState> leftInput = new AstNodeTileInput<>(
                 "leftExpression", expr -> expr.left
         );
-        AstNodeTileInput<RPNCalculationResult, Expr.Binary> rightInput = new AstNodeTileInput<>(
+        AstNodeTileInput<RPNCalculationResult, Expr.Binary, BEASTState> rightInput = new AstNodeTileInput<>(
                 "rightExpression", expr -> expr.right
         );
 
@@ -114,10 +114,10 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
 
     public static class RealReal extends BinaryTile {
 
-        AstNodeTileInput<? extends Tensor<?, ?>, Expr.Binary> leftInput = new AstNodeTileInput<>(
+        AstNodeTileInput<? extends Tensor<?, ?>, Expr.Binary, BEASTState> leftInput = new AstNodeTileInput<>(
                 "leftExpression", expr -> expr.left
         );
-        AstNodeTileInput<? extends Tensor<?, ?>, Expr.Binary> rightInput = new AstNodeTileInput<>(
+        AstNodeTileInput<? extends Tensor<?, ?>, Expr.Binary, BEASTState> rightInput = new AstNodeTileInput<>(
                 "rightExpression", expr -> expr.right
         );
 

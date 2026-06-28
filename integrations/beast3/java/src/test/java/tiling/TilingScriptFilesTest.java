@@ -1,20 +1,21 @@
 package tiling;
 
 import beastconfig.BEASTState;
+import org.phylospec.tiling.EvaluateTiles;
+import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.tiles.Tile;
+import tiles.BeastCoreTileLibrary;
 import tiles.OperatorTileLibrary;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.RemoveGroupings;
-import org.phylospec.components.ComponentLibrary;
-import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
-import tiles.TileLibrary;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -80,11 +81,11 @@ public class TilingScriptFilesTest {
 
             List<String> actualTileLines = new ArrayList<>();
 
-            EvaluateTiles evaluateTiles = new EvaluateTiles(TileLibrary.loadAll(), OperatorTileLibrary.getTiles(), variableResolver, stochasticityResolver);
-            List<Tile<?>> bestTilings = null;
+            EvaluateTiles<BEASTState> evaluateTiles = new EvaluateTiles(new BeastCoreTileLibrary().getTiles(), new ArrayList<>(), variableResolver, stochasticityResolver);
+            List<Tile<?, BEASTState>> bestTilings = null;
             try {
                 bestTilings = evaluateTiles.getBestTiling(statements);
-                for (Tile<?> bestTiling : bestTilings) {
+                for (Tile<?, BEASTState> bestTiling : bestTilings) {
                     actualTileLines.add(bestTiling != null ? "TILING_SUCCESS" : "NO_VALID_TILING");
                 }
             } catch (TileApplicationError e) {
@@ -109,7 +110,7 @@ public class TilingScriptFilesTest {
                 System.setOut(new PrintStream(OutputStream.nullOutputStream()));
                 try {
                     BEASTState beastState = new BEASTState("test");
-                    for (Tile<?> tile : bestTilings) {
+                    for (Tile<?, BEASTState> tile : bestTilings) {
                         tile.apply(beastState, new IdentityHashMap<>());
                     }
                 } catch (TileApplicationError e) {

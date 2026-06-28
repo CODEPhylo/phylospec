@@ -4,20 +4,20 @@ import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeParser;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
 
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-public class FromNewickTile extends GeneratorTile<Tree> {
+public class FromNewickTile extends GeneratorTile<Tree, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "fromNewick";
     }
 
-    GeneratorTileInput<String> newickStringInput = new GeneratorTileInput<>(
+    GeneratorTileInput<String, BEASTState> newickStringInput = new GeneratorTileInput<>(
             "newickString", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
 

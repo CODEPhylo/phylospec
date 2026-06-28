@@ -1,30 +1,29 @@
 package tiles.functions;
 
 import beast.base.spec.domain.Int;
-import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
-import tiling.TileApplicationError;
+import org.phylospec.tiling.errors.TileApplicationError;
 
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 
-public class RangeTile extends GeneratorTile<IntVectorParam<Int>> {
+public class RangeTile extends GeneratorTile<IntVectorParam<Int>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "range";
     }
 
-    GeneratorTileInput<IntScalarParam<? extends Int>> startInput = new GeneratorTileInput<>(
+    GeneratorTileInput<IntScalarParam<? extends Int>, BEASTState> startInput = new GeneratorTileInput<>(
             "start", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
-    GeneratorTileInput<IntScalarParam<? extends Int>> endInput = new GeneratorTileInput<>(
+    GeneratorTileInput<IntScalarParam<? extends Int>, BEASTState> endInput = new GeneratorTileInput<>(
             "end", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
 

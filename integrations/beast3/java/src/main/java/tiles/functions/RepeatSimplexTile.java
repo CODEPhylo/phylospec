@@ -10,11 +10,11 @@ import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
-import tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.misc.AssignedArgumentTile;
 import beastconfig.BEASTState;
-import tiling.FailedTilingAttempt;
-import tiling.Tile;
+import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.tiling.tiles.Tile;
 
 import java.util.Arrays;
 import java.util.IdentityHashMap;
@@ -25,31 +25,31 @@ import java.util.stream.Collectors;
 /**
  * This tile applies to repeat(value, num) calls which produce a simplex (value*num=1.0).
  */
-public class RepeatSimplexTile extends GeneratorTile<SimplexParam> {
+public class RepeatSimplexTile extends GeneratorTile<SimplexParam, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
         return "repeat";
     }
 
-    GeneratorTileInput<RealScalarParam<? extends Real>> valueInput = new GeneratorTileInput<>(
+    GeneratorTileInput<RealScalarParam<? extends Real>, BEASTState> valueInput = new GeneratorTileInput<>(
             "value", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
-    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>> numInput = new GeneratorTileInput<>(
+    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>, BEASTState> numInput = new GeneratorTileInput<>(
             "num", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
     );
 
     @Override
-    public Set<Tile<?>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?>>> inputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
-        Set<Tile<?>> tiles = super.tryToTile(node, inputTiles, variableResolver, stochasticityResolver);
+    public Set<Tile<?, BEASTState>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?, BEASTState>>> inputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
+        Set<Tile<?, BEASTState>> tiles = super.tryToTile(node, inputTiles, variableResolver, stochasticityResolver);
 
         // we further have to check if both value and input are literals and if value*num = 1.0
 
         tiles = tiles.stream().filter(tile -> {
             if (!(tile instanceof RepeatSimplexTile simplexTile)) return false;
 
-            if (!((Tile<?>) simplexTile.valueInput.getTile() instanceof AssignedArgumentTile valueArgTile)) return false;
-            if (!((Tile<?>) simplexTile.numInput.getTile() instanceof AssignedArgumentTile numArgTile)) return false;
+            if (!((Tile<?, BEASTState>) simplexTile.valueInput.getTile() instanceof AssignedArgumentTile valueArgTile)) return false;
+            if (!((Tile<?, BEASTState>) simplexTile.numInput.getTile() instanceof AssignedArgumentTile numArgTile)) return false;
 
             if (!(valueArgTile.getRootNode().expression instanceof Expr.Literal valueLiteral)) return false;
             if (!(numArgTile.getRootNode().expression instanceof Expr.Literal numLiteral)) return false;
