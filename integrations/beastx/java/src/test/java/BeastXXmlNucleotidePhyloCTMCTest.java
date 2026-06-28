@@ -687,10 +687,12 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
         String xml =
                 Files.readString(xmlPath);
 
+        assertTrue(xml.contains("<multiplicativeBranchRates"), xml);
+        assertTrue(xml.contains("<strictClockBranchRates"), xml);
         assertTrue(xml.contains("<discretizedBranchRates"), xml);
         assertTrue(xml.contains("<rateCategories>"), xml);
         assertTrue(xml.contains("<treeLikelihood"), xml);
-        assertTrue(xml.contains("<discretizedBranchRates idref="), xml);
+        assertTrue(xml.contains("<multiplicativeBranchRates idref="), xml);
         assertFalse(xml.contains("branchRateCategories_randomWalk"), xml);
         assertFalse(xml.contains("<narrowExchange"), xml);
         assertFalse(xml.contains("<wideExchange"), xml);

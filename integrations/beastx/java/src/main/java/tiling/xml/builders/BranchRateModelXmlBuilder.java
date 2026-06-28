@@ -1,6 +1,5 @@
 package tiling.xml.builders;
 
-import dr.evomodel.branchratemodel.DiscretizedBranchRates;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.distribution.LogNormalDistributionModel;
 import dr.inference.distribution.ParametricDistributionModel;
@@ -34,17 +33,48 @@ public class BranchRateModelXmlBuilder {
     }
 
     public XmlElement buildRelaxedClockBranchRates(
+            BeastXState state,
             TreeModel treeModel,
             BeastXState.RelaxedClockSpec spec
     ) {
         String id =
                 relaxedClockBranchRateModelId(treeModel, spec);
 
+        return XmlElement.element("multiplicativeBranchRates")
+                .withId(id)
+                .withChild(
+                        buildStrictClockBranchRates(
+                                state,
+                                treeModel,
+                                spec.clockRateParameter()
+                        )
+                )
+                .withChild(
+                        buildRelativeRelaxedClockBranchRates(
+                                treeModel,
+                                spec,
+                                id + "_relativeRates"
+                        )
+                );
+    }
+
+    public String relaxedClockBranchRateModelId(
+            TreeModel treeModel,
+            BeastXState.RelaxedClockSpec spec
+    ) {
+        return treeId(treeModel) + "_relaxedClockBranchRates";
+    }
+
+    private XmlElement buildRelativeRelaxedClockBranchRates(
+            TreeModel treeModel,
+            BeastXState.RelaxedClockSpec spec,
+            String id
+    ) {
         return XmlElement.element("discretizedBranchRates")
                 .withId(id)
                 .withAttribute("overSampling", "1")
                 .withAttribute("normalize", "true")
-                .withAttribute("normalizeBranchRateTo", format(spec.normalizeBranchRateTo()))
+                .withAttribute("normalizeBranchRateTo", "1.0")
                 .withAttribute("randomizeRates", "false")
                 .withAttribute("keepRates", "true")
                 .withChild(treeReference(treeModel))
@@ -63,23 +93,6 @@ public class BranchRateModelXmlBuilder {
                                         parameterReference(spec.rateCategoriesParameter())
                                 )
                 );
-    }
-
-    public String relaxedClockBranchRateModelId(
-            TreeModel treeModel,
-            BeastXState.RelaxedClockSpec spec
-    ) {
-        DiscretizedBranchRates relaxedClock =
-                spec.relaxedClock();
-
-        String relaxedClockId =
-                relaxedClock.getId();
-
-        if (relaxedClockId != null && !relaxedClockId.isBlank()) {
-            return relaxedClockId;
-        }
-
-        return treeId(treeModel) + "_relaxedClockBranchRates";
     }
 
     private XmlElement parametricDistributionDefinition(

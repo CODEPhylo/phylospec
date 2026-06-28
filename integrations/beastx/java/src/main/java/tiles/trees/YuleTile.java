@@ -11,9 +11,9 @@ import org.phylospec.domain.NonNegativeReal;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
-import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.TreeDistribution;
+import tiling.params.BeastXParameters;
 
 import java.util.IdentityHashMap;
 
@@ -58,7 +58,7 @@ public class YuleTile extends GeneratorTile<
 
         BirthDeathGernhard08Model yuleModel =
                 new BirthDeathGernhard08Model(
-                        toParameter(birthRate),
+                        BeastXParameters.toParameter(birthRate),
                         new Parameter.Default(0.0),
                         new Parameter.Default(1.0),
                         BirthDeathGernhard08Model.TreeType.LABELED,
@@ -79,13 +79,5 @@ public class YuleTile extends GeneratorTile<
                     // SpeciationLikelihood receives the tree in its constructor.
                 }
         );
-    }
-
-    private static Parameter toParameter(RealScalar<?> scalar) {
-        if (scalar instanceof BeastXRealScalarParam<?> beastXScalar) {
-            return beastXScalar.getParameter();
-        }
-
-        return new Parameter.Default(scalar.get());
     }
 }

@@ -7,17 +7,15 @@ import dr.math.distributions.Distribution;
 import dr.util.Attribute;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.NonNegativeInt;
-import org.phylospec.domain.Real;
-import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.domain.UnitInterval;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
-import tiling.params.BeastXIntScalarParam;
-import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
+import tiling.params.BeastXIntScalarParam;
+import tiling.params.BeastXRealScalarParam;
 
 import java.util.IdentityHashMap;
-import java.util.List;
 
 public class BernoulliTile extends GeneratorTile<
         BoundDistribution<BeastXIntScalarParam<NonNegativeInt>, DistributionLikelihood>,
@@ -29,7 +27,7 @@ public class BernoulliTile extends GeneratorTile<
         return "Bernoulli";
     }
 
-    GeneratorTileInput<RealScalar<? extends Real>, BeastXState> pInput =
+    GeneratorTileInput<RealScalar<? extends UnitInterval>, BeastXState> pInput =
             new GeneratorTileInput<>("p");
 
     @Override
@@ -37,13 +35,8 @@ public class BernoulliTile extends GeneratorTile<
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
-        RealScalar<? extends Real> p =
+        RealScalar<? extends UnitInterval> p =
                 this.pInput.apply(beastState, indexVariables);
-
-        validateProbability(
-                p.get(),
-                this.getRootNode()
-        );
 
         Parameter pParameter =
                 toParameter(p);
@@ -83,20 +76,6 @@ public class BernoulliTile extends GeneratorTile<
         }
 
         return new Parameter.Default(scalar.get());
-    }
-
-    private static void validateProbability(
-            double p,
-            Object rootNode
-    ) {
-        if (p < 0.0 || p > 1.0) {
-            throw new TileApplicationError(
-                    rootNode instanceof org.phylospec.ast.AstNode node ? node : null,
-                    "Bernoulli probability p must be in [0, 1].",
-                    "Use a probability value between 0.0 and 1.0.",
-                    List.of("NonNegativeInt x ~ Bernoulli(p=0.25)")
-            );
-        }
     }
 
     private static final class BernoulliDistribution implements Distribution {
@@ -187,16 +166,7 @@ public class BernoulliTile extends GeneratorTile<
         }
 
         private double p() {
-            double value =
-                    pParameter.getParameterValue(0);
-
-            if (value < 0.0 || value > 1.0) {
-                throw new IllegalArgumentException(
-                        "Bernoulli probability p must be in [0, 1]."
-                );
-            }
-
-            return value;
+            return pParameter.getParameterValue(0);
         }
 
         private static int asIntegerValue(double x) {

@@ -185,9 +185,7 @@ public class XmlPlanBuilder {
                     entry.getKey();
 
             if (state.treeRelaxedClockModels.containsKey(treeModel)) {
-                throw unsupported(
-                        "A tree cannot use both StrictClock and RelaxedClock for XML export."
-                );
+                continue;
             }
 
             List<Parameter> clockRateParameters =
@@ -229,6 +227,7 @@ public class XmlPlanBuilder {
             plan.add(
                     XmlPlan.Section.BRANCH_RATE_MODELS,
                     branchRateModelXmlBuilder.buildRelaxedClockBranchRates(
+                            state,
                             treeModel,
                             spec
                     )
