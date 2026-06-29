@@ -11,9 +11,9 @@ import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.Simplex;
 import tiling.params.BeastXIntScalarParam;
-import tiling.params.BeastXSimplexParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
+import tiling.params.BeastXParameters;
 
 import java.util.IdentityHashMap;
 
@@ -44,7 +44,7 @@ public class CategoricalTile extends GeneratorTile<
         validateProbabilities(probabilities);
 
         Parameter probabilitiesParameter =
-                toParameter(probabilities);
+                BeastXParameters.toParameter(probabilities);
 
         DistributionLikelihood likelihood =
                 new DistributionLikelihood(
@@ -73,14 +73,6 @@ public class CategoricalTile extends GeneratorTile<
                         new double[]{state.getParameter().getParameterValue(0)}
                 ))
         );
-    }
-
-    private static Parameter toParameter(Simplex probabilities) {
-        if (probabilities instanceof BeastXSimplexParam beastXSimplex) {
-            return beastXSimplex.getParameter();
-        }
-
-        return new Parameter.Default(probabilities.getDoubleArray());
     }
 
     private static void validateProbabilities(Simplex probabilities) {

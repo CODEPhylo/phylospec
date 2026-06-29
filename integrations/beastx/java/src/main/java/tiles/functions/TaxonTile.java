@@ -15,6 +15,12 @@ import java.util.Set;
 
 public class TaxonTile extends GeneratorTile<Taxon, BeastXState> {
 
+    private static final Set<Stochasticity> NON_STOCHASTIC =
+            Set.of(
+                    Stochasticity.CONSTANT,
+                    Stochasticity.DETERMINISTIC
+            );
+
     @Override
     public String getPhyloSpecGeneratorName() {
         return "taxon";
@@ -23,19 +29,21 @@ public class TaxonTile extends GeneratorTile<Taxon, BeastXState> {
     GeneratorTileInput<String, BeastXState> nameInput =
             new GeneratorTileInput<>(
                     "name",
-                    Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+                    NON_STOCHASTIC
             );
 
     GeneratorTileInput<String, BeastXState> speciesInput =
             new GeneratorTileInput<>(
                     "species",
-                    false
+                    false,
+                    NON_STOCHASTIC
             );
 
     GeneratorTileInput<RealScalar<NonNegativeReal>, BeastXState> ageInput =
             new GeneratorTileInput<>(
                     "age",
-                    false
+                    false,
+                    NON_STOCHASTIC
             );
 
     @Override
@@ -56,7 +64,10 @@ public class TaxonTile extends GeneratorTile<Taxon, BeastXState> {
                 new Taxon(name);
 
         if (species != null) {
-            taxon.setAttribute("species", species);
+            taxon.setAttribute(
+                    "species",
+                    species
+            );
         }
 
         double ageValue =

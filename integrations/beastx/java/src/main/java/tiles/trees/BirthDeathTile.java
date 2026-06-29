@@ -12,9 +12,9 @@ import org.phylospec.domain.PositiveReal;
 import org.phylospec.domain.UnitInterval;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
-import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.TreeDistribution;
+import tiling.params.BeastXParameters;
 
 import java.util.IdentityHashMap;
 
@@ -54,8 +54,6 @@ public class BirthDeathTile extends GeneratorTile<
         RealScalar<? extends NonNegativeReal> turnover =
                 this.turnoverInput.apply(beastState, indexVariables);
 
-        validateTurnover(turnover);
-
         RealScalar<UnitInterval> samplingProbability =
                 this.samplingProbabilityInput.apply(beastState, indexVariables);
 
@@ -74,12 +72,12 @@ public class BirthDeathTile extends GeneratorTile<
         Parameter samplingProbabilityParameter =
                 samplingProbability == null
                         ? new Parameter.Default(1.0)
-                        : toParameter(samplingProbability);
+                        : BeastXParameters.toParameter(samplingProbability);
 
         BirthDeathGernhard08Model birthDeathModel =
                 new BirthDeathGernhard08Model(
-                        toParameter(diversificationRate),
-                        toParameter(turnover),
+                        BeastXParameters.toParameter(diversificationRate),
+                        BeastXParameters.toParameter(turnover),
                         samplingProbabilityParameter,
                         BirthDeathGernhard08Model.TreeType.LABELED,
                         Units.Type.YEARS
@@ -99,29 +97,5 @@ public class BirthDeathTile extends GeneratorTile<
                     // SpeciationLikelihood receives the tree in its constructor.
                 }
         );
-    }
-
-    private static void validateTurnover(RealScalar<? extends NonNegativeReal> turnover) {
-        if (turnover instanceof BeastXRealScalarParam<?>) {
-            return;
-        }
-
-        double value =
-                turnover.get();
-
-        if (value > 1.0) {
-            throw new IllegalArgumentException(
-                    "BirthDeath turnover must be in [0, 1]. " +
-                            "Use a UnitInterval prior such as turnover~Beta(alpha=2.0, beta=5.0)."
-            );
-        }
-    }
-
-    private static Parameter toParameter(RealScalar<?> scalar) {
-        if (scalar instanceof BeastXRealScalarParam<?> beastXScalar) {
-            return beastXScalar.getParameter();
-        }
-
-        return new Parameter.Default(scalar.get());
     }
 }

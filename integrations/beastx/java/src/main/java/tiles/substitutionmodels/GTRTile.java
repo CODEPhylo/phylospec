@@ -40,10 +40,6 @@ public class GTRTile extends GeneratorTile<GTR, BeastXState> {
         RealScalar<PositiveReal> rateGT = this.rateGTInput.apply(beastState, indexVariables);
         Simplex baseFrequencies = this.baseFrequenciesInput.apply(beastState, indexVariables);
 
-        if (baseFrequencies == null) {
-            throw new IllegalArgumentException("GTR requires baseFrequencies input.");
-        }
-
         if (baseFrequencies.size() != 4) {
             throw new IllegalArgumentException(
                     "GTR requires exactly four nucleotide base frequencies: A, C, G, T."

@@ -34,10 +34,6 @@ public class HKYTile extends GeneratorTile<HKY, BeastXState> {
         Simplex baseFrequencies =
                 this.baseFrequenciesInput.apply(beastState, indexVariables);
 
-        if (baseFrequencies == null) {
-            throw new IllegalArgumentException("HKY requires baseFrequencies input.");
-        }
-
         if (baseFrequencies.size() != 4) {
             throw new IllegalArgumentException(
                     "HKY requires exactly four nucleotide base frequencies: A, C, G, T."
