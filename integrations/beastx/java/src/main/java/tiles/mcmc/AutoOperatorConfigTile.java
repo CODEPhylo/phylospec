@@ -21,11 +21,13 @@ public class AutoOperatorConfigTile extends Tile<Void, BeastXState> implements C
     private final String settingName;
 
     public AutoOperatorConfigTile() {
-        this.settingName = null;
+        this.settingName =
+                null;
     }
 
     private AutoOperatorConfigTile(String settingName) {
-        this.settingName = settingName;
+        this.settingName =
+                settingName;
     }
 
     @Override
@@ -36,6 +38,10 @@ public class AutoOperatorConfigTile extends Tile<Void, BeastXState> implements C
             StochasticityResolver stochasticityResolver
     ) throws FailedTilingAttempt {
         if (!(node instanceof Stmt.Assignment assignment)) {
+            throw new FailedTilingAttempt.Irrelevant();
+        }
+
+        if (!(assignment.block instanceof Stmt.Block.Mcmc)) {
             throw new FailedTilingAttempt.Irrelevant();
         }
 
@@ -66,6 +72,7 @@ public class AutoOperatorConfigTile extends Tile<Void, BeastXState> implements C
         validateValue(this.settingName, value, assignment);
 
         beastState.operatorConfig.set(this.settingName, value);
+
         return null;
     }
 
