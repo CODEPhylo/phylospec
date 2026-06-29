@@ -1,128 +1,38 @@
 package tiles.mcmc;
 
-import org.phylospec.Utils;
-import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
-import org.phylospec.ast.Stmt;
-import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.tiling.errors.TileApplicationError;
-import org.phylospec.tiling.tiles.CandidateTile;
-import org.phylospec.tiling.tiles.Tile;
-import org.phylospec.tiling.tiles.TilePriority;
-import org.phylospec.typeresolver.StochasticityResolver;
-import org.phylospec.typeresolver.VariableResolver;
+import org.phylospec.tiling.tiles.TemplateTile;
+import org.phylospec.tiling.tiles.TileInput;
+import org.phylospec.typeresolver.Stochasticity;
 import tiling.BeastXState;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-public class ScreenLoggerTile extends Tile<Void, BeastXState> implements CandidateTile<BeastXState> {
-
-    private final List<String> loggableNames;
-    private final List<Tile<?, BeastXState>> loggableInputTiles;
-
-    public ScreenLoggerTile() {
-        this.loggableNames = null;
-        this.loggableInputTiles = List.of();
-    }
-
-    private ScreenLoggerTile(
-            List<String> loggableNames,
-            List<Tile<?, BeastXState>> loggableInputTiles
-    ) {
-        this.loggableNames = loggableNames;
-        this.loggableInputTiles = loggableInputTiles;
-    }
+public class ScreenLoggerTile extends TemplateTile<Void, BeastXState> {
 
     @Override
-    public Set<Tile<?, BeastXState>> tryToTile(
-            AstNode node,
-            Map<AstNode, Set<Tile<?, BeastXState>>> allInputTiles,
-            VariableResolver variableResolver,
-            StochasticityResolver stochasticityResolver
-    ) throws FailedTilingAttempt {
-        if (!(node instanceof Stmt.Assignment assignment)) {
-            throw new FailedTilingAttempt.Irrelevant();
-        }
-
-        if (!assignment.name.equals("screenLogger")) {
-            throw new FailedTilingAttempt.Irrelevant();
-        }
-
-        if (!(assignment.expression instanceof Expr.Call call)) {
-            throw new FailedTilingAttempt.Rejected(
-                    "screenLogger must be created by calling screenLogger(...)."
-            );
-        }
-
-        if (!call.functionName.equals("screenLogger")) {
-            throw new FailedTilingAttempt.Rejected(
-                    "screenLogger must be created by calling screenLogger(...)."
-            );
-        }
-
-        LoggableInputs loggableInputs =
-                getLoggableInputs(assignment, allInputTiles);
-
-        if (loggableInputs == null) {
-            ScreenLoggerTile tile =
-                    new ScreenLoggerTile(null, List.of());
-
-            tile.setRootNode(node);
-            tile.setWeight(getPriority().getWeight());
-
-            return Set.of(tile);
-        }
-
-        if (loggableInputs.possibleInputTiles.isEmpty()) {
-            ScreenLoggerTile tile =
-                    new ScreenLoggerTile(loggableInputs.names, List.of());
-
-            tile.setRootNode(node);
-            tile.setWeight(getPriority().getWeight());
-
-            return Set.of(tile);
-        }
-
-        Set<Tile<?, BeastXState>> screenLoggerTiles =
-                new HashSet<>();
-
-        Utils.visitCombinations(
-                loggableInputs.possibleInputTiles,
-                selectedInputTiles -> {
-                    ScreenLoggerTile tile =
-                            new ScreenLoggerTile(
-                                    loggableInputs.names,
-                                    new ArrayList<>(selectedInputTiles)
-                            );
-
-                    tile.setRootNode(node);
-
-                    int inputWeight =
-                            selectedInputTiles.stream()
-                                    .mapToInt(Tile::getWeight)
-                                    .sum();
-
-                    tile.setWeight(getPriority().getWeight() + inputWeight);
-
-                    screenLoggerTiles.add(tile);
-                }
-        );
-
-        return screenLoggerTiles;
+    protected String getPhyloSpecTemplate() {
+        return """
+                mcmc {
+                    Logger screenLogger = screenLogger(
+                        logEvery=$logEvery,
+                        parameters=$$parameters
+                    )
+                }""";
     }
+
+    public TemplateTileInput<Integer, BeastXState> logEveryInput =
+            new TemplateTileInput<>("$logEvery", Set.of(Stochasticity.CONSTANT));
+
+    public TileInput<LoggerParameterNames, BeastXState> parametersInput =
+            new LoggerParameterNamesInput("$$parameters", false);
 
     @Override
     protected Void applyTile(BeastXState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        Stmt.Assignment assignment =
-                (Stmt.Assignment) this.getRootNode();
-
         int logEvery =
-                getLogEvery(assignment);
+                this.logEveryInput.apply(beastState, indexVariables);
 
         if (logEvery <= 0) {
             throw new TileApplicationError(
@@ -132,144 +42,14 @@ public class ScreenLoggerTile extends Tile<Void, BeastXState> implements Candida
             );
         }
 
-        for (Tile<?, BeastXState> inputTile : this.loggableInputTiles) {
-            inputTile.apply(beastState, indexVariables);
-        }
+        LoggerParameterNames parameters =
+                this.parametersInput.apply(beastState, indexVariables);
 
-        beastState.addScreenLoggerSpec(logEvery, this.loggableNames);
-        return null;
-    }
-
-    private static int getLogEvery(Stmt.Assignment assignment) {
-        Expr.Call call =
-                (Expr.Call) assignment.expression;
-
-        for (Expr.Argument argument : call.arguments) {
-            if (argument.name == null || argument.name.equals("logEvery")) {
-                return getIntegerLiteral(argument.expression, assignment);
-            }
-        }
-
-        throw new TileApplicationError(
-                assignment,
-                "screenLogger requires a logEvery argument.",
-                "Use Logger screenLogger = screenLogger(logEvery=1000)."
+        beastState.addScreenLoggerSpec(
+                logEvery,
+                parameters == null ? null : parameters.names
         );
-    }
-
-    private static LoggableInputs getLoggableInputs(
-            Stmt.Assignment assignment,
-            Map<AstNode, Set<Tile<?, BeastXState>>> allInputTiles
-    ) throws FailedTilingAttempt {
-        Expr.Call call =
-                (Expr.Call) assignment.expression;
-
-        for (Expr.Argument argument : call.arguments) {
-            if (argument.name != null && argument.name.equals("parameters")) {
-                return getNameInputs(argument.expression, assignment, allInputTiles);
-            }
-        }
 
         return null;
-    }
-
-    private static LoggableInputs getNameInputs(
-            Expr expression,
-            Stmt.Assignment assignment,
-            Map<AstNode, Set<Tile<?, BeastXState>>> allInputTiles
-    ) throws FailedTilingAttempt {
-        if (!(expression instanceof Expr.Array array)) {
-            throw new TileApplicationError(
-                    assignment,
-                    "screenLogger parameters must be a list of loggable names.",
-                    "Use parameters=[clockRate] or parameters=[\"posterior\", \"prior\", \"likelihood\", \"clockRate\"]."
-            );
-        }
-
-        List<String> names =
-                new ArrayList<>();
-
-        List<Set<Tile<?, BeastXState>>> possibleInputTiles =
-                new ArrayList<>();
-
-        for (Expr element : array.elements) {
-            if (element instanceof Expr.Variable variable) {
-                names.add(variable.variableName);
-
-                if (!isModelLevelLoggable(variable.variableName)) {
-                    Set<Tile<?, BeastXState>> tiles =
-                            allInputTiles.get(variable);
-
-                    if (tiles == null || tiles.isEmpty()) {
-                        throw new FailedTilingAttempt.RejectedCascade(variable);
-                    }
-
-                    possibleInputTiles.add(tiles);
-                }
-
-                continue;
-            }
-
-            if (element instanceof Expr.Literal literal && literal.value instanceof String string) {
-                names.add(string);
-                continue;
-            }
-
-            throw new TileApplicationError(
-                    assignment,
-                    "screenLogger parameters must contain names.",
-                    "Use bare parameter names such as clockRate, or strings such as \"posterior\"."
-            );
-        }
-
-        return new LoggableInputs(names, possibleInputTiles);
-    }
-
-    private static boolean isModelLevelLoggable(String name) {
-        return name.equals("posterior")
-                || name.equals("prior")
-                || name.equals("likelihood");
-    }
-
-    private static int getIntegerLiteral(Expr expression, Stmt.Assignment assignment) {
-        if (!(expression instanceof Expr.Literal literal)) {
-            throw new TileApplicationError(
-                    assignment,
-                    "screenLogger logEvery must be a constant integer.",
-                    "Use a literal value, for example logEvery=1000."
-            );
-        }
-
-        if (!(literal.value instanceof Number number)) {
-            throw new TileApplicationError(
-                    assignment,
-                    "screenLogger logEvery must be a constant integer.",
-                    "Use a literal value, for example logEvery=1000."
-            );
-        }
-
-        double value =
-                number.doubleValue();
-
-        if (value != Math.rint(value)) {
-            throw new TileApplicationError(
-                    assignment,
-                    "screenLogger logEvery must be an integer.",
-                    "Use a whole number, for example logEvery=1000."
-            );
-        }
-
-        return (int) value;
-    }
-
-    private record LoggableInputs(
-            List<String> names,
-            List<Set<Tile<?, BeastXState>>> possibleInputTiles
-    ) {
-    }
-
-    @Override
-    public TilePriority getPriority() {
-        return TilePriority.CUSTOM;
     }
 }
