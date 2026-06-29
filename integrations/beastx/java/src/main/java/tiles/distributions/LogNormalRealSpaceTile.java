@@ -12,6 +12,7 @@ import org.phylospec.types.RealScalar;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
+import tiling.params.BeastXParameters;
 
 import java.util.IdentityHashMap;
 
@@ -42,8 +43,11 @@ public class LogNormalRealSpaceTile extends GeneratorTile<
         RealScalar<PositiveReal> logSd =
                 this.logSdInput.apply(beastState, indexVariables);
 
-        Parameter meanParameter = new Parameter.Default(mean.get());
-        Parameter logSdParameter = new Parameter.Default(logSd.get());
+        Parameter meanParameter =
+                BeastXParameters.toParameter(mean);
+
+        Parameter logSdParameter =
+                BeastXParameters.toParameter(logSd);
 
         LogNormalDistributionModel distributionModel =
                 new LogNormalDistributionModel(

@@ -18,6 +18,12 @@ import java.util.Set;
 
 public class FromCSVTile extends GeneratorTile<List<Map<String, String>>, BeastXState> {
 
+    private static final Set<Stochasticity> NON_STOCHASTIC =
+            Set.of(
+                    Stochasticity.CONSTANT,
+                    Stochasticity.DETERMINISTIC
+            );
+
     @Override
     public String getPhyloSpecGeneratorName() {
         return "fromCSV";
@@ -26,21 +32,21 @@ public class FromCSVTile extends GeneratorTile<List<Map<String, String>>, BeastX
     GeneratorTileInput<String, BeastXState> fileInput =
             new GeneratorTileInput<>(
                     "file",
-                    Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+                    NON_STOCHASTIC
             );
 
     GeneratorTileInput<String, BeastXState> delimiterInput =
             new GeneratorTileInput<>(
                     "delimiter",
                     false,
-                    Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+                    NON_STOCHASTIC
             );
 
-    GeneratorTileInput<List<?>, BeastXState> headersInput =
+    GeneratorTileInput<List<String>, BeastXState> headersInput =
             new GeneratorTileInput<>(
                     "headers",
                     false,
-                    Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+                    NON_STOCHASTIC
             );
 
     @Override
@@ -55,10 +61,11 @@ public class FromCSVTile extends GeneratorTile<List<Map<String, String>>, BeastX
                 this.delimiterInput.apply(beastState, indexVariables);
 
         if (delimiter == null) {
-            delimiter = ",";
+            delimiter =
+                    ",";
         }
 
-        List<?> headerObjects =
+        List<String> providedHeaders =
                 this.headersInput.apply(beastState, indexVariables);
 
         List<String> lines =
@@ -76,7 +83,7 @@ public class FromCSVTile extends GeneratorTile<List<Map<String, String>>, BeastX
         List<String> headers;
         int firstDataLineIndex;
 
-        if (headerObjects == null) {
+        if (providedHeaders == null) {
             headers =
                     parseLine(lines.getFirst(), delimiter);
 
@@ -84,7 +91,7 @@ public class FromCSVTile extends GeneratorTile<List<Map<String, String>>, BeastX
                     1;
         } else {
             headers =
-                    parseHeaders(headerObjects);
+                    providedHeaders;
 
             firstDataLineIndex =
                     0;
@@ -140,24 +147,6 @@ public class FromCSVTile extends GeneratorTile<List<Map<String, String>>, BeastX
                     "'" + file + "' could not be read."
             );
         }
-    }
-
-    private static List<String> parseHeaders(List<?> headerObjects) {
-        List<String> headers =
-                new ArrayList<>();
-
-        for (Object headerObject : headerObjects) {
-            if (!(headerObject instanceof String header)) {
-                throw new TileApplicationError(
-                        "CSV headers must be strings.",
-                        "Use headers=[\"taxon\", \"trait\", \"location\"]."
-                );
-            }
-
-            headers.add(header);
-        }
-
-        return headers;
     }
 
     private static void validateHeaders(List<String> headers, String file) {

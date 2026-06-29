@@ -21,11 +21,8 @@ import tiles.input.FromNewickTile;
 import tiles.input.FromTreeTile;
 import tiles.input.ParserTile;
 import tiles.input.SubsetTile;
-import tiles.input.DiscreteTraitsFromTaxaTile;
 import tiles.input.FromCSVTile;
-import tiles.input.DiscreteTraitsFromTableTile;
 import tiles.input.TaxaWithAgesFromTableTile;
-import tiles.input.ContinuousTraitsFromTaxaTile;
 
 import tiles.distributions.ExponentialTile;
 import tiles.distributions.LogNormalTile;
@@ -182,9 +179,6 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new FromCSVTile());
         tiles.add(new FromNewickTile());
         tiles.add(new FromTreeTile());
-        tiles.add(new DiscreteTraitsFromTaxaTile());
-        tiles.add(new ContinuousTraitsFromTaxaTile());
-        tiles.add(new DiscreteTraitsFromTableTile());
         tiles.add(new TaxaWithAgesFromTableTile());
         tiles.add(new SubsetTile());
         tiles.add(new ParserTile.Regex());

@@ -1,20 +1,21 @@
 package tiles.functions;
 
-import dr.evolution.tree.NodeRef;
+import dr.evolution.tree.TreeUtils;
+import dr.evolution.util.Taxa;
 import dr.evolution.util.Taxon;
+import dr.evomodel.tree.TMRCAStatistic;
 import dr.evomodel.tree.TreeModel;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.NonNegativeReal;
+import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
-import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
+import tiling.params.BeastXStatisticRealScalar;
 
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Set;
 
 public class MRCATile extends GeneratorTile<RealScalar<NonNegativeReal>, BeastXState> {
 
@@ -49,13 +50,33 @@ public class MRCATile extends GeneratorTile<RealScalar<NonNegativeReal>, BeastXS
             );
         }
 
-        NodeRef mrca =
-                findMRCA(tree, clade);
+        TMRCAStatistic statistic;
 
-        double age =
-                tree.getNodeHeight(mrca);
+        try {
+            statistic =
+                    new TMRCAStatistic(
+                            "mrcaAge",
+                            tree,
+                            toTaxa(clade),
+                            false,
+                            false
+                    );
+        } catch (TreeUtils.MissingTaxonException exception) {
+            throw new TileApplicationError(
+                    this.getRootNode(),
+                    "Could not find one or more MRCA taxa in the tree.",
+                    "Use taxon names or species names that exist in the tree.",
+                    List.of("Age a = mrca(clade=[\"taxon1\", \"taxon2\"], tree=tree)")
+            );
+        }
 
-        if (age < 0.0) {
+        statistic.setId(
+                beastState.getAvailableID(
+                        this.getId("mrcaAge", indexVariables, "")
+                )
+        );
+
+        if (statistic.getStatisticValue(0) < 0.0) {
             throw new TileApplicationError(
                     this.getRootNode(),
                     "MRCA age must be non-negative.",
@@ -64,113 +85,26 @@ public class MRCATile extends GeneratorTile<RealScalar<NonNegativeReal>, BeastXS
             );
         }
 
-        return new BeastXRealScalarParam<>(
-                age,
+        beastState.addCalculationNode(
+                statistic,
+                new TypeToken<TMRCAStatistic>() {},
+                statistic.getId()
+        );
+
+        return new BeastXStatisticRealScalar<>(
+                statistic,
                 NonNegativeReal.INSTANCE
         );
     }
 
-    private static NodeRef findMRCA(
-            TreeModel tree,
-            List<String> clade
-    ) {
-        NodeRef currentMRCA =
-                findExternalNode(tree, clade.get(0));
+    private static Taxa toTaxa(List<String> taxonNames) {
+        Taxa taxa =
+                new Taxa();
 
-        if (currentMRCA == null) {
-            throw missingTaxon(clade.get(0));
+        for (String taxonName : taxonNames) {
+            taxa.addTaxon(new Taxon(taxonName));
         }
 
-        for (int i = 1; i < clade.size(); i++) {
-            NodeRef nextNode =
-                    findExternalNode(tree, clade.get(i));
-
-            if (nextNode == null) {
-                throw missingTaxon(clade.get(i));
-            }
-
-            currentMRCA =
-                    findPairwiseMRCA(tree, currentMRCA, nextNode);
-        }
-
-        return currentMRCA;
-    }
-
-    private static NodeRef findPairwiseMRCA(
-            TreeModel tree,
-            NodeRef first,
-            NodeRef second
-    ) {
-        Set<NodeRef> firstAncestors =
-                new HashSet<>();
-
-        NodeRef current =
-                first;
-
-        while (current != null) {
-            firstAncestors.add(current);
-
-            if (tree.isRoot(current)) {
-                break;
-            }
-
-            current =
-                    tree.getParent(current);
-        }
-
-        current =
-                second;
-
-        while (current != null) {
-            if (firstAncestors.contains(current)) {
-                return current;
-            }
-
-            if (tree.isRoot(current)) {
-                break;
-            }
-
-            current =
-                    tree.getParent(current);
-        }
-
-        return tree.getRoot();
-    }
-
-    private static NodeRef findExternalNode(
-            TreeModel tree,
-            String nodeName
-    ) {
-        for (int i = 0; i < tree.getExternalNodeCount(); i++) {
-            NodeRef node =
-                    tree.getExternalNode(i);
-
-            Taxon taxon =
-                    tree.getNodeTaxon(node);
-
-            if (taxon == null) {
-                continue;
-            }
-
-            if (nodeName.equals(taxon.getId())) {
-                return node;
-            }
-
-            Object species =
-                    taxon.getAttribute("species");
-
-            if (species != null && nodeName.equals(species.toString())) {
-                return node;
-            }
-        }
-
-        return null;
-    }
-
-    private static TileApplicationError missingTaxon(String taxonName) {
-        return new TileApplicationError(
-                "Could not find taxon '" + taxonName + "' in the tree.",
-                "Use taxon names or species names that exist in the tree."
-        );
+        return taxa;
     }
 }

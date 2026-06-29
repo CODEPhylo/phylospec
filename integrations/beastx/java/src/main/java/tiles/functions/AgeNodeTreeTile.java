@@ -3,14 +3,16 @@ package tiles.functions;
 import dr.evolution.tree.NodeRef;
 import dr.evolution.util.Taxon;
 import dr.evomodel.tree.TreeModel;
+import dr.inference.model.Statistic;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.NonNegativeReal;
+import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.types.RealScalar;
-import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
+import tiling.params.BeastXStatisticRealScalar;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -55,10 +57,16 @@ public class AgeNodeTreeTile extends GeneratorTile<RealScalar<NonNegativeReal>, 
             );
         }
 
-        double age =
-                tree.getNodeHeight(node);
+        NodeAgeStatistic statistic =
+                new NodeAgeStatistic(
+                        beastState.getAvailableID(
+                                this.getId("nodeAge", indexVariables, "")
+                        ),
+                        tree,
+                        node
+                );
 
-        if (age < 0.0) {
+        if (statistic.getStatisticValue(0) < 0.0) {
             throw new TileApplicationError(
                     this.getRootNode(),
                     "Node age must be non-negative.",
@@ -67,8 +75,14 @@ public class AgeNodeTreeTile extends GeneratorTile<RealScalar<NonNegativeReal>, 
             );
         }
 
-        return new BeastXRealScalarParam<>(
-                age,
+        beastState.addCalculationNode(
+                statistic,
+                new TypeToken<NodeAgeStatistic>() {},
+                statistic.getId()
+        );
+
+        return new BeastXStatisticRealScalar<>(
+                statistic,
                 NonNegativeReal.INSTANCE
         );
     }
@@ -101,5 +115,35 @@ public class AgeNodeTreeTile extends GeneratorTile<RealScalar<NonNegativeReal>, 
         }
 
         return null;
+    }
+
+    public static class NodeAgeStatistic extends Statistic.Abstract {
+
+        private final TreeModel tree;
+        private final NodeRef node;
+
+        public NodeAgeStatistic(
+                String id,
+                TreeModel tree,
+                NodeRef node
+        ) {
+            super(id);
+            this.tree = tree;
+            this.node = node;
+        }
+
+        @Override
+        public int getDimension() {
+            return 1;
+        }
+
+        @Override
+        public double getStatisticValue(int dim) {
+            if (dim != 0) {
+                throw new IndexOutOfBoundsException("Node age statistic only has dimension 0.");
+            }
+
+            return this.tree.getNodeHeight(this.node);
+        }
     }
 }

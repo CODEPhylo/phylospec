@@ -6,6 +6,7 @@ import org.phylospec.lexer.TokenType;
 import org.phylospec.types.RealScalar;
 import tiling.BeastXState;
 import tiling.params.BeastXRealScalarParam;
+import tiling.params.BeastXStatisticRealScalar;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -52,6 +53,10 @@ public record BeastXRPNCalculationResult(
     ) {
         if (scalar instanceof BeastXRealScalarParam<?> beastXScalar) {
             return from(beastXScalar.getParameter(), beastState);
+        }
+
+        if (scalar instanceof BeastXStatisticRealScalar<?> statisticScalar) {
+            return from(statisticScalar.getStatistic(), beastState);
         }
 
         return from(new Parameter.Default(scalar.get()), beastState);

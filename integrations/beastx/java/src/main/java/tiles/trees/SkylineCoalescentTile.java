@@ -15,6 +15,7 @@ import org.phylospec.types.RealVector;
 import tiling.params.BeastXRealVectorParam;
 import tiling.BeastXState;
 import tiling.model.TreeDistribution;
+import tiling.validation.BeastXValidation;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -73,7 +74,13 @@ public class SkylineCoalescentTile extends GeneratorTile<
         double[] changeTimeValues =
                 toArray(changeTimes);
 
-        validateStrictlyIncreasing(changeTimeValues);
+        BeastXValidation.requireStrictlyIncreasing(
+                changeTimeValues,
+                this.getRootNode(),
+                "SkylineCoalescent changeTimes must be strictly increasing.",
+                "Provide ordered ages such as [1.0, 3.0, 5.0].",
+                List.of("SkylineCoalescent(populationSizes=[100.0, 200.0, 300.0], changeTimes=[1.0, 3.0])")
+        );
 
         double[] epochWidths =
                 toEpochWidths(changeTimeValues);
@@ -128,19 +135,6 @@ public class SkylineCoalescentTile extends GeneratorTile<
         }
 
         return values;
-    }
-
-    private void validateStrictlyIncreasing(double[] changeTimes) {
-        for (int i = 1; i < changeTimes.length; i++) {
-            if (changeTimes[i] <= changeTimes[i - 1]) {
-                throw new TileApplicationError(
-                        this.getRootNode(),
-                        "SkylineCoalescent changeTimes must be strictly increasing.",
-                        "Provide ordered ages such as [1.0, 3.0, 5.0].",
-                        List.of("SkylineCoalescent(populationSizes=[100.0, 200.0, 300.0], changeTimes=[1.0, 3.0], taxa=taxa)")
-                );
-            }
-        }
     }
 
     private static double[] toEpochWidths(double[] changeTimes) {

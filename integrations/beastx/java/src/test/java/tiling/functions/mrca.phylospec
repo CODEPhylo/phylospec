@@ -6,4 +6,5 @@ Age cladeAge = mrca(clade=["taxon1", "taxon2"], tree=tree)
 // EXPECTED_TILES
 
 // EXPECTED BEASTX STATE
+// CN: mrcaAge_2
 // EXPECTED BEASTX STATE
