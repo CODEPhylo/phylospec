@@ -81,49 +81,13 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 Files.readString(sourcePath, charset)
         );
     }
-    // Derives the default run name by stripping the source file extension.
-    public static String defaultRunName(Path sourcePath) {
-        if (sourcePath == null) {
-            throw new IllegalArgumentException("sourcePath must not be null.");
-        }
-
-        String fileName =
-                sourcePath.getFileName().toString();
-
-        int extensionStart =
-                fileName.lastIndexOf('.');
-
-        if (extensionStart <= 0) {
-            return fileName;
-        }
-
-        return fileName.substring(0, extensionStart);
-    }
-
-    public static BeastXRunResult buildRunFromFile(Path sourcePath)
-            throws IOException, ParserConfigurationException, SAXException {
-        String runName =
-                defaultRunName(sourcePath);
-
-        return fromFile(sourcePath)
-                .buildRun(runName);
-    }
-
-    public static BeastXRunResult executeFromFile(Path sourcePath)
-            throws IOException, ParserConfigurationException, SAXException {
-        String runName =
-                defaultRunName(sourcePath);
-
-        return fromFile(sourcePath)
-                .execute(runName);
-    }
 
     public static XmlRunResult buildXmlRunFromFile(
             Path sourcePath,
             Path xmlPath
     ) throws Exception {
         String runName =
-                defaultRunName(sourcePath);
+                FileRunPaths.defaultRunName(sourcePath);
 
         return fromFile(sourcePath)
                 .buildXmlRun(
@@ -139,21 +103,6 @@ public class PhyloSpecRunner implements ErrorEventListener {
         );
     }
 
-    public static XmlRunResult buildDefaultXmlRunFromFile(Path sourcePath)
-            throws Exception {
-        FileRunPaths paths =
-                defaultOutputPathsForFile(sourcePath);
-
-        return fromFile(sourcePath)
-                .buildXmlRun(
-                        XmlRunnerOptions.builder(
-                                        paths.runName(),
-                                        paths.xmlPath()
-                                )
-                                .build()
-                );
-    }
-
     public static XmlRunResult executeDefaultXmlRunFromFile(Path sourcePath)
             throws Exception {
         FileRunPaths paths =
@@ -165,56 +114,6 @@ public class PhyloSpecRunner implements ErrorEventListener {
                                         paths.runName(),
                                         paths.xmlPath()
                                 )
-                                .execute(true)
-                                .build()
-                );
-    }
-
-    public static XmlRunResult buildXmlRunFromFileInOutputRoot(
-            Path sourcePath,
-            Path outputRoot
-    ) throws Exception {
-        FileRunPaths paths =
-                FileRunPaths.forSource(sourcePath, outputRoot);
-
-        return fromFile(sourcePath)
-                .buildXmlRun(
-                        XmlRunnerOptions.builder(
-                                        paths.runName(),
-                                        paths.xmlPath()
-                                )
-                                .build()
-                );
-    }
-
-    public static XmlRunResult executeXmlRunFromFileInOutputRoot(
-            Path sourcePath,
-            Path outputRoot
-    ) throws Exception {
-        FileRunPaths paths =
-                FileRunPaths.forSource(sourcePath, outputRoot);
-
-        return fromFile(sourcePath)
-                .executeXmlRun(
-                        XmlRunnerOptions.builder(
-                                        paths.runName(),
-                                        paths.xmlPath()
-                                )
-                                .execute(true)
-                                .build()
-                );
-    }
-
-    public static XmlRunResult executeXmlRunFromFile(
-            Path sourcePath,
-            Path xmlPath
-    ) throws Exception {
-        String runName =
-                defaultRunName(sourcePath);
-
-        return fromFile(sourcePath)
-                .executeXmlRun(
-                        XmlRunnerOptions.builder(runName, xmlPath)
                                 .execute(true)
                                 .build()
                 );
@@ -281,36 +180,6 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 .buildMCMC(model, chainLength);
     }
 
-    public MCMC buildMaterializedMCMC(String runName)
-            throws IOException, ParserConfigurationException, SAXException {
-        BeastXModel model =
-                buildMaterializedModel(runName);
-
-        return buildMCMC(model);
-    }
-
-    public MCMC buildMaterializedMCMC(String runName, long chainLength)
-            throws IOException, ParserConfigurationException, SAXException {
-        BeastXModel model =
-                buildMaterializedModel(runName);
-
-        return buildMCMC(model, chainLength);
-    }
-
-    public MCMC buildMaterializedMCMC(BeastXState beastState) {
-        BeastXModel model =
-                buildMaterializedModel(beastState);
-
-        return buildMCMC(model);
-    }
-
-    public MCMC buildMaterializedMCMC(BeastXState beastState, long chainLength) {
-        BeastXModel model =
-                buildMaterializedModel(beastState);
-
-        return buildMCMC(model, chainLength);
-    }
-
     /// Runs the PhyloSpec-to-BEAST X pipeline according to the requested run mode.
     ///
     /// The pipeline can stop after building the backend state, model, or MCMC object,
@@ -327,34 +196,6 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 .run(beastState, options);
     }
 
-    public BeastXRunResult buildRun(String runName)
-            throws IOException, ParserConfigurationException, SAXException {
-        return run(
-                RunnerOptions.builder(runName)
-                        .mode(RunMode.BUILD_MCMC)
-                        .build()
-        );
-    }
-
-    public BeastXRunResult buildRun(String runName, long chainLength)
-            throws IOException, ParserConfigurationException, SAXException {
-        return run(
-                RunnerOptions.builder(runName)
-                        .mode(RunMode.BUILD_MCMC)
-                        .chainLengthOverride(chainLength)
-                        .build()
-        );
-    }
-
-    public BeastXRunResult buildRun(RunnerOptions options)
-            throws IOException, ParserConfigurationException, SAXException {
-        return run(
-                options.toBuilder()
-                        .mode(RunMode.BUILD_MCMC)
-                        .build()
-        );
-    }
-
     public BeastXRunResult buildMaterializedRun(String runName)
             throws IOException, ParserConfigurationException, SAXException {
         return run(
@@ -365,133 +206,13 @@ public class PhyloSpecRunner implements ErrorEventListener {
         );
     }
 
-    public BeastXRunResult buildMaterializedRun(String runName, long chainLength)
-            throws IOException, ParserConfigurationException, SAXException {
-        return run(
-                RunnerOptions.builder(runName)
-                        .mode(RunMode.BUILD_MCMC)
-                        .chainLengthOverride(chainLength)
-                        .materializePhyloCTMC(true)
-                        .build()
-        );
-    }
-
-    public BeastXRunResult execute(String runName)
-            throws IOException, ParserConfigurationException, SAXException {
-        return run(
-                RunnerOptions.builder(runName)
-                        .mode(RunMode.EXECUTE_MCMC)
-                        .build()
-        );
-    }
-
-    public BeastXRunResult execute(String runName, long chainLength)
-            throws IOException, ParserConfigurationException, SAXException {
-        return run(
-                RunnerOptions.builder(runName)
-                        .mode(RunMode.EXECUTE_MCMC)
-                        .chainLengthOverride(chainLength)
-                        .build()
-        );
-    }
-
-    public BeastXRunResult execute(RunnerOptions options)
-            throws IOException, ParserConfigurationException, SAXException {
-        return run(
-                options.toBuilder()
-                        .mode(RunMode.EXECUTE_MCMC)
-                        .build()
-        );
-    }
-
-    public BeastXRunResult executeMaterialized(String runName)
-            throws IOException, ParserConfigurationException, SAXException {
-        return run(
-                RunnerOptions.builder(runName)
-                        .mode(RunMode.EXECUTE_MCMC)
-                        .materializePhyloCTMC(true)
-                        .build()
-        );
-    }
-
-    public BeastXRunResult executeMaterialized(String runName, long chainLength)
-            throws IOException, ParserConfigurationException, SAXException {
-        return run(
-                RunnerOptions.builder(runName)
-                        .mode(RunMode.EXECUTE_MCMC)
-                        .chainLengthOverride(chainLength)
-                        .materializePhyloCTMC(true)
-                        .build()
-        );
-    }
-
     public MCMC runMCMC(String runName)
             throws IOException, ParserConfigurationException, SAXException {
-        return execute(runName).mcmc();
-    }
-
-    public MCMC runMCMC(String runName, long chainLength)
-            throws IOException, ParserConfigurationException, SAXException {
-        return execute(runName, chainLength).mcmc();
-    }
-
-    public MCMC runMCMC(RunnerOptions options)
-            throws IOException, ParserConfigurationException, SAXException {
-        return execute(options).mcmc();
-    }
-
-    public MCMC runMCMC(BeastXModel model) {
-        MCMC mcmc =
-                buildMCMC(model);
-
-        mcmc.run();
-
-        return mcmc;
-    }
-
-    public MCMC runMCMC(BeastXModel model, long chainLength) {
-        MCMC mcmc =
-                buildMCMC(model, chainLength);
-
-        mcmc.run();
-
-        return mcmc;
-    }
-
-    public MCMC runMaterializedMCMC(String runName)
-            throws IOException, ParserConfigurationException, SAXException {
-        return executeMaterialized(runName).mcmc();
-    }
-
-    public MCMC runMaterializedMCMC(String runName, long chainLength)
-            throws IOException, ParserConfigurationException, SAXException {
-        return executeMaterialized(runName, chainLength).mcmc();
-    }
-
-    public MCMC runMaterializedMCMC(BeastXState beastState) {
-        MCMC mcmc =
-                buildMaterializedMCMC(beastState);
-
-        mcmc.run();
-
-        return mcmc;
-    }
-
-    public MCMC runMaterializedMCMC(BeastXState beastState, long chainLength) {
-        MCMC mcmc =
-                buildMaterializedMCMC(beastState, chainLength);
-
-        mcmc.run();
-
-        return mcmc;
-    }
-
-    public String toXml(String runName)
-            throws IOException, ParserConfigurationException, SAXException {
-        BeastXModel model =
-                buildModel(runName);
-
-        return toXml(model);
+        return run(
+                RunnerOptions.builder(runName)
+                        .mode(RunMode.EXECUTE_MCMC)
+                        .build()
+        ).mcmc();
     }
 
     /**
@@ -538,29 +259,11 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 .runXmlMCMC(xmlPath);
     }
 
-    public MCMC writeAndParseXmlMCMC(
-            String runName,
-            Path xmlPath
-    ) throws Exception {
-        writeXml(runName, xmlPath);
-
-        return parseXmlMCMC(xmlPath);
-    }
-
     public MCMC writeAndRunXmlMCMC(
             String runName,
             Path xmlPath
     ) throws Exception {
         writeXml(runName, xmlPath);
-
-        return runXmlMCMC(xmlPath);
-    }
-
-    public MCMC writeAndRunXmlMCMC(
-            BeastXModel model,
-            Path xmlPath
-    ) throws Exception {
-        writeXml(model, xmlPath);
 
         return runXmlMCMC(xmlPath);
     }
@@ -615,19 +318,6 @@ public class PhyloSpecRunner implements ErrorEventListener {
         );
     }
 
-    public XmlRunResult executeXmlRun(
-            BeastXModel model,
-            String runName,
-            Path xmlPath
-    ) throws Exception {
-        XmlRunResult run =
-                buildXmlRun(model, runName, xmlPath);
-
-        run.mcmc().run();
-
-        return run.asExecuted();
-    }
-
     /**
      * Writes XML, parses it through the BEAST X XML parser, and optionally executes it.
      */
@@ -658,21 +348,6 @@ public class PhyloSpecRunner implements ErrorEventListener {
                         .execute(true)
                         .build()
         );
-    }
-
-    public void runPhyloSpec(String runName)
-            throws IOException, ParserConfigurationException, SAXException {
-        execute(runName);
-    }
-
-    public void runPhyloSpec(RunnerOptions options)
-            throws IOException, ParserConfigurationException, SAXException {
-        execute(options);
-    }
-
-    public void runMaterializedPhyloSpec(String runName)
-            throws IOException, ParserConfigurationException, SAXException {
-        executeMaterialized(runName);
     }
 
     /**
@@ -708,28 +383,6 @@ public class PhyloSpecRunner implements ErrorEventListener {
             this.errorDetected(error.toError(range));
             throw new IllegalStateException("Unreachable after errorDetected.");
         }
-    }
-
-    private BeastXModel buildModelForOptions(
-            BeastXState beastState,
-            RunnerOptions options
-    ) {
-        if (options.materializePhyloCTMC()) {
-            return buildMaterializedModel(beastState);
-        }
-
-        return buildModel(beastState);
-    }
-
-    private MCMC buildMCMCForOptions(
-            BeastXModel model,
-            RunnerOptions options
-    ) {
-        if (options.chainLengthOverride() == null) {
-            return buildMCMC(model);
-        }
-
-        return buildMCMC(model, options.chainLengthOverride());
     }
 
     /**

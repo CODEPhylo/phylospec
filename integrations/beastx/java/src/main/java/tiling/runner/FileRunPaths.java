@@ -53,7 +53,7 @@ public record FileRunPaths(
         );
     }
 
-    private static String defaultRunName(Path sourcePath) {
+    public static String defaultRunName(Path sourcePath) {
         String fileName =
                 sourcePath.getFileName().toString();
 
