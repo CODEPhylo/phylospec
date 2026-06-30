@@ -1,11 +1,17 @@
 package tiling.model;
 
-import dr.inference.distribution.AbstractDistributionLikelihood;
-import tiling.params.BeastXParam;
-
 import java.util.function.Consumer;
 
-public class BoundDistribution<T extends BeastXParam, O extends AbstractDistributionLikelihood> {
+/**
+ * Connects a BEAST X likelihood to the PhyloSpec state object it generates or
+ * observes.
+ *
+ * <p>Generator tiles create the likelihood and a default state object
+ * separately. This wrapper keeps those two pieces together and provides the
+ * binding step that attaches either the default state object or an observed
+ * state object to the underlying BEAST X likelihood.</p>
+ */
+public class BoundDistribution<T, O> {
 
     public final O distribution;
     public T stateNode;

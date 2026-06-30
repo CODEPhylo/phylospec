@@ -27,7 +27,7 @@ import java.util.Set;
  * state nodes, priors, tree priors, likelihoods, operators, loggers, and XML
  * generation information.
  *
- * This state is later consumed by `ModelBuilder`, `MCMCBuilder`, or
+     * This state is later consumed by `BeastXModel`, `MCMCBuilder`, or
  * `StateXmlGenerator`.
  */
 public class BeastXState {
@@ -154,11 +154,10 @@ public class BeastXState {
             AbstractModelLikelihood likelihood,
             String id
     ) {
-        TreeModel existingTreeModel =
-                this.treeModelsByPhyloSpecName.get(id);
-
-        if (existingTreeModel != null) {
-            return existingTreeModel;
+        if (this.treeModelsByPhyloSpecName.containsKey(id)) {
+            throw new IllegalArgumentException(
+                    "Tree model already registered for PhyloSpec name: " + id
+            );
         }
 
         treeModel.setId(this.getAvailableID(id));
@@ -216,21 +215,9 @@ public class BeastXState {
                 )
         );
     }
-
-    public void addMCMCLogger(Logger logger) {
-        this.mcmcLoggers.add(logger);
-    }
-
-    public void addScreenLoggerSpec(long logEvery) {
-        this.screenLoggerSpecs.add(new ScreenLoggerSpec(logEvery, null));
-    }
-
+    
     public void addScreenLoggerSpec(long logEvery, List<String> parameterNames) {
         this.screenLoggerSpecs.add(new ScreenLoggerSpec(logEvery, parameterNames));
-    }
-
-    public void addFileLoggerSpec(long logEvery, String fileName) {
-        this.fileLoggerSpecs.add(new FileLoggerSpec(logEvery, fileName, null));
     }
 
     public void addFileLoggerSpec(long logEvery, String fileName, List<String> parameterNames) {
@@ -322,37 +309,12 @@ public class BeastXState {
         }
     }
 
-    public static class ScreenLoggerSpec {
-        public final long logEvery;
-        public final List<String> parameterNames;
-
-        public ScreenLoggerSpec(long logEvery, List<String> parameterNames) {
-            this.logEvery = logEvery;
-            this.parameterNames = parameterNames;
-        }
+    public record ScreenLoggerSpec(long logEvery, List<String> parameterNames) {
     }
 
-    public static class FileLoggerSpec {
-        public final long logEvery;
-        public final String fileName;
-        public final List<String> parameterNames;
-
-        public FileLoggerSpec(long logEvery, String fileName, List<String> parameterNames) {
-            this.logEvery = logEvery;
-            this.fileName = fileName;
-            this.parameterNames = parameterNames;
-        }
+    public record FileLoggerSpec(long logEvery, String fileName, List<String> parameterNames) {
     }
 
-    public static class TreeLoggerSpec {
-        public final long logEvery;
-        public final String fileName;
-        public final List<String> treeNames;
-
-        public TreeLoggerSpec(long logEvery, String fileName, List<String> treeNames) {
-            this.logEvery = logEvery;
-            this.treeNames = treeNames;
-            this.fileName = fileName;
-        }
+    public record TreeLoggerSpec(long logEvery, String fileName, List<String> treeNames) {
     }
 }

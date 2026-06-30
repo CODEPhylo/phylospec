@@ -1,5 +1,6 @@
 package tiles.misc;
 
+import dr.inference.distribution.AbstractDistributionLikelihood;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.tiling.TypeToken;
@@ -12,7 +13,11 @@ import java.util.IdentityHashMap;
 
 public class DrawTile extends AstNodeTile<BeastXParam, Stmt.Draw, BeastXState> {
 
-    AstNodeTileInput<BoundDistribution<?, ?>, Stmt.Draw, BeastXState> expressionInput =
+    AstNodeTileInput<
+            BoundDistribution<? extends BeastXParam, ? extends AbstractDistributionLikelihood>,
+            Stmt.Draw,
+            BeastXState
+            > expressionInput =
             new AstNodeTileInput<>("expression", expr -> expr.expression);
 
     @Override
@@ -20,7 +25,7 @@ public class DrawTile extends AstNodeTile<BeastXParam, Stmt.Draw, BeastXState> {
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
-        BoundDistribution<?, ?> evaluatedDistribution =
+        BoundDistribution<? extends BeastXParam, ? extends AbstractDistributionLikelihood> evaluatedDistribution =
                 this.expressionInput.apply(beastState, indexVariables);
 
         String id = this.getId(this.getRootNode().name, indexVariables, "");

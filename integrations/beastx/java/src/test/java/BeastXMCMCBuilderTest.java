@@ -220,7 +220,7 @@ public class BeastXMCMCBuilderTest {
         BeastXState state = runner.buildState("test");
 
         assertEquals(1, state.screenLoggerSpecs.size());
-        assertEquals(500, state.screenLoggerSpecs.getFirst().logEvery);
+        assertEquals(500, state.screenLoggerSpecs.getFirst().logEvery());
     }
 
     @Test
@@ -241,8 +241,8 @@ public class BeastXMCMCBuilderTest {
         BeastXState state = runner.buildState("test");
 
         assertEquals(1, state.screenLoggerSpecs.size());
-        assertEquals(500, state.screenLoggerSpecs.getFirst().logEvery);
-        assertEquals(List.of("x"), state.screenLoggerSpecs.getFirst().parameterNames);
+        assertEquals(500, state.screenLoggerSpecs.getFirst().logEvery());
+        assertEquals(List.of("x"), state.screenLoggerSpecs.getFirst().parameterNames());
     }
 
     @Test
@@ -319,9 +319,9 @@ public class BeastXMCMCBuilderTest {
         BeastXState state = runner.buildState("test");
 
         assertEquals(1, state.fileLoggerSpecs.size());
-        assertEquals(1000, state.fileLoggerSpecs.getFirst().logEvery);
-        assertEquals("output.log", state.fileLoggerSpecs.getFirst().fileName);
-        assertEquals(List.of("x"), state.fileLoggerSpecs.getFirst().parameterNames);
+        assertEquals(1000, state.fileLoggerSpecs.getFirst().logEvery());
+        assertEquals("output.log", state.fileLoggerSpecs.getFirst().fileName());
+        assertEquals(List.of("x"), state.fileLoggerSpecs.getFirst().parameterNames());
     }
 
     @Test
@@ -379,9 +379,9 @@ public class BeastXMCMCBuilderTest {
         BeastXState state = runner.buildState("test");
 
         assertEquals(1, state.treeLoggerSpecs.size());
-        assertEquals(1000, state.treeLoggerSpecs.getFirst().logEvery);
-        assertEquals("target/test-trees.log", state.treeLoggerSpecs.getFirst().fileName);
-        assertEquals(List.of("tree"), state.treeLoggerSpecs.getFirst().treeNames);
+        assertEquals(1000, state.treeLoggerSpecs.getFirst().logEvery());
+        assertEquals("target/test-trees.log", state.treeLoggerSpecs.getFirst().fileName());
+        assertEquals(List.of("tree"), state.treeLoggerSpecs.getFirst().treeNames());
     }
 
     @Test

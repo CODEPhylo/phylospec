@@ -8,12 +8,12 @@ import dr.evomodel.tree.DefaultTreeModel;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiling.BeastXState;
-import tiling.model.TreeDistribution;
+import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
 
 public class CoalescentPopulationFunctionTile extends GeneratorTile<
-        TreeDistribution<CoalescentLikelihood>,
+        BoundDistribution<DefaultTreeModel, CoalescentLikelihood>,
         BeastXState
         > {
 
@@ -29,7 +29,7 @@ public class CoalescentPopulationFunctionTile extends GeneratorTile<
             new GeneratorTileInput<>("taxa");
 
     @Override
-    public TreeDistribution<CoalescentLikelihood> applyTile(
+    public BoundDistribution<DefaultTreeModel, CoalescentLikelihood> applyTile(
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
@@ -54,7 +54,7 @@ public class CoalescentPopulationFunctionTile extends GeneratorTile<
                         populationSize
                 );
 
-        return new TreeDistribution<>(
+        return new BoundDistribution<>(
                 likelihood,
                 defaultTreeModel,
                 treeModel -> {

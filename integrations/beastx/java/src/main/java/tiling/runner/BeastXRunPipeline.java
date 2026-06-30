@@ -4,7 +4,6 @@ import dr.inference.mcmc.MCMC;
 import tiling.BeastXModel;
 import tiling.BeastXState;
 import tiling.mcmc.MCMCBuilder;
-import tiling.model.ModelBuilder;
 import tiling.xml.StateXmlGenerator;
 import tiling.xml.XmlRunner;
 
@@ -89,8 +88,10 @@ public final class BeastXRunPipeline {
             BeastXState beastState,
             boolean materializePhyloCTMC
     ) {
-        return new ModelBuilder(materializePhyloCTMC)
-                .build(beastState);
+        return BeastXModel.fromBeastXState(
+                beastState,
+                materializePhyloCTMC
+        );
     }
 
     public MCMC buildMCMC(BeastXModel model) {

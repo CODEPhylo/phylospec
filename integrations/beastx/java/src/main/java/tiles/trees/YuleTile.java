@@ -12,13 +12,13 @@ import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import tiling.BeastXState;
-import tiling.model.TreeDistribution;
+import tiling.model.BoundDistribution;
 import tiling.params.BeastXParameters;
 
 import java.util.IdentityHashMap;
 
 public class YuleTile extends GeneratorTile<
-        TreeDistribution<SpeciationLikelihood>,
+        BoundDistribution<DefaultTreeModel, SpeciationLikelihood>,
         BeastXState
         > {
 
@@ -37,7 +37,7 @@ public class YuleTile extends GeneratorTile<
             new GeneratorTileInput<>("taxa");
 
     @Override
-    public TreeDistribution<SpeciationLikelihood> applyTile(
+    public BoundDistribution<DefaultTreeModel, SpeciationLikelihood> applyTile(
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
@@ -72,7 +72,7 @@ public class YuleTile extends GeneratorTile<
                         "yulePrior"
                 );
 
-        return new TreeDistribution<>(
+        return new BoundDistribution<>(
                 likelihood,
                 defaultTreeModel,
                 treeModel -> {
