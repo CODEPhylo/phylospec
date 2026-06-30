@@ -12,8 +12,18 @@ import dr.inference.model.Variable;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * BEAST X model-likelihood adapter for PhyloSpec Ornstein-Uhlenbeck continuous
+ * trait models.
+ *
+ * <p>This class evaluates observed continuous traits on a tree under an
+ * Ornstein-Uhlenbeck process with a site variance, selection strength, optimum,
+ * and optional root value. Keeping this BEAST X-specific likelihood setup in a
+ * dedicated model class lets the corresponding PhyloSpec tiles stay focused on
+ * model construction while the likelihood remains connected to BEAST X's model
+ * and variable change notifications.</p>
+ */
 public class BeastXOUTraitLikelihoodSpec extends AbstractModelLikelihood {
-
     private final Alignment observedTraits;
     private final TreeModel treeModel;
     private final Parameter siteVariances;

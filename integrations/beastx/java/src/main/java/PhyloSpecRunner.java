@@ -81,7 +81,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 Files.readString(sourcePath, charset)
         );
     }
-    //  Uses the source file name without its extension as the default run name.
+    // Derives the default run name by stripping the source file extension.
     public static String defaultRunName(Path sourcePath) {
         if (sourcePath == null) {
             throw new IllegalArgumentException("sourcePath must not be null.");

@@ -16,13 +16,13 @@ import org.phylospec.types.RealScalar;
 import tiling.params.BeastXDerivedScalarParameter;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
-import tiling.model.TreeDistribution;
+import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
 import java.util.List;
 
 public class FossilizedBirthDeathTile extends GeneratorTile<
-        TreeDistribution<SpeciationLikelihood>,
+        BoundDistribution<DefaultTreeModel, SpeciationLikelihood>,
         BeastXState
         > {
 
@@ -56,7 +56,7 @@ public class FossilizedBirthDeathTile extends GeneratorTile<
             new GeneratorTileInput<>("taxa");
 
     @Override
-    public TreeDistribution<SpeciationLikelihood> applyTile(
+    public BoundDistribution<DefaultTreeModel, SpeciationLikelihood> applyTile(
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
@@ -216,7 +216,7 @@ public class FossilizedBirthDeathTile extends GeneratorTile<
                         "fossilizedBirthDeathPrior"
                 );
 
-        return new TreeDistribution<>(
+        return new BoundDistribution<>(
                 likelihood,
                 defaultTreeModel,
                 treeModel -> {

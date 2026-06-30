@@ -63,7 +63,7 @@ public record BeastXRunResult(
                 new LinkedHashSet<>();
 
         for (BeastXState.FileLoggerSpec spec : this.beastState.fileLoggerSpecs) {
-            paths.add(Path.of(spec.fileName));
+            paths.add(Path.of(spec.fileName()));
         }
 
         if (
@@ -81,7 +81,7 @@ public record BeastXRunResult(
                 new LinkedHashSet<>();
 
         for (BeastXState.TreeLoggerSpec spec : this.beastState.treeLoggerSpecs) {
-            paths.add(Path.of(spec.fileName));
+            paths.add(Path.of(spec.fileName()));
         }
 
         if (

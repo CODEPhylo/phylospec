@@ -13,8 +13,18 @@ import dr.inference.model.Variable;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * BEAST X model-likelihood adapter for PhyloSpec Brownian-motion continuous
+ * trait models.
+ *
+ * <p>This class evaluates the likelihood of observed continuous traits on a
+ * tree under a Brownian-motion process. The BEAST X integration keeps this
+ * logic in a model-likelihood class so that the PhyloSpec tiles can construct
+ * the model at a higher level while BEAST X still receives a standard
+ * {@link AbstractModelLikelihood} object that is marked dirty when the tree,
+ * branch rates, or trait parameters change.</p>
+ */
 public class BeastXBMTraitLikelihoodSpec extends AbstractModelLikelihood {
-
     private final Alignment observedTraits;
     private final TreeModel treeModel;
     private final BranchRateModel branchRateModel;

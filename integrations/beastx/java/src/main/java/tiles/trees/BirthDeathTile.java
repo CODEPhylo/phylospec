@@ -13,13 +13,13 @@ import org.phylospec.domain.UnitInterval;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import tiling.BeastXState;
-import tiling.model.TreeDistribution;
+import tiling.model.BoundDistribution;
 import tiling.params.BeastXParameters;
 
 import java.util.IdentityHashMap;
 
 public class BirthDeathTile extends GeneratorTile<
-        TreeDistribution<SpeciationLikelihood>,
+        BoundDistribution<DefaultTreeModel, SpeciationLikelihood>,
         BeastXState
         > {
 
@@ -44,7 +44,7 @@ public class BirthDeathTile extends GeneratorTile<
             new GeneratorTileInput<>("taxa");
 
     @Override
-    public TreeDistribution<SpeciationLikelihood> applyTile(
+    public BoundDistribution<DefaultTreeModel, SpeciationLikelihood> applyTile(
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
@@ -90,7 +90,7 @@ public class BirthDeathTile extends GeneratorTile<
                         "birthDeathPrior"
                 );
 
-        return new TreeDistribution<>(
+        return new BoundDistribution<>(
                 likelihood,
                 defaultTreeModel,
                 treeModel -> {

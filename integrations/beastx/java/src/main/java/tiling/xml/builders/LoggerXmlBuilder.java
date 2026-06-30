@@ -22,9 +22,9 @@ public class LoggerXmlBuilder {
             loggers.add(
                     parameterLogger(
                             "screenLogger" + loggerIndex,
-                            spec.logEvery,
+                            spec.logEvery(),
                             null,
-                            getLoggedParameters(state, spec.parameterNames)
+                            getLoggedParameters(state, spec.parameterNames())
                     )
             );
 
@@ -35,9 +35,9 @@ public class LoggerXmlBuilder {
             loggers.add(
                     parameterLogger(
                             "fileLogger" + loggerIndex,
-                            spec.logEvery,
-                            spec.fileName,
-                            getLoggedParameters(state, spec.parameterNames)
+                            spec.logEvery(),
+                            spec.fileName(),
+                            getLoggedParameters(state, spec.parameterNames())
                     )
             );
 
@@ -51,9 +51,9 @@ public class LoggerXmlBuilder {
             loggers.add(
                     treeLogger(
                             "treeLogger" + treeLoggerIndex,
-                            spec.logEvery,
-                            spec.fileName,
-                            getLoggedTrees(state, spec.treeNames)
+                            spec.logEvery(),
+                            spec.fileName(),
+                            getLoggedTrees(state, spec.treeNames())
                     )
             );
 

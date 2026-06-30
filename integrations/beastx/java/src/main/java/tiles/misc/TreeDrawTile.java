@@ -1,17 +1,22 @@
 package tiles.misc;
 
 import dr.evomodel.tree.TreeModel;
+import dr.inference.model.AbstractModelLikelihood;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.tiling.tiles.AstNodeTile;
 import tiling.BeastXState;
-import tiling.model.TreeDistribution;
+import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
 
 public class TreeDrawTile extends AstNodeTile<TreeModel, Stmt.Draw, BeastXState> {
 
-    AstNodeTileInput<TreeDistribution<?>, Stmt.Draw, BeastXState> expressionInput =
+    AstNodeTileInput<
+            BoundDistribution<? extends TreeModel, ? extends AbstractModelLikelihood>,
+            Stmt.Draw,
+            BeastXState
+            > expressionInput =
             new AstNodeTileInput<>("expression", stmt -> stmt.expression);
 
     @Override
@@ -29,14 +34,14 @@ public class TreeDrawTile extends AstNodeTile<TreeModel, Stmt.Draw, BeastXState>
             return existingTreeModel;
         }
 
-        TreeDistribution<?> evaluatedDistribution =
+        BoundDistribution<? extends TreeModel, ? extends AbstractModelLikelihood> evaluatedDistribution =
                 this.expressionInput.apply(beastState, indexVariables);
 
         evaluatedDistribution.bind();
 
         return beastState.addTreePriorDistribution(
-                evaluatedDistribution.treeModel,
-                evaluatedDistribution.likelihood,
+                evaluatedDistribution.stateNode,
+                evaluatedDistribution.distribution,
                 id
         );
     }

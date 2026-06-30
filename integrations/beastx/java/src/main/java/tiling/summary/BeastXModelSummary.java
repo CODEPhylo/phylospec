@@ -137,8 +137,8 @@ public class BeastXModelSummary {
         for (BeastXState.ScreenLoggerSpec spec : model.beastState.screenLoggerSpecs) {
             screenLoggers.add(
                     "screenLogger(logEvery=%d, parameters=%s)".formatted(
-                            spec.logEvery,
-                            formatParameterNames(spec.parameterNames)
+                            spec.logEvery(),
+                            formatParameterNames(spec.parameterNames())
                     )
             );
         }
@@ -148,9 +148,9 @@ public class BeastXModelSummary {
         for (BeastXState.FileLoggerSpec spec : model.beastState.fileLoggerSpecs) {
             fileLoggers.add(
                     "fileLogger(logEvery=%d, file=%s, parameters=%s)".formatted(
-                            spec.logEvery,
-                            spec.fileName,
-                            formatParameterNames(spec.parameterNames)
+                            spec.logEvery(),
+                            spec.fileName(),
+                            formatParameterNames(spec.parameterNames())
                     )
             );
         }
@@ -160,9 +160,9 @@ public class BeastXModelSummary {
         for (BeastXState.TreeLoggerSpec spec : model.beastState.treeLoggerSpecs) {
             treeLoggers.add(
                     "treeLogger(logEvery=%d, file=%s, trees=%s)".formatted(
-                            spec.logEvery,
-                            spec.fileName,
-                            spec.treeNames
+                            spec.logEvery(),
+                            spec.fileName(),
+                            spec.treeNames()
                     )
             );
         }
