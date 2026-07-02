@@ -15,6 +15,6 @@ Tree tree ~ Coalescent(
 )
 
 mcmc {
-    Integer chainLength = 1
+    Integer chainLength = 100000000
     Integer randomSeed = 1234
 }

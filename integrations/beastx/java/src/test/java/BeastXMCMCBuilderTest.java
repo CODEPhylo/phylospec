@@ -1,7 +1,9 @@
 import dr.evomodel.branchmodel.HomogeneousBranchModel;
 import dr.evomodel.operators.ExchangeOperator;
 import dr.evomodel.operators.NodeHeightScaleOperator;
+import dr.evomodel.operators.RandomWalkNodeHeightOperator;
 import dr.evomodel.operators.SubtreeSlideOperator;
+import dr.evomodel.operators.UniformNodeHeightOperator;
 import dr.evomodel.operators.WilsonBalding;
 import dr.evomodel.substmodel.FrequencyModel;
 import dr.inference.loggers.Logger;
@@ -49,6 +51,9 @@ public class BeastXMCMCBuilderTest {
 
                     Real treeScaleWeight = 9.0
                     Real treeScaleFactor = 0.4
+                    Real treeUniformNodeHeightWeight = 12.0
+                    Real treeRandomWalkNodeHeightWeight = 5.0
+                    Real treeRandomWalkNodeHeightSize = 0.08
                     Real treeSubtreeSlideSize = 7.0
                     Real treeSubtreeSlideWeight = 11.0
                     Real treeNarrowExchangeWeight = 13.0
@@ -69,6 +74,9 @@ public class BeastXMCMCBuilderTest {
 
         assertEquals(9.0, state.operatorConfig.treeScaleWeight);
         assertEquals(0.4, state.operatorConfig.treeScaleFactor);
+        assertEquals(12.0, state.operatorConfig.treeUniformNodeHeightWeight);
+        assertEquals(5.0, state.operatorConfig.treeRandomWalkNodeHeightWeight);
+        assertEquals(0.08, state.operatorConfig.treeRandomWalkNodeHeightSize);
         assertEquals(7.0, state.operatorConfig.treeSubtreeSlideSize);
         assertEquals(11.0, state.operatorConfig.treeSubtreeSlideWeight);
         assertEquals(13.0, state.operatorConfig.treeNarrowExchangeWeight);
@@ -816,8 +824,10 @@ public class BeastXMCMCBuilderTest {
         List<MCMCOperator> operators =
                 buildOperators(source);
 
-        assertEquals(5, operators.size());
+        assertEquals(7, operators.size());
         assertTrue(containsOperator(operators, NodeHeightScaleOperator.class));
+        assertTrue(containsOperator(operators, UniformNodeHeightOperator.class));
+        assertTrue(containsOperator(operators, RandomWalkNodeHeightOperator.class));
         assertTrue(containsOperator(operators, SubtreeSlideOperator.class));
         assertTrue(containsOperator(operators, ExchangeOperator.class));
         assertTrue(containsOperator(operators, WilsonBalding.class));
@@ -849,12 +859,14 @@ public class BeastXMCMCBuilderTest {
         List<MCMCOperator> operators =
                 buildOperators(source);
 
-        assertEquals(7, operators.size());
+        assertEquals(9, operators.size());
 
         assertTrue(containsOperator(operators, ScaleOperator.class));
         assertTrue(containsOperator(operators, DeltaExchangeOperator.class));
 
         assertTrue(containsOperator(operators, NodeHeightScaleOperator.class));
+        assertTrue(containsOperator(operators, UniformNodeHeightOperator.class));
+        assertTrue(containsOperator(operators, RandomWalkNodeHeightOperator.class));
         assertTrue(containsOperator(operators, SubtreeSlideOperator.class));
         assertTrue(containsOperator(operators, ExchangeOperator.class));
         assertTrue(containsOperator(operators, WilsonBalding.class));
@@ -907,6 +919,8 @@ public class BeastXMCMCBuilderTest {
 
         assertTrue(containsOperator(operators, ScaleOperator.class));
         assertTrue(containsOperator(operators, NodeHeightScaleOperator.class));
+        assertTrue(containsOperator(operators, UniformNodeHeightOperator.class));
+        assertTrue(containsOperator(operators, RandomWalkNodeHeightOperator.class));
         assertTrue(containsOperator(operators, ExchangeOperator.class));
         assertTrue(containsOperator(operators, WilsonBalding.class));
         assertTrue(containsOperator(operators, UpDownOperator.class));
@@ -938,6 +952,8 @@ public class BeastXMCMCBuilderTest {
 
         assertTrue(containsOperator(operators, ScaleOperator.class));
         assertTrue(containsOperator(operators, NodeHeightScaleOperator.class));
+        assertTrue(containsOperator(operators, UniformNodeHeightOperator.class));
+        assertTrue(containsOperator(operators, RandomWalkNodeHeightOperator.class));
         assertTrue(containsOperator(operators, ExchangeOperator.class));
         assertTrue(containsOperator(operators, WilsonBalding.class));
         assertTrue(containsOperator(operators, UpDownOperator.class));
@@ -989,12 +1005,14 @@ public class BeastXMCMCBuilderTest {
         List<MCMCOperator> operators =
                 buildOperators(source);
 
-        assertEquals(7, operators.size());
+        assertEquals(9, operators.size());
 
         assertTrue(containsOperator(operators, ScaleOperator.class));
         assertTrue(containsOperator(operators, RandomWalkOperator.class));
 
         assertTrue(containsOperator(operators, NodeHeightScaleOperator.class));
+        assertTrue(containsOperator(operators, UniformNodeHeightOperator.class));
+        assertTrue(containsOperator(operators, RandomWalkNodeHeightOperator.class));
         assertTrue(containsOperator(operators, SubtreeSlideOperator.class));
         assertTrue(containsOperator(operators, ExchangeOperator.class));
         assertTrue(containsOperator(operators, WilsonBalding.class));
@@ -1053,12 +1071,14 @@ public class BeastXMCMCBuilderTest {
         List<MCMCOperator> operators =
                 buildOperators(source);
 
-        assertEquals(9, operators.size());
+        assertEquals(11, operators.size());
 
         assertTrue(containsOperator(operators, ScaleOperator.class));
         assertTrue(containsOperator(operators, RandomWalkOperator.class));
 
         assertTrue(containsOperator(operators, NodeHeightScaleOperator.class));
+        assertTrue(containsOperator(operators, UniformNodeHeightOperator.class));
+        assertTrue(containsOperator(operators, RandomWalkNodeHeightOperator.class));
         assertTrue(containsOperator(operators, SubtreeSlideOperator.class));
         assertTrue(containsOperator(operators, ExchangeOperator.class));
         assertTrue(containsOperator(operators, WilsonBalding.class));

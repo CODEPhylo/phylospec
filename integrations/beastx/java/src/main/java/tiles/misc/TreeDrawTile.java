@@ -37,7 +37,8 @@ public class TreeDrawTile extends AstNodeTile<TreeModel, Stmt.Draw, BeastXState>
         return beastState.addTreePriorDistribution(
                 evaluatedDistribution.treeModel,
                 evaluatedDistribution.likelihood,
-                id
+                id,
+                evaluatedDistribution.startingTreeSpec
         );
     }
 }

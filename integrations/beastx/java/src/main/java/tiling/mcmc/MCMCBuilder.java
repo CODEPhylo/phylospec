@@ -76,6 +76,7 @@ public class MCMCBuilder {
                 operatorSchedule,
                 loggers
         );
+        mcmc.setShowOperatorAnalysis(true);
 
         return mcmc;
     }

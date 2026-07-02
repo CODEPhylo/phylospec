@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BeastXXmlTreePriorTest {
@@ -271,6 +272,11 @@ public class BeastXXmlTreePriorTest {
 
         XmlTestSupport.assertXmlContains(xml, "<parameter id=\"populationSize\"");
         XmlTestSupport.assertXmlContains(xml, "<constantSize id=\"tree_prior_model\"");
+        XmlTestSupport.assertXmlContains(xml, "<coalescentSimulator id=\"tree_startingTree\">");
+        XmlTestSupport.assertXmlContains(xml, "<taxa id=\"tree_startingTaxa\">");
+        XmlTestSupport.assertXmlContains(xml, "<constantSize idref=\"tree_prior_model\"/>");
+        XmlTestSupport.assertXmlContains(xml, "<coalescentSimulator idref=\"tree_startingTree\"/>");
+        assertFalse(xml.contains("<newick id=\"tree_startingTree\""), xml);
         XmlTestSupport.assertXmlContains(xml, "<populationSize>");
         XmlTestSupport.assertXmlContains(xml, "<parameter idref=\"populationSize\"/>");
         XmlTestSupport.assertXmlContains(xml, "<coalescentLikelihood id=\"tree_prior\">");

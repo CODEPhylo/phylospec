@@ -47,6 +47,6 @@ Alignment alignment ~ PhyloCTMC(
 ) observed as data
 
 mcmc {
-    Integer chainLength = 200000
+    Integer chainLength = 2000000
     Integer randomSeed = 1234
 }

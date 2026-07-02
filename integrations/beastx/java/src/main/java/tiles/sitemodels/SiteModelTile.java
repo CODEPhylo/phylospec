@@ -63,7 +63,7 @@ public class SiteModelTile extends GeneratorTile<
 
         Parameter invariantProportionParameter =
                 invariantProportion == null
-                        ? unitIntervalParameter(0.0)
+                        ? null
                         : toParameter(invariantProportion);
 
         GammaSiteRateModel siteRateModel =

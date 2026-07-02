@@ -153,7 +153,9 @@ public class XmlPlanBuilder {
 
             treeModelXmlBuilder.addTreeDefinitions(
                     plan,
+                    state,
                     treeModel,
+                    entry.getValue(),
                     emittedTaxonIds
             );
 

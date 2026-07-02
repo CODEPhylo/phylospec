@@ -87,6 +87,30 @@ public class ComparisonDiagnosticTest {
         );
     }
 
+    @Test
+    public void writesFixedTreeSingleStateExponentialCoalescentHKYGammaDiagnosticLogs() throws Exception {
+        runPriorOnlyDiagnostic(
+                "diagnosticH1N1FixedTreeSingleStateExponentialCoalescentHKYGamma.phylospec",
+                "target/comparison-diagnostics/beast3-fixed-tree-single-state-exponential-coalescent-hky-gamma"
+        );
+    }
+
+    @Test
+    public void writesFixedTreeClockRateOnlyHKYDiagnosticLogs() throws Exception {
+        runPriorOnlyDiagnostic(
+                "diagnosticH1N1FixedTreeClockRateOnlyHKY.phylospec",
+                "target/comparison-diagnostics/beast3-fixed-tree-clockrate-only-hky"
+        );
+    }
+
+    @Test
+    public void writesFixedTreeFixedGammaClockRateHKYDiagnosticLogs() throws Exception {
+        runPriorOnlyDiagnostic(
+                "diagnosticH1N1FixedTreeFixedGammaClockRateHKY.phylospec",
+                "target/comparison-diagnostics/beast3-fixed-tree-fixed-gamma-clockrate-hky"
+        );
+    }
+
     private static void runPriorOnlyDiagnostic(
             String sourceFileName,
             String outputPrefix

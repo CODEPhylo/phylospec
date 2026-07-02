@@ -71,7 +71,13 @@ public class FromTreeTile extends GeneratorTile<Tree> {
                     "'" + path + "' could not be found. Does it exist? Select a valid file path."
             );
         }
-        return new TreeParser(newick);
+        TreeParser treeParser = new TreeParser();
+        beastState.setInput(treeParser, treeParser.newickInput, newick);
+        beastState.setInput(treeParser, treeParser.adjustTipHeightsInput, false);
+        beastState.setInput(treeParser, treeParser.allowSingleChildInput, true);
+        beastState.setInput(treeParser, treeParser.isLabelledNewickInput, true);
+        beastState.setInput(treeParser, treeParser.offsetInput, 0);
+        return treeParser;
     }
 
 }

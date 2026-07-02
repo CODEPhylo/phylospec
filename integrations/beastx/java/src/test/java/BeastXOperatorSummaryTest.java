@@ -41,9 +41,10 @@ public class BeastXOperatorSummaryTest {
 
         assertContains(operatorSummary, "DeltaExchangeOperator(parameter=baseFrequencies");
 
-        assertContains(operatorSummary, "NodeHeightScaleOperator(tree=tree");
         assertContains(operatorSummary, "ExchangeOperator(tree=tree, mode=narrow");
         assertContains(operatorSummary, "ExchangeOperator(tree=tree, mode=wide");
+        assertContains(operatorSummary, "UniformNodeHeightOperator(tree=tree");
+        assertContains(operatorSummary, "RandomWalkNodeHeightOperator(tree=tree");
         assertContains(operatorSummary, "WilsonBalding(tree=tree");
 
         assertTrue(
@@ -52,7 +53,7 @@ public class BeastXOperatorSummaryTest {
                 "Expected BEAST X to include a subtree-slide-style tree operator."
         );
 
-        assertContains(operatorSummary, "UpDownOperator(up=[clockRate], down=[tree");
+        assertContains(operatorSummary, "UpDownOperator(up=[clockRate], down=[tree.allInternalNodeHeights");
     }
 
     private static void assertContains(List<String> summaries, String expectedFragment) {

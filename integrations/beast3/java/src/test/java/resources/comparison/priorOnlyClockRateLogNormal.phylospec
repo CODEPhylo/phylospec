@@ -1,0 +1,9 @@
+PositiveReal clockRate ~ LogNormal(
+    logMean=-6.9,
+    logSd=0.5
+)
+
+mcmc {
+    Integer chainLength = 10000000
+    Integer randomSeed = 1234
+}

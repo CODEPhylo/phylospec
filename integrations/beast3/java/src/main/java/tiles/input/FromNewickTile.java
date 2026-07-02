@@ -24,7 +24,13 @@ public class FromNewickTile extends GeneratorTile<Tree> {
     @Override
     public Tree applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         String newick = this.newickStringInput.apply(beastState, indexVariables);
-        return new TreeParser(newick);
+        TreeParser treeParser = new TreeParser();
+        beastState.setInput(treeParser, treeParser.newickInput, newick);
+        beastState.setInput(treeParser, treeParser.adjustTipHeightsInput, false);
+        beastState.setInput(treeParser, treeParser.allowSingleChildInput, true);
+        beastState.setInput(treeParser, treeParser.isLabelledNewickInput, true);
+        beastState.setInput(treeParser, treeParser.offsetInput, 0);
+        return treeParser;
     }
 
 }

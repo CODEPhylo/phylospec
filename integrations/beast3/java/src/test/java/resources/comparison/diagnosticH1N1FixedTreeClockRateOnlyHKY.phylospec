@@ -2,15 +2,16 @@ Alignment data = fromNexus(
     file="src/test/java/resources/comparison/H1N1pdm_2009.nex"
 )
 
-Tree tree = fromTree("src/test/java/resources/comparison/h1n1-fixed-starting-tree.nwk")
+Tree tree = fromTree("src/test/java/resources/comparison/h1n1-balanced-diagnostic-tree.nwk")
 
-Rate clockRate = 0.0001
+Rate clockRate ~ LogNormal(
+    logMean=-6.9,
+    logSd=1.0
+)
 
 PositiveReal kappa = 0.5
 
-Simplex baseFrequencies = [0.25, 0.25, 0.25, 0.25]
-
-PositiveReal gammaShape = 0.1
+Simplex baseFrequencies = [0.335, 0.193, 0.242, 0.230]
 
 QMatrix qMatrix = hky(
     kappa=kappa,
@@ -27,6 +28,6 @@ Alignment alignment ~ PhyloCTMC(
 ) observed as data
 
 mcmc {
-    Integer chainLength = 1
-    Integer randomSeed = 1234
+    Integer chainLength = 10000000
+    Integer randomSeed = 123456
 }

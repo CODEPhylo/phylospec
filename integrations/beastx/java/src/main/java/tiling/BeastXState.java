@@ -11,6 +11,7 @@ import dr.inference.model.Parameter;
 import dr.inference.model.Statistic;
 import org.phylospec.tiling.TypeToken;
 import tiling.params.BeastXParam;
+import tiling.model.StartingTreeSpec;
 import tiling.xml.XmlPlan;
 
 import java.util.ArrayList;
@@ -46,6 +47,7 @@ public class BeastXState {
     public final Map<String, TreeModel> treeModelsByPhyloSpecName;
     public final Map<Parameter, AbstractDistributionLikelihood> priorDistributions;
     public final Map<TreeModel, AbstractModelLikelihood> treePriorDistributions;
+    public final Map<TreeModel, StartingTreeSpec> startingTreeSpecs;
     public final List<AbstractDistributionLikelihood> calibrationPriorDistributions;
     public final List<Likelihood> likelihoodDistributions;
 
@@ -79,6 +81,7 @@ public class BeastXState {
         this.treeModelsByPhyloSpecName = new HashMap<>();
         this.priorDistributions = new HashMap<>();
         this.treePriorDistributions = new HashMap<>();
+        this.startingTreeSpecs = new HashMap<>();
         this.calibrationPriorDistributions = new ArrayList<>();
         this.likelihoodDistributions = new ArrayList<>();
         this.treeClockRateParameters = new HashMap<>();
@@ -154,6 +157,21 @@ public class BeastXState {
             AbstractModelLikelihood likelihood,
             String id
     ) {
+        return addTreePriorDistribution(
+                treeModel,
+                likelihood,
+                id,
+                StartingTreeSpec.fixedNewick()
+        );
+    }
+
+    // Registers a tree model, its tree prior likelihood, and its starting-tree source.
+    public TreeModel addTreePriorDistribution(
+            TreeModel treeModel,
+            AbstractModelLikelihood likelihood,
+            String id,
+            StartingTreeSpec startingTreeSpec
+    ) {
         TreeModel existingTreeModel =
                 this.treeModelsByPhyloSpecName.get(id);
 
@@ -164,6 +182,7 @@ public class BeastXState {
         treeModel.setId(this.getAvailableID(id));
         likelihood.setId(this.getAvailableID(id + "_prior"));
         this.treePriorDistributions.put(treeModel, likelihood);
+        this.startingTreeSpecs.put(treeModel, startingTreeSpec);
         this.treeModelsByPhyloSpecName.put(id, treeModel);
 
         return treeModel;
@@ -262,6 +281,9 @@ public class BeastXState {
 
         public double treeScaleWeight = 5.0;
         public double treeScaleFactor = 0.75;
+        public double treeUniformNodeHeightWeight = 15.0;
+        public double treeRandomWalkNodeHeightWeight = 15.0;
+        public double treeRandomWalkNodeHeightSize = 0.05;
         public double treeSubtreeSlideSize = 15.0;
         public double treeSubtreeSlideWeight = 15.0;
         public double treeNarrowExchangeWeight = 15.0;
@@ -279,6 +301,13 @@ public class BeastXState {
                 case "randomWalkWindowSize" -> this.randomWalkWindowSize = value;
                 case "treeScaleWeight" -> this.treeScaleWeight = value;
                 case "treeScaleFactor" -> this.treeScaleFactor = value;
+                case "treeNodeHeightWeight" -> {
+                    this.treeUniformNodeHeightWeight = value / 2.0;
+                    this.treeRandomWalkNodeHeightWeight = value / 2.0;
+                }
+                case "treeUniformNodeHeightWeight" -> this.treeUniformNodeHeightWeight = value;
+                case "treeRandomWalkNodeHeightWeight" -> this.treeRandomWalkNodeHeightWeight = value;
+                case "treeRandomWalkNodeHeightSize" -> this.treeRandomWalkNodeHeightSize = value;
                 case "treeSubtreeSlideSize" -> this.treeSubtreeSlideSize = value;
                 case "treeSubtreeSlideWeight" -> this.treeSubtreeSlideWeight = value;
                 case "treeNarrowExchangeWeight" -> this.treeNarrowExchangeWeight = value;
@@ -301,6 +330,9 @@ public class BeastXState {
             return Set.of(
                     "parameterOperatorWeight",
                     "treeScaleWeight",
+                    "treeNodeHeightWeight",
+                    "treeUniformNodeHeightWeight",
+                    "treeRandomWalkNodeHeightWeight",
                     "treeSubtreeSlideWeight",
                     "treeNarrowExchangeWeight",
                     "treeWideExchangeWeight",
@@ -320,6 +352,7 @@ public class BeastXState {
         public static boolean isPositiveSetting(String settingName) {
             return Set.of(
                     "randomWalkWindowSize",
+                    "treeRandomWalkNodeHeightSize",
                     "treeSubtreeSlideSize"
             ).contains(settingName);
         }

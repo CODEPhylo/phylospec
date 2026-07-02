@@ -1,6 +1,5 @@
 Alignment data = fromNexus(
-    file="src/test/java/resources/comparison/H1N1pdm_2009.nex",
-    date=parse(regex=".*_(\d+(?:\.\d+)?)$")
+    file="src/test/java/resources/comparison/H1N1pdm_2009.nex"
 )
 
 Tree tree = fromTree("src/test/java/resources/comparison/h1n1-fixed-starting-tree.nwk")
@@ -18,13 +17,6 @@ Vector<Rate> branchRates ~ StrictClock(
     tree=tree
 )
 
-Vector<Rate> siteRates ~ DiscreteGammaInv(
-    shape=gammaShape,
-    numCategories=4,
-    invariantProportion=0.0,
-    numSites=numSites(data)
-)
-
 QMatrix qMatrix = hky(
     kappa=kappa,
     baseFrequencies=baseFrequencies
@@ -33,8 +25,7 @@ QMatrix qMatrix = hky(
 Alignment alignment ~ PhyloCTMC(
     tree=tree,
     qMatrix=qMatrix,
-    branchRates=branchRates,
-    siteRates=siteRates
+    branchRates=branchRates
 ) observed as data
 
 mcmc {
@@ -49,6 +40,7 @@ mcmc {
             "posterior",
             "prior",
             "likelihood",
+            "alignment_likelihood",
             "tree.height",
             "tree.treeLength"
         ]

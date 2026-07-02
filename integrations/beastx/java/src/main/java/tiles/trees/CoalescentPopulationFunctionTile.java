@@ -9,6 +9,7 @@ import dr.evomodel.tree.DefaultTreeModel;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiling.BeastXState;
+import tiling.model.StartingTreeSpec;
 import tiling.model.TreeDistribution;
 
 import java.util.IdentityHashMap;
@@ -61,6 +62,7 @@ public class CoalescentPopulationFunctionTile extends GeneratorTile<
         return new TreeDistribution<>(
                 likelihood,
                 defaultTreeModel,
+                StartingTreeSpec.coalescentSimulator(),
                 treeModel -> {
                     // CoalescentLikelihood receives TreeIntervals built from the tree.
                 }

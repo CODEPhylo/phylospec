@@ -11,7 +11,6 @@ import org.phylospec.types.RealScalar;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
-import tiling.model.ParameterAttribute;
 
 import java.util.IdentityHashMap;
 
@@ -60,7 +59,7 @@ public class BetaTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
-                state -> likelihood.addData(new ParameterAttribute(state.getParameter()))
+                state -> likelihood.addData(state.getParameter())
         );
     }
 }

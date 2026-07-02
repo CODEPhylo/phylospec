@@ -37,8 +37,7 @@ public class BeastXComparisonDiagnosticTest {
         BeastXRunResult result =
                 new PhyloSpecRunner(Files.readString(sourcePath))
                         .executeMaterialized(
-                                "diagnosticH1N1DatedFixedClockHKYGamma",
-                                1
+                                "diagnosticH1N1DatedFixedClockHKYGamma"
                         );
 
         assertNotNull(result);
@@ -142,6 +141,141 @@ public class BeastXComparisonDiagnosticTest {
         assertTrue(Files.size(treeLogPath) > 0, "Expected diagnostic tree log to be non-empty.");
     }
 
+    @Test
+    public void writesFixedTreeSingleStateExponentialCoalescentHKYGammaDiagnosticLogs() throws Exception {
+        Path sourcePath =
+                Path.of(
+                        "src",
+                        "test",
+                        "java",
+                        "resources",
+                        "comparison",
+                        "diagnosticH1N1FixedTreeSingleStateExponentialCoalescentHKYGamma.phylospec"
+                );
+
+        Path logPath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "beastx-fixed-tree-single-state-exponential-coalescent-hky-gamma.log"
+                );
+
+        Files.createDirectories(logPath.getParent());
+        Files.deleteIfExists(logPath);
+
+        BeastXRunResult result =
+                new PhyloSpecRunner(Files.readString(sourcePath))
+                        .executeMaterialized(
+                                "diagnosticH1N1FixedTreeSingleStateExponentialCoalescentHKYGamma"
+                        );
+
+        assertNotNull(result);
+        assertTrue(result.executed());
+
+        assertTrue(Files.exists(logPath), "Expected diagnostic log file.");
+        assertTrue(Files.size(logPath) > 0, "Expected diagnostic log to be non-empty.");
+
+        String log =
+                Files.readString(logPath);
+
+        assertTrue(log.contains("posterior"), log);
+        assertTrue(log.contains("prior"), log);
+        assertTrue(log.contains("likelihood"), log);
+        assertTrue(log.contains("tree_prior"), log);
+        assertTrue(log.contains("alignment_likelihood"), log);
+        assertTrue(log.contains("tree.height"), log);
+        assertTrue(log.contains("tree.treeLength"), log);
+
+    }
+
+    @Test
+    public void writesFixedTreeClockRateOnlyHKYDiagnosticLogs() throws Exception {
+        Path sourcePath =
+                Path.of(
+                        "src",
+                        "test",
+                        "java",
+                        "resources",
+                        "comparison",
+                        "diagnosticH1N1FixedTreeClockRateOnlyHKY.phylospec"
+                );
+
+        Path logPath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "beastx-fixed-tree-clockrate-only-hky.log"
+                );
+
+        Files.createDirectories(logPath.getParent());
+        Files.deleteIfExists(logPath);
+
+        BeastXRunResult result =
+                new PhyloSpecRunner(Files.readString(sourcePath))
+                        .executeMaterialized(
+                                "diagnosticH1N1FixedTreeClockRateOnlyHKY"
+                        );
+
+        assertNotNull(result);
+        assertTrue(result.executed());
+
+        assertTrue(Files.exists(logPath), "Expected diagnostic log file.");
+        assertTrue(Files.size(logPath) > 0, "Expected diagnostic log to be non-empty.");
+
+        String log =
+                Files.readString(logPath);
+
+        assertTrue(log.contains("posterior"), log);
+        assertTrue(log.contains("prior"), log);
+        assertTrue(log.contains("likelihood"), log);
+        assertTrue(log.contains("alignment_likelihood"), log);
+        assertTrue(log.contains("clockRate"), log);
+    }
+
+    @Test
+    public void writesFixedTreeFixedGammaClockRateHKYDiagnosticLogs() throws Exception {
+        Path sourcePath =
+                Path.of(
+                        "src",
+                        "test",
+                        "java",
+                        "resources",
+                        "comparison",
+                        "diagnosticH1N1FixedTreeFixedGammaClockRateHKY.phylospec"
+                );
+
+        Path logPath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "beastx-fixed-tree-fixed-gamma-clockrate-hky.log"
+                );
+
+        Files.createDirectories(logPath.getParent());
+        Files.deleteIfExists(logPath);
+
+        BeastXRunResult result =
+                new PhyloSpecRunner(Files.readString(sourcePath))
+                        .executeMaterialized(
+                                "diagnosticH1N1FixedTreeFixedGammaClockRateHKY"
+                        );
+
+        assertNotNull(result);
+        assertTrue(result.executed());
+
+        assertTrue(Files.exists(logPath), "Expected diagnostic log file.");
+        assertTrue(Files.size(logPath) > 0, "Expected diagnostic log to be non-empty.");
+
+        String log =
+                Files.readString(logPath);
+
+        assertTrue(log.contains("posterior"), log);
+        assertTrue(log.contains("prior"), log);
+        assertTrue(log.contains("likelihood"), log);
+        assertTrue(log.contains("alignment_likelihood"), log);
+        assertTrue(log.contains("clockRate"), log);
+    }
+
     private static void runPriorOnlyDiagnostic(
             String sourceFileName,
             Path logPath,
@@ -164,8 +298,7 @@ public class BeastXComparisonDiagnosticTest {
         BeastXRunResult result =
                 new PhyloSpecRunner(Files.readString(sourcePath))
                         .executeMaterialized(
-                                sourceFileName.replace(".phylospec", ""),
-                                1
+                                sourceFileName.replace(".phylospec", "")
                         );
 
         assertNotNull(result);

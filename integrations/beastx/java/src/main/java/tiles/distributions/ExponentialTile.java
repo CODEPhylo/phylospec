@@ -11,7 +11,6 @@ import org.phylospec.typeresolver.Stochasticity;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
-import tiling.model.ParameterAttribute;
 
 import java.util.IdentityHashMap;
 import java.util.Set;
@@ -56,7 +55,7 @@ public class ExponentialTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
-                state -> likelihood.addData(new ParameterAttribute(state.getParameter()))
+                state -> likelihood.addData(state.getParameter())
         );
     }
 }

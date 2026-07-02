@@ -78,12 +78,6 @@ public class SkylineCoalescentTile extends GeneratorTile<
         double[] epochWidths =
                 toEpochWidths(changeTimeValues);
 
-        DefaultTreeModel defaultTreeModel =
-                new DefaultTreeModel(
-                        "tree",
-                        InitialTreeBuilder.balancedTree(taxa, "SkylineCoalescent")
-                );
-
         PiecewisePopulationModel populationModel =
                 new PiecewisePopulationModel(
                         "skylinePopulation",
@@ -91,6 +85,12 @@ public class SkylineCoalescentTile extends GeneratorTile<
                         epochWidths,
                         false,
                         Units.Type.YEARS
+                );
+
+        DefaultTreeModel defaultTreeModel =
+                new DefaultTreeModel(
+                        "tree",
+                        InitialTreeBuilder.balancedTree(taxa, "SkylineCoalescent")
                 );
 
         TreeIntervals intervals =

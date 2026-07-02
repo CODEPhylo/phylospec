@@ -2,7 +2,9 @@ package tiling.operators;
 
 import dr.evomodel.operators.ExchangeOperator;
 import dr.evomodel.operators.NodeHeightScaleOperator;
+import dr.evomodel.operators.RandomWalkNodeHeightOperator;
 import dr.evomodel.operators.SubtreeSlideOperator;
+import dr.evomodel.operators.UniformNodeHeightOperator;
 import dr.evomodel.operators.WilsonBalding;
 import dr.evomodel.tree.DefaultTreeModel;
 import dr.evomodel.tree.TreeModel;
@@ -23,6 +25,7 @@ import org.phylospec.types.Simplex;
 import tiling.BeastXState;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -66,7 +69,12 @@ public class OperatorBuilder {
         List<MCMCOperator> operators =
                 new ArrayList<>();
 
-        for (Map.Entry<Parameter, TypeToken<?>> entry : beastState.stateNodes.entrySet()) {
+        List<Map.Entry<Parameter, TypeToken<?>>> entries =
+                new ArrayList<>(beastState.stateNodes.entrySet());
+
+        entries.sort(Comparator.comparing(entry -> parameterId(entry.getKey())));
+
+        for (Map.Entry<Parameter, TypeToken<?>> entry : entries) {
             operators.add(buildParameterOperator(
                     entry.getKey(),
                     entry.getValue(),
@@ -81,7 +89,12 @@ public class OperatorBuilder {
         List<String> summaries =
                 new ArrayList<>();
 
-        for (Map.Entry<Parameter, TypeToken<?>> entry : beastState.stateNodes.entrySet()) {
+        List<Map.Entry<Parameter, TypeToken<?>>> entries =
+                new ArrayList<>(beastState.stateNodes.entrySet());
+
+        entries.sort(Comparator.comparing(entry -> parameterId(entry.getKey())));
+
+        for (Map.Entry<Parameter, TypeToken<?>> entry : entries) {
             summaries.add(summarizeParameterOperator(
                     entry.getKey(),
                     entry.getValue(),
@@ -96,7 +109,12 @@ public class OperatorBuilder {
         List<MCMCOperator> operators =
                 new ArrayList<>();
 
-        for (TreeModel treeModel : beastState.treePriorDistributions.keySet()) {
+        List<TreeModel> treeModels =
+                new ArrayList<>(beastState.treePriorDistributions.keySet());
+
+        treeModels.sort(Comparator.comparing(OperatorBuilder::treeId));
+
+        for (TreeModel treeModel : treeModels) {
             operators.addAll(buildDefaultTreeOperators(
                     treeModel,
                     beastState.operatorConfig
@@ -110,7 +128,12 @@ public class OperatorBuilder {
         List<String> summaries =
                 new ArrayList<>();
 
-        for (TreeModel treeModel : beastState.treePriorDistributions.keySet()) {
+        List<TreeModel> treeModels =
+                new ArrayList<>(beastState.treePriorDistributions.keySet());
+
+        treeModels.sort(Comparator.comparing(OperatorBuilder::treeId));
+
+        for (TreeModel treeModel : treeModels) {
             summaries.addAll(summarizeDefaultTreeOperators(
                     treeModel,
                     beastState.operatorConfig
@@ -128,7 +151,12 @@ public class OperatorBuilder {
             return operators;
         }
 
-        for (Map.Entry<TreeModel, List<Parameter>> entry : beastState.treeClockRateParameters.entrySet()) {
+        List<Map.Entry<TreeModel, List<Parameter>>> entries =
+                new ArrayList<>(beastState.treeClockRateParameters.entrySet());
+
+        entries.sort(Comparator.comparing(entry -> treeId(entry.getKey())));
+
+        for (Map.Entry<TreeModel, List<Parameter>> entry : entries) {
             TreeModel treeModel =
                     entry.getKey();
 
@@ -136,7 +164,12 @@ public class OperatorBuilder {
                 continue;
             }
 
-            for (Parameter clockRateParameter : entry.getValue()) {
+            List<Parameter> clockRateParameters =
+                    new ArrayList<>(entry.getValue());
+
+            clockRateParameters.sort(Comparator.comparing(OperatorBuilder::parameterId));
+
+            for (Parameter clockRateParameter : clockRateParameters) {
                 TypeToken<?> typeToken =
                         beastState.stateNodes.get(clockRateParameter);
 
@@ -161,7 +194,12 @@ public class OperatorBuilder {
             return summaries;
         }
 
-        for (Map.Entry<TreeModel, List<Parameter>> entry : beastState.treeClockRateParameters.entrySet()) {
+        List<Map.Entry<TreeModel, List<Parameter>>> entries =
+                new ArrayList<>(beastState.treeClockRateParameters.entrySet());
+
+        entries.sort(Comparator.comparing(entry -> treeId(entry.getKey())));
+
+        for (Map.Entry<TreeModel, List<Parameter>> entry : entries) {
             TreeModel treeModel =
                     entry.getKey();
 
@@ -169,7 +207,12 @@ public class OperatorBuilder {
                 continue;
             }
 
-            for (Parameter clockRateParameter : entry.getValue()) {
+            List<Parameter> clockRateParameters =
+                    new ArrayList<>(entry.getValue());
+
+            clockRateParameters.sort(Comparator.comparing(OperatorBuilder::parameterId));
+
+            for (Parameter clockRateParameter : clockRateParameters) {
                 TypeToken<?> typeToken =
                         beastState.stateNodes.get(clockRateParameter);
 
@@ -252,7 +295,23 @@ public class OperatorBuilder {
         List<MCMCOperator> operators =
                 new ArrayList<>();
 
-        operators.add(buildTreeScaleOperator(treeModel, config));
+        operators.add(buildNodeHeightScaleOperator(
+                treeModel,
+                config
+        ));
+
+        operators.add(new UniformNodeHeightOperator(
+                treeModel,
+                config.treeUniformNodeHeightWeight
+        ));
+
+        operators.add(new RandomWalkNodeHeightOperator(
+                treeModel,
+                config.treeRandomWalkNodeHeightWeight,
+                config.treeRandomWalkNodeHeightSize,
+                AdaptationMode.DEFAULT,
+                0.234
+        ));
 
         operators.add(new ExchangeOperator(
                 ExchangeOperator.NARROW,
@@ -264,11 +323,6 @@ public class OperatorBuilder {
                 ExchangeOperator.WIDE,
                 treeModel,
                 config.treeWideExchangeWeight
-        ));
-
-        operators.add(new WilsonBalding(
-                treeModel,
-                config.treeWilsonBaldingWeight
         ));
 
         if (treeModel instanceof DefaultTreeModel defaultTreeModel) {
@@ -285,49 +339,15 @@ public class OperatorBuilder {
             ));
         }
 
+        operators.add(new WilsonBalding(
+                treeModel,
+                config.treeWilsonBaldingWeight
+        ));
+
         return operators;
     }
 
-    private List<String> summarizeDefaultTreeOperators(
-            TreeModel treeModel,
-            BeastXState.OperatorConfig config
-    ) {
-        List<String> summaries =
-                new ArrayList<>();
-
-        summaries.add("NodeHeightScaleOperator(tree=%s, weight=%s, scaleFactor=%s)".formatted(
-                treeModel.getId(),
-                format(config.treeScaleWeight),
-                format(config.treeScaleFactor)
-        ));
-
-        summaries.add("ExchangeOperator(tree=%s, mode=narrow, weight=%s)".formatted(
-                treeModel.getId(),
-                format(config.treeNarrowExchangeWeight)
-        ));
-
-        summaries.add("ExchangeOperator(tree=%s, mode=wide, weight=%s)".formatted(
-                treeModel.getId(),
-                format(config.treeWideExchangeWeight)
-        ));
-
-        summaries.add("WilsonBalding(tree=%s, weight=%s)".formatted(
-                treeModel.getId(),
-                format(config.treeWilsonBaldingWeight)
-        ));
-
-        if (treeModel instanceof DefaultTreeModel) {
-            summaries.add("SubtreeSlideOperator(tree=%s, weight=%s, size=%s)".formatted(
-                    treeModel.getId(),
-                    format(config.treeSubtreeSlideWeight),
-                    format(config.treeSubtreeSlideSize)
-            ));
-        }
-
-        return summaries;
-    }
-
-    private MCMCOperator buildTreeScaleOperator(
+    private MCMCOperator buildNodeHeightScaleOperator(
             TreeModel treeModel,
             BeastXState.OperatorConfig config
     ) {
@@ -344,19 +364,79 @@ public class OperatorBuilder {
         return operator;
     }
 
+    private List<String> summarizeDefaultTreeOperators(
+            TreeModel treeModel,
+            BeastXState.OperatorConfig config
+    ) {
+        List<String> summaries =
+                new ArrayList<>();
+
+        summaries.add("NodeHeightScaleOperator(tree=%s, weight=%s, scaleFactor=%s, scaleAll=true)".formatted(
+                treeModel.getId(),
+                format(config.treeScaleWeight),
+                format(config.treeScaleFactor)
+        ));
+
+        summaries.add("UniformNodeHeightOperator(tree=%s, weight=%s)".formatted(
+                treeModel.getId(),
+                format(config.treeUniformNodeHeightWeight)
+        ));
+
+        summaries.add("RandomWalkNodeHeightOperator(tree=%s, weight=%s, size=%s)".formatted(
+                treeModel.getId(),
+                format(config.treeRandomWalkNodeHeightWeight),
+                format(config.treeRandomWalkNodeHeightSize)
+        ));
+
+        summaries.add("ExchangeOperator(tree=%s, mode=narrow, weight=%s)".formatted(
+                treeModel.getId(),
+                format(config.treeNarrowExchangeWeight)
+        ));
+
+        summaries.add("ExchangeOperator(tree=%s, mode=wide, weight=%s)".formatted(
+                treeModel.getId(),
+                format(config.treeWideExchangeWeight)
+        ));
+
+        if (treeModel instanceof DefaultTreeModel) {
+            summaries.add("SubtreeSlideOperator(tree=%s, weight=%s, size=%s)".formatted(
+                    treeModel.getId(),
+                    format(config.treeSubtreeSlideWeight),
+                    format(config.treeSubtreeSlideSize)
+            ));
+        }
+
+        summaries.add("WilsonBalding(tree=%s, weight=%s)".formatted(
+                treeModel.getId(),
+                format(config.treeWilsonBaldingWeight)
+        ));
+
+        return summaries;
+    }
+
     private MCMCOperator buildTreeClockUpDownOperator(
             TreeModel treeModel,
             Parameter clockRateParameter,
             BeastXState.OperatorConfig config
     ) {
+        if (!(treeModel instanceof DefaultTreeModel defaultTreeModel)) {
+            throw new IllegalArgumentException(
+                    "Tree-clock up/down operators require a DefaultTreeModel."
+            );
+        }
+
         Scalable[] up =
                 new Scalable[] {
                         new Scalable.Default(clockRateParameter)
                 };
 
+        Parameter allInternalNodeHeights =
+                defaultTreeModel.createNodeHeightsParameter(true, true, false);
+        allInternalNodeHeights.setId(treeModel.getId() + ".allInternalNodeHeights");
+
         Scalable[] down =
                 new Scalable[] {
-                        new TreeHeightScalable(treeModel)
+                        new Scalable.Default(allInternalNodeHeights)
                 };
 
         return new UpDownOperator(
@@ -373,7 +453,7 @@ public class OperatorBuilder {
             Parameter clockRateParameter,
             BeastXState.OperatorConfig config
     ) {
-        return "UpDownOperator(up=[%s], down=[%s], weight=%s, scaleFactor=%s)".formatted(
+        return "UpDownOperator(up=[%s], down=[%s.allInternalNodeHeights], weight=%s, scaleFactor=%s)".formatted(
                 clockRateParameter.getId(),
                 treeModel.getId(),
                 format(config.treeClockUpDownWeight),
@@ -383,5 +463,19 @@ public class OperatorBuilder {
 
     private static String format(double value) {
         return Double.toString(value);
+    }
+
+    private static String parameterId(Parameter parameter) {
+        String id =
+                parameter.getId();
+
+        return id == null ? "" : id;
+    }
+
+    private static String treeId(TreeModel treeModel) {
+        String id =
+                treeModel.getId();
+
+        return id == null ? "" : id;
     }
 }

@@ -3,6 +3,7 @@ package tiles.distributions;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeParser;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.evolution.branchratemodel.Base;
 import beast.base.spec.evolution.branchratemodel.StrictClockModel;
@@ -56,13 +57,23 @@ public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, 
         // initialize tree likelihood
 
         TreeLikelihood treeLikelihood = new TreeLikelihood();
-        beastState.setInput(treeLikelihood, treeLikelihood.treeInput, tree);
+        if (tree instanceof TreeParser) {
+            treeLikelihood.treeInput.setValue(tree, treeLikelihood);
+        } else {
+            beastState.setInput(treeLikelihood, treeLikelihood.treeInput, tree);
+        }
         beastState.setInput(treeLikelihood, treeLikelihood.siteModelInput, siteModel);
         beastState.setInput(treeLikelihood, treeLikelihood.branchRateModelInput, branchRateModel);
 
         return new UnboundDistribution<>(
                 treeLikelihood,
-                data -> beastState.setInput(treeLikelihood, treeLikelihood.dataInput, data)
+                data -> {
+                    if (tree instanceof TreeParser treeParser) {
+                        beastState.setInput(treeParser, treeParser.dataInput, data);
+                        beastState.initBEASTObject(treeParser);
+                    }
+                    beastState.setInput(treeLikelihood, treeLikelihood.dataInput, data);
+                }
         );
     }
 

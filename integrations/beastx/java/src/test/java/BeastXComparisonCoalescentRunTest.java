@@ -1,12 +1,14 @@
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import dr.inference.mcmc.MCMC;
+
 import org.junit.jupiter.api.Test;
 
 import tiling.runner.BeastXRunResult;
-import tiling.runner.XmlRunResult;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BeastXComparisonCoalescentRunTest {
@@ -107,7 +109,7 @@ public class BeastXComparisonCoalescentRunTest {
                 new PhyloSpecRunner(Files.readString(sourcePath))
                         .executeMaterialized(
                                 "tutorialH1N1ExponentialCoalescentHKYGamma",
-                                2000000
+                                10000000
                         );
 
         assertNotNull(result);
@@ -231,15 +233,13 @@ public class BeastXComparisonCoalescentRunTest {
         Files.createDirectories(outputDirectory);
         Files.deleteIfExists(xmlPath);
 
-        XmlRunResult result =
-                PhyloSpecRunner.buildXmlRunFromFile(
-                        sourcePath,
-                        xmlPath
-                );
+        PhyloSpecRunner runner =
+                PhyloSpecRunner.fromFile(sourcePath);
 
-        assertNotNull(result);
-        assertNotNull(result.model());
-        assertNotNull(result.mcmc());
+        runner.writeXml(
+                "tutorialH1N1DatedExponentialCoalescentHKYGamma",
+                xmlPath
+        );
 
         assertTrue(Files.exists(xmlPath), "Expected BEAST X XML file to be written.");
         assertTrue(Files.size(xmlPath) > 0, "Expected BEAST X XML file to be non-empty.");
@@ -252,6 +252,37 @@ public class BeastXComparisonCoalescentRunTest {
         assertTrue(xml.contains("joint"), xml);
         assertTrue(xml.contains("prior"), xml);
         assertTrue(xml.contains("likelihood"), xml);
+
+        assertTrue(xml.contains("<coalescentSimulator id=\"tree_startingTree\">"), xml);
+        assertTrue(xml.contains("<taxa id=\"tree_startingTaxa\">"), xml);
+        assertTrue(xml.contains("<exponentialGrowth idref=\"tree_prior_model\"/>"), xml);
+        assertTrue(xml.contains("<coalescentSimulator idref=\"tree_startingTree\"/>"), xml);
+        assertFalse(xml.contains("<newick id=\"tree_startingTree\""), xml);
+
+        assertTrue(xml.contains("<scaleOperator id=\"clockRate_scale\" scaleFactor=\"0.75\" weight=\"1.0\">"), xml);
+        assertTrue(xml.contains("<scaleOperator id=\"populationSize_scale\" scaleFactor=\"0.75\" weight=\"1.0\">"), xml);
+        assertTrue(xml.contains("<deltaExchange id=\"baseFrequencies_deltaExchange\" delta=\"0.01\" weight=\"1.0\">"), xml);
+
+        assertTrue(xml.contains("<nodeHeightScaleOperator id=\"tree_nodeHeightScale\" scaleFactor=\"0.75\" weight=\"5.0\" scaleAll=\"true\" autoOptimize=\"true\">"), xml);
+        assertTrue(xml.contains("<nodeHeightOperator id=\"tree_uniformNodeHeight\" type=\"uniform\" weight=\"15.0\">"), xml);
+        assertTrue(xml.contains("<nodeHeightOperator id=\"tree_randomWalkNodeHeight\" type=\"randomwalk\" size=\"0.05\" weight=\"15.0\" autoOptimize=\"true\">"), xml);
+        assertTrue(xml.contains("<narrowExchange id=\"tree_narrowExchange\" weight=\"15.0\">"), xml);
+        assertTrue(xml.contains("<wideExchange id=\"tree_wideExchange\" weight=\"5.0\">"), xml);
+        assertTrue(xml.contains("<subtreeSlide id=\"tree_subtreeSlide\" weight=\"15.0\" size=\"15.0\" gaussian=\"true\">"), xml);
+        assertTrue(xml.contains("<wilsonBalding id=\"tree_wilsonBalding\" weight=\"5.0\">"), xml);
+        assertTrue(xml.contains("<upDownOperator id=\"tree_clockRate_upDown\" scaleFactor=\"0.75\" weight=\"5.0\">"), xml);
+
+        try {
+            MCMC mcmc =
+                    runner.parseXmlMCMC(xmlPath);
+
+            assertNotNull(mcmc);
+        } catch (RuntimeException exception) {
+            assertTrue(
+                    XmlTestSupport.isMissingBeagleLibrary(exception),
+                    exception.toString()
+            );
+        }
     }
 
     @Test

@@ -3,7 +3,7 @@ Alignment data = fromNexus("src/test/java/resources/comparison/H1N1pdm_2009.nex"
 Taxa taxa = taxa(data)
 
 PositiveReal populationSize ~ LogNormal(
-    logMean=1.0,
+    logMean=0.0,
     logSd=1.0
 )
 
@@ -13,22 +13,22 @@ PositiveReal growthRate ~ LogNormal(
 )
 
 Rate clockRate ~ LogNormal(
-    logMean=0.0,
+    logMean=-5.8,
     logSd=1.0
 )
 
 PositiveReal kappa ~ LogNormal(
     logMean=1.0,
-    logSd=0.5
+    logSd=1.0
 )
 
 Simplex baseFrequencies ~ Dirichlet(
-    concentration=[1.0, 1.0, 1.0, 1.0]
+    concentration=[3.0, 3.0, 3.0, 3.0]
 )
 
 PositiveReal gammaShape ~ LogNormal(
     logMean=0.0,
-    logSd=1.0
+    logSd=0.5
 )
 
 Tree tree ~ Coalescent(
@@ -59,6 +59,6 @@ Alignment alignment ~ PhyloCTMC(
 ) observed as data
 
 mcmc {
-    Integer chainLength = 2000000
+    Integer chainLength = 10000000
     Integer randomSeed = 1234
 }

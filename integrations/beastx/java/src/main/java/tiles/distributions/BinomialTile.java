@@ -16,7 +16,6 @@ import tiling.params.BeastXIntScalarParam;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
-import tiling.model.ParameterAttribute;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -90,7 +89,7 @@ public class BinomialTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
-                state -> likelihood.addData(new ParameterAttribute(state.getParameter()))
+                state -> likelihood.addData(state.getParameter())
         );
     }
 
