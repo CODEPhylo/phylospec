@@ -1,0 +1,56 @@
+Alignment data = fromNexus(
+    file="src/test/java/resources/comparison/H1N1pdm_2009.nex"
+)
+
+Tree tree = fromTree("src/test/java/resources/comparison/h1n1-balanced-diagnostic-tree.nwk")
+
+Rate clockRate ~ LogNormal(
+    logMean=-6.9,
+    logSd=1.0
+)
+
+PositiveReal kappa = 0.5
+
+Simplex baseFrequencies = [0.335, 0.193, 0.242, 0.230]
+
+PositiveReal gammaShape = 1.0
+
+Vector<Rate> branchRates ~ StrictClock(
+    clockRate=clockRate,
+    tree=tree
+)
+
+Vector<Rate> siteRates ~ DiscreteGammaInv(
+    shape=gammaShape,
+    numCategories=4,
+    numSites=numSites(data)
+)
+
+QMatrix qMatrix = hky(
+    kappa=kappa,
+    baseFrequencies=baseFrequencies
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix,
+    branchRates=branchRates,
+    siteRates=siteRates
+) observed as data
+
+mcmc {
+    Integer chainLength = 10000000
+    Integer randomSeed = 123456
+
+    Logger fileLogger = fileLogger(
+        logEvery=1000,
+        file="target/comparison-diagnostics/beastx-fixed-tree-fixed-gamma-clockrate-hky.log",
+        parameters=[
+            "posterior",
+            "prior",
+            "likelihood",
+            "alignment_likelihood",
+            clockRate
+        ]
+    )
+}

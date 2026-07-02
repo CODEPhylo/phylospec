@@ -1,6 +1,5 @@
 Alignment data = fromNexus(
-    file="src/test/java/resources/comparison/H1N1pdm_2009.nex",
-    date=parse(regex=".*_(\d+(?:\.\d+)?)$")
+    file="src/test/java/resources/comparison/H1N1pdm_2009.nex"
 )
 
 Tree tree = fromTree("src/test/java/resources/comparison/h1n1-fixed-starting-tree.nwk")
@@ -24,11 +23,6 @@ Alignment alignment ~ PhyloCTMC(
     branchRates~StrictClock(
         clockRate=clockRate,
         tree=tree
-    ),
-    siteRates~DiscreteGammaInv(
-        shape=gammaShape,
-        numCategories=4,
-        numSites=numSites(data)
     )
 ) observed as data
 

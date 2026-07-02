@@ -3,6 +3,7 @@ package tiles;
 import org.phylospec.tiling.TileLibrary;
 import org.phylospec.tiling.tiles.CandidateTile;
 
+import tiles.input.*;
 import tiles.misc.AssignmentTile;
 import tiles.misc.AssignedArgumentTile;
 import tiles.misc.LiteralTile;
@@ -14,14 +15,6 @@ import tiles.misc.ListVectorTile;
 import tiles.misc.IndexVariableTile;
 import tiles.misc.IndexedTile;
 import tiles.misc.IndexedStatementTile;
-
-import tiles.input.FromNexusTile;
-import tiles.input.FromFastaTile;
-import tiles.input.FromNewickTile;
-import tiles.input.FromTreeTile;
-import tiles.input.ParserTile;
-import tiles.input.SubsetTile;
-import tiles.input.FromCSVTile;
 
 import tiles.distributions.ExponentialTile;
 import tiles.distributions.LogNormalTile;
@@ -208,6 +201,9 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new AlignmentTaxaTile());
         tiles.add(new TreeTaxaTile());
         tiles.add(new SumRealVectorTile());
+        tiles.add(new ContinuousTraitsFromTaxaTile());
+        tiles.add(new DiscreteTraitsFromTableTile());
+        tiles.add(new DiscreteTraitsFromTaxaTile());
 
         // BEAST X MCMC configuration
         tiles.add(new ChainLengthTile());

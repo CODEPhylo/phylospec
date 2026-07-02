@@ -167,6 +167,14 @@ public class PhyloSpecRunner implements ErrorEventListener {
         // create MCMC object
 
         MCMC mcmc = new MCMC();
+        Path stateFilePath =
+                Path.of(runName + ".state.xml");
+
+        if (stateFilePath.getParent() != null) {
+            Files.createDirectories(stateFilePath.getParent());
+        }
+
+        mcmc.setStateFile(stateFilePath.toString(), false);
         beastState.setInput(mcmc, mcmc.chainLengthInput, beastState.chainLength);
         beastState.setInput(mcmc, mcmc.startStateInput, state);
         beastState.setInput(mcmc, mcmc.posteriorInput, posterior);

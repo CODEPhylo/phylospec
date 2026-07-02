@@ -12,6 +12,7 @@ import dr.inference.model.Statistic;
 import org.phylospec.tiling.TypeToken;
 import tiling.model.StartingTreeSpec;
 import tiling.params.BeastXParam;
+import tiling.model.StartingTreeSpec;
 import tiling.xml.XmlPlan;
 
 import java.util.ArrayList;
@@ -160,21 +161,23 @@ public class BeastXState {
         return addTreePriorDistribution(
                 treeModel,
                 likelihood,
-                StartingTreeSpec.fixedNewick(),
-                id
+                id,
+                StartingTreeSpec.fixedNewick()
         );
     }
 
+    // Registers a tree model, its tree prior likelihood, and its starting-tree source.
     public TreeModel addTreePriorDistribution(
             TreeModel treeModel,
             AbstractModelLikelihood likelihood,
-            StartingTreeSpec startingTreeSpec,
-            String id
+            String id,
+            StartingTreeSpec startingTreeSpec
     ) {
-        if (this.treeModelsByPhyloSpecName.containsKey(id)) {
-            throw new IllegalArgumentException(
-                    "Tree model already registered for PhyloSpec name: " + id
-            );
+        TreeModel existingTreeModel =
+                this.treeModelsByPhyloSpecName.get(id);
+
+        if (existingTreeModel != null) {
+            return existingTreeModel;
         }
 
         treeModel.setId(this.getAvailableID(id));
@@ -261,16 +264,16 @@ public class BeastXState {
     * These values can be overridden by operator-configuration tiles.
     * */
     public static class OperatorConfig {
-        public double treeScaleFactor = 0.75;
-        public double treeUniformNodeHeightWeight = 15.0;
-        public double treeRandomWalkNodeHeightWeight = 15.0;
-        public double treeRandomWalkNodeHeightSize = 0.05;
-
         public double parameterOperatorWeight = 1.0;
         public double parameterScaleFactor = 0.75;
         public double randomWalkWindowSize = 1.0;
 
         public double treeScaleWeight = 5.0;
+        public double treeScaleFactor = 0.75;
+        public double treeUniformNodeHeightWeight = 15.0;
+        public double treeRandomWalkNodeHeightWeight = 15.0;
+        public double treeRandomWalkNodeHeightSize = 0.05;
+
         public double treeSubtreeSlideSize = 15.0;
         public double treeSubtreeSlideWeight = 15.0;
         public double treeNarrowExchangeWeight = 15.0;
@@ -287,13 +290,6 @@ public class BeastXState {
                 case "parameterScaleFactor" -> this.parameterScaleFactor = value;
                 case "randomWalkWindowSize" -> this.randomWalkWindowSize = value;
                 case "treeScaleWeight" -> this.treeScaleWeight = value;
-                case "treeSubtreeSlideSize" -> this.treeSubtreeSlideSize = value;
-                case "treeSubtreeSlideWeight" -> this.treeSubtreeSlideWeight = value;
-                case "treeNarrowExchangeWeight" -> this.treeNarrowExchangeWeight = value;
-                case "treeWideExchangeWeight" -> this.treeWideExchangeWeight = value;
-                case "treeWilsonBaldingWeight" -> this.treeWilsonBaldingWeight = value;
-                case "treeClockUpDownWeight" -> this.treeClockUpDownWeight = value;
-                case "treeClockUpDownScaleFactor" -> this.treeClockUpDownScaleFactor = value;
                 case "treeScaleFactor" -> this.treeScaleFactor = value;
                 case "treeNodeHeightWeight" -> {
                     this.treeUniformNodeHeightWeight = value / 2.0;
@@ -302,6 +298,13 @@ public class BeastXState {
                 case "treeUniformNodeHeightWeight" -> this.treeUniformNodeHeightWeight = value;
                 case "treeRandomWalkNodeHeightWeight" -> this.treeRandomWalkNodeHeightWeight = value;
                 case "treeRandomWalkNodeHeightSize" -> this.treeRandomWalkNodeHeightSize = value;
+                case "treeSubtreeSlideSize" -> this.treeSubtreeSlideSize = value;
+                case "treeSubtreeSlideWeight" -> this.treeSubtreeSlideWeight = value;
+                case "treeNarrowExchangeWeight" -> this.treeNarrowExchangeWeight = value;
+                case "treeWideExchangeWeight" -> this.treeWideExchangeWeight = value;
+                case "treeWilsonBaldingWeight" -> this.treeWilsonBaldingWeight = value;
+                case "treeClockUpDownWeight" -> this.treeClockUpDownWeight = value;
+                case "treeClockUpDownScaleFactor" -> this.treeClockUpDownScaleFactor = value;
                 default -> throw new IllegalArgumentException("Unsupported BEAST X operator setting: " + settingName);
             }
         }
@@ -317,14 +320,14 @@ public class BeastXState {
             return Set.of(
                     "parameterOperatorWeight",
                     "treeScaleWeight",
+                    "treeNodeHeightWeight",
+                    "treeUniformNodeHeightWeight",
+                    "treeRandomWalkNodeHeightWeight",
                     "treeSubtreeSlideWeight",
                     "treeNarrowExchangeWeight",
                     "treeWideExchangeWeight",
                     "treeWilsonBaldingWeight",
-                    "treeClockUpDownWeight",
-                    "treeNodeHeightWeight",
-                    "treeUniformNodeHeightWeight",
-                    "treeRandomWalkNodeHeightWeight"
+                    "treeClockUpDownWeight"
             ).contains(settingName);
         }
 

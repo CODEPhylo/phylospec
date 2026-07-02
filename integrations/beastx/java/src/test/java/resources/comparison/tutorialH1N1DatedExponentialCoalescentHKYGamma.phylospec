@@ -16,7 +16,7 @@ PositiveReal growthRate ~ LogNormal(
 )
 
 Rate clockRate ~ LogNormal(
-    logMean=-5.8,
+    logMean=-6.9,
     logSd=1.0
 )
 
@@ -50,7 +50,6 @@ Vector<Rate> branchRates ~ StrictClock(
 Vector<Rate> siteRates ~ DiscreteGammaInv(
     shape=gammaShape,
     numCategories=4,
-    invariantProportion=0.0,
     numSites=numSites(data)
 )
 
@@ -68,7 +67,11 @@ Alignment alignment ~ PhyloCTMC(
 
 mcmc {
     Integer chainLength = 10000000
-    Integer randomSeed = 123456
+    Integer randomSeed = 741852963
+
+    Real treeUniformNodeHeightWeight = 10.0
+    Real treeRandomWalkNodeHeightWeight = 20.0
+    Real treeRandomWalkNodeHeightSize = 0.05
 
     Logger fileLogger = fileLogger(
         logEvery=1000,

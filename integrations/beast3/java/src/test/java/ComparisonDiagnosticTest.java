@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
@@ -5,6 +6,7 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("integration-test")
 public class ComparisonDiagnosticTest {
 
     @Test
@@ -84,6 +86,30 @@ public class ComparisonDiagnosticTest {
         runPriorOnlyDiagnostic(
                 "diagnosticH1N1DatedFixedPopulationExponentialCoalescentHKYGamma.phylospec",
                 "target/comparison-diagnostics/beast3-fixed-population-exponential-coalescent-hky-gamma"
+        );
+    }
+
+    @Test
+    public void writesFixedTreeSingleStateExponentialCoalescentHKYGammaDiagnosticLogs() throws Exception {
+        runPriorOnlyDiagnostic(
+                "diagnosticH1N1FixedTreeSingleStateExponentialCoalescentHKYGamma.phylospec",
+                "target/comparison-diagnostics/beast3-fixed-tree-single-state-exponential-coalescent-hky-gamma"
+        );
+    }
+
+    @Test
+    public void writesFixedTreeClockRateOnlyHKYDiagnosticLogs() throws Exception {
+        runPriorOnlyDiagnostic(
+                "diagnosticH1N1FixedTreeClockRateOnlyHKY.phylospec",
+                "target/comparison-diagnostics/beast3-fixed-tree-clockrate-only-hky"
+        );
+    }
+
+    @Test
+    public void writesFixedTreeFixedGammaClockRateHKYDiagnosticLogs() throws Exception {
+        runPriorOnlyDiagnostic(
+                "diagnosticH1N1FixedTreeFixedGammaClockRateHKY.phylospec",
+                "target/comparison-diagnostics/beast3-fixed-tree-fixed-gamma-clockrate-hky"
         );
     }
 

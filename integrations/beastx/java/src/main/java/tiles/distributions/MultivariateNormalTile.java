@@ -13,7 +13,6 @@ import org.phylospec.types.Tensor;
 import tiling.params.BeastXRealVectorParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
-import tiling.model.ParameterAttribute;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -87,7 +86,7 @@ public class MultivariateNormalTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
-                state -> likelihood.addData(new ParameterAttribute(state.getParameter()))
+                state -> likelihood.addData(state.getParameter())
         );
     }
 

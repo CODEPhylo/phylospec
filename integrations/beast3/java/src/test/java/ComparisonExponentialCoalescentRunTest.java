@@ -5,10 +5,12 @@ import beast.base.inference.MCMC;
 import beast.base.inference.Runnable;
 import beast.base.parser.XMLParser;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("integration-test")
 public class ComparisonExponentialCoalescentRunTest {
 
     @Test

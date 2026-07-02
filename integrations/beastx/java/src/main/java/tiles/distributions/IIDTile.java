@@ -11,7 +11,6 @@ import tiling.params.BeastXRealScalarParam;
 import tiling.params.BeastXRealVectorParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
-import tiling.model.ParameterAttribute;
 
 import java.util.Arrays;
 import java.util.IdentityHashMap;
@@ -78,7 +77,7 @@ public final class IIDTile {
             return new BoundDistribution<>(
                     base.distribution,
                     defaultState,
-                    state -> base.distribution.addData(new ParameterAttribute(state.getParameter()))
+                    state -> base.distribution.addData(state.getParameter())
             );
         }
     }
@@ -149,7 +148,7 @@ public final class IIDTile {
             return new BoundDistribution<>(
                     base.distribution,
                     defaultState,
-                    state -> base.distribution.addData(new ParameterAttribute(state.getParameter()))
+                    state -> base.distribution.addData(state.getParameter())
             );
         }
     }

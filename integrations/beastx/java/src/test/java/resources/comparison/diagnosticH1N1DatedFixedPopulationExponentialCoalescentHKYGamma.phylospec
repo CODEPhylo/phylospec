@@ -52,7 +52,7 @@ Alignment alignment ~ PhyloCTMC(
 ) observed as data
 
 mcmc {
-    Integer chainLength = 200000
+    Integer chainLength = 2000000
     Integer randomSeed = 1234
     Real treeScaleFactor = 0.1
     Real treeClockUpDownWeight = 0.0
@@ -64,6 +64,9 @@ mcmc {
             "posterior",
             "prior",
             "likelihood",
+            "kappa_prior",
+            "tree_prior",
+            "alignment_likelihood",
             "tree.height",
             "tree.treeLength",
             kappa

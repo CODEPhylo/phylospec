@@ -1,18 +1,12 @@
 package tiles.trees;
 
-import dr.evolution.util.Taxa;
-import dr.evomodel.coalescent.CoalescentLikelihood;
-import dr.evomodel.coalescent.CoalescentSimulator;
-import dr.evomodel.coalescent.TreeIntervals;
-import dr.evomodel.coalescent.demographicmodel.ConstantPopulationModel;
 import dr.evomodel.coalescent.TreeIntervals;
 import dr.evolution.util.Taxa;
 import dr.evomodel.coalescent.CoalescentLikelihood;
 import dr.evomodel.coalescent.CoalescentSimulator;
 import dr.evomodel.coalescent.demographicmodel.DemographicModel;
-import dr.evomodel.coalescent.demographicmodel.ExponentialGrowthModel;
-import dr.evomodel.coalescent.demographicmodel.PiecewisePopulationModel;
 import dr.evomodel.tree.DefaultTreeModel;
+import dr.evomodel.tree.TreeModel;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiling.BeastXState;
@@ -22,7 +16,7 @@ import tiling.model.StartingTreeSpec;
 import java.util.IdentityHashMap;
 
 public class CoalescentPopulationFunctionTile extends GeneratorTile<
-        BoundDistribution<DefaultTreeModel, CoalescentLikelihood>,
+        BoundDistribution<TreeModel, CoalescentLikelihood>,
         BeastXState
         > {
 
@@ -38,7 +32,7 @@ public class CoalescentPopulationFunctionTile extends GeneratorTile<
             new GeneratorTileInput<>("taxa");
 
     @Override
-    public BoundDistribution<DefaultTreeModel, CoalescentLikelihood> applyTile(
+    public BoundDistribution<TreeModel, CoalescentLikelihood> applyTile(
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
@@ -48,13 +42,13 @@ public class CoalescentPopulationFunctionTile extends GeneratorTile<
         Taxa taxa =
                 this.taxaInput.apply(beastState, indexVariables);
 
-        StartingTreeSpec startingTreeSpec =
-                startingTreeSpec(populationSize);
+        CoalescentSimulator simulator =
+                new CoalescentSimulator();
 
         DefaultTreeModel defaultTreeModel =
                 new DefaultTreeModel(
                         "tree",
-                        startingTree(startingTreeSpec, taxa, populationSize)
+                        simulator.simulateTree(taxa, populationSize)
                 );
 
         TreeIntervals intervals =
@@ -69,35 +63,10 @@ public class CoalescentPopulationFunctionTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultTreeModel,
-                startingTreeSpec,
+                StartingTreeSpec.coalescentSimulator(),
                 treeModel -> {
                     // CoalescentLikelihood receives TreeIntervals built from the tree.
                 }
         );
-    }
-
-    private static StartingTreeSpec startingTreeSpec(DemographicModel demographicModel) {
-        if (demographicModel instanceof ConstantPopulationModel
-                || demographicModel instanceof ExponentialGrowthModel
-                || demographicModel instanceof PiecewisePopulationModel) {
-            return StartingTreeSpec.coalescentSimulator();
-        }
-
-        return StartingTreeSpec.fixedNewick();
-    }
-
-    private static dr.evolution.tree.Tree startingTree(
-            StartingTreeSpec startingTreeSpec,
-            Taxa taxa,
-            DemographicModel demographicModel
-    ) {
-        if (startingTreeSpec.type() == StartingTreeSpec.Type.COALESCENT_SIMULATOR) {
-            CoalescentSimulator simulator =
-                    new CoalescentSimulator();
-
-            return simulator.simulateTree(taxa, demographicModel);
-        }
-
-        return InitialTreeBuilder.balancedTree(taxa, "Coalescent");
     }
 }

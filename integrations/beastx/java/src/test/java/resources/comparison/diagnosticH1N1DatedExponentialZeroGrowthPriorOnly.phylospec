@@ -18,22 +18,24 @@ Tree tree ~ Coalescent(
 )
 
 mcmc {
-    Integer chainLength = 1
+    Integer chainLength = 100000000
     Integer randomSeed = 1234
 
     Logger fileLogger = fileLogger(
-        logEvery=1,
+        logEvery=1000,
         file="target/comparison-diagnostics/beastx-exponential-zero-growth-prior-only.log",
         parameters=[
             "posterior",
             "prior",
+            "likelihood",
+            "tree_prior",
             "tree.height",
             "tree.treeLength"
         ]
     )
 
     Logger treeLogger = treeLogger(
-        logEvery=1,
+        logEvery=1000,
         file="target/comparison-diagnostics/beastx-exponential-zero-growth-prior-only.trees",
         trees=[tree]
     )

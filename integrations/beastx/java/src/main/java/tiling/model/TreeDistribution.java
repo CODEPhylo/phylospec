@@ -1,0 +1,49 @@
+package tiling.model;
+
+import dr.evomodel.tree.TreeModel;
+import dr.inference.model.AbstractModelLikelihood;
+
+import java.util.function.Consumer;
+
+public class TreeDistribution<L extends AbstractModelLikelihood> {
+
+    public final L likelihood;
+    public TreeModel treeModel;
+    public StartingTreeSpec startingTreeSpec;
+    private final Consumer<TreeModel> bindTreeFunc;
+
+    public TreeDistribution(
+            L likelihood,
+            TreeModel defaultTreeModel,
+            Consumer<TreeModel> bindTreeFunc
+    ) {
+        this(
+                likelihood,
+                defaultTreeModel,
+                StartingTreeSpec.fixedNewick(),
+                bindTreeFunc
+        );
+    }
+
+    public TreeDistribution(
+            L likelihood,
+            TreeModel defaultTreeModel,
+            StartingTreeSpec startingTreeSpec,
+            Consumer<TreeModel> bindTreeFunc
+    ) {
+        this.likelihood = likelihood;
+        this.treeModel = defaultTreeModel;
+        this.startingTreeSpec = startingTreeSpec;
+        this.bindTreeFunc = bindTreeFunc;
+    }
+
+    public void bind() {
+        this.bindTreeFunc.accept(this.treeModel);
+    }
+
+    public void bind(TreeModel observedTreeModel) {
+        this.bindTreeFunc.accept(observedTreeModel);
+        this.treeModel = observedTreeModel;
+        this.startingTreeSpec = StartingTreeSpec.fixedNewick();
+    }
+}

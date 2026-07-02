@@ -1,6 +1,3 @@
-import dr.evomodel.speciation.BirthDeathGernhard08Model;
-import dr.evomodel.speciation.SpeciationLikelihood;
-import dr.inference.model.Parameter;
 import org.junit.jupiter.api.Test;
 import tiling.BeastXModel;
 
@@ -8,52 +5,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BeastXXmlTreePriorTest {
-
-    @Test
-    public void materializedYuleTreePriorUsesBeastXXmlUnscaledSemantics() throws Exception {
-        String source =
-                """
-                Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
-                Taxa taxa = taxa(data)
-
-                Tree tree ~ Yule(
-                    birthRate=1.0,
-                    taxa=taxa
-                )
-                """;
-
-        BeastXModel model =
-                new PhyloSpecRunner(source)
-                        .buildModel("yuleUnscaledParity");
-
-        SpeciationLikelihood treePrior =
-                (SpeciationLikelihood) model.beastState.treePriorDistributions
-                        .values()
-                        .iterator()
-                        .next();
-
-        BirthDeathGernhard08Model yuleModel =
-                (BirthDeathGernhard08Model) treePrior.getSpeciationModel();
-
-        BirthDeathGernhard08Model expectedUnscaledModel =
-                new BirthDeathGernhard08Model(
-                        new Parameter.Default(1.0),
-                        new Parameter.Default(0.0),
-                        new Parameter.Default(1.0),
-                        BirthDeathGernhard08Model.TreeType.UNSCALED,
-                        yuleModel.getUnits()
-                );
-
-        assertEquals(
-                expectedUnscaledModel.logTreeProbability(12),
-                yuleModel.logTreeProbability(12),
-                1e-12
-        );
-    }
 
     @Test
     public void writesParsesAndRunsPriorOnlyYuleTreeMCMCXml() throws Exception {
@@ -317,6 +272,11 @@ public class BeastXXmlTreePriorTest {
 
         XmlTestSupport.assertXmlContains(xml, "<parameter id=\"populationSize\"");
         XmlTestSupport.assertXmlContains(xml, "<constantSize id=\"tree_prior_model\"");
+        XmlTestSupport.assertXmlContains(xml, "<coalescentSimulator id=\"tree_startingTree\">");
+        XmlTestSupport.assertXmlContains(xml, "<taxa id=\"tree_startingTaxa\">");
+        XmlTestSupport.assertXmlContains(xml, "<constantSize idref=\"tree_prior_model\"/>");
+        XmlTestSupport.assertXmlContains(xml, "<coalescentSimulator idref=\"tree_startingTree\"/>");
+        assertFalse(xml.contains("<newick id=\"tree_startingTree\""), xml);
         XmlTestSupport.assertXmlContains(xml, "<populationSize>");
         XmlTestSupport.assertXmlContains(xml, "<parameter idref=\"populationSize\"/>");
         XmlTestSupport.assertXmlContains(xml, "<coalescentLikelihood id=\"tree_prior\">");

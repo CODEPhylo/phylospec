@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("integration-test")
 public class BeastXComparisonH1N1Test {
 
     private static final Path SOURCE_PATH =

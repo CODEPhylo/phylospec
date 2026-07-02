@@ -248,6 +248,14 @@ public class PhyloSpecRunner implements ErrorEventListener {
     }
 
     /**
+     * Parses a BEAST X XML file into an executable MCMC object.
+     */
+    public MCMC parseXmlMCMC(Path xmlPath) throws Exception {
+        return this.runPipeline
+                .parseXmlMCMC(xmlPath);
+    }
+
+    /**
      * Writes XML, parses it through the BEAST X XML parser, and optionally executes it.
      */
     public XmlRunResult runXml(XmlRunnerOptions options)

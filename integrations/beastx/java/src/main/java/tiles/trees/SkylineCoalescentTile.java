@@ -4,19 +4,17 @@ import dr.evomodel.coalescent.TreeIntervals;
 import dr.evolution.util.Taxa;
 import dr.evolution.util.Units;
 import dr.evomodel.coalescent.CoalescentLikelihood;
-import dr.evomodel.coalescent.TreeIntervals;
 import dr.evomodel.coalescent.demographicmodel.PiecewisePopulationModel;
 import dr.evomodel.tree.DefaultTreeModel;
 import dr.inference.model.Parameter;
-import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealVector;
+import tiling.model.BoundDistribution;
 import tiling.params.BeastXRealVectorParam;
 import tiling.BeastXState;
-import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -75,22 +73,10 @@ public class SkylineCoalescentTile extends GeneratorTile<
         double[] changeTimeValues =
                 toArray(changeTimes);
 
-        requireStrictlyIncreasing(
-                changeTimeValues,
-                this.getRootNode(),
-                "SkylineCoalescent changeTimes must be strictly increasing.",
-                "Provide ordered ages such as [1.0, 3.0, 5.0].",
-                List.of("SkylineCoalescent(populationSizes=[100.0, 200.0, 300.0], changeTimes=[1.0, 3.0])")
-        );
+        validateStrictlyIncreasing(changeTimeValues);
 
         double[] epochWidths =
                 toEpochWidths(changeTimeValues);
-
-        DefaultTreeModel defaultTreeModel =
-                new DefaultTreeModel(
-                        "tree",
-                        InitialTreeBuilder.balancedTree(taxa, "SkylineCoalescent")
-                );
 
         PiecewisePopulationModel populationModel =
                 new PiecewisePopulationModel(
@@ -99,6 +85,12 @@ public class SkylineCoalescentTile extends GeneratorTile<
                         epochWidths,
                         false,
                         Units.Type.YEARS
+                );
+
+        DefaultTreeModel defaultTreeModel =
+                new DefaultTreeModel(
+                        "tree",
+                        InitialTreeBuilder.balancedTree(taxa, "SkylineCoalescent")
                 );
 
         TreeIntervals intervals =
@@ -138,6 +130,19 @@ public class SkylineCoalescentTile extends GeneratorTile<
         return values;
     }
 
+    private void validateStrictlyIncreasing(double[] changeTimes) {
+        for (int i = 1; i < changeTimes.length; i++) {
+            if (changeTimes[i] <= changeTimes[i - 1]) {
+                throw new TileApplicationError(
+                        this.getRootNode(),
+                        "SkylineCoalescent changeTimes must be strictly increasing.",
+                        "Provide ordered ages such as [1.0, 3.0, 5.0].",
+                        List.of("SkylineCoalescent(populationSizes=[100.0, 200.0, 300.0], changeTimes=[1.0, 3.0], taxa=taxa)")
+                );
+            }
+        }
+    }
+
     private static double[] toEpochWidths(double[] changeTimes) {
         double[] widths =
                 new double[changeTimes.length];
@@ -150,24 +155,4 @@ public class SkylineCoalescentTile extends GeneratorTile<
 
         return widths;
     }
-
-    private static void requireStrictlyIncreasing(
-            double[] values,
-            AstNode rootNode,
-            String description,
-            String hint,
-            List<String> examples
-    ) {
-        for (int i = 1; i < values.length; i++) {
-            if (values[i] <= values[i - 1]) {
-                throw new TileApplicationError(
-                        rootNode,
-                        description,
-                        hint,
-                        examples
-                );
-            }
-        }
-    }
-
 }

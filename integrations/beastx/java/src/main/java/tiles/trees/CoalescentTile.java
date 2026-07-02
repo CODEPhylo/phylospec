@@ -12,9 +12,9 @@ import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
+import tiling.model.BoundDistribution;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
-import tiling.model.BoundDistribution;
 import tiling.model.StartingTreeSpec;
 
 import java.util.IdentityHashMap;

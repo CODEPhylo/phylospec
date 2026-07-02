@@ -12,9 +12,6 @@ import java.util.List;
 
 public class OperatorXmlBuilder {
 
-    private static final double DEFAULT_CLOCK_TREE_UP_DOWN_WEIGHT = 5.0;
-    private static final double DEFAULT_TREE_NODE_HEIGHT_SCALE_WEIGHT = 5.0;
-
     public List<XmlElement> buildOperators(BeastXState state) {
         List<XmlElement> operators =
                 new ArrayList<>();
@@ -101,14 +98,7 @@ public class OperatorXmlBuilder {
 
             String id =
                     treeId(treeModel);
-/*
-            operators.add(
-                    nodeHeightScaleOperator(
-                            state,
-                            treeModel
-                    )
-            );
-*/
+
             operators.add(
                     nodeHeightScaleOperator(state, treeModel)
             );
@@ -154,6 +144,22 @@ public class OperatorXmlBuilder {
         }
 
         return operators;
+    }
+
+    private XmlElement nodeHeightScaleOperator(
+            BeastXState state,
+            TreeModel treeModel
+    ) {
+        String id =
+                treeId(treeModel);
+
+        return XmlElement.element("nodeHeightScaleOperator")
+                .withId(id + "_nodeHeightScale")
+                .withAttribute("scaleFactor", format(state.operatorConfig.treeScaleFactor))
+                .withAttribute("weight", format(state.operatorConfig.treeScaleWeight))
+                .withAttribute("scaleAll", "true")
+                .withAttribute("autoOptimize", "true")
+                .withChild(XmlElement.ref("treeModel", id));
     }
 
     private XmlElement uniformNodeHeightOperator(
@@ -292,8 +298,8 @@ public class OperatorXmlBuilder {
 
         return XmlElement.element("upDownOperator")
                 .withId(treeId + "_" + clockRateId + "_upDown")
-                .withAttribute("scaleFactor", format(state.operatorConfig.parameterScaleFactor))
-                .withAttribute("weight", format(DEFAULT_CLOCK_TREE_UP_DOWN_WEIGHT))
+                .withAttribute("scaleFactor", format(state.operatorConfig.treeClockUpDownScaleFactor))
+                .withAttribute("weight", format(state.operatorConfig.treeClockUpDownWeight))
                 .withChild(
                         XmlElement.element("up")
                                 .withChild(parameterReference(clockRate))
@@ -302,20 +308,6 @@ public class OperatorXmlBuilder {
                         XmlElement.element("down")
                                 .withChild(treeAllInternalNodeHeightsReference(treeModel))
                 );
-    }
-
-    private XmlElement nodeHeightScaleOperator(
-            BeastXState state,
-            TreeModel treeModel
-    ) {
-        String id =
-                treeId(treeModel);
-
-        return XmlElement.element("nodeHeightScaleOperator")
-                .withId(id + "_nodeHeightScale")
-                .withAttribute("scaleFactor", format(state.operatorConfig.parameterScaleFactor))
-                .withAttribute("weight", format(DEFAULT_TREE_NODE_HEIGHT_SCALE_WEIGHT))
-                .withChild(treeReference(treeModel));
     }
 
     private XmlElement treeOperator(

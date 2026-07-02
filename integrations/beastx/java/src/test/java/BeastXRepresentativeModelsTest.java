@@ -240,22 +240,87 @@ public class BeastXRepresentativeModelsTest {
                 "DeltaExchangeOperator",
                 "ExchangeOperator",
                 "NodeHeightScaleOperator",
-                "RandomWalkIntegerOperator",
+                "RandomWalkOperator",
                 "ScaleOperator",
                 "SubtreeSlideOperator",
-                "SwapOperator",
-                "UniformIntegerOperator",
                 "WilsonBalding"
         );
 
         assertAnyContains(summary.operatorDetails, "DeltaExchangeOperator(parameter=baseFrequencies");
-        assertAnyContains(summary.operatorDetails, "RandomWalkIntegerOperator(parameter=branchRateCategories");
-        assertAnyContains(summary.operatorDetails, "SwapOperator(parameter=branchRateCategories");
-        assertAnyContains(summary.operatorDetails, "UniformIntegerOperator(parameter=branchRateCategories");
+        assertAnyContains(summary.operatorDetails, "RandomWalkOperator(parameter=branchRateCategories");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=clockRate");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=diversificationRate");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=serialSamplingRate");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=turnover");
+
+        assertEquals(
+                1,
+                summary.chainLength
+        );
+
+        assertTrue(summary.screenLoggers.isEmpty());
+        assertTrue(summary.fileLoggers.isEmpty());
+        assertTrue(summary.treeLoggers.isEmpty());
+    }
+
+    @Test
+    public void jointMolecularTraitMkModelBuildsTwoLikelihoodsOnSharedTree() throws Exception {
+        BeastXModelSummary summary =
+                summaryForShowcase("jointMolecularTraitMkPhyloCTMC.phylospec");
+
+        assertContainsAll(
+                summary.stateNodes,
+                "baseFrequencies",
+                "birthRate",
+                "clockRate",
+                "kappa",
+                "traitRate"
+        );
+
+        assertContainsAll(
+                summary.parameterPriors,
+                "baseFrequencies_prior",
+                "birthRate_prior",
+                "clockRate_prior",
+                "kappa_prior",
+                "traitRate_prior"
+        );
+
+        assertEquals(
+                List.of("tree"),
+                summary.treeModels
+        );
+
+        assertEquals(
+                List.of("tree_prior"),
+                summary.treePriors
+        );
+
+        assertEquals(
+                List.of(
+                        "molecularAlignment_likelihood",
+                        "traitAlignment_likelihood"
+                ),
+                summary.likelihoods
+        );
+
+        assertContainsAll(
+                summary.operators,
+                "DeltaExchangeOperator",
+                "ExchangeOperator",
+                "NodeHeightScaleOperator",
+                "ScaleOperator",
+                "SubtreeSlideOperator",
+                "UpDownOperator",
+                "WilsonBalding"
+        );
+
+        assertAnyContains(summary.operatorDetails, "DeltaExchangeOperator(parameter=baseFrequencies");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=birthRate");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=clockRate");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=kappa");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=traitRate");
+        assertAnyContains(summary.operatorDetails, "UpDownOperator(up=[clockRate], down=[tree.allInternalNodeHeights]");
 
         assertEquals(
                 1,
