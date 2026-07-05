@@ -93,6 +93,8 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
         XmlTestSupport.assertXmlContains(xml, "<uniformDistributionModel id=\"rootCalibration_distribution\"");
         XmlTestSupport.assertXmlContains(xml, "<tmrcaStatistic idref=\"rootAge\"/>");
         XmlTestSupport.assertXmlContains(xml, "<yuleModel id=\"tree_prior_model\"");
+        XmlTestSupport.assertXmlContains(xml, "<newick id=\"tree_startingTree\"");
+        XmlTestSupport.assertXmlDoesNotContain(xml, "<coalescentSimulator id=\"tree_startingTree\"");
         XmlTestSupport.assertXmlContains(xml, "<treeLikelihood id=\"alignment_likelihood\"");
         XmlTestSupport.assertXmlContains(xml, "<siteModel idref=\"alignment_likelihood_siteRateModel\"/>");
         XmlTestSupport.assertXmlContains(xml, "<strictClockBranchRates idref=\"tree_strictClockBranchRates\"/>");
@@ -323,6 +325,8 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
         XmlTestSupport.assertXmlContains(xml, "<logNormalDistributionModel id=\"clockRate_prior_distribution\"");
 
         XmlTestSupport.assertXmlContains(xml, "<birthDeathModel id=\"tree_prior_model\"");
+        XmlTestSupport.assertXmlContains(xml, "<newick id=\"tree_startingTree\"");
+        XmlTestSupport.assertXmlDoesNotContain(xml, "<coalescentSimulator id=\"tree_startingTree\"");
         XmlTestSupport.assertXmlContains(xml, "<birthMinusDeathRate>");
         XmlTestSupport.assertXmlContains(xml, "<parameter idref=\"diversificationRate\"/>");
         XmlTestSupport.assertXmlContains(xml, "<relativeDeathRate>");
@@ -438,6 +442,11 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
         XmlTestSupport.assertXmlContains(xml, "<logNormalDistributionModel id=\"clockRate_prior_distribution\"");
 
         XmlTestSupport.assertXmlContains(xml, "<constantSize id=\"tree_prior_model\"");
+        XmlTestSupport.assertXmlContains(xml, "<coalescentSimulator id=\"tree_startingTree\"");
+        XmlTestSupport.assertXmlContains(xml, "<constantSize idref=\"tree_prior_model\"/>");
+        XmlTestSupport.assertXmlContains(xml, "<treeModel id=\"tree\">");
+        XmlTestSupport.assertXmlContains(xml, "<coalescentSimulator idref=\"tree_startingTree\"/>");
+        XmlTestSupport.assertXmlDoesNotContain(xml, "<newick id=\"tree_startingTree\"");
         XmlTestSupport.assertXmlContains(xml, "<populationSize>");
         XmlTestSupport.assertXmlContains(xml, "<parameter idref=\"populationSize\"/>");
         XmlTestSupport.assertXmlContains(xml, "<coalescentLikelihood id=\"tree_prior\">");
@@ -563,6 +572,11 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
         XmlTestSupport.assertXmlContains(xml, "<logNormalDistributionModel id=\"clockRate_prior_distribution\"");
 
         XmlTestSupport.assertXmlContains(xml, "<exponentialGrowth id=\"tree_prior_model\"");
+        XmlTestSupport.assertXmlContains(xml, "<coalescentSimulator id=\"tree_startingTree\"");
+        XmlTestSupport.assertXmlContains(xml, "<exponentialGrowth idref=\"tree_prior_model\"/>");
+        XmlTestSupport.assertXmlContains(xml, "<treeModel id=\"tree\">");
+        XmlTestSupport.assertXmlContains(xml, "<coalescentSimulator idref=\"tree_startingTree\"/>");
+        XmlTestSupport.assertXmlDoesNotContain(xml, "<newick id=\"tree_startingTree\"");
         XmlTestSupport.assertXmlContains(xml, "<populationSize>");
         XmlTestSupport.assertXmlContains(xml, "<parameter idref=\"populationSize\"/>");
         XmlTestSupport.assertXmlContains(xml, "<growthRate>");
@@ -681,6 +695,9 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
                 );
 
         XmlTestSupport.assertXmlContains(xml, "<logisticGrowth id=\"tree_prior_model\"");
+        XmlTestSupport.assertXmlContains(xml, "<newick id=\"tree_startingTree\"");
+        XmlTestSupport.assertXmlContains(xml, "<newick idref=\"tree_startingTree\"/>");
+        XmlTestSupport.assertXmlDoesNotContain(xml, "<coalescentSimulator id=\"tree_startingTree\"");
         XmlTestSupport.assertXmlContains(xml, "<populationSize>");
         XmlTestSupport.assertXmlContains(xml, "<parameter id=\"tree_prior_populationSize\" value=\"10000.0\"");
         XmlTestSupport.assertXmlContains(xml, "<growthRate>");

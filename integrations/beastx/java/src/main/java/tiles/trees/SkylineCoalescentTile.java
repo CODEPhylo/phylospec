@@ -1,9 +1,9 @@
 package tiles.trees;
 
-import dr.evolution.coalescent.TreeIntervals;
 import dr.evolution.util.Taxa;
 import dr.evolution.util.Units;
 import dr.evomodel.coalescent.CoalescentLikelihood;
+import dr.evomodel.coalescent.TreeIntervals;
 import dr.evomodel.coalescent.demographicmodel.PiecewisePopulationModel;
 import dr.evomodel.tree.DefaultTreeModel;
 import dr.inference.model.Parameter;

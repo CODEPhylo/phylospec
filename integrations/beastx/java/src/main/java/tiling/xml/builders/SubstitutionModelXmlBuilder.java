@@ -281,7 +281,7 @@ public class SubstitutionModelXmlBuilder {
                 .withChild(
                         XmlElement.element("frequencies")
                                 .withChild(
-                                        vectorParameterDefinition(
+                                        vectorParameterOrInlineDefinition(
                                                 frequencyModelId + "_parameter",
                                                 frequencies
                                         )
@@ -555,6 +555,20 @@ public class SubstitutionModelXmlBuilder {
         return XmlElement.element("parameter")
                 .withId(id == null || id.isBlank() ? fallbackId : id)
                 .withAttribute("value", vectorValue(parameter));
+    }
+
+    private XmlElement vectorParameterOrInlineDefinition(
+            String fallbackId,
+            Parameter parameter
+    ) {
+        String id =
+                parameter.getId();
+
+        if (id != null && !id.isBlank()) {
+            return XmlElement.ref("parameter", id);
+        }
+
+        return vectorParameterDefinition(fallbackId, parameter);
     }
 
     private String vectorValue(Parameter parameter) {

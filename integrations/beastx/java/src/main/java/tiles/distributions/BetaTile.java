@@ -3,7 +3,6 @@ package tiles.distributions;
 import dr.inference.distribution.BetaDistributionModel;
 import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.model.Parameter;
-import dr.util.Attribute;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.domain.UnitInterval;
@@ -60,10 +59,7 @@ public class BetaTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
-                state -> likelihood.addData(new Attribute.Default<>(
-                        state.getParameter().getParameterName(),
-                        new double[] {state.getParameter().getParameterValue(0)}
-                ))
+                state -> likelihood.addData(state.getParameter())
         );
     }
 }

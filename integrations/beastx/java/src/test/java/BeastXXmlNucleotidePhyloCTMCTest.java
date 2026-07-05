@@ -497,6 +497,15 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                             clockRate,
                             firstShape,
                             secondShape,
+                            posterior,
+                            prior,
+                            likelihood,
+                            "birthRate_prior",
+                            "clockRate_prior",
+                            "tree_prior",
+                            "firstAlignment_likelihood",
+                            "tree.height",
+                            "tree.treeLength",
                             firstRateAC,
                             firstRateAG,
                             firstRateAT,
@@ -552,10 +561,20 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
         assertTrue(xml.contains("<siteModel id=\"firstAlignment_likelihood_siteRateModel\""), xml);
         assertTrue(xml.contains("<siteModel id=\"secondAlignment_likelihood_siteRateModel\""), xml);
 
-        assertTrue(xml.contains("<gammaShape gammaCategories=\"5\""), xml);
+        assertTrue(xml.contains("<gammaShape gammaCategories=\"4\""), xml);
 
         assertTrue(xml.contains("<parameter idref=\"firstShape\""), xml);
         assertTrue(xml.contains("<parameter idref=\"secondShape\""), xml);
+
+        assertTrue(xml.contains("<joint idref=\"joint\""), xml);
+        assertTrue(xml.contains("<prior idref=\"prior\""), xml);
+        assertTrue(xml.contains("<likelihood idref=\"likelihood\""), xml);
+        assertTrue(xml.contains("<distributionLikelihood idref=\"birthRate_prior\""), xml);
+        assertTrue(xml.contains("<distributionLikelihood idref=\"clockRate_prior\""), xml);
+        assertTrue(xml.contains("<speciationLikelihood idref=\"tree_prior\""), xml);
+        assertTrue(xml.contains("<treeLikelihood idref=\"firstAlignment_likelihood\""), xml);
+        assertTrue(xml.contains("<treeHeightStatistic idref=\"tree.height\""), xml);
+        assertTrue(xml.contains("<treeLengthStatistic idref=\"tree.treeLength\""), xml);
 
         assertTrue(xml.contains("<proportionInvariant>"), xml);
         assertTrue(xml.contains("value=\"0.05\""), xml);

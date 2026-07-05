@@ -10,6 +10,7 @@ import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
 import dr.inference.model.Statistic;
 import org.phylospec.tiling.TypeToken;
+import tiling.model.StartingTreeSpec;
 import tiling.params.BeastXParam;
 import tiling.xml.XmlPlan;
 
@@ -46,6 +47,7 @@ public class BeastXState {
     public final Map<String, TreeModel> treeModelsByPhyloSpecName;
     public final Map<Parameter, AbstractDistributionLikelihood> priorDistributions;
     public final Map<TreeModel, AbstractModelLikelihood> treePriorDistributions;
+    public final Map<TreeModel, StartingTreeSpec> startingTreeSpecs;
     public final List<AbstractDistributionLikelihood> calibrationPriorDistributions;
     public final List<Likelihood> likelihoodDistributions;
 
@@ -79,6 +81,7 @@ public class BeastXState {
         this.treeModelsByPhyloSpecName = new HashMap<>();
         this.priorDistributions = new HashMap<>();
         this.treePriorDistributions = new HashMap<>();
+        this.startingTreeSpecs = new HashMap<>();
         this.calibrationPriorDistributions = new ArrayList<>();
         this.likelihoodDistributions = new ArrayList<>();
         this.treeClockRateParameters = new HashMap<>();
@@ -154,6 +157,20 @@ public class BeastXState {
             AbstractModelLikelihood likelihood,
             String id
     ) {
+        return addTreePriorDistribution(
+                treeModel,
+                likelihood,
+                StartingTreeSpec.fixedNewick(),
+                id
+        );
+    }
+
+    public TreeModel addTreePriorDistribution(
+            TreeModel treeModel,
+            AbstractModelLikelihood likelihood,
+            StartingTreeSpec startingTreeSpec,
+            String id
+    ) {
         if (this.treeModelsByPhyloSpecName.containsKey(id)) {
             throw new IllegalArgumentException(
                     "Tree model already registered for PhyloSpec name: " + id
@@ -163,6 +180,7 @@ public class BeastXState {
         treeModel.setId(this.getAvailableID(id));
         likelihood.setId(this.getAvailableID(id + "_prior"));
         this.treePriorDistributions.put(treeModel, likelihood);
+        this.startingTreeSpecs.put(treeModel, startingTreeSpec);
         this.treeModelsByPhyloSpecName.put(id, treeModel);
 
         return treeModel;
@@ -243,6 +261,11 @@ public class BeastXState {
     * These values can be overridden by operator-configuration tiles.
     * */
     public static class OperatorConfig {
+        public double treeScaleFactor = 0.75;
+        public double treeUniformNodeHeightWeight = 15.0;
+        public double treeRandomWalkNodeHeightWeight = 15.0;
+        public double treeRandomWalkNodeHeightSize = 0.05;
+
         public double parameterOperatorWeight = 1.0;
         public double parameterScaleFactor = 0.75;
         public double randomWalkWindowSize = 1.0;
@@ -271,6 +294,14 @@ public class BeastXState {
                 case "treeWilsonBaldingWeight" -> this.treeWilsonBaldingWeight = value;
                 case "treeClockUpDownWeight" -> this.treeClockUpDownWeight = value;
                 case "treeClockUpDownScaleFactor" -> this.treeClockUpDownScaleFactor = value;
+                case "treeScaleFactor" -> this.treeScaleFactor = value;
+                case "treeNodeHeightWeight" -> {
+                    this.treeUniformNodeHeightWeight = value / 2.0;
+                    this.treeRandomWalkNodeHeightWeight = value / 2.0;
+                }
+                case "treeUniformNodeHeightWeight" -> this.treeUniformNodeHeightWeight = value;
+                case "treeRandomWalkNodeHeightWeight" -> this.treeRandomWalkNodeHeightWeight = value;
+                case "treeRandomWalkNodeHeightSize" -> this.treeRandomWalkNodeHeightSize = value;
                 default -> throw new IllegalArgumentException("Unsupported BEAST X operator setting: " + settingName);
             }
         }
@@ -290,21 +321,26 @@ public class BeastXState {
                     "treeNarrowExchangeWeight",
                     "treeWideExchangeWeight",
                     "treeWilsonBaldingWeight",
-                    "treeClockUpDownWeight"
+                    "treeClockUpDownWeight",
+                    "treeNodeHeightWeight",
+                    "treeUniformNodeHeightWeight",
+                    "treeRandomWalkNodeHeightWeight"
             ).contains(settingName);
         }
 
         public static boolean isScaleFactor(String settingName) {
             return Set.of(
                     "parameterScaleFactor",
-                    "treeClockUpDownScaleFactor"
+                    "treeClockUpDownScaleFactor",
+                    "treeScaleFactor"
             ).contains(settingName);
         }
 
         public static boolean isPositiveSetting(String settingName) {
             return Set.of(
                     "randomWalkWindowSize",
-                    "treeSubtreeSlideSize"
+                    "treeSubtreeSlideSize",
+                    "treeRandomWalkNodeHeightSize"
             ).contains(settingName);
         }
     }

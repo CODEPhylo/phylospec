@@ -15,11 +15,22 @@ public class BoundDistribution<T, O> {
 
     public final O distribution;
     public T stateNode;
+    public final StartingTreeSpec startingTreeSpec;
     private final Consumer<T> setStateNodeFunc;
 
     public BoundDistribution(O distribution, T defaultState, Consumer<T> setStateNodeFunc) {
+        this(distribution, defaultState, StartingTreeSpec.fixedNewick(), setStateNodeFunc);
+    }
+
+    public BoundDistribution(
+            O distribution,
+            T defaultState,
+            StartingTreeSpec startingTreeSpec,
+            Consumer<T> setStateNodeFunc
+    ) {
         this.distribution = distribution;
         this.stateNode = defaultState;
+        this.startingTreeSpec = startingTreeSpec;
         this.setStateNodeFunc = setStateNodeFunc;
     }
 

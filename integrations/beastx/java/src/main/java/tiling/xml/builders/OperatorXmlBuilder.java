@@ -18,6 +18,7 @@ public class OperatorXmlBuilder {
 
         operators.addAll(buildParameterOperators(state));
         operators.addAll(buildTreeOperators(state));
+        operators.addAll(buildClockTreeUpDownOperators(state));
 
         return operators;
     }
@@ -48,6 +49,39 @@ public class OperatorXmlBuilder {
         return operators;
     }
 
+    private List<XmlElement> buildClockTreeUpDownOperators(BeastXState state) {
+        List<XmlElement> operators =
+                new ArrayList<>();
+
+        Parameter clockRate =
+                findClockRateParameter(state);
+
+        if (clockRate == null) {
+            return operators;
+        }
+
+        List<TreeModel> trees =
+                new ArrayList<>(state.treePriorDistributions.keySet());
+
+        trees.sort(Comparator.comparing(OperatorXmlBuilder::treeId));
+
+        for (TreeModel treeModel : trees) {
+            if (hasRelaxedClockBranchRateModel(state, treeModel)) {
+                continue;
+            }
+
+            operators.add(
+                    clockTreeUpDownOperator(
+                            state,
+                            clockRate,
+                            treeModel
+                    )
+            );
+        }
+
+        return operators;
+    }
+
     private List<XmlElement> buildTreeOperators(BeastXState state) {
         List<XmlElement> operators =
                 new ArrayList<>();
@@ -64,6 +98,18 @@ public class OperatorXmlBuilder {
 
             String id =
                     treeId(treeModel);
+
+            operators.add(
+                    nodeHeightScaleOperator(state, treeModel)
+            );
+
+            operators.add(
+                    uniformNodeHeightOperator(state, treeModel)
+            );
+
+            operators.add(
+                    randomWalkNodeHeightOperator(state, treeModel)
+            );
 
             operators.add(
                     treeOperator(
@@ -98,6 +144,52 @@ public class OperatorXmlBuilder {
         }
 
         return operators;
+    }
+
+    private XmlElement nodeHeightScaleOperator(
+            BeastXState state,
+            TreeModel treeModel
+    ) {
+        String id =
+                treeId(treeModel);
+
+        return XmlElement.element("nodeHeightScaleOperator")
+                .withId(id + "_nodeHeightScale")
+                .withAttribute("scaleFactor", format(state.operatorConfig.treeScaleFactor))
+                .withAttribute("weight", format(state.operatorConfig.treeScaleWeight))
+                .withAttribute("scaleAll", "true")
+                .withAttribute("autoOptimize", "true")
+                .withChild(XmlElement.ref("treeModel", id));
+    }
+
+    private XmlElement uniformNodeHeightOperator(
+            BeastXState state,
+            TreeModel treeModel
+    ) {
+        String id =
+                treeId(treeModel);
+
+        return XmlElement.element("nodeHeightOperator")
+                .withId(id + "_uniformNodeHeight")
+                .withAttribute("type", "uniform")
+                .withAttribute("weight", format(state.operatorConfig.treeUniformNodeHeightWeight))
+                .withChild(treeReference(treeModel));
+    }
+
+    private XmlElement randomWalkNodeHeightOperator(
+            BeastXState state,
+            TreeModel treeModel
+    ) {
+        String id =
+                treeId(treeModel);
+
+        return XmlElement.element("nodeHeightOperator")
+                .withId(id + "_randomWalkNodeHeight")
+                .withAttribute("type", "randomwalk")
+                .withAttribute("size", format(state.operatorConfig.treeRandomWalkNodeHeightSize))
+                .withAttribute("weight", format(state.operatorConfig.treeRandomWalkNodeHeightWeight))
+                .withAttribute("autoOptimize", "true")
+                .withChild(treeReference(treeModel));
     }
 
     private boolean isRelaxedClockRateCategoriesParameter(
@@ -193,6 +285,31 @@ public class OperatorXmlBuilder {
                 .withChild(parameterReference(parameter));
     }
 
+    private XmlElement clockTreeUpDownOperator(
+            BeastXState state,
+            Parameter clockRate,
+            TreeModel treeModel
+    ) {
+        String treeId =
+                treeId(treeModel);
+
+        String clockRateId =
+                parameterId(clockRate);
+
+        return XmlElement.element("upDownOperator")
+                .withId(treeId + "_" + clockRateId + "_upDown")
+                .withAttribute("scaleFactor", format(state.operatorConfig.treeClockUpDownScaleFactor))
+                .withAttribute("weight", format(state.operatorConfig.treeClockUpDownWeight))
+                .withChild(
+                        XmlElement.element("up")
+                                .withChild(parameterReference(clockRate))
+                )
+                .withChild(
+                        XmlElement.element("down")
+                                .withChild(treeAllInternalNodeHeightsReference(treeModel))
+                );
+    }
+
     private XmlElement treeOperator(
             String elementName,
             String id,
@@ -220,12 +337,58 @@ public class OperatorXmlBuilder {
                 .withChild(treeReference(treeModel));
     }
 
+    private Parameter findClockRateParameter(BeastXState state) {
+        List<Parameter> parameters =
+                new ArrayList<>(state.stateNodes.keySet());
+
+        parameters.removeIf(parameter -> isRelaxedClockRateCategoriesParameter(state, parameter));
+
+        parameters.sort(Comparator.comparing(OperatorXmlBuilder::parameterId));
+
+        for (Parameter parameter : parameters) {
+            String id =
+                    parameterId(parameter);
+
+            if ("clockRate".equals(id)) {
+                return parameter;
+            }
+        }
+
+        for (Parameter parameter : parameters) {
+            String id =
+                    parameterId(parameter);
+
+            if ("clock.rate".equals(id)) {
+                return parameter;
+            }
+        }
+
+        for (Parameter parameter : parameters) {
+            String id =
+                    parameterId(parameter)
+                            .toLowerCase();
+
+            if (id.contains("clockrate") || id.contains("clock.rate")) {
+                return parameter;
+            }
+        }
+
+        return null;
+    }
+
     private XmlElement parameterReference(Parameter parameter) {
         return XmlElement.ref("parameter", parameterId(parameter));
     }
 
     private XmlElement treeReference(TreeModel treeModel) {
         return XmlElement.ref("treeModel", treeId(treeModel));
+    }
+
+    private XmlElement treeAllInternalNodeHeightsReference(TreeModel treeModel) {
+        return XmlElement.ref(
+                "parameter",
+                treeId(treeModel) + ".allInternalNodeHeights"
+        );
     }
 
     private static boolean supportsScaleOperator(Parameter parameter) {

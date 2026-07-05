@@ -330,7 +330,7 @@ public class BeastXRepresentativeModelsTest {
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=firstShape");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=secondShape");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=secondKappa");
-        assertAnyContains(summary.operatorDetails, "UpDownOperator(up=[clockRate], down=[tree]");
+        assertAnyContains(summary.operatorDetails, "UpDownOperator(up=[clockRate], down=[tree.allInternalNodeHeights]");
 
         assertEquals(
                 50000,
