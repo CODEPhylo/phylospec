@@ -4,7 +4,6 @@ import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.model.Parameter;
 import dr.math.UnivariateFunction;
 import dr.math.distributions.Distribution;
-import dr.util.Attribute;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.NonNegativeInt;
 import org.phylospec.domain.UnitInterval;
@@ -67,10 +66,7 @@ public class GeometricTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
-                state -> likelihood.addData(new Attribute.Default<>(
-                        state.getParameter().getParameterName(),
-                        new double[]{state.getParameter().getParameterValue(0)}
-                ))
+                state -> likelihood.addData(state.getParameter())
         );
     }
 

@@ -7,6 +7,7 @@ import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.Simplex;
 import tiling.BeastXState;
+import tiling.params.BeastXSimplexParam;
 
 import java.util.IdentityHashMap;
 
@@ -36,11 +37,23 @@ public class F81Tile extends GeneratorTile<HKY, BeastXState> {
             );
         }
 
-        FrequencyModel frequencies = new FrequencyModel(
+        FrequencyModel frequencies =
+                frequencyModel(baseFrequencies);
+
+        return new HKY(1.0, frequencies);
+    }
+
+    private static FrequencyModel frequencyModel(Simplex baseFrequencies) {
+        if (baseFrequencies instanceof BeastXSimplexParam beastXBaseFrequencies) {
+            return new FrequencyModel(
+                    Nucleotides.INSTANCE,
+                    beastXBaseFrequencies.getParameter()
+            );
+        }
+
+        return new FrequencyModel(
                 Nucleotides.INSTANCE,
                 baseFrequencies.getDoubleArray()
         );
-
-        return new HKY(1.0, frequencies);
     }
 }

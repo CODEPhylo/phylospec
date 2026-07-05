@@ -1,6 +1,8 @@
 import dr.evomodel.operators.ExchangeOperator;
 import dr.evomodel.operators.NodeHeightScaleOperator;
+import dr.evomodel.operators.RandomWalkNodeHeightOperator;
 import dr.evomodel.operators.SubtreeSlideOperator;
+import dr.evomodel.operators.UniformNodeHeightOperator;
 import dr.evomodel.operators.WilsonBalding;
 import dr.inference.loggers.Logger;
 import dr.inference.loggers.MCLogger;
@@ -334,7 +336,7 @@ public class BeastXMCMCBuilderTest {
                 Logger fileLogger = fileLogger(
                     logEvery=1000,
                     file="target/test-fileLogger-selected.log",
-                    parameters=[x]
+                    parameters=[x, "x_prior"]
                 )
             }
             """;
@@ -351,8 +353,9 @@ public class BeastXMCMCBuilderTest {
                 assertInstanceOf(MCLogger.class, loggers.getFirst());
 
         assertEquals(1000, logger.getLogEvery());
-        assertEquals(1, logger.getColumnCount());
+        assertEquals(2, logger.getColumnCount());
         assertEquals("x", logger.getColumnLabel(0));
+        assertEquals("x_prior", logger.getColumnLabel(1));
     }
 
     @Test
@@ -412,6 +415,43 @@ public class BeastXMCMCBuilderTest {
 
         assertEquals(1, loggers.size());
         assertInstanceOf(dr.evomodel.tree.TreeLogger.class, loggers.getFirst());
+    }
+
+    @Test
+    public void buildsFileLoggerForSelectedTreeStatistics() throws Exception {
+        String source = """
+            Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+            Taxa taxa = taxa(data)
+
+            Tree tree ~ Yule(
+                birthRate=1.0,
+                taxa=taxa
+            )
+
+            mcmc {
+                Logger fileLogger = fileLogger(
+                    logEvery=1000,
+                    file="target/test-fileLogger-tree-statistics.log",
+                    parameters=["tree.height", "tree.treeLength"]
+                )
+            }
+            """;
+
+        PhyloSpecRunner runner = new PhyloSpecRunner(source);
+        BeastXState state = runner.buildState("test");
+
+        List<Logger> loggers =
+                new MCMCBuilder().buildLoggers(state);
+
+        assertEquals(1, loggers.size());
+
+        MCLogger logger =
+                assertInstanceOf(MCLogger.class, loggers.getFirst());
+
+        assertEquals(1000, logger.getLogEvery());
+        assertEquals(2, logger.getColumnCount());
+        assertEquals("tree.height", logger.getColumnLabel(0));
+        assertEquals("tree.treeLength", logger.getColumnLabel(1));
     }
 
     @Test
@@ -727,7 +767,7 @@ public class BeastXMCMCBuilderTest {
                 Logger fileLogger = fileLogger(
                     logEvery=5,
                     file="%s",
-                    parameters=[posterior, prior, likelihood, x]
+                    parameters=[posterior, prior, likelihood, x, "x_prior"]
                 )
             }
             """.formatted(explicitLogPath.toString().replace("\\", "\\\\"));
@@ -808,8 +848,10 @@ public class BeastXMCMCBuilderTest {
         List<MCMCOperator> operators =
                 buildOperators(source);
 
-        assertEquals(5, operators.size());
+        assertEquals(7, operators.size());
         assertTrue(containsOperator(operators, NodeHeightScaleOperator.class));
+        assertTrue(containsOperator(operators, UniformNodeHeightOperator.class));
+        assertTrue(containsOperator(operators, RandomWalkNodeHeightOperator.class));
         assertTrue(containsOperator(operators, SubtreeSlideOperator.class));
         assertTrue(containsOperator(operators, ExchangeOperator.class));
         assertTrue(containsOperator(operators, WilsonBalding.class));
@@ -841,12 +883,14 @@ public class BeastXMCMCBuilderTest {
         List<MCMCOperator> operators =
                 buildOperators(source);
 
-        assertEquals(7, operators.size());
+        assertEquals(9, operators.size());
 
         assertTrue(containsOperator(operators, ScaleOperator.class));
         assertTrue(containsOperator(operators, DeltaExchangeOperator.class));
 
         assertTrue(containsOperator(operators, NodeHeightScaleOperator.class));
+        assertTrue(containsOperator(operators, UniformNodeHeightOperator.class));
+        assertTrue(containsOperator(operators, RandomWalkNodeHeightOperator.class));
         assertTrue(containsOperator(operators, SubtreeSlideOperator.class));
         assertTrue(containsOperator(operators, ExchangeOperator.class));
         assertTrue(containsOperator(operators, WilsonBalding.class));

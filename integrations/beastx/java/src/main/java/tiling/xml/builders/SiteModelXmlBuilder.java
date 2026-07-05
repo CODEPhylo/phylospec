@@ -72,11 +72,21 @@ public class SiteModelXmlBuilder {
                         false
                 );
 
+        Parameter invariantParameter =
+                getParameterField(
+                        siteRateModel,
+                        "invarParameter",
+                        false
+                );
+
         if (shapeParameter != null) {
             element =
                     element.withChild(
                             XmlElement.element("gammaShape")
-                                    .withAttribute("gammaCategories", siteRateModel.getCategoryCount())
+                                    .withAttribute(
+                                            "gammaCategories",
+                                            gammaCategoryCount(siteRateModel, invariantParameter)
+                                    )
                                     .withChild(
                                             parameterOrInlineDefinition(
                                                     siteRateModelId + "_shape",
@@ -85,13 +95,6 @@ public class SiteModelXmlBuilder {
                                     )
                     );
         }
-
-        Parameter invariantParameter =
-                getParameterField(
-                        siteRateModel,
-                        "invarParameter",
-                        false
-                );
 
         if (invariantParameter != null) {
             element =
@@ -107,6 +110,20 @@ public class SiteModelXmlBuilder {
         }
 
         return element;
+    }
+
+    private int gammaCategoryCount(
+            GammaSiteRateModel siteRateModel,
+            Parameter invariantParameter
+    ) {
+        int categoryCount =
+                siteRateModel.getCategoryCount();
+
+        if (invariantParameter != null && categoryCount > 1) {
+            return categoryCount - 1;
+        }
+
+        return categoryCount;
     }
 
     private Parameter getParameterField(

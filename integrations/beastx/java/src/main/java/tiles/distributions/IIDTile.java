@@ -2,7 +2,6 @@ package tiles.distributions;
 
 import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.model.Parameter;
-import dr.util.Attribute;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveInt;
 import org.phylospec.tiling.errors.TileApplicationError;
@@ -78,10 +77,7 @@ public final class IIDTile {
             return new BoundDistribution<>(
                     base.distribution,
                     defaultState,
-                    state -> base.distribution.addData(new Attribute.Default<>(
-                            state.getParameter().getParameterName(),
-                            state.getParameter().getParameterValues()
-                    ))
+                    state -> base.distribution.addData(state.getParameter())
             );
         }
     }
@@ -152,10 +148,7 @@ public final class IIDTile {
             return new BoundDistribution<>(
                     base.distribution,
                     defaultState,
-                    state -> base.distribution.addData(new Attribute.Default<>(
-                            state.getParameter().getParameterName(),
-                            state.getParameter().getParameterValues()
-                    ))
+                    state -> base.distribution.addData(state.getParameter())
             );
         }
     }

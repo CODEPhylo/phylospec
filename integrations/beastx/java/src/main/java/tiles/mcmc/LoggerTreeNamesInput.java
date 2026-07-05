@@ -1,8 +1,10 @@
 package tiles.mcmc;
 
+import dr.evomodel.tree.TreeModel;
 import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
+import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.tiling.tiles.TileInput;
 import org.phylospec.tiling.tiles.Tile;
@@ -21,6 +23,8 @@ import java.util.Set;
 public class LoggerTreeNamesInput extends TileInput<LoggerTreeNames, BeastXState> {
 
     private final String templateVariable;
+    private static final TypeToken<TreeModel> TREE_MODEL_TYPE =
+            new TypeToken<>() {};
 
     public LoggerTreeNamesInput(String templateVariable, boolean required) {
         super(required, EnumSet.allOf(Stochasticity.class));
@@ -56,9 +60,14 @@ public class LoggerTreeNamesInput extends TileInput<LoggerTreeNames, BeastXState
         List<Set<Tile<?, BeastXState>>> allPossibleInputTiles = new ArrayList<>();
 
         for (Expr element : array.elements) {
+            if (element instanceof Expr.Literal literal && literal.value instanceof String string) {
+                names.add(string);
+                continue;
+            }
+
             if (!(element instanceof Expr.Variable variable)) {
                 throw new FailedTilingAttempt.RejectedBoundary(
-                        "BEAST X tree logger trees must be tree variable names."
+                        "BEAST X tree logger trees must be tree variable names or string tree names."
                 );
             }
 
@@ -70,7 +79,26 @@ public class LoggerTreeNamesInput extends TileInput<LoggerTreeNames, BeastXState
                 throw new FailedTilingAttempt.RejectedCascade(variable);
             }
 
-            allPossibleInputTiles.add(tiles);
+            Set<Tile<?, BeastXState>> treeTiles =
+                    compatibleTreeTiles(tiles);
+
+            if (treeTiles.isEmpty()) {
+                throw new FailedTilingAttempt.RejectedBoundary(
+                        "BEAST X tree logger trees must reference tree variables."
+                );
+            }
+
+            allPossibleInputTiles.add(treeTiles);
+        }
+
+        if (allPossibleInputTiles.isEmpty()) {
+            LoggerTreeNamesTile tile =
+                    new LoggerTreeNamesTile(names, List.of());
+
+            tile.setRootNode(inputAstNode);
+            tile.setWeight(0);
+
+            return Set.of(tile);
         }
 
         Set<Tile<?, BeastXState>> tiles = new HashSet<>();
@@ -94,6 +122,19 @@ public class LoggerTreeNamesInput extends TileInput<LoggerTreeNames, BeastXState
         );
 
         return tiles;
+    }
+
+    private static Set<Tile<?, BeastXState>> compatibleTreeTiles(Set<Tile<?, BeastXState>> tiles) {
+        Set<Tile<?, BeastXState>> compatible =
+                new HashSet<>();
+
+        for (Tile<?, BeastXState> tile : tiles) {
+            if (TREE_MODEL_TYPE.isAssignableFrom(tile.getTypeToken())) {
+                compatible.add(tile);
+            }
+        }
+
+        return compatible;
     }
 
     private static class LoggerTreeNamesTile extends Tile<LoggerTreeNames, BeastXState> {

@@ -2,7 +2,6 @@ package tiles.distributions;
 
 import dr.inference.distribution.MultivariateDistributionLikelihood;
 import dr.math.distributions.MultivariateNormalDistribution;
-import dr.util.Attribute;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.Real;
 import org.phylospec.tiling.errors.TileApplicationError;
@@ -87,10 +86,7 @@ public class MultivariateNormalTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
-                state -> likelihood.addData(new Attribute.Default<>(
-                        state.getParameter().getParameterName(),
-                        state.getParameter().getParameterValues()
-                ))
+                state -> likelihood.addData(state.getParameter())
         );
     }
 

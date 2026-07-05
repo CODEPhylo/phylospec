@@ -13,7 +13,7 @@ import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.IntScalar;
 import org.phylospec.types.RealScalar;
 import tiling.BeastXState;
-import tiling.params.BeastXParameters;
+import tiling.params.BeastXRealScalarParam;
 
 import java.util.IdentityHashMap;
 
@@ -59,12 +59,12 @@ public class SiteModelTile extends GeneratorTile<
                 new Parameter.Default(1.0);
 
         Parameter shapeParameter =
-                BeastXParameters.toParameter(shape);
+                toParameter(shape);
 
         Parameter invariantProportionParameter =
                 invariantProportion == null
-                        ? unitIntervalParameter(0.0)
-                        : BeastXParameters.toParameter(invariantProportion);
+                        ? null
+                        : toParameter(invariantProportion);
 
         GammaSiteRateModel siteRateModel =
                 new GammaSiteRateModel(
@@ -83,6 +83,14 @@ public class SiteModelTile extends GeneratorTile<
                     return partialSiteRateModel;
                 }
         );
+    }
+
+    private Parameter toParameter(RealScalar<?> scalar) {
+        if (scalar instanceof BeastXRealScalarParam<?> beastXScalar) {
+            return beastXScalar.getParameter();
+        }
+
+        return new Parameter.Default(scalar.get());
     }
 
     private Parameter unitIntervalParameter(double value) {
