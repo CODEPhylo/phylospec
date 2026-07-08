@@ -58,7 +58,7 @@ public class BeastXRepresentativeModelsTest {
 
             if (!summary.treePriors.isEmpty()) {
                 assertTrue(
-                        summary.operators.contains("NodeHeightScaleOperator"),
+                        summary.operators.contains("UniformNodeHeightOperator"),
                         "Stochastic tree model should have a tree height operator: " + modelPath
                 );
 
@@ -239,7 +239,6 @@ public class BeastXRepresentativeModelsTest {
                 summary.operators,
                 "DeltaExchangeOperator",
                 "ExchangeOperator",
-                "NodeHeightScaleOperator",
                 "RandomWalkOperator",
                 "ScaleOperator",
                 "SubtreeSlideOperator",
@@ -308,7 +307,6 @@ public class BeastXRepresentativeModelsTest {
                 summary.operators,
                 "DeltaExchangeOperator",
                 "ExchangeOperator",
-                "NodeHeightScaleOperator",
                 "ScaleOperator",
                 "SubtreeSlideOperator",
                 "UpDownOperator",
@@ -376,7 +374,6 @@ public class BeastXRepresentativeModelsTest {
                 summary.operators,
                 "DeltaExchangeOperator",
                 "ExchangeOperator",
-                "NodeHeightScaleOperator",
                 "ScaleOperator",
                 "SubtreeSlideOperator",
                 "UpDownOperator",

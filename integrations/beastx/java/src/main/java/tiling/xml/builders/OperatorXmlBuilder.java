@@ -100,15 +100,7 @@ public class OperatorXmlBuilder {
                     treeId(treeModel);
 
             operators.add(
-                    nodeHeightScaleOperator(state, treeModel)
-            );
-
-            operators.add(
                     uniformNodeHeightOperator(state, treeModel)
-            );
-
-            operators.add(
-                    randomWalkNodeHeightOperator(state, treeModel)
             );
 
             operators.add(
@@ -146,22 +138,6 @@ public class OperatorXmlBuilder {
         return operators;
     }
 
-    private XmlElement nodeHeightScaleOperator(
-            BeastXState state,
-            TreeModel treeModel
-    ) {
-        String id =
-                treeId(treeModel);
-
-        return XmlElement.element("nodeHeightScaleOperator")
-                .withId(id + "_nodeHeightScale")
-                .withAttribute("scaleFactor", format(state.operatorConfig.treeScaleFactor))
-                .withAttribute("weight", format(state.operatorConfig.treeScaleWeight))
-                .withAttribute("scaleAll", "true")
-                .withAttribute("autoOptimize", "true")
-                .withChild(XmlElement.ref("treeModel", id));
-    }
-
     private XmlElement uniformNodeHeightOperator(
             BeastXState state,
             TreeModel treeModel
@@ -171,25 +147,8 @@ public class OperatorXmlBuilder {
 
         return XmlElement.element("nodeHeightOperator")
                 .withId(id + "_uniformNodeHeight")
-                .withAttribute("type", "uniform")
-                .withAttribute("weight", format(state.operatorConfig.treeUniformNodeHeightWeight))
-                .withChild(treeReference(treeModel));
-    }
-
-    private XmlElement randomWalkNodeHeightOperator(
-            BeastXState state,
-            TreeModel treeModel
-    ) {
-        String id =
-                treeId(treeModel);
-
-        return XmlElement.element("nodeHeightOperator")
-                .withId(id + "_randomWalkNodeHeight")
-                .withAttribute("type", "randomwalk")
-                .withAttribute("size", format(state.operatorConfig.treeRandomWalkNodeHeightSize))
-                .withAttribute("weight", format(state.operatorConfig.treeRandomWalkNodeHeightWeight))
-                .withAttribute("autoOptimize", "true")
-                .withChild(treeReference(treeModel));
+                .withAttribute("weight", format(state.operatorConfig.treeNodeHeightWeight))
+                .withChild(XmlElement.ref("treeModel", id));
     }
 
     private boolean isRelaxedClockRateCategoriesParameter(

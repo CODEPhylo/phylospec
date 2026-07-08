@@ -270,10 +270,8 @@ public class BeastXState {
 
         public double treeScaleWeight = 5.0;
         public double treeScaleFactor = 0.75;
-        public double treeUniformNodeHeightWeight = 15.0;
-        public double treeRandomWalkNodeHeightWeight = 15.0;
-        public double treeRandomWalkNodeHeightSize = 0.05;
 
+        public double treeNodeHeightWeight = 30.0;
         public double treeSubtreeSlideSize = 15.0;
         public double treeSubtreeSlideWeight = 15.0;
         public double treeNarrowExchangeWeight = 15.0;
@@ -291,13 +289,8 @@ public class BeastXState {
                 case "randomWalkWindowSize" -> this.randomWalkWindowSize = value;
                 case "treeScaleWeight" -> this.treeScaleWeight = value;
                 case "treeScaleFactor" -> this.treeScaleFactor = value;
-                case "treeNodeHeightWeight" -> {
-                    this.treeUniformNodeHeightWeight = value / 2.0;
-                    this.treeRandomWalkNodeHeightWeight = value / 2.0;
-                }
-                case "treeUniformNodeHeightWeight" -> this.treeUniformNodeHeightWeight = value;
-                case "treeRandomWalkNodeHeightWeight" -> this.treeRandomWalkNodeHeightWeight = value;
-                case "treeRandomWalkNodeHeightSize" -> this.treeRandomWalkNodeHeightSize = value;
+                case "treeNodeHeightWeight" -> this.treeNodeHeightWeight = value;
+
                 case "treeSubtreeSlideSize" -> this.treeSubtreeSlideSize = value;
                 case "treeSubtreeSlideWeight" -> this.treeSubtreeSlideWeight = value;
                 case "treeNarrowExchangeWeight" -> this.treeNarrowExchangeWeight = value;
@@ -321,8 +314,6 @@ public class BeastXState {
                     "parameterOperatorWeight",
                     "treeScaleWeight",
                     "treeNodeHeightWeight",
-                    "treeUniformNodeHeightWeight",
-                    "treeRandomWalkNodeHeightWeight",
                     "treeSubtreeSlideWeight",
                     "treeNarrowExchangeWeight",
                     "treeWideExchangeWeight",

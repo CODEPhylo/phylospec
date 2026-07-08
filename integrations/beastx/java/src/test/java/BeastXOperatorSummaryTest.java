@@ -44,7 +44,6 @@ public class BeastXOperatorSummaryTest {
         assertContains(operatorSummary, "ExchangeOperator(tree=tree, mode=narrow");
         assertContains(operatorSummary, "ExchangeOperator(tree=tree, mode=wide");
         assertContains(operatorSummary, "UniformNodeHeightOperator(tree=tree");
-        assertContains(operatorSummary, "RandomWalkNodeHeightOperator(tree=tree");
         assertContains(operatorSummary, "WilsonBalding(tree=tree");
 
         assertTrue(
