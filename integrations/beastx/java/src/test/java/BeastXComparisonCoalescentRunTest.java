@@ -252,6 +252,10 @@ public class BeastXComparisonCoalescentRunTest {
         assertTrue(xml.contains("joint"), xml);
         assertTrue(xml.contains("prior"), xml);
         assertTrue(xml.contains("likelihood"), xml);
+        assertTrue(xml.contains("fileName=\"beastx-tutorial-h1n1-dated-exponential-coalescent-hky-gamma.log\""), xml);
+        assertTrue(xml.contains("fileName=\"beastx-tutorial-h1n1-dated-exponential-coalescent-hky-gamma.trees\""), xml);
+        assertFalse(xml.contains("fileName=\"target/comparison/"), xml);
+        assertFalse(xml.contains("fileName=\"phylo-beastx-tutorial-h1n1-dated-exponential-coalescent-hky-gamma"), xml);
 
         assertTrue(xml.contains("<coalescentSimulator id=\"tree_startingTree\">"), xml);
         assertTrue(xml.contains("<taxa id=\"tree_startingTaxa\">"), xml);
@@ -263,9 +267,9 @@ public class BeastXComparisonCoalescentRunTest {
         assertTrue(xml.contains("<scaleOperator id=\"populationSize_scale\" scaleFactor=\"0.75\" weight=\"1.0\">"), xml);
         assertTrue(xml.contains("<deltaExchange id=\"baseFrequencies_deltaExchange\" delta=\"0.01\" weight=\"1.0\">"), xml);
 
-        assertTrue(xml.contains("<nodeHeightScaleOperator id=\"tree_nodeHeightScale\" scaleFactor=\"0.75\" weight=\"5.0\" scaleAll=\"true\" autoOptimize=\"true\">"), xml);
-        assertTrue(xml.contains("<nodeHeightOperator id=\"tree_uniformNodeHeight\" type=\"uniform\" weight=\"15.0\">"), xml);
-        assertTrue(xml.contains("<nodeHeightOperator id=\"tree_randomWalkNodeHeight\" type=\"randomwalk\" size=\"0.05\" weight=\"15.0\" autoOptimize=\"true\">"), xml);
+        assertFalse(xml.contains("<nodeHeightScaleOperator"), xml);
+        assertTrue(xml.contains("<nodeHeightOperator id=\"tree_uniformNodeHeight\" weight=\"30.0\">"), xml);
+        assertFalse(xml.contains("<nodeHeightOperator id=\"tree_randomWalkNodeHeight\""), xml);
         assertTrue(xml.contains("<narrowExchange id=\"tree_narrowExchange\" weight=\"15.0\">"), xml);
         assertTrue(xml.contains("<wideExchange id=\"tree_wideExchange\" weight=\"5.0\">"), xml);
         assertTrue(xml.contains("<subtreeSlide id=\"tree_subtreeSlide\" weight=\"15.0\" size=\"15.0\" gaussian=\"true\">"), xml);

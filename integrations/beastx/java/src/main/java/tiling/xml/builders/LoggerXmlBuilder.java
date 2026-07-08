@@ -57,7 +57,7 @@ public class LoggerXmlBuilder {
                     parameterLogger(
                             "fileLogger" + loggerIndex,
                             spec.logEvery,
-                            spec.fileName,
+                            xmlFileName(spec.fileName),
                             getLoggedElements(state, spec.parameterNames)
                     )
             );
@@ -73,7 +73,7 @@ public class LoggerXmlBuilder {
                     treeLogger(
                             "treeLogger" + treeLoggerIndex,
                             spec.logEvery,
-                            spec.fileName,
+                            xmlFileName(spec.fileName),
                             getLoggedTrees(state, spec.treeNames)
                     )
             );
@@ -129,6 +129,30 @@ public class LoggerXmlBuilder {
         }
 
         return logger;
+    }
+
+    private String xmlFileName(String fileName) {
+        if (fileName == null) {
+            return null;
+        }
+
+        int separatorIndex =
+                Math.max(
+                        fileName.lastIndexOf('/'),
+                        fileName.lastIndexOf('\\')
+                );
+
+        String baseName =
+                separatorIndex < 0
+                        ? fileName
+                        : fileName.substring(separatorIndex + 1);
+
+        // It a little bit too hard-coded, after maybe need to change
+        if (baseName.startsWith("phylo-")) {
+            return baseName.substring("phylo-".length());
+        }
+
+        return baseName;
     }
 
     private List<XmlElement> getLoggedElements(

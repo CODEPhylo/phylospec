@@ -16,7 +16,7 @@ PositiveReal growthRate ~ LogNormal(
 )
 
 Rate clockRate ~ LogNormal(
-    logMean=-6.9,
+    logMean=-5.8,
     logSd=1.0
 )
 
@@ -63,5 +63,5 @@ Alignment alignment ~ PhyloCTMC(
 
 mcmc {
     Integer chainLength = 10000000
-    Integer randomSeed = 741852963
+    Integer randomSeed = 123456
 }

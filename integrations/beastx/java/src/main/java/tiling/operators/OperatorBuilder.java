@@ -1,8 +1,6 @@
 package tiling.operators;
 
 import dr.evomodel.operators.ExchangeOperator;
-import dr.evomodel.operators.NodeHeightScaleOperator;
-import dr.evomodel.operators.RandomWalkNodeHeightOperator;
 import dr.evomodel.operators.SubtreeSlideOperator;
 import dr.evomodel.operators.UniformNodeHeightOperator;
 import dr.evomodel.operators.WilsonBalding;
@@ -295,22 +293,9 @@ public class OperatorBuilder {
         List<MCMCOperator> operators =
                 new ArrayList<>();
 
-        operators.add(buildNodeHeightScaleOperator(
-                treeModel,
-                config
-        ));
-
         operators.add(new UniformNodeHeightOperator(
                 treeModel,
-                config.treeUniformNodeHeightWeight
-        ));
-
-        operators.add(new RandomWalkNodeHeightOperator(
-                treeModel,
-                config.treeRandomWalkNodeHeightWeight,
-                config.treeRandomWalkNodeHeightSize,
-                AdaptationMode.DEFAULT,
-                0.234
+                config.treeNodeHeightWeight
         ));
 
         operators.add(new ExchangeOperator(
@@ -347,23 +332,6 @@ public class OperatorBuilder {
         return operators;
     }
 
-    private MCMCOperator buildNodeHeightScaleOperator(
-            TreeModel treeModel,
-            BeastXState.OperatorConfig config
-    ) {
-        NodeHeightScaleOperator operator =
-                new NodeHeightScaleOperator(
-                        treeModel,
-                        config.treeScaleFactor,
-                        true,
-                        AdaptationMode.DEFAULT
-                );
-
-        operator.setWeight(config.treeScaleWeight);
-
-        return operator;
-    }
-
     private List<String> summarizeDefaultTreeOperators(
             TreeModel treeModel,
             BeastXState.OperatorConfig config
@@ -371,21 +339,9 @@ public class OperatorBuilder {
         List<String> summaries =
                 new ArrayList<>();
 
-        summaries.add("NodeHeightScaleOperator(tree=%s, weight=%s, scaleFactor=%s, scaleAll=true)".formatted(
-                treeModel.getId(),
-                format(config.treeScaleWeight),
-                format(config.treeScaleFactor)
-        ));
-
         summaries.add("UniformNodeHeightOperator(tree=%s, weight=%s)".formatted(
                 treeModel.getId(),
-                format(config.treeUniformNodeHeightWeight)
-        ));
-
-        summaries.add("RandomWalkNodeHeightOperator(tree=%s, weight=%s, size=%s)".formatted(
-                treeModel.getId(),
-                format(config.treeRandomWalkNodeHeightWeight),
-                format(config.treeRandomWalkNodeHeightSize)
+                format(config.treeNodeHeightWeight)
         ));
 
         summaries.add("ExchangeOperator(tree=%s, mode=narrow, weight=%s)".formatted(
