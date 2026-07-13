@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("beagle")
 public class BeastXXmlNucleotidePhyloCTMCTest {
 
     @Test
@@ -101,7 +102,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
         XmlTestSupport.assertXmlContains(xml, "<hkyModel idref=\"alignment_likelihood_substitutionModel\"");
         XmlTestSupport.assertXmlContains(xml, "<strictClockBranchRates");
         XmlTestSupport.assertXmlContains(xml, "<treeLikelihood");
-        XmlTestSupport.assertXmlContains(xml, "<joint id=\"joint\"");
+        XmlTestSupport.assertXmlContains(xml, "<joint id=\"posterior\"");
         XmlTestSupport.assertXmlContains(xml, "<prior id=\"prior\"");
         XmlTestSupport.assertXmlContains(xml, "<likelihood id=\"likelihood\"");
         XmlTestSupport.assertXmlContains(xml, "<log id=\"fileLogger");

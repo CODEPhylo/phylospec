@@ -15,6 +15,9 @@ import java.util.List;
  * Writes an {@link XmlPlan} and BEAST X state into a complete BEAST XML document.
  */
 public class XmlDocumentWriter {
+    private static final String POSTERIOR_ID =
+            "posterior";
+
 
     public String write(
             BeastXState state,
@@ -127,7 +130,7 @@ public class XmlDocumentWriter {
         if (plan.has(XmlPlan.Section.MCMC_LIKELIHOOD)) {
             writer.writeOpenTag(
                     CompoundLikelihoodParser.JOINT,
-                    new Attribute.Default<>(XMLParser.ID, "joint")
+                    new Attribute.Default<>(XMLParser.ID, POSTERIOR_ID)
             );
         }
 

@@ -1,0 +1,28 @@
+Alignment data = fromNexus(
+    file="src/test/java/resources/comparison/phases/phase1/testHKY.nex"
+)
+
+PositiveReal kappa ~ LogNormal(
+    logMean=1.0,
+    logSd=0.5
+)
+
+Tree tree ~ Yule(
+    birthRate=1.0,
+    taxa=taxa(data)
+)
+
+QMatrix qMatrix = hky(
+    kappa=kappa,
+    baseFrequencies~Dirichlet(repeat(1.0, num=4))
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix
+) observed as data
+
+mcmc {
+    Integer chainLength = 1000000
+    Integer randomSeed = 1234
+}

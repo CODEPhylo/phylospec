@@ -1,0 +1,26 @@
+Alignment data = fromNexus(
+    file="src/test/java/resources/comparison/H1N1pdm_2009.nex"
+)
+
+Tree tree = fromTree("src/test/java/resources/comparison/h1n1-balanced-diagnostic-tree.nwk")
+
+Rate clockRate ~ LogNormal(
+    logMean=-9.0,
+    logSd=1.0
+)
+
+QMatrix qMatrix = jc69()
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix,
+    branchRates~StrictClock(
+        clockRate=clockRate,
+        tree=tree
+    )
+) observed as data
+
+mcmc {
+    Integer chainLength = 1000000
+    Integer randomSeed = 1234
+}

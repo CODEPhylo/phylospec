@@ -1,10 +1,12 @@
 package tiles.trees;
 
+import dr.evolution.tree.SimpleTree;
 import dr.evomodel.coalescent.TreeIntervals;
 import dr.evolution.util.Taxa;
 import dr.evomodel.coalescent.CoalescentLikelihood;
 import dr.evomodel.coalescent.CoalescentSimulator;
 import dr.evomodel.coalescent.demographicmodel.DemographicModel;
+import dr.evomodel.coalescent.demographicmodel.LogisticGrowthModel;
 import dr.evomodel.tree.DefaultTreeModel;
 import dr.evomodel.tree.TreeModel;
 import org.phylospec.ast.Expr;
@@ -42,13 +44,13 @@ public class CoalescentPopulationFunctionTile extends GeneratorTile<
         Taxa taxa =
                 this.taxaInput.apply(beastState, indexVariables);
 
-        CoalescentSimulator simulator =
-                new CoalescentSimulator();
+        StartingTree startingTree =
+                startingTree(taxa, populationSize);
 
         DefaultTreeModel defaultTreeModel =
                 new DefaultTreeModel(
                         "tree",
-                        simulator.simulateTree(taxa, populationSize)
+                        startingTree.tree()
                 );
 
         TreeIntervals intervals =
@@ -63,10 +65,59 @@ public class CoalescentPopulationFunctionTile extends GeneratorTile<
         return new BoundDistribution<>(
                 likelihood,
                 defaultTreeModel,
-                StartingTreeSpec.coalescentSimulator(),
+                startingTree.spec(),
                 treeModel -> {
                     // CoalescentLikelihood receives TreeIntervals built from the tree.
                 }
         );
+    }
+
+    private static StartingTree startingTree(
+            Taxa taxa,
+            DemographicModel populationSize
+    ) {
+        CoalescentSimulator simulator =
+                new CoalescentSimulator();
+
+        try {
+            return new StartingTree(
+                    simulator.simulateTree(taxa, populationSize),
+                    StartingTreeSpec.coalescentSimulator()
+            );
+        } catch (RuntimeException exception) {
+            if (populationSize instanceof LogisticGrowthModel && isMissingInverseIntensity(exception)) {
+                return new StartingTree(
+                        InitialTreeBuilder.balancedTree(taxa, "Coalescent"),
+                        StartingTreeSpec.fixedNewick()
+                );
+            }
+
+            throw exception;
+        }
+    }
+
+    private static boolean isMissingInverseIntensity(RuntimeException exception) {
+        Throwable current =
+                exception;
+
+        while (current != null) {
+            String message =
+                    current.getMessage();
+
+            if (message != null && message.contains("Not implemented")) {
+                return true;
+            }
+
+            current =
+                    current.getCause();
+        }
+
+        return false;
+    }
+
+    private record StartingTree(
+            SimpleTree tree,
+            StartingTreeSpec spec
+    ) {
     }
 }

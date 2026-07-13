@@ -22,6 +22,7 @@ public class ComparisonExponentialCoalescentRunTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "exponentialCoalescentHKYGamma.phylospec"
                 );
 
@@ -81,6 +82,7 @@ public class ComparisonExponentialCoalescentRunTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "tutorialH1N1ExponentialCoalescentHKYGamma.phylospec"
                 );
 
@@ -140,6 +142,7 @@ public class ComparisonExponentialCoalescentRunTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "tutorialH1N1DatedExponentialCoalescentHKYGamma.phylospec"
                 );
 
@@ -211,6 +214,7 @@ public class ComparisonExponentialCoalescentRunTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "tutorialH1N1DatedExponentialCoalescentHKYGamma.phylospec"
                 );
 
@@ -267,6 +271,7 @@ public class ComparisonExponentialCoalescentRunTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "tutorialH1N1DatedExponentialCoalescentHKYGammaFixedClock.phylospec"
                 );
 
@@ -289,6 +294,7 @@ public class ComparisonExponentialCoalescentRunTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "tutorialH1N1DatedExponentialCoalescentHKYGamma.phylospec"
                 );
 

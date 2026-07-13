@@ -24,6 +24,7 @@ public class BeastXComparisonCoalescentRunTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "exponentialCoalescentHKYGamma.phylospec"
                 );
 
@@ -91,6 +92,7 @@ public class BeastXComparisonCoalescentRunTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "tutorialH1N1ExponentialCoalescentHKYGamma.phylospec"
                 );
 
@@ -155,6 +157,7 @@ public class BeastXComparisonCoalescentRunTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "tutorialH1N1DatedExponentialCoalescentHKYGamma.phylospec"
                 );
 
@@ -221,6 +224,7 @@ public class BeastXComparisonCoalescentRunTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "tutorialH1N1DatedExponentialCoalescentHKYGamma.phylospec"
                 );
 
@@ -300,6 +304,7 @@ public class BeastXComparisonCoalescentRunTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "tutorialH1N1DatedExponentialCoalescentHKYGammaFixedClock.phylospec"
                 );
 

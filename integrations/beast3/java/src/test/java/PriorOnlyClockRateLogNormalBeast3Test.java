@@ -18,6 +18,7 @@ public class PriorOnlyClockRateLogNormalBeast3Test {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "priorOnlyClockRateLogNormal.phylospec"
                 );
 

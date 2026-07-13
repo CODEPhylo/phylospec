@@ -1,4 +1,5 @@
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import tiling.BeastXModel;
 
 import java.nio.file.Files;
@@ -7,6 +8,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("beagle")
 public class BeastXXmlScalarPriorTest {
 
     @Test
