@@ -25,7 +25,7 @@ Alignment alignment ~ PhyloCTMC(
 ) observed as data
 
 mcmc {
-    Integer chainLength = 1000000
+    Integer chainLength = 10000000
     Integer randomSeed = 1234
 
     Logger fileLogger = fileLogger(
@@ -38,7 +38,16 @@ mcmc {
             "alignment_likelihood",
             "tree_prior",
             "kappa_prior",
-            kappa
+            kappa,
+            "baseFrequencies",
+            "tree.height",
+            "tree.treeLength"
         ]
+    )
+
+    Logger treeLogger = treeLogger(
+        logEvery=1000,
+        file="target/comparison-diagnostics/phylo-beastx-phase1-hky-estimated-tree.trees",
+        trees=[tree]
     )
 }
