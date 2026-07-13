@@ -589,6 +589,13 @@ public class BeastXComparisonDiagnosticTest {
                         "phylo-beastx-phase1-hky-estimated-tree.log"
                 );
 
+        Path treeLogPath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "phylo-beastx-phase1-hky-estimated-tree.trees"
+                );
+
         Path operatorSummaryPath =
                 Path.of(
                         "target",
@@ -605,6 +612,7 @@ public class BeastXComparisonDiagnosticTest {
 
         Files.createDirectories(logPath.getParent());
         Files.deleteIfExists(logPath);
+        Files.deleteIfExists(treeLogPath);
         Files.deleteIfExists(operatorSummaryPath);
         Files.deleteIfExists(runtimePath);
 
@@ -636,6 +644,9 @@ public class BeastXComparisonDiagnosticTest {
         assertTrue(Files.exists(logPath), "Expected phase 1 BEAST X log file.");
         assertTrue(Files.size(logPath) > 0, "Expected phase 1 BEAST X log to be non-empty.");
 
+        assertTrue(Files.exists(treeLogPath), "Expected phase 1 BEAST X tree log file.");
+        assertTrue(Files.size(treeLogPath) > 0, "Expected phase 1 BEAST X tree log to be non-empty.");
+
         assertTrue(Files.exists(operatorSummaryPath), "Expected phase 1 BEAST X operator summary.");
         assertTrue(Files.size(operatorSummaryPath) > 0, "Expected phase 1 BEAST X operator summary to be non-empty.");
 
@@ -645,13 +656,18 @@ public class BeastXComparisonDiagnosticTest {
         String log =
                 Files.readString(logPath);
 
+        String treeLog =
+                Files.readString(treeLogPath);
+
         assertTrue(log.contains("posterior"), log);
         assertTrue(log.contains("prior"), log);
         assertTrue(log.contains("likelihood"), log);
         assertTrue(log.contains("alignment_likelihood"), log);
         assertTrue(log.contains("tree_prior"), log);
         assertTrue(log.contains("kappa"), log);
-        assertTrue(log.contains("baseFrequencies"), log);
+
+        assertTrue(treeLog.contains("#NEXUS"), treeLog);
+        assertTrue(treeLog.contains("STATE_0"), treeLog);
     }
 
     @Test
@@ -699,6 +715,8 @@ public class BeastXComparisonDiagnosticTest {
         assertTrue(xml.contains("likelihood"), xml);
         assertTrue(xml.contains("<treeLikelihood"), xml);
         assertTrue(xml.contains("beastx-phase1-hky-estimated-tree.log"), xml);
+        assertTrue(xml.contains("beastx-phase1-hky-estimated-tree.trees"), xml);
         assertFalse(xml.contains("phylo-beastx-phase1-hky-estimated-tree.log"), xml);
+        assertFalse(xml.contains("phylo-beastx-phase1-hky-estimated-tree.trees"), xml);
     }
 }
