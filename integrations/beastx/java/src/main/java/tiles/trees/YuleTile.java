@@ -61,7 +61,7 @@ public class YuleTile extends GeneratorTile<
                         BeastXParameters.toParameter(birthRate),
                         new Parameter.Default(0.0),
                         new Parameter.Default(1.0),
-                        BirthDeathGernhard08Model.TreeType.LABELED,
+                        BirthDeathGernhard08Model.TreeType.UNSCALED,
                         Units.Type.YEARS
                 );
 
