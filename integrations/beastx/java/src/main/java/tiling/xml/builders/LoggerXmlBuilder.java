@@ -142,6 +142,11 @@ public class LoggerXmlBuilder {
                         fileName.lastIndexOf('\\')
                 );
 
+        String directory =
+                separatorIndex < 0
+                        ? ""
+                        : fileName.substring(0, separatorIndex + 1);
+
         String baseName =
                 separatorIndex < 0
                         ? fileName
@@ -149,10 +154,10 @@ public class LoggerXmlBuilder {
 
         // It a little bit too hard-coded, after maybe need to change
         if (baseName.startsWith("phylo-")) {
-            return baseName.substring("phylo-".length());
+            return directory + baseName.substring("phylo-".length());
         }
 
-        return baseName;
+        return fileName;
     }
 
     private List<XmlElement> getLoggedElements(
@@ -216,9 +221,9 @@ public class LoggerXmlBuilder {
             return null;
         }
 
-        return switch (loggableName) {
+            return switch (loggableName) {
             case POSTERIOR_LOG_NAME, JOINT_LOG_NAME ->
-                    XmlElement.ref("joint", "joint");
+                    XmlElement.ref("joint", POSTERIOR_LOG_NAME);
 
             case PRIOR_LOG_NAME ->
                     XmlElement.ref("prior", "prior");

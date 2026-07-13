@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("beagle")
 public class BeastXXmlRunnerEntryTest {
 
     @Test
@@ -310,6 +311,7 @@ public class BeastXXmlRunnerEntryTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "commonYuleJc69StrictClock.phylospec"
                 );
 
@@ -347,7 +349,7 @@ public class BeastXXmlRunnerEntryTest {
 
             assertTrue(xml.contains("<beast"), xml);
             assertTrue(xml.contains("<mcmc"), xml);
-            assertTrue(xml.contains("<joint idref=\"joint\""), xml);
+            assertTrue(xml.contains("<joint idref=\"posterior\""), xml);
             assertTrue(xml.contains("<prior idref=\"prior\""), xml);
             assertTrue(xml.contains("<likelihood idref=\"likelihood\""), xml);
             assertTrue(xml.contains("<treeLikelihood"), xml);
@@ -394,6 +396,7 @@ public class BeastXXmlRunnerEntryTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "exponentialCoalescentHKYGamma.phylospec"
                 );
 
@@ -451,7 +454,7 @@ public class BeastXXmlRunnerEntryTest {
         XmlTestSupport.assertXmlContains(xml, "<gammaSiteRateModel id=\"alignment_likelihood_siteRateModel\"");
         XmlTestSupport.assertXmlContains(xml, "<strictClockBranchRates id=\"tree_strictClockBranchRates\"");
         XmlTestSupport.assertXmlContains(xml, "<treeLikelihood id=\"alignment_likelihood\"");
-        XmlTestSupport.assertXmlContains(xml, "<joint id=\"joint\"");
+        XmlTestSupport.assertXmlContains(xml, "<joint id=\"posterior\"");
         XmlTestSupport.assertXmlContains(xml, "<prior id=\"prior\"");
         XmlTestSupport.assertXmlContains(xml, "<likelihood id=\"likelihood\"");
         XmlTestSupport.assertXmlContains(xml, "<log id=\"fileLogger");

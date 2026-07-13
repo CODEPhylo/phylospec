@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class BeastXOperatorSummaryTest {
 
     private static final Path H1N1_SOURCE = Path.of(
-            "src/test/java/resources/comparison/tutorialh1n1datedexponentialcoalescenthkygamma.phylospec"
+            "src/test/java/resources/comparison/legacy/tutorialH1N1DatedExponentialCoalescentHKYGamma.phylospec"
     );
 
     @Test

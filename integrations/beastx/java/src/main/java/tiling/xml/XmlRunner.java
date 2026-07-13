@@ -4,6 +4,8 @@ import dr.app.beast.BeastParser;
 import dr.app.beast.BeastVersion;
 import dr.inference.mcmc.MCMC;
 
+import tiling.runner.BeagleBackendConfigurator;
+
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -18,6 +20,14 @@ import java.util.List;
 public class XmlRunner {
 
     public MCMC parse(Path xmlPath) throws Exception {
+        if (xmlPath == null) {
+            throw new IllegalArgumentException(
+                    "xmlPath must not be null."
+            );
+        }
+
+        BeagleBackendConfigurator.requireNativeBackend();
+
         BeastParser parser =
                 new BeastParser(
                         new String[0],
@@ -28,13 +38,18 @@ public class XmlRunner {
                         BeastVersion.INSTANCE
                 );
 
-        try (Reader reader = Files.newBufferedReader(xmlPath, StandardCharsets.UTF_8)) {
+        try (Reader reader =
+                     Files.newBufferedReader(
+                             xmlPath,
+                             StandardCharsets.UTF_8
+                     )) {
             Object parsed =
                     parser.parse(reader, MCMC.class);
 
             if (!(parsed instanceof MCMC mcmc)) {
                 throw new IllegalStateException(
-                        "BEAST X XML did not parse to an MCMC object: " + parsed
+                        "BEAST X XML did not parse to an MCMC object: "
+                                + parsed
                 );
             }
 

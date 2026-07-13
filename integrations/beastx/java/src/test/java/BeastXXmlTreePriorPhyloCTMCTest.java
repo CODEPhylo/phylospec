@@ -96,7 +96,7 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
         XmlTestSupport.assertXmlContains(xml, "<treeLikelihood id=\"alignment_likelihood\"");
         XmlTestSupport.assertXmlContains(xml, "<siteModel idref=\"alignment_likelihood_siteRateModel\"/>");
         XmlTestSupport.assertXmlContains(xml, "<strictClockBranchRates idref=\"tree_strictClockBranchRates\"/>");
-        XmlTestSupport.assertXmlContains(xml, "<joint id=\"joint\"");
+        XmlTestSupport.assertXmlContains(xml, "<joint id=\"posterior\"");
         XmlTestSupport.assertXmlContains(xml, "<prior id=\"prior\"");
         XmlTestSupport.assertXmlContains(xml, "<likelihood id=\"likelihood\"");
         XmlTestSupport.assertXmlContains(xml, "<log id=\"fileLogger");
@@ -210,7 +210,7 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
         XmlTestSupport.assertXmlContains(xml, "<treeLikelihood id=\"alignment_likelihood\"");
         XmlTestSupport.assertXmlContains(xml, "<siteModel idref=\"alignment_likelihood_siteRateModel\"/>");
         XmlTestSupport.assertXmlContains(xml, "<strictClockBranchRates idref=\"tree_strictClockBranchRates\"/>");
-        XmlTestSupport.assertXmlContains(xml, "<joint id=\"joint\"");
+        XmlTestSupport.assertXmlContains(xml, "<joint id=\"posterior\"");
         XmlTestSupport.assertXmlContains(xml, "<prior id=\"prior\"");
         XmlTestSupport.assertXmlContains(xml, "<likelihood id=\"likelihood\"");
         XmlTestSupport.assertXmlContains(xml, "<log id=\"fileLogger");
@@ -335,7 +335,7 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
         XmlTestSupport.assertXmlContains(xml, "<siteModel idref=\"alignment_likelihood_siteRateModel\"/>");
         XmlTestSupport.assertXmlContains(xml, "<strictClockBranchRates idref=\"tree_strictClockBranchRates\"/>");
 
-        XmlTestSupport.assertXmlContains(xml, "<joint id=\"joint\"");
+        XmlTestSupport.assertXmlContains(xml, "<joint id=\"posterior\"");
         XmlTestSupport.assertXmlContains(xml, "<prior id=\"prior\"");
         XmlTestSupport.assertXmlContains(xml, "<likelihood id=\"likelihood\"");
         XmlTestSupport.assertXmlContains(xml, "<log id=\"fileLogger");
@@ -449,7 +449,7 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
         XmlTestSupport.assertXmlContains(xml, "<siteModel idref=\"alignment_likelihood_siteRateModel\"/>");
         XmlTestSupport.assertXmlContains(xml, "<strictClockBranchRates idref=\"tree_strictClockBranchRates\"/>");
 
-        XmlTestSupport.assertXmlContains(xml, "<joint id=\"joint\"");
+        XmlTestSupport.assertXmlContains(xml, "<joint id=\"posterior\"");
         XmlTestSupport.assertXmlContains(xml, "<prior id=\"prior\"");
         XmlTestSupport.assertXmlContains(xml, "<likelihood id=\"likelihood\"");
         XmlTestSupport.assertXmlContains(xml, "<log id=\"fileLogger");
@@ -578,7 +578,7 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
         XmlTestSupport.assertXmlContains(xml, "<siteModel idref=\"alignment_likelihood_siteRateModel\"/>");
         XmlTestSupport.assertXmlContains(xml, "<strictClockBranchRates idref=\"tree_strictClockBranchRates\"/>");
 
-        XmlTestSupport.assertXmlContains(xml, "<joint id=\"joint\"");
+        XmlTestSupport.assertXmlContains(xml, "<joint id=\"posterior\"");
         XmlTestSupport.assertXmlContains(xml, "<prior id=\"prior\"");
         XmlTestSupport.assertXmlContains(xml, "<likelihood id=\"likelihood\"");
         XmlTestSupport.assertXmlContains(xml, "<log id=\"fileLogger");

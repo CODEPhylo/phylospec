@@ -1,0 +1,44 @@
+Alignment data = fromNexus(
+    file="src/test/java/resources/comparison/phases/phase1/testHKY.nex"
+)
+
+Taxa taxa = taxa(data)
+
+PositiveReal kappa ~ LogNormal(
+    logMean=1.0,
+    logSd=0.5
+)
+
+Tree tree ~ Yule(
+    birthRate=1.0,
+    taxa=taxa
+)
+
+QMatrix qMatrix = hky(
+    kappa=kappa,
+    baseFrequencies~Dirichlet(concentration=repeat(1.0, num=4))
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix
+) observed as data
+
+mcmc {
+    Integer chainLength = 1000000
+    Integer randomSeed = 1234
+
+    Logger fileLogger = fileLogger(
+        logEvery=1000,
+        file="target/comparison-diagnostics/phylo-beastx-phase1-hky-estimated-tree.log",
+        parameters=[
+            "posterior",
+            "prior",
+            "likelihood",
+            "alignment_likelihood",
+            "tree_prior",
+            "kappa_prior",
+            kappa
+        ]
+    )
+}

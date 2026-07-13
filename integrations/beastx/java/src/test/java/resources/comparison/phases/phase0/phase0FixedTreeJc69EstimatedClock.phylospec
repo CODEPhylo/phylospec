@@ -1,0 +1,40 @@
+Alignment data = fromNexus(
+    file="src/test/java/resources/comparison/H1N1pdm_2009.nex"
+)
+
+Tree tree = fromTree("src/test/java/resources/comparison/h1n1-balanced-diagnostic-tree.nwk")
+
+Rate clockRate ~ LogNormal(
+    logMean=-9.0,
+    logSd=1.0
+)
+
+Vector<Rate> branchRates ~ StrictClock(
+    clockRate=clockRate,
+    tree=tree
+)
+
+QMatrix qMatrix = jc69()
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix,
+    branchRates=branchRates
+) observed as data
+
+mcmc {
+    Integer chainLength = 1000000
+    Integer randomSeed = 1234
+
+    Logger fileLogger = fileLogger(
+        logEvery=1000,
+        file="target/comparison-diagnostics/phylo-beastx-phase0-fixed-tree-jc69-estimated-clock.log",
+        parameters=[
+            "posterior",
+            "prior",
+            "likelihood",
+            "alignment_likelihood",
+            clockRate
+        ]
+    )
+}

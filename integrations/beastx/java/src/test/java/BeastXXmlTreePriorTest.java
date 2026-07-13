@@ -1,4 +1,5 @@
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import tiling.BeastXModel;
 
 import java.nio.charset.StandardCharsets;
@@ -8,6 +9,7 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("beagle")
 public class BeastXXmlTreePriorTest {
 
     @Test

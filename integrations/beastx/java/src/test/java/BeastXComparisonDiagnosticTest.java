@@ -4,6 +4,7 @@ import tiling.runner.BeastXRunResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,6 +19,7 @@ public class BeastXComparisonDiagnosticTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "diagnosticH1N1DatedFixedClockHKYGamma.phylospec"
                 );
 
@@ -104,6 +106,7 @@ public class BeastXComparisonDiagnosticTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "diagnosticH1N1DatedFixedPopulationExponentialCoalescentHKYGamma.phylospec"
                 );
 
@@ -150,6 +153,7 @@ public class BeastXComparisonDiagnosticTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "diagnosticH1N1FixedTreeSingleStateExponentialCoalescentHKYGamma.phylospec"
                 );
 
@@ -197,6 +201,7 @@ public class BeastXComparisonDiagnosticTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "diagnosticH1N1FixedTreeClockRateOnlyHKY.phylospec"
                 );
 
@@ -241,6 +246,7 @@ public class BeastXComparisonDiagnosticTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "diagnosticH1N1FixedTreeFixedGammaClockRateHKY.phylospec"
                 );
 
@@ -288,6 +294,7 @@ public class BeastXComparisonDiagnosticTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         sourceFileName
                 );
 
@@ -320,6 +327,7 @@ public class BeastXComparisonDiagnosticTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "diagnosticH1N1DatedFixedSubstitutionFixedClockExponentialCoalescent.phylospec"
                 );
 
@@ -377,6 +385,7 @@ public class BeastXComparisonDiagnosticTest {
                         "java",
                         "resources",
                         "comparison",
+                        "legacy",
                         "diagnosticH1N1DatedStochasticClockFixedSubstitutionExponentialCoalescent.phylospec"
                 );
 
@@ -424,5 +433,270 @@ public class BeastXComparisonDiagnosticTest {
         assertTrue(log.contains("populationSize"), log);
         assertTrue(log.contains("growthRate"), log);
         assertTrue(log.contains("clockRate"), log);
+    }
+
+    @Test
+    public void writesPhase0FixedTreeJc69EstimatedClockDiagnosticLog() throws Exception {
+        Path sourcePath =
+                Path.of(
+                        "src",
+                        "test",
+                        "java",
+                        "resources",
+                        "comparison",
+                        "phases",
+                        "phase0",
+                        "phase0FixedTreeJc69EstimatedClock.phylospec"
+                );
+
+        Path logPath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "phylo-beastx-phase0-fixed-tree-jc69-estimated-clock.log"
+                );
+
+        Path operatorSummaryPath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "phylo-beastx-phase0-fixed-tree-jc69-estimated-clock.operators.txt"
+                );
+
+        Path runtimePath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "phylo-beastx-phase0-fixed-tree-jc69-estimated-clock.runtime.txt"
+                );
+
+        Files.createDirectories(logPath.getParent());
+        Files.deleteIfExists(logPath);
+        Files.deleteIfExists(operatorSummaryPath);
+        Files.deleteIfExists(runtimePath);
+
+        long startNanos =
+                System.nanoTime();
+
+        BeastXRunResult result =
+                new PhyloSpecRunner(Files.readString(sourcePath))
+                        .executeMaterialized(
+                                "phase0FixedTreeJc69EstimatedClock"
+                        );
+
+        long elapsedNanos =
+                System.nanoTime() - startNanos;
+
+        Files.write(
+                operatorSummaryPath,
+                result.operatorSummaries()
+        );
+
+        Files.writeString(
+                runtimePath,
+                "elapsed_seconds=" + (elapsedNanos / 1_000_000_000.0) + System.lineSeparator()
+        );
+
+        assertNotNull(result);
+        assertTrue(result.executed());
+
+        assertTrue(Files.exists(logPath), "Expected phase 0 BEAST X log file.");
+        assertTrue(Files.size(logPath) > 0, "Expected phase 0 BEAST X log to be non-empty.");
+
+        assertTrue(Files.exists(operatorSummaryPath), "Expected phase 0 BEAST X operator summary.");
+        assertTrue(Files.size(operatorSummaryPath) > 0, "Expected phase 0 BEAST X operator summary to be non-empty.");
+
+        assertTrue(Files.exists(runtimePath), "Expected phase 0 BEAST X runtime file.");
+        assertTrue(Files.size(runtimePath) > 0, "Expected phase 0 BEAST X runtime file to be non-empty.");
+
+        String log =
+                Files.readString(logPath);
+
+        assertTrue(log.contains("posterior"), log);
+        assertTrue(log.contains("prior"), log);
+        assertTrue(log.contains("likelihood"), log);
+        assertTrue(log.contains("alignment_likelihood"), log);
+        assertTrue(log.contains("clockRate"), log);
+    }
+
+    @Test
+    public void writesPhase0FixedTreeJc69EstimatedClockXml() throws Exception {
+        Path sourcePath =
+                Path.of(
+                        "src",
+                        "test",
+                        "java",
+                        "resources",
+                        "comparison",
+                        "phases",
+                        "phase0",
+                        "phase0FixedTreeJc69EstimatedClock.phylospec"
+                );
+
+        Path xmlPath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "beastx-phase0-fixed-tree-jc69-estimated-clock.xml"
+                );
+
+        Files.createDirectories(xmlPath.getParent());
+        Files.deleteIfExists(xmlPath);
+
+        PhyloSpecRunner runner =
+                new PhyloSpecRunner(Files.readString(sourcePath));
+
+        runner.writeXml(
+                "phase0FixedTreeJc69EstimatedClock",
+                xmlPath
+        );
+
+        assertTrue(Files.exists(xmlPath), "Expected phase 0 BEAST X XML file.");
+        assertTrue(Files.size(xmlPath) > 0, "Expected phase 0 BEAST X XML file to be non-empty.");
+
+        String xml =
+                Files.readString(xmlPath);
+
+        assertTrue(xml.contains("clockRate"), xml);
+        assertTrue(xml.contains("joint"), xml);
+        assertTrue(xml.contains("prior"), xml);
+        assertTrue(xml.contains("likelihood"), xml);
+        assertTrue(xml.contains("<treeLikelihood"), xml);
+        assertTrue(xml.contains("beastx-phase0-fixed-tree-jc69-estimated-clock.log"), xml);
+        assertFalse(xml.contains("phylo-beastx-phase0-fixed-tree-jc69-estimated-clock.log"), xml);
+    }
+
+    @Test
+    public void writesPhase1HkyEstimatedTreeDiagnosticLog() throws Exception {
+        Path sourcePath =
+                Path.of(
+                        "src",
+                        "test",
+                        "java",
+                        "resources",
+                        "comparison",
+                        "phases",
+                        "phase1",
+                        "phase1HkyEstimatedTree.phylospec"
+                );
+
+        Path logPath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "phylo-beastx-phase1-hky-estimated-tree.log"
+                );
+
+        Path operatorSummaryPath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "phylo-beastx-phase1-hky-estimated-tree.operators.txt"
+                );
+
+        Path runtimePath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "phylo-beastx-phase1-hky-estimated-tree.runtime.txt"
+                );
+
+        Files.createDirectories(logPath.getParent());
+        Files.deleteIfExists(logPath);
+        Files.deleteIfExists(operatorSummaryPath);
+        Files.deleteIfExists(runtimePath);
+
+        long startNanos =
+                System.nanoTime();
+
+        BeastXRunResult result =
+                new PhyloSpecRunner(Files.readString(sourcePath))
+                        .executeMaterialized(
+                                "phase1HkyEstimatedTree"
+                        );
+
+        long elapsedNanos =
+                System.nanoTime() - startNanos;
+
+        Files.write(
+                operatorSummaryPath,
+                result.operatorSummaries()
+        );
+
+        Files.writeString(
+                runtimePath,
+                "elapsed_seconds=" + (elapsedNanos / 1_000_000_000.0) + System.lineSeparator()
+        );
+
+        assertNotNull(result);
+        assertTrue(result.executed());
+
+        assertTrue(Files.exists(logPath), "Expected phase 1 BEAST X log file.");
+        assertTrue(Files.size(logPath) > 0, "Expected phase 1 BEAST X log to be non-empty.");
+
+        assertTrue(Files.exists(operatorSummaryPath), "Expected phase 1 BEAST X operator summary.");
+        assertTrue(Files.size(operatorSummaryPath) > 0, "Expected phase 1 BEAST X operator summary to be non-empty.");
+
+        assertTrue(Files.exists(runtimePath), "Expected phase 1 BEAST X runtime file.");
+        assertTrue(Files.size(runtimePath) > 0, "Expected phase 1 BEAST X runtime file to be non-empty.");
+
+        String log =
+                Files.readString(logPath);
+
+        assertTrue(log.contains("posterior"), log);
+        assertTrue(log.contains("prior"), log);
+        assertTrue(log.contains("likelihood"), log);
+        assertTrue(log.contains("alignment_likelihood"), log);
+        assertTrue(log.contains("tree_prior"), log);
+        assertTrue(log.contains("kappa"), log);
+        assertTrue(log.contains("baseFrequencies"), log);
+    }
+
+    @Test
+    public void writesPhase1HkyEstimatedTreeXml() throws Exception {
+        Path sourcePath =
+                Path.of(
+                        "src",
+                        "test",
+                        "java",
+                        "resources",
+                        "comparison",
+                        "phases",
+                        "phase1",
+                        "phase1HkyEstimatedTree.phylospec"
+                );
+
+        Path xmlPath =
+                Path.of(
+                        "target",
+                        "comparison-diagnostics",
+                        "beastx-phase1-hky-estimated-tree.xml"
+                );
+
+        Files.createDirectories(xmlPath.getParent());
+        Files.deleteIfExists(xmlPath);
+
+        PhyloSpecRunner runner =
+                new PhyloSpecRunner(Files.readString(sourcePath));
+
+        runner.writeXml(
+                "phase1HkyEstimatedTree",
+                xmlPath
+        );
+
+        assertTrue(Files.exists(xmlPath), "Expected phase 1 BEAST X XML file.");
+        assertTrue(Files.size(xmlPath) > 0, "Expected phase 1 BEAST X XML file to be non-empty.");
+
+        String xml =
+                Files.readString(xmlPath);
+
+        assertTrue(xml.contains("kappa"), xml);
+        assertTrue(xml.contains("baseFrequencies"), xml);
+        assertTrue(xml.contains("baseFrequencies_prior"), xml);
+        assertTrue(xml.contains("tree_prior"), xml);
+        assertTrue(xml.contains("likelihood"), xml);
+        assertTrue(xml.contains("<treeLikelihood"), xml);
+        assertTrue(xml.contains("beastx-phase1-hky-estimated-tree.log"), xml);
+        assertFalse(xml.contains("phylo-beastx-phase1-hky-estimated-tree.log"), xml);
     }
 }

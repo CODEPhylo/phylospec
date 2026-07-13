@@ -9,6 +9,7 @@ import dr.inference.model.Parameter;
 import dr.math.distributions.DirichletDistribution;
 import tiling.BeastXModel;
 import tiling.BeastXState;
+import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
 import tiling.xml.builders.BranchRateModelXmlBuilder;
 import tiling.xml.builders.CalibrationPriorXmlBuilder;
 import tiling.xml.builders.DirichletPriorXmlBuilder;
@@ -21,8 +22,10 @@ import tiling.xml.builders.TreeModelXmlBuilder;
 import tiling.xml.builders.TreePriorXmlBuilder;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -147,9 +150,14 @@ public class XmlPlanBuilder {
         Set<String> emittedTaxonIds =
                 new HashSet<>();
 
+        Set<TreeModel> emittedTreeModels =
+                Collections.newSetFromMap(new IdentityHashMap<>());
+
         for (Map.Entry<TreeModel, AbstractModelLikelihood> entry : treeEntries) {
             TreeModel treeModel =
                     entry.getKey();
+
+            emittedTreeModels.add(treeModel);
 
             treeModelXmlBuilder.addTreeDefinitions(
                     plan,
@@ -164,6 +172,44 @@ public class XmlPlanBuilder {
                     treePriorModelDefinition(state, entry.getValue())
             );
         }
+
+        List<TreeModel> fixedTreeModels =
+                treeModelsReferencedOutsideTreePriors(state);
+
+        fixedTreeModels.sort(Comparator.comparing(XmlPlanBuilder::treeId));
+
+        for (TreeModel treeModel : fixedTreeModels) {
+            if (!emittedTreeModels.add(treeModel)) {
+                continue;
+            }
+
+            treeModelXmlBuilder.addTreeDefinitions(
+                    plan,
+                    state,
+                    treeModel,
+                    null,
+                    emittedTaxonIds
+            );
+        }
+    }
+
+    private List<TreeModel> treeModelsReferencedOutsideTreePriors(
+            BeastXState state
+    ) {
+        Set<TreeModel> treeModels =
+                Collections.newSetFromMap(new IdentityHashMap<>());
+
+        treeModels.addAll(state.treeModelsByPhyloSpecName.values());
+        treeModels.addAll(state.treeClockRateParameters.keySet());
+        treeModels.addAll(state.treeRelaxedClockModels.keySet());
+
+        for (dr.inference.model.Likelihood likelihood : state.likelihoodDistributions) {
+            if (likelihood instanceof BeastXPhyloCTMCLikelihoodSpec spec) {
+                treeModels.add(spec.getTreeModel());
+            }
+        }
+
+        return new ArrayList<>(treeModels);
     }
 
     private void addBranchRateModels(

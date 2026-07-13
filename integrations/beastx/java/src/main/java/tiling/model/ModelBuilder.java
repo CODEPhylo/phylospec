@@ -4,6 +4,7 @@ import dr.inference.model.CompoundLikelihood;
 import dr.inference.model.Likelihood;
 import tiling.BeastXModel;
 import tiling.BeastXState;
+import tiling.runner.BeagleBackendConfigurator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +58,8 @@ public class ModelBuilder {
      * BEAST X tree likelihood objects.
      */
     private void materializePhyloCTMCLikelihoods(BeastXState beastState) {
+        BeagleBackendConfigurator.requireNativeBackend();
+
         List<Likelihood> materializedLikelihoods =
                 new ArrayList<>();
 

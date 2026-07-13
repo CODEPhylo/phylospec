@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class XmlDocumentWriter {
+    private static final String POSTERIOR_ID =
+            "posterior";
+
 
     public String write(
             BeastXState state,
@@ -124,7 +127,7 @@ public class XmlDocumentWriter {
         if (plan.has(XmlPlan.Section.MCMC_LIKELIHOOD)) {
             writer.writeOpenTag(
                     CompoundLikelihoodParser.JOINT,
-                    new Attribute.Default<>(XMLParser.ID, "joint")
+                    new Attribute.Default<>(XMLParser.ID, POSTERIOR_ID)
             );
         }
 

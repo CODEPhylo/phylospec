@@ -15,6 +15,7 @@ import dr.inference.operators.RandomWalkOperator;
 import dr.inference.operators.ScaleOperator;
 import dr.inference.operators.UpDownOperator;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import tiling.BeastXModel;
 import tiling.mcmc.MCMCBuilder;
 import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
@@ -550,6 +551,7 @@ public class BeastXMCMCBuilderTest {
     }
 
     @Test
+    @Tag("beagle")
     public void runnerOptionsApplyChainLengthLogEveryAndOutputPrefix() throws Exception {
         String source = """
             PositiveReal x ~ LogNormal(
@@ -586,6 +588,7 @@ public class BeastXMCMCBuilderTest {
     }
 
     @Test
+    @Tag("beagle")
     public void runnerOptionsWriteDefaultParameterAndTreeLogs() throws Exception {
         String source = """
             Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
@@ -636,6 +639,7 @@ public class BeastXMCMCBuilderTest {
     }
 
     @Test
+    @Tag("beagle")
     public void runResultExposesDefaultFileLogPathFromOutputPrefix() throws Exception {
         String source = """
             PositiveReal x ~ LogNormal(
@@ -673,6 +677,7 @@ public class BeastXMCMCBuilderTest {
     }
 
     @Test
+    @Tag("beagle")
     public void runResultExposesDefaultFileAndTreeLogPathsFromOutputPrefix() throws Exception {
         String source = """
             Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
@@ -720,6 +725,7 @@ public class BeastXMCMCBuilderTest {
     }
 
     @Test
+    @Tag("beagle")
     public void runResultExposesExplicitFileLoggerPath() throws Exception {
         Path outputDirectory =
                 Path.of("target", "runner-artifacts", "explicit-" + System.nanoTime());
