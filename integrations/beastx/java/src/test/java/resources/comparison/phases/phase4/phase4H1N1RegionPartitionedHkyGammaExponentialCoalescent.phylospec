@@ -1,0 +1,224 @@
+Alignment data = fromNexus(
+    file="src/test/java/resources/comparison/H1N1pdm_2009.nex",
+    date=parse(regex=".*_(\d+(?:\.\d+)?)$")
+)
+
+Alignment firstRegion = subset(
+    alignment=data,
+    start=1,
+    end=4369
+)
+
+Alignment secondRegion = subset(
+    alignment=data,
+    start=4370,
+    end=8738
+)
+
+Alignment thirdRegion = subset(
+    alignment=data,
+    start=8739,
+    end=13109
+)
+
+Taxa taxa = taxa(data)
+
+PositiveReal populationSize ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+PositiveReal growthRate ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+Rate clockRate ~ LogNormal(
+    logMean=-5.8,
+    logSd=1.0
+)
+
+PositiveReal firstKappa ~ LogNormal(
+    logMean=1.0,
+    logSd=1.0
+)
+
+PositiveReal secondKappa ~ LogNormal(
+    logMean=1.0,
+    logSd=1.0
+)
+
+PositiveReal thirdKappa ~ LogNormal(
+    logMean=1.0,
+    logSd=1.0
+)
+
+Simplex firstBaseFrequencies ~ Dirichlet(
+    concentration=[3,3,3,3]
+)
+
+Simplex secondBaseFrequencies ~ Dirichlet(
+    concentration=[3,3,3,3]
+)
+
+Simplex thirdBaseFrequencies ~ Dirichlet(
+    concentration=[3,3,3,3]
+)
+
+PositiveReal firstGammaShape ~ LogNormal(
+    logMean=0.0,
+    logSd=0.5
+)
+
+PositiveReal secondGammaShape ~ LogNormal(
+    logMean=0.0,
+    logSd=0.5
+)
+
+PositiveReal thirdGammaShape ~ LogNormal(
+    logMean=0.0,
+    logSd=0.5
+)
+
+Tree tree ~ Coalescent(
+    populationSize=exponentialPopulationFunction(
+        populationSize=populationSize,
+        growthRate=growthRate
+    ),
+    taxa=taxa
+)
+
+Vector<Rate> branchRates ~ StrictClock(
+    clockRate=clockRate,
+    tree=tree
+)
+
+Vector<Rate> firstSiteRates ~ DiscreteGammaInv(
+    shape=firstGammaShape,
+    numCategories=4,
+    numSites=numSites(firstRegion)
+)
+
+Vector<Rate> secondSiteRates ~ DiscreteGammaInv(
+    shape=secondGammaShape,
+    numCategories=4,
+    numSites=numSites(secondRegion)
+)
+
+Vector<Rate> thirdSiteRates ~ DiscreteGammaInv(
+    shape=thirdGammaShape,
+    numCategories=4,
+    numSites=numSites(thirdRegion)
+)
+
+QMatrix firstQMatrix = hky(
+    kappa=firstKappa,
+    baseFrequencies=firstBaseFrequencies
+)
+
+QMatrix secondQMatrix = hky(
+    kappa=secondKappa,
+    baseFrequencies=secondBaseFrequencies
+)
+
+QMatrix thirdQMatrix = hky(
+    kappa=thirdKappa,
+    baseFrequencies=thirdBaseFrequencies
+)
+
+Alignment firstRegionAlignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=firstQMatrix,
+    branchRates=branchRates,
+    siteRates=firstSiteRates
+) observed as firstRegion
+
+Alignment secondRegionAlignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=secondQMatrix,
+    branchRates=branchRates,
+    siteRates=secondSiteRates
+) observed as secondRegion
+
+Alignment thirdRegionAlignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=thirdQMatrix,
+    branchRates=branchRates,
+    siteRates=thirdSiteRates
+) observed as thirdRegion
+
+mcmc {
+    Integer chainLength = 10000000
+    Integer randomSeed = 1234
+
+    Logger fileLogger = fileLogger(
+        logEvery=1000,
+        file="target/comparison-diagnostics/phylo-beastx-phase4-h1n1-region-partitioned-hky-gamma-exponential-coalescent.log",
+        parameters=[
+            "posterior",
+            "prior",
+            "likelihood",
+
+            "populationSize_prior",
+            "growthRate_prior",
+            "clockRate_prior",
+            "firstKappa_prior",
+            "secondKappa_prior",
+            "thirdKappa_prior",
+            "firstBaseFrequencies_prior",
+            "secondBaseFrequencies_prior",
+            "thirdBaseFrequencies_prior",
+            "firstGammaShape_prior",
+            "secondGammaShape_prior",
+            "thirdGammaShape_prior",
+            "tree_prior",
+
+            "firstRegionAlignment_likelihood",
+            "secondRegionAlignment_likelihood",
+            "thirdRegionAlignment_likelihood",
+            "tree.height",
+            "tree.treeLength",
+
+            clockRate,
+            populationSize,
+            growthRate,
+            firstKappa,
+            secondKappa,
+            thirdKappa,
+            firstBaseFrequencies,
+            secondBaseFrequencies,
+            thirdBaseFrequencies,
+            firstGammaShape,
+            secondGammaShape,
+            thirdGammaShape
+        ]
+    )
+
+    Logger screenLogger = screenLogger(
+        logEvery=10000,
+        parameters=[
+            "posterior",
+            "prior",
+            "likelihood",
+            "tree_prior",
+            "firstRegionAlignment_likelihood",
+            "secondRegionAlignment_likelihood",
+            "thirdRegionAlignment_likelihood",
+            clockRate,
+            populationSize,
+            growthRate,
+            firstKappa,
+            secondKappa,
+            thirdKappa,
+            firstGammaShape,
+            secondGammaShape,
+            thirdGammaShape
+        ]
+    )
+
+    Logger treeLogger = treeLogger(
+        logEvery=1000,
+        file="target/comparison-diagnostics/phylo-beastx-phase4-h1n1-region-partitioned-hky-gamma-exponential-coalescent.trees",
+        trees=[tree]
+    )
+}

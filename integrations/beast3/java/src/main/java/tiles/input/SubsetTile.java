@@ -64,6 +64,12 @@ public class SubsetTile extends GeneratorTile<DecoratedAlignment> {
         beastState.setInput(filteredAlignment, filteredAlignment.alignmentInput, alignment.alignment());
         beastState.setInput(filteredAlignment, filteredAlignment.filterInput, filterString);
 
+        // FilteredAlignment builds its site-to-pattern index during initialization.
+        // Downstream deterministic functions such as numSites() may inspect the
+        // filtered alignment while tiles are still being applied, before the final
+        // BEAST object initialization pass in PhyloSpecRunner.
+        beastState.initBEASTObject(filteredAlignment);
+
         return new DecoratedAlignment(filteredAlignment, alignment.taxonSet(), alignment.ages());
     }
 
