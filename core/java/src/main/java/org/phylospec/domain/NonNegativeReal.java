@@ -18,5 +18,4 @@ public class NonNegativeReal extends Real {
     public boolean isValid(Double value) {
         return Real.INSTANCE.isValid(value) && value >= 0.0;
     }
-
 }

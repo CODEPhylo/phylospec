@@ -1,12 +1,11 @@
 package org.phylospec.templatematching;
 
+import java.util.*;
 import org.phylospec.ast.*;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.VariableResolver;
-
-import java.util.*;
 
 /// Matches a PhyloSpec AST query against a PhyloSpec template.
 ///
@@ -32,7 +31,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     private VariableResolver queryVariableResolver;
     private AstNode currentQueryNode = null;
 
-    // maps query index variable names to template index variable names during indexed statement matching
+    // maps query index variable names to template index variable names during indexed statement
+    // matching
     private Map<String, String> currentIndexBindings;
 
     public AstTemplateMatcher(String phyloSpecTemplate) {
@@ -49,11 +49,15 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
         for (int i = 0; i < statements.size() - 1; i++) {
             if (!(statements.get(i) instanceof Stmt stmt)) {
-                throw new IllegalArgumentException("The PhyloSpec template contains an expression on the " + (i + 1) + "-th line. Only the last line can contain expressions, all other have to contain complete statements like assignments or draws.");
+                throw new IllegalArgumentException(
+                        "The PhyloSpec template contains an expression on the "
+                                + (i + 1)
+                                + "-th line. Only the last line can contain expressions, all other have to contain complete statements like assignments or draws.");
             }
 
             if (this.templateBlock != stmt.block) {
-                throw new IllegalArgumentException("The PhyloSpec template spans multiple blocks. This is not supported.");
+                throw new IllegalArgumentException(
+                        "The PhyloSpec template spans multiple blocks. This is not supported.");
             }
         }
 
@@ -108,18 +112,21 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         query = this.potentiallyPassThrough(query, this.queryVariableResolver);
         template = this.potentiallyPassThrough(template, templateVariableResolver);
 
-        // if the query is an observed statement but the template is not, this is fine, and we pass through the observation
+        // if the query is an observed statement but the template is not, this is fine, and we pass
+        // through the observation
 
         if (query instanceof Stmt.ObservedAs observed && !(template instanceof Stmt.ObservedAs)) {
             this.match(template, observed.stmt);
             return;
         }
-        if (query instanceof Stmt.ObservedBetween observed && !(template instanceof Stmt.ObservedBetween)) {
+        if (query instanceof Stmt.ObservedBetween observed
+                && !(template instanceof Stmt.ObservedBetween)) {
             this.match(template, observed.stmt);
             return;
         }
 
-        // if the query is a decorated statement but the template is not, this is fine, and we pass through the observation
+        // if the query is a decorated statement but the template is not, this is fine, and we pass
+        // through the observation
 
         if (query instanceof Stmt.Decorated decorated && !(template instanceof Stmt.Decorated)) {
             this.match(template, decorated.statement);
@@ -135,7 +142,9 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             case Stmt node -> node.accept(this);
             case Expr node -> node.accept(this);
             case AstType node -> node.accept(this);
-            default -> throw new RuntimeException("Unknown type of AST node encountered. This should not happen.");
+            default ->
+                    throw new RuntimeException(
+                            "Unknown type of AST node encountered. This should not happen.");
         }
     }
 
@@ -168,7 +177,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             return this.potentiallyPassThrough(assignment.expression, variableResolver);
         }
 
-        // we don't pass through draws, observations, or decorated statements, because they have semantic meaning
+        // we don't pass through draws, observations, or decorated statements, because they have
+        // semantic meaning
 
         return node;
     }
@@ -176,8 +186,11 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     private void matchBlock(Stmt queryStmt) {
         // we treat no block, the data block, and the model block as exchangeable
 
-        Set<Stmt.Block> exchangeableBlocks = Set.of(Stmt.Block.NO_BLOCK, Stmt.Block.DATA, Stmt.Block.MODEL);
-        this.check(exchangeableBlocks.contains(this.templateBlock) == exchangeableBlocks.contains(queryStmt.block));
+        Set<Stmt.Block> exchangeableBlocks =
+                Set.of(Stmt.Block.NO_BLOCK, Stmt.Block.DATA, Stmt.Block.MODEL);
+        this.check(
+                exchangeableBlocks.contains(this.templateBlock)
+                        == exchangeableBlocks.contains(queryStmt.block));
 
         if (!exchangeableBlocks.contains(this.templateBlock)) {
             // both of the statements are in a special block, let's ensure they are the same
@@ -214,7 +227,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     @Override
     public Void visitDraw(Stmt.Draw stmt) {
         if (this.currentQueryNode instanceof Expr.DrawnArgument drawnArgumentQuery) {
-            // in this case, the query is a drawn argument (x~dist) but the template is a drawn statement (Any x ~ dist)
+            // in this case, the query is a drawn argument (x~dist) but the template is a drawn
+            // statement (Any x ~ dist)
             // this still works, we directly route to the drawn distribution
 
             this.match(stmt.expression, drawnArgumentQuery.expression);
@@ -317,7 +331,6 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             this.check(expr.value.equals(queryLiteral.value));
         }
 
-
         if (expr.unit != Unit.IMPLICIT) {
             throw new RuntimeException("Template has explicit units, which is not supported.");
         }
@@ -350,17 +363,20 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     public Void visitTemplateVariable(Expr.TemplateVariable expr) {
         // template variables match any expression and capture the query node
 
-        // if we have already encountered this template variable, it must have been resolved to the same AST node
+        // if we have already encountered this template variable, it must have been resolved to the
+        // same AST node
 
         AstNode existingResolvedNode = templateVariableMap.get(expr.variableName);
         if (existingResolvedNode != null) {
             // the template variable was already bound; the new node must refer to the same thing.
-            // two variable nodes are considered the same if they have the same name, even if they are different objects.
+            // two variable nodes are considered the same if they have the same name, even if they
+            // are different objects.
 
             boolean sameNode = existingResolvedNode == currentQueryNode;
-            boolean sameVariable = existingResolvedNode instanceof Expr.Variable var1
-                    && currentQueryNode instanceof Expr.Variable var2
-                    && var1.variableName.equals(var2.variableName);
+            boolean sameVariable =
+                    existingResolvedNode instanceof Expr.Variable var1
+                            && currentQueryNode instanceof Expr.Variable var2
+                            && var1.variableName.equals(var2.variableName);
 
             if (!sameNode && !sameVariable) {
                 throw new MatchingError();
@@ -376,17 +392,20 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     public Void visitOptionalTemplateVariable(Expr.OptionalTemplateVariable expr) {
         // optional template variables match any expression and capture the query node
 
-        // if we have already encountered this template variable, it must have been resolved to the same AST node
+        // if we have already encountered this template variable, it must have been resolved to the
+        // same AST node
 
         AstNode existingResolvedNode = templateVariableMap.get(expr.variableName);
         if (existingResolvedNode != null) {
             // the template variable was already bound; the new node must refer to the same thing.
-            // two variable nodes are considered the same if they have the same name, even if they are different objects.
+            // two variable nodes are considered the same if they have the same name, even if they
+            // are different objects.
 
             boolean sameNode = existingResolvedNode == currentQueryNode;
-            boolean sameVariable = existingResolvedNode instanceof Expr.Variable var1
-                    && currentQueryNode instanceof Expr.Variable var2
-                    && var1.variableName.equals(var2.variableName);
+            boolean sameVariable =
+                    existingResolvedNode instanceof Expr.Variable var1
+                            && currentQueryNode instanceof Expr.Variable var2
+                            && var1.variableName.equals(var2.variableName);
 
             if (!sameNode && !sameVariable) {
                 throw new MatchingError();
@@ -468,7 +487,10 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
         for (Expr.Argument templateArgument : expr.arguments) {
             if (templateArgument.name == null) {
-                throw new IllegalArgumentException("Generator argument for '" + expr.functionName + "' with no explicit name in template found. Please specify the argument names in templates.");
+                throw new IllegalArgumentException(
+                        "Generator argument for '"
+                                + expr.functionName
+                                + "' with no explicit name in template found. Please specify the argument names in templates.");
             }
 
             templateArguments.put(templateArgument.name, templateArgument);
@@ -480,7 +502,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         for (Expr.Argument queryArgument : queryCall.arguments) {
             String queryArgumentName = queryArgument.name;
 
-            if (queryArgumentName == null && queryArgument.expression instanceof Expr.Variable queryVariable) {
+            if (queryArgumentName == null
+                    && queryArgument.expression instanceof Expr.Variable queryVariable) {
                 queryArgumentName = queryVariable.variableName;
             }
 
@@ -516,7 +539,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     @Override
     public Void visitAssignedArgument(Expr.AssignedArgument expr) {
         if (this.currentQueryNode instanceof Expr.DrawnArgument drawnQueryArg) {
-            // in this case, the template is an assigned argument (x=dist) but the query is a drawn argument (x~dist)
+            // in this case, the template is an assigned argument (x=dist) but the query is a drawn
+            // argument (x~dist)
             // this still works if the template has a variable pointing to a drawn statement
 
             this.check(expr.name.equals(drawnQueryArg.name));
@@ -525,7 +549,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
                 throw new MatchingError();
             }
 
-            AstNode resolvedTemplateStmt = this.potentiallyPassThrough(templateVar, this.templateVariableResolver);
+            AstNode resolvedTemplateStmt =
+                    this.potentiallyPassThrough(templateVar, this.templateVariableResolver);
             if (resolvedTemplateStmt == null) {
                 throw new MatchingError();
             }
@@ -545,7 +570,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
         if (expr.name == null) {
             // we expect arguments in templates to have a name
-            throw new IllegalArgumentException("Generator argument with no explicit name in template found. Please specify the argument names in templates.");
+            throw new IllegalArgumentException(
+                    "Generator argument with no explicit name in template found. Please specify the argument names in templates.");
         }
 
         // we don't have to check the argument name as visitCall takes care of that
@@ -559,14 +585,16 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     @Override
     public Void visitDrawnArgument(Expr.DrawnArgument expr) {
         if (this.currentQueryNode instanceof Expr.AssignedArgument assignedQueryArg) {
-            // in this case, the query is an assigned argument (x=dist) but the template is a drawn argument (x~dist)
+            // in this case, the query is an assigned argument (x=dist) but the template is a drawn
+            // argument (x~dist)
             // this still works if the query has `dist` defined as a draw
 
             if (!(assignedQueryArg.expression instanceof Expr.Variable queryVar)) {
                 throw new MatchingError();
             }
 
-            AstNode resolvedQueryStmt = this.potentiallyPassThrough(queryVar, this.queryVariableResolver);
+            AstNode resolvedQueryStmt =
+                    this.potentiallyPassThrough(queryVar, this.queryVariableResolver);
             if (resolvedQueryStmt == null) {
                 throw new MatchingError();
             }
@@ -596,7 +624,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     public Void visitGrouping(Expr.Grouping expr) {
         // we pass through all groupings
         // we should never end up here
-        throw new RuntimeException("Visit groupings when matching templates. This should not happen.");
+        throw new RuntimeException(
+                "Visit groupings when matching templates. This should not happen.");
     }
 
     @Override
@@ -681,6 +710,5 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         if (!predicate) throw new MatchingError();
     }
 
-    private static class MatchingError extends RuntimeException {
-    }
+    private static class MatchingError extends RuntimeException {}
 }

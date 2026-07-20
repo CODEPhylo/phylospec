@@ -42,9 +42,12 @@ class RevStmt {
         }
 
         Assignment(
-                String variableName, String[] indices, Stochasticity stochasticity, ResolvedType type, StringBuilder expression,
-                ComponentResolver componentResolver
-        ) {
+                String variableName,
+                String[] indices,
+                Stochasticity stochasticity,
+                ResolvedType type,
+                StringBuilder expression,
+                ComponentResolver componentResolver) {
             super(expression.toString());
             this.variableName = variableName;
             this.indices = indices;
@@ -68,9 +71,9 @@ class RevStmt {
                         case DETERMINISTIC -> " := ";
                         case STOCHASTIC -> " ~ ";
                         default ->
-                                throw new RevConverter.RevConversionError("Undefined statement type. This should not happen.");
-                    }
-            );
+                                throw new RevConverter.RevConversionError(
+                                        "Undefined statement type. This should not happen.");
+                    });
 
             builder.append(expression);
 
@@ -127,7 +130,10 @@ class RevStmt {
         }
 
         private boolean covers(String typeString, ResolvedType type) {
-            return TypeUtils.covers(ResolvedType.fromString(typeString, componentResolver).iterator().next(), type, componentResolver);
+            return TypeUtils.covers(
+                    ResolvedType.fromString(typeString, componentResolver).iterator().next(),
+                    type,
+                    componentResolver);
         }
     }
 }

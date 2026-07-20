@@ -1,11 +1,10 @@
 package org.phylospec.typeresolver;
 
+import java.util.*;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.AstVisitor;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
-
-import java.util.*;
 
 /// Resolves variable references in an AST, mapping each {@link Expr.Variable} occurrence
 /// to the {@link Stmt} that declares it.
@@ -138,7 +137,8 @@ public class VariableResolver implements AstVisitor<Void, Void, Void> {
      */
     @Override
     public Void visitVariable(Expr.Variable expr) {
-        // if this variable corresponds to a variable in any of the non-global scopes, we don't remember it
+        // if this variable corresponds to a variable in any of the non-global scopes, we don't
+        // remember it
 
         for (Set<String> scope : this.scopedVariableNames) {
             if (scope.contains(expr.variableName)) {

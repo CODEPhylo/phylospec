@@ -2,7 +2,7 @@ package org.phylospec.types;
 
 import org.phylospec.domain.Real;
 
-//TODO in dev
+// TODO in dev
 public interface RealMatrix<P extends Real> extends Matrix<P, Double> {
 
     /**
@@ -14,5 +14,4 @@ public interface RealMatrix<P extends Real> extends Matrix<P, Double> {
      * @throws IndexOutOfBoundsException if indices are out of range
      */
     double get(int row, int col);
-
 }

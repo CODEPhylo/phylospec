@@ -1,5 +1,6 @@
 package org.phylospec.ast.transformers;
 
+import java.util.List;
 import org.phylospec.ast.AstTransformer;
 import org.phylospec.ast.AstType;
 import org.phylospec.ast.Expr;
@@ -8,8 +9,6 @@ import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
 import org.phylospec.components.Type;
-
-import java.util.List;
 
 /**
  * This transformation replaces all type names and function names with the full
@@ -33,10 +32,12 @@ public class AttachComponentNamespaces extends AstTransformer {
     public Expr visitCall(Expr.Call expr) {
         String generatorName = expr.functionName;
         List<Generator> generators = componentResolver.resolveGenerator(generatorName);
-        if (generators.isEmpty()) throw new ComponentResolutionError("Function `" + generatorName + "` is not known");
+        if (generators.isEmpty())
+            throw new ComponentResolutionError("Function `" + generatorName + "` is not known");
 
         // all imported generators of this name have the same namespace
-        expr.functionName = generators.getFirst().getNamespace() + "." + generators.getFirst().getName();
+        expr.functionName =
+                generators.getFirst().getNamespace() + "." + generators.getFirst().getName();
 
         return expr;
     }
@@ -45,7 +46,8 @@ public class AttachComponentNamespaces extends AstTransformer {
     public AstType visitAtomicType(AstType.Atomic expr) {
         String typeName = expr.name;
         Type typeComponent = componentResolver.resolveType(typeName);
-        if (typeComponent == null) throw new ComponentResolutionError("Type `" + typeName + "` is not known");
+        if (typeComponent == null)
+            throw new ComponentResolutionError("Type `" + typeName + "` is not known");
 
         expr.name = typeComponent.getNamespace() + "." + typeComponent.getName();
 
@@ -58,7 +60,8 @@ public class AttachComponentNamespaces extends AstTransformer {
 
         String typeName = expr.name;
         Type typeComponent = componentResolver.resolveType(typeName);
-        if (typeComponent == null) throw new ComponentResolutionError("Type `" + typeName + "` is not known");
+        if (typeComponent == null)
+            throw new ComponentResolutionError("Type `" + typeName + "` is not known");
 
         expr.name = typeComponent.getNamespace() + "." + typeComponent.getName();
 

@@ -1,15 +1,14 @@
 package org.phylospec.lexer;
 
-import org.junit.jupiter.api.Test;
-import org.phylospec.FuzzingUtils;
-import org.phylospec.errors.Error;
-import org.phylospec.errors.ErrorEventListener;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import org.junit.jupiter.api.Test;
+import org.phylospec.FuzzingUtils;
+import org.phylospec.errors.Error;
+import org.phylospec.errors.ErrorEventListener;
 
 public class LexerTest {
 
@@ -38,8 +37,10 @@ public class LexerTest {
         assertEquals(new Token(TokenType.GREATER, ">", null, 1, 17, 18), tokens.get(15));
         assertEquals(new Token(TokenType.GREATER_EQUAL, ">=", null, 1, 18, 20), tokens.get(16));
         assertEquals(new Token(TokenType.LESS_EQUAL, "<=", null, 1, 20, 22), tokens.get(17));
-        assertEquals(new Token(TokenType.LEFT_SQUARE_BRACKET, "[", null, 1, 22, 23), tokens.get(18));
-        assertEquals(new Token(TokenType.RIGHT_SQUARE_BRACKET, "]", null, 1, 23, 24), tokens.get(19));
+        assertEquals(
+                new Token(TokenType.LEFT_SQUARE_BRACKET, "[", null, 1, 22, 23), tokens.get(18));
+        assertEquals(
+                new Token(TokenType.RIGHT_SQUARE_BRACKET, "]", null, 1, 23, 24), tokens.get(19));
         assertEquals(new Token(TokenType.IMPORT, "use", null, 1, 24, 27), tokens.get(20));
         assertEquals(new Token(TokenType.FOR, "for", null, 1, 28, 31), tokens.get(21));
         assertEquals(new Token(TokenType.EOF, "", null, 1, 31, 31), tokens.get(22));
@@ -75,9 +76,23 @@ public class LexerTest {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
 
-        assertEquals(new Token(TokenType.STRING_END, "\"Hallo this is a string\"", "Hallo this is a string", 1, 0, 24), tokens.get(0));
+        assertEquals(
+                new Token(
+                        TokenType.STRING_END,
+                        "\"Hallo this is a string\"",
+                        "Hallo this is a string",
+                        1,
+                        0,
+                        24),
+                tokens.get(0));
         assertEquals(new Token(TokenType.EOL, "\n", null, 1, 24, 25), tokens.get(1));
-        assertEquals(new Token(TokenType.STRING_END, "\"This is a\nmultiline\r\nstring\"", "This is a\nmultiline\r\nstring", new Range(2, 4, 0, 8)), tokens.get(2));
+        assertEquals(
+                new Token(
+                        TokenType.STRING_END,
+                        "\"This is a\nmultiline\r\nstring\"",
+                        "This is a\nmultiline\r\nstring",
+                        new Range(2, 4, 0, 8)),
+                tokens.get(2));
         assertEquals(new Token(TokenType.EOF, "", null, 4, 8, 8), tokens.get(3));
 
         assertEquals(tokens.size(), 4);
@@ -85,20 +100,32 @@ public class LexerTest {
 
     @Test
     public void testStringInterpolation() {
-        String source = "\"Hallo this is a ${interpolated} very ${cool} ${string}\"\n\"Hallo this is not a \\${interpolated} string\"";
+        String source =
+                "\"Hallo this is a ${interpolated} very ${cool} ${string}\"\n\"Hallo this is not a \\${interpolated} string\"";
 
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
 
-        assertEquals(new Token(TokenType.STRING_PART, "\"Hallo this is a ", "Hallo this is a ", 1, 0, 17), tokens.get(0));
-        assertEquals(new Token(TokenType.IDENTIFIER, "interpolated", null, 1, 19, 31), tokens.get(1));
-        assertEquals(new Token(TokenType.STRING_PART, " very ", " very ", 1, 32, 38), tokens.get(2));
+        assertEquals(
+                new Token(
+                        TokenType.STRING_PART, "\"Hallo this is a ", "Hallo this is a ", 1, 0, 17),
+                tokens.get(0));
+        assertEquals(
+                new Token(TokenType.IDENTIFIER, "interpolated", null, 1, 19, 31), tokens.get(1));
+        assertEquals(
+                new Token(TokenType.STRING_PART, " very ", " very ", 1, 32, 38), tokens.get(2));
         assertEquals(new Token(TokenType.IDENTIFIER, "cool", null, 1, 40, 44), tokens.get(3));
         assertEquals(new Token(TokenType.STRING_PART, " ", " ", 1, 45, 46), tokens.get(4));
         assertEquals(new Token(TokenType.IDENTIFIER, "string", null, 1, 48, 54), tokens.get(5));
         assertEquals(new Token(TokenType.STRING_END, "\"", "", 1, 55, 56), tokens.get(6));
         assertEquals(new Token(TokenType.EOL, "\n", null, 1, 56, 57), tokens.get(7));
-        assertEquals(new Token(TokenType.STRING_END, "\"Hallo this is not a \\${interpolated} string\"", "Hallo this is not a \\${interpolated} string", new Range(2, 0, 45)), tokens.get(8));
+        assertEquals(
+                new Token(
+                        TokenType.STRING_END,
+                        "\"Hallo this is not a \\${interpolated} string\"",
+                        "Hallo this is not a \\${interpolated} string",
+                        new Range(2, 0, 45)),
+                tokens.get(8));
         assertEquals(new Token(TokenType.EOF, "", null, 2, 45, 45), tokens.get(9));
 
         assertEquals(tokens.size(), 10);
@@ -121,7 +148,8 @@ public class LexerTest {
 
     @Test
     public void testMisc() {
-        String source = "(),.-+/*=!~\ntrue\rfalse\r\n\"Hallo\"10\n\r\n10.5  // this is some comment\nsomeFun()";
+        String source =
+                "(),.-+/*=!~\ntrue\rfalse\r\n\"Hallo\"10\n\r\n10.5  // this is some comment\nsomeFun()";
 
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
@@ -149,7 +177,8 @@ public class LexerTest {
         assertEquals(new Token(TokenType.EOL, "\r\n", null, 3, 5, 7), tokens.get(15));
 
         // 4th line: "Hallo" 10
-        assertEquals(new Token(TokenType.STRING_END, "\"Hallo\"", "Hallo", 4, 0, 7), tokens.get(16));
+        assertEquals(
+                new Token(TokenType.STRING_END, "\"Hallo\"", "Hallo", 4, 0, 7), tokens.get(16));
         assertEquals(new Token(TokenType.INT, "10", 10, 4, 7, 9), tokens.get(17));
         assertEquals(new Token(TokenType.EOL, "\n", null, 4, 9, 10), tokens.get(18));
 
@@ -158,7 +187,15 @@ public class LexerTest {
 
         // 6th line: 10.5  // this is some comment
         assertEquals(new Token(TokenType.FLOAT, "10.5", 10.5, 6, 0, 4), tokens.get(20));
-        assertEquals(new Token(TokenType.COMMENT, "// this is some comment", " this is some comment", 6, 6, 29), tokens.get(21));
+        assertEquals(
+                new Token(
+                        TokenType.COMMENT,
+                        "// this is some comment",
+                        " this is some comment",
+                        6,
+                        6,
+                        29),
+                tokens.get(21));
         assertEquals(new Token(TokenType.EOL, "\n", null, 6, 29, 30), tokens.get(22));
 
         // 7th line: someFun()
@@ -174,7 +211,8 @@ public class LexerTest {
 
     @Test
     public void testErrors() {
-        String source = "()£Hallo 1324523564356345892013245235643563458920 -5643563458920.4523564356345892045235643563458920 \"khkh";
+        String source =
+                "()£Hallo 1324523564356345892013245235643563458920 -5643563458920.4523564356345892045235643563458920 \"khkh";
 
         List<Error> errors = new ArrayList<>();
         ErrorEventListener listener = errors::add;
@@ -190,7 +228,9 @@ public class LexerTest {
         assertEquals("Only use letters or digits.", errors.get(0).hint());
 
         assertEquals("(line 1 9:49)", errors.get(1).range().toString());
-        assertEquals("'1324523564356345892013245235643563458920' is not a valid number.", errors.get(1).description());
+        assertEquals(
+                "'1324523564356345892013245235643563458920' is not a valid number.",
+                errors.get(1).description());
         assertEquals("Try a smaller number.", errors.get(1).hint());
 
         assertEquals("(line 1 100:105)", errors.get(2).range().toString());
@@ -205,9 +245,12 @@ public class LexerTest {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
 
-        assertEquals(new Token(TokenType.OBSERVED_AS, "observed as", null, 1, 0, 11), tokens.get(0));
+        assertEquals(
+                new Token(TokenType.OBSERVED_AS, "observed as", null, 1, 0, 11), tokens.get(0));
         assertEquals(new Token(TokenType.TRUE, "true", null, 1, 12, 16), tokens.get(1));
-        assertEquals(new Token(TokenType.OBSERVED_BETWEEN, "observed between", null, 1, 17, 33), tokens.get(2));
+        assertEquals(
+                new Token(TokenType.OBSERVED_BETWEEN, "observed between", null, 1, 17, 33),
+                tokens.get(2));
         assertEquals(new Token(TokenType.EOF, "", null, 1, 33, 33), tokens.get(3));
 
         assertEquals(4, tokens.size());
@@ -224,8 +267,13 @@ public class LexerTest {
             try {
                 tokens = new Lexer(input).scanTokens();
             } catch (Exception e) {
-                fail("Lexer threw an exception on iteration " + i
-                        + " (input=" + repr(input) + "): " + e);
+                fail(
+                        "Lexer threw an exception on iteration "
+                                + i
+                                + " (input="
+                                + repr(input)
+                                + "): "
+                                + e);
                 return;
             }
 
@@ -233,20 +281,26 @@ public class LexerTest {
             assertNotNull(tokens, "tokens must not be null (iter=" + i + ")");
 
             // invariant: last token is always EOF
-            assertEquals(TokenType.EOF, tokens.get(tokens.size() - 1).type,
+            assertEquals(
+                    TokenType.EOF,
+                    tokens.get(tokens.size() - 1).type,
                     "last token must be EOF (iter=" + i + ")");
 
             // invariant: all token ranges are internally consistent
             for (Token token : tokens) {
-                assertTrue(token.range.startLine >= 1,
+                assertTrue(
+                        token.range.startLine >= 1,
                         "startLine must be >= 1 (iter=" + i + ", token=" + token + ")");
-                assertTrue(token.range.start >= 0,
+                assertTrue(
+                        token.range.start >= 0,
                         "start must be >= 0 (iter=" + i + ", token=" + token + ")");
-                assertTrue(token.range.endLine >= token.range.startLine,
+                assertTrue(
+                        token.range.endLine >= token.range.startLine,
                         "end must be >= start (iter=" + i + ", token=" + token + ")");
 
                 if (token.range.startLine == token.range.endLine) {
-                    assertTrue(token.range.end >= token.range.start,
+                    assertTrue(
+                            token.range.end >= token.range.start,
                             "end must be >= start (iter=" + i + ", token=" + token + ")");
                 }
             }
@@ -257,16 +311,26 @@ public class LexerTest {
     private String generateFuzzInput(Random r, int iteration) {
         // first few iterations cover deterministic edge cases
         switch (iteration) {
-            case 0: return "";
-            case 1: return " ";
-            case 2: return "\n";
-            case 3: return "\r\n";
-            case 4: return "\"";
-            case 5: return "\"unterminated";
-            case 6: return "//";
-            case 7: return "// comment only";
-            case 8: return String.valueOf((char) 0);
-            case 9: return "\t\t\t";
+            case 0:
+                return "";
+            case 1:
+                return " ";
+            case 2:
+                return "\n";
+            case 3:
+                return "\r\n";
+            case 4:
+                return "\"";
+            case 5:
+                return "\"unterminated";
+            case 6:
+                return "//";
+            case 7:
+                return "// comment only";
+            case 8:
+                return String.valueOf((char) 0);
+            case 9:
+                return "\t\t\t";
         }
 
         int strategy = r.nextInt(5);

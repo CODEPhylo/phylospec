@@ -9,11 +9,13 @@ package org.phylospec.domain;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public class PositiveReal extends NonNegativeReal{
+public class PositiveReal extends NonNegativeReal {
     public static final PositiveReal INSTANCE = new PositiveReal();
 
     protected PositiveReal() {}
 
     @Override
-    public boolean isValid(Double value) { return Real.INSTANCE.isValid(value) && value > 0.0; }
+    public boolean isValid(Double value) {
+        return Real.INSTANCE.isValid(value) && value > 0.0;
+    }
 }

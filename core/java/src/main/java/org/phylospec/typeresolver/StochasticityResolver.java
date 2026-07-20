@@ -1,20 +1,20 @@
 package org.phylospec.typeresolver;
 
-import org.phylospec.ast.*;
-
 import java.util.*;
+import org.phylospec.ast.*;
 
 /**
  * Resolves the stochasticity of each node of the AST tree: for each node, it is determined if it
  * represents a deterministic or stochastic expression.
  */
-public class StochasticityResolver implements AstVisitor<Stochasticity, Stochasticity, Stochasticity> {
+public class StochasticityResolver
+        implements AstVisitor<Stochasticity, Stochasticity, Stochasticity> {
 
     private final Map<AstNode, Stochasticity> stochasticityMap;
     private final Map<String, Stochasticity> variableStochasticityMap;
 
     private final Set<String> scopedIndexVariables;
-    
+
     public StochasticityResolver() {
         this.stochasticityMap = new HashMap<>();
         this.variableStochasticityMap = new HashMap<>();
@@ -81,10 +81,10 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
     @Override
     public Stochasticity visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
         observedBetween.stmt.accept(this);
-        Stochasticity stochasticity = Stochasticity.merge(
-            observedBetween.observedFrom.accept(this),
-            observedBetween.observedTo.accept(this)
-        );
+        Stochasticity stochasticity =
+                Stochasticity.merge(
+                        observedBetween.observedFrom.accept(this),
+                        observedBetween.observedTo.accept(this));
         return remember(observedBetween, stochasticity);
     }
 
@@ -99,9 +99,7 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
 
         for (Expr.StringTemplate.Part part : expr.parts) {
             if (part instanceof Expr.StringTemplate.ExpressionPart(Expr.Variable expression)) {
-                stochasticity = Stochasticity.merge(
-                        stochasticity, expression.accept(this)
-                );
+                stochasticity = Stochasticity.merge(stochasticity, expression.accept(this));
             }
         }
 
@@ -114,7 +112,9 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
         if (this.scopedIndexVariables.contains(expr.variableName)) {
             stochasticity = Stochasticity.DETERMINISTIC;
         } else {
-            stochasticity = variableStochasticityMap.getOrDefault(expr.variableName, Stochasticity.DETERMINISTIC);
+            stochasticity =
+                    variableStochasticityMap.getOrDefault(
+                            expr.variableName, Stochasticity.DETERMINISTIC);
         }
         return remember(expr, stochasticity);
     }
@@ -138,9 +138,10 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
     public Stochasticity visitBinary(Expr.Binary expr) {
         Stochasticity leftStochasticity = expr.left.accept(this);
         Stochasticity rightStochasticity = expr.right.accept(this);
-        return remember(expr, Stochasticity.nonConstant(
-                Stochasticity.merge(leftStochasticity, rightStochasticity)
-        ));
+        return remember(
+                expr,
+                Stochasticity.nonConstant(
+                        Stochasticity.merge(leftStochasticity, rightStochasticity)));
     }
 
     @Override
@@ -149,10 +150,7 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
                 expr,
                 Stochasticity.nonConstant(
                         Stochasticity.merge(
-                                Arrays.stream(expr.arguments).map(x -> x.accept(this)).toList()
-                        )
-                )
-        );
+                                Arrays.stream(expr.arguments).map(x -> x.accept(this)).toList())));
     }
 
     @Override
@@ -175,10 +173,7 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
     public Stochasticity visitArray(Expr.Array expr) {
         return remember(
                 expr,
-                Stochasticity.merge(
-                        expr.elements.stream().map(x -> x.accept(this)).toList()
-                )
-        );
+                Stochasticity.merge(expr.elements.stream().map(x -> x.accept(this)).toList()));
     }
 
     @Override
@@ -194,10 +189,7 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
 
     @Override
     public Stochasticity visitRange(Expr.Range range) {
-        return remember(
-                range,
-                Stochasticity.merge(range.from.accept(this), range.to.accept(this))
-        );
+        return remember(range, Stochasticity.merge(range.from.accept(this), range.to.accept(this)));
     }
 
     @Override

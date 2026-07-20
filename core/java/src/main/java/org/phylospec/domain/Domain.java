@@ -12,6 +12,4 @@ public interface Domain<T> {
     boolean isValid(T value);
 
     Class<T> getTypeClass();
-
 }
-

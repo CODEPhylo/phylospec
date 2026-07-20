@@ -1,18 +1,17 @@
 package org.phylospec.lsp;
 
-import org.eclipse.lsp4j.*;
-import org.eclipse.lsp4j.jsonrpc.Launcher;
-import org.eclipse.lsp4j.launch.LSPLauncher;
-import org.eclipse.lsp4j.services.LanguageClient;
-import org.eclipse.lsp4j.services.TextDocumentService;
-import org.eclipse.lsp4j.services.WorkspaceService;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.CompletableFuture;
+import org.eclipse.lsp4j.*;
+import org.eclipse.lsp4j.jsonrpc.Launcher;
+import org.eclipse.lsp4j.launch.LSPLauncher;
+import org.eclipse.lsp4j.services.LanguageClient;
+import org.eclipse.lsp4j.services.TextDocumentService;
+import org.eclipse.lsp4j.services.WorkspaceService;
 
 /**
  * This is an LSP for PhyloSpec. It can be started on a port by calling {@code LSP.startServer(...)}.
@@ -29,9 +28,9 @@ public class Lsp implements org.eclipse.lsp4j.services.LanguageServer {
 
             Lsp server = new Lsp();
 
-            Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(
-                    server, socket.getInputStream(), socket.getOutputStream()
-            );
+            Launcher<LanguageClient> launcher =
+                    LSPLauncher.createServerLauncher(
+                            server, socket.getInputStream(), socket.getOutputStream());
             server.setRemoteProxy(launcher.getRemoteProxy());
             launcher.startListening();
         }
@@ -47,9 +46,8 @@ public class Lsp implements org.eclipse.lsp4j.services.LanguageServer {
         res.getCapabilities().setCompletionProvider(new CompletionOptions());
         res.getCapabilities().setHoverProvider(Boolean.TRUE);
         res.getCapabilities().setTextDocumentSync(TextDocumentSyncKind.Full);
-        res.getCapabilities().setDiagnosticProvider(
-                new DiagnosticRegistrationOptions(false, false)
-        );
+        res.getCapabilities()
+                .setDiagnosticProvider(new DiagnosticRegistrationOptions(false, false));
 
         return CompletableFuture.supplyAsync(() -> res);
     }

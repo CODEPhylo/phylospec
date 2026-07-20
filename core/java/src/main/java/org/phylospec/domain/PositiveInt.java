@@ -2,10 +2,10 @@ package org.phylospec.domain;
 
 /**
  * Positive integer type (> 0).
- * 
+ *
  * Represents an integer that must be strictly positive.
  * Common uses include population sizes, sample counts, and dimensions.
- * 
+ *
  * @author PhyloSpec Contributors
  * @since 1.0
  */

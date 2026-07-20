@@ -2,7 +2,6 @@ package org.phylospec.types;
 
 import org.phylospec.domain.Bool;
 
-
 public interface BoolMatrix extends Matrix<Bool, Boolean> {
 
     /**
@@ -14,5 +13,4 @@ public interface BoolMatrix extends Matrix<Bool, Boolean> {
      * @throws IndexOutOfBoundsException if indices are out of range
      */
     boolean get(int row, int col);
-
 }

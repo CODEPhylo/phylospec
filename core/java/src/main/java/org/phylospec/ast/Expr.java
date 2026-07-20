@@ -1,14 +1,10 @@
 package org.phylospec.ast;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import org.phylospec.lexer.TokenType;
-import org.phylospec.typeresolver.ResolvedType;
-import org.phylospec.typeresolver.Stochasticity;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
+import org.phylospec.lexer.TokenType;
 
 /**
  * Expressions are a type of node in the AST tree. This class has a number of
@@ -18,7 +14,7 @@ import java.util.Set;
  */
 public abstract class Expr extends AstNode {
 
-    abstract public <S, E, T> E accept(AstVisitor<S, E, T> visitor);
+    public abstract <S, E, T> E accept(AstVisitor<S, E, T> visitor);
 
     /** Represents a variable. Function and distribution names are also treated
      * as variables. */
@@ -111,15 +107,19 @@ public abstract class Expr extends AstNode {
     public static class StringTemplate extends Expr {
 
         /** A single piece of a string template, either literal text or an interpolated expression. */
-        public sealed interface Part permits StringTemplate.StringPart, StringTemplate.ExpressionPart {}
+        public sealed interface Part
+                permits StringTemplate.StringPart, StringTemplate.ExpressionPart {}
+
         public record StringPart(String value) implements Part {}
+
         public record ExpressionPart(Expr.Variable expression) implements Part {}
 
         public StringTemplate(List<Part> parts) {
             this.parts = parts;
         }
 
-        @JsonPropertyDescription("The parts of the string template, alternating between literal text and interpolated expressions.")
+        @JsonPropertyDescription(
+                "The parts of the string template, alternating between literal text and interpolated expressions.")
         public final List<Part> parts;
 
         @Override
@@ -142,10 +142,11 @@ public abstract class Expr extends AstNode {
 
     /** Represents a literal, i.e. either a String, an Integer, or a
      * Real. */
-	public static class Literal extends Expr {
-		public Literal(Object value) {
-			this.value = value;
-		}
+    public static class Literal extends Expr {
+        public Literal(Object value) {
+            this.value = value;
+        }
+
         public Literal(Object value, Unit unit) {
             this.value = value;
             this.unit = unit;
@@ -154,6 +155,7 @@ public abstract class Expr extends AstNode {
         // TODO: make this type generic
         @JsonPropertyDescription("The literal value (either a string, a number, or a boolean).")
         public Object value;
+
         public Unit unit = Unit.IMPLICIT;
 
         @Override
@@ -179,14 +181,15 @@ public abstract class Expr extends AstNode {
     }
 
     /** Represents a unary operation, e.g. a negation. */
-	public static class Unary extends Expr {
-		public Unary(TokenType operator, Expr right) {
-			this.operator = operator;
-			this.right = right;
-		}
+    public static class Unary extends Expr {
+        public Unary(TokenType operator, Expr right) {
+            this.operator = operator;
+            this.right = right;
+        }
 
         @JsonPropertyDescription("The unary operation (either MINUS or BANG).")
-		public final TokenType operator;
+        public final TokenType operator;
+
         @JsonPropertyDescription("The expression to which the unary operation is applied to.")
         public Expr right;
 
@@ -209,25 +212,30 @@ public abstract class Expr extends AstNode {
     }
 
     /** Represents a binary operation, e.g. addition. */
-	public static class Binary extends Expr {
-		public Binary(Expr left, TokenType operator, Expr right) {
-			this.left = left;
-			this.operator = operator;
-			this.right = right;
-		}
+    public static class Binary extends Expr {
+        public Binary(Expr left, TokenType operator, Expr right) {
+            this.left = left;
+            this.operator = operator;
+            this.right = right;
+        }
 
         @JsonPropertyDescription("The LHS expression to which the binary operation is applied to.")
-		public Expr left;
-        @JsonPropertyDescription("The unary operation (either PLUS, MINUS, STAR, SLASH, BANG_EQUAL, EQUAL_EQUAL, GREATER_EQUAL or LESS_EQUAL).")
-		public final TokenType operator;
+        public Expr left;
+
+        @JsonPropertyDescription(
+                "The unary operation (either PLUS, MINUS, STAR, SLASH, BANG_EQUAL, EQUAL_EQUAL, GREATER_EQUAL or LESS_EQUAL).")
+        public final TokenType operator;
+
         @JsonPropertyDescription("The RHS expression to which the binary operation is applied to.")
-		public Expr right;
+        public Expr right;
 
         @Override
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Binary binary = (Binary) o;
-            return Objects.equals(left, binary.left) && Objects.equals(operator, binary.operator) && Objects.equals(right, binary.right);
+            return Objects.equals(left, binary.left)
+                    && Objects.equals(operator, binary.operator)
+                    && Objects.equals(right, binary.right);
         }
 
         @Override
@@ -285,6 +293,7 @@ public abstract class Expr extends AstNode {
 
         @JsonPropertyDescription("The function name prefixed by its namespace.")
         public String functionName;
+
         @JsonPropertyDescription("The passed arguments.")
         public final Argument[] arguments;
 
@@ -292,7 +301,8 @@ public abstract class Expr extends AstNode {
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Call call = (Call) o;
-            return Objects.equals(functionName, call.functionName) && Objects.deepEquals(arguments, call.arguments);
+            return Objects.equals(functionName, call.functionName)
+                    && Objects.deepEquals(arguments, call.arguments);
         }
 
         @Override
@@ -307,9 +317,11 @@ public abstract class Expr extends AstNode {
     }
 
     /** The base class for function arguments. */
-    public static abstract class Argument extends Expr {
-        @JsonPropertyDescription("The argument name. Null if the argument name is not specified for the first and only argument.")
+    public abstract static class Argument extends Expr {
+        @JsonPropertyDescription(
+                "The argument name. Null if the argument name is not specified for the first and only argument.")
         public String name;
+
         @JsonPropertyDescription("The expression passed to the argument.")
         public Expr expression;
 
@@ -395,6 +407,7 @@ public abstract class Expr extends AstNode {
 
         @JsonPropertyDescription("The expression being indexed.")
         public Expr object;
+
         @JsonPropertyDescription("The index expressions.")
         public List<Expr> indices;
 
@@ -425,6 +438,7 @@ public abstract class Expr extends AstNode {
 
         @JsonPropertyDescription("The lower bound of the range (inclusive).")
         public Expr from;
+
         @JsonPropertyDescription("The upper bound of the range (inclusive).")
         public Expr to;
 
@@ -445,5 +459,4 @@ public abstract class Expr extends AstNode {
             return visitor.visitRange(this);
         }
     }
-
 }

@@ -1,9 +1,8 @@
 package org.phylospec.typeresolver;
 
+import java.util.List;
 import org.phylospec.ast.AstNode;
 import org.phylospec.lexer.Range;
-
-import java.util.List;
 
 public class TypeError extends RuntimeException {
     private AstNode astNode;

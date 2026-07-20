@@ -1,13 +1,12 @@
 package org.phylospec.tiling.tiles;
 
+import java.util.*;
 import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
-
-import java.util.*;
 
 /**
  * This interface provides methods to construct tiles for a subgraph of the PhyloSpec AST.
@@ -22,8 +21,8 @@ public interface CandidateTile<S> {
             AstNode node,
             Map<AstNode, Set<Tile<?, S>>> inputTiles,
             VariableResolver variableResolver,
-            StochasticityResolver stochasticityResolver
-    ) throws FailedTilingAttempt;
+            StochasticityResolver stochasticityResolver)
+            throws FailedTilingAttempt;
 
     /**
      * Creates wired up fresh tiles for the given inputs and their compatible input tiles. For every combination of
@@ -32,8 +31,7 @@ public interface CandidateTile<S> {
     default Set<Tile<?, S>> getWiredUpTiles(
             List<TileInput<?, S>> tileInputs,
             List<Set<Tile<?, S>>> compatibleInputTiles,
-            AstNode rootNode
-    ) {
+            AstNode rootNode) {
         Set<Tile<?, S>> wiredUpTiles = new HashSet<>();
 
         Utils.visitCombinations(
@@ -67,8 +65,7 @@ public interface CandidateTile<S> {
                     if (!wiredUpTile.isInconsistent(new IdentityHashMap<>())) {
                         wiredUpTiles.add(wiredUpTile);
                     }
-                }
-        );
+                });
 
         return wiredUpTiles;
     }
@@ -94,14 +91,16 @@ public interface CandidateTile<S> {
      */
     default Tile<?, S> createInstance() {
         if (!(this instanceof Tile<?, ?> tile)) {
-            throw new RuntimeException(getClass().getSimpleName()  + " does not inherit from Tile<?>. In that case, implement createInstance yourself.");
+            throw new RuntimeException(
+                    getClass().getSimpleName()
+                            + " does not inherit from Tile<?>. In that case, implement createInstance yourself.");
         }
 
         try {
             return tile.getClass().getDeclaredConstructor().newInstance();
         } catch (ReflectiveOperationException e) {
-            throw new RuntimeException("Tile " + getClass().getSimpleName() + " has no public no-arg constructor", e);
+            throw new RuntimeException(
+                    "Tile " + getClass().getSimpleName() + " has no public no-arg constructor", e);
         }
     }
-
 }

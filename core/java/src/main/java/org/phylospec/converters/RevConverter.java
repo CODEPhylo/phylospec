@@ -1,12 +1,11 @@
 package org.phylospec.converters;
 
+import java.util.*;
 import org.phylospec.ast.*;
 import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.TokenType;
 import org.phylospec.typeresolver.*;
-
-import java.util.*;
 
 /// This class converts parsed PhyloSpec statements into a Rev script.
 ///
@@ -14,7 +13,7 @@ import java.util.*;
 /// ```
 /// List<Stmt> statements = parser.parse();
 /// String revString = RevConverter.convertToRev(statements, componentResolver);
-///```
+/// ```
 /// @deprecated not updated to 03-2026
 @Deprecated
 public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
@@ -47,12 +46,15 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
      * Converts the given statements into a Rev script.
      */
     public static String convertToRev(
-            String phylospecFileName, List<Stmt> statements, List<ComponentLibrary> componentLibraries
-    ) {
+            String phylospecFileName,
+            List<Stmt> statements,
+            List<ComponentLibrary> componentLibraries) {
         RevConverter converter = new RevConverter(statements, componentLibraries);
-        String modelName = phylospecFileName.endsWith(".phylospec")
-                ? phylospecFileName.substring(0, phylospecFileName.length() - ".phylospec".length())
-                : phylospecFileName;
+        String modelName =
+                phylospecFileName.endsWith(".phylospec")
+                        ? phylospecFileName.substring(
+                                0, phylospecFileName.length() - ".phylospec".length())
+                        : phylospecFileName;
 
         // traverse the syntax tree to collect the Rev statements
 
@@ -73,37 +75,41 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
             builder.append(statement.build()).append("\n");
         }
 
-        List<String> modelVariableNames = converter.revStatements.stream()
-                .filter(s -> s instanceof RevStmt.Assignment)
-                .map(s -> (RevStmt.Assignment) s)
-                .filter(s -> s.stochasticity == Stochasticity.STOCHASTIC)
-                .map(s -> s.variableName)
-                .toList();
+        List<String> modelVariableNames =
+                converter.revStatements.stream()
+                        .filter(s -> s instanceof RevStmt.Assignment)
+                        .map(s -> (RevStmt.Assignment) s)
+                        .filter(s -> s.stochasticity == Stochasticity.STOCHASTIC)
+                        .map(s -> s.variableName)
+                        .toList();
 
-        List<String> treeVariableNames = converter.revStatements.stream()
-                .filter(s -> s instanceof RevStmt.Assignment)
-                .map(s -> (RevStmt.Assignment) s)
-                .filter(s -> s.type != null && s.type.getName().equals("Tree"))
-                .map(s -> s.variableName)
-                .toList();
+        List<String> treeVariableNames =
+                converter.revStatements.stream()
+                        .filter(s -> s instanceof RevStmt.Assignment)
+                        .map(s -> (RevStmt.Assignment) s)
+                        .filter(s -> s.type != null && s.type.getName().equals("Tree"))
+                        .map(s -> s.variableName)
+                        .toList();
 
         if (!modelVariableNames.isEmpty()) {
             // add monitors
 
-            builder.append("\nmonitors.append( mnModel( filename = \"").append(modelName).append(".log\", printgen = 10 ) )\n");
+            builder.append("\nmonitors.append( mnModel( filename = \"")
+                    .append(modelName)
+                    .append(".log\", printgen = 10 ) )\n");
 
             if (treeVariableNames.size() == 1) {
-                builder
-                        .append("monitors.append( mnNexus( filename = \"")
+                builder.append("monitors.append( mnNexus( filename = \"")
                         .append(modelName)
                         .append(".trees\", tree = ")
                         .append(treeVariableNames.getFirst())
                         .append(", printgen = 10 ) )\n");
             } else {
                 for (String treeVariableName : treeVariableNames) {
-                    builder
-                            .append("monitors.append( mnNexus( filename = \"")
-                            .append(modelName).append("_").append(treeVariableName)
+                    builder.append("monitors.append( mnNexus( filename = \"")
+                            .append(modelName)
+                            .append("_")
+                            .append(treeVariableName)
                             .append(".trees\", tree = ")
                             .append(treeVariableName)
                             .append(", printgen = 10 ) )\n");
@@ -132,10 +138,12 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     public Void visitDecoratedStmt(Stmt.Decorated stmt) {
         // make sure we have a @observedAs decorator with one argument
         if (!stmt.decorator.functionName.equals("observedAs")) {
-            throw new RevConversionError("Decorator " + stmt.decorator.functionName + " is not supported in Rev.");
+            throw new RevConversionError(
+                    "Decorator " + stmt.decorator.functionName + " is not supported in Rev.");
         }
         if (stmt.decorator.arguments.length != 1) {
-            throw new RevConversionError("Decorator " + stmt.decorator.functionName + " requires exactly one argument.");
+            throw new RevConversionError(
+                    "Decorator " + stmt.decorator.functionName + " requires exactly one argument.");
         }
 
         stmt.statement.accept(this);
@@ -189,13 +197,16 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         Set<ResolvedType> expressionTypeSet = typeResolver.resolveTypeSet(stmt.expression);
         Stochasticity[] stochasticity = new Stochasticity[] {Stochasticity.DETERMINISTIC};
         for (ResolvedType expressionType : expressionTypeSet) {
-            TypeUtils.visitTypeAndParents(expressionType, t -> {
-                if (t.getName().equals("Distribution")) {
-                    stochasticity[0] = Stochasticity.STOCHASTIC;
-                    return TypeUtils.Visitor.STOP;
-                }
-                return TypeUtils.Visitor.CONTINUE;
-            }, componentResolver);
+            TypeUtils.visitTypeAndParents(
+                    expressionType,
+                    t -> {
+                        if (t.getName().equals("Distribution")) {
+                            stochasticity[0] = Stochasticity.STOCHASTIC;
+                            return TypeUtils.Visitor.STOP;
+                        }
+                        return TypeUtils.Visitor.CONTINUE;
+                    },
+                    componentResolver);
         }
 
         addRevAssignment(stmt.name, stochasticity[0], type, expression);
@@ -217,7 +228,9 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
             case Double value -> new StringBuilder(value.toString());
             case String value -> new StringBuilder("\"").append(value).append("\"");
             case Boolean value -> new StringBuilder(value.toString());
-            default -> throw new RevConversionError("Literal " + expr.value + " is not supported in Rev.");
+            default ->
+                    throw new RevConversionError(
+                            "Literal " + expr.value + " is not supported in Rev.");
         };
     }
 
@@ -240,7 +253,10 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         } else if (expr.operator == TokenType.BANG) {
             return new StringBuilder().append("!").append(expr.right.accept(this));
         }
-        throw new RevConversionError("Unary operation " + TokenType.getLexeme(expr.operator) + " is not supported in Rev.");
+        throw new RevConversionError(
+                "Unary operation "
+                        + TokenType.getLexeme(expr.operator)
+                        + " is not supported in Rev.");
     }
 
     @Override
@@ -258,7 +274,10 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
             return new StringBuilder().append(left).append(" / ").append(right);
         }
 
-        throw new RevConversionError("Binary operation " + TokenType.getLexeme(expr.operator) + " is not supported in Rev.");
+        throw new RevConversionError(
+                "Binary operation "
+                        + TokenType.getLexeme(expr.operator)
+                        + " is not supported in Rev.");
     }
 
     @Override
@@ -280,9 +299,15 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         // we add a separate variable with the result of the draw
         String variableName = expr.name;
         Set<ResolvedType> resolvedTypeSet = typeResolver.resolveTypeSet(expr);
-        ResolvedType mostGeneralType = TypeUtils.getLowestCover(resolvedTypeSet.stream().toList(), componentResolver);
+        ResolvedType mostGeneralType =
+                TypeUtils.getLowestCover(resolvedTypeSet.stream().toList(), componentResolver);
         StringBuilder variableDeclaration = expr.expression.accept(this);
-        RevStmt.Assignment stmt = addRevAssignment(variableName, Stochasticity.STOCHASTIC, mostGeneralType, variableDeclaration);
+        RevStmt.Assignment stmt =
+                addRevAssignment(
+                        variableName,
+                        Stochasticity.STOCHASTIC,
+                        mostGeneralType,
+                        variableDeclaration);
 
         // we now pass the new variable to the function
         return new StringBuilder(stmt.variableName);
@@ -321,7 +346,6 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
     }
 
     /** Helpers to add rev statements. */
-
     RevStmt addSimpleRevStatement(String stmt) {
         RevStmt revStmt = new RevStmt(stmt);
         revStatements.add(revStmt);
@@ -340,14 +364,23 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         return stmt;
     }
 
-    RevStmt.Assignment addRevAssignment(String variableName, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
+    RevStmt.Assignment addRevAssignment(
+            String variableName,
+            Stochasticity stochasticity,
+            ResolvedType type,
+            StringBuilder expression) {
         return addRevAssignment(variableName, new String[] {}, stochasticity, type, expression);
     }
 
-    RevStmt.Assignment addRevAssignment(String variableName, String[] indices, Stochasticity stochasticity, ResolvedType type, StringBuilder expression) {
+    RevStmt.Assignment addRevAssignment(
+            String variableName,
+            String[] indices,
+            Stochasticity stochasticity,
+            ResolvedType type,
+            StringBuilder expression) {
         return addRevAssignment(
-                new RevStmt.Assignment(variableName, indices, stochasticity, type, expression, componentResolver)
-        );
+                new RevStmt.Assignment(
+                        variableName, indices, stochasticity, type, expression, componentResolver));
     }
 
     String getNextAvailableVariableName(String variableName) {
@@ -358,28 +391,30 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
         }
         return nextAvailableName;
     }
+
     private boolean isVariableNameInUse(String variableName) {
-        List<String> takenVariableNames = revStatements.stream()
-                .filter(s -> s instanceof RevStmt.Assignment)
-                .map(s -> ((RevStmt.Assignment) s).variableName)
-                .toList();
-        return (
-                takenVariableNames.contains(variableName) ||
-                scopedVariableAliases.stream().anyMatch(x -> x.containsValue(variableName))
-        );
+        List<String> takenVariableNames =
+                revStatements.stream()
+                        .filter(s -> s instanceof RevStmt.Assignment)
+                        .map(s -> ((RevStmt.Assignment) s).variableName)
+                        .toList();
+        return (takenVariableNames.contains(variableName)
+                || scopedVariableAliases.stream().anyMatch(x -> x.containsValue(variableName)));
     }
 
     /** Helpers to create new variable scopes and variable aliases. */
-
     private void createVariableScope() {
         scopedVariableAliases.addFirst(new HashMap<>());
     }
+
     private void dropVariableScope() {
         scopedVariableAliases.removeFirst();
     }
+
     private void addVariableToScope(String variableName) {
         scopedVariableAliases.getFirst().put(variableName, variableName);
     }
+
     private void addAliasedVariableToScope(String variableName, String alias) {
         scopedVariableAliases.getFirst().put(variableName, alias);
     }

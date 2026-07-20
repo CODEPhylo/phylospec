@@ -1,10 +1,9 @@
 package org.phylospec.typeresolver;
 
+import java.util.*;
 import org.phylospec.Utils;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.TokenType;
-
-import java.util.*;
 
 /**
  * This class helps to determine the type of the result of an operation on one or more operands.
@@ -30,10 +29,7 @@ class TypeMatcher {
     Set<ResolvedType> findMatch(List<Rule> rules, Query query) {
         // we first enumerate all possible input type combinations
         Set<List<ResolvedType>> inputCombinations = new HashSet<>();
-        Utils.visitCombinations(
-                Arrays.stream(query.inputTypes).toList(),
-                inputCombinations::add
-        );
+        Utils.visitCombinations(Arrays.stream(query.inputTypes).toList(), inputCombinations::add);
 
         // we now find all rules where the rule input types cover the actual input types
         Set<ResolvedType> resultTypesOfMatches = new HashSet<>();
@@ -44,19 +40,23 @@ class TypeMatcher {
 
                 boolean allInputsMatch = true;
                 for (int i = 0; i < inputCombination.size(); i++) {
-                    if (rule.inputTypes[i] != ANY && !TypeUtils.covers(
-                            ResolvedType.fromString(rule.inputTypes[i], componentResolver).iterator().next(),
-                            inputCombination.get(i),
-                            componentResolver
-                    )) {
+                    if (rule.inputTypes[i] != ANY
+                            && !TypeUtils.covers(
+                                    ResolvedType.fromString(rule.inputTypes[i], componentResolver)
+                                            .iterator()
+                                            .next(),
+                                    inputCombination.get(i),
+                                    componentResolver)) {
                         allInputsMatch = false;
                         break;
                     }
                 }
 
-                if (allInputsMatch) resultTypesOfMatches.add(
-                        ResolvedType.fromString(rule.resultType, componentResolver).iterator().next()
-                );
+                if (allInputsMatch)
+                    resultTypesOfMatches.add(
+                            ResolvedType.fromString(rule.resultType, componentResolver)
+                                    .iterator()
+                                    .next());
             }
         }
 
@@ -84,5 +84,4 @@ class TypeMatcher {
         TokenType operation;
         Set<ResolvedType>[] inputTypes;
     }
-
 }

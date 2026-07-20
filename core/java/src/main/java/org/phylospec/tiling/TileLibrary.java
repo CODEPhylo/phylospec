@@ -1,10 +1,9 @@
 package org.phylospec.tiling;
 
-import org.phylospec.tiling.tiles.CandidateTile;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
+import org.phylospec.tiling.tiles.CandidateTile;
 
 public abstract class TileLibrary<S> {
 
@@ -19,5 +18,4 @@ public abstract class TileLibrary<S> {
         }
         return all;
     }
-
 }

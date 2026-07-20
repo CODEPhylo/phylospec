@@ -1,10 +1,9 @@
 package org.phylospec.tiling.errors;
 
+import java.util.List;
 import org.phylospec.ast.AstNode;
 import org.phylospec.errors.Error;
 import org.phylospec.lexer.Range;
-
-import java.util.List;
 
 /**
  * This class describes an error which occurs during an application of a tile.
@@ -23,7 +22,8 @@ public class TileApplicationError extends RuntimeException {
         this(node, description, hint, List.of());
     }
 
-    public TileApplicationError(AstNode node, String description, String hint, List<String> examples) {
+    public TileApplicationError(
+            AstNode node, String description, String hint, List<String> examples) {
         super(description + " " + hint);
         this.node = node;
         this.description = description;

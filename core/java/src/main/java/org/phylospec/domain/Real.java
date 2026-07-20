@@ -56,5 +56,4 @@ public class Real implements Domain<Double>, Bounded<Double> {
     public boolean upperInclusive() {
         return true;
     }
-
 }

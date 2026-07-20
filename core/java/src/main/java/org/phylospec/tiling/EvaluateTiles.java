@@ -1,5 +1,6 @@
 package org.phylospec.tiling;
 
+import java.util.*;
 import org.phylospec.Utils;
 import org.phylospec.ast.*;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
@@ -8,8 +9,6 @@ import org.phylospec.tiling.tiles.CandidateTile;
 import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
-
-import java.util.*;
 
 /**
  * Visits an AST and determines the best tiling for each statement by selecting the lowest-weight
@@ -34,7 +33,8 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
     // statements that have already been claimed by a tile covering multiple statements
     private final Set<Stmt> consumedStatements;
 
-    // all non-Irrelevant failures per failed node, used to build the cascade DAG for root-cause analysis
+    // all non-Irrelevant failures per failed node, used to build the cascade DAG for root-cause
+    // analysis
     private final IdentityHashMap<AstNode, List<FailedTilingAttempt>> allFailures;
 
     // memoised cascade depths, computed lazily during error reporting
@@ -43,7 +43,11 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
     // sentinel depth for nodes that tiled successfully (they act as dead-ends in the cascade DAG)
     private static final int DEPTH_SUCCEEDED = Integer.MIN_VALUE;
 
-    public EvaluateTiles(List<CandidateTile<S>> candidateTiles, List<Tile<?, ?>> operatorTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) {
+    public EvaluateTiles(
+            List<CandidateTile<S>> candidateTiles,
+            List<Tile<?, ?>> operatorTiles,
+            VariableResolver variableResolver,
+            StochasticityResolver stochasticityResolver) {
         this.candidateTiles = candidateTiles;
         this.operatorTiles = operatorTiles;
         this.variableResolver = variableResolver;
@@ -78,7 +82,8 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
      * @return one best tile per unconsumed statement, in source order
      */
     public List<Tile<?, S>> getBestTiling(List<Stmt> statements) {
-        // phase 1: bottom-up matching, last-to-first so multi-statement tiles can claim predecessors
+        // phase 1: bottom-up matching, last-to-first so multi-statement tiles can claim
+        // predecessors
 
         List<List<Tile<?, S>>> possibleTiles = new ArrayList<>();
 
@@ -101,7 +106,8 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
                 this.throwDeepestFailure(stmt);
             }
 
-            // remove all inconsistent tilings (tilings where the same AstNode maps is tiled with different tiles)
+            // remove all inconsistent tilings (tilings where the same AstNode maps is tiled with
+            // different tiles)
 
             candidateTiles.removeIf(x -> x.isInconsistent(new IdentityHashMap<>()));
 
@@ -117,36 +123,39 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
         List<Tile<?, S>> bestTiles = new ArrayList<>();
         boolean[] foundBestTile = new boolean[] {false};
 
-        Utils.visitOrderedCombinations(possibleTiles, tiles -> {
-            if (foundBestTile[0]) {
-                // we've already found the (greedy) best one
-                return;
-            }
+        Utils.visitOrderedCombinations(
+                possibleTiles,
+                tiles -> {
+                    if (foundBestTile[0]) {
+                        // we've already found the (greedy) best one
+                        return;
+                    }
 
-            // check for consistency across the statement tiles
+                    // check for consistency across the statement tiles
 
-            IdentityHashMap<AstNode, Tile<?, ?>> assignments = new IdentityHashMap<>();
+                    IdentityHashMap<AstNode, Tile<?, ?>> assignments = new IdentityHashMap<>();
 
-            for (Tile<?, ?> tile : tiles) {
-                if (tile.isInconsistent(assignments)) return;
-            }
+                    for (Tile<?, ?> tile : tiles) {
+                        if (tile.isInconsistent(assignments)) return;
+                    }
 
-            // we found a consistent tiling
-            // we sorted the candidates by weight earlier, but there could still be a lower-weight consistent tiling
-            // however, we just greedily pick the first consistent one because otherwise this is exponential and
-            // might blow up quickly
+                    // we found a consistent tiling
+                    // we sorted the candidates by weight earlier, but there could still be a
+                    // lower-weight consistent tiling
+                    // however, we just greedily pick the first consistent one because otherwise
+                    // this is exponential and
+                    // might blow up quickly
 
-            bestTiles.clear();
-            bestTiles.addAll(tiles);
-            foundBestTile[0] = true;
-        });
+                    bestTiles.clear();
+                    bestTiles.addAll(tiles);
+                    foundBestTile[0] = true;
+                });
 
         if (!foundBestTile[0]) {
             // no consistent tiling found
             // this is very rare
             throw new TileApplicationError(
-                    "Unsupported operation.", "Your model is not supported by BEAST 2.8."
-            );
+                    "Unsupported operation.", "Your model is not supported by BEAST 2.8.");
         }
 
         this.bestTiles = bestTiles;
@@ -190,17 +199,22 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
         for (CandidateTile<S> tile : this.candidateTiles) {
             Set<Tile<?, S>> evaluatedTiles;
             try {
-                evaluatedTiles = tile.tryToTile(
-                        node, this.evaluatedTiles, this.variableResolver, this.stochasticityResolver
-                );
+                evaluatedTiles =
+                        tile.tryToTile(
+                                node,
+                                this.evaluatedTiles,
+                                this.variableResolver,
+                                this.stochasticityResolver);
             } catch (FailedTilingAttempt.Irrelevant e) {
                 continue;
             } catch (FailedTilingAttempt.RejectedCascade e) {
                 if (e.getOtherNode() == node) {
-                    // the other node points to the node itself. This can sometimes happen due to template matching
+                    // the other node points to the node itself. This can sometimes happen due to
+                    // template matching
                     // or bugs in TileInput fields
 
-                    // we log this error as irrelevant as otherwise we might have cycles leading to stack overflows later
+                    // we log this error as irrelevant as otherwise we might have cycles leading to
+                    // stack overflows later
                     failures.add(new FailedTilingAttempt.Irrelevant());
                 } else {
                     failures.add(e);
@@ -246,10 +260,12 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
      */
     private void throwDeepestFailure(AstNode root) {
         for (AstNode leaf : this.findErrorLeaves(root)) {
-            throw new TileApplicationError(leaf, "Unsupported operation.", this.getBestReason(this.allFailures.get(leaf)));
+            throw new TileApplicationError(
+                    leaf, "Unsupported operation.", this.getBestReason(this.allFailures.get(leaf)));
         }
         // fallback: root failed but every tile threw Irrelevant (no tile targets this node type)
-        throw new TileApplicationError(root, "Unsupported operation.", "BEAST 2.8 does not support this operation.");
+        throw new TileApplicationError(
+                root, "Unsupported operation.", "BEAST 2.8 does not support this operation.");
     }
 
     /**
@@ -294,7 +310,8 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
 
         Set<AstNode> leaves = new LinkedHashSet<>();
         for (FailedTilingAttempt f : failures) {
-            if (f instanceof FailedTilingAttempt.RejectedCascade rc && this.getFailureDepth(rc.getOtherNode()) == maxChildDepth) {
+            if (f instanceof FailedTilingAttempt.RejectedCascade rc
+                    && this.getFailureDepth(rc.getOtherNode()) == maxChildDepth) {
                 leaves.addAll(this.findErrorLeaves(rc.getOtherNode()));
             }
         }
@@ -319,7 +336,6 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
             Stmt definition = this.variableResolver.resolveVariable(nodeVar);
             failures = this.allFailures.get(definition);
         }
-
 
         if (failures == null) {
             // node succeeded — cascade into it is a dead end
@@ -354,7 +370,8 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
         FailedTilingAttempt.RejectedBoundary boundary = null;
         FailedTilingAttempt.Rejected rejected = null;
         for (FailedTilingAttempt f : failures) {
-            if (f instanceof FailedTilingAttempt.RejectedBoundary rb && boundary == null) boundary = rb;
+            if (f instanceof FailedTilingAttempt.RejectedBoundary rb && boundary == null)
+                boundary = rb;
             else if (f instanceof FailedTilingAttempt.Rejected r && rejected == null) rejected = r;
         }
         if (boundary != null) return boundary.getReason();
@@ -434,7 +451,8 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
 
     @Override
     public Void visitVariable(Expr.Variable expr) {
-        // we try to jump to the definition statement of this variable to allow a tiling to cover multiple statements
+        // we try to jump to the definition statement of this variable to allow a tiling to cover
+        // multiple statements
 
         Stmt variableDefinitionStmt = this.variableResolver.resolveVariable(expr);
 
@@ -450,9 +468,7 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
 
             // we re-use the found tiles from the definition statement for the variable
 
-            this.evaluatedTiles.put(
-                    expr, this.evaluatedTiles.get(variableDefinitionStmt)
-            );
+            this.evaluatedTiles.put(expr, this.evaluatedTiles.get(variableDefinitionStmt));
 
             return null;
         } else {
@@ -535,5 +551,4 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
         }
         return this.visitNode(expr);
     }
-
 }

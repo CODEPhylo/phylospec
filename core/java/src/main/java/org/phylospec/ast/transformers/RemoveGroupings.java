@@ -1,6 +1,5 @@
 package org.phylospec.ast.transformers;
 
-
 import org.phylospec.ast.AstTransformer;
 import org.phylospec.ast.Expr;
 

@@ -1,13 +1,12 @@
 package org.phylospec.parser;
 
+import java.util.*;
 import org.phylospec.ast.*;
 import org.phylospec.errors.Error;
 import org.phylospec.errors.ErrorEventListener;
-import org.phylospec.lexer.Token;
 import org.phylospec.lexer.Range;
+import org.phylospec.lexer.Token;
 import org.phylospec.lexer.TokenType;
-
-import java.util.*;
 
 /**
  * This class takes a list of tokens (usually obtained using the Lexer)
@@ -38,8 +37,8 @@ public class Parser {
      * primary           → INT ( unit )? | FLOAT ( unit )? | STRING | "true" | "false" | IDENTIFIER | "(" expression ")" ;
      * unit              → "d" | "yr" | "kyr" | "Myr" | "ka" | "Ma"
      */
-
     private final List<Token> tokens;
+
     private int current = 0;
     private boolean skipNewLines = false;
     private Stmt.Block currentBlock = Stmt.Block.NO_BLOCK;
@@ -96,8 +95,7 @@ public class Parser {
                     consume(
                             TokenType.EOL,
                             "Missing line break.",
-                            "There already is a complete statement on this line. Put each statement on its own line."
-                    );
+                            "There already is a complete statement on this line. Put each statement on its own line.");
 
                     // skip all EOL until the next statement
                     skipEOLs();
@@ -111,11 +109,13 @@ public class Parser {
         // make sure that the last block has been closed
 
         if (currentBlock != Stmt.Block.NO_BLOCK) {
-            logError(new Error(
-                    currentBlockRange,
-                    "Unclosed block.",
-                    "You started a '" + currentBlock + "' block but did not close it. Use curly brackets to close the block."
-            ));
+            logError(
+                    new Error(
+                            currentBlockRange,
+                            "Unclosed block.",
+                            "You started a '"
+                                    + currentBlock
+                                    + "' block but did not close it. Use curly brackets to close the block."));
         }
 
         return statements;
@@ -140,7 +140,8 @@ public class Parser {
                 } else if (isBlockEnd()) {
                     parseBlockEnd();
                 } else {
-                    // store the current state such that we can recover if this is not a complete statement
+                    // store the current state such that we can recover if this is not a complete
+                    // statement
                     int oldCurrent = current;
                     int oldStackSize = astNodeStartPositions.size();
 
@@ -165,8 +166,7 @@ public class Parser {
                     consume(
                             TokenType.EOL,
                             "Missing line break.",
-                            "There already is a complete statement on this line. Put each statement on its own line."
-                    );
+                            "There already is a complete statement on this line. Put each statement on its own line.");
 
                     // skip all EOL until the next statement
                     skipEOLs();
@@ -180,11 +180,13 @@ public class Parser {
         // make sure that the last block has been closed
 
         if (currentBlock != Stmt.Block.NO_BLOCK) {
-            logError(new Error(
-                    currentBlockRange,
-                    "Unclosed block.",
-                    "You started a '" + currentBlock + "' block but did not close it. Use curly brackets to close the block."
-            ));
+            logError(
+                    new Error(
+                            currentBlockRange,
+                            "Unclosed block.",
+                            "You started a '"
+                                    + currentBlock
+                                    + "' block but did not close it. Use curly brackets to close the block."));
         }
 
         return expressions;
@@ -204,20 +206,28 @@ public class Parser {
             throw new Error(
                     previous().range,
                     "Block not closed.",
-                    "You are starting a '" + blockName + "' without closing the '" + currentBlock.toString() + "' block. End the block with curly braces first.",
-                    List.of(currentBlock.toString() + "{\n\t\t...\t\n}\n\t" + blockName + "\n\t\t...\n\t}")
-            );
+                    "You are starting a '"
+                            + blockName
+                            + "' without closing the '"
+                            + currentBlock.toString()
+                            + "' block. End the block with curly braces first.",
+                    List.of(
+                            currentBlock.toString()
+                                    + "{\n\t\t...\t\n}\n\t"
+                                    + blockName
+                                    + "\n\t\t...\n\t}"));
         }
 
         currentBlockRange = previous().range;
 
         advance(); // consume LEFT_BRACE
-        currentBlock = switch (blockName) {
-            case "data" -> Stmt.Block.DATA;
-            case "model" -> Stmt.Block.MODEL;
-            case "mcmc" -> Stmt.Block.MCMC;
-            default -> new Stmt.Block.Custom(blockName);
-        };
+        currentBlock =
+                switch (blockName) {
+                    case "data" -> Stmt.Block.DATA;
+                    case "model" -> Stmt.Block.MODEL;
+                    case "mcmc" -> Stmt.Block.MCMC;
+                    default -> new Stmt.Block.Custom(blockName);
+                };
     }
 
     private boolean isBlockEnd() {
@@ -240,12 +250,11 @@ public class Parser {
             do {
                 namespace.add(
                         consume(
-                                TokenType.IDENTIFIER,
-                                "Invalid import path.",
-                                "Specify an import path consisting of names delimited with a period.",
-                                List.of("use phylospec.io")
-                        ).lexeme
-                );
+                                        TokenType.IDENTIFIER,
+                                        "Invalid import path.",
+                                        "Specify an import path consisting of names delimited with a period.",
+                                        List.of("use phylospec.io"))
+                                .lexeme);
             } while (match(TokenType.DOT));
 
             return remember(new Stmt.Import(namespace));
@@ -258,20 +267,19 @@ public class Parser {
         startAstNode();
 
         while (match(TokenType.AT)) {
-            Token decoratorName = consume(
-                    TokenType.IDENTIFIER,
-                    "Invalid hint.",
-                    "Directly follow the '@' with the name of the engine or extension you want to talk to.",
-                    List.of("@revbayes(discretize=true)")
-            );
+            Token decoratorName =
+                    consume(
+                            TokenType.IDENTIFIER,
+                            "Invalid hint.",
+                            "Directly follow the '@' with the name of the engine or extension you want to talk to.",
+                            List.of("@revbayes(discretize=true)"));
             Expr.Variable decoratorNameVar = new Expr.Variable(decoratorName.lexeme);
 
             consume(
                     TokenType.LEFT_PAREN,
                     "Missing brackets in hint.",
                     "Follow the engine or extension name with brackets, similar to function calls.",
-                    List.of("@revbayes(discretize=true)")
-            );
+                    List.of("@revbayes(discretize=true)"));
 
             // we are in a bracket, let's ignore EOL statements
             boolean oldSkipNewLines = skipNewLines;
@@ -283,8 +291,7 @@ public class Parser {
                         TokenType.RIGHT_PAREN,
                         "Missing closinng brackets in hint.",
                         "Add the closing brackets ')' at the end of the hint.",
-                        List.of("@revbayes(discretize=true)")
-                );
+                        List.of("@revbayes(discretize=true)"));
 
                 // skip all EOL until the next statement
                 skipEOLs();
@@ -306,12 +313,12 @@ public class Parser {
 
         AstType type = type();
 
-        Token nameToken = consume(
-                TokenType.IDENTIFIER,
-                "Invalid variable name.",
-                "Choose a variable name which starts with a letter and only consists of letters and digits.",
-                List.of("Real x = 10")
-        );
+        Token nameToken =
+                consume(
+                        TokenType.IDENTIFIER,
+                        "Invalid variable name.",
+                        "Choose a variable name which starts with a letter and only consists of letters and digits.",
+                        List.of("Real x = 10"));
 
         // check if this is an indexed statement and parse the index if needed
 
@@ -323,8 +330,7 @@ public class Parser {
                             TokenType.IDENTIFIER,
                             "Invalid index.",
                             "Only letters can be used as an index.",
-                            List.of("Real x[i] = i for i in 1:3")
-                    ));
+                            List.of("Real x[i] = i for i in 1:3")));
 
             while (match(TokenType.COMMA)) {
                 indices.add(
@@ -332,16 +338,14 @@ public class Parser {
                                 TokenType.IDENTIFIER,
                                 "Invalid index.",
                                 "Only letters can be used as an index.",
-                                List.of("Real x[i, j] = i for i in 1:3 for j in 1:3")
-                        ));
+                                List.of("Real x[i, j] = i for i in 1:3 for j in 1:3")));
             }
 
             consume(
                     TokenType.RIGHT_SQUARE_BRACKET,
                     "Invalid index.",
                     "Follow the index name with closing square brackets (']').",
-                    List.of("Real x[i] = i for i in 1:3")
-            );
+                    List.of("Real x[i] = i for i in 1:3"));
         }
 
         // parse the statement
@@ -358,8 +362,7 @@ public class Parser {
                     peek().range,
                     "No assignment or draw.",
                     "When defining a variable, either directly assign a value with '=', or draw a value from a distribution with '~'.",
-                    List.of("Real x = 10")
-            );
+                    List.of("Real x = 10"));
         }
 
         // parse clamping if needed
@@ -369,7 +372,8 @@ public class Parser {
             return remember(stmt);
         }
 
-        // this is an indexed statement, so we need to parse the range ("for <index> in <range>") for every index
+        // this is an indexed statement, so we need to parse the range ("for <index> in <range>")
+        // for every index
 
         List<Expr.Variable> indexVariables = new ArrayList<>();
         List<Expr> ranges = new ArrayList<>();
@@ -378,39 +382,43 @@ public class Parser {
                     TokenType.FOR,
                     "Missing range for index '" + index.lexeme + "'.",
                     "End index statements by indicating the range of the index variable.",
-                    List.of("Real x[" + index.lexeme + "] = 1 for " + index.lexeme + " in 1:3")
-            );
+                    List.of("Real x[" + index.lexeme + "] = 1 for " + index.lexeme + " in 1:3"));
 
-            Token rangeIndex = consume(
-                    TokenType.IDENTIFIER,
-                    "Wrong range for index '" + index.lexeme + "'.",
-                    "End index statements by indicating the range of the index variable.",
-                    List.of("Real x[" + index.lexeme + "] = 1 for " + index.lexeme + " in 1:3")
-            );
+            Token rangeIndex =
+                    consume(
+                            TokenType.IDENTIFIER,
+                            "Wrong range for index '" + index.lexeme + "'.",
+                            "End index statements by indicating the range of the index variable.",
+                            List.of(
+                                    "Real x["
+                                            + index.lexeme
+                                            + "] = 1 for "
+                                            + index.lexeme
+                                            + " in 1:3"));
 
             if (!Objects.equals(rangeIndex.lexeme, index.lexeme)) {
                 throw new Error(
                         previous().range,
                         "Wrong index variable.",
-                        "This statement is indexed by `" + index.lexeme + "', but you specify the range of the variable '" + rangeIndex.lexeme + "'. Specify the ranges in the order of the indices."
-                );
+                        "This statement is indexed by `"
+                                + index.lexeme
+                                + "', but you specify the range of the variable '"
+                                + rangeIndex.lexeme
+                                + "'. Specify the ranges in the order of the indices.");
             }
 
             consume(
                     TokenType.IN,
                     "Missing range for index '" + index.lexeme + "'.",
                     "End index statements by indicating the range of the index variable.",
-                    List.of("Real x[" + index.lexeme + "] = 1 for " + index.lexeme + " in 1:3")
-            );
+                    List.of("Real x[" + index.lexeme + "] = 1 for " + index.lexeme + " in 1:3"));
 
             Expr range = expression();
             ranges.add(range);
             indexVariables.add(new Expr.Variable(index.lexeme));
         }
 
-        return remember(
-                new Stmt.Indexed(stmt, indexVariables, ranges)
-        );
+        return remember(new Stmt.Indexed(stmt, indexVariables, ranges));
     }
 
     private Stmt observedStatement(Stmt stmt) throws Error {
@@ -424,8 +432,7 @@ public class Parser {
                     TokenType.LEFT_SQUARE_BRACKET,
                     "Invalid range.",
                     "Use square brackets to specify a range of an observed variable.",
-                    List.of("Real a ~ Exponential(1.0) observed between [20.0, 30.0]")
-            );
+                    List.of("Real a ~ Exponential(1.0) observed between [20.0, 30.0]"));
 
             Expr observedFrom = expression();
 
@@ -433,8 +440,7 @@ public class Parser {
                     TokenType.COMMA,
                     "Invalid range.",
                     "Use two values separated by a comma to specify a range of an observed variable.",
-                    List.of("Real a ~ Exponential(1.0) observed between [20.0, 30.0]")
-            );
+                    List.of("Real a ~ Exponential(1.0) observed between [20.0, 30.0]"));
 
             Expr observedTo = expression();
 
@@ -442,8 +448,7 @@ public class Parser {
                     TokenType.RIGHT_SQUARE_BRACKET,
                     "Invalid range.",
                     "Use square brackets to specify a range of an observed variable.",
-                    List.of("Real a ~ Exponential(1.0) observed between [20.0, 30.0]")
-            );
+                    List.of("Real a ~ Exponential(1.0) observed between [20.0, 30.0]"));
 
             return remember(new Stmt.ObservedBetween(stmt, observedFrom, observedTo));
         }
@@ -454,11 +459,11 @@ public class Parser {
     private AstType type() throws Error {
         startAstNode();
 
-        Token typeNameToken = consume(
-                TokenType.IDENTIFIER,
-                "Invalid variable type.",
-                "Type names can only consist of letters."
-        );
+        Token typeNameToken =
+                consume(
+                        TokenType.IDENTIFIER,
+                        "Invalid variable type.",
+                        "Type names can only consist of letters.");
 
         if (match(TokenType.LESS)) {
             List<AstType> innerTypes = new ArrayList<>();
@@ -470,13 +475,12 @@ public class Parser {
 
             // parse closing brackets
             consume(
-                    TokenType.GREATER, "Generic type must be closed with a '>'.",
-                    "Close the opening square brackets of the generic type with a '>'."
-            );
+                    TokenType.GREATER,
+                    "Generic type must be closed with a '>'.",
+                    "Close the opening square brackets of the generic type with a '>'.");
 
             return remember(
-                    new AstType.Generic(typeNameToken.lexeme, innerTypes.toArray(AstType[]::new))
-            );
+                    new AstType.Generic(typeNameToken.lexeme, innerTypes.toArray(AstType[]::new)));
         }
 
         return remember(new AstType.Atomic(typeNameToken.lexeme));
@@ -505,7 +509,8 @@ public class Parser {
 
         Expr expr = term();
 
-        while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
+        while (match(
+                TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
             Token operatorToken = previous();
             Expr rightExpr = term();
             expr = new Expr.Binary(expr, operatorToken.type, rightExpr);
@@ -590,8 +595,7 @@ public class Parser {
                     consume(
                             TokenType.RIGHT_PAREN,
                             "Function arguments not closed.",
-                            "Add closing brackets ')' after the arguments."
-                    );
+                            "Add closing brackets ')' after the arguments.");
                 } finally {
                     skipNewLines = oldSkipNewLines;
                 }
@@ -614,8 +618,7 @@ public class Parser {
                             TokenType.RIGHT_SQUARE_BRACKET,
                             "Index not closed.",
                             "Add closing square brackets ']' after the index expression.",
-                            List.of("x[1]", "data[1][\"header\"]")
-                    );
+                            List.of("x[1]", "data[1][\"header\"]"));
 
                     expr = new Expr.Index(expr, indices);
                 } finally {
@@ -701,15 +704,14 @@ public class Parser {
 
                 consume(
                         TokenType.RIGHT_SQUARE_BRACKET,
-                        "Vector not terminated.", "Add square brackets ']' after the last item of the vector.",
-                        List.of("[1, 5]")
-                );
+                        "Vector not terminated.",
+                        "Add square brackets ']' after the last item of the vector.",
+                        List.of("[1, 5]"));
 
                 return remember(new Expr.Array(elements));
             } finally {
                 skipNewLines = oldSkipNewLines;
             }
-
         }
 
         return remember(primary());
@@ -750,8 +752,7 @@ public class Parser {
                 consume(
                         TokenType.RIGHT_PAREN,
                         "Missing ')' after expression.",
-                        "Add brackets ')' to close the grouped expression."
-                );
+                        "Add brackets ')' to close the grouped expression.");
                 return remember(new Expr.Grouping(expr));
             } finally {
                 skipNewLines = oldIgnoreNewLines;
@@ -792,15 +793,16 @@ public class Parser {
         while (true) {
             if (check(TokenType.IDENTIFIER)) {
                 Token interpolated = advance();
-                parts.add(new Expr.StringTemplate.ExpressionPart(new Expr.Variable(interpolated.lexeme)));
+                parts.add(
+                        new Expr.StringTemplate.ExpressionPart(
+                                new Expr.Variable(interpolated.lexeme)));
 
                 if (!check(TokenType.STRING_END, TokenType.STRING_PART)) {
                     throw new Error(
                             peek().range,
                             "Invalid string template.",
                             "Only use simple variable names in string templates.",
-                            List.of("String file = \"name ${seed}.nex\"")
-                    );
+                            List.of("String file = \"name ${seed}.nex\""));
                 }
             } else if (check(TokenType.STRING_PART)) {
                 Token stringPart = advance();
@@ -814,8 +816,7 @@ public class Parser {
                         peek().range,
                         "Invalid string template.",
                         "Only use variable names in string templates and end the template with curly braces.",
-                        List.of("String file = \"name ${seed}.nex\"")
-                );
+                        List.of("String file = \"name ${seed}.nex\""));
             }
         }
 
@@ -878,7 +879,8 @@ public class Parser {
     private Token peek() {
         if (skipNewLines) {
             int currentToPeek = current;
-            while (tokens.get(currentToPeek).type == TokenType.EOL && currentToPeek + 1 < tokens.size()) {
+            while (tokens.get(currentToPeek).type == TokenType.EOL
+                    && currentToPeek + 1 < tokens.size()) {
                 currentToPeek++;
             }
             return tokens.get(currentToPeek);
@@ -914,7 +916,8 @@ public class Parser {
      * Advances the cursor if the next token matches the expected token type. If this
      * is not the case, an error with the given correct code examples is raised.
      */
-    private Token consume(TokenType tokenType, String message, String hint, List<String> examples) throws Error {
+    private Token consume(TokenType tokenType, String message, String hint, List<String> examples)
+            throws Error {
         if (check(tokenType)) return advance();
 
         // we couldn't consume the requested token
@@ -926,7 +929,12 @@ public class Parser {
         } else {
             Token startToken = tokens.get(astNodeStartPositions.peek());
             Token currentToken = tokens.get(current);
-            range = new Range(startToken.range.startLine, currentToken.range.endLine, startToken.range.start, currentToken.range.end);
+            range =
+                    new Range(
+                            startToken.range.startLine,
+                            currentToken.range.endLine,
+                            startToken.range.start,
+                            currentToken.range.end);
         }
 
         throw new Error(range, message, hint, examples);
@@ -1043,8 +1051,6 @@ public class Parser {
     }
 
     private void skipEOLs() {
-        while (match(TokenType.EOL)) {
-        }
+        while (match(TokenType.EOL)) {}
     }
-
 }

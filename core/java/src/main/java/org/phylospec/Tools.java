@@ -1,5 +1,12 @@
 package org.phylospec;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.InputMismatchException;
+import java.util.List;
 import org.phylospec.ast.Stmt;
 import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
@@ -12,26 +19,21 @@ import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.TypeResolver;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.InputMismatchException;
-import java.util.List;
-
 /// This class provides a bunch of tools revolving about .phylospec files.
 ///
 /// It can be called using the following CLI arguments:
 /// - `validate file.phylospec` - tries to parse the file and runs the type checker.
-/// - `to-lphy file.phylospec` - converts the given script into an LPhy script and prints it to stdout.
+/// - `to-lphy file.phylospec` - converts the given script into an LPhy script and prints it to
+// stdout.
 /// - `to-rev file.phylospec` - converts the given script into a Rev script and prints it to stdout.
 /// - `to-json file.phylospec` - converts the given script into JSON and prints it to stdout.
-/// - `json-schema` - prints the JSON schema of the JSON representation of PhyloSpec scripts to stdout.
+/// - `json-schema` - prints the JSON schema of the JSON representation of PhyloSpec scripts to
+// stdout.
 public class Tools {
     public static void main(String[] args) throws IOException, JSONConverter.JsonConversionError {
         if (args.length == 0) {
-            throw new RuntimeException("At least one argument with the tool name has to be provided.");
+            throw new RuntimeException(
+                    "At least one argument with the tool name has to be provided.");
         }
 
         String toolName = args[0];
@@ -48,7 +50,8 @@ public class Tools {
     /** Parses the file and runs the type resolver to detect type errors. */
     private static void validate(String[] args) throws IOException {
         if (args.length != 2) {
-            throw new RuntimeException("validate requires you to pass a path to a  phylospec file.");
+            throw new RuntimeException(
+                    "validate requires you to pass a path to a  phylospec file.");
         }
 
         Path pylospecFile = Paths.get(args[1]);
@@ -70,7 +73,8 @@ public class Tools {
     }
 
     /** Parses the file, runs the type resolver, and prints a JSON representation of it to stdout. */
-    private static void convertToJson(String[] args) throws IOException, JSONConverter.JsonConversionError {
+    private static void convertToJson(String[] args)
+            throws IOException, JSONConverter.JsonConversionError {
         if (args.length != 2) {
             throw new RuntimeException("to-json requires you to pass a path to a  phylospec file.");
         }
@@ -95,7 +99,9 @@ public class Tools {
 
         List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
 
-        String revString = RevConverter.convertToRev(pylospecFile.getFileName().toString(), statements, componentLibraries);
+        String revString =
+                RevConverter.convertToRev(
+                        pylospecFile.getFileName().toString(), statements, componentLibraries);
         System.out.println(revString);
     }
 
@@ -126,5 +132,4 @@ public class Tools {
         byte[] phylospecBytes = Files.readAllBytes(pylospecFile);
         return new String(phylospecBytes, Charset.defaultCharset());
     }
-
 }

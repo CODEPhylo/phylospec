@@ -47,13 +47,15 @@ public interface Bounded<T extends Comparable<T>> {
      * @return {@code true} if the value is within the range, {@code false} otherwise
      */
     default boolean withinBounds(T value) {
-        boolean lowerCheck = lowerInclusive()
-                ? value.compareTo(getLower()) >= 0
-                : value.compareTo(getLower()) > 0;
+        boolean lowerCheck =
+                lowerInclusive()
+                        ? value.compareTo(getLower()) >= 0
+                        : value.compareTo(getLower()) > 0;
 
-        boolean upperCheck = upperInclusive()
-                ? value.compareTo(getUpper()) <= 0
-                : value.compareTo(getUpper()) < 0;
+        boolean upperCheck =
+                upperInclusive()
+                        ? value.compareTo(getUpper()) <= 0
+                        : value.compareTo(getUpper()) < 0;
 
         return lowerCheck && upperCheck;
     }
@@ -63,5 +65,4 @@ public interface Bounded<T extends Comparable<T>> {
         String upperBracket = upperInclusive() ? "]" : ")";
         return lowerBracket + getLower() + ", " + getUpper() + upperBracket;
     }
-
 }

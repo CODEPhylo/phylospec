@@ -14,5 +14,4 @@ public interface IntVector<P extends Int> extends Vector<P, Integer> {
         }
         return arr;
     }
-
 }

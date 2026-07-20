@@ -20,7 +20,7 @@ public interface Simplex extends RealVector<UnitInterval> {
     // Invariant: sum(elements) = 1.0, all elements in [0,1]
     default double sum() {
         double s = 0;
-        for(int i = 0; i < size(); i++) {
+        for (int i = 0; i < size(); i++) {
             s += get(i);
         }
         return s;
@@ -28,15 +28,12 @@ public interface Simplex extends RealVector<UnitInterval> {
 
     default boolean isValid() {
         double s = sum();
-        if (Math.abs(s - 1.0) > 1e-10)
-            return false;
+        if (Math.abs(s - 1.0) > 1e-10) return false;
 
-        for(int i = 0; i < size(); i++) {
+        for (int i = 0; i < size(); i++) {
             double v = get(i);
-            if (v < 0 || v > 1)
-                return false;
+            if (v < 0 || v > 1) return false;
         }
         return true;
     }
-
 }

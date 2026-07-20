@@ -24,14 +24,17 @@ public class Token {
     }
 
     public String toString() {
-        return type + " " + lexeme + " " + literal  + range.toString();
+        return type + " " + lexeme + " " + literal + range.toString();
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Token token = (Token) o;
-        return range.equals(token.range) && type == token.type && Objects.equals(lexeme, token.lexeme) && Objects.equals(literal, token.literal);
+        return range.equals(token.range)
+                && type == token.type
+                && Objects.equals(lexeme, token.lexeme)
+                && Objects.equals(literal, token.literal);
     }
 
     @Override

@@ -1,14 +1,13 @@
 package org.phylospec.typeresolver;
 
+import java.util.*;
+import java.util.stream.Collectors;
 import org.phylospec.Utils;
 import org.phylospec.ast.*;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
 import org.phylospec.components.Type;
 import org.phylospec.lexer.TokenType;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /// This class traverses an AST statement and resolves the types for each
 /// AST node and each variable.
@@ -32,8 +31,9 @@ import java.util.stream.Collectors;
 ///
 /// Set<ResolvedType> exprType = resolver.resolveType(<some AST expression>);
 /// ResolvedType varType = resolver.resolveVariable(<some var name>);
-///```
-public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedType>, Set<ResolvedType>> {
+/// ```
+public class TypeResolver
+        implements AstVisitor<Set<ResolvedType>, Set<ResolvedType>, Set<ResolvedType>> {
 
     private final ComponentResolver componentResolver;
     private final TypeMatcher typeMatcher;
@@ -112,7 +112,6 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     /**
      * visitor functions
      */
-
     @Override
     public Set<ResolvedType> visitDecoratedStmt(Stmt.Decorated stmt) {
         if (this.ignoreStmt(stmt)) return Set.of();
@@ -127,13 +126,21 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
 
-        if (!TypeUtils.canBeAssignedTo(resolvedExpressionTypeSet, resolvedVariableTypeSet, componentResolver)) {
+        if (!TypeUtils.canBeAssignedTo(
+                resolvedExpressionTypeSet, resolvedVariableTypeSet, componentResolver)) {
             // TODO: check if distribution and give hint to use ~
             throw new TypeError(
                     stmt,
-                    "Expression of type `" + printType(resolvedExpressionTypeSet) + "` cannot be assigned to variable `" + stmt.name + "` of type `" + printType(resolvedVariableTypeSet) + "`.",
-                    "Change the type of the variable to `" + printType(resolvedExpressionTypeSet) + "`, or change what you assign to it."
-            );
+                    "Expression of type `"
+                            + printType(resolvedExpressionTypeSet)
+                            + "` cannot be assigned to variable `"
+                            + stmt.name
+                            + "` of type `"
+                            + printType(resolvedVariableTypeSet)
+                            + "`.",
+                    "Change the type of the variable to `"
+                            + printType(resolvedExpressionTypeSet)
+                            + "`, or change what you assign to it.");
         }
 
         // the resolved type variables might be stripped of the type parameters
@@ -145,9 +152,9 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 // find the matching resolved types
                 for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
                     if (resolvedVariableType.getName().equals(resolvedExpressionType.getName())) {
-                        resolvedVariableType.getParameterTypes().putAll(
-                                resolvedExpressionType.getParameterTypes()
-                        );
+                        resolvedVariableType
+                                .getParameterTypes()
+                                .putAll(resolvedExpressionType.getParameterTypes());
                     }
                 }
             }
@@ -157,12 +164,14 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 throw new TypeError(
                         stmt,
                         "Missing type parameters.",
-                        "The type '" + resolvedVariableType + "' expects " + resolvedVariableType.getParametersNames().size() + " parameter types, but you specified none. Add the type parameters using brackets.",
-                        List.of("Vector<Real>")
-                );
+                        "The type '"
+                                + resolvedVariableType
+                                + "' expects "
+                                + resolvedVariableType.getParametersNames().size()
+                                + " parameter types, but you specified none. Add the type parameters using brackets.",
+                        List.of("Vector<Real>"));
             }
         }
-
 
         remember(stmt.name, resolvedVariableTypeSet);
         return remember(stmt, resolvedVariableTypeSet);
@@ -182,29 +191,37 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         Set<ResolvedType> generatedTypeSet = new HashSet<>();
         for (ResolvedType expressionType : resolvedExpressionTypeSet) {
             TypeUtils.visitTypeAndParents(
-                    expressionType, x -> {
+                    expressionType,
+                    x -> {
                         if (x.getName().equals("phylospec.types.Distribution")) {
                             generatedTypeSet.add(x.getParameterTypes().get("T"));
                         }
                         return TypeUtils.Visitor.CONTINUE;
-                    }, componentResolver
-            );
+                    },
+                    componentResolver);
         }
 
         if (generatedTypeSet.isEmpty()) {
             throw new TypeError(
                     stmt,
                     "Expression after `~' is not a distribution.",
-                    "After '~', you always need to provide a distribution. Do you want use `=` instead?"
-            );
+                    "After '~', you always need to provide a distribution. Do you want use `=` instead?");
         }
 
-        if (!TypeUtils.canBeAssignedTo(generatedTypeSet, resolvedVariableTypeSet, componentResolver)) {
+        if (!TypeUtils.canBeAssignedTo(
+                generatedTypeSet, resolvedVariableTypeSet, componentResolver)) {
             throw new TypeError(
                     stmt,
-                    "Expression of type `" + printType(generatedTypeSet) + "` cannot be assigned to variable `" + stmt.name + "` of type `" + printType(resolvedVariableTypeSet) + "`.",
-                    "Change the type of the variable to `" + printType(generatedTypeSet) + "`, or change what value you draw and assign to it."
-            );
+                    "Expression of type `"
+                            + printType(generatedTypeSet)
+                            + "` cannot be assigned to variable `"
+                            + stmt.name
+                            + "` of type `"
+                            + printType(resolvedVariableTypeSet)
+                            + "`.",
+                    "Change the type of the variable to `"
+                            + printType(generatedTypeSet)
+                            + "`, or change what value you draw and assign to it.");
         }
 
         // the resolved type variables might be stripped of the type parameters
@@ -216,9 +233,9 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 // find the matching resolved types
                 for (ResolvedType generatedType : generatedTypeSet) {
                     if (resolvedVariableType.getName().equals(generatedType.getName())) {
-                        resolvedVariableType.getParameterTypes().putAll(
-                                generatedType.getParameterTypes()
-                        );
+                        resolvedVariableType
+                                .getParameterTypes()
+                                .putAll(generatedType.getParameterTypes());
                     }
                 }
             }
@@ -228,9 +245,12 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 throw new TypeError(
                         stmt,
                         "Missing type parameters.",
-                        "The type '" + resolvedVariableType + "' expects " + resolvedVariableType.getParametersNames().size() + " parameter types, but you specified none. Add the type parameters using brackets.",
-                        List.of("Vector<Real>")
-                );
+                        "The type '"
+                                + resolvedVariableType
+                                + "' expects "
+                                + resolvedVariableType.getParametersNames().size()
+                                + " parameter types, but you specified none. Add the type parameters using brackets.",
+                        List.of("Vector<Real>"));
             }
         }
 
@@ -256,24 +276,21 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
             throw new TypeError(
                     indexed,
                     "Number of index variables does not match number of ranges.",
-                    "Provide one range for each index variable."
-            );
+                    "Provide one range for each index variable.");
         }
 
         if (indexed.indices.isEmpty() || 2 < indexed.indices.size()) {
             throw new TypeError(
                     indexed,
                     "Indexed statements must have one or two indices.",
-                    "Use one index for vectors and two indices for matrices."
-            );
+                    "Use one index for vectors and two indices for matrices.");
         }
 
         if (indexed.indices.size() != new HashSet<>(indexed.indices).size()) {
             throw new TypeError(
                     indexed,
                     "Duplicate indices.",
-                    "You use the same index name multiple times. Use a distinct name for each index."
-            );
+                    "You use the same index name multiple times. Use a distinct name for each index.");
         }
 
         // evaluate each range
@@ -296,19 +313,24 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 Expr.Variable indexVar = indexed.indices.get(i);
                 Set<ResolvedType> rangeTypeSet = rangeTypeSets.get(i);
 
-                if (!TypeUtils.canBeAssignedTo(rangeTypeSet, ResolvedType.fromString("phylospec.types.Vector<NonNegativeInteger>", componentResolver), componentResolver)) {
+                if (!TypeUtils.canBeAssignedTo(
+                        rangeTypeSet,
+                        ResolvedType.fromString(
+                                "phylospec.types.Vector<NonNegativeInteger>", componentResolver),
+                        componentResolver)) {
                     throw new TypeError(
                             indexed,
                             "Index range must produce positive integer values.",
-                            "Use integer expressions as the range bounds (e.g., '1:10')."
-                    );
+                            "Use integer expressions as the range bounds (e.g., '1:10').");
                 }
 
                 Set<ResolvedType> indexVarTypeSet = new HashSet<>();
                 for (ResolvedType rangeType : rangeTypeSet) {
-                    ResolvedType indexVarType = TypeUtils.recoverType(
-                            "phylospec.types.Vector", rangeType, componentResolver
-                    ).getParameterTypes().get("T");
+                    ResolvedType indexVarType =
+                            TypeUtils.recoverType(
+                                            "phylospec.types.Vector", rangeType, componentResolver)
+                                    .getParameterTypes()
+                                    .get("T");
                     if (indexVarType != null) indexVarTypeSet.add(indexVarType);
                 }
 
@@ -330,9 +352,17 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         Set<ResolvedType> widenedTypeSet;
         if (indexed.indices.size() == 1) {
-            widenedTypeSet = ResolvedType.fromString("phylospec.types.Vector<T>", Map.of("T", innerTypeSet), componentResolver);
+            widenedTypeSet =
+                    ResolvedType.fromString(
+                            "phylospec.types.Vector<T>",
+                            Map.of("T", innerTypeSet),
+                            componentResolver);
         } else {
-            widenedTypeSet = ResolvedType.fromString("phylospec.types.Matrix<T>", Map.of("T", innerTypeSet), componentResolver);
+            widenedTypeSet =
+                    ResolvedType.fromString(
+                            "phylospec.types.Matrix<T>",
+                            Map.of("T", innerTypeSet),
+                            componentResolver);
         }
 
         // register the widened type in the outer scope under the variable name
@@ -352,13 +382,14 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         Set<ResolvedType> observationTypeSet = observedAs.observedAs.accept(this);
         Set<ResolvedType> generatedDistributionTypeSet = observedAs.stmt.accept(this);
 
-        // go through generatedDistributionTypeSet, filter the Distribution<> ones and get the actual underlying values
+        // go through generatedDistributionTypeSet, filter the Distribution<> ones and get the
+        // actual underlying values
 
         Set<ResolvedType> generatedTypeSet = new HashSet<>();
         for (ResolvedType generatedDistType : generatedDistributionTypeSet) {
-            ResolvedType recoveredDistributionType = TypeUtils.recoverType(
-                    "phylospec.types.Distribution", generatedDistType, componentResolver
-            );
+            ResolvedType recoveredDistributionType =
+                    TypeUtils.recoverType(
+                            "phylospec.types.Distribution", generatedDistType, componentResolver);
             if (recoveredDistributionType == null) {
                 // this is not a distribution type directly
                 // it could still be a random variable though
@@ -375,20 +406,22 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         if (generatedTypeSet.isEmpty()) {
             throw new TypeError(
                     "Invalid observation.",
-                    "You are observing a variable which is not a random variable. You can only observe variables drawn from a distribution."
-            );
+                    "You are observing a variable which is not a random variable. You can only observe variables drawn from a distribution.");
         }
 
         // test if the observed value can be assigned to the generated value
 
-        if (!TypeUtils.canBeAssignedTo(
-                observationTypeSet, generatedTypeSet, componentResolver
-        )) {
+        if (!TypeUtils.canBeAssignedTo(observationTypeSet, generatedTypeSet, componentResolver)) {
             throw new TypeError(
                     observedAs,
                     "Wrong observation type.",
-                    "You specify an observation of type '" + printType(observationTypeSet) + "' for a random variable of type '" + printType(generatedTypeSet) + "'. Use an observation of type '" + printType(generatedTypeSet) + "' instead."
-            );
+                    "You specify an observation of type '"
+                            + printType(observationTypeSet)
+                            + "' for a random variable of type '"
+                            + printType(generatedTypeSet)
+                            + "'. Use an observation of type '"
+                            + printType(generatedTypeSet)
+                            + "' instead.");
         }
 
         return generatedDistributionTypeSet;
@@ -401,40 +434,36 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         Set<ResolvedType> observationFromTypeSet = observedBetween.observedFrom.accept(this);
         Set<ResolvedType> observationToTypeSet = observedBetween.observedTo.accept(this);
 
-        Set<ResolvedType> scalarTypeSet = ResolvedType.fromString("phylospec.types.Integer", componentResolver);
+        Set<ResolvedType> scalarTypeSet =
+                ResolvedType.fromString("phylospec.types.Integer", componentResolver);
         scalarTypeSet.addAll(ResolvedType.fromString("phylospec.types.Real", componentResolver));
 
-        if (!TypeUtils.canBeAssignedTo(
-                observationFromTypeSet, scalarTypeSet, componentResolver
-        )) {
+        if (!TypeUtils.canBeAssignedTo(observationFromTypeSet, scalarTypeSet, componentResolver)) {
             throw new TypeError(
                     "Invalid observation.",
-                    "Observations ranges have to be specified using numbers."
-            );
+                    "Observations ranges have to be specified using numbers.");
         }
 
-        if (!TypeUtils.canBeAssignedTo(
-                observationToTypeSet, scalarTypeSet, componentResolver
-        )) {
+        if (!TypeUtils.canBeAssignedTo(observationToTypeSet, scalarTypeSet, componentResolver)) {
             throw new TypeError(
                     "Invalid observation.",
-                    "Observations ranges have to be specified using numbers."
-            );
+                    "Observations ranges have to be specified using numbers.");
         }
 
-        Set<ResolvedType> observationTypeSet = TypeUtils.getLowestCoverTypeSet(
-                List.of(observationFromTypeSet, observationToTypeSet), componentResolver
-        );
+        Set<ResolvedType> observationTypeSet =
+                TypeUtils.getLowestCoverTypeSet(
+                        List.of(observationFromTypeSet, observationToTypeSet), componentResolver);
 
         Set<ResolvedType> generatedDistributionTypeSet = observedBetween.stmt.accept(this);
 
-        // go through generatedDistributionTypeSet, filter the Distribution<> ones and get the actual underlying values
+        // go through generatedDistributionTypeSet, filter the Distribution<> ones and get the
+        // actual underlying values
 
         Set<ResolvedType> generatedTypeSet = new HashSet<>();
         for (ResolvedType generatedDistType : generatedDistributionTypeSet) {
-            ResolvedType recoveredDistributionType = TypeUtils.recoverType(
-                    "phylospec.types.Distribution", generatedDistType, componentResolver
-            );
+            ResolvedType recoveredDistributionType =
+                    TypeUtils.recoverType(
+                            "phylospec.types.Distribution", generatedDistType, componentResolver);
             if (recoveredDistributionType == null) {
                 // this is not a distribution type directly
                 // it could still be a random variable though
@@ -451,20 +480,22 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         if (generatedTypeSet.isEmpty()) {
             throw new TypeError(
                     "Invalid observation.",
-                    "You are observing a variable which is not a random variable. You can only observe variables drawn from a distribution."
-            );
+                    "You are observing a variable which is not a random variable. You can only observe variables drawn from a distribution.");
         }
 
         // test if the observed value can be assigned to the generated value
 
-        if (!TypeUtils.canBeAssignedTo(
-                observationTypeSet, generatedTypeSet, componentResolver
-        )) {
+        if (!TypeUtils.canBeAssignedTo(observationTypeSet, generatedTypeSet, componentResolver)) {
             throw new TypeError(
                     observedBetween,
                     "Wrong observation type.",
-                    "You specify an observation of type '" + printType(observationTypeSet) + "' for a random variable of type '" + printType(generatedTypeSet) + "'. Use an observation of type '" + printType(generatedTypeSet) + "' instead."
-            );
+                    "You specify an observation of type '"
+                            + printType(observationTypeSet)
+                            + "' for a random variable of type '"
+                            + printType(generatedTypeSet)
+                            + "'. Use an observation of type '"
+                            + printType(generatedTypeSet)
+                            + "' instead.");
         }
 
         return generatedDistributionTypeSet;
@@ -472,38 +503,40 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
     @Override
     public Set<ResolvedType> visitLiteral(Expr.Literal expr) {
-        // TODO: only specify the most specific type. this does not work atm due to a bug in TypeMatcher
-        Set<String> typeName = switch (expr.value) {
-            case String ignored -> Set.of("String");
-            case Integer value -> {
-                if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Probability");
-                if (1 == value)
-                    yield Set.of("PositiveReal", "PositiveInteger", "Probability");
-                if (0 < value) yield Set.of("PositiveInteger", "PositiveReal");
-                yield Set.of("Integer", "Real");
-            }
-            case Long value -> {
-                if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Probability");
-                if (1 == value)
-                    yield Set.of("PositiveReal", "PositiveInteger", "Probability");
-                if (0 < value) yield Set.of("PositiveInteger", "PositiveReal");
-                yield Set.of("Integer", "Real");
-            }
-            case Float value -> {
-                if (value == 0) yield Set.of("NonNegativeReal", "Probability");
-                if (0 < value && value <= 1) yield Set.of("Probability", "PositiveReal");
-                if (1 < value) yield Set.of("PositiveReal");
-                yield Set.of("Real");
-            }
-            case Double value -> {
-                if (value == 0) yield Set.of("NonNegativeReal", "Probability");
-                if (0 < value && value <= 1) yield Set.of("Probability", "PositiveReal");
-                if (1 < value) yield Set.of("PositiveReal");
-                yield Set.of("Real");
-            }
-            case Boolean ignored -> Set.of("Boolean");
-            default -> Set.of();
-        };
+        // TODO: only specify the most specific type. this does not work atm due to a bug in
+        // TypeMatcher
+        Set<String> typeName =
+                switch (expr.value) {
+                    case String ignored -> Set.of("String");
+                    case Integer value -> {
+                        if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Probability");
+                        if (1 == value)
+                            yield Set.of("PositiveReal", "PositiveInteger", "Probability");
+                        if (0 < value) yield Set.of("PositiveInteger", "PositiveReal");
+                        yield Set.of("Integer", "Real");
+                    }
+                    case Long value -> {
+                        if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Probability");
+                        if (1 == value)
+                            yield Set.of("PositiveReal", "PositiveInteger", "Probability");
+                        if (0 < value) yield Set.of("PositiveInteger", "PositiveReal");
+                        yield Set.of("Integer", "Real");
+                    }
+                    case Float value -> {
+                        if (value == 0) yield Set.of("NonNegativeReal", "Probability");
+                        if (0 < value && value <= 1) yield Set.of("Probability", "PositiveReal");
+                        if (1 < value) yield Set.of("PositiveReal");
+                        yield Set.of("Real");
+                    }
+                    case Double value -> {
+                        if (value == 0) yield Set.of("NonNegativeReal", "Probability");
+                        if (0 < value && value <= 1) yield Set.of("Probability", "PositiveReal");
+                        if (1 < value) yield Set.of("PositiveReal");
+                        yield Set.of("Real");
+                    }
+                    case Boolean ignored -> Set.of("Boolean");
+                    default -> Set.of();
+                };
 
         Set<ResolvedType> resolvedTypeSet = new HashSet<>();
         for (String name : typeName) {
@@ -518,20 +551,28 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
             if (globalUnit != Unit.IMPLICIT && expr.unit != globalUnit) {
                 throw new TypeError(
                         "Multiple units are not allowed.",
-                        "You use the unit '" + expr.unit + "', but have previously used the unit '" + globalUnit + "'. You can only use a single unit in a model. Convert this value to '" + globalUnit + "'.",
-                        List.of("100 " + globalUnit)
-                );
+                        "You use the unit '"
+                                + expr.unit
+                                + "', but have previously used the unit '"
+                                + globalUnit
+                                + "'. You can only use a single unit in a model. Convert this value to '"
+                                + globalUnit
+                                + "'.",
+                        List.of("100 " + globalUnit));
             }
 
             // check that we have a number literal
 
-            Set<ResolvedType> scalarTypeSet = ResolvedType.fromString("phylospec.types.Real", componentResolver);
-            scalarTypeSet.addAll(ResolvedType.fromString("phylospec.types.Integer", componentResolver));
+            Set<ResolvedType> scalarTypeSet =
+                    ResolvedType.fromString("phylospec.types.Real", componentResolver);
+            scalarTypeSet.addAll(
+                    ResolvedType.fromString("phylospec.types.Integer", componentResolver));
             if (!TypeUtils.canBeAssignedTo(resolvedTypeSet, scalarTypeSet, componentResolver)) {
                 throw new TypeError(
                         "Only numbers can have units.",
-                        "You specify a unit for a value of the type '" + printType(resolvedTypeSet) + "'. Only numbers can have units."
-                );
+                        "You specify a unit for a value of the type '"
+                                + printType(resolvedTypeSet)
+                                + "'. Only numbers can have units.");
             }
 
             // set the global unit
@@ -551,17 +592,26 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 Expr interpolatedExpr = ((Expr.StringTemplate.ExpressionPart) part).expression();
                 Set<ResolvedType> interpolatedTypeSet = interpolatedExpr.accept(this);
 
-                if (!(
-                        TypeUtils.canBeAssignedTo(interpolatedTypeSet, ResolvedType.fromString("String", componentResolver), componentResolver)
-                                || TypeUtils.canBeAssignedTo(interpolatedTypeSet, ResolvedType.fromString("Integer", componentResolver), componentResolver)
-                                || TypeUtils.canBeAssignedTo(interpolatedTypeSet, ResolvedType.fromString("Real", componentResolver), componentResolver)
-                )) {
-                    // this variable is neither a string, real, nor integer and cannot be used in a string template
+                if (!(TypeUtils.canBeAssignedTo(
+                                interpolatedTypeSet,
+                                ResolvedType.fromString("String", componentResolver),
+                                componentResolver)
+                        || TypeUtils.canBeAssignedTo(
+                                interpolatedTypeSet,
+                                ResolvedType.fromString("Integer", componentResolver),
+                                componentResolver)
+                        || TypeUtils.canBeAssignedTo(
+                                interpolatedTypeSet,
+                                ResolvedType.fromString("Real", componentResolver),
+                                componentResolver))) {
+                    // this variable is neither a string, real, nor integer and cannot be used in a
+                    // string template
                     throw new TypeError(
                             expr,
                             "Invalid variable in string template.",
-                            "You try to use a variable of type '" + printType(interpolatedTypeSet) + "' in a string template. However, only strings and numbers can be used here."
-                    );
+                            "You try to use a variable of type '"
+                                    + printType(interpolatedTypeSet)
+                                    + "' in a string template. However, only strings and numbers can be used here.");
                 }
 
                 // all good
@@ -583,8 +633,9 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
             throw new TypeError(
                     expr,
                     "Variable `" + variableName + "` does not exist.",
-                    closestCandidate.isBlank() ? "" : "Do you mean `" + findClosestVariable(variableName) + "'?"
-            );
+                    closestCandidate.isBlank()
+                            ? ""
+                            : "Do you mean `" + findClosestVariable(variableName) + "'?");
         }
 
         return remember(expr, resolvedTypeSet);
@@ -595,8 +646,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         // template variables are not allowed in normal PhyloSpec models
         throw new TypeError(
                 "Template variables are not allowed.",
-                "You use a variable name starting with a '$'. This is not allowed in a PhyloSpec model. Use a variable name without a dollar symbol."
-        );
+                "You use a variable name starting with a '$'. This is not allowed in a PhyloSpec model. Use a variable name without a dollar symbol.");
     }
 
     @Override
@@ -604,28 +654,29 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         // optional template variables are not allowed in normal PhyloSpec models
         throw new TypeError(
                 "Template variables are not allowed.",
-                "You use a variable name starting with a '$$'. This is not allowed in a PhyloSpec model. Use a variable name without a dollar symbol."
-        );
+                "You use a variable name starting with a '$$'. This is not allowed in a PhyloSpec model. Use a variable name without a dollar symbol.");
     }
 
     @Override
     public Set<ResolvedType> visitUnary(Expr.Unary expr) {
-        List<TypeMatcher.Rule> typeMap = List.of(
-                new TypeMatcher.Rule(TokenType.BANG, "Boolean", "Boolean"),
-                new TypeMatcher.Rule(TokenType.MINUS, "Real", "Real"),
-                new TypeMatcher.Rule(TokenType.MINUS, "Integer", "Integer")
-        );
+        List<TypeMatcher.Rule> typeMap =
+                List.of(
+                        new TypeMatcher.Rule(TokenType.BANG, "Boolean", "Boolean"),
+                        new TypeMatcher.Rule(TokenType.MINUS, "Real", "Real"),
+                        new TypeMatcher.Rule(TokenType.MINUS, "Integer", "Integer"));
 
         Set<ResolvedType> rightType = expr.right.accept(this);
-        Set<ResolvedType> resultType = typeMatcher.findMatch(
-                typeMap, new TypeMatcher.Query(expr.operator, rightType)
-        );
+        Set<ResolvedType> resultType =
+                typeMatcher.findMatch(typeMap, new TypeMatcher.Query(expr.operator, rightType));
 
         if (resultType.isEmpty()) {
             throw new TypeError(
                     expr,
-                    "Operation `" + TokenType.getLexeme(expr.operator) + "` is not supported for type `" + rightType + "`."
-            );
+                    "Operation `"
+                            + TokenType.getLexeme(expr.operator)
+                            + "` is not supported for type `"
+                            + rightType
+                            + "`.");
         }
 
         return remember(expr, resultType);
@@ -633,67 +684,102 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
     @Override
     public Set<ResolvedType> visitBinary(Expr.Binary expr) {
-        List<TypeMatcher.Rule> typeMap = List.of(
-                new TypeMatcher.Rule(TokenType.EQUAL_EQUAL, TypeMatcher.ANY, TypeMatcher.ANY, "Boolean"),
-                new TypeMatcher.Rule(TokenType.BANG_EQUAL, TypeMatcher.ANY, TypeMatcher.ANY, "Boolean"),
-                new TypeMatcher.Rule(TokenType.GREATER, "Real", "Real", "Boolean"),
-                new TypeMatcher.Rule(TokenType.GREATER, "Integer", "Integer", "Boolean"),
-                new TypeMatcher.Rule(TokenType.GREATER, "Integer", "Real", "Boolean"),
-                new TypeMatcher.Rule(TokenType.GREATER, "Real", "Integer", "Boolean"),
-                new TypeMatcher.Rule(TokenType.LESS, "Real", "Real", "Boolean"),
-                new TypeMatcher.Rule(TokenType.LESS, "Integer", "Integer", "Boolean"),
-                new TypeMatcher.Rule(TokenType.LESS, "Integer", "Real", "Boolean"),
-                new TypeMatcher.Rule(TokenType.LESS, "Real", "Integer", "Boolean"),
-                new TypeMatcher.Rule(TokenType.GREATER_EQUAL, "Real", "Real", "Boolean"),
-                new TypeMatcher.Rule(TokenType.GREATER_EQUAL, "Integer", "Integer", "Boolean"),
-                new TypeMatcher.Rule(TokenType.GREATER_EQUAL, "Integer", "Real", "Boolean"),
-                new TypeMatcher.Rule(TokenType.GREATER_EQUAL, "Real", "Integer", "Boolean"),
-                new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Real", "Real", "Boolean"),
-                new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Integer", "Integer", "Boolean"),
-                new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Integer", "Real", "Boolean"),
-                new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Real", "Integer", "Boolean"),
-                new TypeMatcher.Rule(TokenType.PLUS, "PositiveReal", "PositiveReal", "PositiveReal"),
-                new TypeMatcher.Rule(TokenType.PLUS, "PositiveInteger", "PositiveInteger", "PositiveInteger"),
-                new TypeMatcher.Rule(TokenType.PLUS, "PositiveInteger", "PositiveReal", "PositiveReal"),
-                new TypeMatcher.Rule(TokenType.PLUS, "PositiveReal", "PositiveInteger", "PositiveReal"),
-                new TypeMatcher.Rule(TokenType.PLUS, "NonNegativeReal", "NonNegativeReal", "NonNegativeReal"),
-                new TypeMatcher.Rule(TokenType.PLUS, "Real", "Real", "Real"),
-                new TypeMatcher.Rule(TokenType.PLUS, "Integer", "Integer", "Integer"),
-                new TypeMatcher.Rule(TokenType.PLUS, "Integer", "Real", "Real"),
-                new TypeMatcher.Rule(TokenType.PLUS, "Real", "Integer", "Real"),
-                new TypeMatcher.Rule(TokenType.PLUS, "String", "String", "String"),
-                new TypeMatcher.Rule(TokenType.MINUS, "Real", "Real", "Real"),
-                new TypeMatcher.Rule(TokenType.MINUS, "Integer", "Integer", "Integer"),
-                new TypeMatcher.Rule(TokenType.MINUS, "Integer", "Real", "Real"),
-                new TypeMatcher.Rule(TokenType.MINUS, "Real", "Integer", "Real"),
-                new TypeMatcher.Rule(TokenType.STAR, "PositiveReal", "PositiveReal", "PositiveReal"),
-                new TypeMatcher.Rule(TokenType.STAR, "PositiveInteger", "PositiveInteger", "PositiveInteger"),
-                new TypeMatcher.Rule(TokenType.STAR, "PositiveInteger", "PositiveReal", "PositiveReal"),
-                new TypeMatcher.Rule(TokenType.STAR, "PositiveReal", "PositiveInteger", "PositiveReal"),
-                new TypeMatcher.Rule(TokenType.STAR, "NonNegativeReal", "NonNegativeReal", "NonNegativeReal"),
-                new TypeMatcher.Rule(TokenType.STAR, "Real", "Real", "Real"),
-                new TypeMatcher.Rule(TokenType.STAR, "Integer", "Integer", "Integer"),
-                new TypeMatcher.Rule(TokenType.STAR, "Integer", "Real", "Real"),
-                new TypeMatcher.Rule(TokenType.STAR, "Real", "Integer", "Real"),
-                new TypeMatcher.Rule(TokenType.SLASH, "PositiveReal", "PositiveReal", "PositiveReal"),
-                new TypeMatcher.Rule(TokenType.SLASH, "NonNegativeReal", "NonNegativeReal", "NonNegativeReal"),
-                new TypeMatcher.Rule(TokenType.SLASH, "Real", "Real", "Real"),
-                new TypeMatcher.Rule(TokenType.SLASH, "Integer", "Integer", "Real"),
-                new TypeMatcher.Rule(TokenType.SLASH, "Integer", "Real", "Real"),
-                new TypeMatcher.Rule(TokenType.SLASH, "Real", "Integer", "Real")
-        );
+        List<TypeMatcher.Rule> typeMap =
+                List.of(
+                        new TypeMatcher.Rule(
+                                TokenType.EQUAL_EQUAL, TypeMatcher.ANY, TypeMatcher.ANY, "Boolean"),
+                        new TypeMatcher.Rule(
+                                TokenType.BANG_EQUAL, TypeMatcher.ANY, TypeMatcher.ANY, "Boolean"),
+                        new TypeMatcher.Rule(TokenType.GREATER, "Real", "Real", "Boolean"),
+                        new TypeMatcher.Rule(TokenType.GREATER, "Integer", "Integer", "Boolean"),
+                        new TypeMatcher.Rule(TokenType.GREATER, "Integer", "Real", "Boolean"),
+                        new TypeMatcher.Rule(TokenType.GREATER, "Real", "Integer", "Boolean"),
+                        new TypeMatcher.Rule(TokenType.LESS, "Real", "Real", "Boolean"),
+                        new TypeMatcher.Rule(TokenType.LESS, "Integer", "Integer", "Boolean"),
+                        new TypeMatcher.Rule(TokenType.LESS, "Integer", "Real", "Boolean"),
+                        new TypeMatcher.Rule(TokenType.LESS, "Real", "Integer", "Boolean"),
+                        new TypeMatcher.Rule(TokenType.GREATER_EQUAL, "Real", "Real", "Boolean"),
+                        new TypeMatcher.Rule(
+                                TokenType.GREATER_EQUAL, "Integer", "Integer", "Boolean"),
+                        new TypeMatcher.Rule(TokenType.GREATER_EQUAL, "Integer", "Real", "Boolean"),
+                        new TypeMatcher.Rule(TokenType.GREATER_EQUAL, "Real", "Integer", "Boolean"),
+                        new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Real", "Real", "Boolean"),
+                        new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Integer", "Integer", "Boolean"),
+                        new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Integer", "Real", "Boolean"),
+                        new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Real", "Integer", "Boolean"),
+                        new TypeMatcher.Rule(
+                                TokenType.PLUS, "PositiveReal", "PositiveReal", "PositiveReal"),
+                        new TypeMatcher.Rule(
+                                TokenType.PLUS,
+                                "PositiveInteger",
+                                "PositiveInteger",
+                                "PositiveInteger"),
+                        new TypeMatcher.Rule(
+                                TokenType.PLUS, "PositiveInteger", "PositiveReal", "PositiveReal"),
+                        new TypeMatcher.Rule(
+                                TokenType.PLUS, "PositiveReal", "PositiveInteger", "PositiveReal"),
+                        new TypeMatcher.Rule(
+                                TokenType.PLUS,
+                                "NonNegativeReal",
+                                "NonNegativeReal",
+                                "NonNegativeReal"),
+                        new TypeMatcher.Rule(TokenType.PLUS, "Real", "Real", "Real"),
+                        new TypeMatcher.Rule(TokenType.PLUS, "Integer", "Integer", "Integer"),
+                        new TypeMatcher.Rule(TokenType.PLUS, "Integer", "Real", "Real"),
+                        new TypeMatcher.Rule(TokenType.PLUS, "Real", "Integer", "Real"),
+                        new TypeMatcher.Rule(TokenType.PLUS, "String", "String", "String"),
+                        new TypeMatcher.Rule(TokenType.MINUS, "Real", "Real", "Real"),
+                        new TypeMatcher.Rule(TokenType.MINUS, "Integer", "Integer", "Integer"),
+                        new TypeMatcher.Rule(TokenType.MINUS, "Integer", "Real", "Real"),
+                        new TypeMatcher.Rule(TokenType.MINUS, "Real", "Integer", "Real"),
+                        new TypeMatcher.Rule(
+                                TokenType.STAR, "PositiveReal", "PositiveReal", "PositiveReal"),
+                        new TypeMatcher.Rule(
+                                TokenType.STAR,
+                                "PositiveInteger",
+                                "PositiveInteger",
+                                "PositiveInteger"),
+                        new TypeMatcher.Rule(
+                                TokenType.STAR, "PositiveInteger", "PositiveReal", "PositiveReal"),
+                        new TypeMatcher.Rule(
+                                TokenType.STAR, "PositiveReal", "PositiveInteger", "PositiveReal"),
+                        new TypeMatcher.Rule(
+                                TokenType.STAR,
+                                "NonNegativeReal",
+                                "NonNegativeReal",
+                                "NonNegativeReal"),
+                        new TypeMatcher.Rule(TokenType.STAR, "Real", "Real", "Real"),
+                        new TypeMatcher.Rule(TokenType.STAR, "Integer", "Integer", "Integer"),
+                        new TypeMatcher.Rule(TokenType.STAR, "Integer", "Real", "Real"),
+                        new TypeMatcher.Rule(TokenType.STAR, "Real", "Integer", "Real"),
+                        new TypeMatcher.Rule(
+                                TokenType.SLASH, "PositiveReal", "PositiveReal", "PositiveReal"),
+                        new TypeMatcher.Rule(
+                                TokenType.SLASH,
+                                "NonNegativeReal",
+                                "NonNegativeReal",
+                                "NonNegativeReal"),
+                        new TypeMatcher.Rule(TokenType.SLASH, "Real", "Real", "Real"),
+                        new TypeMatcher.Rule(TokenType.SLASH, "Integer", "Integer", "Real"),
+                        new TypeMatcher.Rule(TokenType.SLASH, "Integer", "Real", "Real"),
+                        new TypeMatcher.Rule(TokenType.SLASH, "Real", "Integer", "Real"));
 
         Set<ResolvedType> leftType = expr.left.accept(this);
         Set<ResolvedType> rightType = expr.right.accept(this);
-        Set<ResolvedType> resultType = typeMatcher.findMatch(
-                typeMap, new TypeMatcher.Query(expr.operator, leftType, rightType)
-        );
+        Set<ResolvedType> resultType =
+                typeMatcher.findMatch(
+                        typeMap, new TypeMatcher.Query(expr.operator, leftType, rightType));
 
         if (resultType.isEmpty()) {
             throw new TypeError(
                     expr,
-                    "Operation `" + TokenType.getLexeme(expr.operator) + "` is not supported for types `" + printType(leftType) + "` and `" + printType(rightType) + "`."
-            );
+                    "Operation `"
+                            + TokenType.getLexeme(expr.operator)
+                            + "` is not supported for types `"
+                            + printType(leftType)
+                            + "` and `"
+                            + printType(rightType)
+                            + "`.");
         }
 
         return remember(expr, resultType);
@@ -727,15 +813,15 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                     throw new TypeError(
                             argument,
                             "Argument '" + variable.variableName + "' specified multiple times.",
-                            "You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than '" + variable.variableName + "', set it explicitly with '<argument>=" + variable.variableName + "'."
-                    );
+                            "You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than '"
+                                    + variable.variableName
+                                    + "', set it explicitly with '<argument>="
+                                    + variable.variableName
+                                    + "'.");
                 }
 
                 // rule (3)
-                resolvedArguments.put(
-                        variable.variableName,
-                        argument.accept(this)
-                );
+                resolvedArguments.put(variable.variableName, argument.accept(this));
 
                 if (expr.arguments.length == 1) {
                     // if there is only one argument given, the given value is always assigned
@@ -751,8 +837,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 throw new TypeError(
                         argument,
                         "Argument name not specified.",
-                        "You have to specify the name of the argument here using 'name=<value>'. You can only omit the argument name for the first argument or when your variable has the same name as the argument."
-                );
+                        "You have to specify the name of the argument here using 'name=<value>'. You can only omit the argument name for the first argument or when your variable has the same name as the argument.");
             }
         }
 
@@ -762,8 +847,9 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
             throw new TypeError(
                     expr,
                     "The function `" + expr.functionName + "` does not exist.",
-                    "Are you looking for `" + componentResolver.findClosestComponent(expr.functionName) + "'?"
-            );
+                    "Are you looking for `"
+                            + componentResolver.findClosestComponent(expr.functionName)
+                            + "'?");
         }
 
         // check if generators are compatible with arguments
@@ -771,9 +857,9 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         List<TypeError> errors = new ArrayList<>();
         for (Generator generator : generators) {
             try {
-                Set<ResolvedType> possibleGeneratorReturnTypes = TypeUtils.resolveGeneratedType(
-                        generator, resolvedArguments, firstArgumentName, componentResolver
-                );
+                Set<ResolvedType> possibleGeneratorReturnTypes =
+                        TypeUtils.resolveGeneratedType(
+                                generator, resolvedArguments, firstArgumentName, componentResolver);
                 possibleReturnTypes.addAll(possibleGeneratorReturnTypes);
             } catch (TypeError e) {
                 e.attachAstNode(expr);
@@ -783,19 +869,32 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         // throw errors if needed
         if (possibleReturnTypes.isEmpty() && errors.isEmpty()) {
-            throw new TypeError(expr, "Function `" + expr.functionName + "` with the given arguments does not exist.");
+            throw new TypeError(
+                    expr,
+                    "Function `"
+                            + expr.functionName
+                            + "` with the given arguments does not exist.");
         } else if (possibleReturnTypes.isEmpty() && errors.size() == 1) {
             throw errors.getFirst();
         } else if (possibleReturnTypes.isEmpty()) {
-            String description = "Function `" + expr.functionName + "` with the given arguments does not exist.";
+            String description =
+                    "Function `" + expr.functionName + "` with the given arguments does not exist.";
 
-            StringBuilder hint = new StringBuilder("There are " + generators.size() + " different versions of '" + expr.functionName + "'. They cannot be used due to the following reasons:\n");
+            StringBuilder hint =
+                    new StringBuilder(
+                            "There are "
+                                    + generators.size()
+                                    + " different versions of '"
+                                    + expr.functionName
+                                    + "'. They cannot be used due to the following reasons:\n");
 
             for (int i = 0; i < errors.size(); i++) {
                 hint.append("\n ").append(i + 1).append(". ").append(errors.get(i).getMessage());
             }
 
-            hint.append("\n\nFix any of these issues to use '").append(expr.functionName).append("'.");
+            hint.append("\n\nFix any of these issues to use '")
+                    .append(expr.functionName)
+                    .append("'.");
 
             throw new TypeError(expr, description, hint.toString());
         }
@@ -817,20 +916,23 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         Set<ResolvedType> generatedTypeSet = new HashSet<>();
         for (ResolvedType expressionType : resolvedTypeSet) {
             TypeUtils.visitTypeAndParents(
-                    expressionType, x -> {
+                    expressionType,
+                    x -> {
                         if (x.getName().equals("phylospec.types.Distribution")) {
                             generatedTypeSet.add(x.getParameterTypes().get("T"));
                             return TypeUtils.Visitor.STOP;
                         }
                         return TypeUtils.Visitor.CONTINUE;
-                    }, componentResolver
-            );
+                    },
+                    componentResolver);
         }
 
         if (generatedTypeSet.isEmpty()) {
             throw new TypeError(
                     expr,
-                    "Expression of type `" + printType(resolvedTypeSet) + "` is not a distribution.",
+                    "Expression of type `"
+                            + printType(resolvedTypeSet)
+                            + "` is not a distribution.",
                     "After '~', you always need to provide a distribution. Do you want to use `=` instead?");
         }
 
@@ -846,23 +948,24 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     public Set<ResolvedType> visitArray(Expr.Array expr) {
         // resolve the element types
 
-        List<Set<ResolvedType>> elementTypeSets = expr.elements.stream()
-                .map(x -> x.accept(this))
-                .collect(Collectors.toList());
+        List<Set<ResolvedType>> elementTypeSets =
+                expr.elements.stream().map(x -> x.accept(this)).collect(Collectors.toList());
 
         // get the most specific type compatible with the element types
         // this is done by looking at the product of the typesets for every
         // single element. for each possible type combination, the lowest
         // cover is determined (the most specific supertype)
 
-        Set<ResolvedType> lcTypeSet = TypeUtils.getLowestCoverTypeSet(elementTypeSets, componentResolver);
+        Set<ResolvedType> lcTypeSet =
+                TypeUtils.getLowestCoverTypeSet(elementTypeSets, componentResolver);
 
         // build the Vector result type
 
         Type vectorComponent = componentResolver.resolveType("phylospec.types.Vector");
-        Set<ResolvedType> arrayTypeSet = lcTypeSet.stream().map(
-                x -> new ResolvedType(vectorComponent, Map.of("T", x))
-        ).collect(Collectors.toSet());
+        Set<ResolvedType> arrayTypeSet =
+                lcTypeSet.stream()
+                        .map(x -> new ResolvedType(vectorComponent, Map.of("T", x)))
+                        .collect(Collectors.toSet());
 
         // we check the edge case where we have an array of number literals adding up to 1
         boolean onlyNumberLiterals = true;
@@ -872,7 +975,8 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 onlyNumberLiterals = false;
                 break;
             }
-            if (!(((Expr.Literal) element).value instanceof Double) && !(((Expr.Literal) element).value instanceof Float)) {
+            if (!(((Expr.Literal) element).value instanceof Double)
+                    && !(((Expr.Literal) element).value instanceof Float)) {
                 onlyNumberLiterals = false;
                 break;
             }
@@ -881,7 +985,8 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         }
         if (Math.abs(summedUpLiterals - 1.0) < 1e-10) {
             // this is a simplex
-            arrayTypeSet.addAll(ResolvedType.fromString("phylospec.types.Simplex", componentResolver));
+            arrayTypeSet.addAll(
+                    ResolvedType.fromString("phylospec.types.Simplex", componentResolver));
         }
 
         return remember(expr, arrayTypeSet);
@@ -900,8 +1005,11 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         for (ResolvedType possibleContainerType : containerTypeSet) {
             Map<String, List<ResolvedType>> resolvedTypeParameterTypes = new HashMap<>();
             if (TypeUtils.checkAssignabilityAndResolveTypeParameters(
-                    "phylospec.types.Map<K, V>", possibleContainerType, List.of("K", "V"), resolvedTypeParameterTypes, componentResolver
-            )) {
+                    "phylospec.types.Map<K, V>",
+                    possibleContainerType,
+                    List.of("K", "V"),
+                    resolvedTypeParameterTypes,
+                    componentResolver)) {
                 itemTypeSet.addAll(resolvedTypeParameterTypes.get("V"));
                 indexTypeSet.addAll(resolvedTypeParameterTypes.get("K"));
                 numberOfIndicesRequired.add(1);
@@ -909,19 +1017,29 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
             resolvedTypeParameterTypes.clear();
             if (TypeUtils.checkAssignabilityAndResolveTypeParameters(
-                    "phylospec.types.Matrix<T>", possibleContainerType, List.of("T"), resolvedTypeParameterTypes, componentResolver
-            )) {
+                    "phylospec.types.Matrix<T>",
+                    possibleContainerType,
+                    List.of("T"),
+                    resolvedTypeParameterTypes,
+                    componentResolver)) {
                 itemTypeSet.addAll(resolvedTypeParameterTypes.get("T"));
-                indexTypeSet.addAll(ResolvedType.fromString("phylospec.types.NonNegativeInteger", componentResolver));
+                indexTypeSet.addAll(
+                        ResolvedType.fromString(
+                                "phylospec.types.NonNegativeInteger", componentResolver));
                 numberOfIndicesRequired.add(2);
             }
 
             resolvedTypeParameterTypes.clear();
             if (TypeUtils.checkAssignabilityAndResolveTypeParameters(
-                    "phylospec.types.Vector<T>", possibleContainerType, List.of("T"), resolvedTypeParameterTypes, componentResolver
-            )) {
+                    "phylospec.types.Vector<T>",
+                    possibleContainerType,
+                    List.of("T"),
+                    resolvedTypeParameterTypes,
+                    componentResolver)) {
                 itemTypeSet.addAll(resolvedTypeParameterTypes.get("T"));
-                indexTypeSet.addAll(ResolvedType.fromString("phylospec.types.NonNegativeInteger", componentResolver));
+                indexTypeSet.addAll(
+                        ResolvedType.fromString(
+                                "phylospec.types.NonNegativeInteger", componentResolver));
                 numberOfIndicesRequired.add(1);
             }
         }
@@ -931,8 +1049,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         if (numberOfIndicesRequired.isEmpty()) {
             throw new TypeError(
                     "This element cannot be accessed with an index.",
-                    "You use the index notation ('items[3]') on an element which is neither a vector, a matrix nor a map. Remove the index."
-            );
+                    "You use the index notation ('items[3]') on an element which is neither a vector, a matrix nor a map. Remove the index.");
         }
 
         // check if there are the right number of indices
@@ -940,8 +1057,13 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         if (!numberOfIndicesRequired.contains(expr.indices.size())) {
             throw new TypeError(
                     "Wrong number of indices provided.",
-                    "You provide " + expr.indices.size() + " indices, but " + numberOfIndicesRequired.stream().map(String::valueOf).collect(Collectors.joining("|")) + " are needed."
-            );
+                    "You provide "
+                            + expr.indices.size()
+                            + " indices, but "
+                            + numberOfIndicesRequired.stream()
+                                    .map(String::valueOf)
+                                    .collect(Collectors.joining("|"))
+                            + " are needed.");
         }
 
         // check that the passed indices have the correct type
@@ -951,8 +1073,11 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
             if (!TypeUtils.canBeAssignedTo(resolvedIndexTypeSet, indexTypeSet, componentResolver)) {
                 throw new TypeError(
                         "Invalid index.",
-                        "Your index is of type '" + printType(resolvedIndexTypeSet) + "'. Only use values of type '" + printType(indexTypeSet) + "' as an index."
-                );
+                        "Your index is of type '"
+                                + printType(resolvedIndexTypeSet)
+                                + "'. Only use values of type '"
+                                + printType(indexTypeSet)
+                                + "' as an index.");
             }
         }
 
@@ -964,34 +1089,37 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         Set<ResolvedType> fromTypeSet = range.from.accept(this);
         Set<ResolvedType> toTypeSet = range.to.accept(this);
 
-        if (!TypeUtils.canBeAssignedTo(fromTypeSet, ResolvedType.fromString("Integer", componentResolver), componentResolver)) {
+        if (!TypeUtils.canBeAssignedTo(
+                fromTypeSet,
+                ResolvedType.fromString("Integer", componentResolver),
+                componentResolver)) {
             throw new TypeError(
                     range,
                     "The lower bound of the range is not an integer.",
                     "Use an integer expression as lower and upper bounds of a range.",
-                    List.of("5:20")
-            );
+                    List.of("5:20"));
         }
-        if (!TypeUtils.canBeAssignedTo(toTypeSet, ResolvedType.fromString("Integer", componentResolver), componentResolver)) {
+        if (!TypeUtils.canBeAssignedTo(
+                toTypeSet,
+                ResolvedType.fromString("Integer", componentResolver),
+                componentResolver)) {
             throw new TypeError(
                     range,
                     "The upper bound of the range is not an integer.",
                     "Use an integer expression as lower and upper bounds of a range.",
-                    List.of("5:20")
-            );
+                    List.of("5:20"));
         }
 
         // the type of the items is the cover of the two bounds
 
-        Set<ResolvedType> itemTypeSet = TypeUtils.getLowestCoverTypeSet(List.of(fromTypeSet, toTypeSet), componentResolver);
+        Set<ResolvedType> itemTypeSet =
+                TypeUtils.getLowestCoverTypeSet(List.of(fromTypeSet, toTypeSet), componentResolver);
 
         // the type of the vector produced is the vector of the item type set
 
-        Set<ResolvedType> listComprehensionTypeSet = ResolvedType.fromString(
-                "phylospec.types.Vector<T>",
-                Map.of("T", itemTypeSet),
-                componentResolver
-        );
+        Set<ResolvedType> listComprehensionTypeSet =
+                ResolvedType.fromString(
+                        "phylospec.types.Vector<T>", Map.of("T", itemTypeSet), componentResolver);
 
         return remember(range, listComprehensionTypeSet);
     }
@@ -1014,7 +1142,8 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
             typeParameters.add(type.accept(this));
         }
 
-        Set<ResolvedType> resolvedType = ResolvedType.fromString(expr.name, typeParameters, componentResolver, true);
+        Set<ResolvedType> resolvedType =
+                ResolvedType.fromString(expr.name, typeParameters, componentResolver, true);
         return remember(expr, resolvedType);
     }
 
@@ -1022,7 +1151,8 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
      * Check if the type resolver ignores the statement because it is in a custom block.
      */
     private boolean ignoreStmt(Stmt stmt) {
-        Set<Stmt.Block> blocksConsidered = Set.of(Stmt.Block.NO_BLOCK, Stmt.Block.MODEL, Stmt.Block.DATA);
+        Set<Stmt.Block> blocksConsidered =
+                Set.of(Stmt.Block.NO_BLOCK, Stmt.Block.MODEL, Stmt.Block.DATA);
         return (!blocksConsidered.contains(stmt.block));
     }
 
@@ -1067,7 +1197,6 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     /**
      * helper functions to pretty-print types
      */
-
     private static String printType(Set<ResolvedType> type) {
         if (type.isEmpty()) {
             return "unknown";
@@ -1085,7 +1214,12 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         result += "<";
 
-        result += String.join(",", type.getParametersNames().stream().map(x -> printType(type.getParameterTypes().get(x))).toList());
+        result +=
+                String.join(
+                        ",",
+                        type.getParametersNames().stream()
+                                .map(x -> printType(type.getParameterTypes().get(x)))
+                                .toList());
 
         result += ">";
         return result;
@@ -1094,11 +1228,9 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     /**
      * helper functions for useful error messages
      */
-
     private String findClosestVariable(String queryVariable) {
         return getVariableNames().stream()
                 .min(Comparator.comparingInt(name -> Utils.editDistance(queryVariable, name)))
                 .orElse("");
     }
-
 }

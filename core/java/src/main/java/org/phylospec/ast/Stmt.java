@@ -1,7 +1,6 @@
 package org.phylospec.ast;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-
 import java.util.List;
 import java.util.Objects;
 
@@ -12,31 +11,36 @@ import java.util.Objects;
  */
 public abstract class Stmt extends AstNode {
 
-    abstract public <S, E, T> S accept(AstVisitor<S, E, T> visitor);
+    public abstract <S, E, T> S accept(AstVisitor<S, E, T> visitor);
 
-    abstract public String getName();
+    public abstract String getName();
 
     /** Identifies which block a statement belongs to. */
-    public sealed interface Block permits Block.NoBlock, Block.Data, Block.Model, Block.Mcmc, Block.Custom {
+    public sealed interface Block
+            permits Block.NoBlock, Block.Data, Block.Model, Block.Mcmc, Block.Custom {
         record NoBlock() implements Block {}
+
         record Data() implements Block {
             @Override
             public String toString() {
                 return "data";
             }
         }
+
         record Model() implements Block {
             @Override
             public String toString() {
                 return "model";
             }
         }
+
         record Mcmc() implements Block {
             @Override
             public String toString() {
                 return "mcmc";
             }
         }
+
         record Custom(String blockName) implements Block {
             @Override
             public String toString() {
@@ -62,8 +66,10 @@ public abstract class Stmt extends AstNode {
 
         @JsonPropertyDescription("The type of variable being assigned.")
         public AstType type;
+
         @JsonPropertyDescription("The variable name.")
         public final String name;
+
         @JsonPropertyDescription("The expression being assigned to the variable.")
         public Expr expression;
 
@@ -71,7 +77,9 @@ public abstract class Stmt extends AstNode {
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Assignment that = (Assignment) o;
-            return Objects.equals(type, that.type) && Objects.equals(name, that.name) && Objects.equals(expression, that.expression);
+            return Objects.equals(type, that.type)
+                    && Objects.equals(name, that.name)
+                    && Objects.equals(expression, that.expression);
         }
 
         @Override
@@ -99,8 +107,10 @@ public abstract class Stmt extends AstNode {
 
         @JsonPropertyDescription("The type of variable being drawn.")
         public AstType type;
+
         @JsonPropertyDescription("The variable name.")
         public final String name;
+
         @JsonPropertyDescription("The expression being drawn from.")
         public Expr expression;
 
@@ -113,7 +123,9 @@ public abstract class Stmt extends AstNode {
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Draw that = (Draw) o;
-            return Objects.equals(type, that.type) && Objects.equals(name, that.name) && Objects.equals(expression, that.expression);
+            return Objects.equals(type, that.type)
+                    && Objects.equals(name, that.name)
+                    && Objects.equals(expression, that.expression);
         }
 
         @Override
@@ -137,6 +149,7 @@ public abstract class Stmt extends AstNode {
 
         @JsonPropertyDescription("The decorator call.")
         public final Expr.Call decorator;
+
         @JsonPropertyDescription("The decorated statement.")
         public Stmt statement;
 
@@ -149,7 +162,8 @@ public abstract class Stmt extends AstNode {
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Decorated decorated = (Decorated) o;
-            return Objects.equals(decorator, decorated.decorator) && Objects.equals(statement, decorated.statement);
+            return Objects.equals(decorator, decorated.decorator)
+                    && Objects.equals(statement, decorated.statement);
         }
 
         @Override
@@ -173,8 +187,10 @@ public abstract class Stmt extends AstNode {
 
         @JsonPropertyDescription("The indexed statement.")
         public Stmt statement;
+
         @JsonPropertyDescription("The index variables.")
         public final List<Expr.Variable> indices;
+
         @JsonPropertyDescription("The ranges over which the indices go.")
         public final List<Expr> ranges;
 
@@ -187,7 +203,9 @@ public abstract class Stmt extends AstNode {
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Indexed indexed = (Indexed) o;
-            return Objects.equals(statement, indexed.statement) && Objects.equals(indices, indexed.indices) && Objects.equals(ranges, indexed.ranges);
+            return Objects.equals(statement, indexed.statement)
+                    && Objects.equals(indices, indexed.indices)
+                    && Objects.equals(ranges, indexed.ranges);
         }
 
         @Override
@@ -240,6 +258,7 @@ public abstract class Stmt extends AstNode {
 
         @JsonPropertyDescription("The statement observed.")
         public Stmt stmt;
+
         @JsonPropertyDescription("The observed value.")
         public Expr observedAs;
 
@@ -276,8 +295,10 @@ public abstract class Stmt extends AstNode {
 
         @JsonPropertyDescription("The statement observed.")
         public Stmt stmt;
+
         @JsonPropertyDescription("The lower bound.")
         public Expr observedFrom;
+
         @JsonPropertyDescription("The upper bound.")
         public Expr observedTo;
 
@@ -290,7 +311,9 @@ public abstract class Stmt extends AstNode {
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             ObservedBetween that = (ObservedBetween) o;
-            return Objects.equals(stmt, that.stmt) && Objects.equals(observedFrom, that.observedFrom) && Objects.equals(observedTo, that.observedTo);
+            return Objects.equals(stmt, that.stmt)
+                    && Objects.equals(observedFrom, that.observedFrom)
+                    && Objects.equals(observedTo, that.observedTo);
         }
 
         @Override
