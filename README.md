@@ -49,6 +49,27 @@ PhyloSpec provides a standardized way to describe phylogenetic modeling componen
     └── component-library.schema.json  # Metaschema for component libraries
 ```
 
+## Code Formatting
+
+This project uses [Spotless](https://github.com/diffplug/spotless) to automatically format the Java code. Formatting is enforced on every pull request (see `.github/workflows/pull_request.yml`).
+
+To format the code locally, run:
+
+```sh
+sh scripts/format.sh
+```
+
+### Pre-commit hook
+
+To automatically format your code before every commit, create a `pre-commit` file at `.git/hooks/pre-commit` with the following content:
+
+```sh
+#!/bin/sh
+sh scripts/format.sh
+```
+
+Git will now check that your code is formatted on every commit.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
