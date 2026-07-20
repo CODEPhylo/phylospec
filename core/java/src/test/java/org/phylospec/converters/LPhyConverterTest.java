@@ -1,13 +1,6 @@
 package org.phylospec.converters;
 
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.TestFactory;
-import org.phylospec.ast.Stmt;
-import org.phylospec.components.ComponentLibrary;
-import org.phylospec.components.ComponentResolver;
-import org.phylospec.lexer.Lexer;
-import org.phylospec.lexer.Token;
-import org.phylospec.parser.Parser;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -19,8 +12,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
+import org.phylospec.ast.Stmt;
+import org.phylospec.components.ComponentLibrary;
+import org.phylospec.components.ComponentResolver;
+import org.phylospec.lexer.Lexer;
+import org.phylospec.lexer.Token;
+import org.phylospec.parser.Parser;
 
 public class LPhyConverterTest {
 
@@ -46,8 +45,7 @@ public class LPhyConverterTest {
 
     private List<Path> findPsFiles(Path root) throws IOException {
         try (Stream<Path> paths = Files.walk(root)) {
-            return paths
-                    .filter(Files::isRegularFile)
+            return paths.filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().endsWith(".phylospec"))
                     .collect(Collectors.toList());
         }
@@ -66,31 +64,33 @@ public class LPhyConverterTest {
                     psPath.getFileName().toString() + " (missing .lphy file)",
                     () -> {
                         System.err.println("Expected LPhy file not found: " + lphyPath);
-                    }
-            );
+                    });
         }
 
         String expectedLPhy = Files.readString(lphyPath, StandardCharsets.UTF_8);
 
-        return DynamicTest.dynamicTest(psPath.getFileName().toString(), () -> {
-            // Lex and parse the PhyloSpec file
-            Lexer lexer = new Lexer(source);
-            List<Token> tokens = lexer.scanTokens();
-            Parser parser = new Parser(tokens);
-            List<Stmt> statements = parser.parse();
+        return DynamicTest.dynamicTest(
+                psPath.getFileName().toString(),
+                () -> {
+                    // Lex and parse the PhyloSpec file
+                    Lexer lexer = new Lexer(source);
+                    List<Token> tokens = lexer.scanTokens();
+                    Parser parser = new Parser(tokens);
+                    List<Stmt> statements = parser.parse();
 
-            List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
+                    List<ComponentLibrary> componentLibraries =
+                            ComponentResolver.loadCoreComponentLibraries();
 
-            // Convert AST to LPhy using LPhyConverter
-            String actualLPhyString = LPhyConverter.convertToLPhy(statements, componentLibraries).replace("\t", "    ");
-            String expectedLPhyString = expectedLPhy.trim();
+                    // Convert AST to LPhy using LPhyConverter
+                    String actualLPhyString =
+                            LPhyConverter.convertToLPhy(statements, componentLibraries)
+                                    .replace("\t", "    ");
+                    String expectedLPhyString = expectedLPhy.trim();
 
-            assertEquals(
-                    expectedLPhyString,
-                    actualLPhyString,
-                    "LPhy conversion mismatch for: " + psPath
-            );
-        });
+                    assertEquals(
+                            expectedLPhyString,
+                            actualLPhyString,
+                            "LPhy conversion mismatch for: " + psPath);
+                });
     }
 }
-

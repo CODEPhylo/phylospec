@@ -8,8 +8,7 @@ import org.phylospec.ast.AstNode;
 public abstract class FailedTilingAttempt extends Throwable {
 
     /** This error should be raised when the tile is completely irrelevant for an AST subgraph. */
-    public static class Irrelevant extends FailedTilingAttempt {
-    }
+    public static class Irrelevant extends FailedTilingAttempt {}
 
     /** This error indicates that the tile is relevant but failed due to miscellaneous reasons. */
     public static class Rejected extends FailedTilingAttempt {
@@ -35,7 +34,6 @@ public abstract class FailedTilingAttempt extends Throwable {
         public String getReason() {
             return reason;
         }
-
     }
 
     /** This error indicates that the tile is relevant but failed due a missing tile at the interface. */
@@ -50,5 +48,4 @@ public abstract class FailedTilingAttempt extends Throwable {
             return otherNode;
         }
     }
-
 }

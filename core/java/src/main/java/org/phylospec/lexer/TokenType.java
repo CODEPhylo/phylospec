@@ -2,28 +2,55 @@ package org.phylospec.lexer;
 
 public enum TokenType {
     // single-character tokens
-    LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE, COMMA, DOT, MINUS, PLUS,
-    SLASH, STAR, TILDE, AT, LEFT_SQUARE_BRACKET, RIGHT_SQUARE_BRACKET,
-    DOLLAR, COLON,
+    LEFT_PAREN,
+    RIGHT_PAREN,
+    LEFT_BRACE,
+    RIGHT_BRACE,
+    COMMA,
+    DOT,
+    MINUS,
+    PLUS,
+    SLASH,
+    STAR,
+    TILDE,
+    AT,
+    LEFT_SQUARE_BRACKET,
+    RIGHT_SQUARE_BRACKET,
+    DOLLAR,
+    COLON,
 
     // one or two character tokens
-    BANG, BANG_EQUAL,
-    EQUAL, EQUAL_EQUAL,
-    GREATER, GREATER_EQUAL,
-    LESS, LESS_EQUAL,
+    BANG,
+    BANG_EQUAL,
+    EQUAL,
+    EQUAL_EQUAL,
+    GREATER,
+    GREATER_EQUAL,
+    LESS,
+    LESS_EQUAL,
     DOLLAR_DOLLAR,
 
     // literals
-    IDENTIFIER, INT, FLOAT,
+    IDENTIFIER,
+    INT,
+    FLOAT,
 
     // strings
-    STRING_PART, STRING_END,
+    STRING_PART,
+    STRING_END,
 
     // keywords
-    TRUE, FALSE, IMPORT, FOR, IN, OBSERVED_AS, OBSERVED_BETWEEN,
+    TRUE,
+    FALSE,
+    IMPORT,
+    FOR,
+    IN,
+    OBSERVED_AS,
+    OBSERVED_BETWEEN,
 
     // terminators
-    EOL, EOF,
+    EOL,
+    EOF,
 
     // comment
     COMMENT;

@@ -1,9 +1,8 @@
 package org.phylospec.errors;
 
-import org.phylospec.lexer.Range;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.phylospec.lexer.Range;
 
 public final class Error extends Throwable {
     private final String description;
@@ -31,11 +30,7 @@ public final class Error extends Throwable {
      *                    end with a period
      * @param examples    a list of example code snippets
      */
-    public Error(
-            Range range, String description,
-            String hint,
-            List<String> examples
-    ) {
+    public Error(Range range, String description, String hint, List<String> examples) {
         this.description = description;
         this.range = range;
         this.hint = hint;
@@ -91,8 +86,13 @@ public final class Error extends Throwable {
 
         StringBuilder text = new StringBuilder();
 
-        text.append(RED).append("There is a problem:").append(RESET)
-                .append(" ").append(BOLD).append(description()).append(RESET);
+        text.append(RED)
+                .append("There is a problem:")
+                .append(RESET)
+                .append(" ")
+                .append(BOLD)
+                .append(description())
+                .append(RESET);
 
         String[] lines = source.split("\n", -1);
         if (range != null && range.startLine >= 1 && range.startLine <= lines.length) {
@@ -106,11 +106,18 @@ public final class Error extends Throwable {
                 String sourceLine = lines[range.startLine - 1];
                 String lineLabel = String.format("%" + gutterWidth + "d", range.startLine);
                 text.append("\n\n")
-                        .append(INDENT).append(lineLabel).append(" | ").append(sourceLine)
+                        .append(INDENT)
+                        .append(lineLabel)
+                        .append(" | ")
+                        .append(sourceLine)
                         .append("\n")
-                        .append(INDENT).append(gutter).append(" | ")
+                        .append(INDENT)
+                        .append(gutter)
+                        .append(" | ")
                         .append(" ".repeat(range.start))
-                        .append(YELLOW).append("^".repeat(Math.max(1, range.end - range.start))).append(RESET);
+                        .append(YELLOW)
+                        .append("^".repeat(Math.max(1, range.end - range.start)))
+                        .append(RESET);
             } else {
                 /* multiline range — show each line with carets beneath it */
                 text.append("\n");
@@ -118,9 +125,14 @@ public final class Error extends Throwable {
                     String sourceLine = lines[lineNum - 1];
                     String lineLabel = String.format("%" + gutterWidth + "d", lineNum);
                     text.append("\n")
-                            .append(INDENT).append(lineLabel).append(" | ").append(sourceLine)
+                            .append(INDENT)
+                            .append(lineLabel)
+                            .append(" | ")
+                            .append(sourceLine)
                             .append("\n")
-                            .append(INDENT).append(gutter).append(" | ");
+                            .append(INDENT)
+                            .append(gutter)
+                            .append(" | ");
 
                     int caretStart, caretLen;
                     if (lineNum == range.startLine) {
@@ -138,13 +150,20 @@ public final class Error extends Throwable {
                     }
 
                     text.append(" ".repeat(caretStart))
-                            .append(YELLOW).append("^".repeat(caretLen)).append(RESET);
+                            .append(YELLOW)
+                            .append("^".repeat(caretLen))
+                            .append(RESET);
                 }
             }
         }
 
         if (!hint().isBlank()) {
-            text.append("\n\n").append(BLUE).append("Hint:").append(RESET).append(" ").append(hint());
+            text.append("\n\n")
+                    .append(BLUE)
+                    .append("Hint:")
+                    .append(RESET)
+                    .append(" ")
+                    .append(hint());
         }
 
         if (!examples().isEmpty()) {
@@ -158,5 +177,4 @@ public final class Error extends Throwable {
 
         return text.toString();
     }
-
 }

@@ -7,7 +7,7 @@ import org.phylospec.domain.Domain;
  *
  * @param <D> the type of {@link Domain <T>}.
  * @param <T> the primitive type in Java.
- * 
+ *
  * @author PhyloSpec Contributors
  * @since 1.0
  */
@@ -45,10 +45,9 @@ public interface Tensor<D extends Domain<T>, T> {
      */
     D domainType();
 
-    default long size(){
-        long s=1;
-        for(int d:shape())
-            s*=d;
+    default long size() {
+        long s = 1;
+        for (int d : shape()) s *= d;
         return s;
     }
 

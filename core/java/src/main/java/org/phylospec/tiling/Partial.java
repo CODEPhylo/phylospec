@@ -11,5 +11,4 @@ public record Partial<T, M>(T partiallyGeneratedObject, BiFunction<T, M, T> comp
     public T complete(M missingPart) {
         return this.completeFunc.apply(this.partiallyGeneratedObject, missingPart);
     }
-
 }

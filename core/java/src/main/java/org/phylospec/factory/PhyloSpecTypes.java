@@ -1,11 +1,11 @@
-//package org.phylospec.factory;
+// package org.phylospec.factory;
 //
-//import org.phylospec.types.*;
-//import org.phylospec.types.impl.*;
-//import java.util.List;
-//import java.util.ArrayList;
+// import org.phylospec.types.*;
+// import org.phylospec.types.impl.*;
+// import java.util.List;
+// import java.util.ArrayList;
 //
-///**
+/// **
 // * Factory class for creating PhyloSpec type instances.
 // *
 // * This class provides convenient static methods for creating all PhyloSpec types
@@ -14,7 +14,7 @@
 // * @author PhyloSpec Contributors
 // * @since 1.0
 // */
-//public final class PhyloSpecTypes {
+// public final class PhyloSpecTypes {
 //
 //    // Private constructor to prevent instantiation
 //    private PhyloSpecTypes() {
@@ -267,7 +267,8 @@
 //    public static Simplex aminoAcidFrequencies(double... frequencies) {
 //        if (frequencies.length != 20) {
 //            throw new IllegalArgumentException(
-//                "Amino acid frequencies must have exactly 20 values, but got: " + frequencies.length);
+//                "Amino acid frequencies must have exactly 20 values, but got: " +
+// frequencies.length);
 //        }
 //        return simplex(frequencies);
 //    }
@@ -397,4 +398,4 @@
 //        }
 //        return simplex(normalized);
 //    }
-//}
+// }

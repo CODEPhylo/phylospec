@@ -1,11 +1,6 @@
 package org.phylospec.parser;
 
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.TestFactory;
-import org.phylospec.ast.AstPrinter;
-import org.phylospec.ast.Stmt;
-import org.phylospec.lexer.Lexer;
-import org.phylospec.lexer.Token;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -17,8 +12,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
+import org.phylospec.ast.AstPrinter;
+import org.phylospec.ast.Stmt;
+import org.phylospec.lexer.Lexer;
+import org.phylospec.lexer.Token;
 
 public class ScriptFilesParserTest {
 
@@ -43,8 +42,7 @@ public class ScriptFilesParserTest {
 
     private List<Path> findPsFiles(Path root) throws IOException {
         try (Stream<Path> paths = Files.walk(root)) {
-            return paths
-                    .filter(Files::isRegularFile)
+            return paths.filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().endsWith(".phylospec"))
                     .collect(Collectors.toList());
         }
@@ -57,26 +55,32 @@ public class ScriptFilesParserTest {
 
         String source = String.join("\n", lines);
 
-        return DynamicTest.dynamicTest(psPath.getFileName().toString(), () -> {
-            Lexer lexer = new Lexer(source);
-            List<Token> tokens = lexer.scanTokens();
-            Parser parser = new Parser(tokens);
-            List<Stmt> statements = parser.parse();
+        return DynamicTest.dynamicTest(
+                psPath.getFileName().toString(),
+                () -> {
+                    Lexer lexer = new Lexer(source);
+                    List<Token> tokens = lexer.scanTokens();
+                    Parser parser = new Parser(tokens);
+                    List<Stmt> statements = parser.parse();
 
-            AstPrinter printer = new AstPrinter();
-            List<String> actualAstLines = new ArrayList<>();
-            for (Stmt statement : statements) {
-                actualAstLines.add(statement.accept(printer));
-            }
+                    AstPrinter printer = new AstPrinter();
+                    List<String> actualAstLines = new ArrayList<>();
+                    for (Stmt statement : statements) {
+                        actualAstLines.add(statement.accept(printer));
+                    }
 
-            assertEquals(expectedAstLines.size(), actualAstLines.size(), "Wrong number of AST lines for: " + psPath);
+                    assertEquals(
+                            expectedAstLines.size(),
+                            actualAstLines.size(),
+                            "Wrong number of AST lines for: " + psPath);
 
-            for (int i = 0; i < expectedAstLines.size(); i++) {
-                String expected = expectedAstLines.get(i).trim();
-                String actual = actualAstLines.get(i).trim();
-                assertEquals(expected, actual, "AST mismatch at index " + i + " for: " + psPath);
-            }
-        });
+                    for (int i = 0; i < expectedAstLines.size(); i++) {
+                        String expected = expectedAstLines.get(i).trim();
+                        String actual = actualAstLines.get(i).trim();
+                        assertEquals(
+                                expected, actual, "AST mismatch at index " + i + " for: " + psPath);
+                    }
+                });
     }
 
     private List<String> extractExpectedAstLines(List<String> lines) {
@@ -123,5 +127,3 @@ public class ScriptFilesParserTest {
         return expected;
     }
 }
-
-

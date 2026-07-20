@@ -1,11 +1,5 @@
-
 package org.phylospec.components;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -13,6 +7,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.processing.Generated;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -29,58 +28,66 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class Generator {
 
     /**
-     * 
+     *
      * (Required)
-     * 
+     *
      */
     @JsonProperty("name")
     private String name;
+
     @JsonProperty("description")
     private String description;
+
     @JsonProperty("namespace")
     private String namespace;
+
     /**
-     * 
+     *
      * (Required)
-     * 
+     *
      */
     @JsonProperty("generatedType")
     private String generatedType;
+
     /**
      * Type parameters for generic generators (e.g., ['T'] for Mixture<T>)
-     * 
+     *
      */
     @JsonProperty("typeParameters")
     @JsonPropertyDescription("Type parameters for generic generators (e.g., ['T'] for Mixture<T>)")
     private List<String> typeParameters = new ArrayList<String>();
+
     /**
-     * 
+     *
      * (Required)
-     * 
+     *
      */
     @JsonProperty("arguments")
     private List<Argument> arguments = new ArrayList<Argument>();
+
     /**
      * File I/O metadata for data-loading or exporting functions
-     * 
+     *
      */
     @JsonProperty("ioHints")
     @JsonPropertyDescription("File I/O metadata for data-loading or exporting functions")
     private IoHints ioHints;
+
     /**
      * Example usage snippets for this generator
-     * 
+     *
      */
     @JsonProperty("examples")
     @JsonPropertyDescription("Example usage snippets for this generator")
     private List<String> examples = new ArrayList<String>();
+
     @JsonIgnore
     private Map<String, Object> additionalProperties = new LinkedHashMap<String, Object>();
 
     /**
-     * 
+     *
      * (Required)
-     * 
+     *
      */
     @JsonProperty("name")
     public String getName() {
@@ -88,9 +95,9 @@ public class Generator {
     }
 
     /**
-     * 
+     *
      * (Required)
-     * 
+     *
      */
     @JsonProperty("name")
     public void setName(String name) {
@@ -118,9 +125,9 @@ public class Generator {
     }
 
     /**
-     * 
+     *
      * (Required)
-     * 
+     *
      */
     @JsonProperty("generatedType")
     public String getGeneratedType() {
@@ -128,9 +135,9 @@ public class Generator {
     }
 
     /**
-     * 
+     *
      * (Required)
-     * 
+     *
      */
     @JsonProperty("generatedType")
     public void setGeneratedType(String generatedType) {
@@ -139,7 +146,7 @@ public class Generator {
 
     /**
      * Type parameters for generic generators (e.g., ['T'] for Mixture<T>)
-     * 
+     *
      */
     @JsonProperty("typeParameters")
     public List<String> getTypeParameters() {
@@ -148,7 +155,7 @@ public class Generator {
 
     /**
      * Type parameters for generic generators (e.g., ['T'] for Mixture<T>)
-     * 
+     *
      */
     @JsonProperty("typeParameters")
     public void setTypeParameters(List<String> typeParameters) {
@@ -156,9 +163,9 @@ public class Generator {
     }
 
     /**
-     * 
+     *
      * (Required)
-     * 
+     *
      */
     @JsonProperty("arguments")
     public List<Argument> getArguments() {
@@ -166,9 +173,9 @@ public class Generator {
     }
 
     /**
-     * 
+     *
      * (Required)
-     * 
+     *
      */
     @JsonProperty("arguments")
     public void setArguments(List<Argument> arguments) {
@@ -177,7 +184,7 @@ public class Generator {
 
     /**
      * File I/O metadata for data-loading or exporting functions
-     * 
+     *
      */
     @JsonProperty("ioHints")
     public IoHints getIoHints() {
@@ -186,7 +193,7 @@ public class Generator {
 
     /**
      * File I/O metadata for data-loading or exporting functions
-     * 
+     *
      */
     @JsonProperty("ioHints")
     public void setIoHints(IoHints ioHints) {
@@ -195,7 +202,7 @@ public class Generator {
 
     /**
      * Example usage snippets for this generator
-     * 
+     *
      */
     @JsonProperty("examples")
     public List<String> getExamples() {
@@ -204,7 +211,7 @@ public class Generator {
 
     /**
      * Example usage snippets for this generator
-     * 
+     *
      */
     @JsonProperty("examples")
     public void setExamples(List<String> examples) {
@@ -224,45 +231,48 @@ public class Generator {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(Generator.class.getName()).append('@').append(Integer.toHexString(System.identityHashCode(this))).append('[');
+        sb.append(Generator.class.getName())
+                .append('@')
+                .append(Integer.toHexString(System.identityHashCode(this)))
+                .append('[');
         sb.append("name");
         sb.append('=');
-        sb.append(((this.name == null)?"<null>":this.name));
+        sb.append(((this.name == null) ? "<null>" : this.name));
         sb.append(',');
         sb.append("description");
         sb.append('=');
-        sb.append(((this.description == null)?"<null>":this.description));
+        sb.append(((this.description == null) ? "<null>" : this.description));
         sb.append(',');
         sb.append("namespace");
         sb.append('=');
-        sb.append(((this.namespace == null)?"<null>":this.namespace));
+        sb.append(((this.namespace == null) ? "<null>" : this.namespace));
         sb.append(',');
         sb.append("generatedType");
         sb.append('=');
-        sb.append(((this.generatedType == null)?"<null>":this.generatedType));
+        sb.append(((this.generatedType == null) ? "<null>" : this.generatedType));
         sb.append(',');
         sb.append("typeParameters");
         sb.append('=');
-        sb.append(((this.typeParameters == null)?"<null>":this.typeParameters));
+        sb.append(((this.typeParameters == null) ? "<null>" : this.typeParameters));
         sb.append(',');
         sb.append("arguments");
         sb.append('=');
-        sb.append(((this.arguments == null)?"<null>":this.arguments));
+        sb.append(((this.arguments == null) ? "<null>" : this.arguments));
         sb.append(',');
         sb.append("ioHints");
         sb.append('=');
-        sb.append(((this.ioHints == null)?"<null>":this.ioHints));
+        sb.append(((this.ioHints == null) ? "<null>" : this.ioHints));
         sb.append(',');
         sb.append("examples");
         sb.append('=');
-        sb.append(((this.examples == null)?"<null>":this.examples));
+        sb.append(((this.examples == null) ? "<null>" : this.examples));
         sb.append(',');
         sb.append("additionalProperties");
         sb.append('=');
-        sb.append(((this.additionalProperties == null)?"<null>":this.additionalProperties));
+        sb.append(((this.additionalProperties == null) ? "<null>" : this.additionalProperties));
         sb.append(',');
-        if (sb.charAt((sb.length()- 1)) == ',') {
-            sb.setCharAt((sb.length()- 1), ']');
+        if (sb.charAt((sb.length() - 1)) == ',') {
+            sb.setCharAt((sb.length() - 1), ']');
         } else {
             sb.append(']');
         }
@@ -272,15 +282,23 @@ public class Generator {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.generatedType == null)? 0 :this.generatedType.hashCode()));
-        result = ((result* 31)+((this.examples == null)? 0 :this.examples.hashCode()));
-        result = ((result* 31)+((this.ioHints == null)? 0 :this.ioHints.hashCode()));
-        result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
-        result = ((result* 31)+((this.namespace == null)? 0 :this.namespace.hashCode()));
-        result = ((result* 31)+((this.description == null)? 0 :this.description.hashCode()));
-        result = ((result* 31)+((this.arguments == null)? 0 :this.arguments.hashCode()));
-        result = ((result* 31)+((this.additionalProperties == null)? 0 :this.additionalProperties.hashCode()));
-        result = ((result* 31)+((this.typeParameters == null)? 0 :this.typeParameters.hashCode()));
+        result =
+                ((result * 31)
+                        + ((this.generatedType == null) ? 0 : this.generatedType.hashCode()));
+        result = ((result * 31) + ((this.examples == null) ? 0 : this.examples.hashCode()));
+        result = ((result * 31) + ((this.ioHints == null) ? 0 : this.ioHints.hashCode()));
+        result = ((result * 31) + ((this.name == null) ? 0 : this.name.hashCode()));
+        result = ((result * 31) + ((this.namespace == null) ? 0 : this.namespace.hashCode()));
+        result = ((result * 31) + ((this.description == null) ? 0 : this.description.hashCode()));
+        result = ((result * 31) + ((this.arguments == null) ? 0 : this.arguments.hashCode()));
+        result =
+                ((result * 31)
+                        + ((this.additionalProperties == null)
+                                ? 0
+                                : this.additionalProperties.hashCode()));
+        result =
+                ((result * 31)
+                        + ((this.typeParameters == null) ? 0 : this.typeParameters.hashCode()));
         return result;
     }
 
@@ -293,7 +311,48 @@ public class Generator {
             return false;
         }
         Generator rhs = ((Generator) other);
-        return ((((((((((this.generatedType == rhs.generatedType)||((this.generatedType!= null)&&this.generatedType.equals(rhs.generatedType)))&&((this.examples == rhs.examples)||((this.examples!= null)&&this.examples.equals(rhs.examples))))&&((this.ioHints == rhs.ioHints)||((this.ioHints!= null)&&this.ioHints.equals(rhs.ioHints))))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.namespace == rhs.namespace)||((this.namespace!= null)&&this.namespace.equals(rhs.namespace))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.arguments == rhs.arguments)||((this.arguments!= null)&&this.arguments.equals(rhs.arguments))))&&((this.additionalProperties == rhs.additionalProperties)||((this.additionalProperties!= null)&&this.additionalProperties.equals(rhs.additionalProperties))))&&((this.typeParameters == rhs.typeParameters)||((this.typeParameters!= null)&&this.typeParameters.equals(rhs.typeParameters))));
+        return ((((((((((this.generatedType == rhs.generatedType)
+                                                                                || ((this
+                                                                                                        .generatedType
+                                                                                                != null)
+                                                                                        && this
+                                                                                                .generatedType
+                                                                                                .equals(
+                                                                                                        rhs.generatedType)))
+                                                                        && ((this.examples
+                                                                                        == rhs.examples)
+                                                                                || ((this.examples
+                                                                                                != null)
+                                                                                        && this
+                                                                                                .examples
+                                                                                                .equals(
+                                                                                                        rhs.examples))))
+                                                                && ((this.ioHints == rhs.ioHints)
+                                                                        || ((this.ioHints != null)
+                                                                                && this.ioHints
+                                                                                        .equals(
+                                                                                                rhs.ioHints))))
+                                                        && ((this.name == rhs.name)
+                                                                || ((this.name != null)
+                                                                        && this.name.equals(
+                                                                                rhs.name))))
+                                                && ((this.namespace == rhs.namespace)
+                                                        || ((this.namespace != null)
+                                                                && this.namespace.equals(
+                                                                        rhs.namespace))))
+                                        && ((this.description == rhs.description)
+                                                || ((this.description != null)
+                                                        && this.description.equals(
+                                                                rhs.description))))
+                                && ((this.arguments == rhs.arguments)
+                                        || ((this.arguments != null)
+                                                && this.arguments.equals(rhs.arguments))))
+                        && ((this.additionalProperties == rhs.additionalProperties)
+                                || ((this.additionalProperties != null)
+                                        && this.additionalProperties.equals(
+                                                rhs.additionalProperties))))
+                && ((this.typeParameters == rhs.typeParameters)
+                        || ((this.typeParameters != null)
+                                && this.typeParameters.equals(rhs.typeParameters))));
     }
-
 }

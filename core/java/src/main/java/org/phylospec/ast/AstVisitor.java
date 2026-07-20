@@ -63,7 +63,8 @@ public interface AstVisitor<S, E, T> {
 
     default E visitStringTemplate(Expr.StringTemplate expr) {
         for (Expr.StringTemplate.Part part : expr.parts) {
-            if (part instanceof Expr.StringTemplate.ExpressionPart expressionPart) expressionPart.expression().accept(this);
+            if (part instanceof Expr.StringTemplate.ExpressionPart expressionPart)
+                expressionPart.expression().accept(this);
         }
 
         return null;

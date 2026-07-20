@@ -1,14 +1,13 @@
 package org.phylospec.typeresolver;
 
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.phylospec.Utils;
 import org.phylospec.components.Argument;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
 import org.phylospec.components.Type;
-
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class TypeUtils {
 
@@ -16,7 +15,10 @@ public class TypeUtils {
      * Checks if some of the types in {@code assignedTypeSet} can be assigned to some of the types in {@code assigneeType}.
      * A type A can be assigned to type B if B covers A.
      */
-    public static boolean canBeAssignedTo(Set<ResolvedType> assignedTypeSet, Set<ResolvedType> assigneeTypeSet, ComponentResolver componentResolver) {
+    public static boolean canBeAssignedTo(
+            Set<ResolvedType> assignedTypeSet,
+            Set<ResolvedType> assigneeTypeSet,
+            ComponentResolver componentResolver) {
         for (ResolvedType assignedType : assignedTypeSet) {
             for (ResolvedType assigneeType : assigneeTypeSet) {
                 if (covers(assigneeType, assignedType, componentResolver)) return true;
@@ -32,18 +34,18 @@ public class TypeUtils {
      * loaded.
      */
     public static ResolvedType recoverType(
-            String typeName,
-            ResolvedType resolvedType,
-            ComponentResolver componentResolver
-    ) {
-        ResolvedType[] recoveredType = new ResolvedType[]{null};
-        visitTypeAndParents(resolvedType, t -> {
-            if (t.getName().equals(typeName)) {
-                recoveredType[0] = t;
-                return Visitor.STOP;
-            }
-            return Visitor.CONTINUE;
-        }, componentResolver);
+            String typeName, ResolvedType resolvedType, ComponentResolver componentResolver) {
+        ResolvedType[] recoveredType = new ResolvedType[] {null};
+        visitTypeAndParents(
+                resolvedType,
+                t -> {
+                    if (t.getName().equals(typeName)) {
+                        recoveredType[0] = t;
+                        return Visitor.STOP;
+                    }
+                    return Visitor.CONTINUE;
+                },
+                componentResolver);
         return recoveredType[0];
     }
 
@@ -58,24 +60,27 @@ public class TypeUtils {
             Generator generator,
             Map<String, Set<ResolvedType>> resolvedArguments,
             String firstArgumentName,
-            ComponentResolver componentResolver
-    ) {
+            ComponentResolver componentResolver) {
         List<Argument> parameters = generator.getArguments();
 
         // make sure we don't pass any unknown arguments
 
-        Set<String> parameterNames = parameters.stream()
-                .map(Argument::getName)
-                .collect(Collectors.toSet());
+        Set<String> parameterNames =
+                parameters.stream().map(Argument::getName).collect(Collectors.toSet());
         for (String argument : resolvedArguments.keySet()) {
-            if (!parameterNames.contains(argument) && (!Objects.equals(firstArgumentName, argument))) {
-                    String closestMatch = parameterNames.stream()
-                            .min(Comparator.comparingInt(x -> Utils.editDistance(x, argument)))
-                            .orElse("");
+            if (!parameterNames.contains(argument)
+                    && (!Objects.equals(firstArgumentName, argument))) {
+                String closestMatch =
+                        parameterNames.stream()
+                                .min(Comparator.comparingInt(x -> Utils.editDistance(x, argument)))
+                                .orElse("");
                 throw new TypeError(
-                        "Function `" + generator.getName() + "` takes no argument named `" + argument + "`.",
-                        "Do you mean '" + closestMatch + "'?"
-                );
+                        "Function `"
+                                + generator.getName()
+                                + "` takes no argument named `"
+                                + argument
+                                + "`.",
+                        "Do you mean '" + closestMatch + "'?");
             }
         }
 
@@ -94,7 +99,12 @@ public class TypeUtils {
 
             if (resolvedArgumentTypeSet == null) {
                 if (parameter.getRequired()) {
-                    throw new TypeError("Function `" + generator.getName() + "` takes the required argument `" + parameterName + "`.");
+                    throw new TypeError(
+                            "Function `"
+                                    + generator.getName()
+                                    + "` takes the required argument `"
+                                    + parameterName
+                                    + "`.");
                 }
 
                 continue;
@@ -111,18 +121,20 @@ public class TypeUtils {
                         possibleArgumentType,
                         generator.getTypeParameters(),
                         possibleParameterTypeSets,
-                        componentResolver
-                )) {
+                        componentResolver)) {
                     foundMatch = true;
                 }
             }
 
             if (!foundMatch) {
                 throw new TypeError(
-                        "Wrong argument type for function `" + generator.getName() + "` and argument `" + parameterName + "`."
-                );
+                        "Wrong argument type for function `"
+                                + generator.getName()
+                                + "` and argument `"
+                                + parameterName
+                                + "`.",
+                        "You need to use a value of type '" + parameter.getType() + "'.");
             }
-
         }
 
         // find the lowest cover for every type parameter
@@ -133,12 +145,11 @@ public class TypeUtils {
         for (String typeParameter : possibleParameterTypeSets.keySet()) {
             parameterTypeSets.put(
                     typeParameter,
-                    Set.of(TypeUtils.getLowestCover(
-                            possibleParameterTypeSets.get(typeParameter), componentResolver
-                    ))
-            );
+                    Set.of(
+                            TypeUtils.getLowestCover(
+                                    possibleParameterTypeSets.get(typeParameter),
+                                    componentResolver)));
         }
-
 
         // construct return type
 
@@ -190,9 +201,7 @@ public class TypeUtils {
                 numNestedGenerics--;
             }
         }
-        typeParameterNames.add(
-                typeString.substring(lastStart, typeString.length() - 1).trim()
-        );
+        typeParameterNames.add(typeString.substring(lastStart, typeString.length() - 1).trim());
 
         return typeParameterNames;
     }
@@ -200,23 +209,26 @@ public class TypeUtils {
     /**
      * Checks if {@code query} covers {@code reference}. Type A covers type B if A = B or if A extends B.
      */
-    public static boolean covers(ResolvedType query, ResolvedType reference, ComponentResolver componentResolver) {
+    public static boolean covers(
+            ResolvedType query, ResolvedType reference, ComponentResolver componentResolver) {
         if (query.equals(reference)) return true;
 
-        // test if the reference is stripped from its generics and if yes, if the stripped type matches
-        if (query.getParameterTypes().isEmpty() && query.getTypeComponent().equals(reference.getTypeComponent()))
-            return true;
+        // test if the reference is stripped from its generics and if yes, if the stripped type
+        // matches
+        if (query.getParameterTypes().isEmpty()
+                && query.getTypeComponent().equals(reference.getTypeComponent())) return true;
 
         boolean[] covers = {false};
         visitParents(
-                reference, x -> {
+                reference,
+                x -> {
                     if (x.equals(query)) {
                         covers[0] = true;
                         return Visitor.STOP;
                     }
                     return Visitor.CONTINUE;
-                }, componentResolver
-        );
+                },
+                componentResolver);
         return covers[0];
     }
 
@@ -227,10 +239,12 @@ public class TypeUtils {
      * {@code typeSets}. Then, for every such combination, the lowest cover type is
      * determined. Then the set of all lowest covers is returned.
      */
-    static Set<ResolvedType> getLowestCoverTypeSet(List<Set<ResolvedType>> typeSets, ComponentResolver componentResolver) {
+    static Set<ResolvedType> getLowestCoverTypeSet(
+            List<Set<ResolvedType>> typeSets, ComponentResolver componentResolver) {
         if (typeSets.isEmpty()) return Set.of();
 
-        // we first remove duplicate type sets as this can quickly turn into a combinatorial explosion
+        // we first remove duplicate type sets as this can quickly turn into a combinatorial
+        // explosion
         typeSets = typeSets.stream().distinct().collect(Collectors.toList());
 
         Set<List<ResolvedType>> possibleElementTypeCombinations = new HashSet<>();
@@ -251,7 +265,8 @@ public class TypeUtils {
      * A type C is the lowest cover of a typeset T if it covers all types in T,
      * and if all other covers of T cover C.
      */
-    public static ResolvedType getLowestCover(List<ResolvedType> typeSet, ComponentResolver componentResolver) {
+    public static ResolvedType getLowestCover(
+            List<ResolvedType> typeSet, ComponentResolver componentResolver) {
         if (typeSet.size() == 1) return typeSet.getFirst();
 
         ResolvedType lowestCover = typeSet.getFirst();
@@ -269,23 +284,30 @@ public class TypeUtils {
      * A type C is the lowest cover of type A and type B if it covers both A and B,
      * and if all other covers of A and B cover C.
      */
-    static ResolvedType getLowestCover(ResolvedType type1, ResolvedType type2, ComponentResolver componentResolver) {
+    static ResolvedType getLowestCover(
+            ResolvedType type1, ResolvedType type2, ComponentResolver componentResolver) {
         if (type1.equals(type2)) return type1;
 
         Set<ResolvedType> parents1 = new HashSet<>();
-        visitTypeAndParents(type1, x -> {
-            parents1.add(x);
-            return Visitor.CONTINUE;
-        }, componentResolver);
+        visitTypeAndParents(
+                type1,
+                x -> {
+                    parents1.add(x);
+                    return Visitor.CONTINUE;
+                },
+                componentResolver);
 
         ResolvedType[] lowestCover = {null};
-        visitTypeAndParents(type2, x -> {
-            if (parents1.contains(x)) {
-                lowestCover[0] = x;
-                return Visitor.STOP;
-            }
-            return Visitor.CONTINUE;
-        }, componentResolver);
+        visitTypeAndParents(
+                type2,
+                x -> {
+                    if (parents1.contains(x)) {
+                        lowestCover[0] = x;
+                        return Visitor.STOP;
+                    }
+                    return Visitor.CONTINUE;
+                },
+                componentResolver);
 
         return lowestCover[0];
     }
@@ -296,8 +318,7 @@ public class TypeUtils {
     public static void visitTypeAndParents(
             ResolvedType type,
             Function<ResolvedType, Visitor> visitor,
-            ComponentResolver componentResolver
-    ) {
+            ComponentResolver componentResolver) {
         if (visitor.apply(type) == Visitor.STOP) return;
         visitParents(type, visitor, componentResolver);
     }
@@ -308,17 +329,16 @@ public class TypeUtils {
     public static void visitParents(
             ResolvedType type,
             Function<ResolvedType, Visitor> visitor,
-            ComponentResolver componentResolver
-    ) {
+            ComponentResolver componentResolver) {
         if (type.getExtends() != null) {
             HashMap<String, Set<ResolvedType>> inheritedTypeParameters = new HashMap<>();
             for (String name : type.getParameterTypes().keySet()) {
                 inheritedTypeParameters.put(name, Set.of(type.getParameterTypes().get(name)));
             }
 
-            Set<ResolvedType> directlyExtendedTypeSet = ResolvedType.fromString(
-                    type.getExtends(), inheritedTypeParameters, componentResolver, false
-            );
+            Set<ResolvedType> directlyExtendedTypeSet =
+                    ResolvedType.fromString(
+                            type.getExtends(), inheritedTypeParameters, componentResolver, false);
             for (ResolvedType directlyExtendedType : directlyExtendedTypeSet) {
                 visitTypeAndParents(directlyExtendedType, visitor, componentResolver);
             }
@@ -332,22 +352,19 @@ public class TypeUtils {
                         // we replace this type param with its extended form and visit it again
                         // note that this is correct but not efficient, as we might visit
                         // the same type multiple times
-                        Map<String, ResolvedType> clonedTypeParams = new HashMap<>(
-                                type.getParameterTypes()
-                        );
+                        Map<String, ResolvedType> clonedTypeParams =
+                                new HashMap<>(type.getParameterTypes());
                         clonedTypeParams.put(parameterName, x);
 
-                        ResolvedType clonedType = new ResolvedType(type.getTypeComponent(), clonedTypeParams);
+                        ResolvedType clonedType =
+                                new ResolvedType(type.getTypeComponent(), clonedTypeParams);
                         if (visitor.apply(clonedType) == Visitor.STOP) return Visitor.STOP;
 
-                        visitParents(
-                                clonedType, visitor, componentResolver
-                        );
+                        visitParents(clonedType, visitor, componentResolver);
 
                         return Visitor.CONTINUE;
                     },
-                    componentResolver
-            );
+                    componentResolver);
         }
     }
 
@@ -369,8 +386,7 @@ public class TypeUtils {
             ResolvedType resolvedType,
             List<String> typeParameterNames,
             Map<String, List<ResolvedType>> resolvedTypeParameterTypes,
-            ComponentResolver componentResolver
-    ) {
+            ComponentResolver componentResolver) {
         if (typeParameterNames.contains(requiredTypeName)) {
             // requiredTypeName is simply a type parameter (e.g. "T")
             // we add the resolved type to the possible resolved types of the type parameter
@@ -381,7 +397,8 @@ public class TypeUtils {
         }
 
         if (!isGeneric(requiredTypeName)) {
-            Set<ResolvedType> requiredTypeSet = ResolvedType.fromString(requiredTypeName, componentResolver, true);
+            Set<ResolvedType> requiredTypeSet =
+                    ResolvedType.fromString(requiredTypeName, componentResolver, true);
 
             for (ResolvedType requiredType : requiredTypeSet) {
                 if (covers(requiredType, resolvedType, componentResolver)) {
@@ -395,12 +412,13 @@ public class TypeUtils {
         Type requiredTypeComponent = componentResolver.resolveType(requiredTypeName);
         List<String> requiredParameterTypeNames = parseParameterTypes(requiredTypeName);
 
-        // we look at all parents of resolvedType to find the type matching the given requiredTypeName
+        // we look at all parents of resolvedType to find the type matching the given
+        // requiredTypeName
 
         // we don't want to update the type parameter map until we are sure that everything matches
         Map<String, List<ResolvedType>> localResolvedTypeParameterTypes = new HashMap<>();
 
-        boolean[] foundMatch = new boolean[]{false};
+        boolean[] foundMatch = new boolean[] {false};
         visitTypeAndParents(
                 resolvedType,
                 type -> {
@@ -420,8 +438,7 @@ public class TypeUtils {
                                 type.getParameterTypes().get(type.getParametersNames().get(i)),
                                 typeParameterNames,
                                 localResolvedTypeParameterTypes,
-                                componentResolver
-                        )) {
+                                componentResolver)) {
                             foundMatchForAll = false;
                         }
                     }
@@ -434,8 +451,7 @@ public class TypeUtils {
                         return Visitor.CONTINUE;
                     }
                 },
-                componentResolver
-        );
+                componentResolver);
 
         if (!foundMatch[0]) {
             return false;
@@ -444,9 +460,9 @@ public class TypeUtils {
         // the entire type matches, we update the type parameter map
 
         for (String name : localResolvedTypeParameterTypes.keySet()) {
-            resolvedTypeParameterTypes.computeIfAbsent(name, x -> new ArrayList<>()).addAll(
-                    localResolvedTypeParameterTypes.get(name)
-            );
+            resolvedTypeParameterTypes
+                    .computeIfAbsent(name, x -> new ArrayList<>())
+                    .addAll(localResolvedTypeParameterTypes.get(name));
         }
 
         return true;

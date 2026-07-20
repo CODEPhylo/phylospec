@@ -1,20 +1,19 @@
 package org.phylospec.parser;
 
-import org.junit.jupiter.api.Test;
-import org.phylospec.FuzzingUtils;
-import org.phylospec.ast.Expr;
-import org.phylospec.ast.Stmt;
-import org.phylospec.ast.AstType;
-import org.phylospec.lexer.Lexer;
-import org.phylospec.lexer.Token;
-import org.phylospec.lexer.TokenType;
-
-import java.util.List;
-import java.util.Random;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
+
+import java.util.List;
+import java.util.Random;
+import org.junit.jupiter.api.Test;
+import org.phylospec.FuzzingUtils;
+import org.phylospec.ast.AstType;
+import org.phylospec.ast.Expr;
+import org.phylospec.ast.Stmt;
+import org.phylospec.lexer.Lexer;
+import org.phylospec.lexer.Token;
+import org.phylospec.lexer.TokenType;
 
 public class ParserTest {
 
@@ -28,16 +27,15 @@ public class ParserTest {
         testStatements(
                 "Object var = 10 + (-25.2 - 100 / (2 + 4))",
                 new Stmt.Assignment(
-                        new AstType.Atomic("Object"), "var",
+                        new AstType.Atomic("Object"),
+                        "var",
                         new Expr.Binary(
                                 new Expr.Literal(10),
                                 TokenType.PLUS,
                                 new Expr.Grouping(
                                         new Expr.Binary(
                                                 new Expr.Unary(
-                                                        TokenType.MINUS,
-                                                        new Expr.Literal(25.2)
-                                                ),
+                                                        TokenType.MINUS, new Expr.Literal(25.2)),
                                                 TokenType.MINUS,
                                                 new Expr.Binary(
                                                         new Expr.Literal(100),
@@ -46,15 +44,7 @@ public class ParserTest {
                                                                 new Expr.Binary(
                                                                         new Expr.Literal(2),
                                                                         TokenType.PLUS,
-                                                                        new Expr.Literal(4)
-                                                                )
-                                                        )
-                                                )
-                                        )
-                                )
-                        )
-                )
-        );
+                                                                        new Expr.Literal(4)))))))));
     }
 
     @Test
@@ -62,7 +52,8 @@ public class ParserTest {
         testStatements(
                 "Object var = true == !(10 >= 11)",
                 new Stmt.Assignment(
-                        new AstType.Atomic("Object"), "var",
+                        new AstType.Atomic("Object"),
+                        "var",
                         new Expr.Binary(
                                 new Expr.Literal(true),
                                 TokenType.EQUAL_EQUAL,
@@ -72,13 +63,7 @@ public class ParserTest {
                                                 new Expr.Binary(
                                                         new Expr.Literal(10),
                                                         TokenType.GREATER_EQUAL,
-                                                        new Expr.Literal(11)
-                                                )
-                                        )
-                                )
-                        )
-                )
-        );
+                                                        new Expr.Literal(11)))))));
     }
 
     @Test
@@ -86,50 +71,37 @@ public class ParserTest {
         testStatements(
                 "PositiveReal value = 10.4",
                 new Stmt.Assignment(
-                        new AstType.Atomic("PositiveReal"),
-                        "value",
-                        new Expr.Literal(10.4)
-                )
-        );
+                        new AstType.Atomic("PositiveReal"), "value", new Expr.Literal(10.4)));
 
         testStatements(
                 "PositiveReal value ~ 10.4",
-                new Stmt.Draw(
-                        new AstType.Atomic("PositiveReal"),
-                        "value",
-                        new Expr.Literal(10.4)
-                )
-        );
+                new Stmt.Draw(new AstType.Atomic("PositiveReal"), "value", new Expr.Literal(10.4)));
 
         testStatements(
                 "PositiveReal<T> value = 10.4",
                 new Stmt.Assignment(
                         new AstType.Generic("PositiveReal", new AstType.Atomic("T")),
                         "value",
-                        new Expr.Literal(10.4)
-                )
-        );
+                        new Expr.Literal(10.4)));
 
         testStatements(
                 "PositiveReal<T<M>> value ~ 10.4",
                 new Stmt.Draw(
-                        new AstType.Generic("PositiveReal", new AstType.Generic("T", new AstType.Atomic("M"))),
+                        new AstType.Generic(
+                                "PositiveReal", new AstType.Generic("T", new AstType.Atomic("M"))),
                         "value",
-                        new Expr.Literal(10.4)
-                )
-        );
+                        new Expr.Literal(10.4)));
 
         testStatements(
                 "PositiveReal<T<M>, B<B,D>> value ~ 10.4",
                 new Stmt.Draw(
-                        new AstType.Generic("PositiveReal",
+                        new AstType.Generic(
+                                "PositiveReal",
                                 new AstType.Generic("T", new AstType.Atomic("M")),
-                                new AstType.Generic("B", new AstType.Atomic("B"), new AstType.Atomic("D"))
-                        ),
+                                new AstType.Generic(
+                                        "B", new AstType.Atomic("B"), new AstType.Atomic("D"))),
                         "value",
-                        new Expr.Literal(10.4)
-                )
-        );
+                        new Expr.Literal(10.4)));
     }
 
     @Test
@@ -137,13 +109,7 @@ public class ParserTest {
         testStatements(
                 "PositiveReal value ~ LogNormal()",
                 new Stmt.Draw(
-                        new AstType.Atomic("PositiveReal"),
-                        "value",
-                        new Expr.Call(
-                                "LogNormal"
-                        )
-                )
-        );
+                        new AstType.Atomic("PositiveReal"), "value", new Expr.Call("LogNormal")));
 
         testStatements(
                 "PositiveReal value ~ LogNormal(10 + 20)",
@@ -152,14 +118,11 @@ public class ParserTest {
                         "value",
                         new Expr.Call(
                                 "LogNormal",
-                                new Expr.AssignedArgument(new Expr.Binary(
-                                        new Expr.Literal(10),
-                                        TokenType.PLUS,
-                                        new Expr.Literal(20)
-                                ))
-                        )
-                )
-        );
+                                new Expr.AssignedArgument(
+                                        new Expr.Binary(
+                                                new Expr.Literal(10),
+                                                TokenType.PLUS,
+                                                new Expr.Literal(20))))));
 
         testStatements(
                 "PositiveReal value ~ LogNormal(meanLog = 10.5, sdLog)",
@@ -169,10 +132,7 @@ public class ParserTest {
                         new Expr.Call(
                                 "LogNormal",
                                 new Expr.AssignedArgument("meanLog", new Expr.Literal(10.5)),
-                                new Expr.AssignedArgument(null, new Expr.Variable("sdLog"))
-                        )
-                )
-        );
+                                new Expr.AssignedArgument(null, new Expr.Variable("sdLog")))));
 
         testStatements(
                 "PositiveReal value ~ LogNormal(meanLog = 10.5, sdLog,)",
@@ -182,10 +142,7 @@ public class ParserTest {
                         new Expr.Call(
                                 "LogNormal",
                                 new Expr.AssignedArgument("meanLog", new Expr.Literal(10.5)),
-                                new Expr.AssignedArgument(null, new Expr.Variable("sdLog"))
-                        )
-                )
-        );
+                                new Expr.AssignedArgument(null, new Expr.Variable("sdLog")))));
 
         testStatements(
                 "PositiveReal value ~ LogNormal(meanLog ~ Exp(), sdLog ~ Normal())",
@@ -195,10 +152,7 @@ public class ParserTest {
                         new Expr.Call(
                                 "LogNormal",
                                 new Expr.DrawnArgument("meanLog", new Expr.Call("Exp")),
-                                new Expr.DrawnArgument("sdLog", new Expr.Call("Normal"))
-                        )
-                )
-        );
+                                new Expr.DrawnArgument("sdLog", new Expr.Call("Normal")))));
     }
 
     @Test
@@ -206,86 +160,63 @@ public class ParserTest {
         testStatements(
                 "PositiveReal value = []",
                 new Stmt.Assignment(
-                        new AstType.Atomic("PositiveReal"),
-                        "value",
-                        new Expr.Array(List.of())
-                )
-        );
+                        new AstType.Atomic("PositiveReal"), "value", new Expr.Array(List.of())));
 
         testStatements(
                 "PositiveReal value = [10, 5, 200]",
                 new Stmt.Assignment(
                         new AstType.Atomic("PositiveReal"),
                         "value",
-                        new Expr.Array(List.of(
-                                new Expr.Literal(10),
-                                new Expr.Literal(5),
-                                new Expr.Literal(200)
-                        ))
-                )
-        );
+                        new Expr.Array(
+                                List.of(
+                                        new Expr.Literal(10),
+                                        new Expr.Literal(5),
+                                        new Expr.Literal(200)))));
 
         testStatements(
                 "PositiveReal value = [10, 5, 200,]",
                 new Stmt.Assignment(
                         new AstType.Atomic("PositiveReal"),
                         "value",
-                        new Expr.Array(List.of(
-                                new Expr.Literal(10),
-                                new Expr.Literal(5),
-                                new Expr.Literal(200)
-                        ))
-                )
-        );
+                        new Expr.Array(
+                                List.of(
+                                        new Expr.Literal(10),
+                                        new Expr.Literal(5),
+                                        new Expr.Literal(200)))));
 
         testStatements(
                 "PositiveReal value = [abs(5), square(2),]",
                 new Stmt.Assignment(
                         new AstType.Atomic("PositiveReal"),
                         "value",
-                        new Expr.Array(List.of(
-                                new Expr.Call("abs", new Expr.AssignedArgument(new Expr.Literal(5))),
-                                new Expr.Call("square", new Expr.AssignedArgument(new Expr.Literal(2)))
-                        ))
-                )
-        );
+                        new Expr.Array(
+                                List.of(
+                                        new Expr.Call(
+                                                "abs",
+                                                new Expr.AssignedArgument(new Expr.Literal(5))),
+                                        new Expr.Call(
+                                                "square",
+                                                new Expr.AssignedArgument(new Expr.Literal(2)))))));
     }
 
     @Test
     public void testMultipleLines() {
         testStatements(
-                "PositiveReal value = 10.4\n"
-                        + "PositiveReal value = 2.0",
+                "PositiveReal value = 10.4\n" + "PositiveReal value = 2.0",
                 new Stmt.Assignment(
-                        new AstType.Atomic("PositiveReal"),
-                        "value",
-                        new Expr.Literal(10.4)
-                ),
+                        new AstType.Atomic("PositiveReal"), "value", new Expr.Literal(10.4)),
                 new Stmt.Assignment(
-                        new AstType.Atomic("PositiveReal"),
-                        "value",
-                        new Expr.Literal(2.0)
-                )
-        );
+                        new AstType.Atomic("PositiveReal"), "value", new Expr.Literal(2.0)));
 
         testStatements(
-                "PositiveReal value = 10.4\n\n"
-                        + "PositiveReal value = 2.0",
+                "PositiveReal value = 10.4\n\n" + "PositiveReal value = 2.0",
                 new Stmt.Assignment(
-                        new AstType.Atomic("PositiveReal"),
-                        "value",
-                        new Expr.Literal(10.4)
-                ),
+                        new AstType.Atomic("PositiveReal"), "value", new Expr.Literal(10.4)),
                 new Stmt.Assignment(
-                        new AstType.Atomic("PositiveReal"),
-                        "value",
-                        new Expr.Literal(2.0)
-                )
-        );
+                        new AstType.Atomic("PositiveReal"), "value", new Expr.Literal(2.0)));
 
         testStatements(
-                "PositiveReal value = (10.4\n\n"
-                        + "+ 5.0)",
+                "PositiveReal value = (10.4\n\n" + "+ 5.0)",
                 new Stmt.Assignment(
                         new AstType.Atomic("PositiveReal"),
                         "value",
@@ -293,44 +224,28 @@ public class ParserTest {
                                 new Expr.Binary(
                                         new Expr.Literal(10.4),
                                         TokenType.PLUS,
-                                        new Expr.Literal(5.0)
-                                )
-                        )
-                )
-        );
+                                        new Expr.Literal(5.0)))));
 
         testStatements(
-                "PositiveReal value = func(\n"
-                        + "a=10.4,\n"
-                        + "b=5.0,\n"
-                        + ")",
+                "PositiveReal value = func(\n" + "a=10.4,\n" + "b=5.0,\n" + ")",
                 new Stmt.Assignment(
                         new AstType.Atomic("PositiveReal"),
                         "value",
                         new Expr.Call(
                                 "func",
-                                new Expr.AssignedArgument(
-                                        "a", new Expr.Literal(10.4)
-                                ),
-                                new Expr.AssignedArgument(
-                                        "b", new Expr.Literal(5.0)
-                                )
-                        )
-                )
-        );
+                                new Expr.AssignedArgument("a", new Expr.Literal(10.4)),
+                                new Expr.AssignedArgument("b", new Expr.Literal(5.0)))));
 
         testStatements(
                 "PositiveReal value = [10, \n5, \n200]",
                 new Stmt.Assignment(
                         new AstType.Atomic("PositiveReal"),
                         "value",
-                        new Expr.Array(List.of(
-                                new Expr.Literal(10),
-                                new Expr.Literal(5),
-                                new Expr.Literal(200)
-                        ))
-                )
-        );
+                        new Expr.Array(
+                                List.of(
+                                        new Expr.Literal(10),
+                                        new Expr.Literal(5),
+                                        new Expr.Literal(200)))));
     }
 
     @Test
@@ -342,10 +257,7 @@ public class ParserTest {
                         new Stmt.Draw(
                                 new AstType.Atomic("PositiveReal"),
                                 "value",
-                                new Expr.Literal(10)
-                        )
-                )
-        );
+                                new Expr.Literal(10))));
 
         testStatements(
                 "@Decorator1()\n@Decorator2()\nPositiveReal value ~ 10",
@@ -356,13 +268,8 @@ public class ParserTest {
                                 new Stmt.Draw(
                                         new AstType.Atomic("PositiveReal"),
                                         "value",
-                                        new Expr.Literal(10)
-                                )
-                        )
-                )
-        );
+                                        new Expr.Literal(10)))));
     }
-
 
     @Test
     public void testFuzz() {
@@ -376,8 +283,13 @@ public class ParserTest {
                 List<Token> tokens = new Lexer(input).scanTokens();
                 statements = new Parser(tokens).parse();
             } catch (Exception e) {
-                fail("Parser threw an exception on iteration " + i
-                        + " (input=" + repr(input) + "): " + e);
+                fail(
+                        "Parser threw an exception on iteration "
+                                + i
+                                + " (input="
+                                + repr(input)
+                                + "): "
+                                + e);
                 return;
             }
 
@@ -393,16 +305,26 @@ public class ParserTest {
     private String generateFuzzInput(Random r, int iteration) {
         // first few iterations cover deterministic edge cases
         switch (iteration) {
-            case 0: return "";
-            case 1: return "\n";
-            case 2: return "// comment only";
-            case 3: return "@";
-            case 4: return "=";
-            case 5: return "Real x =";
-            case 6: return "Real x = (";
-            case 7: return "Real x = [";
-            case 8: return "Real<> x = 1";
-            case 9: return "import";
+            case 0:
+                return "";
+            case 1:
+                return "\n";
+            case 2:
+                return "// comment only";
+            case 3:
+                return "@";
+            case 4:
+                return "=";
+            case 5:
+                return "Real x =";
+            case 6:
+                return "Real x = (";
+            case 7:
+                return "Real x = [";
+            case 8:
+                return "Real<> x = 1";
+            case 9:
+                return "import";
         }
 
         int strategy = r.nextInt(5);

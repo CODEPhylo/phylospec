@@ -1,10 +1,8 @@
 package org.phylospec.ast.transformers;
 
-
+import java.util.Objects;
 import org.phylospec.ast.AstTransformer;
 import org.phylospec.ast.Expr;
-
-import java.util.Objects;
 
 /**
  * This transformation evaluates all scalar functions if their arguments are literals.
@@ -15,15 +13,13 @@ public class EvaluateScalarFunctions extends AstTransformer {
     public Expr visitCall(Expr.Call expr) {
         try {
             return switch (expr.functionName) {
-                case "exp" -> new Expr.Literal(
-                        Math.exp(this.get("x", expr.arguments, true))
-                );
-                case "sqrt" -> new Expr.Literal(
-                        Math.sqrt(this.get("x", expr.arguments, true))
-                );
-                case "log" -> new Expr.Literal(
-                        Math.log(this.get("x", expr.arguments, true)) / Math.log(this.get("base", expr.arguments, false, Math.E))
-                );
+                case "exp" -> new Expr.Literal(Math.exp(this.get("x", expr.arguments, true)));
+                case "sqrt" -> new Expr.Literal(Math.sqrt(this.get("x", expr.arguments, true)));
+                case "log" ->
+                        new Expr.Literal(
+                                Math.log(this.get("x", expr.arguments, true))
+                                        / Math.log(
+                                                this.get("base", expr.arguments, false, Math.E)));
                 default -> super.visitCall(expr);
             };
         } catch (UnpackError e) {
@@ -49,7 +45,8 @@ public class EvaluateScalarFunctions extends AstTransformer {
         throw new UnpackError();
     }
 
-    private double get(String name, Expr.Argument[] arguments, boolean isFirst, double defaultValue) throws UnpackError {
+    private double get(String name, Expr.Argument[] arguments, boolean isFirst, double defaultValue)
+            throws UnpackError {
         if (arguments.length == 0) {
             throw new UnpackError();
         }
@@ -75,7 +72,5 @@ public class EvaluateScalarFunctions extends AstTransformer {
         return number.doubleValue();
     }
 
-    private class UnpackError extends Throwable {
-    }
+    private class UnpackError extends Throwable {}
 }
-

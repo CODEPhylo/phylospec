@@ -4,7 +4,7 @@ import org.phylospec.domain.Domain;
 
 /**
  * Tensor type - ordered value or values.
- * 
+ *
  * @author PhyloSpec Contributors
  * @since 1.0
  */
@@ -16,5 +16,4 @@ public interface NumberTensor<P extends Domain<Number>> extends Tensor<P, Number
     static double sum(NumberTensor<?>... tensors) {
         return 0;
     }
-
 }

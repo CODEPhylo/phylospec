@@ -1,16 +1,15 @@
 package org.phylospec.tiling.tiles;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.*;
 import org.phylospec.tiling.errors.InconsistentTilingException;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.errors.WrappedTileApplicationError;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.*;
 
 /**
  * A tile covers a subgraph of the PhyloSpec AST rooted at a root node and describes how to turn ("apply") this
@@ -31,7 +30,10 @@ public abstract class Tile<T, S> {
         if (superclass instanceof ParameterizedType pt) {
             return TypeToken.of(pt.getActualTypeArguments()[0]);
         } else {
-            throw new IllegalArgumentException("Tile " + this.getClass() + " has no return type parameter. Either specify the type in the type signature of the inheriting class, or override the getTypeToken method.");
+            throw new IllegalArgumentException(
+                    "Tile "
+                            + this.getClass()
+                            + " has no return type parameter. Either specify the type in the type signature of the inheriting class, or override the getTypeToken method.");
         }
     }
 
@@ -86,7 +88,8 @@ public abstract class Tile<T, S> {
             Tile<?, ?> existingInputTile = usedInputs.putIfAbsent(inputNode, inputTile);
 
             if (existingInputTile != null && existingInputTile != inputTile) {
-                // we already have a different input mapped to this AST node and there we used a different input tile
+                // we already have a different input mapped to this AST node and there we used a
+                // different input tile
                 throw new InconsistentTilingException(inputNode, existingInputTile, inputTile);
             }
         }
@@ -115,15 +118,16 @@ public abstract class Tile<T, S> {
     }
 
     /** methods to apply a tiling */
-
-    private final Map<IdentityHashMap<Expr.Variable, Integer>, T> appliedWithIndexedVariables = new HashMap<>();
+    private final Map<IdentityHashMap<Expr.Variable, Integer>, T> appliedWithIndexedVariables =
+            new HashMap<>();
 
     /**
      * Applies the tile. Memoization is used to not apply the same tile twice.
      */
     public T apply(S state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         // we use memoization to make sure that no tile is applied more than once.
-        // two apply calls are only considered the same when the index variables in scope are identical
+        // two apply calls are only considered the same when the index variables in scope are
+        // identical
 
         // we filter the index Variables by the one in the current scope
         IdentityHashMap<Expr.Variable, Integer> indexVariablesInScope = new IdentityHashMap<>();
@@ -134,12 +138,15 @@ public abstract class Tile<T, S> {
         }
 
         // we check if we have already applied this tile with the given index variables
-        for (IdentityHashMap<Expr.Variable, Integer> previousIndexVariables : this.appliedWithIndexedVariables.keySet()) {
+        for (IdentityHashMap<Expr.Variable, Integer> previousIndexVariables :
+                this.appliedWithIndexedVariables.keySet()) {
             if (previousIndexVariables.size() != indexVariablesInScope.size()) continue;
 
             boolean allMatch = true;
             for (Expr.Variable index : indexVariablesInScope.keySet()) {
-                if (!Objects.equals(indexVariablesInScope.get(index), previousIndexVariables.get(index))) allMatch = false;
+                if (!Objects.equals(
+                        indexVariablesInScope.get(index), previousIndexVariables.get(index)))
+                    allMatch = false;
             }
 
             if (allMatch) return this.appliedWithIndexedVariables.get(previousIndexVariables);
@@ -150,7 +157,8 @@ public abstract class Tile<T, S> {
 
         try {
             T result = this.applyTile(state, indexVariablesInScope);
-            this.appliedWithIndexedVariables.put(new IdentityHashMap<>(indexVariablesInScope), result);
+            this.appliedWithIndexedVariables.put(
+                    new IdentityHashMap<>(indexVariablesInScope), result);
             return result;
         } catch (TileApplicationError tilingError) {
             // attach node if needed
@@ -162,17 +170,15 @@ public abstract class Tile<T, S> {
         } catch (Exception e) {
             // we wrap the exception into a tiling error
             throw new WrappedTileApplicationError(
-                    this.getRootNode(),
-                    "Creating the BEAST 2.8 objects did not work.",
-                    e
-            );
+                    this.getRootNode(), "Creating the BEAST 2.8 objects did not work.", e);
         }
     }
 
     /**
      * Applies the tile. This method should be overridden by custom tiles.
      */
-    protected abstract T applyTile(S beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables);
+    protected abstract T applyTile(
+            S beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables);
 
     /* root node of an applied tile */
 
@@ -215,14 +221,16 @@ public abstract class Tile<T, S> {
     /**
      * Constructs an ID consisting of the given prefix, postfix, and index variables.
      */
-    protected String getId(String prefix, IdentityHashMap<Expr.Variable, Integer> indexVariables, String postfix) {
+    protected String getId(
+            String prefix, IdentityHashMap<Expr.Variable, Integer> indexVariables, String postfix) {
         StringBuilder builder = new StringBuilder(prefix);
 
         if (!indexVariables.isEmpty()) {
             Map<String, String> sortedIndexValues = new TreeMap<>();
             for (Expr.Variable indexVar : indexVariables.keySet()) {
                 // this does not work with duplicate index names, but this never happens
-                sortedIndexValues.put(indexVar.variableName, indexVariables.get(indexVar).toString());
+                sortedIndexValues.put(
+                        indexVar.variableName, indexVariables.get(indexVar).toString());
             }
 
             for (String index : sortedIndexValues.keySet()) {

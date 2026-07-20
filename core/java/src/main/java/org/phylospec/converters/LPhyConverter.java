@@ -1,16 +1,13 @@
 package org.phylospec.converters;
 
+import java.util.*;
 import org.phylospec.ast.*;
 import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.TokenType;
-import org.phylospec.typeresolver.ResolvedType;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeResolver;
-
-import java.io.IOException;
-import java.util.*;
 
 /// This class converts parsed PhyloSpec statements into an LPhy script.
 ///
@@ -18,7 +15,7 @@ import java.util.*;
 /// ```
 /// List<Stmt> statements = parser.parse();
 /// String lphyString = LPhyConverter.convertToLPhy(statements, componentResolver);
-///```
+/// ```
 ///
 /// @deprecated not updated to 03-2026
 @Deprecated
@@ -50,7 +47,8 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     /**
      * Converts the given statements into an LPhy script.
      */
-    public static String convertToLPhy(List<Stmt> statements, List<ComponentLibrary> componentLibraries) {
+    public static String convertToLPhy(
+            List<Stmt> statements, List<ComponentLibrary> componentLibraries) {
         LPhyConverter converter = new LPhyConverter(statements, componentLibraries);
 
         // traverse the syntax tree to collect the LPhy statements
@@ -81,10 +79,12 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     public StringBuilder visitDecoratedStmt(Stmt.Decorated stmt) {
         // make sure we have a @observedAs decorator with one argument
         if (!stmt.decorator.functionName.equals("observedAs")) {
-            throw new LPhyConversionError("Decorator " + stmt.decorator.functionName + " is not supported in LPhy.");
+            throw new LPhyConversionError(
+                    "Decorator " + stmt.decorator.functionName + " is not supported in LPhy.");
         }
         if (stmt.decorator.arguments.length != 1) {
-            throw new LPhyConversionError("Decorator " + stmt.decorator.functionName + " requires exactly one argument.");
+            throw new LPhyConversionError(
+                    "Decorator " + stmt.decorator.functionName + " requires exactly one argument.");
         }
 
         stmt.statement.accept(this);
@@ -109,21 +109,29 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         // to signal the clamping
         return addStatement(
                 stmt,
-                new StringBuilder(observedVariableName).append(" = ").append(randomVariableName).append(";")
-        );
+                new StringBuilder(observedVariableName)
+                        .append(" = ")
+                        .append(randomVariableName)
+                        .append(";"));
     }
 
     @Override
     public StringBuilder visitAssignment(Stmt.Assignment stmt) {
         StringBuilder builder = new StringBuilder();
-        builder.append(sanitizeVariableName(stmt.name)).append(" = ").append(stmt.expression.accept(this)).append(";");
+        builder.append(sanitizeVariableName(stmt.name))
+                .append(" = ")
+                .append(stmt.expression.accept(this))
+                .append(";");
         return addStatement(stmt, builder);
     }
 
     @Override
     public StringBuilder visitDraw(Stmt.Draw stmt) {
         StringBuilder builder = new StringBuilder();
-        builder.append(sanitizeVariableName(stmt.name)).append(" ~ ").append(stmt.expression.accept(this)).append(";");
+        builder.append(sanitizeVariableName(stmt.name))
+                .append(" ~ ")
+                .append(stmt.expression.accept(this))
+                .append(";");
         return addStatement(stmt, builder);
     }
 
@@ -141,7 +149,9 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
             case Double value -> new StringBuilder(value.toString());
             case String value -> new StringBuilder("\"").append(value).append("\"");
             case Boolean value -> new StringBuilder(value.toString());
-            default -> throw new LPhyConversionError("Literal " + expr.value + " is not supported in LPhy.");
+            default ->
+                    throw new LPhyConversionError(
+                            "Literal " + expr.value + " is not supported in LPhy.");
         };
     }
 
@@ -155,7 +165,10 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         if (expr.operator == TokenType.MINUS) {
             return new StringBuilder().append("-").append(expr.right.accept(this));
         }
-        throw new LPhyConversionError("Unary operation " + TokenType.getLexeme(expr.operator) + " is not supported in LPhy.");
+        throw new LPhyConversionError(
+                "Unary operation "
+                        + TokenType.getLexeme(expr.operator)
+                        + " is not supported in LPhy.");
     }
 
     @Override
@@ -173,7 +186,10 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
             return new StringBuilder().append(left).append(" / ").append(right);
         }
 
-        throw new LPhyConversionError("Binary operation " + TokenType.getLexeme(expr.operator) + " is not supported in LPhy.");
+        throw new LPhyConversionError(
+                "Binary operation "
+                        + TokenType.getLexeme(expr.operator)
+                        + " is not supported in LPhy.");
     }
 
     @Override
@@ -194,8 +210,11 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     public StringBuilder visitDrawnArgument(Expr.DrawnArgument expr) {
         // we add a separate variable with the result of the draw
         String variableName = getAvailableVariableName(expr.name);
-        StringBuilder variableDeclaration = new StringBuilder(variableName)
-                .append(" ~ ").append(expr.expression.accept(this)).append(";");
+        StringBuilder variableDeclaration =
+                new StringBuilder(variableName)
+                        .append(" ~ ")
+                        .append(expr.expression.accept(this))
+                        .append(";");
         addStatement(expr, variableDeclaration);
 
         // we now pass the new variable to the function
@@ -240,10 +259,10 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
      */
     private String sanitizeVariableName(String variableName) {
         if (variableName.equals("data") || variableName.equals("model")) {
-           while (variableNames.contains(variableName)) {
-               variableName = variableName + "_";
-           }
-           return variableName;
+            while (variableNames.contains(variableName)) {
+                variableName = variableName + "_";
+            }
+            return variableName;
         }
         return variableName;
     }
@@ -277,7 +296,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
 
         if (stochasticity == Stochasticity.STOCHASTIC) {
             modelStatements.add(builder.toString());
-        } else  {
+        } else {
             dataStatements.add(builder.toString());
         }
 

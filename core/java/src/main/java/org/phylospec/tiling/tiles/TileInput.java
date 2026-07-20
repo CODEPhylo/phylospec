@@ -1,19 +1,17 @@
 package org.phylospec.tiling.tiles;
 
-
-import org.phylospec.ast.AstNode;
-import org.phylospec.ast.Expr;
-import org.phylospec.tiling.TypeToken;
-import org.phylospec.tiling.errors.FailedTilingAttempt;
-import org.phylospec.typeresolver.Stochasticity;
-import org.phylospec.typeresolver.StochasticityResolver;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
+import org.phylospec.ast.AstNode;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.typeresolver.Stochasticity;
+import org.phylospec.typeresolver.StochasticityResolver;
 
 /**
  * This class can be used to specify tile inputs.
@@ -47,7 +45,8 @@ public abstract class TileInput<T, S> {
         try {
             this.tile = (Tile<T, S>) tile;
         } catch (ClassCastException e) {
-            throw new RuntimeException("Incompatible tile assigned to a tile input. This should not happen.");
+            throw new RuntimeException(
+                    "Incompatible tile assigned to a tile input. This should not happen.");
         }
     }
 
@@ -55,13 +54,20 @@ public abstract class TileInput<T, S> {
      * Returns the tiles rooted at 'inputAstNode' which have types compatible with this input.
      * Also checks that the stochasticity of 'inputAstNode' is accepted by this input.
      */
-    public Set<Tile<?, S>> getCompatibleInputTiles(AstNode inputAstNode, Map<AstNode, Set<Tile<?, S>>> possibleInputTiles, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt.RejectedCascade, FailedTilingAttempt.RejectedBoundary {
+    public Set<Tile<?, S>> getCompatibleInputTiles(
+            AstNode inputAstNode,
+            Map<AstNode, Set<Tile<?, S>>> possibleInputTiles,
+            StochasticityResolver stochasticityResolver)
+            throws FailedTilingAttempt.RejectedCascade, FailedTilingAttempt.RejectedBoundary {
         // check the stochasticity of the input node
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(inputAstNode);
         if (!this.acceptedStochasticities.contains(stochasticity)) {
             throw new FailedTilingAttempt.RejectedBoundary(
-                    Stochasticity.getErrorMessage("BEAST 2.8", this.getKey(), stochasticity, this.acceptedStochasticities)
-            );
+                    Stochasticity.getErrorMessage(
+                            "BEAST 2.8",
+                            this.getKey(),
+                            stochasticity,
+                            this.acceptedStochasticities));
         }
 
         Set<Tile<?, S>> potentialInputs = possibleInputTiles.get(inputAstNode);
@@ -107,5 +113,4 @@ public abstract class TileInput<T, S> {
     public TypeToken<?> getTypeToken() {
         return this.tile != null ? this.tile.getTypeToken() : this.typeToken;
     }
-
 }

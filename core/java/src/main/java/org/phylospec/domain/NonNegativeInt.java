@@ -2,10 +2,10 @@ package org.phylospec.domain;
 
 /**
  * Non-negative integer number type (>= 0).
- * 
+ *
  * Represents an integer number that must be non-negative.
  * Common uses include distances, time durations, and count data.
- * 
+ *
  * @author PhyloSpec Contributors
  * @since 1.0
  */

@@ -24,16 +24,16 @@ public class FuzzingUtils {
 
     public static String pickValidSnippet(Random r) {
         String[] snippets = {
-                "foo = 1.5\n",
-                "import bar\n",
-                "for x in [1, 2, 3]\n",
-                "\"hello world\"\n",
-                "a + b * c\n",
-                "x != y == z\n",
-                "true false\n",
-                "fn(a, b)\n",
-                "// comment\nx = 42\n",
-                "x >= 0.0\n",
+            "foo = 1.5\n",
+            "import bar\n",
+            "for x in [1, 2, 3]\n",
+            "\"hello world\"\n",
+            "a + b * c\n",
+            "x != y == z\n",
+            "true false\n",
+            "fn(a, b)\n",
+            "// comment\nx = 42\n",
+            "x >= 0.0\n",
         };
         return snippets[r.nextInt(snippets.length)];
     }

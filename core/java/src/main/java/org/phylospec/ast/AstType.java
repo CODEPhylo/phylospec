@@ -1,7 +1,6 @@
 package org.phylospec.ast;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -15,13 +14,13 @@ public abstract class AstType extends AstNode {
     @JsonPropertyDescription("The name of the type prefixed by its namespace.")
     public String name;
 
-    abstract public <S, E, T> T accept(AstVisitor<S, E, T> visitor);
+    public abstract <S, E, T> T accept(AstVisitor<S, E, T> visitor);
 
     /** Represents a non-generic type like `Real` */
     public static class Atomic extends AstType {
-		public Atomic(String name) {
-			this.name = name;
-		}
+        public Atomic(String name) {
+            this.name = name;
+        }
 
         @Override
         public boolean equals(Object o) {
@@ -55,7 +54,8 @@ public abstract class AstType extends AstNode {
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Generic generic = (Generic) o;
-            return Objects.equals(name, generic.name) && Objects.deepEquals(typeParameters, generic.typeParameters);
+            return Objects.equals(name, generic.name)
+                    && Objects.deepEquals(typeParameters, generic.typeParameters);
         }
 
         @Override
@@ -68,6 +68,4 @@ public abstract class AstType extends AstNode {
             return visitor.visitGenericType(this);
         }
     }
-
-
 }

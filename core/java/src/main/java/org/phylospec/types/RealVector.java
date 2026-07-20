@@ -2,9 +2,8 @@ package org.phylospec.types;
 
 import org.phylospec.domain.Real;
 
-//TODO in dev
+// TODO in dev
 public interface RealVector<P extends Real> extends Vector<P, Double> {
-
 
     double get(int i);
 
@@ -16,5 +15,4 @@ public interface RealVector<P extends Real> extends Vector<P, Double> {
         }
         return arr;
     }
-
 }

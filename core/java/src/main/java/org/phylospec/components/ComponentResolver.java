@@ -1,14 +1,13 @@
 package org.phylospec.components;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.phylospec.Utils;
-import org.phylospec.typeresolver.TypeError;
-import org.phylospec.typeresolver.TypeUtils;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import org.phylospec.Utils;
+import org.phylospec.typeresolver.TypeError;
+import org.phylospec.typeresolver.TypeUtils;
 
 /**
  * This class allows to register multiple component libraries and access
@@ -19,7 +18,8 @@ public class ComponentResolver {
     final List<ComponentLibrary> componentLibraries;
     final Set<String> knownNamespaces;
 
-    private final Map<String, List<Generator>> knownGenerators;  // there might be multiple generators with the same name
+    private final Map<String, List<Generator>>
+            knownGenerators; // there might be multiple generators with the same name
     private final Map<String, Type> knownTypes;
 
     public ComponentResolver(List<ComponentLibrary> componentLibraries) {
@@ -40,7 +40,8 @@ public class ComponentResolver {
     public static ComponentLibrary loadLibraryFromFile(String fileName) throws IOException {
         try (InputStream fileStream = new FileInputStream(fileName)) {
             ObjectMapper mapper = new ObjectMapper();
-            ComponentLibrarySchema componentLibrary = mapper.readValue(fileStream, ComponentLibrarySchema.class);
+            ComponentLibrarySchema componentLibrary =
+                    mapper.readValue(fileStream, ComponentLibrarySchema.class);
             return componentLibrary.getComponentLibrary();
         }
     }
@@ -48,9 +49,11 @@ public class ComponentResolver {
     /**
      * Loads a component library from an input stream.
      */
-    public static ComponentLibrary loadLibraryFromInputStream(InputStream fileStream) throws IOException {
+    public static ComponentLibrary loadLibraryFromInputStream(InputStream fileStream)
+            throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        ComponentLibrarySchema componentLibrary = mapper.readValue(fileStream, ComponentLibrarySchema.class);
+        ComponentLibrarySchema componentLibrary =
+                mapper.readValue(fileStream, ComponentLibrarySchema.class);
         return componentLibrary.getComponentLibrary();
     }
 
@@ -59,9 +62,10 @@ public class ComponentResolver {
      */
     public static List<ComponentLibrary> loadCoreComponentLibraries() throws IOException {
         List<ComponentLibrary> libraries = new ArrayList<>();
-        libraries.add(loadLibraryFromInputStream(
-                ComponentResolver.class.getResourceAsStream("/phylospec-core-component-library.json"))
-        );
+        libraries.add(
+                loadLibraryFromInputStream(
+                        ComponentResolver.class.getResourceAsStream(
+                                "/phylospec-core-component-library.json")));
         return libraries;
     }
 
@@ -79,21 +83,20 @@ public class ComponentResolver {
         for (Generator generator : library.getGenerators()) {
             String namespace = generator.getNamespace();
             for (int i = 0; i < namespace.length(); i++) {
-                if (namespace.charAt(i) == '.')
-                    knownNamespaces.add(namespace.substring(0, i));
+                if (namespace.charAt(i) == '.') knownNamespaces.add(namespace.substring(0, i));
             }
             knownNamespaces.add(namespace);
         }
         for (Type type : library.getTypes()) {
             String namespace = type.getNamespace();
             for (int i = 0; i < namespace.length(); i++) {
-                if (namespace.charAt(i) == '.')
-                    knownNamespaces.add(namespace.substring(0, i));
+                if (namespace.charAt(i) == '.') knownNamespaces.add(namespace.substring(0, i));
             }
             knownNamespaces.add(namespace);
         }
 
-        // make all components resolvable with their qualified name. this allows imported components to reference
+        // make all components resolvable with their qualified name. this allows imported components
+        // to reference
         // not-imported components (e.g. for their parameter types)
 
         for (Generator generator : library.getGenerators()) {
@@ -103,13 +106,19 @@ public class ComponentResolver {
         }
         for (Type type : library.getTypes()) {
             if (type.getName().contains(".")) {
-                throw new IllegalArgumentException("The type name '" + type.getName() + "' contains periods. This is not allowed. If it contains the namespace as well, just remove it.");
+                throw new IllegalArgumentException(
+                        "The type name '"
+                                + type.getName()
+                                + "' contains periods. This is not allowed. If it contains the namespace as well, just remove it.");
             }
 
             String fullyQualifiedName = getFullyQualifiedName(type);
 
             if (this.knownTypes.containsKey(fullyQualifiedName)) {
-                throw new IllegalArgumentException("The type '" + fullyQualifiedName + "' is registered multiple times. This is not allowed.");
+                throw new IllegalArgumentException(
+                        "The type '"
+                                + fullyQualifiedName
+                                + "' is registered multiple times. This is not allowed.");
             }
 
             this.knownTypes.put(fullyQualifiedName, type);
@@ -122,10 +131,12 @@ public class ComponentResolver {
             String namespace = generator.getNamespace();
             List<String> parameterTypes = generator.getTypeParameters();
 
-            generator.setGeneratedType(getFullyQualifiedType(generator.getGeneratedType(), namespace, parameterTypes));
+            generator.setGeneratedType(
+                    getFullyQualifiedType(generator.getGeneratedType(), namespace, parameterTypes));
 
             for (Argument argument : generator.getArguments()) {
-                argument.setType(getFullyQualifiedType(argument.getType(), namespace, parameterTypes));
+                argument.setType(
+                        getFullyQualifiedType(argument.getType(), namespace, parameterTypes));
             }
         }
 
@@ -146,7 +157,8 @@ public class ComponentResolver {
      * For an unqualified type name, finds the fully qualified type name which is closest in the namespace.
      * Closest means that the two namespaces have the most levels in common before they diverge.
      */
-    private String getFullyQualifiedType(String typeName, String namespace, List<String> typeParameters) {
+    private String getFullyQualifiedType(
+            String typeName, String namespace, List<String> typeParameters) {
         if (typeName == null) return null;
         if (typeParameters.contains(typeName)) return typeName;
 
@@ -162,12 +174,15 @@ public class ComponentResolver {
             String unqualifiedCandidateBaseName = getUnqualifiedName(candidateType.getName());
             if (!Objects.equals(unqualifiedCandidateBaseName, unqualifiedBaseName)) continue;
 
-            // these types have the same unqualified name. let's check how close their namespaces are
+            // these types have the same unqualified name. let's check how close their namespaces
+            // are
 
             String[] splitCandidateNamespace = splitNamespace(candidateType.getName());
 
             int sharedPrefixLength = 0;
-            for (int i = 0; i < Math.min(splitNamespace.length, splitCandidateNamespace.length); i++) {
+            for (int i = 0;
+                    i < Math.min(splitNamespace.length, splitCandidateNamespace.length);
+                    i++) {
                 if (splitNamespace[i].equals(splitCandidateNamespace[i])) {
                     sharedPrefixLength++;
                 } else {
@@ -182,13 +197,19 @@ public class ComponentResolver {
         }
 
         if (bestQualifiedBaseName == null) {
-            throw new IllegalArgumentException("Unknown type '" + typeName + "' is mentioned in '" + namespace + "'. This is not allowed. Are the component libraries registered in the correct order?");
+            throw new IllegalArgumentException(
+                    "Unknown type '"
+                            + typeName
+                            + "' is mentioned in '"
+                            + namespace
+                            + "'. This is not allowed. Are the component libraries registered in the correct order?");
         }
 
         // get the fully qualified names for the parameter types
 
         List<String> parameterTypesNames = TypeUtils.parseParameterTypes(typeName);
-        parameterTypesNames.replaceAll(s -> this.getFullyQualifiedType(s, namespace, typeParameters));
+        parameterTypesNames.replaceAll(
+                s -> this.getFullyQualifiedType(s, namespace, typeParameters));
 
         if (!parameterTypesNames.isEmpty()) {
             bestQualifiedBaseName += "<" + String.join(",", parameterTypesNames) + ">";
@@ -210,20 +231,21 @@ public class ComponentResolver {
             throw new TypeError(
                     "The import '" + namespaceString + "' does not exist.",
                     "Do you want to use '" + closestNamespace + "'?",
-                    List.of("use " + closestNamespace)
-            );
+                    List.of("use " + closestNamespace));
         }
 
         for (ComponentLibrary library : componentLibraries) {
             for (Generator generator : library.getGenerators()) {
                 if (generator.getNamespace().equals(namespaceString)) {
-                    this.knownGenerators.computeIfAbsent(generator.getName(), x -> new ArrayList<>());
+                    this.knownGenerators.computeIfAbsent(
+                            generator.getName(), x -> new ArrayList<>());
 
-                    // we only allow multiple generators of the same namespace, otherwise this import
+                    // we only allow multiple generators of the same namespace, otherwise this
+                    // import
                     // shadows all others
-                    this.knownGenerators.get(generator.getName()).removeIf(
-                            g -> !g.getNamespace().equals(generator.getNamespace())
-                    );
+                    this.knownGenerators
+                            .get(generator.getName())
+                            .removeIf(g -> !g.getNamespace().equals(generator.getNamespace()));
 
                     this.knownGenerators.get(generator.getName()).add(generator);
                 }
@@ -250,24 +272,21 @@ public class ComponentResolver {
             throw new TypeError(
                     "The import '" + namespaceString + "' does not exist.",
                     "Do you want to use '" + closestNamespace + "'?",
-                    List.of("use " + closestNamespace)
-            );
+                    List.of("use " + closestNamespace));
         }
 
         for (ComponentLibrary library : componentLibraries) {
             for (Generator generator : library.getGenerators()) {
-                if (
-                        generator.getNamespace().equals(namespaceString)
-                                || generator.getNamespace().startsWith(namespaceStringWithDot)
-                ) {
-                    this.knownGenerators.computeIfAbsent(generator.getName(), k -> new ArrayList<>()).add(generator);
+                if (generator.getNamespace().equals(namespaceString)
+                        || generator.getNamespace().startsWith(namespaceStringWithDot)) {
+                    this.knownGenerators
+                            .computeIfAbsent(generator.getName(), k -> new ArrayList<>())
+                            .add(generator);
                 }
             }
             for (Type type : library.getTypes()) {
-                if (
-                        type.getNamespace().equals(namespaceString)
-                                || type.getNamespace().startsWith(namespaceStringWithDot)
-                ) {
+                if (type.getNamespace().equals(namespaceString)
+                        || type.getNamespace().startsWith(namespaceStringWithDot)) {
                     this.knownTypes.put(this.getUnqualifiedName(type.getName()), type);
                 }
             }
@@ -297,7 +316,14 @@ public class ComponentResolver {
         List<String> specifiedParameterTypes = TypeUtils.parseParameterTypes(typeName);
 
         if (specifiedParameterTypes.size() != generatedType.getTypeParameters().size()) {
-            throw new IllegalArgumentException("Invalid number of type parameters of the generated type of '" + generator.getName() + "'. Type '" + typeName + "' takes " + generatedType.getTypeParameters().size() + " type paramters.");
+            throw new IllegalArgumentException(
+                    "Invalid number of type parameters of the generated type of '"
+                            + generator.getName()
+                            + "'. Type '"
+                            + typeName
+                            + "' takes "
+                            + generatedType.getTypeParameters().size()
+                            + " type paramters.");
         }
 
         // recursively check parameter types
@@ -385,11 +411,13 @@ public class ComponentResolver {
     public String findClosestComponent(String componentName) {
         String unqualifiedName = this.getUnqualifiedName(componentName);
         return getKnownGenerators().values().stream()
-                .flatMap(
-                        Collection::stream
-                )
+                .flatMap(Collection::stream)
                 .map(Generator::getName)
-                .min(Comparator.comparingInt(x -> Utils.editDistance(this.getUnqualifiedName(x), unqualifiedName)))
+                .min(
+                        Comparator.comparingInt(
+                                x ->
+                                        Utils.editDistance(
+                                                this.getUnqualifiedName(x), unqualifiedName)))
                 .orElse("");
     }
 
@@ -400,7 +428,9 @@ public class ComponentResolver {
         String unqualifiedName = this.getUnqualifiedName(typeName);
         return getKnownTypes().values().stream()
                 .map(x -> this.getUnqualifiedName(x.getName()))
-                .min(Comparator.comparingInt(x -> Utils.editDistance(this.getUnqualifiedName(x), typeName)))
+                .min(
+                        Comparator.comparingInt(
+                                x -> Utils.editDistance(this.getUnqualifiedName(x), typeName)))
                 .orElse("");
     }
 

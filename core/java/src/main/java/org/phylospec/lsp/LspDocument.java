@@ -1,23 +1,22 @@
 package org.phylospec.lsp;
 
-import org.eclipse.lsp4j.*;
-import org.eclipse.lsp4j.services.LanguageClient;
-import org.phylospec.errors.Error;
-import org.phylospec.ast.*;
-import org.phylospec.components.*;
-import org.phylospec.lexer.Lexer;
-import org.phylospec.errors.ErrorEventListener;
-import org.phylospec.lexer.Token;
-import org.phylospec.lexer.Range;
-import org.phylospec.parser.Parser;
-import org.phylospec.typeresolver.ResolvedType;
-import org.phylospec.typeresolver.TypeError;
-import org.phylospec.typeresolver.TypeResolver;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import org.eclipse.lsp4j.*;
+import org.eclipse.lsp4j.services.LanguageClient;
+import org.phylospec.ast.*;
+import org.phylospec.components.*;
+import org.phylospec.errors.Error;
+import org.phylospec.errors.ErrorEventListener;
+import org.phylospec.lexer.Lexer;
+import org.phylospec.lexer.Range;
+import org.phylospec.lexer.Token;
+import org.phylospec.parser.Parser;
+import org.phylospec.typeresolver.ResolvedType;
+import org.phylospec.typeresolver.TypeError;
+import org.phylospec.typeresolver.TypeResolver;
 
 /**
  * This class implements the actual LSP responses for a given document.
@@ -25,7 +24,7 @@ import java.util.Set;
  * and basic auto-completion.
  */
 class LspDocument implements ErrorEventListener {
-    final private String uri;
+    private final String uri;
     private LanguageClient client;
 
     private final ComponentResolver componentResolver;
@@ -87,11 +86,7 @@ class LspDocument implements ErrorEventListener {
 
         // publish diagnostics
 
-        this.client.publishDiagnostics(
-                new PublishDiagnosticsParams(
-                        this.uri, foundDiagnostics
-                )
-        );
+        this.client.publishDiagnostics(new PublishDiagnosticsParams(this.uri, foundDiagnostics));
     }
 
     @Override
@@ -109,12 +104,12 @@ class LspDocument implements ErrorEventListener {
             }
         }
 
-        foundDiagnostics.add(new Diagnostic(
-                new org.eclipse.lsp4j.Range(
-                        new Position(error.range().startLine - 1, error.range().start),
-                        new Position(error.range().endLine - 1, error.range().end)
-                ), text.toString()
-        ));
+        foundDiagnostics.add(
+                new Diagnostic(
+                        new org.eclipse.lsp4j.Range(
+                                new Position(error.range().startLine - 1, error.range().start),
+                                new Position(error.range().endLine - 1, error.range().end)),
+                        text.toString()));
 
         System.out.println(error.toStdOutString(content));
     }
@@ -182,7 +177,8 @@ class LspDocument implements ErrorEventListener {
                 }
             }
             case Expr.Variable variable -> {
-                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveVariable(variable.variableName);
+                Set<ResolvedType> resolvedTypeSet =
+                        typeResolver.resolveVariable(variable.variableName);
 
                 for (ResolvedType resolvedType : resolvedTypeSet) {
                     hoverText.append("```phylospec\n");
@@ -214,10 +210,7 @@ class LspDocument implements ErrorEventListener {
             }
         }
 
-        return new MarkupContent(
-                "markdown",
-                hoverText.toString()
-        );
+        return new MarkupContent("markdown", hoverText.toString());
     }
 
     /** Returns the completion items for the given cursor position. */
@@ -277,13 +270,14 @@ class LspDocument implements ErrorEventListener {
             Argument argument = generator.getArguments().get(i);
 
             if (argument.getRequired()) {
-                stringBuilder
-                        .append(argument.getType())
-                        .append(" ").append(argument.getName());
+                stringBuilder.append(argument.getType()).append(" ").append(argument.getName());
             } else {
-                stringBuilder.append("[")
+                stringBuilder
+                        .append("[")
                         .append(argument.getType())
-                        .append(" ").append(argument.getName()).append("]");
+                        .append(" ")
+                        .append(argument.getName())
+                        .append("]");
             }
 
             if (i != generator.getArguments().size() - 1) {

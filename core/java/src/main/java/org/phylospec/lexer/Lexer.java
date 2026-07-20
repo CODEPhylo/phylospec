@@ -1,13 +1,11 @@
 package org.phylospec.lexer;
 
-import org.phylospec.ast.Expr;
-import org.phylospec.errors.Error;
-import org.phylospec.errors.ErrorEventListener;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.phylospec.errors.Error;
+import org.phylospec.errors.ErrorEventListener;
 
 /**
  * This class takes a PhyloSpec source code and splits it up
@@ -165,14 +163,15 @@ public class Lexer {
                     addToken(TokenType.GREATER);
                 }
                 break;
-            case '/': {
-                if (match('/')) {
-                    comment();
-                } else {
-                    addToken(TokenType.SLASH);
+            case '/':
+                {
+                    if (match('/')) {
+                        comment();
+                    } else {
+                        addToken(TokenType.SLASH);
+                    }
+                    break;
                 }
-                break;
-            }
 
             // EOL tokens
             case '\n':
@@ -208,8 +207,7 @@ public class Lexer {
                 } else {
                     reportError(
                             "'" + c + "' is not an allowed character.",
-                            "Only use letters or digits."
-                    );
+                            "Only use letters or digits.");
                 }
         }
     }
@@ -256,11 +254,14 @@ public class Lexer {
 
                 if (isAtEnd()) {
                     reportError(
-                            new Range(startLine, currentLine, start - startLineStart, current - currentLineStart),
+                            new Range(
+                                    startLine,
+                                    currentLine,
+                                    start - startLineStart,
+                                    current - currentLineStart),
                             "A string template must be terminated with an '}'.",
                             "Use curly brackets to add an variable name into a string.",
-                            List.of("String name = \"file_{seed}.nex")
-                    );
+                            List.of("String name = \"file_{seed}.nex"));
                     return;
                 }
 
@@ -281,10 +282,13 @@ public class Lexer {
 
         if (isAtEnd()) {
             reportError(
-                    new Range(startLine, currentLine, start - startLineStart, current - currentLineStart),
+                    new Range(
+                            startLine,
+                            currentLine,
+                            start - startLineStart,
+                            current - currentLineStart),
                     "A string must be terminated with an '\"'.",
-                    "Use quotation marks to end the string."
-            );
+                    "Use quotation marks to end the string.");
             return;
         }
 
@@ -303,7 +307,8 @@ public class Lexer {
 
         TokenType identifierType = keywords.get(text);
         if (identifierType == null) {
-            // handle the special case for the two-word identifiers "observed as" and "observed between"
+            // handle the special case for the two-word identifiers "observed as" and "observed
+            // between"
             if (text.equals("observed")) {
                 if (peek(2).equals("as")) {
                     for (int i = 0; i <= 2; i++) advance();
@@ -338,8 +343,7 @@ public class Lexer {
             } catch (NumberFormatException ignored) {
                 reportError(
                         "'" + source.substring(start, current) + "' is not a valid number.",
-                        "Try a smaller number."
-                );
+                        "Try a smaller number.");
             }
         } else {
             // this number has no fractional part, it is thus an integer
@@ -348,8 +352,7 @@ public class Lexer {
             } catch (NumberFormatException e) {
                 reportError(
                         "'" + source.substring(start, current) + "' is not a valid number.",
-                        "Try a smaller number."
-                );
+                        "Try a smaller number.");
             }
         }
     }
@@ -367,9 +370,7 @@ public class Lexer {
     }
 
     private boolean isAlpha(char c) {
-        return (c >= 'a' && c <= 'z') ||
-                (c >= 'A' && c <= 'Z') ||
-                c == '_';
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
     }
 
     private boolean isAlphaNumeric(char c) {
@@ -449,7 +450,9 @@ public class Lexer {
      */
     private void addToken(TokenType type, Object literal) {
         String text = source.substring(start, current);
-        Range range = new Range(startLine, currentLine, start - startLineStart, current - currentLineStart);
+        Range range =
+                new Range(
+                        startLine, currentLine, start - startLineStart, current - currentLineStart);
         tokens.add(new Token(type, text, literal, range));
     }
 

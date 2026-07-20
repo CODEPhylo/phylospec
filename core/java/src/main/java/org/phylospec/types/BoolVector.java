@@ -14,5 +14,4 @@ public interface BoolVector extends Vector<Bool, Boolean> {
         }
         return arr;
     }
-
 }

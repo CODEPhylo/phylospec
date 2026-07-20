@@ -9,7 +9,7 @@ package org.phylospec.domain;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public class UnitInterval extends NonNegativeReal{
+public class UnitInterval extends NonNegativeReal {
     public static final UnitInterval INSTANCE = new UnitInterval();
 
     protected UnitInterval() {}

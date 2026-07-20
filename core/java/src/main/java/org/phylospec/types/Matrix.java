@@ -17,20 +17,21 @@ public interface Matrix<P extends Domain<T>, T> extends Tensor<P, T> {
      */
     int cols();
 
+    @Override
+    default int rank() {
+        return 2;
+    }
 
     @Override
-    default int rank(){ return 2; }
-
-    @Override
-    default int[] shape(){ return new int[]{ rows(), cols() }; }
+    default int[] shape() {
+        return new int[] {rows(), cols()};
+    }
 
     @Override
     default boolean isValid() {
         P p = domainType();
-        for (int r=0;r<rows();r++)
-            for (int c=0;c<cols();c++)
-                if (!p.isValid(get(r,c)))
-                    return false;
+        for (int r = 0; r < rows(); r++)
+            for (int c = 0; c < cols(); c++) if (!p.isValid(get(r, c))) return false;
         return true;
     }
 }

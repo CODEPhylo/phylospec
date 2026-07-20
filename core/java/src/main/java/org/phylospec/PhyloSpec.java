@@ -1,21 +1,19 @@
 package org.phylospec;
 
-import org.phylospec.ast.AstPrinter;
-import org.phylospec.components.ComponentLibrary;
-import org.phylospec.converters.JSONConverter;
-import org.phylospec.typeresolver.TypeError;
-import org.phylospec.typeresolver.TypeResolver;
-import org.phylospec.components.ComponentResolver;
-import org.phylospec.ast.Stmt;
-import org.phylospec.lexer.Lexer;
-import org.phylospec.lexer.Token;
-import org.phylospec.parser.Parser;
-
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import org.phylospec.ast.AstPrinter;
+import org.phylospec.ast.Stmt;
+import org.phylospec.components.ComponentLibrary;
+import org.phylospec.components.ComponentResolver;
+import org.phylospec.lexer.Lexer;
+import org.phylospec.lexer.Token;
+import org.phylospec.parser.Parser;
+import org.phylospec.typeresolver.TypeError;
+import org.phylospec.typeresolver.TypeResolver;
 
 /// This class can be used to run the PhyloSpec parser.
 ///
@@ -51,7 +49,7 @@ public class PhyloSpec {
         BufferedReader reader = new BufferedReader(input);
         TypeResolver resolver = loadTypeResolver();
 
-        for (;;) {
+        for (; ; ) {
             System.out.print("> ");
             String line = reader.readLine();
             if (line == null) break;
@@ -76,7 +74,7 @@ public class PhyloSpec {
 
             try {
                 statement.accept(resolver);
-            } catch(TypeError error) {
+            } catch (TypeError error) {
                 System.out.println(error.getMessage());
             }
         }

@@ -120,11 +120,10 @@ public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> 
     public Expr visitStringTemplate(Expr.StringTemplate expr) {
         for (int i = 0; i < expr.parts.size(); i++) {
             if (expr.parts.get(i) instanceof Expr.StringTemplate.ExpressionPart partExpr) {
-                expr.parts.set(i,
+                expr.parts.set(
+                        i,
                         new Expr.StringTemplate.ExpressionPart(
-                                (Expr.Variable) partExpr.expression().accept(this)
-                        )
-                );
+                                (Expr.Variable) partExpr.expression().accept(this)));
             }
         }
         return expr;
@@ -208,6 +207,7 @@ public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> 
     public AstType visitAtomicType(AstType.Atomic expr) {
         return expr;
     }
+
     @Override
     public AstType visitGenericType(AstType.Generic expr) {
         for (int i = 0; i < expr.typeParameters.length; i++) {

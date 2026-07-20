@@ -28,17 +28,18 @@ public class Range {
     }
 
     public String toString() {
-        if (startLine == endLine)
-            return "(line " + startLine + " " + start + ":" + end +  ")";
-        else
-            return "(line " + startLine + " " + start + " : line " + endLine + " " + end +  ")";
+        if (startLine == endLine) return "(line " + startLine + " " + start + ":" + end + ")";
+        else return "(line " + startLine + " " + start + " : line " + endLine + " " + end + ")";
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Range that = (Range) o;
-        return startLine == that.startLine && endLine == that.endLine && start == that.start && end == that.end;
+        return startLine == that.startLine
+                && endLine == that.endLine
+                && start == that.start
+                && end == that.end;
     }
 
     @Override
