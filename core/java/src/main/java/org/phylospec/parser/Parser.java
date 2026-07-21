@@ -45,7 +45,7 @@ public class Parser {
     private Range currentBlockRange = null;
 
     private final Map<Token, AstNode> tokenAstNodeMap;
-    private final Map<AstNode, Range> astNodeRanges;
+    private final IdentityHashMap<AstNode, Range> astNodeRanges;
     private final LinkedList<Integer> astNodeStartPositions;
 
     private final List<ErrorEventListener> eventListeners;
@@ -59,7 +59,7 @@ public class Parser {
         this.tokens = tokens;
         this.eventListeners = new ArrayList<>();
         this.tokenAstNodeMap = new HashMap<>();
-        this.astNodeRanges = new HashMap<>();
+        this.astNodeRanges = new IdentityHashMap<>();
         this.astNodeStartPositions = new LinkedList<>();
     }
 
