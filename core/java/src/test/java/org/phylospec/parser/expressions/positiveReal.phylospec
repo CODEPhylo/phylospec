@@ -1,13 +1,13 @@
 PositiveReal a = 100 * 50 / 2 + 10.0 + (20.0 + 2) / 3
-NonNegativeReal a = 100 * 50 / 2 + 10.0 + (20.0 + 2) / 3
-PositiveReal a = 0 * 50 / 2 + 10.0 + (20.0 + 2) / 3
+NonNegativeReal b = 100 * 50 / 2 + 10.0 + (20.0 + 2) / 3
+PositiveReal c = 0 * 50 / 2 + 10.0 + (20.0 + 2) / 3
 
 // EXPECT AST
 // (AS PositiveReal a (+ (+ (/ (* 100 50) 2) 10.0) (/ (GR (+ 20.0 2)) 3)))
-// (AS NonNegativeReal a (+ (+ (/ (* 100 50) 2) 10.0) (/ (GR (+ 20.0 2)) 3)))
-// (AS PositiveReal a (+ (+ (/ (* 0 50) 2) 10.0) (/ (GR (+ 20.0 2)) 3)))
+// (AS NonNegativeReal b (+ (+ (/ (* 100 50) 2) 10.0) (/ (GR (+ 20.0 2)) 3)))
+// (AS PositiveReal c (+ (+ (/ (* 0 50) 2) 10.0) (/ (GR (+ 20.0 2)) 3)))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Expression of type `NonNegativeReal | Real` cannot be assigned to variable `a` of type `PositiveReal`. Change the type of the variable to `NonNegativeReal | Real`, or change what you assign to it.
+// Expression of type `NonNegativeReal | Real` cannot be assigned to variable `c` of type `PositiveReal`. Change the type of the variable to `NonNegativeReal | Real`, or change what you assign to it.
 // EXPECT TYPE_ERRORS

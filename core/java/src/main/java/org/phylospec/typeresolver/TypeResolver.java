@@ -173,6 +173,8 @@ public class TypeResolver
             }
         }
 
+        enforceUniqueness(stmt.name, stmt);
+
         remember(stmt.name, resolvedVariableTypeSet);
         return remember(stmt, resolvedVariableTypeSet);
     }
@@ -254,6 +256,8 @@ public class TypeResolver
             }
         }
 
+        enforceUniqueness(stmt.name, stmt);
+
         remember(stmt.name, resolvedVariableTypeSet);
         return remember(stmt, resolvedVariableTypeSet);
     }
@@ -334,6 +338,7 @@ public class TypeResolver
                     if (indexVarType != null) indexVarTypeSet.add(indexVarType);
                 }
 
+                enforceUniqueness(indexVar.variableName, indexVar);
                 remember(indexVar.variableName, indexVarTypeSet);
             }
 
@@ -1192,6 +1197,18 @@ public class TypeResolver
     private Set<ResolvedType> remember(String variableName, Set<ResolvedType> resolvedTypeSet) {
         scopedVariableTypes.getFirst().put(variableName, resolvedTypeSet);
         return resolvedTypeSet;
+    }
+
+    private void enforceUniqueness(String variableName, AstNode astNode) {
+        if (scopedVariableTypes.getFirst().containsKey(variableName)) {
+            throw new TypeError(
+                    astNode,
+                    "Duplicate variable name.",
+                    "You have already used the variable name '"
+                            + variableName
+                            + "' before. Use another name instead.",
+                    List.of());
+        }
     }
 
     /**
