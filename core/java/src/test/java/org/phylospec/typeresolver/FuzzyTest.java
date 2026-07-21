@@ -1,4 +1,4 @@
-package org.phylospec.parser;
+package org.phylospec.typeresolver;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -11,14 +11,21 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 import org.phylospec.FuzzingUtils;
 import org.phylospec.ast.Stmt;
+import org.phylospec.components.ComponentLibrary;
+import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
+import org.phylospec.parser.Parser;
 
-public class FuzzyParserTest {
+public class FuzzyTest {
 
     @Test
-    public void testFuzz() {
+    public void testFuzz() throws IOException {
         Random random = new Random(0);
+
+        List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
+        ComponentResolver componentResolver = new ComponentResolver(componentLibraries);
+        TypeResolver typeResolver = new TypeResolver(componentResolver);
 
         for (int i = 0; i < 10000; i++) {
             String input = generateFuzzInput(random, i);
@@ -27,6 +34,21 @@ public class FuzzyParserTest {
             try {
                 List<Token> tokens = new Lexer(input).scanTokens();
                 statements = new Parser(tokens).parse();
+            } catch (Exception e) {
+                fail(
+                        "Parser threw an exception on iteration "
+                                + i
+                                + " (input="
+                                + repr(input)
+                                + "): "
+                                + e);
+                return;
+            }
+
+            try {
+                typeResolver.visitStatements(statements);
+            } catch (TypeError e) {
+                // this is fine
             } catch (Exception e) {
                 fail(
                         "Parser threw an exception on iteration "
@@ -105,6 +127,10 @@ public class FuzzyParserTest {
             readFile("src/test/java/org/phylospec/parser/complicated/model2.phylospec"),
         };
 
+        List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
+        ComponentResolver componentResolver = new ComponentResolver(componentLibraries);
+        TypeResolver typeResolver = new TypeResolver(componentResolver);
+
         for (int i = 0; i < 10000; i++) {
             String input = mutateComplicatedModel(random, models[i % models.length]);
             List<Stmt> statements;
@@ -112,6 +138,21 @@ public class FuzzyParserTest {
             try {
                 List<Token> tokens = new Lexer(input).scanTokens();
                 statements = new Parser(tokens).parse();
+            } catch (Exception e) {
+                fail(
+                        "Parser threw an exception on iteration "
+                                + i
+                                + " (input="
+                                + repr(input)
+                                + "): "
+                                + e);
+                return;
+            }
+
+            try {
+                typeResolver.visitStatements(statements);
+            } catch (TypeError e) {
+                // this is fine
             } catch (Exception e) {
                 fail(
                         "Parser threw an exception on iteration "
