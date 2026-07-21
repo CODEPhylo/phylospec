@@ -208,14 +208,9 @@ public class Parser {
                     "Block not closed.",
                     "You are starting a '"
                             + blockName
-                            + "' without closing the '"
+                            + "' block without closing the '"
                             + currentBlock.toString()
-                            + "' block. End the block with curly braces first.",
-                    List.of(
-                            currentBlock.toString()
-                                    + "{\n\t\t...\t\n}\n\t"
-                                    + blockName
-                                    + "\n\t\t...\n\t}"));
+                            + "' block. End the block with curly braces first.");
         }
 
         currentBlockRange = previous().range;

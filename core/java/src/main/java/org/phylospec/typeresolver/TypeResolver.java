@@ -449,6 +449,17 @@ public class TypeResolver
         // test if the observed value can be assigned to the generated value
 
         if (!TypeUtils.canBeAssignedTo(observationTypeSet, generatedTypeSet, componentResolver)) {
+            // we check if this could work with an "observed between" statement
+            if (TypeUtils.canBeAssignedTo(
+                    observationTypeSet,
+                    ResolvedType.fromString("phylospec.types.Vector", componentResolver, true),
+                    componentResolver)) {
+                throw new TypeError(
+                        observedAs,
+                        "Wrong observation type.",
+                        "You might want to use 'observed between' instead of 'observed as'.");
+            }
+
             throw new TypeError(
                     observedAs,
                     "Wrong observation type.",
