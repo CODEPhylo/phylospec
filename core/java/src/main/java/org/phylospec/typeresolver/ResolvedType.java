@@ -90,8 +90,7 @@ public class ResolvedType {
                     "Are you looking for '" + componentResolver.findClosestType(typeString) + "'?");
         }
 
-        if (!allowUnresolvedTypeParameter
-                && typeParameters.size() != typeComponent.getTypeParameters().size()) {
+        if (typeParameters.size() != typeComponent.getTypeParameters().size()) {
             throw new TypeError(
                     "The type '"
                             + typeString
@@ -100,7 +99,9 @@ public class ResolvedType {
                             + " type parameters, but you provided "
                             + typeParameters.size()
                             + ".",
-                    "Provide exactly " + typeParameters.size() + " type parameters.");
+                    "Provide exactly "
+                            + typeComponent.getTypeParameters().size()
+                            + " type parameters.");
         }
 
         Map<String, Set<ResolvedType>> typeParameterMap = new HashMap<>();
