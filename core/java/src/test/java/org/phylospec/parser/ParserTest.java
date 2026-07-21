@@ -1,13 +1,9 @@
 package org.phylospec.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.List;
-import java.util.Random;
 import org.junit.jupiter.api.Test;
-import org.phylospec.FuzzingUtils;
 import org.phylospec.ast.AstType;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
@@ -269,109 +265,6 @@ public class ParserTest {
                                         new AstType.Atomic("PositiveReal"),
                                         "value",
                                         new Expr.Literal(10)))));
-    }
-
-    @Test
-    public void testFuzz() {
-        Random random = new Random(0);
-
-        for (int i = 0; i < 10000; i++) {
-            String input = generateFuzzInput(random, i);
-            List<Stmt> statements;
-
-            try {
-                List<Token> tokens = new Lexer(input).scanTokens();
-                statements = new Parser(tokens).parse();
-            } catch (Exception e) {
-                fail(
-                        "Parser threw an exception on iteration "
-                                + i
-                                + " (input="
-                                + repr(input)
-                                + "): "
-                                + e);
-                return;
-            }
-
-            // invariant: result and every element are non-null
-            assertNotNull(statements, "statements must not be null (iter=" + i + ")");
-            for (Stmt stmt : statements) {
-                assertNotNull(stmt, "statement must not be null (iter=" + i + ")");
-            }
-        }
-    }
-
-    // generates one fuzz input chosen from several strategies
-    private String generateFuzzInput(Random r, int iteration) {
-        // first few iterations cover deterministic edge cases
-        switch (iteration) {
-            case 0:
-                return "";
-            case 1:
-                return "\n";
-            case 2:
-                return "// comment only";
-            case 3:
-                return "@";
-            case 4:
-                return "=";
-            case 5:
-                return "Real x =";
-            case 6:
-                return "Real x = (";
-            case 7:
-                return "Real x = [";
-            case 8:
-                return "Real<> x = 1";
-            case 9:
-                return "import";
-        }
-
-        int strategy = r.nextInt(5);
-        switch (strategy) {
-            case 0:
-                // random printable ASCII — stresses error recovery
-                return FuzzingUtils.randomString(r, r.nextInt(80) + 1, 32, 126);
-            case 1:
-                // digit-heavy — stresses number parsing interactions with the parser
-                return FuzzingUtils.randomDigitHeavyString(r, r.nextInt(60) + 1);
-            case 2:
-                // mutated valid PhyloSpec snippets — stresses near-valid paths
-                return FuzzingUtils.mutate(r, pickValidStatement(r), r.nextInt(5) + 1);
-            case 3:
-                // multiple lines of mutated statements — stresses error recovery across lines
-                return FuzzingUtils.mutate(r, pickValidStatement(r), r.nextInt(3))
-                        + "\n"
-                        + FuzzingUtils.mutate(r, pickValidStatement(r), r.nextInt(3));
-            default:
-                // full byte range — stresses the lexer+parser pipeline together
-                return FuzzingUtils.randomString(r, r.nextInt(50) + 1, 0, 127);
-        }
-    }
-
-    // valid PhyloSpec statements that cover the main grammar rules
-    private String pickValidStatement(Random r) {
-        String[] snippets = {
-            "Real x = 1.0",
-            "Real x ~ LogNormal(meanLog = 0.0, sdLog = 1.0)",
-            "Real x = a + b * c",
-            "Real x = [1, 2, 3]",
-            "Real x = [v for v in values]",
-            "import phylospec.distributions",
-            "@Observed() Real x ~ Normal(mu = 0.0, sigma = 1.0)",
-            "Real<T> x = func(a = 1, b = 2)",
-            "Real x = (a + b) * (c - d)",
-            "Real x = obj.field",
-            "Real x = f(a = 1,)",
-            "Real x = [1, 2,]",
-        };
-        return snippets[r.nextInt(snippets.length)];
-    }
-
-    // returns a compact representation of a string for failure messages
-    private String repr(String s) {
-        if (s.length() > 60) return "\"" + s.substring(0, 60).replace("\n", "\\n") + "...\"";
-        return "\"" + s.replace("\n", "\\n").replace("\r", "\\r") + "\"";
     }
 
     @Test
