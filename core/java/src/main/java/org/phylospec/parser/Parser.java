@@ -313,12 +313,27 @@ public class Parser {
 
         AstType type = type();
 
+        // we check for the special case where someone forgot to specify a type (e.g. "x = 10") and
+        // give a helpful message
+
+        Token currentToken = peek();
+        if (currentToken != null
+                && (currentToken.type == TokenType.EQUAL || currentToken.type == TokenType.TILDE)) {
+            throw new Error(
+                    currentToken.range,
+                    "Missing type.",
+                    "You have to specify the type of the variable. Some possible types are 'Alignment', 'Tree', 'Real', 'Rate', or 'Vector<Rate>'.",
+                    List.of("Tree " + type.name + " " + currentToken.lexeme + " ..."));
+        }
+
+        // consume the variable name
+
         Token nameToken =
                 consume(
                         TokenType.IDENTIFIER,
                         "Invalid variable name.",
                         "Choose a variable name which starts with a letter and only consists of letters and digits.",
-                        List.of("Real x = 10"));
+                        List.of("Real number = 10"));
 
         // check if this is an indexed statement and parse the index if needed
 
