@@ -187,26 +187,17 @@ public class LexerTest {
 
         // 6th line: 10.5  // this is some comment
         assertEquals(new Token(TokenType.FLOAT, "10.5", 10.5, 6, 0, 4), tokens.get(20));
-        assertEquals(
-                new Token(
-                        TokenType.COMMENT,
-                        "// this is some comment",
-                        " this is some comment",
-                        6,
-                        6,
-                        29),
-                tokens.get(21));
-        assertEquals(new Token(TokenType.EOL, "\n", null, 6, 29, 30), tokens.get(22));
+        assertEquals(new Token(TokenType.EOL, "\n", null, 6, 29, 30), tokens.get(21));
 
         // 7th line: someFun()
-        assertEquals(new Token(TokenType.IDENTIFIER, "someFun", null, 7, 0, 7), tokens.get(23));
-        assertEquals(new Token(TokenType.LEFT_PAREN, "(", null, 7, 7, 8), tokens.get(24));
-        assertEquals(new Token(TokenType.RIGHT_PAREN, ")", null, 7, 8, 9), tokens.get(25));
+        assertEquals(new Token(TokenType.IDENTIFIER, "someFun", null, 7, 0, 7), tokens.get(22));
+        assertEquals(new Token(TokenType.LEFT_PAREN, "(", null, 7, 7, 8), tokens.get(23));
+        assertEquals(new Token(TokenType.RIGHT_PAREN, ")", null, 7, 8, 9), tokens.get(24));
 
         // EOF
-        assertEquals(new Token(TokenType.EOF, "", null, 7, 9, 9), tokens.get(26));
+        assertEquals(new Token(TokenType.EOF, "", null, 7, 9, 9), tokens.get(25));
 
-        assertEquals(tokens.size(), 27);
+        assertEquals(tokens.size(), 26);
     }
 
     @Test

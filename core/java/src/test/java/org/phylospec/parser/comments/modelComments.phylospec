@@ -1,0 +1,22 @@
+// this is a line comment
+
+
+Real x = 10 // this is an end-of-line comment
+
+// this is another line comment
+Real y = 10
+
+Real z = log( // something
+    // something else
+    x=10 // something blue
+    // something cool
+) // something new
+
+// something new
+
+
+// EXPECT AST
+// (AS Real x 10)
+// (AS Real y 10)
+// (AS Real z (CA log (AA x 10)))
+// EXPECT AST
