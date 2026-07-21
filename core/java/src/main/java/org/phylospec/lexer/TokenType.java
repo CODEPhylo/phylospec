@@ -50,10 +50,7 @@ public enum TokenType {
 
     // terminators
     EOL,
-    EOF,
-
-    // comment
-    COMMENT;
+    EOF;
 
     public static String getLexeme(TokenType token) {
         return switch (token) {
