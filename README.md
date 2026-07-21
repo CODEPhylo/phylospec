@@ -70,6 +70,18 @@ sh scripts/format.sh
 
 Git will now check that your code is formatted on every commit.
 
+### Fixing `git blame`
+
+Large initial formatting commits can make `git blame` point to the formatting commit instead of the actual change. To make `git blame` skip these commits, configure git to use `.git-blame-ignore-revs`:
+
+```sh
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
+If a formatting commit isn't already listed in [.git-blame-ignore-revs](.git-blame-ignore-revs), add its commit hash to that file.
+
+If you're using IntelliJ, you may need to restart it after configuring `blame.ignoreRevsFile` for the change to take effect.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
