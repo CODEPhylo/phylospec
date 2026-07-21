@@ -128,7 +128,39 @@ public class TypeResolver
 
         if (!TypeUtils.canBeAssignedTo(
                 resolvedExpressionTypeSet, resolvedVariableTypeSet, componentResolver)) {
-            // TODO: check if distribution and give hint to use ~
+            // expression cannot be assigned to this variable
+            // we check if a draw would fix the problem and raise a more helpful message in that
+            // case
+
+            Set<ResolvedType> resolvedDistributionTypeSet = new HashSet<>();
+            for (ResolvedType expressionType : resolvedExpressionTypeSet) {
+                TypeUtils.visitTypeAndParents(
+                        expressionType,
+                        x -> {
+                            if (x.getName().equals("phylospec.types.Distribution")) {
+                                resolvedDistributionTypeSet.add(x.getParameterTypes().get("T"));
+                            }
+                            return TypeUtils.Visitor.CONTINUE;
+                        },
+                        componentResolver);
+            }
+            if (TypeUtils.canBeAssignedTo(
+                    resolvedDistributionTypeSet, resolvedVariableTypeSet, componentResolver)) {
+                throw new TypeError(
+                        stmt,
+                        "Expression of type `"
+                                + printType(resolvedExpressionTypeSet)
+                                + "` cannot be assigned to variable `"
+                                + stmt.name
+                                + "` of type `"
+                                + printType(resolvedVariableTypeSet)
+                                + "`.",
+                        "You probably want to use '~' to draw the variable from the distribution.",
+                        List.of(stmt.type.name + " " + stmt.name + " ~ ..."));
+            }
+
+            // it would not work even with a draw
+
             throw new TypeError(
                     stmt,
                     "Expression of type `"
@@ -207,7 +239,8 @@ public class TypeResolver
             throw new TypeError(
                     stmt,
                     "Expression after `~' is not a distribution.",
-                    "After '~', you always need to provide a distribution. Do you want use `=` instead?");
+                    "After '~', you always need to provide a distribution. Do you want use `=` instead?",
+                    List.of(stmt.type.name + " " + stmt.name + " = ..."));
         }
 
         if (!TypeUtils.canBeAssignedTo(
@@ -399,7 +432,6 @@ public class TypeResolver
                 // this is not a distribution type directly
                 // it could still be a random variable though
                 generatedTypeSet.add(generatedDistType);
-                continue;
             } else {
                 ResolvedType generatedType = recoveredDistributionType.getParameterTypes().get("T");
                 if (generatedType == null) continue;
