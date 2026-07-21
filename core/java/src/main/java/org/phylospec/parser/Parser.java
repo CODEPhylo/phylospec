@@ -477,10 +477,16 @@ public class Parser {
         Token typeNameToken =
                 consume(
                         TokenType.IDENTIFIER,
-                        "Invalid variable type.",
+                        "Invalid type name.",
                         "Type names can only consist of letters.");
 
         if (match(TokenType.LESS)) {
+            // handle the special case of an empty generic (like "Real<>")
+            if (check(TokenType.GREATER)) {
+                advance();
+                return remember(new AstType.Atomic(typeNameToken.lexeme));
+            }
+
             List<AstType> innerTypes = new ArrayList<>();
             innerTypes.add(type());
 
