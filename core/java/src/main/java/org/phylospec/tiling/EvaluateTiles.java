@@ -155,7 +155,7 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
             // no consistent tiling found
             // this is very rare
             throw new TileApplicationError(
-                    "Unsupported operation.", "Your model is not supported by BEAST 2.8.");
+                    "Unsupported operation.", "Your model is not supported by your engine.");
         }
 
         this.bestTiles = bestTiles;
