@@ -26,6 +26,9 @@ import tiling.xml.builders.ScalarPriorXmlBuilder;
 
 import java.util.Map;
 
+/**
+ * Validates that a BEAST X model only contains components supported by XML export.
+ */
 public class XmlExportValidator {
     private final ScalarPriorXmlBuilder scalarPriorXmlBuilder =
             new ScalarPriorXmlBuilder();

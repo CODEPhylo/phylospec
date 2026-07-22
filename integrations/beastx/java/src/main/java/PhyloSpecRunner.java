@@ -51,6 +51,9 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
     private final BeastXRunPipeline runPipeline;
 
+    /**
+     * Creates a runner for the given PhyloSpec source string.
+     */
     public PhyloSpecRunner(String source) {
         this.source =
                 source;
@@ -59,29 +62,25 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 new BeastXRunPipeline();
     }
 
-    // Creates a runner from a PhyloSpec source file using UTF-8 encoding.
+    /* --- Static convenient methods for easy creation of a runner.  --- */
+
+    /**
+     * Creates a runner from a PhyloSpec source file using UTF-8 encoding.
+     */
     public static PhyloSpecRunner fromFile(Path sourcePath)
             throws IOException {
-        return fromFile(sourcePath, StandardCharsets.UTF_8);
-    }
-
-    public static PhyloSpecRunner fromFile(
-            Path sourcePath,
-            Charset charset
-    ) throws IOException {
         if (sourcePath == null) {
             throw new IllegalArgumentException("sourcePath must not be null.");
         }
 
-        if (charset == null) {
-            throw new IllegalArgumentException("charset must not be null.");
-        }
-
         return new PhyloSpecRunner(
-                Files.readString(sourcePath, charset)
+                Files.readString(sourcePath, StandardCharsets.UTF_8)
         );
     }
 
+    /**
+     * Builds an XML run for a source file and writes it to the requested path.
+     */
     public static XmlRunResult buildXmlRunFromFile(
             Path sourcePath,
             Path xmlPath
@@ -96,17 +95,15 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 );
     }
 
-    public static FileRunPaths defaultOutputPathsForFile(Path sourcePath) {
-        return FileRunPaths.forSource(
+    /**
+     * Executes the default XML run for a source file under target/beastx-runs.
+     */
+    public static XmlRunResult executeDefaultXmlRunFromFile(Path sourcePath)
+            throws Exception {
+        FileRunPaths paths = FileRunPaths.forSource(
                 sourcePath,
                 Path.of("target", "beastx-runs")
         );
-    }
-
-    public static XmlRunResult executeDefaultXmlRunFromFile(Path sourcePath)
-            throws Exception {
-        FileRunPaths paths =
-                defaultOutputPathsForFile(sourcePath);
 
         return fromFile(sourcePath)
                 .executeXmlRun(
@@ -119,71 +116,11 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 );
     }
 
-    /// Parses, resolves, and tiles the PhyloSpec source into a BEAST X state.
-    public BeastXState buildState(String runName)
-            throws IOException, ParserConfigurationException, SAXException {
-        ParsedPhyloSpec parsed =
-                parseAndResolve();
+    /* --- Public methods executing different parts of the pipeline. --- */
 
-        return tile(parsed, runName);
-    }
-
-    public BeastXModel buildModel(String runName)
-            throws IOException, ParserConfigurationException, SAXException {
-        BeastXState beastState =
-                buildState(runName);
-
-        return buildModel(beastState);
-    }
-
-    public BeastXModel buildModel(BeastXState beastState) {
-        return this.runPipeline
-                .buildModel(beastState, false);
-    }
-
-    public BeastXModel buildMaterializedModel(String runName)
-            throws IOException, ParserConfigurationException, SAXException {
-        BeastXState beastState =
-                buildState(runName);
-
-        return buildMaterializedModel(beastState);
-    }
-
-    public BeastXModel buildMaterializedModel(BeastXState beastState) {
-        return this.runPipeline
-                .buildModel(beastState, true);
-    }
-
-    public MCMC buildMCMC(String runName)
-            throws IOException, ParserConfigurationException, SAXException {
-        BeastXModel model =
-                buildModel(runName);
-
-        return buildMCMC(model);
-    }
-
-    public MCMC buildMCMC(String runName, long chainLength)
-            throws IOException, ParserConfigurationException, SAXException {
-        BeastXModel model =
-                buildModel(runName);
-
-        return buildMCMC(model, chainLength);
-    }
-
-    public MCMC buildMCMC(BeastXModel model) {
-        return this.runPipeline
-                .buildMCMC(model);
-    }
-
-    public MCMC buildMCMC(BeastXModel model, long chainLength) {
-        return this.runPipeline
-                .buildMCMC(model, chainLength);
-    }
-
-    /// Runs the PhyloSpec-to-BEAST X pipeline according to the requested run mode.
-    ///
-    /// The pipeline can stop after building the backend state, model, or MCMC object,
-    /// or it can execute the MCMC immediately.
+    /**
+     * Runs the PhyloSpec-to-BEAST X pipeline according to the requested run mode.
+     */
     public BeastXRunResult run(RunnerOptions options)
             throws IOException, ParserConfigurationException, SAXException {
         ParsedPhyloSpec parsed =
@@ -196,6 +133,56 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 .run(beastState, options);
     }
 
+    /**
+     * Parses, resolves, and tiles the PhyloSpec source into a BEAST X state.
+     */
+    public BeastXState buildState(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        ParsedPhyloSpec parsed =
+                parseAndResolve();
+
+        return tile(parsed, runName);
+    }
+
+    /**
+     * Builds a BEAST X model from the PhyloSpec source.
+     */
+    public BeastXModel buildModel(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        BeastXState beastState =
+                buildState(runName);
+
+        return this.runPipeline
+                .buildModel(beastState, false);
+    }
+
+    /**
+     * Builds a BEAST X model with materialized PhyloCTMC likelihoods.
+     */
+    public BeastXModel buildMaterializedModel(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        BeastXState beastState =
+                buildState(runName);
+
+        return this.runPipeline
+                .buildModel(beastState, true);
+    }
+
+    /**
+     * Builds an MCMC object for the source using the requested chain length.
+     */
+    public MCMC buildMCMC(String runName, long chainLength)
+            throws IOException, ParserConfigurationException, SAXException {
+        BeastXModel model =
+                buildModel(runName);
+
+        return this.runPipeline
+                .buildMCMC(model, chainLength);
+    }
+
+    /**
+     * Builds an MCMC run with materialized PhyloCTMC likelihoods without executing it.
+     */
     public BeastXRunResult buildMaterializedRun(String runName)
             throws IOException, ParserConfigurationException, SAXException {
         return run(
@@ -206,6 +193,9 @@ public class PhyloSpecRunner implements ErrorEventListener {
         );
     }
 
+    /**
+     * Builds and executes an in-memory BEAST X MCMC run.
+     */
     public MCMC runMCMC(String runName)
             throws IOException, ParserConfigurationException, SAXException {
         return run(
@@ -213,109 +203,6 @@ public class PhyloSpecRunner implements ErrorEventListener {
                         .mode(RunMode.EXECUTE_MCMC)
                         .build()
         ).mcmc();
-    }
-
-    /**
-     * Serializes a BEAST X model into BEAST X XML.
-     */
-    public String toXml(BeastXModel model) {
-        return this.runPipeline
-                .toXml(model);
-    }
-
-    /**
-     * Writes the generated BEAST X XML to disk.
-     */
-    public BeastXModel writeXml(
-            String runName,
-            Path xmlPath
-    ) throws IOException, ParserConfigurationException, SAXException {
-        BeastXModel model =
-                buildModel(runName);
-
-        writeXml(model, xmlPath);
-
-        return model;
-    }
-
-    public void writeXml(
-            BeastXModel model,
-            Path xmlPath
-    ) throws IOException {
-        this.runPipeline
-                .writeXml(model, xmlPath);
-    }
-
-    /**
-     * Parses a BEAST X XML file into an executable MCMC object.
-     */
-    public MCMC parseXmlMCMC(Path xmlPath) throws Exception {
-        return this.runPipeline
-                .parseXmlMCMC(xmlPath);
-    }
-
-    public MCMC runXmlMCMC(Path xmlPath) throws Exception {
-        return this.runPipeline
-                .runXmlMCMC(xmlPath);
-    }
-
-    public MCMC writeAndRunXmlMCMC(
-            String runName,
-            Path xmlPath
-    ) throws Exception {
-        writeXml(runName, xmlPath);
-
-        return runXmlMCMC(xmlPath);
-    }
-
-    public XmlRunResult buildXmlRun(
-            String runName,
-            Path xmlPath
-    ) throws Exception {
-        BeastXModel model =
-                writeXml(runName, xmlPath);
-
-        MCMC mcmc =
-                parseXmlMCMC(xmlPath);
-
-        return new XmlRunResult(
-                runName,
-                model,
-                xmlPath,
-                mcmc,
-                false
-        );
-    }
-
-    public XmlRunResult executeXmlRun(
-            String runName,
-            Path xmlPath
-    ) throws Exception {
-        XmlRunResult run =
-                buildXmlRun(runName, xmlPath);
-
-        run.mcmc().run();
-
-        return run.asExecuted();
-    }
-
-    public XmlRunResult buildXmlRun(
-            BeastXModel model,
-            String runName,
-            Path xmlPath
-    ) throws Exception {
-        writeXml(model, xmlPath);
-
-        MCMC mcmc =
-                parseXmlMCMC(xmlPath);
-
-        return new XmlRunResult(
-                runName,
-                model,
-                xmlPath,
-                mcmc,
-                false
-        );
     }
 
     /**
@@ -332,6 +219,61 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 .runXml(model, options);
     }
 
+    /**
+     * Writes the generated BEAST X XML to disk and returns the model used for export.
+     */
+    public BeastXModel writeXml(
+            String runName,
+            Path xmlPath
+    ) throws IOException, ParserConfigurationException, SAXException {
+        BeastXModel model =
+                buildModel(runName);
+
+        this.runPipeline
+                .writeXml(model, xmlPath);
+
+        return model;
+    }
+
+    /**
+     * Writes BEAST X XML and executes the parsed XML MCMC.
+     */
+    public MCMC writeAndRunXmlMCMC(
+            String runName,
+            Path xmlPath
+    ) throws Exception {
+        writeXml(runName, xmlPath);
+
+        return this.runPipeline
+                .runXmlMCMC(xmlPath);
+    }
+
+    /**
+     * Writes BEAST X XML and parses it into an XML run without executing it.
+     */
+    public XmlRunResult buildXmlRun(
+            String runName,
+            Path xmlPath
+    ) throws Exception {
+        BeastXModel model =
+                writeXml(runName, xmlPath);
+
+        MCMC mcmc =
+                this.runPipeline
+                        .parseXmlMCMC(xmlPath);
+
+        return new XmlRunResult(
+                runName,
+                model,
+                xmlPath,
+                mcmc,
+                false
+        );
+    }
+
+    /**
+     * Writes and parses an XML run without executing it.
+     */
     public XmlRunResult buildXmlRun(XmlRunnerOptions options)
             throws Exception {
         return runXml(
@@ -341,6 +283,24 @@ public class PhyloSpecRunner implements ErrorEventListener {
         );
     }
 
+    /**
+     * Writes, parses, and executes a BEAST X XML run.
+     */
+    public XmlRunResult executeXmlRun(
+            String runName,
+            Path xmlPath
+    ) throws Exception {
+        XmlRunResult run =
+                buildXmlRun(runName, xmlPath);
+
+        run.mcmc().run();
+
+        return run.asExecuted();
+    }
+
+    /**
+     * Writes, parses, and executes a BEAST X XML run.
+     */
     public XmlRunResult executeXmlRun(XmlRunnerOptions options)
             throws Exception {
         return runXml(
@@ -350,40 +310,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         );
     }
 
-    /**
-     * Applies the BEAST X tile library to the resolved PhyloSpec AST.
-     *
-     * The resulting BeastXState is the backend-specific intermediate state used
-     * later to build a BEAST X model, MCMC object, or XML file.
-     */
-    private BeastXState tile(
-            ParsedPhyloSpec parsed,
-            String runName
-    ) {
-        // Load all BEAST X backend tiles and prepare the tiling evaluator.
-        EvaluateTiles<BeastXState> applyTiles =
-                new EvaluateTiles<>(
-                        BeastXTileLibraries.loadAll(),
-                        new ArrayList<>(),
-                        parsed.variableResolver,
-                        parsed.stochasticityResolver
-                );
-
-        BeastXState beastState =
-                new BeastXState(runName);
-
-        try {
-            // Find and apply the best tile sequence for the parsed PhyloSpec statements.
-            applyTiles.getBestTiling(parsed.statements);
-            return applyTiles.applyBestTiling(beastState);
-        } catch (TileApplicationError error) {
-            Range range =
-                    parsed.parser.getRangeForAstNode(error.getAstNode());
-
-            this.errorDetected(error.toError(range));
-            throw new IllegalStateException("Unreachable after errorDetected.");
-        }
-    }
+    /* --- Internal methods parsing a PhyloSpec script and executing the tiling algorithm --- */
 
     /**
      * Parses the PhyloSpec source and prepares it for tiling.
@@ -391,8 +318,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
      * This includes lexical scanning, parsing, AST simplification, variable
      * resolution, type checking, and stochasticity analysis.
      */
-    private ParsedPhyloSpec parseAndResolve()
-            throws IOException {
+    private ParsedPhyloSpec parseAndResolve() {
         ComponentResolver componentResolver =
                 loadComponentResolver();
 
@@ -453,6 +379,41 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 variableResolver,
                 stochasticityResolver
         );
+    }
+
+    /**
+     * Applies the BEAST X tile library to the resolved PhyloSpec AST.
+     *
+     * The resulting BeastXState is the backend-specific intermediate state used
+     * later to build a BEAST X model, MCMC object, or XML file.
+     */
+    private BeastXState tile(
+            ParsedPhyloSpec parsed,
+            String runName
+    ) {
+        // Load all BEAST X backend tiles and prepare the tiling evaluator.
+        EvaluateTiles<BeastXState> applyTiles =
+                new EvaluateTiles<>(
+                        BeastXTileLibraries.loadAll(),
+                        new ArrayList<>(),
+                        parsed.variableResolver,
+                        parsed.stochasticityResolver
+                );
+
+        BeastXState beastState =
+                new BeastXState(runName);
+
+        try {
+            // Find and apply the best tile sequence for the parsed PhyloSpec statements.
+            applyTiles.getBestTiling(parsed.statements);
+            return applyTiles.applyBestTiling(beastState);
+        } catch (TileApplicationError error) {
+            Range range =
+                    parsed.parser.getRangeForAstNode(error.getAstNode());
+
+            this.errorDetected(error.toError(range));
+            throw new IllegalStateException("Unreachable after errorDetected.");
+        }
     }
 
     private static ComponentResolver loadComponentResolver() {

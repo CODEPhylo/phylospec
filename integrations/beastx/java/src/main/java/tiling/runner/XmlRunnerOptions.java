@@ -2,6 +2,9 @@ package tiling.runner;
 
 import java.nio.file.Path;
 
+/**
+ * Options for writing, parsing, and optionally executing a BEAST X XML run.
+ */
 public record XmlRunnerOptions(
         String runName,
         Path xmlPath,

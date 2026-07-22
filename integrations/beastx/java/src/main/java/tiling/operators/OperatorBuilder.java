@@ -29,6 +29,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Builds MCMC operators for BEAST X state and tree parameters.
+ */
 public class OperatorBuilder {
 
     private static final TypeToken<?> SIMPLEX =
@@ -39,9 +42,6 @@ public class OperatorBuilder {
 
     private static final TypeToken<?> POSITIVE_REAL_VECTOR =
             new TypeToken<RealVector<? extends PositiveReal>>() {};
-
-    private static final TypeToken<?> NON_NEGATIVE_REAL_SCALAR =
-            new TypeToken<RealScalar<? extends NonNegativeReal>>() {};
 
     public List<MCMCOperator> build(BeastXState beastState) {
         List<MCMCOperator> operators =

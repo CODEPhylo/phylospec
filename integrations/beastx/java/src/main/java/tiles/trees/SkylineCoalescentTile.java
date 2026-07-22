@@ -7,6 +7,7 @@ import dr.evomodel.coalescent.TreeIntervals;
 import dr.evomodel.coalescent.demographicmodel.PiecewisePopulationModel;
 import dr.evomodel.tree.DefaultTreeModel;
 import dr.inference.model.Parameter;
+import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.errors.TileApplicationError;
@@ -15,7 +16,6 @@ import org.phylospec.types.RealVector;
 import tiling.params.BeastXRealVectorParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
-import tiling.validation.BeastXValidation;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -74,7 +74,7 @@ public class SkylineCoalescentTile extends GeneratorTile<
         double[] changeTimeValues =
                 toArray(changeTimes);
 
-        BeastXValidation.requireStrictlyIncreasing(
+        requireStrictlyIncreasing(
                 changeTimeValues,
                 this.getRootNode(),
                 "SkylineCoalescent changeTimes must be strictly increasing.",
@@ -149,4 +149,24 @@ public class SkylineCoalescentTile extends GeneratorTile<
 
         return widths;
     }
+
+    private static void requireStrictlyIncreasing(
+            double[] values,
+            AstNode rootNode,
+            String description,
+            String hint,
+            List<String> examples
+    ) {
+        for (int i = 1; i < values.length; i++) {
+            if (values[i] <= values[i - 1]) {
+                throw new TileApplicationError(
+                        rootNode,
+                        description,
+                        hint,
+                        examples
+                );
+            }
+        }
+    }
+
 }

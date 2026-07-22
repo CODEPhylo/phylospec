@@ -10,6 +10,9 @@ import tiling.xml.XmlElement;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Builds XML alignment and pattern-list definitions from BEAST X alignments.
+ */
 public class AlignmentXmlBuilder {
 
     public List<XmlElement> buildAlignmentAndPatterns(

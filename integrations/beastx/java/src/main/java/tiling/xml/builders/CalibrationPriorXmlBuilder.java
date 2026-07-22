@@ -14,6 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Builds XML statistics and priors for supported calibration constraints.
+ */
 public class CalibrationPriorXmlBuilder {
 
     public boolean supports(AbstractDistributionLikelihood calibrationPrior) {

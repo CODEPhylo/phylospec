@@ -11,6 +11,10 @@ import tiling.params.BeastXStatisticRealScalar;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Holds an in-progress RPN expression as a string together with the BEAST X statistics it
+ * references and the names that identify each statistic within the expression.
+ */
 public record BeastXRPNCalculationResult(
         String calculation,
         Map<String, Statistic> variables

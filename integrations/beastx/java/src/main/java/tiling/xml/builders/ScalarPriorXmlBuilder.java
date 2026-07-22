@@ -11,6 +11,9 @@ import dr.inference.distribution.UniformDistributionModel;
 import dr.inference.model.Parameter;
 import tiling.xml.XmlElement;
 
+/**
+ * Builds XML elements for supported scalar parameter priors.
+ */
 public class ScalarPriorXmlBuilder {
 
     public boolean supports(Distribution distribution) {

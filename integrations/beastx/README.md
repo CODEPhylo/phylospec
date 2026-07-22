@@ -33,3 +33,11 @@ Once BEAST X is installed locally:
 ```sh
 mvn -pl integrations/beastx/java -am compile
 ```
+
+## Beagle
+
+For Beagle to work, you generally have two options:
+
+- Add the library to `PATH`,
+- Specify the library path in the VM options of the run config (e.g. `-Djava.library.path=/usr/local/lib` on macOS). 
+- 

@@ -24,12 +24,12 @@ import java.util.Set;
 /**
  * Intermediate state produced while evaluating BEAST X tiles.
  *
- * Each tile adds the BEAST X objects or export metadata it creates, such as
+ * <p>Each tile adds the BEAST X objects or export metadata it creates, such as
  * state nodes, priors, tree priors, likelihoods, operators, loggers, and XML
- * generation information.
+ * generation information.</p>
  *
-     * This state is later consumed by `BeastXModel`, `MCMCBuilder`, or
- * `StateXmlGenerator`.
+ * <p>This state is later consumed by {@link BeastXModel}, {@link tiling.mcmc.MCMCBuilder}, or
+ * {@link tiling.xml.StateXmlGenerator}.</p>
  */
 public class BeastXState {
 

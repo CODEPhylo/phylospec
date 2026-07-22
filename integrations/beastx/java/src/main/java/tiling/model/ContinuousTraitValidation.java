@@ -7,6 +7,9 @@ import dr.evolution.util.Taxon;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.model.Parameter;
 
+/**
+ * Validates observed continuous trait data before building trait likelihoods.
+ */
 public final class ContinuousTraitValidation {
 
     public static final String TRAIT_ATTRIBUTE = "continuousTrait";

@@ -18,6 +18,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Builds XML logger definitions matching the logger specs in a BEAST X state.
+ */
 public class LoggerXmlBuilder {
 
     private static final String POSTERIOR_LOG_NAME =

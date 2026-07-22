@@ -7,6 +7,9 @@ import dr.evomodel.coalescent.demographicmodel.DemographicModel;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Combines multiple demographic models into a single time-segmented population model.
+ */
 public class BeastXCompoundPopulationModel extends DemographicModel {
 
     private final List<DemographicModel> models;

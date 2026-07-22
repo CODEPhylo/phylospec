@@ -7,6 +7,9 @@ import tiling.xml.XmlElement;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Builds XML parameter definitions for BEAST X MCMC state nodes.
+ */
 public class StateParameterXmlBuilder {
 
     public XmlElement buildParameter(Parameter parameter) {

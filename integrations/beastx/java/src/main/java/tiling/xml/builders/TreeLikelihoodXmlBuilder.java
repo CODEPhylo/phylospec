@@ -2,6 +2,9 @@ package tiling.xml.builders;
 
 import tiling.xml.XmlElement;
 
+/**
+ * Builds XML tree likelihood elements used by PhyloCTMC XML export.
+ */
 public class TreeLikelihoodXmlBuilder {
 
     public XmlElement buildTreeLikelihood(

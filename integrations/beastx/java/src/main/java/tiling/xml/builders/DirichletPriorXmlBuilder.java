@@ -9,6 +9,9 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Builds XML elements for Dirichlet priors on vector parameters.
+ */
 public class DirichletPriorXmlBuilder {
 
     public XmlElement buildPrior(

@@ -7,6 +7,9 @@ import dr.inference.model.VariableListener;
 
 import java.util.function.DoubleSupplier;
 
+/**
+ * Read-only BEAST X scalar parameter whose value is derived from other parameters.
+ */
 public class BeastXDerivedScalarParameter extends Parameter.Abstract implements VariableListener {
 
     private final String id;

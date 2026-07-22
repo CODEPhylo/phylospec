@@ -18,6 +18,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Allows to create a summary string of the BEAST X state, likelihoods, operators, and loggers in a model.
+ */
 public class BeastXModelSummary {
 
     public final List<String> stateNodes;

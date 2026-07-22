@@ -4,6 +4,10 @@ import dr.inference.model.Parameter;
 import org.phylospec.domain.Int;
 import org.phylospec.types.IntScalar;
 
+/**
+ * Wraps a BEAST X parameter as a PhyloSpec integer scalar.
+ * This is useful to validate the parameter domain during tiling.
+ */
 public class BeastXIntScalarParam<D extends Int> implements IntScalar<D>, BeastXParam {
 
     private final Parameter parameter;

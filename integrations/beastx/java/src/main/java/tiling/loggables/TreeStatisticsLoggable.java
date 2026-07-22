@@ -1,4 +1,4 @@
-package tiling.mcmc;
+package tiling.loggables;
 
 import dr.evolution.tree.Tree;
 import dr.evomodel.tree.TreeModel;
@@ -9,6 +9,9 @@ import dr.inference.loggers.NumberColumn;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Exposes tree height and tree length statistics as BEAST X loggables.
+ */
 public final class TreeStatisticsLoggable implements Loggable {
 
     private final TreeModel treeModel;

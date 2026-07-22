@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.lang.reflect.Field;
 
+/**
+ * Builds XML substitution and frequency model definitions for PhyloCTMC export.
+ */
 public class SubstitutionModelXmlBuilder {
 
     private static final List<String> GTR_RATE_NAMES =
