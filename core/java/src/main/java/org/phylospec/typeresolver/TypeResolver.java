@@ -1262,27 +1262,9 @@ public class TypeResolver
             return "unknown";
         }
         if (type.size() == 1) {
-            return printType(type.iterator().next());
+            return type.iterator().next().toString();
         }
-        return String.join(" | ", type.stream().map(TypeResolver::printType).sorted().toList());
-    }
-
-    private static String printType(ResolvedType type) {
-        String result = type.getUnqualifiedName();
-
-        if (type.getParameterTypes().isEmpty()) return result;
-
-        result += "<";
-
-        result +=
-                String.join(
-                        ",",
-                        type.getParametersNames().stream()
-                                .map(x -> printType(type.getParameterTypes().get(x)))
-                                .toList());
-
-        result += ">";
-        return result;
+        return String.join(" | ", type.stream().map(ResolvedType::toString).sorted().toList());
     }
 
     /**

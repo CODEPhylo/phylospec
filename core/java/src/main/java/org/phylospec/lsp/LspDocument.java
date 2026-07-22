@@ -248,7 +248,7 @@ class LspDocument implements ErrorEventListener {
 
             CompletionItem item;
             if (type != null) {
-                item = new CompletionItem(type.getName());
+                item = new CompletionItem(getUnqualifiedName(type.getName()));
                 item.setKind(CompletionItemKind.TypeParameter);
                 item.setDocumentation(type.getDescription());
             } else {
@@ -263,18 +263,21 @@ class LspDocument implements ErrorEventListener {
 
     /** Helper method to print the info for a generator. */
     private StringBuilder printGeneratorInfo(StringBuilder stringBuilder, Generator generator) {
-        stringBuilder.append(generator.getGeneratedType()).append(" ");
+        stringBuilder.append(getUnqualifiedName(generator.getGeneratedType())).append(" ");
         stringBuilder.append(generator.getName()).append("(");
 
         for (int i = 0; i < generator.getArguments().size(); i++) {
             Argument argument = generator.getArguments().get(i);
 
             if (argument.getRequired()) {
-                stringBuilder.append(argument.getType()).append(" ").append(argument.getName());
+                stringBuilder
+                        .append(getUnqualifiedName(argument.getType()))
+                        .append(" ")
+                        .append(argument.getName());
             } else {
                 stringBuilder
                         .append("[")
-                        .append(argument.getType())
+                        .append(getUnqualifiedName(argument.getType()))
                         .append(" ")
                         .append(argument.getName())
                         .append("]");
@@ -287,6 +290,10 @@ class LspDocument implements ErrorEventListener {
 
         stringBuilder.append(")");
         return stringBuilder;
+    }
+
+    private static String getUnqualifiedName(String name) {
+        return ComponentResolver.getUnqualifiedName(name);
     }
 
     /** Helper method to get the token at the cursor position. */
