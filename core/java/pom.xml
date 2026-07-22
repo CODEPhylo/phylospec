@@ -248,7 +248,7 @@
                 </executions>
             </plugin>
 
-            <!-- Plugin to generate a fat JAR with the Tools class. -->
+            <!-- Plugin to generate fat JARs with runnable entry points. -->
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
@@ -268,6 +268,24 @@
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
                             <finalName>${project.artifactId}-tools</finalName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>make-lsp</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <mainClass>org.phylospec.lsp.RunLsp</mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <finalName>phylospec-lsp</finalName>
                         </configuration>
                     </execution>
                 </executions>
