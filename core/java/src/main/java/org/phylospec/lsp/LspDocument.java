@@ -149,7 +149,17 @@ class LspDocument implements ErrorEventListener {
                 Set<ResolvedType> resolvedTypeSet = typeResolver.resolveTypeSet(typeNode);
                 if (resolvedTypeSet == null) return null;
 
+                if (1 < resolvedTypeSet.size()) {
+                    hoverText
+                            .append("_There are multiple versions of ")
+                            .append(getUnqualifiedName(typeNode.name))
+                            .append(":_\n\n");
+                }
+
                 for (ResolvedType resolvedType : resolvedTypeSet) {
+                    if (1 < resolvedTypeSet.size()) {
+                        hoverText.append("---\n\n");
+                    }
                     hoverText.append(resolvedType.getTypeComponent().getDescription());
                     hoverText.append("\n\n```phylospec\n");
                     hoverText.append(resolvedType);
@@ -160,27 +170,57 @@ class LspDocument implements ErrorEventListener {
                 Set<ResolvedType> resolvedTypeSet = typeResolver.resolveTypeSet(stmt);
                 if (resolvedTypeSet == null) return null;
 
+                if (1 < resolvedTypeSet.size()) {
+                    hoverText
+                            .append("_There are multiple versions of ")
+                            .append(stmt.name)
+                            .append(":_\n\n");
+                }
+
                 for (ResolvedType resolvedType : resolvedTypeSet) {
+                    if (1 < resolvedTypeSet.size()) {
+                        hoverText.append("---\n\n");
+                    }
                     hoverText.append("```phylospec\n");
                     hoverText.append(resolvedType).append(" ").append(stmt.name);
-                    hoverText.append("\n```");
+                    hoverText.append("\n```\n\n");
                 }
             }
             case Stmt.Draw stmt -> {
                 Set<ResolvedType> resolvedTypeSet = typeResolver.resolveTypeSet(stmt);
                 if (resolvedTypeSet == null) return null;
 
+                if (1 < resolvedTypeSet.size()) {
+                    hoverText
+                            .append("_There are multiple versions of ")
+                            .append(stmt.name)
+                            .append(":_\n\n");
+                }
+
                 for (ResolvedType resolvedType : resolvedTypeSet) {
+                    if (1 < resolvedTypeSet.size()) {
+                        hoverText.append("---\n\n");
+                    }
                     hoverText.append("```phylospec\n");
                     hoverText.append(resolvedType).append(" ").append(stmt.name);
-                    hoverText.append("\n```");
+                    hoverText.append("\n```\n\n");
                 }
             }
             case Expr.Variable variable -> {
                 Set<ResolvedType> resolvedTypeSet =
                         typeResolver.resolveVariable(variable.variableName);
 
+                if (1 < resolvedTypeSet.size()) {
+                    hoverText
+                            .append("_There are multiple versions of ")
+                            .append(variable.variableName)
+                            .append(":_\n\n");
+                }
+
                 for (ResolvedType resolvedType : resolvedTypeSet) {
+                    if (1 < resolvedTypeSet.size()) {
+                        hoverText.append("---\n\n");
+                    }
                     hoverText.append("```phylospec\n");
                     hoverText.append(resolvedType).append(" ").append(variable.variableName);
                     hoverText.append("\n```\n\n");
@@ -189,19 +229,48 @@ class LspDocument implements ErrorEventListener {
             case Expr.Call call -> {
                 List<Generator> generators = componentResolver.resolveGenerator(call.functionName);
 
-                for (Generator generator : generators) {
+                if (1 < generators.size()) {
+                    hoverText
+                            .append("_There are multiple versions of ")
+                            .append(call.functionName)
+                            .append(":_\n\n");
+                }
+
+                for (int i = 0; i < generators.size(); i++) {
+                    Generator generator = generators.get(i);
+
+                    if (1 < generators.size()) {
+                        hoverText.append("---\n\n");
+                    }
                     hoverText.append(generator.getDescription()).append("\n\n");
                     hoverText.append("```phylospec\n");
                     printGeneratorInfo(hoverText, generator);
                     hoverText.append("\n```\n\n");
+                    printGeneratorArgumentDescriptions(hoverText, generator);
                 }
             }
             case Expr.Argument argument -> {
                 Set<ResolvedType> resolvedTypeSet = typeResolver.resolveTypeSet(argument);
 
+                String argumentName = argument.name;
+                if (argumentName == null) {
+                    if (argument.expression instanceof Expr.Variable variable) {
+                        argumentName = variable.variableName;
+                    } else {
+                        argumentName = "";
+                    }
+                }
+
+                if (1 < resolvedTypeSet.size()) {
+                    hoverText.append("_There are multiple versions of this argument:_\n\n");
+                }
+
                 for (ResolvedType resolvedType : resolvedTypeSet) {
+                    if (1 < resolvedTypeSet.size()) {
+                        hoverText.append("---\n\n");
+                    }
                     hoverText.append("```phylospec\n");
-                    hoverText.append(resolvedType).append(" ").append(argument.name);
+                    hoverText.append(resolvedType).append(" ").append(argumentName);
                     hoverText.append("\n```\n\n");
                 }
             }
@@ -259,6 +328,21 @@ class LspDocument implements ErrorEventListener {
         }
 
         return completionItems;
+    }
+
+    /** Appends argument descriptions for a generator. */
+    private static void printGeneratorArgumentDescriptions(
+            StringBuilder stringBuilder, Generator generator) {
+        if (generator.getArguments().isEmpty()) return;
+
+        for (Argument argument : generator.getArguments()) {
+            stringBuilder.append("* ").append(argument.getName()).append(": ");
+            if (argument.getDescription() != null) {
+                stringBuilder.append(argument.getDescription());
+            }
+            stringBuilder.append("\n");
+        }
+        stringBuilder.append("\n");
     }
 
     /** Helper method to print the info for a generator. */
