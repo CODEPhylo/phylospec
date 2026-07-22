@@ -336,7 +336,11 @@ class LspDocument implements ErrorEventListener {
         if (generator.getArguments().isEmpty()) return;
 
         for (Argument argument : generator.getArguments()) {
-            stringBuilder.append("* ").append(argument.getName()).append(": ");
+            stringBuilder.append("* ").append(argument.getName());
+            if (!Boolean.TRUE.equals(argument.getRequired())) {
+                stringBuilder.append(" (optional)");
+            }
+            stringBuilder.append(": ");
             if (argument.getDescription() != null) {
                 stringBuilder.append(argument.getDescription());
             }
