@@ -9,6 +9,15 @@
     "vscode": "^1.75.0"
   },
   "main": "./out/extension",
+  "activationEvents": [
+    "onLanguage:phylospec"
+  ],
+  "files": [
+    "language-configuration.json",
+    "out/**",
+    "server/**",
+    "syntaxes/**"
+  ],
   "contributes": {
     "languages": [
       {
@@ -32,7 +41,8 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run build:lsp && npm run compile",
+    "build:lsp": "mvn -f ../../core/java/pom.xml -DskipTests package && node -e \"const fs = require('fs'); fs.mkdirSync('server', { recursive: true }); fs.copyFileSync('../../core/java/target/phylospec-lsp-jar-with-dependencies.jar', 'server/phylospec-lsp.jar');\"",
     "compile": "tsc -b",
     "watch": "tsc -b -w"
   },
