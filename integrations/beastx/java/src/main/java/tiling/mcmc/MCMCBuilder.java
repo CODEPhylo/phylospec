@@ -15,7 +15,7 @@ import tiling.operators.OperatorBuilder;
 import java.util.List;
 
 /**
- * Builds runnable BEAST X MCMC objects from an in-memory BeastXModel.
+ * Builds runnable BEAST X MCMC objects from an in-memory {@link BeastXModel}.
  *
  * Connects the model, operators, loggers, chain length, and random seed
  * into the MCMC structure expected by BEAST X.

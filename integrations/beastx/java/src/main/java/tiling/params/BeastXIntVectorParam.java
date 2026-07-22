@@ -7,6 +7,10 @@ import org.phylospec.types.IntVector;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Wraps a BEAST X parameter as a PhyloSpec integer vector.
+ * This is useful to validate the parameter domain during tiling.
+ */
 public class BeastXIntVectorParam<D extends Int> implements IntVector<D>, BeastXParam {
 
     private final Parameter parameter;

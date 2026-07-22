@@ -4,6 +4,9 @@ import tiling.BeastXState;
 
 import java.nio.file.Path;
 
+/**
+ * Options applied when running or partially building a BEAST X pipeline.
+ */
 public record RunnerOptions(
         String runName,
         RunMode mode,

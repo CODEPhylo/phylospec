@@ -11,6 +11,7 @@ import dr.inference.model.Parameter;
 import dr.inference.model.Statistic;
 import tiling.BeastXModel;
 import tiling.BeastXState;
+import tiling.loggables.TreeStatisticsLoggable;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -20,6 +21,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Builds BEAST X runtime loggers from logger specs collected in a {@link BeastXState} or a {@link BeastXModel}.
+ */
 public class LoggerBuilder {
 
     public List<Logger> build(BeastXState beastState) {

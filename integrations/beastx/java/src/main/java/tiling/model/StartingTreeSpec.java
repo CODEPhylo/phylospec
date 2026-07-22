@@ -1,5 +1,8 @@
 package tiling.model;
 
+/**
+ * Describes how a tree model should receive its starting tree during XML export.
+ */
 public record StartingTreeSpec(Type type) {
 
     public enum Type {

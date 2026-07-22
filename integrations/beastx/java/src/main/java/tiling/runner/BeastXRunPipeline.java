@@ -10,12 +10,17 @@ import tiling.xml.XmlRunner;
 import java.io.IOException;
 import java.nio.file.Path;
 
+/**
+ * Coordinates BEAST X state, model, MCMC, XML, and execution steps.
+ */
 public final class BeastXRunPipeline {
 
     public BeastXRunResult run(
             BeastXState beastState,
             RunnerOptions options
     ) {
+        // verify inputs
+
         if (beastState == null) {
             throw new IllegalArgumentException("beastState must not be null.");
         }
@@ -24,9 +29,12 @@ public final class BeastXRunPipeline {
             throw new IllegalArgumentException("options must not be null.");
         }
 
+        // apply options
+
         options.applyTo(beastState);
 
         if (options.mode() == RunMode.BUILD_STATE) {
+            // we have already built the state and are done
             return new BeastXRunResult(
                     options.runName(),
                     options,
@@ -38,6 +46,8 @@ public final class BeastXRunPipeline {
             );
         }
 
+        // build the BeastXModel from the BeastXState
+
         BeastXModel model =
                 buildModel(
                         beastState,
@@ -45,6 +55,7 @@ public final class BeastXRunPipeline {
                 );
 
         if (options.mode() == RunMode.BUILD_MODEL) {
+            // we have built the model and are done
             return new BeastXRunResult(
                     options.runName(),
                     options,
@@ -55,6 +66,8 @@ public final class BeastXRunPipeline {
                     false
             );
         }
+
+        // build the BEAST X MCMC objects
 
         MCMC mcmc =
                 buildMCMC(model, options);
@@ -71,13 +84,19 @@ public final class BeastXRunPipeline {
                 );
 
         if (options.mode() == RunMode.BUILD_MCMC) {
+            // we have built the MCMC objects and are done
             return run;
         }
 
+        // run MCMC
+
+        mcmc.run();
+
         if (options.mode() == RunMode.EXECUTE_MCMC) {
-            mcmc.run();
             return run.asExecuted();
         }
+
+        // we don't know this mode
 
         throw new IllegalStateException(
                 "Unsupported BEAST X run mode: " + options.mode()

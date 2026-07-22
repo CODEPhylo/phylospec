@@ -5,6 +5,9 @@ import tiling.BeastXModel;
 
 import java.nio.file.Path;
 
+/**
+ * Captures the parsed MCMC object and XML path from an XML-based BEAST X run.
+ */
 public record XmlRunResult(
         String runName,
         BeastXModel model,

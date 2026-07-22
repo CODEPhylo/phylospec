@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * In-memory BEAST X model assembled from a completed BeastXState.
+ * In-memory BEAST X model assembled from a built-up {@link BeastXState}.
  *
  * Holds the posterior, prior, likelihood, state nodes, operators, loggers,
  * and MCMC settings used for direct BEAST X execution.

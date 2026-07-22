@@ -17,6 +17,9 @@ import tiling.xml.XmlPlan;
 
 import java.util.Set;
 
+/**
+ * Adds tree, taxon, and starting-tree XML definitions to an XML plan.
+ */
 public class TreeModelXmlBuilder {
 
     public void addTreeDefinitions(

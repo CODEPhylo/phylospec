@@ -18,6 +18,9 @@ import dr.inference.model.Variable;
 import tiling.BeastXState;
 import tiling.xml.XmlElement;
 
+/**
+ * Builds XML model and likelihood elements for supported tree priors.
+ */
 public class TreePriorXmlBuilder {
 
     public XmlElement buildModelDefinition(

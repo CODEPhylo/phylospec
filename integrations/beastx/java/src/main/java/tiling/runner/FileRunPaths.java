@@ -2,6 +2,9 @@ package tiling.runner;
 
 import java.nio.file.Path;
 
+/**
+ * Derives the run name and output paths for a PhyloSpec source file.
+ */
 public record FileRunPaths(
         Path sourcePath,
         String runName,

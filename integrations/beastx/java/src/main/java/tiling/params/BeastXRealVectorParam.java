@@ -7,6 +7,10 @@ import org.phylospec.types.RealVector;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Wraps a BEAST X parameter as a PhyloSpec real vector.
+ * This is useful to validate the parameter domain during tiling.
+ */
 public class BeastXRealVectorParam<D extends Real> implements RealVector<D>, BeastXParam {
 
     private final Parameter parameter;

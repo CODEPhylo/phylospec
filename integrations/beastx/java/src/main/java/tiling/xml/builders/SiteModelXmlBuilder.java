@@ -7,6 +7,9 @@ import tiling.xml.XmlElement;
 
 import java.lang.reflect.Field;
 
+/**
+ * Builds XML site model definitions for PhyloCTMC likelihood export.
+ */
 public class SiteModelXmlBuilder {
 
     public XmlElement buildSiteRateModel(

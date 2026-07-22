@@ -7,6 +7,9 @@ import dr.inference.model.Parameter;
 import tiling.BeastXState;
 import tiling.xml.XmlElement;
 
+/**
+ * Builds XML elements for strict and relaxed branch rate models.
+ */
 public class BranchRateModelXmlBuilder {
 
     public XmlElement buildStrictClockBranchRates(

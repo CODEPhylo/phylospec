@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Builds XML operator definitions from the operators implied by a BEAST X state.
+ */
 public class OperatorXmlBuilder {
 
     public List<XmlElement> buildOperators(BeastXState state) {

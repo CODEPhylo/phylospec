@@ -12,6 +12,12 @@ import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Model;
 import dr.inference.model.Variable;
 
+/**
+ * This is a wrapper of {@link BeagleTreeLikelihood}.
+ *
+ * <p>The PhyloCTMC tiles construct this class first to be consistent with how PhyloBM and PhyloOU are currently
+ * handled with their respective likelihood spec classes.</p>
+ */
 public class BeastXPhyloCTMCLikelihoodSpec extends AbstractModelLikelihood {
 
     private final Alignment observedAlignment;

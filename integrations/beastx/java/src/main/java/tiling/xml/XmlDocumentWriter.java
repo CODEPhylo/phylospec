@@ -11,6 +11,9 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Writes an {@link XmlPlan} and BEAST X state into a complete BEAST XML document.
+ */
 public class XmlDocumentWriter {
 
     public String write(

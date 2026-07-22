@@ -4,6 +4,10 @@ import dr.inference.model.Parameter;
 import org.phylospec.domain.Real;
 import org.phylospec.types.RealScalar;
 
+/**
+ * Wraps a BEAST X parameter as a PhyloSpec real scalar.
+ * This is useful to validate the parameter domain during tiling.
+ */
 public class BeastXRealScalarParam<D extends Real> implements RealScalar<D>, BeastXParam {
 
     private final Parameter parameter;

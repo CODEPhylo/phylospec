@@ -10,6 +10,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Captures the artifacts and output paths produced by a BEAST X run pipeline.
+ */
 public record BeastXRunResult(
         String runName,
         RunnerOptions options,

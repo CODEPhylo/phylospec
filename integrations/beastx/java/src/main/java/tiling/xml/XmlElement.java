@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Immutable XML element used by XML builders before writing BEAST X XML.
+ */
 public class XmlElement {
 
     private final String tag;
