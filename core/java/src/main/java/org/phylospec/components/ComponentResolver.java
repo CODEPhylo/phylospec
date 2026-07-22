@@ -377,6 +377,20 @@ public class ComponentResolver {
      * Gets the unqualified name (without the namespace).
      */
     public static String getUnqualifiedName(String name) {
+        String unqualifiedBaseName = getUnqualifiedAtomicName(TypeUtils.stripGenerics(name));
+        List<String> parameterTypes = TypeUtils.parseParameterTypes(name);
+
+        if (parameterTypes.isEmpty()) return unqualifiedBaseName;
+
+        return unqualifiedBaseName
+                + "<"
+                + parameterTypes.stream()
+                        .map(ComponentResolver::getUnqualifiedName)
+                        .collect(java.util.stream.Collectors.joining(", "))
+                + ">";
+    }
+
+    private static String getUnqualifiedAtomicName(String name) {
         String[] splitNamespace = splitNamespace(name);
         return splitNamespace[splitNamespace.length - 1];
     }
