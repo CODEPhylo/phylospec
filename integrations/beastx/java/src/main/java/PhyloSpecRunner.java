@@ -17,6 +17,7 @@ import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
+import org.phylospec.xml.XmlProvenance;
 import org.xml.sax.SAXException;
 import tiles.BeastXTileLibraries;
 import tiling.BeastXModel;
@@ -214,18 +215,6 @@ public class PhyloSpecRunner implements ErrorEventListener {
         );
     }
 
-    /**
-     * Builds and executes an in-memory BEAST X MCMC run.
-     */
-    public MCMC runMCMC(String runName)
-            throws IOException, ParserConfigurationException, SAXException {
-        return run(
-                RunnerOptions.builder(runName)
-                        .mode(RunMode.EXECUTE_MCMC)
-                        .build()
-        ).mcmc();
-    }
-
     public BeastXRunResult executeMaterialized(String runName)
             throws IOException, ParserConfigurationException, SAXException {
         return run(
@@ -247,6 +236,51 @@ public class PhyloSpecRunner implements ErrorEventListener {
         );
     }
 
+    public MCMC runMCMC(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        return execute(runName).mcmc();
+    }
+
+    public BeastXRunResult execute(String runName)
+            throws IOException, ParserConfigurationException, SAXException {
+        return run(
+                RunnerOptions.builder(runName)
+                        .mode(RunMode.EXECUTE_MCMC)
+                        .build()
+        );
+    }
+
+    /**
+     * Serializes a BEAST X model into BEAST X XML.
+     */
+    public String toXml(BeastXModel model) {
+        return XmlProvenance.embedSource(
+                this.runPipeline.toXml(model),
+                this.source
+        );
+    }
+
+    /**
+     * Writes the generated BEAST X XML to disk.
+     */
+    public void writeXml(
+            BeastXModel model,
+            Path xmlPath
+    ) throws IOException {
+        Path parent =
+                xmlPath.getParent();
+
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
+
+        Files.writeString(
+                xmlPath,
+                toXml(model),
+                StandardCharsets.UTF_8
+        );
+    }
+
     /**
      * Parses a BEAST X XML file into an executable MCMC object.
      */
@@ -265,8 +299,27 @@ public class PhyloSpecRunner implements ErrorEventListener {
                         ? buildMaterializedModel(options.runName())
                         : buildModel(options.runName());
 
-        return this.runPipeline
-                .runXml(model, options);
+        writeXml(model, options.xmlPath());
+
+        MCMC mcmc =
+                parseXmlMCMC(options.xmlPath());
+
+        XmlRunResult run =
+                new XmlRunResult(
+                        options.runName(),
+                        model,
+                        options.xmlPath(),
+                        mcmc,
+                        false
+                );
+
+        if (!options.execute()) {
+            return run;
+        }
+
+        mcmc.run();
+
+        return run.asExecuted();
     }
 
     /**
@@ -278,9 +331,18 @@ public class PhyloSpecRunner implements ErrorEventListener {
     ) throws IOException, ParserConfigurationException, SAXException {
         BeastXModel model =
                 buildModel(runName);
+        Path parent =
+                xmlPath.getParent();
 
-        this.runPipeline
-                .writeXml(model, xmlPath);
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
+
+        Files.writeString(
+                xmlPath,
+                toXml(model),
+                StandardCharsets.UTF_8
+        );
 
         return model;
     }

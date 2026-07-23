@@ -1,15 +1,11 @@
 package tiles.branchmodels;
 
-import dr.evomodel.branchratemodel.BranchRateModel;
 import dr.evomodel.branchratemodel.DiscretizedBranchRates;
-import dr.evomodel.branchratemodel.MultiplicativeBranchRateModel;
-import dr.evomodel.branchratemodel.StrictClockBranchRates;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.distribution.ParametricDistributionModel;
 import dr.inference.model.Parameter;
 import dr.math.distributions.Distribution;
-
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.NonNegativeInt;
 import org.phylospec.domain.PositiveReal;
@@ -17,7 +13,6 @@ import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
-
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
 import tiling.params.BeastXIntVectorParam;
@@ -27,7 +22,7 @@ import tiling.params.BeastXRealScalarParam;
 import java.util.IdentityHashMap;
 import java.util.List;
 
-public class RelaxedClockTile extends GeneratorTile<BranchRateModel, BeastXState> {
+public class RelaxedClockTile extends GeneratorTile<DiscretizedBranchRates, BeastXState> {
 
     private static final double MEAN_TOLERANCE = 1.0e-6;
 
@@ -52,7 +47,7 @@ public class RelaxedClockTile extends GeneratorTile<BranchRateModel, BeastXState
             new GeneratorTileInput<>("tree");
 
     @Override
-    public BranchRateModel applyTile(
+    public DiscretizedBranchRates applyTile(
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
@@ -124,37 +119,17 @@ public class RelaxedClockTile extends GeneratorTile<BranchRateModel, BeastXState
                 categoryId
         );
 
-        DiscretizedBranchRates relativeRelaxedClock =
+        DiscretizedBranchRates relaxedClock =
                 new DiscretizedBranchRates(
                         tree,
                         rateCategories.getParameter(),
                         parametricDistribution,
                         1,
                         true,
-                        1.0,
+                        clockRate.get(),
                         false,
                         false,
                         false
-                );
-
-        relativeRelaxedClock.setId(
-                beastState.getAvailableID(
-                        this.getId("relaxedClockRelativeRates", indexVariables, "")
-                )
-        );
-
-        StrictClockBranchRates globalClock =
-                new StrictClockBranchRates(clockRateParameter);
-
-        globalClock.setId(
-                beastState.getAvailableID(
-                        this.getId("relaxedClockGlobalClock", indexVariables, "")
-                )
-        );
-
-        MultiplicativeBranchRateModel relaxedClock =
-                new MultiplicativeBranchRateModel(
-                        List.of(globalClock, relativeRelaxedClock)
                 );
 
         relaxedClock.setId(
@@ -165,7 +140,7 @@ public class RelaxedClockTile extends GeneratorTile<BranchRateModel, BeastXState
 
         beastState.addTreeRelaxedClockModel(
                 tree,
-                relativeRelaxedClock,
+                relaxedClock,
                 rateCategories.getParameter(),
                 parametricDistribution,
                 clockRateParameter

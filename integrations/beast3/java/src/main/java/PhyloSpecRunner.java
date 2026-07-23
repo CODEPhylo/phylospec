@@ -21,6 +21,7 @@ import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
+import org.phylospec.xml.XmlProvenance;
 import org.xml.sax.SAXException;
 import beastconfig.BEASTState;
 
@@ -202,7 +203,10 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 new XMLProducer()
                         .toXML(mcmc);
 
-        Files.writeString(xmlPath, xml);
+        Files.writeString(
+                xmlPath,
+                XmlProvenance.embedSource(xml, this.source)
+        );
     }
 
     /**
