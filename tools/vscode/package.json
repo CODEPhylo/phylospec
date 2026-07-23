@@ -2,21 +2,21 @@
   "name": "PhyloSpec",
   "description": "This is a VS Code extension providing syntax highlighting and an LSP for the PhyloSpec language.",
   "author": "CODEPhylo steering group",
+  "repository": "https://github.com/CODEPhylo/phylospec",
   "license": "MIT",
   "version": "1.0.0",
+  "publisher": "CodePhylo",
   "categories": [],
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.81.0"
   },
   "main": "./out/extension",
-  "activationEvents": [
-    "onLanguage:phylospec"
-  ],
   "files": [
     "language-configuration.json",
     "out/**",
     "server/**",
-    "syntaxes/**"
+    "syntaxes/**",
+    "LICENSE"
   ],
   "contributes": {
     "languages": [
@@ -44,7 +44,9 @@
     "vscode:prepublish": "npm run build:lsp && npm run compile",
     "build:lsp": "mvn -f ../../core/java/pom.xml -DskipTests package && node -e \"const fs = require('fs'); fs.mkdirSync('server', { recursive: true }); fs.copyFileSync('../../core/java/target/phylospec-lsp-jar-with-dependencies.jar', 'server/phylospec-lsp.jar');\"",
     "compile": "tsc -b",
-    "watch": "tsc -b -w"
+    "watch": "tsc -b -w",
+    "package": "vsce package",
+    "publish": "vsce publish"
   },
   "dependencies": {
     "vscode-languageclient": "^8.1.0"
@@ -52,6 +54,7 @@
   "devDependencies": {
     "@types/node": "^20.5.7",
     "@types/vscode": "^1.81.0",
+    "@vscode/vsce": "^3.9.2",
     "typescript": "^5.2.2"
   }
 }
