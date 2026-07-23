@@ -16,3 +16,8 @@ To run a developer version of this extension in VS Code (or any of its forks):
 5. **Open VS Code in this directory** (not in the root directory of this repository). Open the `src/extension.ts` file, press `F5`, and select `Extension Development Host`.
 
 A new window should pop up. Create or open a `.phylospec` file and try out the extension. The extension activates for PhyloSpec files and starts the bundled Java LSP server on port `5007`.
+
+## How to Publish
+
+1. Login with your Azure account which is connected to the PhyloSpec organization using `vsce login CodePhylo`.
+2. Run `npm run publish` to publish the VS Code extension.

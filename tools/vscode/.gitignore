@@ -1,3 +1,5 @@
+.env
 node_modules
 out
 tsconfig.tsbuildinfo
+PhyloSpec-1.0.0.vsix
