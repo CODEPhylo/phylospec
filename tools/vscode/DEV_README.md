@@ -16,4 +16,5 @@ A new window should pop up. Create or open a `.phylospec` file and try out the e
 
 1. Login with your Azure account which is connected to the PhyloSpec organization using `vsce login CodePhylo`.
 2. Make sure you've increased the version number in the `package.json` file.
-3. Run `npm run publish` to publish the VS Code extension.
+3. Run `npm run publish-vscode` to publish the VS Code extension in the VS Code marketplace.
+4. Run `npm run publish-openvsx` followed by `npx ovsx publish <newly_created_file.vsix> -p <access token>` to publish the extension in the OpenVSX marketplace for IDEs like Cursor or Windsurf.

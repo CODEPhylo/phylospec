@@ -47,7 +47,9 @@
     "build:lsp": "mvn -f ../../core/java/pom.xml -DskipTests package && node -e \"const fs = require('fs'); fs.mkdirSync('server', { recursive: true }); fs.copyFileSync('../../core/java/target/phylospec-lsp-jar-with-dependencies.jar', 'server/phylospec-lsp.jar');\"",
     "compile": "tsc -b",
     "watch": "tsc -b -w",
-    "publish": "git clean -xfd node_modules && npm i && npm run build:lsp && npm run compile && vsce publish"
+    "prepare-publish": "git clean -xfd node_modules && npm i && npm run build:lsp && npm run compile",
+    "publish-vscode": "npm run prepare-publish && vsce publish",
+    "publish-openvsx": "npm run prepare-publish && vsce package && echo 'Now you have to run: npx ovsx publish <file.vsix> -p <access token>'"
   },
   "dependencies": {
     "vscode-languageclient": "^8.1.0"
