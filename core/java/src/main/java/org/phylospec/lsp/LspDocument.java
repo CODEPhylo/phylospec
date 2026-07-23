@@ -1,9 +1,7 @@
 package org.phylospec.lsp;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.phylospec.ast.*;
@@ -13,6 +11,7 @@ import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Range;
 import org.phylospec.lexer.Token;
+import org.phylospec.lexer.TokenType;
 import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.ResolvedType;
 import org.phylospec.typeresolver.TypeError;
@@ -55,7 +54,9 @@ class LspDocument implements ErrorEventListener {
         return new ComponentResolver(componentLibraries);
     }
 
-    /** Updates the document content and re-runs the static analysis. */
+    /**
+     * Updates the document content and re-runs the static analysis.
+     */
     void updateContent(String newContent) {
         foundDiagnostics.clear();
 
@@ -122,8 +123,10 @@ class LspDocument implements ErrorEventListener {
         this.errorDetected(astNodeError.toError(range));
     }
 
-    /** Applied changes to the content. Assumes that the LSP is configured to
-     * always receive full changes. */
+    /**
+     * Applied changes to the content. Assumes that the LSP is configured to
+     * always receive full changes.
+     */
     public void applyContentChanges(List<TextDocumentContentChangeEvent> contentChanges) {
         if (contentChanges.isEmpty()) return;
 
@@ -136,7 +139,9 @@ class LspDocument implements ErrorEventListener {
         updateContent(contentChanges.getLast().getText());
     }
 
-    /** Returns the hover information for the given cursor position. */
+    /**
+     * Returns the hover information for the given cursor position.
+     */
     public MarkupContent getHoverInfo(Position position) {
         Token token = getTokenAtPosition(position);
         AstNode node = parser.getAstNodeForToken(token);
@@ -282,8 +287,90 @@ class LspDocument implements ErrorEventListener {
         return new MarkupContent("markdown", hoverText.toString());
     }
 
-    /** Returns the completion items for the given cursor position. */
+    /**
+     * Returns the completion items for the given cursor position.
+     */
     public List<CompletionItem> getCompletionItems(CompletionParams position) {
+        CompletionContext context = getCompletionContext(position.getPosition());
+
+        if (context == CompletionContext.TYPE) {
+            return getTypeCompletionItems();
+        }
+
+        if (context == CompletionContext.VARIABLE_NAME) {
+            return getVariableNameCompletionItems(position);
+        }
+
+        if (context == CompletionContext.ASSIGNMENT) {
+            List<CompletionItem> completionItems = getVariableCompletionItems();
+            completionItems.addAll(getGeneratorCompletionItems(false));
+            return completionItems;
+        }
+
+        if (context == CompletionContext.DRAW) {
+            List<CompletionItem> completionItems = getVariableCompletionItems();
+            completionItems.addAll(getGeneratorCompletionItems(true));
+            return completionItems;
+        }
+
+        List<CompletionItem> completionItems = getVariableCompletionItems();
+        completionItems.addAll(getGeneratorCompletionItems(false));
+        completionItems.addAll(getTypeCompletionItems());
+        completionItems.addAll(getKeywordCompletionItems());
+        return completionItems;
+    }
+
+    private List<CompletionItem> getVariableNameCompletionItems(CompletionParams cursorPosition) {
+        Position position = cursorPosition.getPosition();
+        int lineStart = 0;
+
+        for (int line = 0; line < position.getLine(); line++) {
+            int lineBreak = content.indexOf('\n', lineStart);
+            if (lineBreak < 0) return List.of();
+            lineStart = lineBreak + 1;
+        }
+
+        int lineBreak = content.indexOf('\n', lineStart);
+        int lineEnd = lineBreak < 0 ? content.length() : lineBreak;
+        int cursorOffset = Math.min(lineStart + position.getCharacter(), lineEnd);
+        String lineContentUntilCursor = content.substring(lineStart, cursorOffset);
+
+        List<String> suggestions = new ArrayList<>();
+
+        if (lineContentUntilCursor.startsWith("QMatrix ")) {
+            suggestions.add("qMatrix");
+            suggestions.add("substitutionMatrix");
+            suggestions.add("substitutionModel");
+        } else if (lineContentUntilCursor.startsWith("Vector<Rate> ")) {
+            suggestions.add("branchRates");
+            suggestions.add("siteRates");
+        } else if (lineContentUntilCursor.startsWith("Alignment ")) {
+            suggestions.add("alignment");
+            suggestions.add("data");
+        } else if (lineContentUntilCursor.startsWith("Vector<Alignment> ")) {
+            suggestions.add("partition");
+            suggestions.add("alignments");
+            suggestions.add("data");
+        } else {
+            List<Token> lineTokens = getTokensBeforeCursor(cursorPosition.getPosition());
+            if (lineTokens.isEmpty()) return List.of();
+
+            String typeName = lineTokens.getFirst().lexeme;
+            String variableName = typeName.toLowerCase(Locale.ROOT);
+            suggestions.add(variableName);
+        }
+
+        List<CompletionItem> items = new ArrayList<>();
+        for (String suggestion : suggestions) {
+            CompletionItem item = new CompletionItem(suggestion);
+            item.setKind(CompletionItemKind.Variable);
+            items.add(item);
+        }
+
+        return items;
+    }
+
+    private List<CompletionItem> getVariableCompletionItems() {
         List<CompletionItem> completionItems = new ArrayList<>();
 
         for (String variableName : typeResolver.getVariableNames()) {
@@ -299,10 +386,22 @@ class LspDocument implements ErrorEventListener {
             }
         }
 
+        return completionItems;
+    }
+
+    private List<CompletionItem> getGeneratorCompletionItems(boolean distributionsOnly) {
+        List<CompletionItem> completionItems = new ArrayList<>();
+
         for (String generatorName : componentResolver.getKnownGenerators().keySet()) {
             List<Generator> generators = componentResolver.resolveGenerator(generatorName);
 
             for (Generator generator : generators) {
+                if (distributionsOnly
+                        && !getUnqualifiedName(generator.getGeneratedType())
+                                .startsWith("Distribution<")) {
+                    continue;
+                }
+
                 CompletionItem item = new CompletionItem(generator.getName());
                 item.setKind(CompletionItemKind.Function);
                 item.setDetail(printGeneratorInfo(new StringBuilder(), generator).toString());
@@ -311,6 +410,12 @@ class LspDocument implements ErrorEventListener {
                 completionItems.add(item);
             }
         }
+
+        return completionItems;
+    }
+
+    private List<CompletionItem> getTypeCompletionItems() {
+        List<CompletionItem> completionItems = new ArrayList<>();
 
         for (String typeName : componentResolver.getKnownTypes().keySet()) {
             Type type = componentResolver.resolveType(typeName);
@@ -330,7 +435,120 @@ class LspDocument implements ErrorEventListener {
         return completionItems;
     }
 
-    /** Appends argument descriptions for a generator. */
+    private Collection<? extends CompletionItem> getKeywordCompletionItems() {
+        List<String> keywords = List.of("observed as", "observed between");
+
+        List<CompletionItem> completionItems = new ArrayList<>();
+        for (String keyword : keywords) {
+            CompletionItem observedAs = new CompletionItem(keyword);
+            observedAs.setKind(CompletionItemKind.Keyword);
+            completionItems.add(observedAs);
+        }
+
+        return completionItems;
+    }
+
+    private CompletionContext getCompletionContext(Position position) {
+        List<Token> lineTokens = getTokensBeforeCursor(position);
+
+        if (lineTokens.isEmpty()) return CompletionContext.UNKNOWN;
+
+        // check we are hanging, in that case just return unknown
+
+        boolean isIndented = 0 < lineTokens.getFirst().range.start;
+
+        // remove the token we are currently typing
+
+        if (lineTokens.getLast().range.end >= position.getCharacter()) {
+            lineTokens.removeLast();
+        }
+
+        // inspect the current context
+
+        if (afterAssignment(lineTokens)) {
+            return CompletionContext.ASSIGNMENT;
+        }
+
+        if (afterDraw(lineTokens)) {
+            return CompletionContext.DRAW;
+        }
+
+        if (withinType(lineTokens, isIndented)) {
+            return CompletionContext.TYPE;
+        }
+
+        if (withinVariableName(lineTokens, isIndented)) {
+            return CompletionContext.VARIABLE_NAME;
+        }
+
+        return CompletionContext.UNKNOWN;
+    }
+
+    private boolean afterAssignment(List<Token> lineTokens) {
+        return !lineTokens.isEmpty() && lineTokens.getLast().type == TokenType.EQUAL;
+    }
+
+    private boolean afterDraw(List<Token> lineTokens) {
+        return !lineTokens.isEmpty() && lineTokens.getLast().type == TokenType.TILDE;
+    }
+
+    private List<Token> getTokensBeforeCursor(Position position) {
+        List<Token> lineTokens = new ArrayList<>();
+        int line = position.getLine() + 1;
+
+        for (Token token : tokens) {
+            if (token.range.startLine != line) continue;
+            if (position.getCharacter() < token.range.start) continue;
+            if (token.type == TokenType.EOL || token.type == TokenType.EOF) continue;
+            lineTokens.add(token);
+        }
+
+        return lineTokens;
+    }
+
+    private boolean withinType(List<Token> lineTokens, boolean isIndented) {
+        if (isIndented) return false;
+        if (lineTokens.isEmpty()) return true;
+
+        int genericDepth = 0;
+        for (Token token : lineTokens) {
+            if (token.type == TokenType.LESS) {
+                genericDepth++;
+            } else if (token.type == TokenType.GREATER) {
+                genericDepth--;
+            }
+        }
+
+        return genericDepth != 0;
+    }
+
+    private boolean withinVariableName(List<Token> lineTokens, boolean isIndented) {
+        if (isIndented) return false;
+
+        if (lineTokens.size() == 1) return true;
+
+        for (Token token : lineTokens) {
+            if (token.type != TokenType.IDENTIFIER
+                    && token.type != TokenType.LESS
+                    && token.type != TokenType.GREATER) {
+                return false;
+            }
+        }
+
+        return lineTokens.getLast().type == TokenType.GREATER;
+    }
+
+    private enum CompletionContext {
+        VARIABLE_NAME,
+        ASSIGNMENT,
+        DRAW,
+        TYPE,
+        UNKNOWN
+    }
+
+    /**
+     * Appends argument descriptions for a generator.
+     */
     private static void printGeneratorArgumentDescriptions(
             StringBuilder stringBuilder, Generator generator) {
         if (generator.getArguments().isEmpty()) return;
@@ -349,7 +567,9 @@ class LspDocument implements ErrorEventListener {
         stringBuilder.append("\n");
     }
 
-    /** Helper method to print the info for a generator. */
+    /**
+     * Helper method to print the info for a generator.
+     */
     private StringBuilder printGeneratorInfo(StringBuilder stringBuilder, Generator generator) {
         stringBuilder.append(getUnqualifiedName(generator.getGeneratedType())).append(" ");
         stringBuilder.append(generator.getName()).append("(");
@@ -384,7 +604,9 @@ class LspDocument implements ErrorEventListener {
         return ComponentResolver.getUnqualifiedName(name);
     }
 
-    /** Helper method to get the token at the cursor position. */
+    /**
+     * Helper method to get the token at the cursor position.
+     */
     private Token getTokenAtPosition(Position position) {
         for (Token token : tokens) {
             if (token.range.startLine != position.getLine() + 1) continue;
