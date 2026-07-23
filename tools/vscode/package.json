@@ -4,7 +4,7 @@
   "author": "CODEPhylo steering group",
   "repository": "https://github.com/CODEPhylo/phylospec",
   "license": "MIT",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "publisher": "CodePhylo",
   "categories": [],
   "engines": {
@@ -16,7 +16,8 @@
     "out/**",
     "server/**",
     "syntaxes/**",
-    "LICENSE"
+    "LICENSE",
+    "node_modules/**"
   ],
   "contributes": {
     "languages": [
@@ -41,12 +42,10 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run build:lsp && npm run compile",
     "build:lsp": "mvn -f ../../core/java/pom.xml -DskipTests package && node -e \"const fs = require('fs'); fs.mkdirSync('server', { recursive: true }); fs.copyFileSync('../../core/java/target/phylospec-lsp-jar-with-dependencies.jar', 'server/phylospec-lsp.jar');\"",
     "compile": "tsc -b",
     "watch": "tsc -b -w",
-    "package": "vsce package",
-    "publish": "vsce publish"
+    "publish": "git clean -xfd node_modules && npm i && npm run build:lsp && npm run compile && vsce publish"
   },
   "dependencies": {
     "vscode-languageclient": "^8.1.0"
