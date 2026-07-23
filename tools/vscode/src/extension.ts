@@ -1,6 +1,7 @@
-import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+import { ChildProcessWithoutNullStreams, execFile, spawn } from "child_process";
 import { existsSync } from "fs";
 import { connect, Socket } from "net";
+import { promisify } from "util";
 import * as vscode from "vscode";
 
 import {
@@ -14,6 +15,8 @@ const HOST = "localhost";
 const SERVER_JAR = "server/phylospec-lsp.jar";
 const STARTUP_ATTEMPTS = 20;
 const STARTUP_RETRY_MS = 250;
+const REQUIRED_JAVA_VERSION = 25;
+const execFileAsync = promisify(execFile);
 
 let client: LanguageClient;
 let serverProcess: ChildProcessWithoutNullStreams | undefined;
@@ -27,6 +30,22 @@ export async function activate(context: vscode.ExtensionContext) {
 
   if (!existsSync(jarPath)) {
     vscode.window.showErrorMessage(`PhyloSpec LSP JAR not found: ${jarPath}`);
+    return;
+  }
+
+  const javaVersion = await getJavaVersion();
+
+  if (javaVersion === undefined) {
+    vscode.window.showErrorMessage(
+      "PhyloSpec requires Java 25 or newer, but Java could not be found. Install Java 25 and ensure the java executable is available on your PATH.",
+    );
+    return;
+  }
+
+  if (javaVersion < REQUIRED_JAVA_VERSION) {
+    vscode.window.showErrorMessage(
+      `PhyloSpec requires Java 25 or newer, but Java ${javaVersion} was found. Install Java 25 and ensure it is the java executable available on your PATH.`,
+    );
     return;
   }
 
@@ -72,6 +91,17 @@ export async function activate(context: vscode.ExtensionContext) {
       serverProcess.kill();
       serverProcess = undefined;
     }
+  }
+}
+
+async function getJavaVersion(): Promise<number | undefined> {
+  try {
+    const { stdout, stderr } = await execFileAsync("java", ["-version"]);
+    const versionOutput = `${stdout}\n${stderr}`;
+    const match = versionOutput.match(/version "(?:1\.)?(\d+)/);
+    return match ? Number.parseInt(match[1], 10) : undefined;
+  } catch {
+    return undefined;
   }
 }
 
