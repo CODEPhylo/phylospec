@@ -17,6 +17,7 @@ import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
+import org.phylospec.xml.XmlProvenance;
 import org.xml.sax.SAXException;
 import tiles.BeastXTileLibraries;
 import tiling.BeastXModel;
@@ -498,8 +499,10 @@ public class PhyloSpecRunner implements ErrorEventListener {
      * Serializes a BEAST X model into BEAST X XML.
      */
     public String toXml(BeastXModel model) {
-        return this.runPipeline
-                .toXml(model);
+        return XmlProvenance.embedSource(
+                this.runPipeline.toXml(model),
+                this.source
+        );
     }
 
     /**
@@ -521,8 +524,18 @@ public class PhyloSpecRunner implements ErrorEventListener {
             BeastXModel model,
             Path xmlPath
     ) throws IOException {
-        this.runPipeline
-                .writeXml(model, xmlPath);
+        Path parent =
+                xmlPath.getParent();
+
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
+
+        Files.writeString(
+                xmlPath,
+                toXml(model),
+                StandardCharsets.UTF_8
+        );
     }
 
     /**
@@ -638,8 +651,27 @@ public class PhyloSpecRunner implements ErrorEventListener {
                         ? buildMaterializedModel(options.runName())
                         : buildModel(options.runName());
 
-        return this.runPipeline
-                .runXml(model, options);
+        writeXml(model, options.xmlPath());
+
+        MCMC mcmc =
+                parseXmlMCMC(options.xmlPath());
+
+        XmlRunResult run =
+                new XmlRunResult(
+                        options.runName(),
+                        model,
+                        options.xmlPath(),
+                        mcmc,
+                        false
+                );
+
+        if (!options.execute()) {
+            return run;
+        }
+
+        mcmc.run();
+
+        return run.asExecuted();
     }
 
     public XmlRunResult buildXmlRun(XmlRunnerOptions options)
