@@ -1,23 +1,11 @@
 # PhyloSpec VS Code Extension
 
-This repository contains a VS Code extension with two main features:
+This VS Code extension provides syntax highlighting, error checking, auto-completion, and useful hover hints when writing PhyloSpec models.
 
-- Syntax highlighting controlled by the TextMate grammar in `syntaxes/phylospec.json`.
-- A VS Code language client that launches the bundled Java LSP server automatically.
+This extension works for all `.phylospec` files.
 
-## Getting Started
+**Note: Java 25 has to be installed on your system and available in `PATH` for this extension to work.**
 
-To run a developer version of this extension in VS Code (or any of its forks):
+## For Developers
 
-1. Clone this repo.
-2. Make sure `java`, `mvn`, and `npm` are available on your `PATH`.
-3. Run `npm install` from this directory.
-4. Run `npm run vscode:prepublish` from this directory. This builds the Java LSP fat JAR, copies it to `server/phylospec-lsp.jar`, and compiles the TypeScript extension.
-5. **Open VS Code in this directory** (not in the root directory of this repository). Open the `src/extension.ts` file, press `F5`, and select `Extension Development Host`.
-
-A new window should pop up. Create or open a `.phylospec` file and try out the extension. The extension activates for PhyloSpec files and starts the bundled Java LSP server on port `5007`.
-
-## How to Publish
-
-1. Login with your Azure account which is connected to the PhyloSpec organization using `vsce login CodePhylo`.
-2. Run `npm run publish` to publish the VS Code extension.
+Check out the `DEV_README.md` file for more information.
