@@ -1,0 +1,4 @@
+build-jars:
+    cd .. && mvn package -Dmaven.test.skip=true
+    cp ../integrations/beast3/java/target/phylospec-beast3-runner-jar-with-dependencies.jar jars/beast3.jar
+    cp ../integrations/beastx/java/target/phylospec-beastx-runner-jar-with-dependencies.jar jars/beastx.jar

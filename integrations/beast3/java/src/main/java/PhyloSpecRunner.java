@@ -25,6 +25,9 @@ import beastconfig.BEASTState;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +39,24 @@ import java.util.List;
 public class PhyloSpecRunner implements ErrorEventListener {
 
     private final String source;
+
+    /**
+     * Runs a PhyloSpec source file with BEAST 3.
+     */
+    public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException {
+        if (args.length != 1 || !args[0].endsWith(".phylospec")) {
+            System.err.println("Usage: java -jar <runner.jar> <script.phylospec>");
+            System.exit(2);
+            return;
+        }
+
+        Path sourcePath = Path.of(args[0]);
+        String source = Files.readString(sourcePath, StandardCharsets.UTF_8);
+        String fileName = sourcePath.getFileName().toString();
+        String runName = fileName.substring(0, fileName.length() - ".phylospec".length());
+
+        new PhyloSpecRunner(source).runPhyloSpec(runName);
+    }
 
     /**
      * Constructs a runner for the given PhyloSpec source code.

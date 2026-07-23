@@ -52,6 +52,29 @@ public class PhyloSpecRunner implements ErrorEventListener {
     private final BeastXRunPipeline runPipeline;
 
     /**
+     * Runs a PhyloSpec source file with BEAST X.
+     */
+    public static void main(String[] args) throws Exception {
+        if (args.length != 1 || !args[0].endsWith(".phylospec")) {
+            System.err.println("Usage: java -jar <runner.jar> <script.phylospec>");
+            System.exit(2);
+            return;
+        }
+
+        Path sourcePath =
+                Path.of(args[0]);
+
+        String runName =
+                FileRunPaths.defaultRunName(sourcePath);
+
+        BeastXRunResult run =
+                PhyloSpecRunner.fromFile(sourcePath)
+                        .buildMaterializedRun(runName);
+
+        run.mcmc().run();
+    }
+
+    /**
      * Creates a runner for the given PhyloSpec source string.
      */
     public PhyloSpecRunner(String source) {
