@@ -1,10 +1,11 @@
 {
   "name": "PhyloSpec",
-  "description": "This is a VS Code extension providing syntax highlighting and an LSP for the PhyloSpec language.",
+  "description": "A VS Code extension providing syntax highlighting and language support for the PhyloSpec modeling language.",
   "author": "CODEPhylo steering group",
   "repository": "https://github.com/CODEPhylo/phylospec",
   "license": "MIT",
-  "version": "1.0.3",
+  "version": "1.0.4",
+  "icon": "assets/icon.png",
   "publisher": "CodePhylo",
   "categories": [],
   "engines": {
@@ -14,6 +15,7 @@
   "files": [
     "language-configuration.json",
     "out/**",
+    "assets/**",
     "server/**",
     "syntaxes/**",
     "LICENSE",
