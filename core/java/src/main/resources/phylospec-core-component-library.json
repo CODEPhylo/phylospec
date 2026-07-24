@@ -14,7 +14,8 @@
       {
         "name": "String",
         "description": "Text value",
-        "namespace": "phylospec.types"
+        "namespace": "phylospec.types",
+        "typeProperties": ["literal"]
       },
       {
         "name": "Real",

@@ -20,6 +20,7 @@ import javax.annotation.processing.Generated;
     "extends",
     "alias",
     "typeParameters",
+    "typeProperties",
     "properties",
     "namespace"
 })
@@ -55,6 +56,15 @@ public class Type {
     @JsonProperty("typeParameters")
     @JsonPropertyDescription("Type parameters for generic types (e.g., ['T'] for Vector<T>)")
     private List<String> typeParameters = new ArrayList<String>();
+
+    /**
+     * Possible type properties for more fine-grained validation (e.g., `num` for Vector<T>)
+     *
+     */
+    @JsonProperty("typeProperties")
+    @JsonPropertyDescription(
+            "Possible type properties for more fine-grained validation (e.g., `num` for Vector<T>)")
+    private List<String> typeProperties = new ArrayList<String>();
 
     @JsonProperty("properties")
     private Properties properties;
@@ -148,6 +158,24 @@ public class Type {
         this.typeParameters = typeParameters;
     }
 
+    /**
+     * Possible type properties for more fine-grained validation (e.g., `num` for Vector<T>)
+     *
+     */
+    @JsonProperty("typeProperties")
+    public List<String> getTypeProperties() {
+        return typeProperties;
+    }
+
+    /**
+     * Possible type properties for more fine-grained validation (e.g., `num` for Vector<T>)
+     *
+     */
+    @JsonProperty("typeProperties")
+    public void setTypeProperties(List<String> typeProperties) {
+        this.typeProperties = typeProperties;
+    }
+
     @JsonProperty("properties")
     public Properties getProperties() {
         return properties;
@@ -213,6 +241,10 @@ public class Type {
         sb.append('=');
         sb.append(((this.typeParameters == null) ? "<null>" : this.typeParameters));
         sb.append(',');
+        sb.append("typeProperties");
+        sb.append('=');
+        sb.append(((this.typeProperties == null) ? "<null>" : this.typeProperties));
+        sb.append(',');
         sb.append("properties");
         sb.append('=');
         sb.append(((this.properties == null) ? "<null>" : this.properties));
@@ -236,6 +268,9 @@ public class Type {
     @Override
     public int hashCode() {
         int result = 1;
+        result =
+                ((result * 31)
+                        + ((this.typeProperties == null) ? 0 : this.typeProperties.hashCode()));
         result = ((result * 31) + ((this._extends == null) ? 0 : this._extends.hashCode()));
         result = ((result * 31) + ((this.name == null) ? 0 : this.name.hashCode()));
         result = ((result * 31) + ((this.namespace == null) ? 0 : this.namespace.hashCode()));
@@ -262,11 +297,22 @@ public class Type {
             return false;
         }
         Type rhs = ((Type) other);
-        return (((((((((this._extends == rhs._extends)
-                                                                        || ((this._extends != null)
-                                                                                && this._extends
-                                                                                        .equals(
-                                                                                                rhs._extends)))
+        return ((((((((((this.typeProperties == rhs.typeProperties)
+                                                                                || ((this
+                                                                                                        .typeProperties
+                                                                                                != null)
+                                                                                        && this
+                                                                                                .typeProperties
+                                                                                                .equals(
+                                                                                                        rhs.typeProperties)))
+                                                                        && ((this._extends
+                                                                                        == rhs._extends)
+                                                                                || ((this._extends
+                                                                                                != null)
+                                                                                        && this
+                                                                                                ._extends
+                                                                                                .equals(
+                                                                                                        rhs._extends))))
                                                                 && ((this.name == rhs.name)
                                                                         || ((this.name != null)
                                                                                 && this.name.equals(

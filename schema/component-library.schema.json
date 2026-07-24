@@ -89,6 +89,13 @@
           },
           "description": "Type parameters for generic types (e.g., ['T'] for Vector<T>)"
         },
+        "typeProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Possible type properties for more fine-grained validation (e.g., `num` for Vector<T>)"
+        },
         "properties": {
           "type": "object",
           "additionalProperties": {
