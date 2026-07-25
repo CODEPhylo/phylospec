@@ -1,0 +1,114 @@
+Alignment data = fromNexus(
+    file="${REPOSITORY_ROOT}/integrations/beast3/java/src/test/java/resources/primate-mtDNA.nex"
+)
+
+Taxa taxa = taxa(data)
+
+Alignment codingFirst = subset(
+    alignment=data,
+    start=2,
+    end=457
+)
+
+Alignment codingSecond = subset(
+    alignment=data,
+    start=660,
+    end=896
+)
+
+Alignment noncodingFirst = subset(
+    alignment=data,
+    start=1,
+    end=1
+)
+
+Alignment noncodingSecond = subset(
+    alignment=data,
+    start=458,
+    end=659
+)
+
+Alignment noncodingThird = subset(
+    alignment=data,
+    start=897,
+    end=898
+)
+
+PositiveReal rateAC ~ LogNormal(
+    logMean=0.0,
+    logSd=1.25
+)
+
+PositiveReal rateAG ~ LogNormal(
+    logMean=0.0,
+    logSd=1.25
+)
+
+PositiveReal rateAT ~ LogNormal(
+    logMean=0.0,
+    logSd=1.25
+)
+
+PositiveReal rateCG ~ LogNormal(
+    logMean=0.0,
+    logSd=1.25
+)
+
+PositiveReal rateGT ~ LogNormal(
+    logMean=0.0,
+    logSd=1.25
+)
+
+Simplex baseFrequencies ~ Dirichlet(
+    concentration=repeat(1.0, num=4)
+)
+
+QMatrix qMatrix = gtr(
+    rateAC=rateAC,
+    rateAG=rateAG,
+    rateAT=rateAT,
+    rateCG=rateCG,
+    rateCT=1.0,
+    rateGT=rateGT,
+    baseFrequencies=baseFrequencies
+)
+
+PositiveReal birthRate ~ Gamma(
+    shape=1.0,
+    rate=0.001
+)
+
+Tree tree ~ Yule(
+    birthRate=birthRate,
+    taxa=taxa
+)
+
+Alignment codingFirstLikelihood ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix
+) observed as codingFirst
+
+Alignment codingSecondLikelihood ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix
+) observed as codingSecond
+
+Alignment noncodingFirstLikelihood ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix
+) observed as noncodingFirst
+
+Alignment noncodingSecondLikelihood ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix
+) observed as noncodingSecond
+
+Alignment noncodingThirdLikelihood ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix
+) observed as noncodingThird
+
+mcmc {
+    Integer chainLength = 5000000
+    Integer randomSeed = 1234
+}

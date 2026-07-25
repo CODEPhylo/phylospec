@@ -5,5 +5,8 @@ phylospec-core.iml
 out
 /integrations/beast3/java/target/
 /integrations/beastx/java/target/
+/validation/target/
+/validation/beast3/java/target/
+/validation/beastx/java/target/
 **/state.backup.xml
 **/*.backup.xml

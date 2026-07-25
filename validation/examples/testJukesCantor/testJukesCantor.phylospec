@@ -1,0 +1,22 @@
+Alignment data = fromNexus(
+    file="${REPOSITORY_ROOT}/validation/examples/testJukesCantor/testJukesCantor.nex"
+)
+
+Taxa taxa = taxa(data)
+
+QMatrix qMatrix = jc69()
+
+Tree tree ~ Yule(
+    birthRate=1.0,
+    taxa=taxa
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix
+) observed as data
+
+mcmc {
+    Integer chainLength = 10000000
+    Integer randomSeed = 1234
+}

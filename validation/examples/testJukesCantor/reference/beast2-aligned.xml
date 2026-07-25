@@ -1,0 +1,126 @@
+<beast version='2.0'
+       namespace='beast.base.evolution.alignment:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood'>
+
+
+    <!-- The sequence alignment                                                  -->
+    <!-- ntax=6 nchar=768                                                        -->
+    <!-- npatterns=69                                                            -->
+    <data id="alignment" dataType="nucleotide">
+        <sequence taxon="human">
+            AGAAATATGTCTGATAAAAGAGTTACTTTGATAGAGTAAATAATAGGAGCTTAAACCCCCTTATTTCTACTAGGACTATGAGAATCGAACCCATCCCTGAGAATCCAAAATTCTCCGTGCCACCTATCACACCCCATCCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTTATACCCTTCCCGTACTAAGAAATTTAGGTTAAATACAGACCAAGAGCCTTCAAAGCCCTCAGTAAGTTG-CAATACTTAATTTCTGTAAGGACTGCAAAACCCCACTCTGCATCAACTGAACGCAAATCAGCCACTTTAATTAAGCTAAGCCCTTCTAGACCAATGGGACTTAAACCCACAAACACTTAGTTAACAGCTAAGCACCCTAATCAAC-TGGCTTCAATCTAAAGCCCCGGCAGG-TTTGAAGCTGCTTCTTCGAATTTGCAATTCAATATGAAAA-TCACCTCGGAGCTTGGTAAAAAGAGGCCTAACCCCTGTCTTTAGATTTACAGTCCAATGCTTCA-CTCAGCCATTTTACCACAAAAAAGGAAGGAATCGAACCCCCCAAAGCTGGTTTCAAGCCAACCCCATGGCCTCCATGACTTTTTCAAAAGGTATTAGAAAAACCATTTCATAACTTTGTCAAAGTTAAATTATAGGCT-AAATCCTATATATCTTA-CACTGTAAAGCTAACTTAGCATTAACCTTTTAAGTTAAAGATTAAGAGAACCAACACCTCTTTACAGTGA
+        </sequence>
+        <sequence taxon="chimp">
+            AGAAATATGTCTGATAAAAGAATTACTTTGATAGAGTAAATAATAGGAGTTCAAATCCCCTTATTTCTACTAGGACTATAAGAATCGAACTCATCCCTGAGAATCCAAAATTCTCCGTGCCACCTATCACACCCCATCCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTTACACCCTTCCCGTACTAAGAAATTTAGGTTAAGCACAGACCAAGAGCCTTCAAAGCCCTCAGCAAGTTA-CAATACTTAATTTCTGTAAGGACTGCAAAACCCCACTCTGCATCAACTGAACGCAAATCAGCCACTTTAATTAAGCTAAGCCCTTCTAGATTAATGGGACTTAAACCCACAAACATTTAGTTAACAGCTAAACACCCTAATCAAC-TGGCTTCAATCTAAAGCCCCGGCAGG-TTTGAAGCTGCTTCTTCGAATTTGCAATTCAATATGAAAA-TCACCTCAGAGCTTGGTAAAAAGAGGCTTAACCCCTGTCTTTAGATTTACAGTCCAATGCTTCA-CTCAGCCATTTTACCACAAAAAAGGAAGGAATCGAACCCCCTAAAGCTGGTTTCAAGCCAACCCCATGACCTCCATGACTTTTTCAAAAGATATTAGAAAAACTATTTCATAACTTTGTCAAAGTTAAATTACAGGTT-AACCCCCGTATATCTTA-CACTGTAAAGCTAACCTAGCATTAACCTTTTAAGTTAAAGATTAAGAGGACCGACACCTCTTTACAGTGA
+        </sequence>
+        <sequence taxon="bonobo">
+            AGAAATATGTCTGATAAAAGAATTACTTTGATAGAGTAAATAATAGGAGTTTAAATCCCCTTATTTCTACTAGGACTATGAGAGTCGAACCCATCCCTGAGAATCCAAAATTCTCCGTGCCACCTATCACACCCCATCCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTTATACCCTTCCCGTACTAAGAAATTTAGGTTAAACACAGACCAAGAGCCTTCAAAGCTCTCAGTAAGTTA-CAATACTTAATTTCTGTAAGGACTGCAAAACCCCACTCTGCATCAACTGAACGCAAATCAGCCACTTTAATTAAGCTAAGCCCTTCTAGATTAATGGGACTTAAACCCACAAACATTTAGTTAACAGCTAAACACCCTAATCAGC-TGGCTTCAATCTAAAGCCCCGGCAGG-TTTGAAGCTGCTTCTTTGAATTTGCAATTCAATATGAAAA-TCACCTCAGAGCTTGGTAAAAAGAGGCTTAACCCCTGTCTTTAGATTTACAGTCCAATGCTTCA-CTCAGCCATTTTACCACAAAAAAGGAAGGAATCGAACCCCCTAAAGCTGGTTTCAAGCCAACCCCATGACCCCCATGACTTTTTCAAAAGATATTAGAAAAACTATTTCATAACTTTGTCAAAGTTAAATTACAGGTT-AAACCCCGTATATCTTA-CACTGTAAAGCTAACCTAGCATTAACCTTTTAAGTTAAAGATTAAGAGGACCAACACCTCTTTACAGTGA
+        </sequence>
+        <sequence taxon="gorilla">
+            AGAAATATGTCTGATAAAAGAGTTACTTTGATAGAGTAAATAATAGAGGTTTAAACCCCCTTATTTCTACTAGGACTATGAGAATTGAACCCATCCCTGAGAATCCAAAATTCTCCGTGCCACCTGTCACACCCCATCCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTCACATCCTTCCCGTACTAAGAAATTTAGGTTAAACATAGACCAAGAGCCTTCAAAGCCCTTAGTAAGTTA-CAACACTTAATTTCTGTAAGGACTGCAAAACCCTACTCTGCATCAACTGAACGCAAATCAGCCACTTTAATTAAGCTAAGCCCTTCTAGATCAATGGGACTCAAACCCACAAACATTTAGTTAACAGCTAAACACCCTAGTCAAC-TGGCTTCAATCTAAAGCCCCGGCAGG-TTTGAAGCTGCTTCTTCGAATTTGCAATTCAATATGAAAT-TCACCTCGGAGCTTGGTAAAAAGAGGCCCAGCCTCTGTCTTTAGATTTACAGTCCAATGCCTTA-CTCAGCCATTTTACCACAAAAAAGGAAGGAATCGAACCCCCCAAAGCTGGTTTCAAGCCAACCCCATGACCTTCATGACTTTTTCAAAAGATATTAGAAAAACTATTTCATAACTTTGTCAAGGTTAAATTACGGGTT-AAACCCCGTATATCTTA-CACTGTAAAGCTAACCTAGCGTTAACCTTTTAAGTTAAAGATTAAGAGTATCGGCACCTCTTTGCAGTGA
+        </sequence>
+        <sequence taxon="orangutan">
+            AGAAATATGTCTGACAAAAGAGTTACTTTGATAGAGTAAAAAATAGAGGTCTAAATCCCCTTATTTCTACTAGGACTATGGGAATTGAACCCACCCCTGAGAATCCAAAATTCTCCGTGCCACCCATCACACCCCATCCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTTACACCCTTCCCGTACTAAGAAATTTAGGTTA--CACAGACCAAGAGCCTTCAAAGCCCTCAGCAAGTCA-CAGCACTTAATTTCTGTAAGGACTGCAAAACCCCACTTTGCATCAACTGAGCGCAAATCAGCCACTTTAATTAAGCTAAGCCCTCCTAGACCGATGGGACTTAAACCCACAAACATTTAGTTAACAGCTAAACACCCTAGTCAAT-TGGCTTCAGTCCAAAGCCCCGGCAGGCCTTAAAGCTGCTCCTTCGAATTTGCAATTCAACATGACAA-TCACCTCAGGGCTTGGTAAAAAGAGGTCTGACCCCTGTTCTTAGATTTACAGCCTAATGCCTTAACTCGGCCATTTTACCGCAAAAAAGGAAGGAATCGAACCTCCTAAAGCTGGTTTCAAGCCAACCCCATAACCCCCATGACTTTTTCAAAAGGTACTAGAAAAACCATTTCGTAACTTTGTCAAAGTTAAATTACAGGTC-AGACCCTGTGTATCTTA-CATTGCAAAGCTAACCTAGCATTAACCTTTTAAGTTAAAGACTAAGAGAACCAGCCTCTCTTTGCAATGA
+        </sequence>
+        <sequence taxon="siamang">
+            AGAAATACGTCTGACGAAAGAGTTACTTTGATAGAGTAAATAACAGGGGTTTAAATCCCCTTATTTCTACTAGAACCATAGGAGTCGAACCCATCCTTGAGAATCCAAAACTCTCCGTGCCACCCGTCGCACCCTGTTCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTTATACCCTTCCCATACTAAGAAATTTAGGTTAAACACAGACCAAGAGCCTTCAAAGCCCTCAGTAAGTTAACAAAACTTAATTTCTGCAAGGGCTGCAAAACCCTACTTTGCATCAACCGAACGCAAATCAGCCACTTTAATTAAGCTAAGCCCTTCTAGATCGATGGGACTTAAACCCATAAAAATTTAGTTAACAGCTAAACACCCTAAACAACCTGGCTTCAATCTAAAGCCCCGGCAGA-GTTGAAGCTGCTTCTTTGAACTTGCAATTCAACGTGAAAAATCACTTCGGAGCTTGGCAAAAAGAGGTTTCACCTCTGTCCTTAGATTTACAGTCTAATGCTTTA-CTCAGCCACTTTACCACAAAAAAGGAAGGAATCGAACCCTCTAAAACCGGTTTCAAGCCAGCCCCATAACCTTTATGACTTTTTCAAAAGATATTAGAAAAACTATTTCATAACTTTGTCAAAGTTAAATCACAGGTCCAAACCCCGTATATCTTATCACTGTAGAGCTAGACCAGCATTAACCTTTTAAGTTAAAGACTAAGAGAACTACCGCCTCTTTACAGTGA
+        </sequence>
+    </data>
+
+    <!-- The Jukes-Cantor substitution model (Jukes & Cantor, 1969)             -->
+    <input spec='JukesCantor' id='jc69'/>
+
+    <!-- site model                                                              -->
+    <input spec='SiteModel' id="siteModel" gammaCategoryCount='1'>
+        <substModel idref='jc69'/>
+    </input>
+
+    <input spec='TreeLikelihood' id="treeLikelihood">
+        <data idref="alignment"/>
+        <tree idref="tree"/>
+        <siteModel idref="siteModel"/>
+        <branchRateModel id="strictClock"
+                         spec="beast.base.evolution.branchratemodel.StrictClockModel">
+            <parameter estimate="false" id="clockRate"
+                       name="clock.rate" value="1.0"/>
+        </branchRateModel>
+    </input>
+
+    <parameter id="birthRate" estimate="false" value="1.0" lower="0.0"/>
+
+    <tree id='tree'/>
+
+    <tree spec='beast.base.evolution.tree.ClusterTree' id='upgmatree' clusterType='upgma' initial='@tree'>
+        <taxa idref='alignment'/>
+    </tree>
+    <tree spec='beast.base.evolution.tree.coalescent.RandomTree' id='coalescentSimulator' initial='@tree' taxa='@alignment'>
+        <populationModel spec='ConstantPopulation'>
+            <popSize spec='parameter.RealParameter' value='0.05'/>
+        </populationModel>
+    </tree>
+
+    <!--
+        Controlled comparison model aligned to testJukesCantor.phylospec:
+        * JC69 substitution model
+        * tree ~ Yule(birthRate=1.0)
+        * strict clock rate fixed to 1.0
+
+        The distributed example has no tree prior. Its RandomTree coalescent
+        model is only an initializer, so this aligned file adds an explicit
+        proper tree prior for the cross-engine posterior comparison.
+    -->
+    <run spec="MCMC" id="mcmc" chainLength="10000000">
+        <state id="state" storeEvery="1000">
+            <stateNode idref="tree"/>
+        </state>
+
+        <init idref='coalescentSimulator'/>
+        <distribution spec='CompoundDistribution' id='posterior'>
+            <distribution id="prior" spec="CompoundDistribution">
+                <distribution id="tree.prior"
+                              spec="beast.base.evolution.speciation.YuleModel"
+                              birthDiffRate="@birthRate"
+                              tree="@tree"/>
+            </distribution>
+            <distribution id="likelihood" idref="treeLikelihood"/>
+        </distribution>
+
+        <operator id="treeScaler" spec="ScaleOperator"
+                  scaleFactor="0.5" weight="1.0" tree="@tree"/>
+        <operator id="uniform" spec="Uniform"
+                  weight="10.0" tree="@tree"/>
+        <operator id="subtreeSlide" spec="SubtreeSlide"
+                  weight="5.0" gaussian="true" size="1.0" tree="@tree"/>
+        <operator id="narrow" spec="Exchange"
+                  isNarrow="true" weight="1.0" tree="@tree"/>
+        <operator id="wide" spec="Exchange"
+                  isNarrow="false" weight="1.0" tree="@tree"/>
+        <operator id="wilsonBalding" spec="WilsonBalding"
+                  weight="1.0" tree="@tree"/>
+
+        <logger id="tracelog" logEvery="1000"
+                fileName="testJukesCantor-beast2.log"
+                model="@posterior" sanitiseHeaders="true">
+            <log idref="posterior"/>
+            <log idref="prior"/>
+            <log idref="likelihood"/>
+            <log idref="tree.prior"/>
+            <log id="tree.statistics"
+                 spec="beast.base.evolution.tree.TreeStatLogger"
+                 tree="@tree"/>
+        </logger>
+
+        <logger id="treelog" logEvery="1000"
+                fileName="testJukesCantor-beast2.trees" mode="tree">
+            <log id="treeWithMetaData"
+                 spec="beast.base.evolution.TreeWithMetaDataLogger"
+                 tree="@tree"/>
+        </logger>
+
+        <logger id="screenlog" logEvery="100000">
+            <log idref="posterior"/>
+            <log idref="prior"/>
+            <log idref="likelihood"/>
+        </logger>
+    </run>
+
+</beast>
