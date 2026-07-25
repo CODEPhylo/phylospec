@@ -240,14 +240,18 @@ public class BeastXRepresentativeModelsTest {
                 "DeltaExchangeOperator",
                 "ExchangeOperator",
                 "NodeHeightScaleOperator",
-                "RandomWalkOperator",
+                "RandomWalkIntegerOperator",
                 "ScaleOperator",
                 "SubtreeSlideOperator",
+                "SwapOperator",
+                "UniformIntegerOperator",
                 "WilsonBalding"
         );
 
         assertAnyContains(summary.operatorDetails, "DeltaExchangeOperator(parameter=baseFrequencies");
-        assertAnyContains(summary.operatorDetails, "RandomWalkOperator(parameter=branchRateCategories");
+        assertAnyContains(summary.operatorDetails, "RandomWalkIntegerOperator(parameter=branchRateCategories");
+        assertAnyContains(summary.operatorDetails, "SwapOperator(parameter=branchRateCategories");
+        assertAnyContains(summary.operatorDetails, "UniformIntegerOperator(parameter=branchRateCategories");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=clockRate");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=diversificationRate");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=serialSamplingRate");
