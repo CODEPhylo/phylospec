@@ -1,6 +1,7 @@
 package tiling;
 
 import dr.evomodel.branchratemodel.DiscretizedBranchRates;
+import dr.evomodel.branchratemodel.ScaledByTreeTimeBranchRateModel;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.distribution.AbstractDistributionLikelihood;
 import dr.inference.distribution.ParametricDistributionModel;
@@ -220,18 +221,20 @@ public class BeastXState {
     public void addTreeRelaxedClockModel(
             TreeModel treeModel,
             DiscretizedBranchRates relaxedClock,
+            ScaledByTreeTimeBranchRateModel scaledRelaxedClock,
             Parameter rateCategoriesParameter,
             ParametricDistributionModel distributionModel,
-            double normalizeBranchRateTo
+            Parameter meanRateParameter
     ) {
         this.treeRelaxedClockModels.put(
                 treeModel,
                 new RelaxedClockSpec(
                         treeModel,
                         relaxedClock,
+                        scaledRelaxedClock,
                         rateCategoriesParameter,
                         distributionModel,
-                        normalizeBranchRateTo
+                        meanRateParameter
                 )
         );
     }
@@ -264,9 +267,10 @@ public class BeastXState {
     public record RelaxedClockSpec(
             TreeModel treeModel,
             DiscretizedBranchRates relaxedClock,
+            ScaledByTreeTimeBranchRateModel scaledRelaxedClock,
             Parameter rateCategoriesParameter,
             ParametricDistributionModel distributionModel,
-            double normalizeBranchRateTo
+            Parameter meanRateParameter
     ) {
     }
     /*

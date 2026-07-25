@@ -689,14 +689,20 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                 Files.readString(xmlPath);
 
         assertTrue(xml.contains("<discretizedBranchRates"), xml);
+        assertTrue(xml.contains("<scaledByTreeTimeBranchRates"), xml);
         assertTrue(xml.contains("<rateCategories>"), xml);
         assertTrue(xml.contains("<treeLikelihood"), xml);
-        assertTrue(xml.contains("<discretizedBranchRates idref="), xml);
-        assertFalse(xml.contains("branchRateCategories_randomWalk"), xml);
-        assertFalse(xml.contains("<narrowExchange"), xml);
-        assertFalse(xml.contains("<wideExchange"), xml);
-        assertFalse(xml.contains("<subtreeSlide"), xml);
-        assertFalse(xml.contains("<wilsonBalding"), xml);
+        assertTrue(xml.contains("<scaledByTreeTimeBranchRates idref="), xml);
+        assertTrue(xml.contains("normalize=\"false\""), xml);
+        assertTrue(xml.contains("cachedRates=\"true\""), xml);
+        assertTrue(xml.contains("keepRates=\"false\""), xml);
+        assertTrue(xml.contains("branchRateCategories_randomWalk"), xml);
+        assertTrue(xml.contains("branchRateCategories_swap"), xml);
+        assertTrue(xml.contains("branchRateCategories_uniform"), xml);
+        assertTrue(xml.contains("<narrowExchange"), xml);
+        assertTrue(xml.contains("<wideExchange"), xml);
+        assertTrue(xml.contains("<subtreeSlide"), xml);
+        assertTrue(xml.contains("<wilsonBalding"), xml);
 
         new XmlRunner()
                 .run(xmlPath);

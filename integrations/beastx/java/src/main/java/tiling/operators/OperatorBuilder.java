@@ -6,13 +6,17 @@ import dr.evomodel.operators.UniformNodeHeightOperator;
 import dr.evomodel.operators.WilsonBalding;
 import dr.evomodel.tree.DefaultTreeModel;
 import dr.evomodel.tree.TreeModel;
+import dr.inference.model.Bounds;
 import dr.inference.model.Parameter;
 import dr.inference.operators.AdaptationMode;
 import dr.inference.operators.DeltaExchangeOperator;
 import dr.inference.operators.MCMCOperator;
+import dr.inference.operators.RandomWalkIntegerOperator;
 import dr.inference.operators.RandomWalkOperator;
 import dr.inference.operators.Scalable;
 import dr.inference.operators.ScaleOperator;
+import dr.inference.operators.SwapOperator;
+import dr.inference.operators.UniformIntegerOperator;
 import dr.inference.operators.UpDownOperator;
 import org.phylospec.domain.NonNegativeReal;
 import org.phylospec.domain.PositiveReal;
@@ -73,11 +77,18 @@ public class OperatorBuilder {
         entries.sort(Comparator.comparing(entry -> parameterId(entry.getKey())));
 
         for (Map.Entry<Parameter, TypeToken<?>> entry : entries) {
-            operators.add(buildParameterOperator(
-                    entry.getKey(),
-                    entry.getValue(),
-                    beastState.operatorConfig
-            ));
+            Parameter parameter =
+                    entry.getKey();
+
+            if (isRelaxedClockRateCategoriesParameter(beastState, parameter)) {
+                operators.addAll(buildRelaxedClockCategoryOperators(parameter));
+            } else {
+                operators.add(buildParameterOperator(
+                        parameter,
+                        entry.getValue(),
+                        beastState.operatorConfig
+                ));
+            }
         }
 
         return operators;
@@ -93,11 +104,18 @@ public class OperatorBuilder {
         entries.sort(Comparator.comparing(entry -> parameterId(entry.getKey())));
 
         for (Map.Entry<Parameter, TypeToken<?>> entry : entries) {
-            summaries.add(summarizeParameterOperator(
-                    entry.getKey(),
-                    entry.getValue(),
-                    beastState.operatorConfig
-            ));
+            Parameter parameter =
+                    entry.getKey();
+
+            if (isRelaxedClockRateCategoriesParameter(beastState, parameter)) {
+                summaries.addAll(summarizeRelaxedClockCategoryOperators(parameter));
+            } else {
+                summaries.add(summarizeParameterOperator(
+                        parameter,
+                        entry.getValue(),
+                        beastState.operatorConfig
+                ));
+            }
         }
 
         return summaries;
@@ -256,6 +274,91 @@ public class OperatorBuilder {
                 config.parameterOperatorWeight,
                 AdaptationMode.DEFAULT
         );
+    }
+
+    private List<MCMCOperator> buildRelaxedClockCategoryOperators(
+            Parameter parameter
+    ) {
+        List<MCMCOperator> operators =
+                new ArrayList<>();
+
+        operators.add(new RandomWalkIntegerOperator(
+                parameter,
+                1,
+                10.0
+        ));
+
+        SwapOperator swapOperator =
+                new SwapOperator(parameter, 1);
+
+        swapOperator.setWeight(10.0);
+        operators.add(swapOperator);
+
+        Bounds<Double> bounds =
+                parameter.getBounds();
+
+        int lower =
+                (int) Math.ceil(
+                        bounds.getLowerLimit(0)
+                );
+
+        int upper =
+                (int) Math.floor(
+                        bounds.getUpperLimit(0)
+                );
+
+        operators.add(new UniformIntegerOperator(
+                parameter,
+                lower,
+                upper,
+                10.0,
+                1
+        ));
+
+        return operators;
+    }
+
+    private List<String> summarizeRelaxedClockCategoryOperators(
+            Parameter parameter
+    ) {
+        String id =
+                parameterId(parameter);
+
+        return List.of(
+                "RandomWalkIntegerOperator(parameter=%s, weight=10.0, windowSize=1)".formatted(id),
+                "SwapOperator(parameter=%s, weight=10.0, size=1)".formatted(id),
+                "UniformIntegerOperator(parameter=%s, weight=10.0, count=1)".formatted(id)
+        );
+    }
+
+    private boolean isRelaxedClockRateCategoriesParameter(
+            BeastXState state,
+            Parameter parameter
+    ) {
+        for (BeastXState.RelaxedClockSpec spec : state.treeRelaxedClockModels.values()) {
+            Parameter rateCategoriesParameter =
+                    spec.rateCategoriesParameter();
+
+            if (rateCategoriesParameter == parameter) {
+                return true;
+            }
+
+            String parameterId =
+                    parameter.getId();
+
+            String rateCategoriesId =
+                    rateCategoriesParameter.getId();
+
+            if (
+                    parameterId != null
+                            && rateCategoriesId != null
+                            && parameterId.equals(rateCategoriesId)
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private String summarizeParameterOperator(

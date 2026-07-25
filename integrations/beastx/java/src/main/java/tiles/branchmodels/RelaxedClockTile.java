@@ -1,9 +1,12 @@
 package tiles.branchmodels;
 
+import dr.evomodel.branchratemodel.BranchRateModel;
 import dr.evomodel.branchratemodel.DiscretizedBranchRates;
+import dr.evomodel.branchratemodel.ScaledByTreeTimeBranchRateModel;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.distribution.ParametricDistributionModel;
+import dr.inference.model.Parameter;
 import dr.math.distributions.Distribution;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.NonNegativeInt;
@@ -20,7 +23,7 @@ import tiling.params.BeastXRealScalarParam;
 import java.util.IdentityHashMap;
 import java.util.List;
 
-public class RelaxedClockTile extends GeneratorTile<DiscretizedBranchRates, BeastXState> {
+public class RelaxedClockTile extends GeneratorTile<BranchRateModel, BeastXState> {
 
     private static final double MEAN_TOLERANCE = 1.0e-6;
 
@@ -45,7 +48,7 @@ public class RelaxedClockTile extends GeneratorTile<DiscretizedBranchRates, Beas
             new GeneratorTileInput<>("tree");
 
     @Override
-    public DiscretizedBranchRates applyTile(
+    public BranchRateModel applyTile(
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
@@ -60,6 +63,14 @@ public class RelaxedClockTile extends GeneratorTile<DiscretizedBranchRates, Beas
 
         TreeModel tree =
                 this.treeInput.apply(beastState, indexVariables);
+
+        Parameter clockRateParameter =
+                toParameter(clockRate);
+
+        beastState.addTreeClockRateParameter(
+                tree,
+                clockRateParameter
+        );
 
         Distribution distribution =
                 base.distribution.getDistribution();
@@ -118,27 +129,50 @@ public class RelaxedClockTile extends GeneratorTile<DiscretizedBranchRates, Beas
                         rateCategories.getParameter(),
                         parametricDistribution,
                         1,
-                        true,
-                        clockRate.get(),
+                        false,
+                        Double.NaN,
                         false,
                         false,
-                        false
+                        true
                 );
+
+        String relaxedClockId =
+                this.getId("relaxedClock", indexVariables, "");
 
         relaxedClock.setId(
                 beastState.getAvailableID(
-                        this.getId("relaxedClock", indexVariables, "")
+                        relaxedClockId + "_unscaled"
                 )
+        );
+
+        ScaledByTreeTimeBranchRateModel scaledRelaxedClock =
+                new ScaledByTreeTimeBranchRateModel(
+                        tree,
+                        relaxedClock,
+                        clockRateParameter
+                );
+
+        scaledRelaxedClock.setId(
+                beastState.getAvailableID(relaxedClockId)
         );
 
         beastState.addTreeRelaxedClockModel(
                 tree,
                 relaxedClock,
+                scaledRelaxedClock,
                 rateCategories.getParameter(),
                 parametricDistribution,
-                clockRate.get()
+                clockRateParameter
         );
 
-        return relaxedClock;
+        return scaledRelaxedClock;
+    }
+
+    private static Parameter toParameter(RealScalar<?> scalar) {
+        if (scalar instanceof BeastXRealScalarParam<?> beastXScalar) {
+            return beastXScalar.getParameter();
+        }
+
+        return new Parameter.Default(scalar.get());
     }
 }

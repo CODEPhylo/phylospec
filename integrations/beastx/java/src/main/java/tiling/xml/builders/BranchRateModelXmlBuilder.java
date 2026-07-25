@@ -34,19 +34,24 @@ public class BranchRateModelXmlBuilder {
     }
 
     public XmlElement buildRelaxedClockBranchRates(
+            BeastXState state,
             TreeModel treeModel,
             BeastXState.RelaxedClockSpec spec
     ) {
         String id =
                 relaxedClockBranchRateModelId(treeModel, spec);
 
-        return XmlElement.element("discretizedBranchRates")
-                .withId(id)
+        String unscaledId =
+                unscaledRelaxedClockBranchRateModelId(treeModel, spec);
+
+        XmlElement unscaledRelaxedClock =
+                XmlElement.element("discretizedBranchRates")
+                .withId(unscaledId)
                 .withAttribute("overSampling", "1")
-                .withAttribute("normalize", "true")
-                .withAttribute("normalizeBranchRateTo", format(spec.normalizeBranchRateTo()))
+                .withAttribute("normalize", "false")
                 .withAttribute("randomizeRates", "false")
-                .withAttribute("keepRates", "true")
+                .withAttribute("keepRates", "false")
+                .withAttribute("cachedRates", "true")
                 .withChild(treeReference(treeModel))
                 .withChild(
                         XmlElement.element("distribution")
@@ -63,9 +68,61 @@ public class BranchRateModelXmlBuilder {
                                         parameterReference(spec.rateCategoriesParameter())
                                 )
                 );
+
+        Parameter meanRateParameter =
+                spec.meanRateParameter();
+
+        return XmlElement.element("scaledByTreeTimeBranchRates")
+                .withId(id)
+                .withChild(treeReference(treeModel))
+                .withChild(unscaledRelaxedClock)
+                .withChild(
+                        parameterDefinitionOrReference(
+                                state,
+                                meanRateParameter,
+                                id + "_meanRate",
+                                meanRateParameter.getParameterValue(0),
+                                0.0,
+                                null
+                        )
+                );
+    }
+
+    private XmlElement parameterDefinitionOrReference(
+            BeastXState state,
+            Parameter parameter,
+            String fallbackId,
+            double fallbackValue,
+            Double lower,
+            Double upper
+    ) {
+        if (parameter != null && state.stateNodes.containsKey(parameter)) {
+            return parameterReference(parameter);
+        }
+
+        return inlineParameterDefinition(
+                fallbackId,
+                fallbackValue,
+                lower,
+                upper
+        );
     }
 
     public String relaxedClockBranchRateModelId(
+            TreeModel treeModel,
+            BeastXState.RelaxedClockSpec spec
+    ) {
+        String scaledRelaxedClockId =
+                spec.scaledRelaxedClock().getId();
+
+        if (scaledRelaxedClockId != null && !scaledRelaxedClockId.isBlank()) {
+            return scaledRelaxedClockId;
+        }
+
+        return treeId(treeModel) + "_relaxedClockBranchRates";
+    }
+
+    private String unscaledRelaxedClockBranchRateModelId(
             TreeModel treeModel,
             BeastXState.RelaxedClockSpec spec
     ) {
@@ -79,7 +136,7 @@ public class BranchRateModelXmlBuilder {
             return relaxedClockId;
         }
 
-        return treeId(treeModel) + "_relaxedClockBranchRates";
+        return relaxedClockBranchRateModelId(treeModel, spec) + "_unscaled";
     }
 
     private XmlElement parametricDistributionDefinition(

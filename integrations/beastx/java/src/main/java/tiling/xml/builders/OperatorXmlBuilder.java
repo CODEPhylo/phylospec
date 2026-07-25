@@ -17,6 +17,7 @@ public class OperatorXmlBuilder {
                 new ArrayList<>();
 
         operators.addAll(buildParameterOperators(state));
+        operators.addAll(buildRelaxedClockCategoryOperators(state));
         operators.addAll(buildTreeOperators(state));
         operators.addAll(buildClockTreeUpDownOperators(state));
 
@@ -92,10 +93,6 @@ public class OperatorXmlBuilder {
         trees.sort(Comparator.comparing(OperatorXmlBuilder::treeId));
 
         for (TreeModel treeModel : trees) {
-            if (hasRelaxedClockBranchRateModel(state, treeModel)) {
-                continue;
-            }
-
             String id =
                     treeId(treeModel);
 
@@ -132,6 +129,52 @@ public class OperatorXmlBuilder {
                             state.operatorConfig.treeWilsonBaldingWeight,
                             treeModel
                     )
+            );
+        }
+
+        return operators;
+    }
+
+    private List<XmlElement> buildRelaxedClockCategoryOperators(
+            BeastXState state
+    ) {
+        List<Parameter> parameters =
+                state.treeRelaxedClockModels.values().stream()
+                        .map(BeastXState.RelaxedClockSpec::rateCategoriesParameter)
+                        .distinct()
+                        .sorted(Comparator.comparing(OperatorXmlBuilder::parameterId))
+                        .toList();
+
+        List<XmlElement> operators =
+                new ArrayList<>();
+
+        for (Parameter parameter : parameters) {
+            String id =
+                    parameterId(parameter);
+
+            operators.add(
+                    XmlElement.element("randomWalkIntegerOperator")
+                            .withId(id + "_randomWalk")
+                            .withAttribute("windowSize", "1")
+                            .withAttribute("weight", "10.0")
+                            .withChild(parameterReference(parameter))
+            );
+
+            operators.add(
+                    XmlElement.element("swapOperator")
+                            .withId(id + "_swap")
+                            .withAttribute("size", "1")
+                            .withAttribute("weight", "10.0")
+                            .withAttribute("autoOptimize", "false")
+                            .withChild(parameterReference(parameter))
+            );
+
+            operators.add(
+                    XmlElement.element("uniformIntegerOperator")
+                            .withId(id + "_uniform")
+                            .withAttribute("count", "1")
+                            .withAttribute("weight", "10.0")
+                            .withChild(parameterReference(parameter))
             );
         }
 

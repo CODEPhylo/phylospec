@@ -198,13 +198,51 @@ public class LoggerXmlBuilder {
     }
 
     private List<XmlElement> defaultLoggedElements(BeastXState state) {
+        List<XmlElement> loggedElements =
+                new ArrayList<>();
+
+        if (!state.likelihoodDistributions.isEmpty()) {
+            loggedElements.add(
+                    XmlElement.ref("joint", POSTERIOR_LOG_NAME)
+            );
+        }
+
+        loggedElements.add(
+                XmlElement.ref("prior", PRIOR_LOG_NAME)
+        );
+
+        if (!state.likelihoodDistributions.isEmpty()) {
+            loggedElements.add(
+                    XmlElement.ref("likelihood", LIKELIHOOD_LOG_NAME)
+            );
+        }
+
+        List<String> treeNames =
+                new ArrayList<>(
+                        state.treeModelsByPhyloSpecName.keySet()
+                );
+
+        treeNames.sort(String::compareTo);
+
+        for (String treeName : treeNames) {
+            loggedElements.add(
+                    XmlElement.ref(
+                            "treeHeightStatistic",
+                            treeName + ".height"
+                    )
+            );
+            loggedElements.add(
+                    XmlElement.ref(
+                            "treeLengthStatistic",
+                            treeName + ".treeLength"
+                    )
+            );
+        }
+
         List<Parameter> parameters =
                 new ArrayList<>(state.stateNodes.keySet());
 
         parameters.sort(Comparator.comparing(LoggerXmlBuilder::parameterId));
-
-        List<XmlElement> loggedElements =
-                new ArrayList<>();
 
         for (Parameter parameter : parameters) {
             loggedElements.add(parameterReference(parameter));

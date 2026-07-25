@@ -234,9 +234,12 @@ public class XmlPlanBuilder {
                     entry.getKey();
 
             if (state.treeRelaxedClockModels.containsKey(treeModel)) {
-                throw unsupported(
-                        "A tree cannot use both StrictClock and RelaxedClock for XML export."
-                );
+                // Relaxed clocks register their mean-rate parameter here so
+                // operator construction can couple it to the tree. The
+                // relaxed-clock XML builder serializes that parameter inside
+                // scaledByTreeTimeBranchRates, so no strict-clock definition
+                // should be emitted for this tree.
+                continue;
             }
 
             List<Parameter> clockRateParameters =
@@ -278,6 +281,7 @@ public class XmlPlanBuilder {
             plan.add(
                     XmlPlan.Section.BRANCH_RATE_MODELS,
                     branchRateModelXmlBuilder.buildRelaxedClockBranchRates(
+                            state,
                             treeModel,
                             spec
                     )
@@ -391,7 +395,8 @@ public class XmlPlanBuilder {
             Set<String> emittedStatisticIds
     ) {
         if (loggableNames == null) {
-            return;
+            loggableNames =
+                    defaultTreeStatisticNames(state);
         }
 
         for (String loggableName : loggableNames) {
@@ -409,6 +414,27 @@ public class XmlPlanBuilder {
                 );
             }
         }
+    }
+
+    private List<String> defaultTreeStatisticNames(
+            BeastXState state
+    ) {
+        List<String> treeNames =
+                new ArrayList<>(
+                        state.treeModelsByPhyloSpecName.keySet()
+                );
+
+        treeNames.sort(String::compareTo);
+
+        List<String> statisticNames =
+                new ArrayList<>();
+
+        for (String treeName : treeNames) {
+            statisticNames.add(treeName + ".height");
+            statisticNames.add(treeName + ".treeLength");
+        }
+
+        return statisticNames;
     }
 
     private XmlElement treeStatistic(

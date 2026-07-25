@@ -67,6 +67,7 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel> {
         beastState.setInput(relaxedClockModel, relaxedClockModel.meanRateInput, clockRate);
         beastState.setInput(relaxedClockModel, relaxedClockModel.treeInput, tree);
         beastState.setInput(relaxedClockModel, relaxedClockModel.categoryInput, rateCategories);
+        beastState.setInput(relaxedClockModel, relaxedClockModel.normalizeInput, true);
 
         return relaxedClockModel;
     }

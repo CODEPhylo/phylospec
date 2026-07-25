@@ -256,7 +256,7 @@ public class PhyloCTMCXmlBuilder {
 
         if (relaxedClockSpec != null) {
             return XmlElement.ref(
-                    "discretizedBranchRates",
+                    "scaledByTreeTimeBranchRates",
                     branchRateModelXmlBuilder.relaxedClockBranchRateModelId(treeModel, relaxedClockSpec)
             );
         }
@@ -277,7 +277,7 @@ public class PhyloCTMCXmlBuilder {
 
             if (treeModelId.equals(treeId(registeredTreeModel))) {
                 return XmlElement.ref(
-                        "discretizedBranchRates",
+                        "scaledByTreeTimeBranchRates",
                         branchRateModelXmlBuilder.relaxedClockBranchRateModelId(
                                 registeredTreeModel,
                                 entry.getValue()

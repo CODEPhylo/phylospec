@@ -12,6 +12,7 @@ import beast.base.spec.inference.operator.DeltaExchangeOperator;
 import beast.base.spec.inference.operator.IntRandomWalkOperator;
 import beast.base.spec.inference.operator.ScaleOperator;
 import beast.base.spec.inference.operator.SwapOperator;
+import beast.base.spec.inference.operator.uniform.IntUniformOperator;
 import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
@@ -121,6 +122,11 @@ public class OperatorSelector {
             swapOperator.intparameterInput.setValue(intVector, swapOperator);
             beastState.setInput(swapOperator, swapOperator.m_pWeight, 10.0);
             beastState.addOperator(swapOperator, stateNode);
+
+            IntUniformOperator intUniformOperator = new IntUniformOperator();
+            beastState.setInput(intUniformOperator, intUniformOperator.parameterInput, intVector);
+            beastState.setInput(intUniformOperator, intUniformOperator.m_pWeight, 10.0);
+            beastState.addOperator(intUniformOperator, stateNode);
         }
     }
 }
