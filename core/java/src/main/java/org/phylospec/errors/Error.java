@@ -71,28 +71,34 @@ public final class Error extends Throwable {
         return text.toString();
     }
 
+    public String toStdOutString(String source) {
+        return toStdOutString(source, false);
+    }
+
     /**
      * Returns a formatted string with the highlighted problematic code which can be used
      * to print pretty error messages on stdout.
      */
-    public String toStdOutString(String source) {
+    public String toStdOutString(String source, boolean isWarning) {
         final String RESET = "\033[0m";
         final String BOLD = "\033[1m";
         final String RED = "\033[1;31m";
         final String YELLOW = "\033[1;33m";
+        final String MUTED_YELLOW = "\033[33m";
         final String BLUE = "\033[1;34m";
         final String CYAN = "\033[36m";
         final String INDENT = "    ";
+        final String headingColor = isWarning ? MUTED_YELLOW : RED;
+        final String heading = isWarning ? "Please note:" : "There is a problem:";
+        final String markerColor = isWarning ? MUTED_YELLOW : YELLOW;
 
         StringBuilder text = new StringBuilder();
 
-        text.append(RED)
-                .append("There is a problem:")
+        text.append(headingColor)
+                .append(heading)
                 .append(RESET)
                 .append(" ")
-                .append(BOLD)
-                .append(description())
-                .append(RESET);
+                .append(isWarning ? description() : BOLD + description() + RESET);
 
         String[] lines = source.split("\n", -1);
         if (range != null && range.startLine >= 1 && range.startLine <= lines.length) {
@@ -115,7 +121,7 @@ public final class Error extends Throwable {
                         .append(gutter)
                         .append(" | ")
                         .append(" ".repeat(range.start))
-                        .append(YELLOW)
+                        .append(markerColor)
                         .append("^".repeat(Math.max(1, range.end - range.start)))
                         .append(RESET);
             } else {
@@ -150,7 +156,7 @@ public final class Error extends Throwable {
                     }
 
                     text.append(" ".repeat(caretStart))
-                            .append(YELLOW)
+                            .append(markerColor)
                             .append("^".repeat(caretLen))
                             .append(RESET);
                 }

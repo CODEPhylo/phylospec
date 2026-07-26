@@ -77,6 +77,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         // run type resolver
 
         TypeResolver typeResolver = new TypeResolver(componentResolver);
+        typeResolver.registerEventListener(this);
 
         try {
             typeResolver.visitStatements(statements);
@@ -84,6 +85,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
             Range range = parser.getRangeForAstNode(error.getAstNode());
             this.errorDetected(error.toError(range));
         }
+
+        System.exit(1);
 
         StochasticityResolver stochasticityResolver = new StochasticityResolver();
         stochasticityResolver.visitStatements(statements);
@@ -165,5 +168,13 @@ public class PhyloSpecRunner implements ErrorEventListener {
     public void errorDetected(Error error) {
         System.out.println(error.toStdOutString(this.source));
         System.exit(1);
+    }
+
+    /**
+     * Prints the warning to standard output but does not exit the process.
+     */
+    @Override
+    public void warningDetected(Error warning) {
+        System.out.println(warning.toStdOutString(this.source, true));
     }
 }

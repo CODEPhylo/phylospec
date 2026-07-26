@@ -30,6 +30,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   if (!existsSync(jarPath)) {
     vscode.window.showErrorMessage(`PhyloSpec LSP JAR not found: ${jarPath}`);
+    context.asAbsolutePath();
     return;
   }
 

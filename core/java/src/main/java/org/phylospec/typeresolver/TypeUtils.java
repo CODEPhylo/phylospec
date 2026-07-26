@@ -56,7 +56,7 @@ public class TypeUtils {
      * the resolved arguments and uses that to build the possible return
      * types.
      */
-    static Set<ResolvedType> resolveGeneratedType(
+    static ResolvedGeneratorApplication resolveGeneratedType(
             Generator generator,
             Map<String, Set<ResolvedType>> resolvedArguments,
             String firstArgumentName,
@@ -87,6 +87,7 @@ public class TypeUtils {
         // check passed types and resolve type parameters
 
         Map<String, List<ResolvedType>> possibleParameterTypeSets = new HashMap<>();
+        Map<String, Set<ResolvedType>> possibleArgumentTypeSets = new HashMap<>();
         for (Argument parameter : parameters) {
             String parameterName = parameter.getName();
 
@@ -94,7 +95,12 @@ public class TypeUtils {
 
             if (resolvedArgumentTypeSet == null && parameter == parameters.getFirst()) {
                 // there might be an unnamed argument
-                resolvedArgumentTypeSet = resolvedArguments.get(firstArgumentName);
+                parameterName = firstArgumentName;
+                resolvedArgumentTypeSet = resolvedArguments.get(parameterName);
+            }
+
+            if (parameterName == null) {
+                parameterName = parameters.getFirst().getName();
             }
 
             if (resolvedArgumentTypeSet == null) {
@@ -115,6 +121,7 @@ public class TypeUtils {
             // updated with the corresponding types for type parameters
 
             boolean foundMatch = false;
+            Set<ResolvedType> matchingArgumentTypeSet = new HashSet<>();
             for (ResolvedType possibleArgumentType : resolvedArgumentTypeSet) {
                 if (TypeUtils.checkAssignabilityAndResolveTypeParameters(
                         parameter.getType(),
@@ -123,8 +130,10 @@ public class TypeUtils {
                         possibleParameterTypeSets,
                         componentResolver)) {
                     foundMatch = true;
+                    matchingArgumentTypeSet.add(possibleArgumentType);
                 }
             }
+            possibleArgumentTypeSets.put(parameterName, matchingArgumentTypeSet);
 
             if (!foundMatch) {
                 throw new TypeError(
@@ -156,8 +165,14 @@ public class TypeUtils {
         // construct return type
 
         String returnTypeName = generator.getGeneratedType();
-        return ResolvedType.fromString(returnTypeName, parameterTypeSets, componentResolver);
+        return new ResolvedGeneratorApplication(
+                ResolvedType.fromString(returnTypeName, parameterTypeSets, componentResolver),
+                possibleArgumentTypeSets);
     }
+
+    record ResolvedGeneratorApplication(
+            Set<ResolvedType> generatedTypeSet, Map<String, Set<ResolvedType>> resolvedArguments) {}
+    ;
 
     /**
      * Checks whether the given type String (e.g. {@code "Vector<Real>"}) is a generic.

@@ -1,6 +1,9 @@
 package org.phylospec.lsp;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Path;
 import java.util.*;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -16,6 +19,7 @@ import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.ResolvedType;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
+import org.phylospec.workspace.Workspace;
 
 /**
  * This class implements the actual LSP responses for a given document.
@@ -42,6 +46,7 @@ class LspDocument implements ErrorEventListener {
         this.componentResolver = loadComponentResolver();
 
         updateContent(content);
+        updateWorkspace(uri);
     }
 
     private static ComponentResolver loadComponentResolver() {
@@ -77,6 +82,7 @@ class LspDocument implements ErrorEventListener {
         // run type resolver
 
         typeResolver = new TypeResolver(componentResolver);
+        typeResolver.registerEventListener(this);
         for (Stmt statement : statements) {
             try {
                 statement.accept(typeResolver);
@@ -113,6 +119,33 @@ class LspDocument implements ErrorEventListener {
                         text.toString()));
 
         System.out.println(error.toStdOutString(content));
+    }
+
+    @Override
+    public void warningDetected(Error warning) {
+        StringBuilder text = new StringBuilder(warning.description());
+
+        if (!warning.hint().isBlank()) {
+            text.append("\n\n").append(warning.hint());
+        }
+
+        if (!warning.examples().isEmpty()) {
+            text.append("\n\nFor example:\n");
+            for (String example : warning.examples()) {
+                text.append("\n\t").append(example);
+            }
+        }
+
+        foundDiagnostics.add(
+                new Diagnostic(
+                        new org.eclipse.lsp4j.Range(
+                                new Position(warning.range().startLine - 1, warning.range().start),
+                                new Position(warning.range().endLine - 1, warning.range().end)),
+                        text.toString(),
+                        DiagnosticSeverity.Warning,
+                        null));
+
+        System.out.println(warning.toStdOutString(content, true));
     }
 
     public void errorDetected(TypeError astNodeError, Stmt stmt) {
@@ -619,5 +652,9 @@ class LspDocument implements ErrorEventListener {
 
     public void setRemoteProxy(LanguageClient remoteProxy) {
         this.client = remoteProxy;
+    }
+
+    private void updateWorkspace(String client) {
+        Workspace.FOLDERS.add(Path.of(new File(URI.create(client)).getPath()).getParent());
     }
 }

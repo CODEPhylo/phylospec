@@ -48,6 +48,7 @@
     "compile": "tsc -b",
     "prepare-dev": "npm run build:lsp && npm run compile",
     "watch": "tsc -b -w",
+    "prep-dev": "npm run build:lsp && npm run compile",
     "prepare-publish": "git clean -xfd node_modules && npm i && npm run build:lsp && npm run compile",
     "publish-vscode": "npm run prepare-publish && vsce publish",
     "publish-openvsx": "npm run prepare-publish && vsce package && echo 'Now you have to run: npx ovsx publish <file.vsix> -p <access token>'"

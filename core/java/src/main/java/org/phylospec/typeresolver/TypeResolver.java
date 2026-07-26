@@ -1,5 +1,7 @@
 package org.phylospec.typeresolver;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.phylospec.Utils;
@@ -7,7 +9,10 @@ import org.phylospec.ast.*;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
 import org.phylospec.components.Type;
+import org.phylospec.errors.Error;
+import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.lexer.TokenType;
+import org.phylospec.workspace.Workspace;
 
 /// This class traverses an AST statement and resolves the types for each
 /// AST node and each variable.
@@ -45,14 +50,21 @@ public class TypeResolver
 
     AstPrinter printer;
 
+    private final List<ErrorEventListener> eventListeners;
+
     public TypeResolver(ComponentResolver componentResolver) {
         this.componentResolver = componentResolver;
         this.typeMatcher = new TypeMatcher(componentResolver);
         this.resolvedTypes = new HashMap<>();
         this.scopedVariableTypes = new ArrayList<>();
         this.printer = new AstPrinter();
+        this.eventListeners = new ArrayList<>();
 
         createScope();
+    }
+
+    public void registerEventListener(ErrorEventListener listener) {
+        this.eventListeners.add(listener);
     }
 
     /**
@@ -205,6 +217,17 @@ public class TypeResolver
             }
         }
 
+        // we attach the type properties to the variable types
+
+        for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
+            // find the matching resolved types
+            for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
+                if (resolvedVariableType.getName().equals(resolvedExpressionType.getName())) {
+                    resolvedVariableType.attachProperties(resolvedExpressionType.getProperties());
+                }
+            }
+        }
+
         enforceUniqueness(stmt.name, stmt);
 
         remember(stmt.name, resolvedVariableTypeSet);
@@ -286,6 +309,17 @@ public class TypeResolver
                                 + resolvedVariableType.getParametersNames().size()
                                 + " parameter types, but you specified none. Add the type parameters using brackets.",
                         List.of("Vector<Real>"));
+            }
+        }
+
+        // we attach the type properties to the variable types
+
+        for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
+            // find the matching resolved types
+            for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
+                if (resolvedVariableType.getName().equals(resolvedExpressionType.getName())) {
+                    resolvedVariableType.attachProperties(resolvedExpressionType.getProperties());
+                }
             }
         }
 
@@ -628,6 +662,10 @@ public class TypeResolver
             globalUnit = expr.unit;
         }
 
+        for (ResolvedType resolvedType : resolvedTypeSet) {
+            resolvedType.attachProperty("literal", expr.value);
+        }
+
         return remember(expr, resolvedTypeSet);
     }
 
@@ -906,10 +944,12 @@ public class TypeResolver
         Set<String> errorMessages = new HashSet<>();
         for (Generator generator : generators) {
             try {
-                Set<ResolvedType> possibleGeneratorReturnTypes =
+                TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication =
                         TypeUtils.resolveGeneratedType(
                                 generator, resolvedArguments, firstArgumentName, componentResolver);
-                possibleReturnTypes.addAll(possibleGeneratorReturnTypes);
+                possibleReturnTypes.addAll(resolvedGeneratorApplication.generatedTypeSet());
+
+                checkGeneratorApplication(expr, generator, resolvedGeneratorApplication);
             } catch (TypeError e) {
                 e.attachAstNode(expr);
                 lastError = e;
@@ -1273,5 +1313,52 @@ public class TypeResolver
         return getVariableNames().stream()
                 .min(Comparator.comparingInt(name -> Utils.editDistance(queryVariable, name)))
                 .orElse("");
+    }
+
+    private void raiseWarning(Error warning) {
+        for (ErrorEventListener eventListener : eventListeners) {
+            eventListener.warningDetected(warning);
+        }
+    }
+
+    private void checkGeneratorApplication(
+            AstNode astNode,
+            Generator generator,
+            TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
+        if (generator.getName().equals("fromNexus")
+                && generator.getNamespace().equals("phylospec.functions.io")) {
+            Set<ResolvedType> fileNameTypeSet =
+                    resolvedGeneratorApplication.resolvedArguments().get("file");
+            if (fileNameTypeSet == null || fileNameTypeSet.isEmpty()) return;
+
+            boolean someExist = false;
+            for (ResolvedType resolvedType : fileNameTypeSet) {
+                Object literalPropertyObj = resolvedType.getProperty("literal");
+                if (!(literalPropertyObj instanceof String literalString)) return;
+
+                // check if the file exists
+                boolean fileExists = Files.exists(Path.of(literalString));
+                if (fileExists) {
+                    someExist = true;
+                    break;
+                }
+
+                for (Path folder : Workspace.FOLDERS) {
+                    boolean fileExistsInWorkspace = Files.exists(folder.resolve(literalString));
+                    if (fileExistsInWorkspace) {
+                        someExist = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!someExist) {
+                raiseWarning(
+                        new Error(
+                                astNode.getRange(),
+                                "File might not exist.",
+                                "You might want to check if that file exists or choose a file which does exist."));
+            }
+        }
     }
 }
