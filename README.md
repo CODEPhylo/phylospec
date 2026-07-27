@@ -10,43 +10,42 @@ PhyloSpec provides a standardized way to describe phylogenetic modeling componen
 
 - Check out our [website](https://codephylo.github.io/phylospec).
 - Check out the [PRs](https://github.com/CODEPhylo/phylospec/pulls?q=is%3Apr+) and [our Blog](https://codephylo.github.io/phylospec/blog) for the latest progress.
+- Check out the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=CodePhylo.PhyloSpec) and the [OpenVSX extension](https://open-vsx.org/extension/CodePhylo/PhyloSpec).
 - Check out the [other documentation](docs).
-- Check out the [VS Code extension demo](https://polybox.ethz.ch/index.php/s/8TSWd7mqLRiEcTJ).
 
 ## Repository Structure
 
 ```
 .
-├── core/                          # Core implementations
-│   └── java/                      # Java reference implementation
-│       ├── src/main/java/         # Type system and annotations
+├── core/                             # Core implementations
+│   └── java/                         # Java reference implementation
+│       ├── src/main/java/            # Type system and annotations
 │       │   └── org/phylospec/
-│       │       ├── annotations/   # PhyloSpec annotations
-│       │       ├── ast/           # Nodes of syntax tree
-│       │       ├── components/    # Classes corresponding to components in component libraries
-│       │       ├── converters/    # Classes to convert PhyloSpec into other languages (Rev, LPhy, JSON)
-│       │       ├── domain/        # Bounded primitive types (PositiveReal, Probability, etc.)
-│       │       ├── errors/        # Error types and reporting
-│       │       ├── factory/       # Type factory utilities
-│       │       ├── lexer/         # Lexer
-│       │       ├── lsp/           # LSP Server
-│       │       ├── parser/        # Parser
-│       │       ├── typeresolver/  # Type resolver and static type checker
-│       │       └── types/         # Complex types (Matrix, Vector, etc.)
-│       └── src/test/              # Unit and integration tests
-├── integrations/                  # Engine-specific integrations
-│   └── beast3/java/               # BEAST 3 integration
-├── tools/                         # Related tools
-│   └── vscode/                    # VS Code Extension
-├── docs/                          # Documentation
-│   ├── language.md                # Written language specification
-│   ├── types.md                   # Type system specification
-│   ├── distributions.md           # Distribution signatures
-│   ├── functions.md               # Function signatures
-│   └── errors.md                  # Error definitions
-├── website/                       # Svelte website for the project
-└── schema/                        # JSON schemas and specifications
-    └── component-library.schema.json  # Metaschema for component libraries
+│       │       ├── annotations/      # PhyloSpec annotations
+│       │       ├── ast/              # Nodes of syntax tree
+│       │       ├── components/       # Classes corresponding to components in component libraries
+│       │       ├── converters/       # Classes to convert PhyloSpec into other languages (Rev, LPhy, JSON)
+│       │       ├── domain/           # Bounded primitive types (PositiveReal, Probability, etc.)
+│       │       ├── errors/           # Error types and reporting
+│       │       ├── factory/          # Type factory utilities
+│       │       ├── lexer/            # Lexer
+│       │       ├── lsp/              # LSP Server
+│       │       ├── parser/           # Parser
+│       │       ├── templatematching/ # Template matching engine
+│       │       ├── tiling/           # Tiling algorithm
+│       │       ├── typeresolver/     # Type resolver and static type checker
+│       │       └── types/            # Complex types (Matrix, Vector, etc.)
+│       └── src/test/                 # Unit and integration tests
+├── integrations/                     # Engine-specific integrations
+│   └── beast3/java/                  # BEAST 3 integration
+│   └── beastx/java/                  # BEAST X integration
+├── scripts/                          # Misc. scripts for developers
+├── tools/                            # Related tools
+│   └── vscode/                       # VS Code Extension
+│   └── phylospec-template-gui/       # Template-based GUI prototype
+├── website/                          # Svelte website for the project
+└── schema/                           # JSON schemas and specifications
+    └── component-library.schema.json # Metaschema for component libraries
 ```
 
 ## Code Formatting

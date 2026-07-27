@@ -39,5 +39,4 @@ mvn -pl integrations/beastx/java -am compile
 For Beagle to work, you generally have two options:
 
 - Add the library to `PATH`,
-- Specify the library path in the VM options of the run config (e.g. `-Djava.library.path=/usr/local/lib` on macOS). 
-- 
+- Specify the library path in the VM options of the run config (e.g. `-Djava.library.path=/usr/local/lib` on macOS).
