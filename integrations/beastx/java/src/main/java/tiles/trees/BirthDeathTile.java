@@ -81,7 +81,7 @@ public class BirthDeathTile extends GeneratorTile<
                         toParameter(diversificationRate),
                         toParameter(turnover),
                         samplingProbabilityParameter,
-                        BirthDeathGernhard08Model.TreeType.LABELED,
+                        BirthDeathGernhard08Model.TreeType.UNSCALED,
                         Units.Type.YEARS
                 );
 

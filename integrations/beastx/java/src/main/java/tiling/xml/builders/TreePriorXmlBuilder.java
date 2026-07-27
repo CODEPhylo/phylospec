@@ -128,7 +128,7 @@ public class TreePriorXmlBuilder {
     ) {
         return XmlElement.element("birthDeathModel")
                 .withId(treePriorModelId(treePrior))
-                .withAttribute("type", "LABELED")
+                .withAttribute("type", "UNSCALED")
                 .withAttribute("units", "years")
                 .withChild(
                         parameterElement(

@@ -25,6 +25,16 @@ public class SubstitutionModelXmlBuilder {
     private static final List<String> GTR_RATE_NAMES =
             List.of("rateAC", "rateAG", "rateAT", "rateCG", "rateCT", "rateGT");
 
+    private static final List<String> GTR_RATE_FIELD_NAMES =
+            List.of(
+                    "rateACVariable",
+                    "rateAGVariable",
+                    "rateATVariable",
+                    "rateCGVariable",
+                    "rateCTVariable",
+                    "rateGTVariable"
+            );
+
     public List<XmlElement> buildSubstitutionModel(
             SubstitutionModel substitutionModel,
             String substitutionModelId
@@ -469,22 +479,43 @@ public class SubstitutionModelXmlBuilder {
         List<Parameter> parameters =
                 new ArrayList<>();
 
-        for (int i = 0; i < gtr.getVariableCount(); i++) {
-            Variable<?> variable =
-                    gtr.getVariable(i);
-
-            if (variable instanceof Parameter parameter && parameter.getDimension() == 1) {
-                parameters.add(parameter);
-            }
-        }
-
-        if (parameters.size() != 6) {
-            throw unsupported(
-                    "GTR XML export requires six scalar rate parameters in AC, AG, AT, CG, CT, GT order."
+        for (String fieldName : GTR_RATE_FIELD_NAMES) {
+            parameters.add(
+                    gtrRateParameterField(
+                            gtr,
+                            fieldName
+                    )
             );
         }
 
         return parameters;
+    }
+
+    private Parameter gtrRateParameterField(
+            GTR gtr,
+            String fieldName
+    ) {
+        try {
+            Field field =
+                    GTR.class.getDeclaredField(fieldName);
+
+            field.setAccessible(true);
+
+            Object value =
+                    field.get(gtr);
+
+            if (value instanceof Parameter parameter && parameter.getDimension() == 1) {
+                return parameter;
+            }
+
+            throw unsupported(
+                    "GTR field '" + fieldName + "' is not a scalar Parameter."
+            );
+        } catch (NoSuchFieldException | IllegalAccessException exception) {
+            throw unsupported(
+                    "Cannot extract GTR rate field '" + fieldName + "'."
+            );
+        }
     }
 
     private boolean allGTRRatesAreInline(List<Parameter> rateParameters) {
@@ -498,35 +529,27 @@ public class SubstitutionModelXmlBuilder {
     }
 
     private int impliedReferenceRateIndex(List<Parameter> rateParameters) {
-        int impliedRateIndex =
-                -1;
-
         for (int i = 0; i < rateParameters.size(); i++) {
             Parameter parameter =
                     rateParameters.get(i);
 
             if (!hasId(parameter) && approximatelyOne(parameter.getParameterValue(0))) {
-                if (impliedRateIndex != -1) {
-                    throw unsupported(
-                            "Stochastic GTR XML export requires exactly one fixed rate equal to 1.0 "
-                                    + "so BEAST X can use it as the implied reference rate."
-                    );
-                }
-
-                impliedRateIndex =
-                        i;
+                /*
+                 * BEAST X represents a stochastic GTR model with five named
+                 * rates and treats the missing sixth rate as 1.0. More than
+                 * one PhyloSpec rate may be fixed to 1.0 (for example TN93).
+                 * Select the first such slot as the missing reference and
+                 * emit every other fixed slot explicitly.
+                 */
+                return i;
             }
         }
 
-        if (impliedRateIndex == -1) {
-            throw unsupported(
-                    "Stochastic GTR XML export requires exactly one fixed rate equal to 1.0. "
-                            + "BEAST X XML accepts either a six-dimensional rates parameter, or exactly five named rates "
-                            + "with one implied reference rate."
-            );
-        }
-
-        return impliedRateIndex;
+        throw unsupported(
+                "Stochastic GTR XML export requires at least one fixed rate equal to 1.0. "
+                        + "BEAST X XML accepts either a six-dimensional rates parameter, or exactly five named rates "
+                        + "with one fixed rate omitted as the implied reference rate."
+        );
     }
 
     private XmlElement parameterOrInlineDefinition(
