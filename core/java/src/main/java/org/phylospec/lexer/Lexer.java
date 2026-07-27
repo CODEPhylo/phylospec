@@ -204,6 +204,10 @@ public class Lexer {
                     identifier();
                 } else if (isDigit(c)) {
                     number();
+                } else if (c == ';' && peek() == '\n') {
+                    reportError(
+                            "';' is not allowed here.",
+                            "PhyloSpec does not use semicolons at the end of statements.");
                 } else {
                     reportError(
                             "'" + c + "' is not an allowed character.",
