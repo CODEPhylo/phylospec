@@ -99,7 +99,7 @@ If you use PhyloSpec in your research, please cite:
 @software{phylospec2025,
   author = {CODEPhylo Working Group},
   title = {PhyloSpec: A Specification for Phylogenetic Modeling Components},
-  year = {2025},
+  year = {2026},
   publisher = {GitHub},
   url = {https://github.com/CODEPhylo/phylospec}
 }
