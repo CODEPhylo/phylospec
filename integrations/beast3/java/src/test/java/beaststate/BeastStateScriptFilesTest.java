@@ -125,7 +125,7 @@ public class BeastStateScriptFilesTest {
                     .map(CalculationNode::getID)
                     .collect(Collectors.toSet());
 
-            Set<String> actualPriorIds = beastState.priorDistributions.values().stream()
+            Set<String> actualPriorIds = beastState.getPriorDistributions().stream()
                     .map(Distribution::getID)
                     .collect(Collectors.toSet());
 

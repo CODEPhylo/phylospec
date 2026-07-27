@@ -23,7 +23,7 @@ public class BEASTState {
     public final HashMap<StateNode, TypeToken<?>> stateNodes;
     public final HashMap<CalculationNode, TypeToken<?>> calculationNodes;
 
-    public final HashMap<StateNode, Distribution> priorDistributions;
+    public final HashMap<StateNode, List<Distribution>> priorDistributions;
     public final List<Distribution> likelihoodDistributions;
 
     public final HashMap<Operator, Set<StateNode>> operators;
@@ -139,7 +139,21 @@ public class BEASTState {
         distribution.setID(this.getAvailableID(id));
         this.addBEASTObject(stateNode);
         this.addBEASTObject(distribution);
-        this.priorDistributions.put(stateNode, distribution);
+        this.priorDistributions
+                .computeIfAbsent(stateNode, ignored -> new ArrayList<>())
+                .add(distribution);
+    }
+
+    /**
+     * Returns every registered prior distribution.
+     *
+     * A state node can participate in more than one prior. For example, a
+     * tree can have both a Yule prior and a root-calibration prior.
+     */
+    public List<Distribution> getPriorDistributions() {
+        return this.priorDistributions.values().stream()
+                .flatMap(Collection::stream)
+                .toList();
     }
 
     /**

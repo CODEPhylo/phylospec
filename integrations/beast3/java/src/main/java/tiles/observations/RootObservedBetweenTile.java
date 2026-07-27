@@ -42,9 +42,11 @@ public class RootObservedBetweenTile extends TemplateTile<RealScalarParam<Positi
         beastState.setInput(prior, prior.treeInput, tree);
         beastState.setInput(prior, prior.taxonsetInput, tree.getTaxonset());
 
-        // we add the prior as likelihood to the beast state
+        // A tree can have both a tree-generating prior and one or more
+        // calibration priors. Register the calibration as an additional prior
+        // associated with the same tree.
 
-        beastState.addLikelihoodDistribution(prior, "rootCalibration");
+        beastState.addPriorDistribution(tree, prior, "rootCalibration");
 
         // we return the observed root age
 

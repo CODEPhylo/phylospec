@@ -24,7 +24,7 @@ public class LoggerSelector {
             BEASTState beastState, CompoundDistribution posterior, CompoundDistribution prior, CompoundDistribution likelihood
     ) {
         List<BEASTObject> loggableObjects = getLoggableObjects(beastState);
-        loggableObjects.addAll(beastState.priorDistributions.values());
+        loggableObjects.addAll(beastState.getPriorDistributions());
         loggableObjects.addAll(beastState.likelihoodDistributions);
         loggableObjects.add(posterior);
         loggableObjects.add(prior);
