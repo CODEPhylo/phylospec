@@ -1,0 +1,97 @@
+<?xml version="1.0" standalone="yes"?>
+<beast version="2.0"
+       namespace="beast.base.evolution.alignment:beast.base.evolution.speciation:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree:beast.base.evolution.tree.coalescent:beast.base.util:beast.base.math:beast.base.evolution.likelihood:beast.base.evolution.branchratemodel:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.operator:beast.base.inference.operator">
+
+    <data id="alignment" dataType="nucleotide">
+        <sequence taxon="A">A</sequence>
+        <sequence taxon="B">A</sequence>
+        <sequence taxon="C">A</sequence>
+        <sequence taxon="D">A</sequence>
+    </data>
+
+    <parameter id="birthRate" estimate="false" value="1.0" lower="0.0"/>
+
+    <input id="yule" spec="beast.base.evolution.speciation.YuleModel"
+           birthDiffRate="@birthRate">
+        <tree id="tree" spec="beast.base.evolution.tree.TreeParser"
+              IsLabelledNewick="true" taxa="@alignment"
+              newick="((A:1.0,B:1.0):1.0,(C:1.0,D:1.0):1.0);"/>
+    </input>
+
+    <input id="siteModel" spec="SiteModel" gammaCategoryCount="1">
+        <substModel id="jc69" spec="JukesCantor"/>
+    </input>
+
+    <input id="treeLikelihood" spec="TreeLikelihood"
+           data="@alignment" tree="@tree" siteModel="@siteModel">
+        <branchRateModel id="strictClock"
+                         spec="beast.base.evolution.branchratemodel.StrictClockModel">
+            <parameter id="clockRate" estimate="false"
+                       name="clock.rate" value="1.0"/>
+        </branchRateModel>
+    </input>
+
+    <!--
+        Controlled comparison aligned to testYuleOneSite.phylospec:
+        * the original four-taxon, one-site alignment
+        * tree ~ Yule(birthRate=1.0)
+        * JC69 likelihood with a fixed unit strict clock
+
+        The distributed example is a ten-step density smoke test. It combines
+        Yule and zero-death BirthDeath densities on one tree and comments out
+        its likelihood. The validation model uses one generative Yule prior
+        and one explicit likelihood so all five paths have one target density.
+    -->
+    <run id="mcmc" spec="MCMC" chainLength="10000000">
+        <state id="state" storeEvery="1000">
+            <stateNode idref="tree"/>
+        </state>
+
+        <distribution id="posterior" spec="CompoundDistribution">
+            <distribution id="prior" spec="CompoundDistribution">
+                <distribution id="yule.prior" idref="yule"/>
+            </distribution>
+            <distribution id="likelihood" idref="treeLikelihood"/>
+        </distribution>
+
+        <operator id="treeScaler" spec="ScaleOperator"
+                  scaleFactor="0.5" weight="1.0" tree="@tree"/>
+        <operator id="uniform"
+                  spec="beast.base.evolution.operator.Uniform"
+                  weight="10.0" tree="@tree"/>
+        <operator id="subtreeSlide" spec="SubtreeSlide"
+                  weight="5.0" gaussian="true"
+                  size="1.0" tree="@tree"/>
+        <operator id="narrow" spec="Exchange"
+                  isNarrow="true" weight="1.0" tree="@tree"/>
+        <operator id="wide" spec="Exchange"
+                  isNarrow="false" weight="1.0" tree="@tree"/>
+        <operator id="wilsonBalding" spec="WilsonBalding"
+                  weight="1.0" tree="@tree"/>
+
+        <logger id="tracelog" logEvery="1000"
+                fileName="testYuleOneSite-beast2.log"
+                model="@posterior" sanitiseHeaders="true">
+            <log idref="posterior"/>
+            <log idref="prior"/>
+            <log idref="likelihood"/>
+            <log idref="yule.prior"/>
+            <log id="tree.statistics"
+                 spec="beast.base.evolution.tree.TreeStatLogger"
+                 tree="@tree"/>
+        </logger>
+
+        <logger id="treelog" logEvery="1000"
+                fileName="testYuleOneSite-beast2.trees" mode="tree">
+            <log id="treeWithMetaData"
+                 spec="beast.base.evolution.TreeWithMetaDataLogger"
+                 tree="@tree"/>
+        </logger>
+
+        <logger id="screenlog" logEvery="100000">
+            <log idref="posterior"/>
+            <log idref="prior"/>
+            <log idref="likelihood"/>
+        </logger>
+    </run>
+</beast>

@@ -1,0 +1,71 @@
+Vector<Alignment<Character>> data = [
+    fromNexus(
+        file="${REPOSITORY_ROOT}/validation/examples/testMultipleAlignments/data/gene1.nex",
+        age=parse(regex=".*__age([0-9]+)$")
+    ),
+    fromNexus(
+        file="${REPOSITORY_ROOT}/validation/examples/testMultipleAlignments/data/gene2.nex",
+        age=parse(regex=".*__age([0-9]+)$")
+    ),
+    fromNexus(
+        file="${REPOSITORY_ROOT}/validation/examples/testMultipleAlignments/data/gene3.nex",
+        age=parse(regex=".*__age([0-9]+)$")
+    )
+]
+
+PositiveReal populationSize ~ LogNormal(
+    logMean=11.831743,
+    logSd=1.0
+)
+
+Tree tree[i] ~ Coalescent(
+    populationSize=constantPopulationFunction(
+        populationSize=populationSize
+    ),
+    taxa=taxa(data[i])
+) for i in 1:3
+
+PositiveReal kappa ~ LogNormal(
+    logMean=1.0,
+    logSd=1.25
+)
+
+Simplex baseFrequencies = [0.25, 0.25, 0.25, 0.25]
+
+QMatrix qMatrix = hky(
+    kappa=kappa,
+    baseFrequencies=baseFrequencies
+)
+
+PositiveReal gammaShape ~ Gamma(
+    shape=1.0,
+    rate=1.0
+)
+
+Vector<Rate> siteRates ~ DiscreteGammaInv(
+    shape=gammaShape,
+    numCategories=4,
+    numSites=numSites(data[1])
+)
+
+Rate clockRate ~ LogNormal(
+    logMean=-18.420681,
+    logSd=0.5
+)
+
+Vector<Rate> branchRates[i] ~ StrictClock(
+    clockRate=clockRate,
+    tree=tree[i]
+) for i in 1:3
+
+Alignment alignment[i] ~ PhyloCTMC(
+    tree=tree[i],
+    qMatrix=qMatrix,
+    branchRates=branchRates[i],
+    siteRates=siteRates
+) observed as data[i] for i in 1:3
+
+mcmc {
+    Integer chainLength = 10000000
+    Integer randomSeed = 1234
+}

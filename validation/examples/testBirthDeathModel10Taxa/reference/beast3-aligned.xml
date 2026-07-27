@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beast version="2.8"
+       namespace="beast.pkgmgmt:beast.base.core:beast.base.inference:
+       beast.base.evolution.alignment:beast.base.evolution.operator:
+       beast.base.spec.evolution.tree.coalescent:
+       beast.base.spec.inference.operator:beast.base.spec.inference.parameter:
+       beast.base.spec.inference.distribution">
+
+    <data id="alignment" spec="Alignment" dataType="nucleotide">
+        <sequence taxon="A" value="A"/>
+        <sequence taxon="B" value="A"/>
+        <sequence taxon="C" value="A"/>
+        <sequence taxon="D" value="A"/>
+        <sequence taxon="E" value="A"/>
+        <sequence taxon="F" value="A"/>
+        <sequence taxon="G" value="A"/>
+        <sequence taxon="H" value="A"/>
+        <sequence taxon="I" value="A"/>
+        <sequence taxon="J" value="A"/>
+    </data>
+
+    <!--
+        Controlled comparison model aligned to
+        testBirthDeathModel10Taxa.phylospec:
+
+        diversificationRate ~ LogNormal(logMean=0.0, logSd=1.0)
+        turnover = 0.5
+        samplingProbability = 1.0 (the BirthDeath default)
+        tree ~ BirthDeath(diversificationRate, turnover)
+
+        This is intentionally a prior-only benchmark. The one-site alignment
+        supplies the ten taxa but is not attached to a sequence likelihood.
+    -->
+    <run id="mcmc" spec="MCMC" chainLength="10000000">
+        <state id="state">
+            <stateNode id="tree"
+                       spec="beast.base.spec.evolution.tree.coalescent.RandomTree">
+                <taxa idref="alignment"/>
+                <populationModel id="initialPopulation"
+                                 spec="beast.base.spec.evolution.tree.coalescent.ConstantPopulation">
+                    <popSize spec="RealScalarParam"
+                             domain="PositiveReal" value="1.0"/>
+                </populationModel>
+                <taxonset id="taxonSet" spec="TaxonSet"
+                          alignment="@alignment"/>
+            </stateNode>
+            <stateNode id="diversificationRate"
+                       spec="RealScalarParam"
+                       domain="PositiveReal" value="0.5"/>
+        </state>
+
+        <distribution id="posterior" spec="CompoundDistribution">
+            <distribution id="prior" spec="CompoundDistribution">
+                <distribution id="birthDeath"
+                              spec="beast.base.spec.evolution.speciation.BirthDeathGernhard08Model"
+                              birthDiffRate="@diversificationRate"
+                              tree="@tree">
+                    <relativeDeathRate spec="RealScalarParam"
+                                       domain="PositiveReal" value="0.5"/>
+                </distribution>
+
+                <distribution id="diversificationRate.prior"
+                              spec="beast.base.spec.inference.distribution.LogNormal"
+                              param="@diversificationRate">
+                    <M spec="RealScalarParam" domain="Real" value="0.0"/>
+                    <S spec="RealScalarParam"
+                       domain="PositiveReal" value="1.0"/>
+                </distribution>
+            </distribution>
+
+            <distribution id="likelihood" spec="CompoundDistribution"/>
+        </distribution>
+
+        <operator id="diversificationRateScaler"
+                  spec="beast.base.spec.inference.operator.ScaleOperator"
+                  scaleFactor="0.75" weight="1.0"
+                  parameter="@diversificationRate"/>
+        <operator id="treeScaler"
+                  spec="beast.base.spec.evolution.operator.ScaleTreeOperator"
+                  scaleFactor="0.75" weight="5.0" tree="@tree"/>
+        <operator id="uniform" spec="kernel.BactrianNodeOperator"
+                  weight="30.0" tree="@tree"/>
+        <operator id="subtreeSlide" spec="kernel.BactrianSubtreeSlide"
+                  weight="15.0" tree="@tree"/>
+        <operator id="narrow" spec="Exchange"
+                  isNarrow="true" weight="15.0" tree="@tree"/>
+        <operator id="wide" spec="Exchange"
+                  isNarrow="false" weight="5.0" tree="@tree"/>
+        <operator id="wilsonBalding" spec="WilsonBalding"
+                  weight="5.0" tree="@tree"/>
+
+        <logger id="trace" logEvery="1000"
+                fileName="testBirthDeathModel10Taxa-beast3-reference.log">
+            <log idref="posterior"/>
+            <log idref="prior"/>
+            <log idref="likelihood"/>
+            <log idref="birthDeath"/>
+            <log idref="diversificationRate.prior"/>
+            <log idref="diversificationRate"/>
+            <log id="tree.statistics"
+                 spec="beast.base.evolution.tree.TreeStatLogger"
+                 tree="@tree"/>
+        </logger>
+
+        <logger id="trees" logEvery="1000"
+                fileName="testBirthDeathModel10Taxa-beast3-reference.trees"
+                mode="tree">
+            <log idref="tree"/>
+        </logger>
+
+        <logger id="screen" logEvery="100000">
+            <log idref="posterior"/>
+            <log idref="prior"/>
+            <log idref="birthDeath"/>
+            <log idref="diversificationRate"/>
+        </logger>
+    </run>
+</beast>

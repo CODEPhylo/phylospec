@@ -1,0 +1,41 @@
+Alignment data = fromNexus(
+    file="${REPOSITORY_ROOT}/validation/examples/testTipDates2/testTipDates2.nex",
+    age=parse(regex=".*_age([01])$")
+)
+
+Taxa taxa = taxa(data)
+
+PositiveReal kappa ~ LogNormal(
+    logMean=1.0,
+    logSd=0.5
+)
+
+Simplex baseFrequencies ~ Dirichlet(
+    concentration=repeat(1.0, num=4)
+)
+
+QMatrix qMatrix = hky(
+    kappa=kappa,
+    baseFrequencies=baseFrequencies
+)
+
+Tree tree ~ Coalescent(
+    populationSize=constantPopulationFunction(
+        populationSize=1.0
+    ),
+    taxa=taxa
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix,
+    branchRates~StrictClock(
+        clockRate=1.0,
+        tree=tree
+    )
+) observed as data
+
+mcmc {
+    Integer chainLength = 10000000
+    Integer randomSeed = 1234
+}

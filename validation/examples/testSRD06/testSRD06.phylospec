@@ -1,0 +1,80 @@
+Alignment data = fromNexus(
+    file="${REPOSITORY_ROOT}/validation/examples/testSRD06/testSRD06.nex"
+)
+
+Taxa taxa = taxa(data)
+
+Alignment firstCodonPositions = subset(
+    alignment=data,
+    codonPosition=1
+)
+
+Alignment secondCodonPositions = subset(
+    alignment=data,
+    codonPosition=2
+)
+
+Alignment thirdCodonPositions = subset(
+    alignment=data,
+    codonPosition=3
+)
+
+PositiveReal firstSecondKappa ~ LogNormal(
+    logMean=1.0,
+    logSd=0.5
+)
+
+Simplex firstSecondBaseFrequencies ~ Dirichlet(
+    concentration=repeat(1.0, num=4)
+)
+
+QMatrix firstSecondQMatrix = hky(
+    kappa=firstSecondKappa,
+    baseFrequencies=firstSecondBaseFrequencies
+)
+
+PositiveReal thirdKappa ~ LogNormal(
+    logMean=1.0,
+    logSd=0.5
+)
+
+Simplex thirdBaseFrequencies ~ Dirichlet(
+    concentration=repeat(1.0, num=4)
+)
+
+QMatrix thirdQMatrix = hky(
+    kappa=thirdKappa,
+    baseFrequencies=thirdBaseFrequencies
+)
+
+PositiveReal populationSize ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+Tree tree ~ Coalescent(
+    populationSize=constantPopulationFunction(
+        populationSize=populationSize
+    ),
+    taxa=taxa
+)
+
+Alignment firstCodonAlignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=firstSecondQMatrix
+) observed as firstCodonPositions
+
+Alignment secondCodonAlignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=firstSecondQMatrix
+) observed as secondCodonPositions
+
+Alignment thirdCodonAlignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=thirdQMatrix
+) observed as thirdCodonPositions
+
+mcmc {
+    Integer chainLength = 10000000
+    Integer randomSeed = 1234
+}

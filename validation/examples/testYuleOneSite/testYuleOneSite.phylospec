@@ -1,0 +1,20 @@
+Alignment<Character> data = fromNexus(
+    file="${REPOSITORY_ROOT}/validation/examples/testYuleOneSite/testYuleOneSite.nex"
+)
+
+Tree tree ~ Yule(
+    birthRate=1.0,
+    taxa=taxa(data)
+)
+
+QMatrix qMatrix = jc69()
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix
+) observed as data
+
+mcmc {
+    Integer chainLength = 10000000
+    Integer randomSeed = 1234
+}

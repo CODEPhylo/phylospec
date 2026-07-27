@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Applies the standard runtime-only configuration shared by BEAST X
@@ -59,11 +60,21 @@ final class BeastXValidationSupport {
                     );
             treeNames.sort(String::compareTo);
 
-            state.addTreeLoggerSpec(
-                    logEvery,
-                    outputPrefix + ".trees",
-                    treeNames
-            );
+            if (treeNames.size() == 1) {
+                state.addTreeLoggerSpec(
+                        logEvery,
+                        outputPrefix + ".trees",
+                        treeNames
+                );
+            } else {
+                for (String treeName : treeNames) {
+                    state.addTreeLoggerSpec(
+                            logEvery,
+                            outputPrefix + "." + treeName + ".trees",
+                            List.of(treeName)
+                    );
+                }
+            }
         }
     }
 

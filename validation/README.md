@@ -47,13 +47,81 @@ validation/
 │   │       ├── beast2-original.xml
 │   │       ├── beast3-original.xml
 │   │       └── beast2-aligned.xml
-│   └── testRelaxedClock/
+│   ├── testRelaxedClock/
+│   │   ├── README.md
+│   │   ├── testRelaxedClock.nex
+│   │   ├── testRelaxedClock.phylospec
+│   │   └── reference/
+│   │       ├── beast2-original.xml
+│   │       ├── beast3-original.xml
+│   │       └── beast2-aligned.xml
+│   ├── testSRD06/
+│   │   ├── README.md
+│   │   ├── testSRD06.nex
+│   │   ├── testSRD06.phylospec
+│   │   └── reference/
+│   │       ├── beast2-original.xml
+│   │       └── beast2-aligned.xml
+│   ├── testRestrictedGTR/
+│   │   ├── README.md
+│   │   ├── testRestrictedGTR.phylospec
+│   │   └── reference/
+│   │       ├── beast2-original.xml
+│   │       └── beast2-aligned.xml
+│   ├── testTIM/
+│   │   ├── README.md
+│   │   ├── testTIM.phylospec
+│   │   └── reference/
+│   │       ├── beast2-original.xml
+│   │       └── beast2-aligned.xml
+│   ├── testTVM/
+│   │   ├── README.md
+│   │   ├── testTVM.phylospec
+│   │   └── reference/
+│   │       ├── beast2-original.xml
+│   │       └── beast2-aligned.xml
+│   ├── testTN93/
+│   │   ├── README.md
+│   │   ├── testTN93.phylospec
+│   │   └── reference/
+│   │       ├── beast2-original.xml
+│   │       └── beast2-aligned.xml
+│   ├── testSYM/
+│   │   ├── README.md
+│   │   ├── testSYM.phylospec
+│   │   └── reference/
+│   │       ├── beast2-original.xml
+│   │       └── beast2-aligned.xml
+│   ├── testMultipleAlignments/
+│   │   ├── README.md
+│   │   ├── testMultipleAlignments.phylospec
+│   │   ├── data/
+│   │   │   ├── gene1.nex
+│   │   │   ├── gene2.nex
+│   │   │   └── gene3.nex
+│   │   └── reference/
+│   │       ├── beast2-original.xml
+│   │       └── beast2-aligned.xml
+│   ├── testClassicRootCalibrationPrior/
+│   │   ├── README.md
+│   │   ├── testClassicRootCalibrationPrior.nex
+│   │   ├── testClassicRootCalibrationPrior.phylospec
+│   │   └── reference/
+│   │       ├── beast2-original.xml
+│   │       └── beast2-aligned.xml
+│   ├── testTipDates/
+│   │   ├── README.md
+│   │   ├── testTipDates.nex
+│   │   ├── testTipDates.phylospec
+│   │   └── reference/
+│   │       ├── beast2-original.xml
+│   │       └── beast2-aligned.xml
+│   └── testTipDates2/
 │       ├── README.md
-│       ├── testRelaxedClock.nex
-│       ├── testRelaxedClock.phylospec
+│       ├── testTipDates2.nex
+│       ├── testTipDates2.phylospec
 │       └── reference/
 │           ├── beast2-original.xml
-│           ├── beast3-original.xml
 │           └── beast2-aligned.xml
 ├── beast3/
 │   └── java/                       # BEAST 3 validation Maven module
@@ -96,7 +164,57 @@ validation/
     │   ├── beast3-xml/
     │   ├── beastx-direct/
     │   └── beastx-xml/
-    └── testRelaxedClock/
+    ├── testRelaxedClock/
+    │   ├── beast3-direct/
+    │   ├── beast3-xml/
+    │   ├── beastx-direct/
+    │   └── beastx-xml/
+    ├── testSRD06/
+    │   ├── beast3-direct/
+    │   ├── beast3-xml/
+    │   ├── beastx-direct/
+    │   └── beastx-xml/
+    ├── testRestrictedGTR/
+    │   ├── beast3-direct/
+    │   ├── beast3-xml/
+    │   ├── beastx-direct/
+    │   └── beastx-xml/
+    ├── testTIM/
+    │   ├── beast3-direct/
+    │   ├── beast3-xml/
+    │   ├── beastx-direct/
+    │   └── beastx-xml/
+    ├── testTVM/
+    │   ├── beast3-direct/
+    │   ├── beast3-xml/
+    │   ├── beastx-direct/
+    │   └── beastx-xml/
+    ├── testTN93/
+    │   ├── beast3-direct/
+    │   ├── beast3-xml/
+    │   ├── beastx-direct/
+    │   └── beastx-xml/
+    ├── testSYM/
+    │   ├── beast3-direct/
+    │   ├── beast3-xml/
+    │   ├── beastx-direct/
+    │   └── beastx-xml/
+    ├── testMultipleAlignments/
+    │   ├── beast3-direct/
+    │   ├── beast3-xml/
+    │   ├── beastx-direct/
+    │   └── beastx-xml/
+    ├── testClassicRootCalibrationPrior/
+    │   ├── beast3-direct/
+    │   ├── beast3-xml/
+    │   ├── beastx-direct/
+    │   └── beastx-xml/
+    ├── testTipDates/
+    │   ├── beast3-direct/
+    │   ├── beast3-xml/
+    │   ├── beastx-direct/
+    │   └── beastx-xml/
+    └── testTipDates2/
         ├── beast3-direct/
         ├── beast3-xml/
         ├── beastx-direct/
@@ -121,9 +239,44 @@ The BEAST X module contains the corresponding two paths:
 2. `PhyloSpec source -> BEAST X XML -> external BEAST X`.
 
 The current examples are `testGTR`, `testHKY`, `testCoalescent`,
-`testExponentialGrowth`, `testJukesCantor`, and `testRelaxedClock`.
+`testExponentialGrowth`, `testJukesCantor`, `testRelaxedClock`,
+`testSRD06`, `testRestrictedGTR`, `testTIM`, `testTVM`, `testTN93`,
+`testSYM`, `testMultipleAlignments`, `testClassicRootCalibrationPrior`, and
+`testTipDates`, `testTipDates2`, `testYuleOneSite`, `testSliceHKY`, and
+`testSiteModelAlpha`, `testBirthDeathModel10Taxa`, and
+`testBirthDeathAsYule`.
 Example-specific model notes and commands are documented in each example's
 `README.md`.
+
+Most examples use an aligned BEAST 2 XML as the external reference.
+`testSiteModelAlpha` begins the complementary BEAST-3-derived series.
+`testBirthDeathModel10Taxa` extends that series with a prior-only
+Birth-Death tree model. `testBirthDeathAsYule` then checks that the
+zero-death, complete-sampling Birth-Death density equals the Yule density on
+the same fixed tree. These examples use aligned official BEAST 3 examples as
+their external references while retaining the same four PhyloSpec direct/XML
+backend paths.
+
+## Validation findings ledger
+
+Backend limitations exposed by the five-path examples are recorded here
+before they are consolidated into focused fixes:
+
+The complete engineering history, including merged fixes and outstanding
+follow-up work, is maintained in
+[`BACKEND_FINDINGS.md`](BACKEND_FINDINGS.md).
+
+| Example | Path | Finding | Current status |
+|---|---|---|---|
+| `testTN93` | PhyloSpec to BEAST X XML | The GTR exporter rejected TN93 because four rate slots are fixed to `1.0`, although BEAST X XML can omit one as the reference rate and write the other three explicitly. | Corrected locally with `BeastXXmlTN93Test`; retain for the later consolidated XML-export review. |
+| `testMultipleAlignments` | PhyloSpec to BEAST X XML | `LoggerXmlBuilder` serialized every selected tree into one `<logTree>`, but BEAST X requires exactly one tree per `<logTree>`. The direct path also reused one output filename for multiple tree loggers. | The validation wrapper now emits one logger and one uniquely named `.trees` file per tree. Retain the generic multi-tree logger behavior for a later focused backend fix. |
+| `testMultipleAlignments` | PhyloSpec to BEAST 3 direct/XML | Expanding the three indexed tree declarations manually caused each declaration to be materialized three times. The resulting runs contained nine state trees and nine coalescent priors, although only three trees were connected to likelihoods. | The example now retains the indexed `tree[i]`, `branchRates[i]`, and `alignment[i]` declarations. Regenerated XML contains exactly three state trees, three coalescent priors, and three likelihoods. Retain the explicit-declaration duplication as a focused BEAST 3 materialization regression case. |
+| `testMultipleAlignments` | Aligned BEAST 2 reference | `popSize.t:gene1` was present in the state and prior but had no operator. It therefore remained fixed at `137550`, while the other paths sampled population size, shifting the correlated clock/tree posterior. | Added a population-size `ScaleOperator`. The BEAST 2 path must be rerun before comparing parameter marginals. |
+| `testClassicRootCalibrationPrior` | PhyloSpec to BEAST 3 direct | The automatically generated initial Yule tree could fall below the positive root-calibration lower bound, giving `rootCalibration = -Infinity` before MCMC began. | The controlled comparison uses `Uniform(0.0, 10.0)`. This retains a finite root calibration while avoiding dependence on backend-specific initial-tree generation. |
+| `testTipDates2` | Language and both backends | The distributed example samples uncertain tip ages with a `TipDatesRandomWalker`, while PhyloSpec currently represents parsed ages as fixed alignment metadata. | The controlled five-path benchmark fixes the two ages at their original value. Stochastic tip-age declarations, priors, logging, and operators remain an explicit future coverage item. |
+
+The detailed rate mapping and reproduction commands are recorded in the
+example-specific README.
 
 Each full MCMC path produces two complementary logs:
 

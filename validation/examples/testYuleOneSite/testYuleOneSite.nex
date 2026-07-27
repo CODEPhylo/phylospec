@@ -1,0 +1,24 @@
+#NEXUS
+
+[Four-taxon, one-site alignment from the BEAST 2 testYuleOneSite.xml example.]
+
+begin taxa;
+    dimensions ntax=4;
+    taxlabels
+        A
+        B
+        C
+        D
+    ;
+end;
+
+begin characters;
+    dimensions nchar=1;
+    format datatype=dna missing=? gap=-;
+    matrix
+        A    A
+        B    A
+        C    A
+        D    A
+    ;
+end;

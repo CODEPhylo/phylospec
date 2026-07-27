@@ -1,0 +1,79 @@
+<?xml version="1.0" standalone="yes"?>
+<!-- test Yule birth model and Birth Death model per Gernhard 2008-->
+<beast version='2.0'
+       namespace='beast.base.evolution.speciation:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.base.util:beast.base.math:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood'>
+
+    <data id="alignment" dataType="nucleotide">
+        <sequence taxon="A">A</sequence>
+        <sequence taxon="B">A</sequence>
+        <sequence taxon="C">A</sequence>
+        <sequence taxon="D">A</sequence>
+    </data>
+
+    <input spec='YuleModel' id="yule">
+        <parameter name='birthDiffRate' idref="birthRate"/>
+        <tree spec='beast.base.evolution.tree.TreeParser' id='tree'
+              IsLabelledNewick='true' taxa='@alignment'
+              newick='((A:1.0,B:1.0):1.0,(C:1.0,D:1.0):1.0);'/>
+    </input>
+
+    <input spec='BirthDeathGernhard08Model' id="yulelike"
+           type='unscaled' tree='@tree'>
+        <parameter name='birthDiffRate' idref="birthRate"/>
+        <parameter name='relativeDeathRate' idref='relativeDeathRate'/>
+    </input>
+
+    <input spec='SiteModel' id="siteModel" gammaCategoryCount='1'>
+        <substModel spec='HKY' id='hky'>
+            <kappa id='hky.kappa' spec='parameter.RealParameter' value='1.0'/>
+            <frequencies id='freqs' spec='Frequencies'>
+                <data idref='alignment'/>
+            </frequencies>
+        </substModel>
+    </input>
+
+    <parameter id="birthRate" value="1.0" lower="0.0" upper="100.0"/>
+    <parameter id='relativeDeathRate' value='0'/>
+
+    <run spec='MCMC' chainLength="10">
+        <state>
+            <stateNode idref='tree'/>
+            <stateNode idref='birthRate'/>
+            <stateNode id='tree-test-single-child-parsing'
+                       IsLabelledNewick='true'
+                       spec='beast.base.evolution.tree.TreeParser'
+                       singlechild='true' newick='((A:1.0):2,C:3);'>
+                <taxonset spec='beast.base.evolution.alignment.TaxonSet'>
+                    <taxon spec='beast.base.evolution.alignment.Taxon' id='A'/>
+                    <taxon spec='beast.base.evolution.alignment.Taxon' id='C'/>
+                </taxonset>
+            </stateNode>
+        </state>
+
+        <distribution spec='CompoundDistribution'>
+            <distribution id="yule.prior" idref='yule'/>
+            <distribution id="yulelike.prior" idref='yulelike'/>
+        </distribution>
+
+        <operator spec='SubtreeSlide' weight="5" gaussian="true"
+                  size="1.0" tree="@tree"/>
+        <operator spec='Uniform' weight="10" tree="@tree"/>
+        <operator id='narrow' spec='Exchange' isNarrow='true'
+                  weight="1" tree="@tree"/>
+        <operator id='wide' spec='Exchange' isNarrow='false'
+                  weight="1" tree="@tree"/>
+        <operator spec='WilsonBalding' weight="1" tree="@tree"/>
+
+        <logger logEvery='100'>
+            <log idref='yule.prior'/>
+            <log idref='yulelike.prior'/>
+            <log spec='beast.base.evolution.tree.TreeHeightLogger'
+                 tree='@tree'/>
+        </logger>
+        <logger logEvery='100' fileName='$(seed).log'>
+            <log idref='yule.prior'/>
+            <log spec='beast.base.evolution.tree.TreeHeightLogger'
+                 tree='@tree'/>
+        </logger>
+    </run>
+</beast>

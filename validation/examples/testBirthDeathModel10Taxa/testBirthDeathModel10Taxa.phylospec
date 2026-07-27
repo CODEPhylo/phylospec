@@ -1,0 +1,19 @@
+Alignment<Character> data = fromNexus(
+    file="${REPOSITORY_ROOT}/validation/examples/testBirthDeathModel10Taxa/testBirthDeathModel10Taxa.nex"
+)
+
+PositiveReal diversificationRate ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+Tree tree ~ BirthDeath(
+    diversificationRate=diversificationRate,
+    turnover=0.5,
+    taxa=taxa(data)
+)
+
+mcmc {
+    Integer chainLength = 10000000
+    Integer randomSeed = 1234
+}

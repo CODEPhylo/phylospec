@@ -1,0 +1,18 @@
+Alignment<Character> data = fromNexus(
+    file="${REPOSITORY_ROOT}/validation/examples/testBirthDeathAsYule/testBirthDeathAsYule.nex"
+)
+
+PositiveReal birthRate ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+Tree tree ~ Yule(
+    birthRate=birthRate,
+    taxa=taxa(data)
+)
+
+mcmc {
+    Integer chainLength = 10000000
+    Integer randomSeed = 1234
+}

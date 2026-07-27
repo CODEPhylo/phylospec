@@ -1,0 +1,29 @@
+Alignment<Character> data = fromNexus(
+    file="${REPOSITORY_ROOT}/validation/examples/testClassicRootCalibrationPrior/testClassicRootCalibrationPrior.nex"
+)
+
+PositiveReal birthRate ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+Tree tree ~ Yule(
+    birthRate=birthRate,
+    taxa=taxa(data)
+)
+
+Age calibratedRoot = rootAge(
+    tree=tree
+) observed between [0.0, 10.0]
+
+QMatrix qMatrix = jc69()
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix
+) observed as data
+
+mcmc {
+    Integer chainLength = 5000000
+    Integer randomSeed = 1234
+}

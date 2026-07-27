@@ -1,0 +1,37 @@
+Alignment data = fromNexus(
+    file="${REPOSITORY_ROOT}/validation/examples/testHKY/testHKY.nex"
+)
+
+Taxa taxa = taxa(data)
+
+PositiveReal kappa ~ LogNormal(
+    logMean=1.0,
+    logSd=0.5
+)
+
+Simplex baseFrequencies = [
+    0.3390942900896959,
+    0.2465543644716692,
+    0.1531393568147014,
+    0.2612119886239335
+]
+
+QMatrix qMatrix = hky(
+    kappa=kappa,
+    baseFrequencies=baseFrequencies
+)
+
+Tree tree ~ Yule(
+    birthRate=1.0,
+    taxa=taxa
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix
+) observed as data
+
+mcmc {
+    Integer chainLength = 10000000
+    Integer randomSeed = 1234
+}

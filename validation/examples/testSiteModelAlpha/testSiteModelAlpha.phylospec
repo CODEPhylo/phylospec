@@ -1,0 +1,68 @@
+Alignment data = fromNexus(
+    file="${REPOSITORY_ROOT}/validation/examples/testSiteModelAlpha/testSiteModelAlpha.nex",
+    date=parse(regex=".*_([0-9]+)$")
+)
+
+Taxa taxa = taxa(data)
+
+PositiveReal kappa ~ LogNormal(
+    logMean=1.0,
+    logSd=0.5
+)
+
+Simplex baseFrequencies = [
+    0.348155156102,
+    0.186261861759,
+    0.229236547117,
+    0.236346435022
+]
+
+QMatrix qMatrix = hky(
+    kappa=kappa,
+    baseFrequencies=baseFrequencies
+)
+
+PositiveReal gammaShape ~ LogNormal(
+    logMean=-2.995732273554,
+    logSd=0.5
+)
+
+Vector<Rate> siteRates ~ DiscreteGammaInv(
+    shape=gammaShape,
+    numCategories=4,
+    numSites=numSites(data)
+)
+
+PositiveReal populationSize ~ LogNormal(
+    logMean=5.940171252721,
+    logSd=1.0
+)
+
+Tree tree ~ Coalescent(
+    populationSize=constantPopulationFunction(
+        populationSize=populationSize
+    ),
+    taxa=taxa
+)
+
+Rate clockRate ~ LogNormal(
+    logMean=-7.824046010856,
+    logSd=0.5
+)
+
+Vector<Rate> branchRates ~ StrictClock(
+    clockRate=clockRate,
+    tree=tree
+)
+
+Alignment alignment ~ PhyloCTMC(
+    tree=tree,
+    qMatrix=qMatrix,
+    branchRates=branchRates,
+    siteRates=siteRates
+) observed as data
+
+mcmc {
+    Integer chainLength = 10000000
+    Integer randomSeed = 1234
+}
