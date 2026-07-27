@@ -824,7 +824,8 @@ public class BeastXMCMCBuilderTest {
         List<MCMCOperator> operators =
                 buildOperators(source);
 
-        assertEquals(5, operators.size());
+        assertEquals(6, operators.size());
+        assertTrue(containsOperator(operators, ScaleOperator.class));
         assertTrue(containsOperator(operators, UniformNodeHeightOperator.class));
         assertTrue(containsOperator(operators, SubtreeSlideOperator.class));
         assertTrue(containsOperator(operators, ExchangeOperator.class));
@@ -857,7 +858,7 @@ public class BeastXMCMCBuilderTest {
         List<MCMCOperator> operators =
                 buildOperators(source);
 
-        assertEquals(7, operators.size());
+        assertEquals(8, operators.size());
 
         assertTrue(containsOperator(operators, ScaleOperator.class));
         assertTrue(containsOperator(operators, DeltaExchangeOperator.class));
@@ -997,7 +998,7 @@ public class BeastXMCMCBuilderTest {
         List<MCMCOperator> operators =
                 buildOperators(source);
 
-        assertEquals(7, operators.size());
+        assertEquals(8, operators.size());
 
         assertTrue(containsOperator(operators, ScaleOperator.class));
         assertTrue(containsOperator(operators, RandomWalkOperator.class));
@@ -1061,7 +1062,7 @@ public class BeastXMCMCBuilderTest {
         List<MCMCOperator> operators =
                 buildOperators(source);
 
-        assertEquals(9, operators.size());
+        assertEquals(10, operators.size());
 
         assertTrue(containsOperator(operators, ScaleOperator.class));
         assertTrue(containsOperator(operators, RandomWalkOperator.class));

@@ -97,6 +97,10 @@ public class OperatorXmlBuilder {
                     treeId(treeModel);
 
             operators.add(
+                    treeScaleOperator(state, treeModel)
+            );
+
+            operators.add(
                     uniformNodeHeightOperator(state, treeModel)
             );
 
@@ -133,6 +137,22 @@ public class OperatorXmlBuilder {
         }
 
         return operators;
+    }
+
+    private XmlElement treeScaleOperator(
+            BeastXState state,
+            TreeModel treeModel
+    ) {
+        String id =
+                treeId(treeModel);
+
+        return XmlElement.element("scaleOperator")
+                .withId(id + "_scale")
+                .withAttribute("scaleFactor", format(state.operatorConfig.treeScaleFactor))
+                .withAttribute("weight", format(state.operatorConfig.treeScaleWeight))
+                .withAttribute("scaleAll", "true")
+                .withAttribute("ignoreBounds", "true")
+                .withChild(treeAllInternalNodeHeightsReference(treeModel));
     }
 
     private List<XmlElement> buildRelaxedClockCategoryOperators(

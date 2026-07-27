@@ -320,7 +320,7 @@ Status values:
 
 ### VAL-018 — BEAST X prior-only Yule tree scale mixes poorly
 
-- **Status:** open; diagnostic evidence only
+- **Status:** fixed and validated across all five paths
 - **Area:** BEAST X default tree-operator schedule
 - **Example:** `testBirthDeathAsYule`
 - **Observed:** the three BEAST 3 paths agree with one another and the two
@@ -335,11 +335,27 @@ Status values:
 - **Interpretation:** this is consistent with inefficient exploration of the
   global tree scale, not a direct/XML serialization disagreement. It is not
   yet proof that the target density differs.
-- **Required follow-up:** add a focused fixed-state log-density comparison
-  between zero-death Birth-Death and Yule, then add a tree-scale proposal to
-  the BEAST X direct and XML schedules and repeat several seeds. Do not mark
-  this five-path example as statistically validated until that diagnostic is
-  complete.
+- **Root cause found:** `treeScaleWeight` and `treeScaleFactor` were accepted
+  by `BeastXState.OperatorConfig`, but neither the direct `OperatorBuilder`
+  nor `OperatorXmlBuilder` used them. Consequently the BEAST X schedules had
+  no joint scale move for all internal node heights.
+- **Fix:** add a scale-all `ScaleOperator` over
+  `tree.allInternalNodeHeights` to both direct and XML schedules, using the
+  configured tree-scale weight and scale factor. Scaling a single element of
+  this compound parameter is invalid because its node-height bounds depend on
+  adjacent nodes. The XML therefore also declares `scaleAll="true"` and
+  `ignoreBounds="true"`; the operator checks the resulting bounds after the
+  joint move. Focused tests execute the direct proposal and verify the
+  exported XML configuration.
+- **Validation:** after regenerating and rerunning both BEAST X paths with
+  seed `1234`, all five paths agree. The `birthRate` means span
+  `1.628–1.691`, tree-height means span `3.076–3.181`, and tree-length means
+  span `14.28–14.87`. BEAST X direct and XML generate the same operator
+  schedule, and the new whole-tree scale operator has an acceptance
+  probability of approximately `0.234` in both paths.
+- **Conclusion:** the earlier displacement was caused by poor global
+  tree-scale mixing rather than an observed cross-engine target-density
+  difference.
 
 ## Current follow-up queue
 
@@ -359,6 +375,3 @@ Status values:
 8. Decide whether observed tree distributions are a supported cross-backend
    feature, then add the BEAST X binding and XML-export regression described
    in VAL-017.
-9. Diagnose VAL-018 with a fixed-state density comparison and a paired
-   direct/XML tree-scale operator regression before interpreting the current
-   `testBirthDeathAsYule` chain difference as a semantic failure.

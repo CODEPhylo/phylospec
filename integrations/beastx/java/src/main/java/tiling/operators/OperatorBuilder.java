@@ -396,6 +396,13 @@ public class OperatorBuilder {
         List<MCMCOperator> operators =
                 new ArrayList<>();
 
+        if (treeModel instanceof DefaultTreeModel defaultTreeModel) {
+            operators.add(buildTreeScaleOperator(
+                    defaultTreeModel,
+                    config
+            ));
+        }
+
         operators.add(new UniformNodeHeightOperator(
                 treeModel,
                 config.treeNodeHeightWeight
@@ -442,6 +449,14 @@ public class OperatorBuilder {
         List<String> summaries =
                 new ArrayList<>();
 
+        if (treeModel instanceof DefaultTreeModel) {
+            summaries.add("ScaleTreeOperator(tree=%s, weight=%s, scaleFactor=%s)".formatted(
+                    treeModel.getId(),
+                    format(config.treeScaleWeight),
+                    format(config.treeScaleFactor)
+            ));
+        }
+
         summaries.add("UniformNodeHeightOperator(tree=%s, weight=%s)".formatted(
                 treeModel.getId(),
                 format(config.treeNodeHeightWeight)
@@ -471,6 +486,28 @@ public class OperatorBuilder {
         ));
 
         return summaries;
+    }
+
+    private MCMCOperator buildTreeScaleOperator(
+            DefaultTreeModel treeModel,
+            BeastXState.OperatorConfig config
+    ) {
+        Parameter allInternalNodeHeights =
+                treeModel.createNodeHeightsParameter(true, true, false);
+
+        allInternalNodeHeights.setId(treeModel.getId() + ".allInternalNodeHeights");
+
+        return new ScaleOperator(
+                allInternalNodeHeights,
+                true,
+                0,
+                config.treeScaleFactor,
+                AdaptationMode.DEFAULT,
+                config.treeScaleWeight,
+                null,
+                1.0,
+                false
+        );
     }
 
     private MCMCOperator buildTreeClockUpDownOperator(
