@@ -133,7 +133,9 @@ public class TypeUtils {
                                 + "` and argument `"
                                 + parameterName
                                 + "`.",
-                        "You need to use a value of type '" + parameter.getType() + "'.");
+                        "You need to use a value of type '"
+                                + ComponentResolver.getUnqualifiedName(parameter.getType())
+                                + "'.");
             }
         }
 

@@ -34,5 +34,5 @@ revbayes {
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Wrong argument type for function `Normal` and argument `sd`. You need to use a value of type 'phylospec.types.PositiveReal'.
+// Wrong argument type for function `Normal` and argument `sd`. You need to use a value of type 'PositiveReal'.
 // EXPECT TYPE_ERRORS

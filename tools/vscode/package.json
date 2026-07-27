@@ -46,6 +46,7 @@
   "scripts": {
     "build:lsp": "mvn -f ../../core/java/pom.xml -DskipTests package && node -e \"const fs = require('fs'); fs.mkdirSync('server', { recursive: true }); fs.copyFileSync('../../core/java/target/phylospec-lsp-jar-with-dependencies.jar', 'server/phylospec-lsp.jar');\"",
     "compile": "tsc -b",
+    "prepare-dev": "npm run build:lsp && npm run compile",
     "watch": "tsc -b -w",
     "prepare-publish": "git clean -xfd node_modules && npm i && npm run build:lsp && npm run compile",
     "publish-vscode": "npm run prepare-publish && vsce publish",

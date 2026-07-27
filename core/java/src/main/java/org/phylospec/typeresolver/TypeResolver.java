@@ -902,7 +902,8 @@ public class TypeResolver
 
         // check if generators are compatible with arguments
         Set<ResolvedType> possibleReturnTypes = new HashSet<>();
-        List<TypeError> errors = new ArrayList<>();
+        TypeError lastError = null;
+        Set<String> errorMessages = new HashSet<>();
         for (Generator generator : generators) {
             try {
                 Set<ResolvedType> possibleGeneratorReturnTypes =
@@ -911,19 +912,20 @@ public class TypeResolver
                 possibleReturnTypes.addAll(possibleGeneratorReturnTypes);
             } catch (TypeError e) {
                 e.attachAstNode(expr);
-                errors.add(e);
+                lastError = e;
+                errorMessages.add(e.getMessage());
             }
         }
 
         // throw errors if needed
-        if (possibleReturnTypes.isEmpty() && errors.isEmpty()) {
+        if (possibleReturnTypes.isEmpty() && errorMessages.isEmpty()) {
             throw new TypeError(
                     expr,
                     "Function `"
                             + expr.functionName
                             + "` with the given arguments does not exist.");
-        } else if (possibleReturnTypes.isEmpty() && errors.size() == 1) {
-            throw errors.getFirst();
+        } else if (possibleReturnTypes.isEmpty() && errorMessages.size() == 1) {
+            throw lastError;
         } else if (possibleReturnTypes.isEmpty()) {
             String description =
                     "Function `" + expr.functionName + "` with the given arguments does not exist.";
@@ -932,17 +934,14 @@ public class TypeResolver
                     new StringBuilder(
                             "There are "
                                     + generators.size()
-                                    + " different versions of '"
+                                    + " versions of '"
                                     + expr.functionName
-                                    + "'. They cannot be used due to the following reasons:\n");
+                                    + "'. Neither of them can be used:");
 
-            for (int i = 0; i < errors.size(); i++) {
-                hint.append("\n ").append(i + 1).append(". ").append(errors.get(i).getMessage());
+            int i = 1;
+            for (String error : errorMessages.stream().sorted().toList()) {
+                hint.append("\n ").append(i++).append(". ").append(error);
             }
-
-            hint.append("\n\nFix any of these issues to use '")
-                    .append(expr.functionName)
-                    .append("'.");
 
             throw new TypeError(expr, description, hint.toString());
         }
