@@ -131,6 +131,7 @@ Status values:
 - **Evidence:** `BeastXXmlTN93Test`, `BeastXXmlRestrictedGTRTest`, and
   five-path constrained-GTR examples.
 - **Current file:** `SubstitutionModelXmlBuilder.java`.
+- **Note TO:** I'm sceptical if it is worth to support the entire XML generation stack, as I fear it won't be maintained in the future, as it adds more work when someone wants to support a new BEAST X model. Ideally, the only thing needed when a new component is added is its Tile file.
 
 ### VAL-008 — Multiple BEAST X tree loggers were serialized as one logTree
 
@@ -159,6 +160,7 @@ Status values:
   `alignment[i]` declarations in the validation source.
 - **Remaining work:** add a focused materialization regression test before
   changing generic expansion behavior.
+- **Note TO:** Somehow I cannot confirm that when running the example model, I only see three state trees and coalescent priors in the BeastState object. Am I missing something?
 
 ### VAL-010 — Aligned BEAST 2 reference omitted a population-size operator
 
@@ -225,6 +227,7 @@ Status values:
 - **Known unrelated test state:** the full `TilingScriptFilesTest` currently
   has two pre-existing failures for `fromEmptyTree.phylospec` and
   `fromInvalidTree.phylospec`; the new calibration fixture passes.
+- **Note TO:** This is intended and goes back to the interpretation of node calibration as likelihood (similar to what RevBayes is doing), instead of having a secondary prior which is conceptually questionable. Can discuss in person.
 
 ### VAL-014 — Sampled tip ages are not represented in PhyloSpec
 
@@ -267,6 +270,7 @@ Status values:
   generated BEAST X XML explicitly contains sample probability `1.0`.
 - **Remaining work:** add focused literal-unit-interval input coverage before
   changing generic tile-input coercion.
+- **Note TO:** This is because samplingProbability is of type UnitInterval and the LiteralTile only assigns UnitInterval for 0 < x < 1. I assume we can relax this to 0 <= x <= 1.
 
 ### VAL-016 — BirthDeath tree-type coefficient differed across backends
 
@@ -317,6 +321,7 @@ Status values:
 - **Remaining work:** define whether observed tree distributions are an
   intended cross-backend language feature. If so, add BEAST X binding,
   state-membership, XML-export, and no-tree-operator regression tests.
+- **Note TO:** Can this be fixed the same way as in BEAST 3 with the ObservedAsTile, where the distribution is a very generic `UnboundDistribution<? extends StateNode, ?>`, hence also matching trees? I don't know the distribution hierarchy in BEAST X well enough.
 
 ### VAL-018 — BEAST X prior-only Yule tree scale mixes poorly
 
