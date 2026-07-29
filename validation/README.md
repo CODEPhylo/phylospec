@@ -3,6 +3,11 @@
 This directory owns the project-level workflows and examples used to validate
 PhyloSpec models across inference backends.
 
+See [COVERAGE.md](COVERAGE.md) for the current example-to-tile coverage matrix,
+validation status, controlled limitations, and uncovered model capabilities.
+Backend defects and workarounds discovered by the suite are recorded in
+[BACKEND_FINDINGS.md](BACKEND_FINDINGS.md).
+
 The framework is being introduced incrementally. It does not translate BEAST
 XML into PhyloSpec, and it does not yet run all engines or calculate posterior
 summaries.
@@ -244,7 +249,9 @@ The current examples are `testGTR`, `testHKY`, `testCoalescent`,
 `testSYM`, `testMultipleAlignments`, `testClassicRootCalibrationPrior`, and
 `testTipDates`, `testTipDates2`, `testYuleOneSite`, `testSliceHKY`, and
 `testSiteModelAlpha`, `testBirthDeathModel10Taxa`, and
-`testBirthDeathAsYule`.
+`testBirthDeathAsYule`. Four additional substitution-model cases,
+`testF81`, `testK80`, `testJTT`, and `testWAG`, are prepared and awaiting
+five-path trace comparison; they are not yet counted as validated coverage.
 Example-specific model notes and commands are documented in each example's
 `README.md`.
 
