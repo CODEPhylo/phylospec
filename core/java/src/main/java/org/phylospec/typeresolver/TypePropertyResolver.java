@@ -1,14 +1,20 @@
 package org.phylospec.typeresolver;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import org.phylospec.components.Generator;
 import org.phylospec.components.ParsedType;
 import org.phylospec.components.ParsedTypeProperty;
 
 public class TypePropertyResolver {
+
+    private static List<TypePropertyResolverHook> hooks = new ArrayList<>();
+
+    static {
+        // load hooks
+        for (TypePropertyResolverHook hook : ServiceLoader.load(TypePropertyResolverHook.class)) {
+            hooks.add(hook);
+        }
+    }
 
     /**
      * Resolves properties declared by a generator's generated type and attaches them to every
@@ -23,6 +29,8 @@ public class TypePropertyResolver {
         ParsedType parsedGeneratedType = new ParsedType(generator.getGeneratedType());
         for (ResolvedType generatedType : resolvedGeneratorApplication.generatedTypeSet()) {
             resolveTypeProperties(
+                    generator.getName(),
+                    generator.getNamespace(),
                     parsedGeneratedType,
                     generatedType,
                     resolvedGeneratorApplication.resolvedArguments());
@@ -30,12 +38,28 @@ public class TypePropertyResolver {
     }
 
     private static void resolveTypeProperties(
+            String generatorName,
+            String namespace,
             ParsedType parsedType,
             ResolvedType generatedType,
             Map<String, Set<ResolvedType>> resolvedArguments) {
+        // resolve potential hooks
+
+        for (TypePropertyResolverHook hook : hooks) {
+            if (hook.getGenerator().equals(namespace + "." + generatorName)) {
+                hook.attemptResolution(parsedType, generatedType, resolvedArguments);
+            }
+        }
+
         // resolve the type properties of generatedType
 
         for (ParsedTypeProperty typeProperty : parsedType.getTypeProperties()) {
+            if (generatedType.hasPropertyAttached(typeProperty.getPropertyName())) {
+                // we have already resolved this property name
+                // we don't do it again
+                continue;
+            }
+
             String propertyName = typeProperty.getPropertyName();
 
             if (typeProperty instanceof ParsedTypeProperty.Constant constant) {
@@ -94,7 +118,11 @@ public class TypePropertyResolver {
                     generatedType.getParameterTypes().get(resolvedTypeParameterNames.get(index));
             if (resolvedTypeParameter != null) {
                 resolveTypeProperties(
-                        parsedTypeParameters.get(index), resolvedTypeParameter, resolvedArguments);
+                        generatorName,
+                        namespace,
+                        parsedTypeParameters.get(index),
+                        resolvedTypeParameter,
+                        resolvedArguments);
             }
         }
     }
