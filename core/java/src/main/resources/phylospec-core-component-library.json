@@ -623,7 +623,7 @@
       },
       {
         "name": "taxa",
-        "generatedType": "Taxa<num=$alignment.numTaxa>",
+        "generatedType": "Taxa<;num=$alignment.numTaxa>",
         "namespace": "phylospec.functions.accessor",
         "description": "Extract taxa from an alignment",
         "arguments": [
@@ -637,7 +637,7 @@
       },
       {
         "name": "taxa",
-        "generatedType": "Taxa<num=$tree.numTaxa>",
+        "generatedType": "Taxa<;num=$tree.numTaxa>",
         "namespace": "phylospec.functions.accessor",
         "description": "Extract taxa from a tree",
         "arguments": [
@@ -719,7 +719,7 @@
       },
       {
         "name": "numBranches",
-        "generatedType": "PositiveInteger<literal=$tree.numBranches>",
+        "generatedType": "PositiveInteger<;literal=$tree.numBranches>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of branches in a tree",
         "arguments": [
@@ -733,7 +733,7 @@
       },
       {
         "name": "numTaxa",
-        "generatedType": "PositiveInteger<literal=$alignment.numTaxa>",
+        "generatedType": "PositiveInteger<;literal=$alignment.numTaxa>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of taxa in an alignment",
         "arguments": [
@@ -747,7 +747,7 @@
       },
       {
         "name": "numTaxa",
-        "generatedType": "PositiveInteger<literal=$tree.numTaxa>",
+        "generatedType": "PositiveInteger<;literal=$tree.numTaxa>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of taxa in a tree",
         "arguments": [
@@ -761,7 +761,7 @@
       },
       {
         "name": "numSites",
-        "generatedType": "PositiveInteger<literal=$alignment.numSites>",
+        "generatedType": "PositiveInteger<;literal=$alignment.numSites>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of sites in an alignment",
         "arguments": [
@@ -775,7 +775,7 @@
       },
       {
         "name": "numSites",
-        "generatedType": "PositiveInteger<literal=$sequence.num>",
+        "generatedType": "PositiveInteger<;literal=$sequence.num>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of sites in a sequence",
         "arguments": [
@@ -792,7 +792,7 @@
       },
       {
         "name": "num",
-        "generatedType": "NonNegativeInteger<literal=$vector.num>",
+        "generatedType": "NonNegativeInteger<;literal=$vector.num>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of elements in a vector",
         "arguments": [
@@ -877,7 +877,7 @@
       },
       {
         "name": "numRows",
-        "generatedType": "PositiveInteger<literal=$matrix.numRows>",
+        "generatedType": "PositiveInteger<;literal=$matrix.numRows>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of rows in a matrix",
         "arguments": [
@@ -894,7 +894,7 @@
       },
       {
         "name": "numCols",
-        "generatedType": "PositiveInteger<literal=$matrix.numCols>",
+        "generatedType": "PositiveInteger<;literal=$matrix.numCols>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of columns in a matrix",
         "arguments": [
@@ -1258,7 +1258,7 @@
       },
       {
         "name": "Dirichlet",
-        "generatedType": "Distribution<Simplex<num=$concentration.num>>",
+        "generatedType": "Distribution<Simplex<; num=$concentration.num>>",
         "namespace": "phylospec.distributions",
         "description": "Dirichlet distribution for probability vectors",
         "arguments": [
@@ -1418,7 +1418,7 @@
       },
       {
         "name": "Yule",
-        "generatedType": "Distribution<Tree<numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Yule pure-birth process for trees conditioned on the number of taxa",
         "arguments": [
@@ -1439,7 +1439,7 @@
       },
       {
         "name": "Yule",
-        "generatedType": "Distribution<Tree<numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Yule pure-birth process for trees conditioned on the root age",
         "arguments": [
@@ -1466,7 +1466,7 @@
       },
       {
         "name": "BirthDeath",
-        "generatedType": "Distribution<Tree<numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Birth-death process for trees of extant taxa. Conditioned on the root age if given, otherwise conditioned on the number of extant taxa",
         "arguments": [
@@ -1505,7 +1505,7 @@
       },
       {
         "name": "BirthDeath",
-        "generatedType": "Distribution<Tree<numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Birth-death process for trees of extant taxa. Conditioned on the root age if given, otherwise conditioned on the number of extant taxa",
         "arguments": [
@@ -1544,7 +1544,7 @@
       },
       {
         "name": "Coalescent",
-        "generatedType": "Distribution<Tree<numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Coalescent process for population genetics",
         "arguments": [
@@ -1564,7 +1564,7 @@
       },
       {
         "name": "Coalescent",
-        "generatedType": "Distribution<Tree<numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Coalescent process for population genetics",
         "arguments": [
@@ -1584,7 +1584,7 @@
       },
       {
         "name": "SkylineCoalescent",
-        "generatedType": "Distribution<Tree<numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Skyline coalescent process with piecewise-constant population sizes",
         "arguments": [
@@ -1620,7 +1620,7 @@
       },
       {
         "name": "FossilizedBirthDeath",
-        "generatedType": "Distribution<Tree<numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Fossilized birth-death process for trees with fossil taxa, conditioned on the number of taxa and root age",
         "arguments": [
@@ -1665,7 +1665,7 @@
       },
       {
         "name": "FossilizedBirthDeath",
-        "generatedType": "Distribution<Tree<numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Fossilized birth-death process for trees with fossil taxa, conditioned on the number of taxa and root age",
         "arguments": [

@@ -4,6 +4,7 @@ import static org.phylospec.Utils.visitCombinations;
 
 import java.util.*;
 import org.phylospec.components.ComponentResolver;
+import org.phylospec.components.ParsedType;
 import org.phylospec.components.Type;
 
 /// This class represents a fully resolved type.
@@ -100,8 +101,7 @@ public class ResolvedType {
             boolean allowUnresolvedTypeParameter) {
         // we build a map of the type parameters and then use the more general overloaded method
 
-        String atomicTypeString = TypeUtils.stripGenerics(typeString);
-        Type typeComponent = componentResolver.resolveType(atomicTypeString);
+        Type typeComponent = componentResolver.resolveType(typeString);
         if (typeComponent == null) {
             throw new TypeError(
                     "The type '" + typeString + "' does not exist.",
@@ -160,8 +160,7 @@ public class ResolvedType {
             Map<String, Set<ResolvedType>> typeParameters,
             ComponentResolver componentResolver,
             boolean allowUnresolvedTypeParameter) {
-        String atomicTypeString = TypeUtils.stripGenerics(typeString);
-        Type typeComponent = componentResolver.resolveType(atomicTypeString);
+        Type typeComponent = componentResolver.resolveType(typeString);
         if (typeComponent == null) {
             throw new TypeError(
                     "The type '" + typeString + "' does not exist.",
@@ -170,15 +169,16 @@ public class ResolvedType {
 
         // resolve the possible type parameters
 
-        List<String> typeParameterNames = TypeUtils.parseParameterTypes(typeString);
+        List<ParsedType> typeParameterNames = new ParsedType(typeString).getTypeParameters();
         List<Set<ResolvedType>> inferredTypeParameters = new ArrayList<>();
 
-        if (TypeUtils.isGeneric(typeString)) {
+        if (new ParsedType(typeString).isGeneric()) {
             // in this case, the given type string directly indicates the type parameters (e.g.
             // Vector<Real>).
             // we resolve the type parameters from the string
 
-            for (String typeParameterName : typeParameterNames) {
+            for (ParsedType typeParameter : typeParameterNames) {
+                String typeParameterName = typeParameter.getTypeString();
                 if (typeComponent.getTypeParameters().contains(typeParameterName)
                         && typeParameters.containsKey(typeParameterName)) {
                     // parameter type is a Generic (like T) and we know its value
