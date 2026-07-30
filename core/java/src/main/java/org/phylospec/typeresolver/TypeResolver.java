@@ -944,12 +944,19 @@ public class TypeResolver
         Set<String> errorMessages = new HashSet<>();
         for (Generator generator : generators) {
             try {
+                // check if the generator is compatible
+                // throws a TypeError if not
+
                 TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication =
                         TypeUtils.resolveGeneratedType(
                                 generator, resolvedArguments, firstArgumentName, componentResolver);
 
+                // check type constraints and resolve generated type constraints
+
                 checkGeneratorApplication(expr, generator, resolvedGeneratorApplication);
                 TypePropertyResolver.resolveTypeProperties(generator, resolvedGeneratorApplication);
+
+                // we remember the generated type set
 
                 possibleReturnTypes.addAll(resolvedGeneratorApplication.generatedTypeSet());
             } catch (TypeError e) {
