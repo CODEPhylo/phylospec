@@ -59,6 +59,10 @@ public class ResolvedType {
         this.typeProperties.putAll(typeProperties);
     }
 
+    public boolean hasPropertyAttached(String propertyName) {
+        return this.typeProperties.containsKey(propertyName);
+    }
+
     public Object getProperty(String propertyName) {
         return this.typeProperties.get(propertyName);
     }
