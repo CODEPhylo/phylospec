@@ -251,7 +251,7 @@
       },
       {
         "name": "linspace",
-        "generatedType": "Vector<Real; num=$num.literal>",
+        "generatedType": "Vector<Real; num=num.literal>",
         "namespace": "phylospec.functions.math",
         "description": "Generate a vector of evenly spaced values over a specified interval",
         "arguments": [
@@ -297,7 +297,7 @@
       },
       {
         "name": "repeat",
-        "generatedType": "Vector<T; num=$num.literal>",
+        "generatedType": "Vector<T; num=num.literal>",
         "namespace": "phylospec.functions.math",
         "description": "Create a vector by repeating a value n times",
         "typeParameters": [
@@ -521,7 +521,7 @@
       },
       {
         "name": "discreteTraitsFromTaxa",
-        "generatedType": "Alignment<Character; numTaxa=$taxa.num, numSites=1>",
+        "generatedType": "Alignment<Character; numTaxa=taxa.num, numSites=1>",
         "namespace": "phylospec.functions.io",
         "description": "Retrieves an alignment with a single trait from taxa names.",
         "arguments": [
@@ -541,7 +541,7 @@
       },
       {
         "name": "continuousTraitsFromTaxa",
-        "generatedType": "Alignment<Real; numTaxa=$taxa.num, numSites=1>",
+        "generatedType": "Alignment<Real; numTaxa=taxa.num, numSites=1>",
         "namespace": "phylospec.functions.io",
         "description": "Retrieves an alignment with a single trait from taxa names.",
         "arguments": [
@@ -623,7 +623,7 @@
       },
       {
         "name": "taxa",
-        "generatedType": "Taxa<;num=$alignment.numTaxa>",
+        "generatedType": "Taxa<;num=alignment.numTaxa>",
         "namespace": "phylospec.functions.accessor",
         "description": "Extract taxa from an alignment",
         "arguments": [
@@ -637,7 +637,7 @@
       },
       {
         "name": "taxa",
-        "generatedType": "Taxa<;num=$tree.numTaxa>",
+        "generatedType": "Taxa<;num=tree.numTaxa>",
         "namespace": "phylospec.functions.accessor",
         "description": "Extract taxa from a tree",
         "arguments": [
@@ -678,7 +678,7 @@
       },
       {
         "name": "subset",
-        "generatedType": "Alignment<T; numTaxa=$alignment.numTaxa>",
+        "generatedType": "Alignment<T; numTaxa=alignment.numTaxa>",
         "namespace": "phylospec.functions.alignment",
         "description": "Extract a subset of sites from an alignment",
         "typeParameters": [
@@ -711,15 +711,15 @@
           }
         ],
         "constraints": [
-          "$start.literal <= $alignment.numSites",
-          "$end.literal <= $alignment.numSites",
-          "$start.literal <= $end.literal",
-          "$codonPosition.literal < 4"
+          "start.literal <= alignment.numSites",
+          "end.literal <= alignment.numSites",
+          "start.literal <= end.literal",
+          "codonPosition.literal < 4"
         ]
       },
       {
         "name": "numBranches",
-        "generatedType": "PositiveInteger<;literal=$tree.numBranches>",
+        "generatedType": "PositiveInteger<;literal=tree.numBranches>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of branches in a tree",
         "arguments": [
@@ -733,7 +733,7 @@
       },
       {
         "name": "numTaxa",
-        "generatedType": "PositiveInteger<;literal=$alignment.numTaxa>",
+        "generatedType": "PositiveInteger<;literal=alignment.numTaxa>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of taxa in an alignment",
         "arguments": [
@@ -747,7 +747,7 @@
       },
       {
         "name": "numTaxa",
-        "generatedType": "PositiveInteger<;literal=$tree.numTaxa>",
+        "generatedType": "PositiveInteger<;literal=tree.numTaxa>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of taxa in a tree",
         "arguments": [
@@ -761,7 +761,7 @@
       },
       {
         "name": "numSites",
-        "generatedType": "PositiveInteger<;literal=$alignment.numSites>",
+        "generatedType": "PositiveInteger<;literal=alignment.numSites>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of sites in an alignment",
         "arguments": [
@@ -775,7 +775,7 @@
       },
       {
         "name": "numSites",
-        "generatedType": "PositiveInteger<;literal=$sequence.num>",
+        "generatedType": "PositiveInteger<;literal=sequence.num>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of sites in a sequence",
         "arguments": [
@@ -792,7 +792,7 @@
       },
       {
         "name": "num",
-        "generatedType": "NonNegativeInteger<;literal=$vector.num>",
+        "generatedType": "NonNegativeInteger<;literal=vector.num>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of elements in a vector",
         "arguments": [
@@ -877,7 +877,7 @@
       },
       {
         "name": "numRows",
-        "generatedType": "PositiveInteger<;literal=$matrix.numRows>",
+        "generatedType": "PositiveInteger<;literal=matrix.numRows>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of rows in a matrix",
         "arguments": [
@@ -894,7 +894,7 @@
       },
       {
         "name": "numCols",
-        "generatedType": "PositiveInteger<;literal=$matrix.numCols>",
+        "generatedType": "PositiveInteger<;literal=matrix.numCols>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of columns in a matrix",
         "arguments": [
@@ -967,7 +967,7 @@
       },
       {
         "name": "IID",
-        "generatedType": "Distribution<Vector<T; num=$num.literal>>",
+        "generatedType": "Distribution<Vector<T; num=num.literal>>",
         "namespace": "phylospec.distributions",
         "description": "Vector of independent and identically distributed random variables",
         "typeParameters": [
@@ -1258,7 +1258,7 @@
       },
       {
         "name": "Dirichlet",
-        "generatedType": "Distribution<Simplex<; num=$concentration.num>>",
+        "generatedType": "Distribution<Simplex<; num=concentration.num>>",
         "namespace": "phylospec.distributions",
         "description": "Dirichlet distribution for probability vectors",
         "arguments": [
@@ -1272,7 +1272,7 @@
       },
       {
         "name": "MultivariateNormal",
-        "generatedType": "Distribution<Vector<Real; num=$mean.num>>",
+        "generatedType": "Distribution<Vector<Real; num=mean.num>>",
         "namespace": "phylospec.distributions",
         "description": "Multivariate normal for correlated values",
         "arguments": [
@@ -1290,8 +1290,8 @@
           }
         ],
         "constraints": [
-          "$mean.num == $covariance.numCols",
-          "$mean.num == $covariance.numRows"
+          "mean.num == covariance.numCols",
+          "mean.num == covariance.numRows"
         ]
       },
       {
@@ -1398,7 +1398,7 @@
       },
       {
         "name": "ExponentialMarkovChain",
-        "generatedType": "Distribution<Vector<Real; num=$numValues.literal>>",
+        "generatedType": "Distribution<Vector<Real; num=numValues.literal>>",
         "namespace": "phylospec.distributions",
         "description": "Generates a chain of auto-correlated random variables",
         "arguments": [
@@ -1418,7 +1418,7 @@
       },
       {
         "name": "Yule",
-        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Yule pure-birth process for trees conditioned on the number of taxa",
         "arguments": [
@@ -1439,7 +1439,7 @@
       },
       {
         "name": "Yule",
-        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Yule pure-birth process for trees conditioned on the root age",
         "arguments": [
@@ -1466,7 +1466,7 @@
       },
       {
         "name": "BirthDeath",
-        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Birth-death process for trees of extant taxa. Conditioned on the root age if given, otherwise conditioned on the number of extant taxa",
         "arguments": [
@@ -1505,7 +1505,7 @@
       },
       {
         "name": "BirthDeath",
-        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Birth-death process for trees of extant taxa. Conditioned on the root age if given, otherwise conditioned on the number of extant taxa",
         "arguments": [
@@ -1544,7 +1544,7 @@
       },
       {
         "name": "Coalescent",
-        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Coalescent process for population genetics",
         "arguments": [
@@ -1564,7 +1564,7 @@
       },
       {
         "name": "Coalescent",
-        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Coalescent process for population genetics",
         "arguments": [
@@ -1584,7 +1584,7 @@
       },
       {
         "name": "SkylineCoalescent",
-        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Skyline coalescent process with piecewise-constant population sizes",
         "arguments": [
@@ -1614,13 +1614,13 @@
           }
         ],
         "constraints": [
-          "$populationSizes.num == $groupSizes.num",
-          "$populationSizes.num == $changeTimes.num + 1"
+          "populationSizes.num == groupSizes.num",
+          "populationSizes.num == changeTimes.num + 1"
         ]
       },
       {
         "name": "FossilizedBirthDeath",
-        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Fossilized birth-death process for trees with fossil taxa, conditioned on the number of taxa and root age",
         "arguments": [
@@ -1665,7 +1665,7 @@
       },
       {
         "name": "FossilizedBirthDeath",
-        "generatedType": "Distribution<Tree<;numTaxa=$taxa.num>>",
+        "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Fossilized birth-death process for trees with fossil taxa, conditioned on the number of taxa and root age",
         "arguments": [
@@ -1710,7 +1710,7 @@
       },
       {
         "name": "PhyloCTMC",
-        "generatedType": "Distribution<Alignment<Character; numSites=$siteRates.num, numTaxa=$tree.numTaxa>>",
+        "generatedType": "Distribution<Alignment<Character; numSites=siteRates.num, numTaxa=tree.numTaxa>>",
         "namespace": "phylospec.distributions.sequence",
         "description": "Phylogenetic continuous-time Markov chain",
         "arguments": [
@@ -1740,12 +1740,12 @@
           }
         ],
         "constraints": [
-          "$tree.numBranches == $branchRates.num"
+          "tree.numBranches == branchRates.num"
         ]
       },
       {
         "name": "PhyloCTMC",
-        "generatedType": "Distribution<Alignment<Character; numSites=$siteRates.num, numTaxa=$tree.numTaxa>>",
+        "generatedType": "Distribution<Alignment<Character; numSites=siteRates.num, numTaxa=tree.numTaxa>>",
         "namespace": "phylospec.distributions.sequence",
         "description": "Phylogenetic continuous-time Markov chain",
         "arguments": [
@@ -1775,13 +1775,13 @@
           }
         ],
         "constraints": [
-          "$tree.numBranches == $branchRates.num",
-          "$siteQMatrices.num == $siteRates.num"
+          "tree.numBranches == branchRates.num",
+          "siteQMatrices.num == siteRates.num"
         ]
       },
       {
         "name": "PhyloBM",
-        "generatedType": "Distribution<Alignment<Real; numSites=$siteRates.num, numTaxa=$tree.numTaxa>>",
+        "generatedType": "Distribution<Alignment<Real; numSites=siteRates.num, numTaxa=tree.numTaxa>>",
         "namespace": "phylospec.distributions.continuous",
         "description": "Phylogenetic Brownian motion for the evolution of continuous traits",
         "arguments": [
@@ -1811,8 +1811,8 @@
           }
         ],
         "constraints": [
-          "$tree.numBranches == $branchRates.num",
-          "$siteRates.num == $rootValues.num"
+          "tree.numBranches == branchRates.num",
+          "siteRates.num == rootValues.num"
         ]
       },
       {
@@ -1855,13 +1855,13 @@
           }
         ],
         "constraints": [
-          "$siteVariances.num == $siteOptima.num",
-          "$siteVariances.num == $rootValues.num"
+          "siteVariances.num == siteOptima.num",
+          "siteVariances.num == rootValues.num"
         ]
       },
       {
         "name": "StrictClock",
-        "generatedType": "Distribution<Vector<Rate; num=$tree.numBranches>>",
+        "generatedType": "Distribution<Vector<Rate; num=tree.numBranches>>",
         "namespace": "phylospec.distributions.clock",
         "description": "Strict clock model for branch rates",
         "arguments": [
@@ -1882,7 +1882,7 @@
       },
       {
         "name": "RelaxedClock",
-        "generatedType": "Distribution<Vector<Rate; num=$tree.numBranches>>",
+        "generatedType": "Distribution<Vector<Rate; num=tree.numBranches>>",
         "namespace": "phylospec.distributions.clock",
         "description": "Relaxed clock model for branch rates",
         "arguments": [
@@ -1908,7 +1908,7 @@
       },
       {
         "name": "DiscreteGammaInv",
-        "generatedType": "Distribution<Vector<Rate; num=$numSites.literal>>",
+        "generatedType": "Distribution<Vector<Rate; num=numSites.literal>>",
         "namespace": "phylospec.distributions.siterates",
         "description": "Discrete gamma site rates with a proportion of invariant sites",
         "arguments": [
