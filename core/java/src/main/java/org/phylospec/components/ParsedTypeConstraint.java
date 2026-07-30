@@ -1,0 +1,118 @@
+package org.phylospec.components;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * Represents a comparison between properties of two component inputs.
+ */
+public class ParsedTypeConstraint {
+    private static final Pattern CONSTRAINT_PATTERN =
+            Pattern.compile(
+                    "^\\s*\\$?([A-Za-z_][A-Za-z0-9_]*)\\s*\\.\\s*"
+                            + "([A-Za-z_][A-Za-z0-9_]*)\\s*"
+                            + "(==|!=|>=|<=|=<|>|<)\\s*"
+                            + "\\$?([A-Za-z_][A-Za-z0-9_]*)\\s*\\.\\s*"
+                            + "([A-Za-z_][A-Za-z0-9_]*)\\s*$");
+
+    private final ConstraintType constraintType;
+    private final String leftInputName;
+    private final String leftPropertyName;
+    private final String rightInputName;
+    private final String rightPropertyName;
+
+    /**
+     * Parses a comparison between two input property references.
+     *
+     * @param constraint the constraint to parse
+     * @throws IllegalArgumentException if the constraint does not compare two input properties
+     */
+    public ParsedTypeConstraint(String constraint) {
+        if (constraint == null) {
+            throw new IllegalArgumentException("Type constraint cannot be null.");
+        }
+
+        Matcher matcher = CONSTRAINT_PATTERN.matcher(constraint);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException(
+                    "Type constraint must compare two input properties: " + constraint);
+        }
+
+        this.leftInputName = matcher.group(1);
+        this.leftPropertyName = matcher.group(2);
+        this.constraintType = parseConstraintType(matcher.group(3));
+        this.rightInputName = matcher.group(4);
+        this.rightPropertyName = matcher.group(5);
+    }
+
+    private static ConstraintType parseConstraintType(String operator) {
+        return switch (operator) {
+            case "==" -> ConstraintType.EQUALITY;
+            case "!=" -> ConstraintType.INEQUALITY;
+            case "<" -> ConstraintType.LESS;
+            case "<=", "=<" -> ConstraintType.LESS_THAN;
+            case ">" -> ConstraintType.GREATER;
+            case ">=" -> ConstraintType.GREATER_THAN;
+            default ->
+                    throw new IllegalArgumentException(
+                            "Unsupported type constraint operator: " + operator);
+        };
+    }
+
+    /**
+     * Returns the comparison performed by this constraint.
+     *
+     * @return the constraint type
+     */
+    public ConstraintType getConstraintType() {
+        return constraintType;
+    }
+
+    /**
+     * Returns the input name on the left side of the comparison.
+     *
+     * @return the left input name
+     */
+    public String getLeftInputName() {
+        return leftInputName;
+    }
+
+    /**
+     * Returns the property name on the left side of the comparison.
+     *
+     * @return the left property name
+     */
+    public String getLeftPropertyName() {
+        return leftPropertyName;
+    }
+
+    /**
+     * Returns the input name on the right side of the comparison.
+     *
+     * @return the right input name
+     */
+    public String getRightInputName() {
+        return rightInputName;
+    }
+
+    /**
+     * Returns the property name on the right side of the comparison.
+     *
+     * @return the right property name
+     */
+    public String getRightPropertyName() {
+        return rightPropertyName;
+    }
+
+    /**
+     * Identifies the comparison operator used by a parsed constraint.
+     */
+    public enum ConstraintType {
+        EQUALITY,
+        INEQUALITY,
+        LESS,
+        LESS_THAN,
+        GREATER,
+        GREATER_THAN
+    }
+}
