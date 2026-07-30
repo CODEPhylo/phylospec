@@ -65,6 +65,11 @@ public abstract class ParsedTypeProperty {
         public int hashCode() {
             return Objects.hash(getPropertyName(), this.value);
         }
+
+        @Override
+        public String toString() {
+            return getPropertyName() + "=" + value;
+        }
     }
 
     /**
@@ -132,6 +137,11 @@ public abstract class ParsedTypeProperty {
         @Override
         public int hashCode() {
             return Objects.hash(getPropertyName(), this.inputName, this.inputPropertyName);
+        }
+
+        @Override
+        public String toString() {
+            return getPropertyName() + "=" + inputName + "." + inputPropertyName;
         }
     }
 
