@@ -1325,6 +1325,13 @@ public class TypeResolver
             AstNode astNode,
             Generator generator,
             TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
+        try {
+            ConstraintChecker.checkConstraints(
+                    astNode, generator.getConstraints(), resolvedGeneratorApplication);
+        } catch (Error e) {
+            raiseWarning(e);
+        }
+
         if (generator.getName().equals("fromNexus")
                 && generator.getNamespace().equals("phylospec.functions.io")) {
             Set<ResolvedType> fileNameTypeSet =
