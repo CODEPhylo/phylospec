@@ -947,9 +947,11 @@ public class TypeResolver
                 TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication =
                         TypeUtils.resolveGeneratedType(
                                 generator, resolvedArguments, firstArgumentName, componentResolver);
-                possibleReturnTypes.addAll(resolvedGeneratorApplication.generatedTypeSet());
 
                 checkGeneratorApplication(expr, generator, resolvedGeneratorApplication);
+                TypePropertyResolver.resolveTypeProperties(generator, resolvedGeneratorApplication);
+
+                possibleReturnTypes.addAll(resolvedGeneratorApplication.generatedTypeSet());
             } catch (TypeError e) {
                 e.attachAstNode(expr);
                 lastError = e;
