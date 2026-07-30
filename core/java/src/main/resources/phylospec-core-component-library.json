@@ -713,8 +713,7 @@
         "constraints": [
           "start.literal <= alignment.numSites",
           "end.literal <= alignment.numSites",
-          "start.literal <= end.literal",
-          "codonPosition.literal < 4"
+          "start.literal <= end.literal"
         ]
       },
       {
@@ -1614,8 +1613,7 @@
           }
         ],
         "constraints": [
-          "populationSizes.num == groupSizes.num",
-          "populationSizes.num == changeTimes.num + 1"
+          "populationSizes.num == groupSizes.num"
         ]
       },
       {
