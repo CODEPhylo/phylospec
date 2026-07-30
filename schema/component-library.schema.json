@@ -112,7 +112,6 @@
       "type": "object",
       "required": [
         "name",
-        "generatorType",
         "generatedType",
         "arguments"
       ],
@@ -141,6 +140,13 @@
           "items": {
             "$ref": "#/definitions/argument"
           }
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Type property constraints on the inputs."
         },
         "ioHints": {
           "type": "object",
