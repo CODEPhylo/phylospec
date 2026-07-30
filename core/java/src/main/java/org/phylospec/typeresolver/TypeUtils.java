@@ -167,7 +167,7 @@ public class TypeUtils {
                 possibleArgumentTypeSets);
     }
 
-    record ResolvedGeneratorApplication(
+    public record ResolvedGeneratorApplication(
             Set<ResolvedType> generatedTypeSet, Map<String, Set<ResolvedType>> resolvedArguments) {}
     ;
 
