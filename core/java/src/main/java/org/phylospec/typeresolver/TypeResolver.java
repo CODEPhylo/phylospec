@@ -12,6 +12,7 @@ import org.phylospec.components.Type;
 import org.phylospec.errors.Error;
 import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.lexer.TokenType;
+import org.phylospec.typeresolver.properties.TypePropertyUtils;
 import org.phylospec.workspace.Workspace;
 
 /// This class traverses an AST statement and resolves the types for each
@@ -223,7 +224,8 @@ public class TypeResolver
             // find the matching resolved types
             for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
                 if (resolvedVariableType.getName().equals(resolvedExpressionType.getName())) {
-                    resolvedVariableType.attachProperties(resolvedExpressionType.getProperties());
+                    TypePropertyUtils.copyTypeProperties(
+                            resolvedVariableType, resolvedExpressionType);
                 }
             }
         }
@@ -315,11 +317,14 @@ public class TypeResolver
         // we attach the type properties to the variable types
 
         for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
-            // find the matching resolved types
             for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
-                if (resolvedVariableType.getName().equals(resolvedExpressionType.getName())) {
-                    resolvedVariableType.attachProperties(resolvedExpressionType.getProperties());
-                }
+                ResolvedType unwrappedExpressionType =
+                        TypeUtils.recoverTypeParameter(
+                                "phylospec.types.Distribution",
+                                "T",
+                                resolvedExpressionType,
+                                componentResolver);
+                TypePropertyUtils.copyTypeProperties(resolvedVariableType, unwrappedExpressionType);
             }
         }
 
@@ -398,10 +403,8 @@ public class TypeResolver
                 Set<ResolvedType> indexVarTypeSet = new HashSet<>();
                 for (ResolvedType rangeType : rangeTypeSet) {
                     ResolvedType indexVarType =
-                            TypeUtils.recoverType(
-                                            "phylospec.types.Vector", rangeType, componentResolver)
-                                    .getParameterTypes()
-                                    .get("T");
+                            TypeUtils.recoverTypeParameter(
+                                    "phylospec.types.Vector", "T", rangeType, componentResolver);
                     if (indexVarType != null) indexVarTypeSet.add(indexVarType);
                 }
 
@@ -437,6 +440,16 @@ public class TypeResolver
                             componentResolver);
         }
 
+        // attach the num properties
+
+        for (ResolvedType type : widenedTypeSet) {
+            // TODO for later
+        }
+
+        if (indexed.indices.size() == 2) {
+            // TODO for later
+        }
+
         // register the widened type in the outer scope under the variable name
 
         String variableName = indexed.statement.getName();
@@ -459,17 +472,17 @@ public class TypeResolver
 
         Set<ResolvedType> generatedTypeSet = new HashSet<>();
         for (ResolvedType generatedDistType : generatedDistributionTypeSet) {
-            ResolvedType recoveredDistributionType =
-                    TypeUtils.recoverType(
-                            "phylospec.types.Distribution", generatedDistType, componentResolver);
-            if (recoveredDistributionType == null) {
+            ResolvedType generatedType =
+                    TypeUtils.recoverTypeParameter(
+                            "phylospec.types.Distribution",
+                            "T",
+                            generatedDistType,
+                            componentResolver);
+            if (generatedType == null) {
                 // this is not a distribution type directly
                 // it could still be a random variable though
                 generatedTypeSet.add(generatedDistType);
             } else {
-                ResolvedType generatedType = recoveredDistributionType.getParameterTypes().get("T");
-                if (generatedType == null) continue;
-
                 generatedTypeSet.add(generatedType);
             }
         }
@@ -504,6 +517,28 @@ public class TypeResolver
                             + "'. Use an observation of type '"
                             + printType(generatedTypeSet)
                             + "' instead.");
+        }
+
+        // check if type properties agree
+
+        Set<String> commonProperties = TypePropertyUtils.getCommonPropertyNames(generatedTypeSet);
+        for (String propertyName : commonProperties) {
+            Object generatedProperty =
+                    TypePropertyUtils.getPropertyOnAgreement(generatedTypeSet, propertyName);
+            Object observedProperty =
+                    TypePropertyUtils.getPropertyOnAgreement(observationTypeSet, propertyName);
+
+            if (TypePropertyUtils.disagreeIfKnown(generatedProperty, observedProperty)) {
+                raiseWarning(
+                        new Error(
+                                observedAs.getRange(),
+                                "Property mismatch: ",
+                                generatedProperty
+                                        + " != "
+                                        + observedProperty
+                                        + " for "
+                                        + propertyName));
+            }
         }
 
         return generatedDistributionTypeSet;
@@ -543,18 +578,17 @@ public class TypeResolver
 
         Set<ResolvedType> generatedTypeSet = new HashSet<>();
         for (ResolvedType generatedDistType : generatedDistributionTypeSet) {
-            ResolvedType recoveredDistributionType =
-                    TypeUtils.recoverType(
-                            "phylospec.types.Distribution", generatedDistType, componentResolver);
-            if (recoveredDistributionType == null) {
+            ResolvedType generatedType =
+                    TypeUtils.recoverTypeParameter(
+                            "phylospec.types.Distribution",
+                            "T",
+                            generatedDistType,
+                            componentResolver);
+            if (generatedType == null) {
                 // this is not a distribution type directly
                 // it could still be a random variable though
                 generatedTypeSet.add(generatedDistType);
-                continue;
             } else {
-                ResolvedType generatedType = recoveredDistributionType.getParameterTypes().get("T");
-                if (generatedType == null) continue;
-
                 generatedTypeSet.add(generatedType);
             }
         }
@@ -579,6 +613,9 @@ public class TypeResolver
                             + printType(generatedTypeSet)
                             + "' instead.");
         }
+
+        // check if type properties agree
+        // TODO for later
 
         return generatedDistributionTypeSet;
     }
@@ -1011,16 +1048,10 @@ public class TypeResolver
 
         Set<ResolvedType> generatedTypeSet = new HashSet<>();
         for (ResolvedType expressionType : resolvedTypeSet) {
-            TypeUtils.visitTypeAndParents(
-                    expressionType,
-                    x -> {
-                        if (x.getName().equals("phylospec.types.Distribution")) {
-                            generatedTypeSet.add(x.getParameterTypes().get("T"));
-                            return TypeUtils.Visitor.STOP;
-                        }
-                        return TypeUtils.Visitor.CONTINUE;
-                    },
-                    componentResolver);
+            ResolvedType unwrappedExpressionType =
+                    TypeUtils.recoverTypeParameter(
+                            "phylospec.types.Distribution", "T", expressionType, componentResolver);
+            generatedTypeSet.add(unwrappedExpressionType);
         }
 
         if (generatedTypeSet.isEmpty()) {
@@ -1079,10 +1110,15 @@ public class TypeResolver
 
             summedUpLiterals += ((Number) ((Expr.Literal) element).value).doubleValue();
         }
-        if (Math.abs(summedUpLiterals - 1.0) < 1e-10) {
+        if (onlyNumberLiterals && Math.abs(summedUpLiterals - 1.0) < 1e-10) {
             // this is a simplex
             arrayTypeSet.addAll(
                     ResolvedType.fromString("phylospec.types.Simplex", componentResolver));
+        }
+
+        // attach the num property to the array types
+        for (ResolvedType resolvedType : arrayTypeSet) {
+            resolvedType.attachProperty("num", expr.elements.size());
         }
 
         return remember(expr, arrayTypeSet);
@@ -1177,6 +1213,9 @@ public class TypeResolver
             }
         }
 
+        // check that the index is in range in case we have a num property
+        // TODO for later
+
         return remember(expr, itemTypeSet);
     }
 
@@ -1216,6 +1255,10 @@ public class TypeResolver
         Set<ResolvedType> listComprehensionTypeSet =
                 ResolvedType.fromString(
                         "phylospec.types.Vector<T>", Map.of("T", itemTypeSet), componentResolver);
+
+        // check if type range has literal properties and determine the result num property if
+        // possible
+        // TODO for later
 
         return remember(range, listComprehensionTypeSet);
     }
