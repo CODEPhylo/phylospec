@@ -25,13 +25,15 @@ public class TypeUtils {
     }
 
     /**
-     * Takes a type name (e.g. Vector) and a resolved type (e.g. a subclass of Vector<T>). Returns
-     * the {@link ResolvedType} object of the typeName with the correct type parameters.
-     * Note that this does not work when there are multiple type components with the same name
-     * loaded.
+     * Takes a type name (e.g. Vector), a type parameter (e.g. T) and a resolved type (e.g. a subclass of Vector<T>).
+     * Returns the {@link ResolvedType} object of the type parameters. Returns null if the resolved type is not
+     * actually a subtyype of the type name or the type parameter is not resolved.
      */
-    public static ResolvedType recoverType(
-            String typeName, ResolvedType resolvedType, ComponentResolver componentResolver) {
+    public static ResolvedType recoverTypeParameter(
+            String typeName,
+            String typeParameter,
+            ResolvedType resolvedType,
+            ComponentResolver componentResolver) {
         ResolvedType[] recoveredType = new ResolvedType[] {null};
         visitTypeAndParents(
                 resolvedType,
@@ -43,7 +45,12 @@ public class TypeUtils {
                     return Visitor.CONTINUE;
                 },
                 componentResolver);
-        return recoveredType[0];
+
+        if (recoveredType[0] == null) {
+            return null;
+        } else {
+            return recoveredType[0].getParameterTypes().get(typeParameter);
+        }
     }
 
     /**
