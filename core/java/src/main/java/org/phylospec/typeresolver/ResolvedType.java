@@ -6,6 +6,7 @@ import java.util.*;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.ParsedType;
 import org.phylospec.components.Type;
+import org.phylospec.typeresolver.properties.TypeProperties;
 
 /// This class represents a fully resolved type.
 ///
@@ -15,11 +16,11 @@ public class ResolvedType {
     ResolvedType(Type typeComponent, Map<String, ResolvedType> parameterTypes) {
         this.typeComponent = typeComponent;
         this.parameterTypes = parameterTypes;
-        this.typeProperties = new HashMap<>();
+        this.typeProperties = new TypeProperties();
     }
 
     private final Map<String, ResolvedType> parameterTypes;
-    private final Map<String, Object> typeProperties;
+    private final TypeProperties typeProperties;
     private final Type typeComponent;
 
     public Type getTypeComponent() {
@@ -51,23 +52,7 @@ public class ResolvedType {
         return typeComponent.getTypeParameters();
     }
 
-    public void attachProperty(String propertyName, Object value) {
-        this.typeProperties.put(propertyName, value);
-    }
-
-    public void attachProperties(Map<String, Object> typeProperties) {
-        this.typeProperties.putAll(typeProperties);
-    }
-
-    public boolean hasPropertyAttached(String propertyName) {
-        return this.typeProperties.containsKey(propertyName);
-    }
-
-    public Object getProperty(String propertyName) {
-        return this.typeProperties.get(propertyName);
-    }
-
-    public Map<String, Object> getProperties() {
+    public TypeProperties properties() {
         return this.typeProperties;
     }
 

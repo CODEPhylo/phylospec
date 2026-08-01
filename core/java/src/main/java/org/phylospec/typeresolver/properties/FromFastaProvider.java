@@ -1,13 +1,14 @@
 package org.phylospec.typeresolver.properties;
 
+import static org.phylospec.typeresolver.properties.TypePropertyNames.*;
+
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import org.phylospec.components.ParsedType;
 import org.phylospec.typeresolver.ResolvedType;
 
-public class FromFastaHook implements TypePropertyResolverHook {
+public class FromFastaProvider implements GeneratorPropertyProvider {
 
     @Override
     public String getGenerator() {
@@ -15,13 +16,11 @@ public class FromFastaHook implements TypePropertyResolverHook {
     }
 
     @Override
-    public void attemptResolution(
-            ParsedType parsedType,
-            ResolvedType generatedType,
-            Map<String, Set<ResolvedType>> resolvedArguments) {
+    public void resolveGenerator(
+            ResolvedType generatedType, Map<String, Set<ResolvedType>> resolvedArguments) {
         Set<ResolvedType> fileNameTypeSet = resolvedArguments.get("file");
         if (fileNameTypeSet == null || fileNameTypeSet.isEmpty()) return;
-        Object fileNameObj = TypePropertyUtils.getPropertyOnAgreement(fileNameTypeSet, "literal");
+        Object fileNameObj = TypePropertyEngine.getPropertyOnAgreement(fileNameTypeSet, LITERAL);
 
         if (!(fileNameObj instanceof String fileName)) {
             return;
@@ -32,8 +31,8 @@ public class FromFastaHook implements TypePropertyResolverHook {
         LightweightFileParsers.parseFasta(path.get())
                 .ifPresent(
                         properties -> {
-                            generatedType.attachProperty("numSites", properties.numSites());
-                            generatedType.attachProperty("numTaxa", properties.numTaxa());
+                            generatedType.properties().attach(NUM_SITES, properties.numSites());
+                            generatedType.properties().attach(NUM_TAXA, properties.numTaxa());
                         });
     }
 }

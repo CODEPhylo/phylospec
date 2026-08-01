@@ -1,11 +1,12 @@
 package org.phylospec.typeresolver.properties;
 
+import static org.phylospec.typeresolver.properties.TypePropertyNames.*;
+
 import java.util.Map;
 import java.util.Set;
-import org.phylospec.components.ParsedType;
 import org.phylospec.typeresolver.ResolvedType;
 
-public class FromNewickHook implements TypePropertyResolverHook {
+public class FromNewickProvider implements GeneratorPropertyProvider {
 
     @Override
     public String getGenerator() {
@@ -13,13 +14,11 @@ public class FromNewickHook implements TypePropertyResolverHook {
     }
 
     @Override
-    public void attemptResolution(
-            ParsedType parsedType,
-            ResolvedType generatedType,
-            Map<String, Set<ResolvedType>> resolvedArguments) {
+    public void resolveGenerator(
+            ResolvedType generatedType, Map<String, Set<ResolvedType>> resolvedArguments) {
         Set<ResolvedType> newickTypeSet = resolvedArguments.get("newickString");
         if (newickTypeSet == null || newickTypeSet.isEmpty()) return;
-        Object newickObj = TypePropertyUtils.getPropertyOnAgreement(newickTypeSet, "literal");
+        Object newickObj = TypePropertyEngine.getPropertyOnAgreement(newickTypeSet, LITERAL);
 
         if (!(newickObj instanceof String newickString)) {
             return;
@@ -28,8 +27,10 @@ public class FromNewickHook implements TypePropertyResolverHook {
         LightweightFileParsers.parseNewick(newickString)
                 .ifPresent(
                         properties -> {
-                            generatedType.attachProperty("numBranches", properties.numBranches());
-                            generatedType.attachProperty("numTaxa", properties.numTaxa());
+                            generatedType
+                                    .properties()
+                                    .attach(NUM_BRANCHES, properties.numBranches());
+                            generatedType.properties().attach(NUM_TAXA, properties.numTaxa());
                         });
     }
 }

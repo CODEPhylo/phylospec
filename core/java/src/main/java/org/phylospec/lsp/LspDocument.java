@@ -262,12 +262,12 @@ class LspDocument implements ErrorEventListener {
                     hoverText.append("```phylospec\n");
                     hoverText.append(resolvedType).append(" ").append(variable.variableName);
 
-                    for (String property : resolvedType.getProperties().keySet()) {
+                    for (String property : resolvedType.properties().getPropertyNames()) {
                         hoverText
                                 .append(" ")
                                 .append(property)
                                 .append(":")
-                                .append(resolvedType.getProperties().get(property));
+                                .append(resolvedType.properties().get(property));
                     }
 
                     hoverText.append("\n```\n\n");
