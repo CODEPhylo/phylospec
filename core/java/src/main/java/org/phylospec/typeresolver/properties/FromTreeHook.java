@@ -5,11 +5,11 @@ import java.util.Set;
 import org.phylospec.components.ParsedType;
 import org.phylospec.typeresolver.ResolvedType;
 
-public class FromNewickHook implements TypePropertyResolverHook {
+public class FromTreeHook implements TypePropertyResolverHook {
 
     @Override
     public String getGenerator() {
-        return "phylospec.functions.io.fromNewick";
+        return "phylospec.functions.io.fromTree";
     }
 
     @Override
@@ -17,15 +17,16 @@ public class FromNewickHook implements TypePropertyResolverHook {
             ParsedType parsedType,
             ResolvedType generatedType,
             Map<String, Set<ResolvedType>> resolvedArguments) {
-        Set<ResolvedType> newickTypeSet = resolvedArguments.get("newickString");
-        Object newickObj = TypePropertyUtils.getPropertyOnAgreement(newickTypeSet, "literal");
+        Set<ResolvedType> fileNameTypeSet = resolvedArguments.get("file");
+        Object fileNameObj = TypePropertyUtils.getPropertyOnAgreement(fileNameTypeSet, "literal");
 
-        if (!(newickObj instanceof String newickString)) {
-            // we don't know the newickString, let's skip
+        if (!(fileNameObj instanceof String fileName)) {
+            // we don't know the file name, let's skip
             return;
         }
 
-        // parse the newick string and get the properties
+        // the file could be a newick or nexus file, in both cases with a single tree
+        // read the file and get the properties
 
         // TODO
 
