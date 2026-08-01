@@ -1,0 +1,5 @@
+org.phylospec.typeresolver.properties.FromNewickProvider
+org.phylospec.typeresolver.properties.FromNexusProvider
+org.phylospec.typeresolver.properties.FromFastaProvider
+org.phylospec.typeresolver.properties.FromTreeProvider
+org.phylospec.typeresolver.properties.FromCsvProvider
