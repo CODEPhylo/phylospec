@@ -12,6 +12,8 @@ import org.phylospec.components.Type;
 import org.phylospec.errors.Error;
 import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.lexer.TokenType;
+import org.phylospec.typeresolver.properties.ConstraintChecker;
+import org.phylospec.typeresolver.properties.TypePropertyResolver;
 import org.phylospec.typeresolver.properties.TypePropertyUtils;
 import org.phylospec.workspace.Workspace;
 
