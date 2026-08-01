@@ -1,4 +1,4 @@
-package org.phylospec.typeresolver;
+package org.phylospec.typeresolver.properties;
 
 import java.util.List;
 import java.util.Map;
@@ -6,6 +6,8 @@ import java.util.Set;
 import org.phylospec.ast.AstNode;
 import org.phylospec.components.ParsedTypeConstraint;
 import org.phylospec.errors.Error;
+import org.phylospec.typeresolver.ResolvedType;
+import org.phylospec.typeresolver.TypeUtils;
 
 /**
  * Checks type-property constraints for resolved generator applications.

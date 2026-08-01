@@ -1,9 +1,11 @@
-package org.phylospec.typeresolver;
+package org.phylospec.typeresolver.properties;
 
 import java.util.*;
 import org.phylospec.components.Generator;
 import org.phylospec.components.ParsedType;
 import org.phylospec.components.ParsedTypeProperty;
+import org.phylospec.typeresolver.ResolvedType;
+import org.phylospec.typeresolver.TypeUtils;
 
 public class TypePropertyResolver {
 
