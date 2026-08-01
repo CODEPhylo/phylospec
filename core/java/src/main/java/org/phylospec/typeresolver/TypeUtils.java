@@ -99,11 +99,7 @@ public class TypeUtils {
 
             if (resolvedArgumentTypeSet == null && parameter == parameters.getFirst()) {
                 // there might be an unnamed argument
-                parameterName = firstArgumentName;
-                resolvedArgumentTypeSet = resolvedArguments.get(parameterName);
-            }
-
-            if (parameterName == null) {
+                resolvedArgumentTypeSet = resolvedArguments.get(firstArgumentName);
                 parameterName = parameters.getFirst().getName();
             }
 
