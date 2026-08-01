@@ -1,5 +1,7 @@
 package org.phylospec.components;
 
+import static org.phylospec.typeresolver.properties.TypePropertyNames.describeProperty;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -102,6 +104,31 @@ public class ParsedTypeConstraint {
      */
     public String getRightPropertyName() {
         return rightPropertyName;
+    }
+
+    /**
+     * Returns a human-readable error message.
+     *
+     * @return the message
+     */
+    public String errorMessage() {
+        return describeProperty(leftInputName, leftPropertyName, true)
+                + " must "
+                + describeComparison(constraintType)
+                + " "
+                + describeProperty(rightInputName, rightPropertyName, false)
+                + ".";
+    }
+
+    private static String describeComparison(ConstraintType constraintType) {
+        return switch (constraintType) {
+            case EQUALITY -> "be equal to";
+            case INEQUALITY -> "be different from";
+            case LESS -> "be less than";
+            case LESS_THAN -> "be less than or equal to";
+            case GREATER -> "be greater than";
+            case GREATER_THAN -> "be greater than or equal to";
+        };
     }
 
     /**

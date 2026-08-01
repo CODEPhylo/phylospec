@@ -112,7 +112,11 @@ public class GeneratorPropertyResolver {
 
         // all type combinations could be evaluated and none of them were successful
 
-        raiseWarning(new Error(call.getRange(), "Check not passed.", constraintString));
+        raiseWarning(
+                new Error(
+                        call.getRange(),
+                        "The inputs for '" + call.functionName + "' might be invalid.",
+                        constraint.errorMessage()));
     }
 
     private void resolveProviders(

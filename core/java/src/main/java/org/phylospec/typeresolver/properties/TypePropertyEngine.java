@@ -65,12 +65,15 @@ public class TypePropertyEngine {
                 raiseWarning(
                         new Error(
                                 observedAs.getRange(),
-                                "Property mismatch: ",
-                                generatedProperty
-                                        + " != "
+                                "The observation might not be compatible with the generated value.",
+                                propertyName
+                                        + " is "
                                         + observedProperty
-                                        + " for "
-                                        + propertyName));
+                                        + " for the observation, but "
+                                        + generatedProperty
+                                        + " for '"
+                                        + observedAs.getName()
+                                        + "'."));
             }
         }
     }
