@@ -65,6 +65,9 @@ public class TypePropertyUtils implements AstVisitor<Void, Void, Void> {
 
     public static boolean disagreeIfKnown(Object a, Object b) {
         if (a == null || b == null) return false;
+        if (a instanceof Number aNumber && b instanceof Number bNumber) {
+            return Double.compare(aNumber.doubleValue(), bNumber.doubleValue()) != 0;
+        }
         return !a.equals(b);
     }
 }
