@@ -374,7 +374,6 @@ public class TypeResolver
         List<Set<ResolvedType>> rangeTypeSets = new ArrayList<>();
 
         for (int i = 0; i < indexed.indices.size(); i++) {
-            Expr.Variable indexVar = indexed.indices.get(i);
             Set<ResolvedType> rangeTypeSet = indexed.ranges.get(i).accept(this);
             rangeTypeSets.add(rangeTypeSet);
         }
@@ -442,12 +441,14 @@ public class TypeResolver
 
         // attach the num properties
 
-        for (ResolvedType type : widenedTypeSet) {
-            // TODO for later
-        }
-
-        if (indexed.indices.size() == 2) {
-            // TODO for later
+        if (indexed.indices.size() == 1) {
+            Object num = TypePropertyUtils.getPropertyOnAgreement(rangeTypeSets.getFirst(), "num");
+            TypePropertyUtils.attachPropertyToAll(widenedTypeSet, "num", num);
+        } else {
+            Object numRows = TypePropertyUtils.getPropertyOnAgreement(rangeTypeSets.get(0), "num");
+            Object numCols = TypePropertyUtils.getPropertyOnAgreement(rangeTypeSets.get(1), "num");
+            TypePropertyUtils.attachPropertyToAll(widenedTypeSet, "numRows", numRows);
+            TypePropertyUtils.attachPropertyToAll(widenedTypeSet, "numCols", numCols);
         }
 
         // register the widened type in the outer scope under the variable name
@@ -613,9 +614,6 @@ public class TypeResolver
                             + printType(generatedTypeSet)
                             + "' instead.");
         }
-
-        // check if type properties agree
-        // TODO for later
 
         return generatedDistributionTypeSet;
     }
@@ -1200,8 +1198,10 @@ public class TypeResolver
 
         // check that the passed indices have the correct type
 
+        List<Set<ResolvedType>> resolvedIndexTypeSets = new ArrayList<>();
         for (Expr index : expr.indices) {
             Set<ResolvedType> resolvedIndexTypeSet = index.accept(this);
+            resolvedIndexTypeSets.add(resolvedIndexTypeSet);
             if (!TypeUtils.canBeAssignedTo(resolvedIndexTypeSet, indexTypeSet, componentResolver)) {
                 throw new TypeError(
                         "Invalid index.",
@@ -1214,7 +1214,46 @@ public class TypeResolver
         }
 
         // check that the index is in range in case we have a num property
-        // TODO for later
+
+        // check the first dimension using the num property
+
+        Object firstIndexLiteral =
+                TypePropertyUtils.getPropertyOnAgreement(
+                        resolvedIndexTypeSets.getFirst(), "literal");
+        Object containerSize = TypePropertyUtils.getPropertyOnAgreement(containerTypeSet, "num");
+
+        if (firstIndexLiteral instanceof Number indexNr && containerSize instanceof Number sizeNr) {
+            long indexValue = indexNr.longValue();
+            long sizeValue = sizeNr.longValue();
+            if (indexValue < 1 || sizeValue < indexValue) {
+                raiseWarning(
+                        new Error(
+                                expr.indices.getFirst().getRange(),
+                                "The index might be out of range.",
+                                "Use an index between 1 and " + sizeValue + "."));
+            }
+        }
+
+        // check a possible second dimension using the numCols property
+
+        if (expr.indices.size() == 2) {
+            Object secondIndexLiteral =
+                    TypePropertyUtils.getPropertyOnAgreement(
+                            resolvedIndexTypeSets.get(1), "literal");
+            Object numCols = TypePropertyUtils.getPropertyOnAgreement(containerTypeSet, "numCols");
+
+            if (secondIndexLiteral instanceof Number indexNr && numCols instanceof Number sizeNr) {
+                long indexValue = indexNr.longValue();
+                long sizeValue = sizeNr.longValue();
+                if (indexValue < 1 || sizeValue < indexValue) {
+                    raiseWarning(
+                            new Error(
+                                    expr.indices.get(1).getRange(),
+                                    "The index might be out of range.",
+                                    "Use an index between 1 and " + sizeValue + "."));
+                }
+            }
+        }
 
         return remember(expr, itemTypeSet);
     }
@@ -1258,7 +1297,15 @@ public class TypeResolver
 
         // check if type range has literal properties and determine the result num property if
         // possible
-        // TODO for later
+
+        Object fromLiteral = TypePropertyUtils.getPropertyOnAgreement(fromTypeSet, "literal");
+        Object toLiteral = TypePropertyUtils.getPropertyOnAgreement(toTypeSet, "literal");
+        if (fromLiteral instanceof Number fromNumber && toLiteral instanceof Number toNumber) {
+            long fromValue = fromNumber.longValue();
+            long toValue = toNumber.longValue();
+            long rangeSize = Math.abs(toValue - fromValue) + 1;
+            TypePropertyUtils.attachPropertyToAll(listComprehensionTypeSet, "num", rangeSize);
+        }
 
         return remember(range, listComprehensionTypeSet);
     }
