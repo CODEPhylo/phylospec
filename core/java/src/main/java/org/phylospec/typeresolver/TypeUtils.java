@@ -143,7 +143,7 @@ public class TypeUtils {
                                 + parameterName
                                 + "`.",
                         "You need to use a value of type '"
-                                + ComponentResolver.getUnqualifiedName(parameter.getType())
+                                + new ParsedType(parameter.getType()).getAtomicTypeName()
                                 + "'.");
             }
         }
