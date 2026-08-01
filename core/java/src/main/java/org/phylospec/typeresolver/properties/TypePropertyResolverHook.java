@@ -1,8 +1,9 @@
-package org.phylospec.typeresolver;
+package org.phylospec.typeresolver.properties;
 
 import java.util.Map;
 import java.util.Set;
 import org.phylospec.components.ParsedType;
+import org.phylospec.typeresolver.ResolvedType;
 
 public interface TypePropertyResolverHook {
 
