@@ -18,20 +18,18 @@ public class FromNewickHook implements TypePropertyResolverHook {
             ResolvedType generatedType,
             Map<String, Set<ResolvedType>> resolvedArguments) {
         Set<ResolvedType> newickTypeSet = resolvedArguments.get("newickString");
+        if (newickTypeSet == null || newickTypeSet.isEmpty()) return;
         Object newickObj = TypePropertyUtils.getPropertyOnAgreement(newickTypeSet, "literal");
 
         if (!(newickObj instanceof String newickString)) {
-            // we don't know the newickString, let's skip
             return;
         }
 
-        // parse the newick string and get the properties
-
-        // TODO
-
-        // attach the properties
-
-        generatedType.attachProperty("numBranches", 100);
-        generatedType.attachProperty("numTaxa", 100);
+        LightweightFileParsers.parseNewick(newickString)
+                .ifPresent(
+                        properties -> {
+                            generatedType.attachProperty("numBranches", properties.numBranches());
+                            generatedType.attachProperty("numTaxa", properties.numTaxa());
+                        });
     }
 }

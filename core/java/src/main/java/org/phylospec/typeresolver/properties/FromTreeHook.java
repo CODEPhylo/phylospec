@@ -1,6 +1,8 @@
 package org.phylospec.typeresolver.properties;
 
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.phylospec.components.ParsedType;
 import org.phylospec.typeresolver.ResolvedType;
@@ -18,21 +20,20 @@ public class FromTreeHook implements TypePropertyResolverHook {
             ResolvedType generatedType,
             Map<String, Set<ResolvedType>> resolvedArguments) {
         Set<ResolvedType> fileNameTypeSet = resolvedArguments.get("file");
+        if (fileNameTypeSet == null || fileNameTypeSet.isEmpty()) return;
         Object fileNameObj = TypePropertyUtils.getPropertyOnAgreement(fileNameTypeSet, "literal");
 
         if (!(fileNameObj instanceof String fileName)) {
-            // we don't know the file name, let's skip
             return;
         }
 
-        // the file could be a newick or nexus file, in both cases with a single tree
-        // read the file and get the properties
-
-        // TODO
-
-        // attach the properties
-
-        generatedType.attachProperty("numBranches", 100);
-        generatedType.attachProperty("numTaxa", 100);
+        Optional<Path> path = LightweightFileParsers.resolveSmallFile(fileName);
+        if (path.isEmpty()) return;
+        LightweightFileParsers.parseTree(path.get())
+                .ifPresent(
+                        properties -> {
+                            generatedType.attachProperty("numBranches", properties.numBranches());
+                            generatedType.attachProperty("numTaxa", properties.numTaxa());
+                        });
     }
 }
