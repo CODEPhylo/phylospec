@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.Set;
 import org.phylospec.components.ParsedType;
 import org.phylospec.typeresolver.ResolvedType;
-import org.phylospec.typeresolver.TypePropertyResolverHook;
 
 public class FromNewickHook implements TypePropertyResolverHook {
 
