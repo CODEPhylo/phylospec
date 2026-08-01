@@ -5,11 +5,11 @@ import java.util.Set;
 import org.phylospec.components.ParsedType;
 import org.phylospec.typeresolver.ResolvedType;
 
-public class FromNexusHook implements TypePropertyResolverHook {
+public class FromCsvHook implements TypePropertyResolverHook {
 
     @Override
     public String getGenerator() {
-        return "phylospec.functions.io.fromNexus";
+        return "phylospec.functions.io.fromCsv";
     }
 
     @Override
@@ -31,7 +31,6 @@ public class FromNexusHook implements TypePropertyResolverHook {
 
         // attach the properties
 
-        generatedType.attachProperty("numSites", 100);
-        generatedType.attachProperty("numTaxa", 100);
+        generatedType.attachProperty("num", 100); // num rows without header
     }
 }
