@@ -1,7 +1,5 @@
 package org.phylospec.typeresolver;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.phylospec.Utils;
@@ -12,10 +10,7 @@ import org.phylospec.components.Type;
 import org.phylospec.errors.Error;
 import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.lexer.TokenType;
-import org.phylospec.typeresolver.properties.ConstraintChecker;
-import org.phylospec.typeresolver.properties.TypePropertyResolver;
-import org.phylospec.typeresolver.properties.TypePropertyUtils;
-import org.phylospec.workspace.Workspace;
+import org.phylospec.typeresolver.properties.TypePropertyEngine;
 
 /// This class traverses an AST statement and resolves the types for each
 /// AST node and each variable.
@@ -45,6 +40,7 @@ public class TypeResolver
 
     private final ComponentResolver componentResolver;
     private final TypeMatcher typeMatcher;
+    private final TypePropertyEngine typePropertyEngine;
 
     public Map<AstNode, Set<ResolvedType>> resolvedTypes;
     private final List<Map<String, Set<ResolvedType>>> scopedVariableTypes;
@@ -62,12 +58,14 @@ public class TypeResolver
         this.scopedVariableTypes = new ArrayList<>();
         this.printer = new AstPrinter();
         this.eventListeners = new ArrayList<>();
+        this.typePropertyEngine = new TypePropertyEngine();
 
         createScope();
     }
 
     public void registerEventListener(ErrorEventListener listener) {
         this.eventListeners.add(listener);
+        this.typePropertyEngine.registerEventListener(listener);
     }
 
     /**
@@ -226,8 +224,7 @@ public class TypeResolver
             // find the matching resolved types
             for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
                 if (resolvedVariableType.getName().equals(resolvedExpressionType.getName())) {
-                    TypePropertyUtils.copyTypeProperties(
-                            resolvedVariableType, resolvedExpressionType);
+                    typePropertyEngine.copyProperties(resolvedExpressionType, resolvedVariableType);
                 }
             }
         }
@@ -326,7 +323,7 @@ public class TypeResolver
                                 "T",
                                 resolvedExpressionType,
                                 componentResolver);
-                TypePropertyUtils.copyTypeProperties(resolvedVariableType, unwrappedExpressionType);
+                typePropertyEngine.copyProperties(unwrappedExpressionType, resolvedVariableType);
             }
         }
 
@@ -443,15 +440,7 @@ public class TypeResolver
 
         // attach the num properties
 
-        if (indexed.indices.size() == 1) {
-            Object num = TypePropertyUtils.getPropertyOnAgreement(rangeTypeSets.getFirst(), "num");
-            TypePropertyUtils.attachPropertyToAll(widenedTypeSet, "num", num);
-        } else {
-            Object numRows = TypePropertyUtils.getPropertyOnAgreement(rangeTypeSets.get(0), "num");
-            Object numCols = TypePropertyUtils.getPropertyOnAgreement(rangeTypeSets.get(1), "num");
-            TypePropertyUtils.attachPropertyToAll(widenedTypeSet, "numRows", numRows);
-            TypePropertyUtils.attachPropertyToAll(widenedTypeSet, "numCols", numCols);
-        }
+        typePropertyEngine.resolveIndexed(indexed.indices.size(), rangeTypeSets, widenedTypeSet);
 
         // register the widened type in the outer scope under the variable name
 
@@ -522,27 +511,9 @@ public class TypeResolver
                             + "' instead.");
         }
 
-        // check if type properties agree
+        // check if type properties of the observation and generated object agree
 
-        Set<String> commonProperties = TypePropertyUtils.getCommonPropertyNames(generatedTypeSet);
-        for (String propertyName : commonProperties) {
-            Object generatedProperty =
-                    TypePropertyUtils.getPropertyOnAgreement(generatedTypeSet, propertyName);
-            Object observedProperty =
-                    TypePropertyUtils.getPropertyOnAgreement(observationTypeSet, propertyName);
-
-            if (TypePropertyUtils.disagreeIfKnown(generatedProperty, observedProperty)) {
-                raiseWarning(
-                        new Error(
-                                observedAs.getRange(),
-                                "Property mismatch: ",
-                                generatedProperty
-                                        + " != "
-                                        + observedProperty
-                                        + " for "
-                                        + propertyName));
-            }
-        }
+        typePropertyEngine.checkObservedAs(observedAs, generatedTypeSet, observationTypeSet);
 
         return generatedDistributionTypeSet;
     }
@@ -699,9 +670,9 @@ public class TypeResolver
             globalUnit = expr.unit;
         }
 
-        for (ResolvedType resolvedType : resolvedTypeSet) {
-            resolvedType.attachProperty("literal", expr.value);
-        }
+        // attach literal property
+
+        typePropertyEngine.resolveLiteral(resolvedTypeSet, expr.value);
 
         return remember(expr, resolvedTypeSet);
     }
@@ -990,8 +961,7 @@ public class TypeResolver
 
                 // check type constraints and resolve generated type constraints
 
-                checkGeneratorApplication(expr, generator, resolvedGeneratorApplication);
-                TypePropertyResolver.resolveTypeProperties(generator, resolvedGeneratorApplication);
+                typePropertyEngine.processGenerator(expr, generator, resolvedGeneratorApplication);
 
                 // we remember the generated type set
 
@@ -1117,9 +1087,7 @@ public class TypeResolver
         }
 
         // attach the num property to the array types
-        for (ResolvedType resolvedType : arrayTypeSet) {
-            resolvedType.attachProperty("num", expr.elements.size());
-        }
+        typePropertyEngine.resolveArray(expr.elements.size(), arrayTypeSet);
 
         return remember(expr, arrayTypeSet);
     }
@@ -1215,47 +1183,7 @@ public class TypeResolver
             }
         }
 
-        // check that the index is in range in case we have a num property
-
-        // check the first dimension using the num property
-
-        Object firstIndexLiteral =
-                TypePropertyUtils.getPropertyOnAgreement(
-                        resolvedIndexTypeSets.getFirst(), "literal");
-        Object containerSize = TypePropertyUtils.getPropertyOnAgreement(containerTypeSet, "num");
-
-        if (firstIndexLiteral instanceof Number indexNr && containerSize instanceof Number sizeNr) {
-            long indexValue = indexNr.longValue();
-            long sizeValue = sizeNr.longValue();
-            if (indexValue < 1 || sizeValue < indexValue) {
-                raiseWarning(
-                        new Error(
-                                expr.indices.getFirst().getRange(),
-                                "The index might be out of range.",
-                                "Use an index between 1 and " + sizeValue + "."));
-            }
-        }
-
-        // check a possible second dimension using the numCols property
-
-        if (expr.indices.size() == 2) {
-            Object secondIndexLiteral =
-                    TypePropertyUtils.getPropertyOnAgreement(
-                            resolvedIndexTypeSets.get(1), "literal");
-            Object numCols = TypePropertyUtils.getPropertyOnAgreement(containerTypeSet, "numCols");
-
-            if (secondIndexLiteral instanceof Number indexNr && numCols instanceof Number sizeNr) {
-                long indexValue = indexNr.longValue();
-                long sizeValue = sizeNr.longValue();
-                if (indexValue < 1 || sizeValue < indexValue) {
-                    raiseWarning(
-                            new Error(
-                                    expr.indices.get(1).getRange(),
-                                    "The index might be out of range.",
-                                    "Use an index between 1 and " + sizeValue + "."));
-                }
-            }
-        }
+        typePropertyEngine.checkIndex(expr.indices, resolvedIndexTypeSets, containerTypeSet);
 
         return remember(expr, itemTypeSet);
     }
@@ -1297,17 +1225,9 @@ public class TypeResolver
                 ResolvedType.fromString(
                         "phylospec.types.Vector<T>", Map.of("T", itemTypeSet), componentResolver);
 
-        // check if type range has literal properties and determine the result num property if
-        // possible
+        // resolve the range properties
 
-        Object fromLiteral = TypePropertyUtils.getPropertyOnAgreement(fromTypeSet, "literal");
-        Object toLiteral = TypePropertyUtils.getPropertyOnAgreement(toTypeSet, "literal");
-        if (fromLiteral instanceof Number fromNumber && toLiteral instanceof Number toNumber) {
-            long fromValue = fromNumber.longValue();
-            long toValue = toNumber.longValue();
-            long rangeSize = Math.abs(toValue - fromValue) + 1;
-            TypePropertyUtils.attachPropertyToAll(listComprehensionTypeSet, "num", rangeSize);
-        }
+        typePropertyEngine.resolveRange(fromTypeSet, toTypeSet, listComprehensionTypeSet);
 
         return remember(range, listComprehensionTypeSet);
     }
@@ -1419,54 +1339,6 @@ public class TypeResolver
     private void raiseWarning(Error warning) {
         for (ErrorEventListener eventListener : eventListeners) {
             eventListener.warningDetected(warning);
-        }
-    }
-
-    private void checkGeneratorApplication(
-            AstNode astNode,
-            Generator generator,
-            TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
-        try {
-            ConstraintChecker.checkConstraints(
-                    astNode, generator.getConstraints(), resolvedGeneratorApplication);
-        } catch (Error e) {
-            raiseWarning(e);
-        }
-
-        if (generator.getName().equals("fromNexus")
-                && generator.getNamespace().equals("phylospec.functions.io")) {
-            Set<ResolvedType> fileNameTypeSet =
-                    resolvedGeneratorApplication.resolvedArguments().get("file");
-            if (fileNameTypeSet == null || fileNameTypeSet.isEmpty()) return;
-
-            boolean someExist = false;
-            for (ResolvedType resolvedType : fileNameTypeSet) {
-                Object literalPropertyObj = resolvedType.getProperty("literal");
-                if (!(literalPropertyObj instanceof String literalString)) return;
-
-                // check if the file exists
-                boolean fileExists = Files.exists(Path.of(literalString));
-                if (fileExists) {
-                    someExist = true;
-                    break;
-                }
-
-                for (Path folder : Workspace.FOLDERS) {
-                    boolean fileExistsInWorkspace = Files.exists(folder.resolve(literalString));
-                    if (fileExistsInWorkspace) {
-                        someExist = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!someExist) {
-                raiseWarning(
-                        new Error(
-                                astNode.getRange(),
-                                "File might not exist.",
-                                "You might want to check if that file exists or choose a file which does exist."));
-            }
         }
     }
 }

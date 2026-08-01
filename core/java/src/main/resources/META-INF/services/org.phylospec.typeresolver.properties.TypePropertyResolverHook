@@ -1,5 +1,0 @@
-org.phylospec.typeresolver.properties.FromNewickHook
-org.phylospec.typeresolver.properties.FromNexusHook
-org.phylospec.typeresolver.properties.FromFastaHook
-org.phylospec.typeresolver.properties.FromTreeHook
-org.phylospec.typeresolver.properties.FromCsvHook
