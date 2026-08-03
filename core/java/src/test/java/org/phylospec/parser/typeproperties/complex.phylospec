@@ -1,0 +1,39 @@
+Alignment data = fromNexus(file="src/test/java/org/phylospec/resources/primate-mtDNA.nex")
+Tree yuleTree ~ Yule(birthRate=1.0, taxa=taxa(data))
+Tree coalescentTree ~ Coalescent(populationSize=1000.0, taxa=taxa(data))
+QMatrix q = jc69()
+Vector<Real> siteRates = repeat(value=1.0, num=numSites(data))
+Vector<Rate> gammaRates ~ DiscreteGammaInv(shape=1.0, numCategories=4, invariantProportion=0.1, numSites=numSites(data))
+Vector<Rate> strictRates ~ StrictClock(clockRate=1.0, tree=yuleTree)
+Vector<Rate> relaxedRates ~ RelaxedClock(base=LogNormal(mean=1.0, logSd=0.4), clockRate=1.0, tree=fromNewick(newickString="((A, B), C);"))
+Alignment simulated ~ PhyloCTMC(tree=yuleTree, qMatrix=q, siteRates=siteRates) observed as data
+
+// EXPECT AST
+// (AS Alignment data (CA fromNexus (AA file "src/test/java/org/phylospec/resources/primate-mtDNA.nex")))
+// (DR Tree yuleTree (CA Yule (AA birthRate 1.0) (AA taxa (CA taxa (AA null data)))))
+// (DR Tree coalescentTree (CA Coalescent (AA populationSize 1000.0) (AA taxa (CA taxa (AA null data)))))
+// (AS QMatrix q (CA jc69 ))
+// (AS Vector<Real> siteRates (CA repeat (AA value 1.0) (AA num (CA numSites (AA null data)))))
+// (DR Vector<Rate> gammaRates (CA DiscreteGammaInv (AA shape 1.0) (AA numCategories 4) (AA invariantProportion 0.1) (AA numSites (CA numSites (AA null data)))))
+// (DR Vector<Rate> strictRates (CA StrictClock (AA clockRate 1.0) (AA tree yuleTree)))
+// (DR Vector<Rate> relaxedRates (CA RelaxedClock (AA base (CA LogNormal (AA mean 1.0) (AA logSd 0.4))) (AA clockRate 1.0) (AA tree (CA fromNewick (AA newickString "((A, B), C);")))))
+// (OA (DR Alignment simulated (CA PhyloCTMC (AA tree yuleTree) (AA qMatrix q) (AA siteRates siteRates))) data)
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS
+
+// EXPECT TYPES
+// Alignment<;numSites=898, numTaxa=12>
+// Tree<;numTaxa=12>
+// Tree<;numTaxa=12>
+// QMatrix
+// Vector<Real;num=898>
+// Vector<PositiveReal;num=898>
+// Vector<Rate;num=898>
+// Vector<PositiveReal;num=null>
+// Vector<Rate;num=null>
+// Vector<PositiveReal;num=4>
+// Vector<Rate;num=4>
+// Alignment<;numSites=898, numTaxa=12>
+// EXPECT TYPES

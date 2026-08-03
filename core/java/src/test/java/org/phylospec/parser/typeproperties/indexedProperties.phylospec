@@ -1,0 +1,19 @@
+Real constants[i] = 2.0 for i in 1:5
+Real draws[i] ~ Normal(mean=0.0, sd=1.0) for i in 1:6
+Real grid[i, j] = 1.0 for i in 1:3 for j in 1:num(draws)
+
+// EXPECT AST
+// (IS (AS Real constants 2.0) i (R 1 5))
+// (IS (DR Real draws (CA Normal (AA mean 0.0) (AA sd 1.0))) i (R 1 6))
+// (IS (AS Real grid 1.0) i (R 1 3) j (R 1 (CA num (AA null draws))))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS
+
+// EXPECT TYPES
+// Vector<Real;num=5>
+// Vector<Real;num=6>
+// Matrix<Real;numRows=3, numCols=6>
+// Vector<Vector<Real>;numRows=3, numCols=6>
+// EXPECT TYPES

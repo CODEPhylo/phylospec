@@ -1,0 +1,21 @@
+Boolean enabled = true
+String label = "phylo"
+PositiveInteger count = 4
+PositiveReal weight = 2.5
+
+// EXPECT AST
+// (AS Boolean enabled true)
+// (AS String label "phylo")
+// (AS PositiveInteger count 4)
+// (AS PositiveReal weight 2.5)
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS
+
+// EXPECT TYPES
+// Boolean<;literal=true>
+// String<;literal=phylo>
+// PositiveInteger<;literal=4>
+// PositiveReal<;literal=2.5>
+// EXPECT TYPES
