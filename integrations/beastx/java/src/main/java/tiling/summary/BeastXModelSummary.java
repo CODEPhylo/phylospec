@@ -111,6 +111,10 @@ public class BeastXModelSummary {
             treePriors.add(entry.getValue().getId());
         }
 
+        for (Map.Entry<TreeModel, AbstractModelLikelihood> entry : model.beastState.observedTreeDistributions.entrySet()) {
+            treeModels.add(entry.getKey().getId());
+        }
+
         List<String> calibrationPriors = new ArrayList<>();
 
         for (AbstractDistributionLikelihood calibrationPrior : model.beastState.calibrationPriorDistributions) {
@@ -120,6 +124,10 @@ public class BeastXModelSummary {
         List<String> likelihoods = new ArrayList<>();
 
         for (Likelihood likelihood : model.beastState.likelihoodDistributions) {
+            likelihoods.add(likelihood.getId());
+        }
+
+        for (Likelihood likelihood : model.beastState.observedTreeDistributions.values()) {
             likelihoods.add(likelihood.getId());
         }
 

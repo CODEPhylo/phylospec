@@ -23,6 +23,7 @@ import tiling.xml.builders.TreePriorXmlBuilder;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -84,6 +85,7 @@ public class XmlPlanBuilder {
 
         addParameterPriors(plan, state);
         addTreePriors(plan, state);
+        addObservedTreeDistributions(plan, state);
         addCalibrationPriors(plan, state);
         addTreeStatistics(plan, state);
         addOperators(plan, state);
@@ -147,9 +149,14 @@ public class XmlPlanBuilder {
         Set<String> emittedTaxonIds =
                 new HashSet<>();
 
+        Set<TreeModel> emittedTreeModels =
+                java.util.Collections.newSetFromMap(new IdentityHashMap<>());
+
         for (Map.Entry<TreeModel, AbstractModelLikelihood> entry : treeEntries) {
             TreeModel treeModel =
                     entry.getKey();
+
+            emittedTreeModels.add(treeModel);
 
             treeModelXmlBuilder.addTreeDefinitions(
                     plan,
@@ -158,6 +165,31 @@ public class XmlPlanBuilder {
                     entry.getValue(),
                     emittedTaxonIds
             );
+
+            plan.add(
+                    XmlPlan.Section.TREE_PRIOR_MODELS,
+                    treePriorModelDefinition(state, entry.getValue())
+            );
+        }
+
+        List<Map.Entry<TreeModel, AbstractModelLikelihood>> observedEntries =
+                new ArrayList<>(state.observedTreeDistributions.entrySet());
+
+        observedEntries.sort(Comparator.comparing(entry -> treeId(entry.getKey())));
+
+        for (Map.Entry<TreeModel, AbstractModelLikelihood> entry : observedEntries) {
+            TreeModel treeModel =
+                    entry.getKey();
+
+            if (emittedTreeModels.add(treeModel)) {
+                treeModelXmlBuilder.addTreeDefinitions(
+                        plan,
+                        state,
+                        treeModel,
+                        entry.getValue(),
+                        emittedTaxonIds
+                );
+            }
 
             plan.add(
                     XmlPlan.Section.TREE_PRIOR_MODELS,
@@ -298,6 +330,23 @@ public class XmlPlanBuilder {
             plan.add(
                     XmlPlan.Section.MCMC_PRIOR,
                     treePrior(entry.getKey(), entry.getValue())
+            );
+        }
+    }
+
+    private void addObservedTreeDistributions(
+            XmlPlan plan,
+            BeastXState state
+    ) {
+        List<Map.Entry<TreeModel, AbstractModelLikelihood>> entries =
+                new ArrayList<>(state.observedTreeDistributions.entrySet());
+
+        entries.sort(Comparator.comparing(entry -> treeId(entry.getKey())));
+
+        for (Map.Entry<TreeModel, AbstractModelLikelihood> entry : entries) {
+            plan.add(
+                    XmlPlan.Section.MCMC_LIKELIHOOD,
+                    treePriorXmlBuilder.buildPrior(entry.getKey(), entry.getValue())
             );
         }
     }

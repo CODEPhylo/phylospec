@@ -47,6 +47,7 @@ public class BeastXState {
     public final Map<String, TreeModel> treeModelsByPhyloSpecName;
     public final Map<Parameter, AbstractDistributionLikelihood> priorDistributions;
     public final Map<TreeModel, AbstractModelLikelihood> treePriorDistributions;
+    public final Map<TreeModel, AbstractModelLikelihood> observedTreeDistributions;
     public final Map<TreeModel, StartingTreeSpec> startingTreeSpecs;
     public final List<AbstractDistributionLikelihood> calibrationPriorDistributions;
     public final List<Likelihood> likelihoodDistributions;
@@ -81,6 +82,7 @@ public class BeastXState {
         this.treeModelsByPhyloSpecName = new HashMap<>();
         this.priorDistributions = new HashMap<>();
         this.treePriorDistributions = new HashMap<>();
+        this.observedTreeDistributions = new HashMap<>();
         this.startingTreeSpecs = new HashMap<>();
         this.calibrationPriorDistributions = new ArrayList<>();
         this.likelihoodDistributions = new ArrayList<>();
@@ -182,6 +184,36 @@ public class BeastXState {
         this.treePriorDistributions.put(treeModel, likelihood);
         this.startingTreeSpecs.put(treeModel, startingTreeSpec);
         this.treeModelsByPhyloSpecName.put(id, treeModel);
+
+        return treeModel;
+    }
+
+    /**
+     * Registers a density evaluated on a fixed observed tree.
+     *
+     * <p>The tree is deliberately kept out of {@link #treePriorDistributions}:
+     * that collection represents sampled trees and drives automatic tree
+     * operator construction. The density still belongs to the model likelihood
+     * and therefore contributes to the posterior.</p>
+     */
+    public TreeModel addObservedTreeDistribution(
+            TreeModel treeModel,
+            AbstractModelLikelihood likelihood,
+            String treeId,
+            String likelihoodId
+    ) {
+        if (this.treeModelsByPhyloSpecName.containsKey(treeId)) {
+            throw new IllegalArgumentException(
+                    "Tree model already registered for PhyloSpec name: " + treeId
+            );
+        }
+
+        treeModel.setId(this.getAvailableID(treeId));
+        likelihood.setId(this.getAvailableID(likelihoodId));
+
+        this.observedTreeDistributions.put(treeModel, likelihood);
+        this.treeModelsByPhyloSpecName.put(treeId, treeModel);
+        this.startingTreeSpecs.put(treeModel, StartingTreeSpec.fixedNewick());
 
         return treeModel;
     }
