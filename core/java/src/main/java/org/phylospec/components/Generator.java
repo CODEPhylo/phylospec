@@ -21,6 +21,7 @@ import javax.annotation.processing.Generated;
     "generatedType",
     "typeParameters",
     "arguments",
+    "constraints",
     "ioHints",
     "examples"
 })
@@ -64,6 +65,14 @@ public class Generator {
      */
     @JsonProperty("arguments")
     private List<Argument> arguments = new ArrayList<Argument>();
+
+    /**
+     * Type property constraints on the inputs.
+     *
+     */
+    @JsonProperty("constraints")
+    @JsonPropertyDescription("Type property constraints on the inputs.")
+    private List<String> constraints = new ArrayList<String>();
 
     /**
      * File I/O metadata for data-loading or exporting functions
@@ -183,6 +192,24 @@ public class Generator {
     }
 
     /**
+     * Type property constraints on the inputs.
+     *
+     */
+    @JsonProperty("constraints")
+    public List<String> getConstraints() {
+        return constraints;
+    }
+
+    /**
+     * Type property constraints on the inputs.
+     *
+     */
+    @JsonProperty("constraints")
+    public void setConstraints(List<String> constraints) {
+        this.constraints = constraints;
+    }
+
+    /**
      * File I/O metadata for data-loading or exporting functions
      *
      */
@@ -259,6 +286,10 @@ public class Generator {
         sb.append('=');
         sb.append(((this.arguments == null) ? "<null>" : this.arguments));
         sb.append(',');
+        sb.append("constraints");
+        sb.append('=');
+        sb.append(((this.constraints == null) ? "<null>" : this.constraints));
+        sb.append(',');
         sb.append("ioHints");
         sb.append('=');
         sb.append(((this.ioHints == null) ? "<null>" : this.ioHints));
@@ -299,6 +330,7 @@ public class Generator {
         result =
                 ((result * 31)
                         + ((this.typeParameters == null) ? 0 : this.typeParameters.hashCode()));
+        result = ((result * 31) + ((this.constraints == null) ? 0 : this.constraints.hashCode()));
         return result;
     }
 
@@ -311,48 +343,55 @@ public class Generator {
             return false;
         }
         Generator rhs = ((Generator) other);
-        return ((((((((((this.generatedType == rhs.generatedType)
-                                                                                || ((this
+        return (((((((((((this.generatedType == rhs.generatedType)
+                                                                                        || ((this
+                                                                                                                .generatedType
+                                                                                                        != null)
+                                                                                                && this
                                                                                                         .generatedType
+                                                                                                        .equals(
+                                                                                                                rhs.generatedType)))
+                                                                                && ((this.examples
+                                                                                                == rhs.examples)
+                                                                                        || ((this
+                                                                                                                .examples
+                                                                                                        != null)
+                                                                                                && this
+                                                                                                        .examples
+                                                                                                        .equals(
+                                                                                                                rhs.examples))))
+                                                                        && ((this.ioHints
+                                                                                        == rhs.ioHints)
+                                                                                || ((this.ioHints
                                                                                                 != null)
                                                                                         && this
-                                                                                                .generatedType
+                                                                                                .ioHints
                                                                                                 .equals(
-                                                                                                        rhs.generatedType)))
-                                                                        && ((this.examples
-                                                                                        == rhs.examples)
-                                                                                || ((this.examples
-                                                                                                != null)
-                                                                                        && this
-                                                                                                .examples
-                                                                                                .equals(
-                                                                                                        rhs.examples))))
-                                                                && ((this.ioHints == rhs.ioHints)
-                                                                        || ((this.ioHints != null)
-                                                                                && this.ioHints
-                                                                                        .equals(
-                                                                                                rhs.ioHints))))
-                                                        && ((this.name == rhs.name)
-                                                                || ((this.name != null)
-                                                                        && this.name.equals(
-                                                                                rhs.name))))
-                                                && ((this.namespace == rhs.namespace)
-                                                        || ((this.namespace != null)
-                                                                && this.namespace.equals(
-                                                                        rhs.namespace))))
-                                        && ((this.description == rhs.description)
-                                                || ((this.description != null)
-                                                        && this.description.equals(
-                                                                rhs.description))))
-                                && ((this.arguments == rhs.arguments)
-                                        || ((this.arguments != null)
-                                                && this.arguments.equals(rhs.arguments))))
-                        && ((this.additionalProperties == rhs.additionalProperties)
-                                || ((this.additionalProperties != null)
-                                        && this.additionalProperties.equals(
-                                                rhs.additionalProperties))))
-                && ((this.typeParameters == rhs.typeParameters)
-                        || ((this.typeParameters != null)
-                                && this.typeParameters.equals(rhs.typeParameters))));
+                                                                                                        rhs.ioHints))))
+                                                                && ((this.name == rhs.name)
+                                                                        || ((this.name != null)
+                                                                                && this.name.equals(
+                                                                                        rhs.name))))
+                                                        && ((this.namespace == rhs.namespace)
+                                                                || ((this.namespace != null)
+                                                                        && this.namespace.equals(
+                                                                                rhs.namespace))))
+                                                && ((this.description == rhs.description)
+                                                        || ((this.description != null)
+                                                                && this.description.equals(
+                                                                        rhs.description))))
+                                        && ((this.arguments == rhs.arguments)
+                                                || ((this.arguments != null)
+                                                        && this.arguments.equals(rhs.arguments))))
+                                && ((this.additionalProperties == rhs.additionalProperties)
+                                        || ((this.additionalProperties != null)
+                                                && this.additionalProperties.equals(
+                                                        rhs.additionalProperties))))
+                        && ((this.typeParameters == rhs.typeParameters)
+                                || ((this.typeParameters != null)
+                                        && this.typeParameters.equals(rhs.typeParameters))))
+                && ((this.constraints == rhs.constraints)
+                        || ((this.constraints != null)
+                                && this.constraints.equals(rhs.constraints))));
     }
 }
