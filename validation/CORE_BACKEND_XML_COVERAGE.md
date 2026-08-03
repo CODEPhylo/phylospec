@@ -143,7 +143,7 @@ package availability is recorded separately.
 | Distribution | `Multinomial` | — | — | No general Multinomial distribution target or direct tile in either system; BEAST X contains specialized multinomial likelihood/prior classes that are not equivalent to this Core generator, and the Core return type (`Distribution<NonNegativeInteger>`) should be reviewed because a multinomial draw normally produces a vector of category counts |
 | Distribution | `Geometric` | — | `GeometricTile` | PhyloSpec BEAST 3 tile gap |
 | Distribution | `Poisson` | `PoissonTile` | `PoissonTile` | Shared |
-| Distribution | `ExponentialMarkovChain` | — | — | Missing in both direct tile systems |
+| Distribution | `ExponentialMarkovChain` | — | — | PhyloSpec tile gap in both backends: BEAST 3 has a direct target; BEAST X requires a composite mapping for the initial-value prior and Markov transitions |
 | Tree distribution | `Yule` | `YuleTile` | `YuleTile` | Shared |
 | Tree distribution | `BirthDeath` | `BirthDeathTile` | `BirthDeathTile` | Shared |
 | Tree distribution | `Coalescent` | coalescent tiles | coalescent tiles | Shared |
