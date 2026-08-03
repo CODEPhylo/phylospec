@@ -89,6 +89,13 @@
           },
           "description": "Type parameters for generic types (e.g., ['T'] for Vector<T>)"
         },
+        "typeProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Possible type properties for more fine-grained validation (e.g., `num` for Vector<T>)"
+        },
         "properties": {
           "type": "object",
           "additionalProperties": {
@@ -105,7 +112,6 @@
       "type": "object",
       "required": [
         "name",
-        "generatorType",
         "generatedType",
         "arguments"
       ],
@@ -134,6 +140,13 @@
           "items": {
             "$ref": "#/definitions/argument"
           }
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Type property constraints on the inputs."
         },
         "ioHints": {
           "type": "object",
