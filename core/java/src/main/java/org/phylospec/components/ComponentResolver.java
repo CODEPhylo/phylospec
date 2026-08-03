@@ -169,7 +169,7 @@ public class ComponentResolver {
         String bestQualifiedBaseName = null;
         int bestScore = -Integer.MAX_VALUE;
 
-        String[] splitNamespace = splitNamespace(namespace);
+        String[] splitNamespace = parsedType.getSplitNamespace();
 
         for (Type candidateType : this.knownTypes.values()) {
             ParsedType parsedCandidateType = new ParsedType(candidateType.getName());
