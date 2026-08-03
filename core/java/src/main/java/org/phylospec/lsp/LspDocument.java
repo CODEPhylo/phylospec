@@ -245,15 +245,6 @@ class LspDocument implements ErrorEventListener {
                     }
                     hoverText.append("```phylospec\n");
                     hoverText.append(resolvedType).append(" ").append(variable.variableName);
-
-                    for (String property : resolvedType.properties().getPropertyNames()) {
-                        hoverText
-                                .append(" ")
-                                .append(property)
-                                .append(":")
-                                .append(resolvedType.properties().get(property));
-                    }
-
                     hoverText.append("\n```\n\n");
                 }
             }
@@ -647,6 +638,9 @@ class LspDocument implements ErrorEventListener {
         this.client = remoteProxy;
     }
 
+    /**
+     * Adds the workspace URI to the global workspace folders.
+     */
     private void updateWorkspace(String client) {
         Workspace.FOLDERS.add(Path.of(new File(URI.create(client)).getPath()).getParent());
     }

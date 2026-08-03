@@ -6,7 +6,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Represents a comparison between properties of two component inputs.
+ * Represents a comparison between properties of two component inputs. An example is
+ * `tree.numBranches == branchRates.num`. Such constraints can be used to formalize
+ * conditions that have to be met such that a generator can be applied.
+ * The constraints are usually given as strings by the JSON component definitions. This
+ * class can be used to parse these strings.
  */
 public class ParsedTypeConstraint {
     private static final Pattern CONSTRAINT_PATTERN =
@@ -30,10 +34,6 @@ public class ParsedTypeConstraint {
      * @throws IllegalArgumentException if the constraint does not compare two input properties
      */
     public ParsedTypeConstraint(String constraint) {
-        if (constraint == null) {
-            throw new IllegalArgumentException("Type constraint cannot be null.");
-        }
-
         Matcher matcher = CONSTRAINT_PATTERN.matcher(constraint);
         if (!matcher.matches()) {
             throw new IllegalArgumentException(

@@ -86,8 +86,6 @@ public class PhyloSpecRunner implements ErrorEventListener {
             this.errorDetected(error.toError(range));
         }
 
-        System.exit(1);
-
         StochasticityResolver stochasticityResolver = new StochasticityResolver();
         stochasticityResolver.visitStatements(statements);
 
