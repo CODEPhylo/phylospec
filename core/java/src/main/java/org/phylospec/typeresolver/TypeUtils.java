@@ -4,10 +4,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.phylospec.Utils;
-import org.phylospec.components.Argument;
-import org.phylospec.components.ComponentResolver;
-import org.phylospec.components.Generator;
-import org.phylospec.components.Type;
+import org.phylospec.components.*;
 
 public class TypeUtils {
 
@@ -56,7 +53,7 @@ public class TypeUtils {
      * the resolved arguments and uses that to build the possible return
      * types.
      */
-    static Set<ResolvedType> resolveGeneratedType(
+    static ResolvedGeneratorApplication resolveGeneratedType(
             Generator generator,
             Map<String, Set<ResolvedType>> resolvedArguments,
             String firstArgumentName,
@@ -87,6 +84,7 @@ public class TypeUtils {
         // check passed types and resolve type parameters
 
         Map<String, List<ResolvedType>> possibleParameterTypeSets = new HashMap<>();
+        Map<String, Set<ResolvedType>> possibleArgumentTypeSets = new HashMap<>();
         for (Argument parameter : parameters) {
             String parameterName = parameter.getName();
 
@@ -94,7 +92,12 @@ public class TypeUtils {
 
             if (resolvedArgumentTypeSet == null && parameter == parameters.getFirst()) {
                 // there might be an unnamed argument
-                resolvedArgumentTypeSet = resolvedArguments.get(firstArgumentName);
+                parameterName = firstArgumentName;
+                resolvedArgumentTypeSet = resolvedArguments.get(parameterName);
+            }
+
+            if (parameterName == null) {
+                parameterName = parameters.getFirst().getName();
             }
 
             if (resolvedArgumentTypeSet == null) {
@@ -115,6 +118,7 @@ public class TypeUtils {
             // updated with the corresponding types for type parameters
 
             boolean foundMatch = false;
+            Set<ResolvedType> matchingArgumentTypeSet = new HashSet<>();
             for (ResolvedType possibleArgumentType : resolvedArgumentTypeSet) {
                 if (TypeUtils.checkAssignabilityAndResolveTypeParameters(
                         parameter.getType(),
@@ -123,8 +127,10 @@ public class TypeUtils {
                         possibleParameterTypeSets,
                         componentResolver)) {
                     foundMatch = true;
+                    matchingArgumentTypeSet.add(possibleArgumentType);
                 }
             }
+            possibleArgumentTypeSets.put(parameterName, matchingArgumentTypeSet);
 
             if (!foundMatch) {
                 throw new TypeError(
@@ -134,7 +140,7 @@ public class TypeUtils {
                                 + parameterName
                                 + "`.",
                         "You need to use a value of type '"
-                                + ComponentResolver.getUnqualifiedName(parameter.getType())
+                                + new ParsedType(parameter.getType()).getAtomicTypeName()
                                 + "'.");
             }
         }
@@ -156,57 +162,14 @@ public class TypeUtils {
         // construct return type
 
         String returnTypeName = generator.getGeneratedType();
-        return ResolvedType.fromString(returnTypeName, parameterTypeSets, componentResolver);
+        return new ResolvedGeneratorApplication(
+                ResolvedType.fromString(returnTypeName, parameterTypeSets, componentResolver),
+                possibleArgumentTypeSets);
     }
 
-    /**
-     * Checks whether the given type String (e.g. {@code "Vector<Real>"}) is a generic.
-     */
-    static boolean isGeneric(String typeString) {
-        return typeString.contains("<");
-    }
-
-    /**
-     * Strips the generic part of the type name (e.g. {@code "Vector<Real>"} to {@code "Vector"}).
-     */
-    public static String stripGenerics(String typeString) {
-        if (isGeneric(typeString)) {
-            return typeString.substring(0, typeString.indexOf("<"));
-        } else {
-            return typeString;
-        }
-    }
-
-    /**
-     * Returns a list containing the type strings of the generic type parameters. Supports nested
-     * generics like {@code "Vector<Pair<Real, Real>>"}
-     */
-    public static List<String> parseParameterTypes(String typeString) {
-        if (!isGeneric(typeString)) return new ArrayList<>();
-
-        int numNestedGenerics = 0;
-        int lastStart = typeString.indexOf("<") + 1;
-        List<String> typeParameterNames = new ArrayList<>();
-
-        for (int i = lastStart; i < typeString.length() - 1; i++) {
-            char character = typeString.charAt(i);
-
-            if (character == ',' && numNestedGenerics == 0) {
-                typeParameterNames.add(typeString.substring(lastStart, i).trim());
-                lastStart = i + 1;
-            }
-
-            if (character == '<') {
-                numNestedGenerics++;
-            }
-            if (character == '>') {
-                numNestedGenerics--;
-            }
-        }
-        typeParameterNames.add(typeString.substring(lastStart, typeString.length() - 1).trim());
-
-        return typeParameterNames;
-    }
+    record ResolvedGeneratorApplication(
+            Set<ResolvedType> generatedTypeSet, Map<String, Set<ResolvedType>> resolvedArguments) {}
+    ;
 
     /**
      * Checks if {@code query} covers {@code reference}. Type A covers type B if A = B or if A extends B.
@@ -398,7 +361,9 @@ public class TypeUtils {
             return true;
         }
 
-        if (!isGeneric(requiredTypeName)) {
+        ParsedType parsedRequiredType = new ParsedType(requiredTypeName);
+
+        if (!parsedRequiredType.isGeneric()) {
             Set<ResolvedType> requiredTypeSet =
                     ResolvedType.fromString(requiredTypeName, componentResolver, true);
 
@@ -412,7 +377,7 @@ public class TypeUtils {
         }
 
         Type requiredTypeComponent = componentResolver.resolveType(requiredTypeName);
-        List<String> requiredParameterTypeNames = parseParameterTypes(requiredTypeName);
+        List<ParsedType> requiredParameterTypeNames = parsedRequiredType.getTypeParameters();
 
         // we look at all parents of resolvedType to find the type matching the given
         // requiredTypeName
@@ -436,7 +401,7 @@ public class TypeUtils {
                     boolean foundMatchForAll = true;
                     for (int i = 0; i < requiredParameterTypeNames.size(); i++) {
                         if (!checkAssignabilityAndResolveTypeParameters(
-                                requiredParameterTypeNames.get(i),
+                                requiredParameterTypeNames.get(i).getTypeString(),
                                 type.getParameterTypes().get(type.getParametersNames().get(i)),
                                 typeParameterNames,
                                 localResolvedTypeParameterTypes,

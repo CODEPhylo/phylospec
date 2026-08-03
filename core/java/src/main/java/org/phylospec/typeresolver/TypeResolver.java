@@ -7,6 +7,8 @@ import org.phylospec.ast.*;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
 import org.phylospec.components.Type;
+import org.phylospec.errors.Error;
+import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.lexer.TokenType;
 
 /// This class traverses an AST statement and resolves the types for each
@@ -45,14 +47,21 @@ public class TypeResolver
 
     AstPrinter printer;
 
+    private final List<ErrorEventListener> eventListeners;
+
     public TypeResolver(ComponentResolver componentResolver) {
         this.componentResolver = componentResolver;
         this.typeMatcher = new TypeMatcher(componentResolver);
         this.resolvedTypes = new HashMap<>();
         this.scopedVariableTypes = new ArrayList<>();
         this.printer = new AstPrinter();
+        this.eventListeners = new ArrayList<>();
 
         createScope();
+    }
+
+    public void registerEventListener(ErrorEventListener listener) {
+        this.eventListeners.add(listener);
     }
 
     /**
@@ -906,10 +915,11 @@ public class TypeResolver
         Set<String> errorMessages = new HashSet<>();
         for (Generator generator : generators) {
             try {
-                Set<ResolvedType> possibleGeneratorReturnTypes =
+                TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication =
                         TypeUtils.resolveGeneratedType(
                                 generator, resolvedArguments, firstArgumentName, componentResolver);
-                possibleReturnTypes.addAll(possibleGeneratorReturnTypes);
+                possibleReturnTypes.addAll(resolvedGeneratorApplication.generatedTypeSet());
+
             } catch (TypeError e) {
                 e.attachAstNode(expr);
                 lastError = e;
@@ -1273,5 +1283,11 @@ public class TypeResolver
         return getVariableNames().stream()
                 .min(Comparator.comparingInt(name -> Utils.editDistance(queryVariable, name)))
                 .orElse("");
+    }
+
+    private void raiseWarning(Error warning) {
+        for (ErrorEventListener eventListener : eventListeners) {
+            eventListener.warningDetected(warning);
+        }
     }
 }

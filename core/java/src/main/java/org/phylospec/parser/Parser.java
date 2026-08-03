@@ -987,6 +987,7 @@ public class Parser {
         Range endRange = tokens.get(current - 1).range;
         Range astNodeRange = Range.combine(startRange, endRange);
         astNodeRanges.put(newAstNode, astNodeRange);
+        newAstNode.attachRange(astNodeRange);
 
         return newAstNode;
     }
