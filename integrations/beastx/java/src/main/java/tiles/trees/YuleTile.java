@@ -5,6 +5,7 @@ import dr.evolution.util.Units;
 import dr.evomodel.speciation.BirthDeathGernhard08Model;
 import dr.evomodel.speciation.SpeciationLikelihood;
 import dr.evomodel.tree.DefaultTreeModel;
+import dr.evomodel.tree.TreeModel;
 import dr.inference.model.Parameter;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.NonNegativeReal;
@@ -18,7 +19,7 @@ import tiling.params.BeastXParameters;
 import java.util.IdentityHashMap;
 
 public class YuleTile extends GeneratorTile<
-        BoundDistribution<DefaultTreeModel, SpeciationLikelihood>,
+        BoundDistribution<TreeModel, SpeciationLikelihood>,
         BeastXState
         > {
 
@@ -37,7 +38,7 @@ public class YuleTile extends GeneratorTile<
             new GeneratorTileInput<>("taxa");
 
     @Override
-    public BoundDistribution<DefaultTreeModel, SpeciationLikelihood> applyTile(
+    public BoundDistribution<TreeModel, SpeciationLikelihood> applyTile(
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
@@ -65,18 +66,14 @@ public class YuleTile extends GeneratorTile<
                         Units.Type.YEARS
                 );
 
-        SpeciationLikelihood likelihood =
-                new SpeciationLikelihood(
-                        defaultTreeModel,
-                        yuleModel,
-                        "yulePrior"
-                );
-
         return new BoundDistribution<>(
-                likelihood,
                 defaultTreeModel,
                 treeModel -> {
-                    // SpeciationLikelihood receives the tree in its constructor.
+                    return new SpeciationLikelihood(
+                            treeModel,
+                            yuleModel,
+                            "yulePrior"
+                    );
                 }
         );
     }

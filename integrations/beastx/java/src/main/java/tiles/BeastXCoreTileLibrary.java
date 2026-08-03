@@ -83,6 +83,7 @@ import tiles.observations.ObservedAsAlignmentTile;
 import tiles.observations.RootObservedBetweenTile;
 import tiles.observations.MRCAObservedBetweenTile;
 import tiles.observations.ObservedAsTile;
+import tiles.observations.ObservedAsTreeTile;
 import tiles.observations.ObservedAsNonNegativeIntTile;
 import tiles.observations.ObservedAsIntTile;
 
@@ -143,6 +144,7 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new DrawTile());
         tiles.add(new TreeDrawTile());
         tiles.add(new ObservedAsAlignmentTile());
+        tiles.add(new ObservedAsTreeTile());
         tiles.add(new ObservedAsTile());
         tiles.add(new ObservedAsNonNegativeIntTile());
         tiles.add(new ObservedAsIntTile());

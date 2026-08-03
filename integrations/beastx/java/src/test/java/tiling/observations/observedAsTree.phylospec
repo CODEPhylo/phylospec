@@ -1,0 +1,24 @@
+Tree treeData = fromNewick(
+    "((A:1.0,B:1.0):1.0,(C:1.0,D:1.0):1.0);"
+)
+
+PositiveReal birthRate ~ LogNormal(
+    logMean=0.0,
+    logSd=1.0
+)
+
+Tree tree ~ Yule(
+    birthRate=birthRate,
+    taxa=taxa(treeData)
+) observed as treeData
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: birthRate
+// P: birthRate_prior
+// TM: tree
+// L: tree_likelihood
+// EXPECTED BEASTX STATE

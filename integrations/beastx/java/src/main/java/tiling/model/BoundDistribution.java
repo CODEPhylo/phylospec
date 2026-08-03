@@ -1,6 +1,7 @@
 package tiling.model;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Connects a BEAST X likelihood to the PhyloSpec state object it generates or
@@ -13,10 +14,11 @@ import java.util.function.Consumer;
  */
 public class BoundDistribution<T, O> {
 
-    public final O distribution;
+    public O distribution;
     public T stateNode;
     public final StartingTreeSpec startingTreeSpec;
     private final Consumer<T> setStateNodeFunc;
+    private final Function<T, O> distributionFactory;
 
     public BoundDistribution(O distribution, T defaultState, Consumer<T> setStateNodeFunc) {
         this(distribution, defaultState, StartingTreeSpec.fixedNewick(), setStateNodeFunc);
@@ -32,14 +34,46 @@ public class BoundDistribution<T, O> {
         this.stateNode = defaultState;
         this.startingTreeSpec = startingTreeSpec;
         this.setStateNodeFunc = setStateNodeFunc;
+        this.distributionFactory = null;
+    }
+
+    /**
+     * Creates a distribution whose BEAST X likelihood must be constructed only
+     * after its final state object is known. This is required for APIs such as
+     * {@code SpeciationLikelihood}, which receive their tree in the constructor
+     * and cannot be rebound afterwards.
+     */
+    public BoundDistribution(
+            T defaultState,
+            StartingTreeSpec startingTreeSpec,
+            Function<T, O> distributionFactory
+    ) {
+        this.distribution = null;
+        this.stateNode = defaultState;
+        this.startingTreeSpec = startingTreeSpec;
+        this.setStateNodeFunc = null;
+        this.distributionFactory = distributionFactory;
+    }
+
+    public BoundDistribution(
+            T defaultState,
+            Function<T, O> distributionFactory
+    ) {
+        this(defaultState, StartingTreeSpec.fixedNewick(), distributionFactory);
     }
 
     public void bind() {
-        this.setStateNodeFunc.accept(this.stateNode);
+        bind(this.stateNode);
     }
 
     public void bind(T observedStateNode) {
-        this.setStateNodeFunc.accept(observedStateNode);
         this.stateNode = observedStateNode;
+
+        if (this.distributionFactory != null) {
+            this.distribution = this.distributionFactory.apply(observedStateNode);
+            return;
+        }
+
+        this.setStateNodeFunc.accept(observedStateNode);
     }
 }

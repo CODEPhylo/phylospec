@@ -315,6 +315,12 @@ public class LoggerBuilder {
             }
         }
 
+        for (Likelihood candidate : beastState.observedTreeDistributions.values()) {
+            if (loggableName.equals(candidate.getId())) {
+                return candidate;
+            }
+        }
+
         for (Likelihood candidate : beastState.calibrationPriorDistributions) {
             if (loggableName.equals(candidate.getId())) {
                 return candidate;

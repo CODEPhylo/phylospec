@@ -142,7 +142,10 @@ public class BeastXStateScriptFilesTest {
                             .collect(Collectors.toSet());
 
             Set<String> actualTreeModelIds =
-                    beastState.treePriorDistributions.keySet().stream()
+                    Stream.concat(
+                                    beastState.treePriorDistributions.keySet().stream(),
+                                    beastState.observedTreeDistributions.keySet().stream()
+                            )
                             .map(TreeModel::getId)
                             .collect(Collectors.toSet());
 
@@ -157,7 +160,10 @@ public class BeastXStateScriptFilesTest {
                             .collect(Collectors.toSet());
 
             Set<String> actualLikelihoodIds =
-                    beastState.likelihoodDistributions.stream()
+                    Stream.concat(
+                                    beastState.likelihoodDistributions.stream(),
+                                    beastState.observedTreeDistributions.values().stream()
+                            )
                             .map(Likelihood::getId)
                             .collect(Collectors.toSet());
 

@@ -101,8 +101,13 @@ public class BeastXModel {
     }
 
     private static CompoundLikelihood buildLikelihood(BeastXState beastState) {
+        List<Likelihood> likelihoods =
+                new ArrayList<>(beastState.likelihoodDistributions);
+
+        likelihoods.addAll(beastState.observedTreeDistributions.values());
+
         CompoundLikelihood likelihood =
-                new CompoundLikelihood(new ArrayList<>(beastState.likelihoodDistributions));
+                new CompoundLikelihood(likelihoods);
 
         likelihood.setId(beastState.getAvailableID("likelihood"));
 

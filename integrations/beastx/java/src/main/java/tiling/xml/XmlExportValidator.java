@@ -52,6 +52,7 @@ public class XmlExportValidator {
         validateMCMCLoggerRequirement(state);
         validateParameterPriors(state);
         validateTreePriors(state);
+        validateObservedTreeDistributions(state);
     }
 
     private void validateLikelihoodExportBoundary(BeastXState state) {
@@ -72,6 +73,7 @@ public class XmlExportValidator {
         if (
                 state.priorDistributions.isEmpty()
                         && state.treePriorDistributions.isEmpty()
+                        && state.observedTreeDistributions.isEmpty()
                         && state.likelihoodDistributions.isEmpty()
         ) {
             throw unsupported("At least one scalar prior, tree prior, or likelihood is required.");
@@ -147,6 +149,19 @@ public class XmlExportValidator {
             } else {
                 throw unsupported("Only SpeciationLikelihood and CoalescentLikelihood tree priors are supported.");
             }
+        }
+    }
+
+    private void validateObservedTreeDistributions(BeastXState state) {
+        for (AbstractModelLikelihood distribution : state.observedTreeDistributions.values()) {
+            if (distribution instanceof SpeciationLikelihood speciationLikelihood) {
+                validateSpeciationTreePrior(speciationLikelihood);
+                continue;
+            }
+
+            throw unsupported(
+                    "Only observed Yule and BirthDeath tree distributions are supported."
+            );
         }
     }
 
