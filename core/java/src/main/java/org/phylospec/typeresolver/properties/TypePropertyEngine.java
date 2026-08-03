@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
+import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
 import org.phylospec.errors.Error;
 import org.phylospec.errors.ErrorEventListener;
@@ -34,6 +35,36 @@ public class TypePropertyEngine {
     private void raiseWarning(Error warning) {
         for (ErrorEventListener eventListener : eventListeners) {
             eventListener.warningDetected(warning);
+        }
+    }
+
+    public void resolveAssignment(
+            Set<ResolvedType> resolvedVariableTypeSet,
+            Set<ResolvedType> resolvedExpressionTypeSet) {
+        for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
+            // find the matching resolved types
+            for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
+                if (resolvedVariableType.getName().equals(resolvedExpressionType.getName())) {
+                    copyProperties(resolvedExpressionType, resolvedVariableType);
+                }
+            }
+        }
+    }
+
+    public void resolveDraw(
+            Set<ResolvedType> resolvedVariableTypeSet,
+            Set<ResolvedType> resolvedExpressionTypeSet,
+            ComponentResolver componentResolver) {
+        for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
+            for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
+                ResolvedType unwrappedExpressionType =
+                        TypeUtils.recoverTypeParameter(
+                                "phylospec.types.Distribution",
+                                "T",
+                                resolvedExpressionType,
+                                componentResolver);
+                copyProperties(unwrappedExpressionType, resolvedVariableType);
+            }
         }
     }
 
