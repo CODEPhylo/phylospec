@@ -50,7 +50,7 @@ export async function activate(context: vscode.ExtensionContext) {
   }
 
   try {
-    // startServer(jarPath);
+    startServer(jarPath);
   } catch (error) {
     vscode.window.showErrorMessage(`Failed to start PhyloSpec LSP: ${error}`);
     return;

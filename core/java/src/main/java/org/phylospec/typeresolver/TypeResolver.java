@@ -218,17 +218,7 @@ public class TypeResolver
             }
         }
 
-        // we attach the type properties to the variable types
-
-        for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
-            // find the matching resolved types
-            for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
-                if (resolvedVariableType.getName().equals(resolvedExpressionType.getName())) {
-                    typePropertyEngine.copyProperties(resolvedExpressionType, resolvedVariableType);
-                }
-            }
-        }
-
+        typePropertyEngine.resolveAssignment(resolvedVariableTypeSet, resolvedExpressionTypeSet);
         enforceUniqueness(stmt.name, stmt);
 
         remember(stmt.name, resolvedVariableTypeSet);
@@ -313,20 +303,8 @@ public class TypeResolver
             }
         }
 
-        // we attach the type properties to the variable types
-
-        for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
-            for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
-                ResolvedType unwrappedExpressionType =
-                        TypeUtils.recoverTypeParameter(
-                                "phylospec.types.Distribution",
-                                "T",
-                                resolvedExpressionType,
-                                componentResolver);
-                typePropertyEngine.copyProperties(unwrappedExpressionType, resolvedVariableType);
-            }
-        }
-
+        typePropertyEngine.resolveDraw(
+                resolvedVariableTypeSet, resolvedExpressionTypeSet, componentResolver);
         enforceUniqueness(stmt.name, stmt);
 
         remember(stmt.name, resolvedVariableTypeSet);
