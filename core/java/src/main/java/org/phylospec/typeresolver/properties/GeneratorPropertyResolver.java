@@ -36,13 +36,18 @@ public class GeneratorPropertyResolver {
         }
     }
 
+    /**
+     * Checks the generator's declared constraints, runs any generator-specific property
+     * providers, and resolves the properties declared on the generated type, for a single call to
+     * the given generator.
+     */
     public void processGenerator(
             Expr.Call call,
             Generator generator,
             TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
         ParsedType parsedGeneratedType = new ParsedType(generator.getGeneratedType());
         checkConstraints(call, generator, resolvedGeneratorApplication);
-        resolveProviders(generator, parsedGeneratedType, resolvedGeneratorApplication);
+        resolveProviders(generator, resolvedGeneratorApplication);
         resolveGenerator(parsedGeneratedType, resolvedGeneratorApplication);
     }
 
@@ -54,11 +59,11 @@ public class GeneratorPropertyResolver {
                 resolvedGeneratorApplication.resolvedArguments();
 
         for (String constraintString : generator.getConstraints()) {
-            checkGenerator(call, constraintString, resolvedArguments);
+            checkConstraint(call, constraintString, resolvedArguments);
         }
     }
 
-    private void checkGenerator(
+    private void checkConstraint(
             Expr.Call call,
             String constraintString,
             Map<String, Set<ResolvedType>> resolvedArguments) {
@@ -102,6 +107,7 @@ public class GeneratorPropertyResolver {
                         };
 
                 if (fulfilled) {
+                    // there are type inputs for which the constraint could be fulfilled :)
                     return;
                 }
             }
@@ -118,15 +124,14 @@ public class GeneratorPropertyResolver {
 
     private void resolveProviders(
             Generator generator,
-            ParsedType parsedGeneratedType,
             TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
         Map<String, Set<ResolvedType>> resolvedArguments =
                 resolvedGeneratorApplication.resolvedArguments();
 
-        for (ResolvedType generatedType : resolvedGeneratorApplication.generatedTypeSet()) {
-            for (GeneratorPropertyProvider provider : providers) {
-                if (provider.getGenerator()
-                        .equals(generator.getNamespace() + "." + generator.getName())) {
+        for (GeneratorPropertyProvider provider : providers) {
+            if (provider.getGenerator()
+                    .equals(generator.getNamespace() + "." + generator.getName())) {
+                for (ResolvedType generatedType : resolvedGeneratorApplication.generatedTypeSet()) {
                     provider.resolveGenerator(generatedType, resolvedArguments);
                 }
             }
@@ -149,6 +154,8 @@ public class GeneratorPropertyResolver {
             ResolvedType generatedType,
             Map<String, Set<ResolvedType>> resolvedArguments) {
         // resolve the type properties of generatedType
+        // this could be either a constant assignment (e.g. `Vector<Real; num=10`) or an assignment
+        // of an input type property (e.g. `numBranches=inputTree.numBranches`).
 
         for (ParsedTypeProperty typeProperty : parsedType.getTypeProperties()) {
             if (generatedType.properties().has(typeProperty.getPropertyName())) {
@@ -160,49 +167,18 @@ public class GeneratorPropertyResolver {
             String propertyName = typeProperty.getPropertyName();
 
             if (typeProperty instanceof ParsedTypeProperty.Constant constant) {
+                // this is a constant assignment (propertyName = constant)
+
                 generatedType
                         .properties()
                         .attach(propertyName, resolveConstant(constant.getValue()));
+
             } else if (typeProperty instanceof ParsedTypeProperty.Assignment assignment) {
-                // this is an assignment (propertyName = inputName.inputPropertyName)
-                Set<ResolvedType> resolvedTypeSet =
-                        resolvedArguments.get(assignment.getInputName());
+                // this is an input type assignment (propertyName = inputName.inputPropertyName)
 
-                if (resolvedTypeSet == null || resolvedTypeSet.isEmpty()) {
-                    // we cannot determine the input types
-                    // we don't resolve this property
-                    continue;
-                }
-
-                // we now check all possible input types and resolve the property value if they all
-                // agree
-                // this is not the most general way to handle this, as there might be disagreements
-                // and then we lose track of that information
-
-                Set<Object> possiblePropertyValues = new HashSet<>();
-                for (ResolvedType resolvedType : resolvedTypeSet) {
-                    Object propertyValue =
-                            resolvedType.properties().get(assignment.getInputPropertyName());
-
-                    if (propertyValue == null) {
-                        // this input type does not have this property
-                        // we clear possiblePropertyValues such that existing property values are
-                        // not
-                        // resolved
-                        possiblePropertyValues.clear();
-                        break;
-                    }
-
-                    possiblePropertyValues.add(propertyValue);
-                }
-
-                if (possiblePropertyValues.size() == 1) {
-                    // all candidate property values agree
-                    // we resolve it
-                    generatedType
-                            .properties()
-                            .attach(propertyName, possiblePropertyValues.iterator().next());
-                }
+                generatedType
+                        .properties()
+                        .attach(propertyName, resolveAssignment(resolvedArguments, assignment));
             }
         }
 
@@ -221,6 +197,44 @@ public class GeneratorPropertyResolver {
                         parsedTypeParameters.get(index), resolvedTypeParameter, resolvedArguments);
             }
         }
+    }
+
+    private static Object resolveAssignment(
+            Map<String, Set<ResolvedType>> resolvedArguments,
+            ParsedTypeProperty.Assignment assignment) {
+        Set<ResolvedType> resolvedTypeSet = resolvedArguments.get(assignment.getInputName());
+
+        if (resolvedTypeSet == null || resolvedTypeSet.isEmpty()) {
+            // we cannot determine the input types
+            // we don't resolve this property
+            return null;
+        }
+
+        // we now check all possible input types and resolve the property value if they all
+        // agree
+        // this is not the most general way to handle this, as there might be disagreements
+        // and then we lose track of that information
+
+        Set<Object> possiblePropertyValues = new HashSet<>();
+        for (ResolvedType resolvedType : resolvedTypeSet) {
+            Object propertyValue = resolvedType.properties().get(assignment.getInputPropertyName());
+
+            if (propertyValue == null) {
+                // this input type does not have this property
+                return null;
+            }
+
+            possiblePropertyValues.add(propertyValue);
+        }
+
+        if (possiblePropertyValues.size() != 1) {
+            // not all property values agree
+            // we don't resolve this property
+            return null;
+        }
+
+        // all property values agree
+        return possiblePropertyValues.iterator().next();
     }
 
     private static Object resolveConstant(String value) {
