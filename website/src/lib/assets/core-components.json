@@ -15,13 +15,13 @@
         "name": "String",
         "description": "Text value",
         "namespace": "phylospec.types",
-        "typeProperties": ["literal"]
+        "typeProperties": ["value"]
       },
       {
         "name": "Real",
         "description": "Real-valued number",
         "namespace": "phylospec.types",
-        "typeProperties": ["literal"]
+        "typeProperties": ["value"]
       },
       {
         "name": "NonNegativeReal",
@@ -56,7 +56,7 @@
         "name": "Integer",
         "description": "Integer-valued number",
         "namespace": "phylospec.types",
-        "typeProperties": ["literal"]
+        "typeProperties": ["value"]
       },
       {
         "name": "NonNegativeInteger",
@@ -251,7 +251,7 @@
       },
       {
         "name": "linspace",
-        "generatedType": "Vector<Real; num=num.literal>",
+        "generatedType": "Vector<Real; num=num.value>",
         "namespace": "phylospec.functions.math",
         "description": "Generate a vector of evenly spaced values over a specified interval",
         "arguments": [
@@ -297,7 +297,7 @@
       },
       {
         "name": "repeat",
-        "generatedType": "Vector<T; num=num.literal>",
+        "generatedType": "Vector<T; num=num.value>",
         "namespace": "phylospec.functions.math",
         "description": "Create a vector by repeating a value n times",
         "typeParameters": [
@@ -711,14 +711,14 @@
           }
         ],
         "constraints": [
-          "start.literal <= alignment.numSites",
-          "end.literal <= alignment.numSites",
-          "start.literal <= end.literal"
+          "start.value <= alignment.numSites",
+          "end.value <= alignment.numSites",
+          "start.value <= end.value"
         ]
       },
       {
         "name": "numBranches",
-        "generatedType": "PositiveInteger<;literal=tree.numBranches>",
+        "generatedType": "PositiveInteger<;value=tree.numBranches>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of branches in a tree",
         "arguments": [
@@ -732,7 +732,7 @@
       },
       {
         "name": "numTaxa",
-        "generatedType": "PositiveInteger<;literal=alignment.numTaxa>",
+        "generatedType": "PositiveInteger<;value=alignment.numTaxa>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of taxa in an alignment",
         "arguments": [
@@ -746,7 +746,7 @@
       },
       {
         "name": "numTaxa",
-        "generatedType": "PositiveInteger<;literal=tree.numTaxa>",
+        "generatedType": "PositiveInteger<;value=tree.numTaxa>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of taxa in a tree",
         "arguments": [
@@ -760,7 +760,7 @@
       },
       {
         "name": "numSites",
-        "generatedType": "PositiveInteger<;literal=alignment.numSites>",
+        "generatedType": "PositiveInteger<;value=alignment.numSites>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of sites in an alignment",
         "arguments": [
@@ -774,7 +774,7 @@
       },
       {
         "name": "numSites",
-        "generatedType": "PositiveInteger<;literal=sequence.num>",
+        "generatedType": "PositiveInteger<;value=sequence.num>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of sites in a sequence",
         "arguments": [
@@ -791,7 +791,7 @@
       },
       {
         "name": "num",
-        "generatedType": "NonNegativeInteger<;literal=vector.num>",
+        "generatedType": "NonNegativeInteger<;value=vector.num>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of elements in a vector",
         "arguments": [
@@ -876,7 +876,7 @@
       },
       {
         "name": "numRows",
-        "generatedType": "PositiveInteger<;literal=matrix.numRows>",
+        "generatedType": "PositiveInteger<;value=matrix.numRows>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of rows in a matrix",
         "arguments": [
@@ -893,7 +893,7 @@
       },
       {
         "name": "numCols",
-        "generatedType": "PositiveInteger<;literal=matrix.numCols>",
+        "generatedType": "PositiveInteger<;value=matrix.numCols>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of columns in a matrix",
         "arguments": [
@@ -966,7 +966,7 @@
       },
       {
         "name": "IID",
-        "generatedType": "Distribution<Vector<T; num=num.literal>>",
+        "generatedType": "Distribution<Vector<T; num=num.value>>",
         "namespace": "phylospec.distributions",
         "description": "Vector of independent and identically distributed random variables",
         "typeParameters": [
@@ -1397,7 +1397,7 @@
       },
       {
         "name": "ExponentialMarkovChain",
-        "generatedType": "Distribution<Vector<Real; num=numValues.literal>>",
+        "generatedType": "Distribution<Vector<Real; num=numValues.value>>",
         "namespace": "phylospec.distributions",
         "description": "Generates a chain of auto-correlated random variables",
         "arguments": [
@@ -1906,7 +1906,7 @@
       },
       {
         "name": "DiscreteGammaInv",
-        "generatedType": "Distribution<Vector<Rate; num=numSites.literal>>",
+        "generatedType": "Distribution<Vector<Rate; num=numSites.value>>",
         "namespace": "phylospec.distributions.siterates",
         "description": "Discrete gamma site rates with a proportion of invariant sites",
         "arguments": [

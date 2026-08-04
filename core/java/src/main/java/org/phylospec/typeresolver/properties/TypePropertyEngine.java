@@ -123,7 +123,7 @@ public class TypePropertyEngine {
 
     public void resolveLiteral(Set<ResolvedType> resolvedTypeSet, Object value) {
         for (ResolvedType resolvedType : resolvedTypeSet) {
-            resolvedType.properties().attach(LITERAL, value);
+            resolvedType.properties().attach(VALUE, value);
         }
     }
 
@@ -148,8 +148,7 @@ public class TypePropertyEngine {
 
         // check the first dimension using the num property
 
-        Object firstIndexLiteral =
-                getPropertyOnAgreement(resolvedIndexTypeSets.getFirst(), LITERAL);
+        Object firstIndexLiteral = getPropertyOnAgreement(resolvedIndexTypeSets.getFirst(), VALUE);
         Object containerSize = getPropertyOnAgreement(containerTypeSet, NUM);
 
         if (firstIndexLiteral instanceof Number indexNr && containerSize instanceof Number sizeNr) {
@@ -167,8 +166,7 @@ public class TypePropertyEngine {
         // check a possible second dimension using the numCols property
 
         if (indices.size() == 2) {
-            Object secondIndexLiteral =
-                    getPropertyOnAgreement(resolvedIndexTypeSets.get(1), LITERAL);
+            Object secondIndexLiteral = getPropertyOnAgreement(resolvedIndexTypeSets.get(1), VALUE);
             Object numCols = getPropertyOnAgreement(containerTypeSet, NUM_COLS);
 
             if (secondIndexLiteral instanceof Number indexNr && numCols instanceof Number sizeNr) {
@@ -192,8 +190,8 @@ public class TypePropertyEngine {
         // check if type range has literal properties and determine the result num property if
         // possible
 
-        Object fromLiteral = getPropertyOnAgreement(fromTypeSet, LITERAL);
-        Object toLiteral = getPropertyOnAgreement(toTypeSet, LITERAL);
+        Object fromLiteral = getPropertyOnAgreement(fromTypeSet, VALUE);
+        Object toLiteral = getPropertyOnAgreement(toTypeSet, VALUE);
         if (fromLiteral instanceof Number fromNumber && toLiteral instanceof Number toNumber) {
             long fromValue = fromNumber.longValue();
             long toValue = toNumber.longValue();

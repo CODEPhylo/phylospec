@@ -23,5 +23,5 @@ Vector<Real> vector2 = [          10           ]
 
 // EXPECT TYPES
 // Vector<Real; num=1>
-// Vector<Real<;literal=10>; num=1>
+// Vector<Real<;value=10>; num=1>
 // EXPECT TYPES
