@@ -1,9 +1,7 @@
 package org.phylospec.typeresolver.properties;
 
 import java.nio.file.Path;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import org.phylospec.typeresolver.ResolvedType;
 
 /**
@@ -13,10 +11,27 @@ import org.phylospec.typeresolver.ResolvedType;
  */
 public interface GeneratorPropertyProvider {
 
+    /**
+     * Returns the name of the generator including the namespace for which this provider is applicable.
+     */
     String getGenerator();
 
+    /**
+     * Resolves the properties for the generatedType based on the resolved arguments.
+     */
     void resolveGenerator(
             ResolvedType generatedType, Map<String, Set<ResolvedType>> resolvedArguments);
+
+    /**
+     * Returns all providers that can be discovered through {@link java.util.ServiceLoader}.
+     */
+    static List<GeneratorPropertyProvider> loadProviders() {
+        List<GeneratorPropertyProvider> providers = new ArrayList<>();
+        for (GeneratorPropertyProvider hook : ServiceLoader.load(GeneratorPropertyProvider.class)) {
+            providers.add(hook);
+        }
+        return providers;
+    }
 
     /**
      * Resolves a generator argument to its literal string value, if all of its candidate types
