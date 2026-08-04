@@ -15,6 +15,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.phylospec.workspace.Workspace;
 
+/**
+ * Cheaply extracts type properties (taxa counts, site counts, branch counts, row counts) from
+ * small alignment, tree, and CSV files without fully parsing them into their normal in-memory
+ * representations. Results are cached per file and invalidated when the file's size or
+ * modification time changes.
+ */
 final class LightweightFileParsers {
 
     private static final long MAX_FILE_SIZE = 5L * 1024 * 1024;
