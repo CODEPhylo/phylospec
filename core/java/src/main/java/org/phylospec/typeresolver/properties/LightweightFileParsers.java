@@ -27,16 +27,11 @@ final class LightweightFileParsers {
     private static final int MAX_CACHED_FILES = 256;
     private static final int MAX_NEWICK_LENGTH = 5 * 1024 * 1024;
     private static final int MAX_NEWICK_DEPTH = 10_000;
-    private static final ConcurrentHashMap<CacheKey, CacheEntry> FILE_CACHE =
-            new ConcurrentHashMap<>();
-    private static final Pattern NTAX_PATTERN =
-            Pattern.compile("\\bntax\\s*=\\s*(\\d+)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern NCHAR_PATTERN =
-            Pattern.compile("\\bnchar\\s*=\\s*(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final ConcurrentHashMap<CacheKey, CacheEntry> FILE_CACHE = new ConcurrentHashMap<>();
+    private static final Pattern NTAX_PATTERN = Pattern.compile("\\bntax\\s*=\\s*(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern NCHAR_PATTERN = Pattern.compile("\\bnchar\\s*=\\s*(\\d+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern NEXUS_TREE_PATTERN =
-            Pattern.compile(
-                    "\\b(?:tree|utree)\\b[^=;]*=\\s*(.+?;)",
-                    Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+            Pattern.compile("\\b(?:tree|utree)\\b[^=;]*=\\s*(.+?;)", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
     private LightweightFileParsers() {}
 
@@ -175,14 +170,11 @@ final class LightweightFileParsers {
         return Optional.empty();
     }
 
-    private static <T> Optional<T> parseCached(
-            Path path, ParserKind parserKind, Function<String, Optional<T>> parser) {
+    private static <T> Optional<T> parseCached(Path path, ParserKind parserKind, Function<String, Optional<T>> parser) {
         try {
             CacheKey key = new CacheKey(path.toAbsolutePath().normalize(), parserKind);
             evictIfFull(key);
-            CacheEntry entry =
-                    FILE_CACHE.compute(
-                            key, (ignored, cached) -> loadCacheEntry(key.path(), cached, parser));
+            CacheEntry entry = FILE_CACHE.compute(key, (ignored, cached) -> loadCacheEntry(key.path(), cached, parser));
             if (entry == null) return Optional.empty();
             return castResult(entry.result());
         } catch (RuntimeException ignored) {
@@ -190,8 +182,7 @@ final class LightweightFileParsers {
         }
     }
 
-    private static <T> CacheEntry loadCacheEntry(
-            Path path, CacheEntry cached, Function<String, Optional<T>> parser) {
+    private static <T> CacheEntry loadCacheEntry(Path path, CacheEntry cached, Function<String, Optional<T>> parser) {
         try {
             for (int attempt = 0; attempt < 2; attempt++) {
                 BasicFileAttributes attributes = readSmallFileAttributes(path);
@@ -289,8 +280,7 @@ final class LightweightFileParsers {
     private record FileSignature(long size, FileTime lastModifiedTime, Object fileKey) {
 
         private static FileSignature from(BasicFileAttributes attributes) {
-            return new FileSignature(
-                    attributes.size(), attributes.lastModifiedTime(), attributes.fileKey());
+            return new FileSignature(attributes.size(), attributes.lastModifiedTime(), attributes.fileKey());
         }
     }
 
@@ -388,10 +378,7 @@ final class LightweightFileParsers {
             int start = index;
             while (index < value.length()) {
                 char current = value.charAt(index);
-                if (Character.isWhitespace(current)
-                        || isStructural(current)
-                        || current == '['
-                        || current == ']') {
+                if (Character.isWhitespace(current) || isStructural(current) || current == '[' || current == ']') {
                     break;
                 }
                 index++;

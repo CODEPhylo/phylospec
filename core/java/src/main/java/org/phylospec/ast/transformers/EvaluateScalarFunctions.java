@@ -16,10 +16,8 @@ public class EvaluateScalarFunctions extends AstTransformer {
                 case "exp" -> new Expr.Literal(Math.exp(this.get("x", expr.arguments, true)));
                 case "sqrt" -> new Expr.Literal(Math.sqrt(this.get("x", expr.arguments, true)));
                 case "log" ->
-                        new Expr.Literal(
-                                Math.log(this.get("x", expr.arguments, true))
-                                        / Math.log(
-                                                this.get("base", expr.arguments, false, Math.E)));
+                    new Expr.Literal(Math.log(this.get("x", expr.arguments, true))
+                            / Math.log(this.get("base", expr.arguments, false, Math.E)));
                 default -> super.visitCall(expr);
             };
         } catch (UnpackError e) {

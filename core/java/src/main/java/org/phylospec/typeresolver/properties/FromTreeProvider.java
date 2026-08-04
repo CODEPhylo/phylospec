@@ -14,16 +14,12 @@ public class FromTreeProvider implements GeneratorPropertyProvider {
     }
 
     @Override
-    public void resolveGenerator(
-            ResolvedType generatedType, Map<String, Set<ResolvedType>> resolvedArguments) {
+    public void resolveGenerator(ResolvedType generatedType, Map<String, Set<ResolvedType>> resolvedArguments) {
         GeneratorPropertyProvider.resolveFile(resolvedArguments, "file")
                 .flatMap(LightweightFileParsers::parseTree)
-                .ifPresent(
-                        properties -> {
-                            generatedType
-                                    .properties()
-                                    .attach(NUM_BRANCHES, properties.numBranches());
-                            generatedType.properties().attach(NUM_TAXA, properties.numTaxa());
-                        });
+                .ifPresent(properties -> {
+                    generatedType.properties().attach(NUM_BRANCHES, properties.numBranches());
+                    generatedType.properties().attach(NUM_TAXA, properties.numTaxa());
+                });
     }
 }

@@ -16,8 +16,7 @@ public abstract class Stmt extends AstNode {
     public abstract String getName();
 
     /** Identifies which block a statement belongs to. */
-    public sealed interface Block
-            permits Block.NoBlock, Block.Data, Block.Model, Block.Mcmc, Block.Custom {
+    public sealed interface Block permits Block.NoBlock, Block.Data, Block.Model, Block.Mcmc, Block.Custom {
         record NoBlock() implements Block {}
 
         record Data() implements Block {
@@ -162,8 +161,7 @@ public abstract class Stmt extends AstNode {
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Decorated decorated = (Decorated) o;
-            return Objects.equals(decorator, decorated.decorator)
-                    && Objects.equals(statement, decorated.statement);
+            return Objects.equals(decorator, decorated.decorator) && Objects.equals(statement, decorated.statement);
         }
 
         @Override

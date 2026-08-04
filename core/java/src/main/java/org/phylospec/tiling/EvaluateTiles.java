@@ -123,39 +123,36 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
         List<Tile<?, S>> bestTiles = new ArrayList<>();
         boolean[] foundBestTile = new boolean[] {false};
 
-        Utils.visitOrderedCombinations(
-                possibleTiles,
-                tiles -> {
-                    if (foundBestTile[0]) {
-                        // we've already found the (greedy) best one
-                        return;
-                    }
+        Utils.visitOrderedCombinations(possibleTiles, tiles -> {
+            if (foundBestTile[0]) {
+                // we've already found the (greedy) best one
+                return;
+            }
 
-                    // check for consistency across the statement tiles
+            // check for consistency across the statement tiles
 
-                    IdentityHashMap<AstNode, Tile<?, ?>> assignments = new IdentityHashMap<>();
+            IdentityHashMap<AstNode, Tile<?, ?>> assignments = new IdentityHashMap<>();
 
-                    for (Tile<?, ?> tile : tiles) {
-                        if (tile.isInconsistent(assignments)) return;
-                    }
+            for (Tile<?, ?> tile : tiles) {
+                if (tile.isInconsistent(assignments)) return;
+            }
 
-                    // we found a consistent tiling
-                    // we sorted the candidates by weight earlier, but there could still be a
-                    // lower-weight consistent tiling
-                    // however, we just greedily pick the first consistent one because otherwise
-                    // this is exponential and
-                    // might blow up quickly
+            // we found a consistent tiling
+            // we sorted the candidates by weight earlier, but there could still be a
+            // lower-weight consistent tiling
+            // however, we just greedily pick the first consistent one because otherwise
+            // this is exponential and
+            // might blow up quickly
 
-                    bestTiles.clear();
-                    bestTiles.addAll(tiles);
-                    foundBestTile[0] = true;
-                });
+            bestTiles.clear();
+            bestTiles.addAll(tiles);
+            foundBestTile[0] = true;
+        });
 
         if (!foundBestTile[0]) {
             // no consistent tiling found
             // this is very rare
-            throw new TileApplicationError(
-                    "Unsupported operation.", "Your model is not supported by your engine.");
+            throw new TileApplicationError("Unsupported operation.", "Your model is not supported by your engine.");
         }
 
         this.bestTiles = bestTiles;
@@ -200,11 +197,7 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
             Set<Tile<?, S>> evaluatedTiles;
             try {
                 evaluatedTiles =
-                        tile.tryToTile(
-                                node,
-                                this.evaluatedTiles,
-                                this.variableResolver,
-                                this.stochasticityResolver);
+                        tile.tryToTile(node, this.evaluatedTiles, this.variableResolver, this.stochasticityResolver);
             } catch (FailedTilingAttempt.Irrelevant e) {
                 continue;
             } catch (FailedTilingAttempt.RejectedCascade e) {
@@ -264,8 +257,7 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
                     leaf, "Unsupported operation.", this.getBestReason(this.allFailures.get(leaf)));
         }
         // fallback: root failed but every tile threw Irrelevant (no tile targets this node type)
-        throw new TileApplicationError(
-                root, "Unsupported operation.", "Your engine does not support this operation.");
+        throw new TileApplicationError(root, "Unsupported operation.", "Your engine does not support this operation.");
     }
 
     /**
@@ -370,8 +362,7 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
         FailedTilingAttempt.RejectedBoundary boundary = null;
         FailedTilingAttempt.Rejected rejected = null;
         for (FailedTilingAttempt f : failures) {
-            if (f instanceof FailedTilingAttempt.RejectedBoundary rb && boundary == null)
-                boundary = rb;
+            if (f instanceof FailedTilingAttempt.RejectedBoundary rb && boundary == null) boundary = rb;
             else if (f instanceof FailedTilingAttempt.Rejected r && rejected == null) rejected = r;
         }
         if (boundary != null) return boundary.getReason();

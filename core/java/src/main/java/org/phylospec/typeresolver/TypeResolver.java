@@ -35,8 +35,7 @@ import org.phylospec.typeresolver.properties.TypePropertyEngine;
 /// Set<ResolvedType> exprType = resolver.resolveType(<some AST expression>);
 /// ResolvedType varType = resolver.resolveVariable(<some var name>);
 /// ```
-public class TypeResolver
-        implements AstVisitor<Set<ResolvedType>, Set<ResolvedType>, Set<ResolvedType>> {
+public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedType>, Set<ResolvedType>> {
 
     private final ComponentResolver componentResolver;
     private final TypeMatcher typeMatcher;
@@ -139,8 +138,7 @@ public class TypeResolver
 
         Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
 
-        if (!TypeUtils.canBeAssignedTo(
-                resolvedExpressionTypeSet, resolvedVariableTypeSet, componentResolver)) {
+        if (!TypeUtils.canBeAssignedTo(resolvedExpressionTypeSet, resolvedVariableTypeSet, componentResolver)) {
             // expression cannot be assigned to this variable
             // we check if a draw would fix the problem and raise a more helpful message in that
             // case
@@ -151,14 +149,14 @@ public class TypeResolver
                         expressionType,
                         x -> {
                             if (x.getName().equals("phylospec.types.Distribution")) {
-                                resolvedDistributionTypeSet.add(x.getParameterTypes().get("T"));
+                                resolvedDistributionTypeSet.add(
+                                        x.getParameterTypes().get("T"));
                             }
                             return TypeUtils.Visitor.CONTINUE;
                         },
                         componentResolver);
             }
-            if (TypeUtils.canBeAssignedTo(
-                    resolvedDistributionTypeSet, resolvedVariableTypeSet, componentResolver)) {
+            if (TypeUtils.canBeAssignedTo(resolvedDistributionTypeSet, resolvedVariableTypeSet, componentResolver)) {
                 throw new TypeError(
                         stmt,
                         "Expression of type `"
@@ -197,9 +195,7 @@ public class TypeResolver
                 // find the matching resolved types
                 for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
                     if (resolvedVariableType.getName().equals(resolvedExpressionType.getName())) {
-                        resolvedVariableType
-                                .getParameterTypes()
-                                .putAll(resolvedExpressionType.getParameterTypes());
+                        resolvedVariableType.getParameterTypes().putAll(resolvedExpressionType.getParameterTypes());
                     }
                 }
             }
@@ -257,8 +253,7 @@ public class TypeResolver
                     List.of(stmt.type.name + " " + stmt.name + " = ..."));
         }
 
-        if (!TypeUtils.canBeAssignedTo(
-                generatedTypeSet, resolvedVariableTypeSet, componentResolver)) {
+        if (!TypeUtils.canBeAssignedTo(generatedTypeSet, resolvedVariableTypeSet, componentResolver)) {
             throw new TypeError(
                     stmt,
                     "Expression of type `"
@@ -282,9 +277,7 @@ public class TypeResolver
                 // find the matching resolved types
                 for (ResolvedType generatedType : generatedTypeSet) {
                     if (resolvedVariableType.getName().equals(generatedType.getName())) {
-                        resolvedVariableType
-                                .getParameterTypes()
-                                .putAll(generatedType.getParameterTypes());
+                        resolvedVariableType.getParameterTypes().putAll(generatedType.getParameterTypes());
                     }
                 }
             }
@@ -303,8 +296,7 @@ public class TypeResolver
             }
         }
 
-        typePropertyEngine.resolveDraw(
-                resolvedVariableTypeSet, resolvedExpressionTypeSet, componentResolver);
+        typePropertyEngine.resolveDraw(resolvedVariableTypeSet, resolvedExpressionTypeSet, componentResolver);
         enforceUniqueness(stmt.name, stmt);
 
         remember(stmt.name, resolvedVariableTypeSet);
@@ -367,8 +359,7 @@ public class TypeResolver
 
                 if (!TypeUtils.canBeAssignedTo(
                         rangeTypeSet,
-                        ResolvedType.fromString(
-                                "phylospec.types.Vector<NonNegativeInteger>", componentResolver),
+                        ResolvedType.fromString("phylospec.types.Vector<NonNegativeInteger>", componentResolver),
                         componentResolver)) {
                     throw new TypeError(
                             indexed,
@@ -379,8 +370,7 @@ public class TypeResolver
                 Set<ResolvedType> indexVarTypeSet = new HashSet<>();
                 for (ResolvedType rangeType : rangeTypeSet) {
                     ResolvedType indexVarType =
-                            TypeUtils.recoverTypeParameter(
-                                    "phylospec.types.Vector", "T", rangeType, componentResolver);
+                            TypeUtils.recoverTypeParameter("phylospec.types.Vector", "T", rangeType, componentResolver);
                     if (indexVarType != null) indexVarTypeSet.add(indexVarType);
                 }
 
@@ -404,16 +394,10 @@ public class TypeResolver
         Set<ResolvedType> widenedTypeSet;
         if (indexed.indices.size() == 1) {
             widenedTypeSet =
-                    ResolvedType.fromString(
-                            "phylospec.types.Vector<T>",
-                            Map.of("T", innerTypeSet),
-                            componentResolver);
+                    ResolvedType.fromString("phylospec.types.Vector<T>", Map.of("T", innerTypeSet), componentResolver);
         } else {
             widenedTypeSet =
-                    ResolvedType.fromString(
-                            "phylospec.types.Matrix<T>",
-                            Map.of("T", innerTypeSet),
-                            componentResolver);
+                    ResolvedType.fromString("phylospec.types.Matrix<T>", Map.of("T", innerTypeSet), componentResolver);
         }
 
         // attach the num properties
@@ -442,12 +426,8 @@ public class TypeResolver
 
         Set<ResolvedType> generatedTypeSet = new HashSet<>();
         for (ResolvedType generatedDistType : generatedDistributionTypeSet) {
-            ResolvedType generatedType =
-                    TypeUtils.recoverTypeParameter(
-                            "phylospec.types.Distribution",
-                            "T",
-                            generatedDistType,
-                            componentResolver);
+            ResolvedType generatedType = TypeUtils.recoverTypeParameter(
+                    "phylospec.types.Distribution", "T", generatedDistType, componentResolver);
             if (generatedType == null) {
                 // this is not a distribution type directly
                 // it could still be a random variable though
@@ -503,25 +483,19 @@ public class TypeResolver
         Set<ResolvedType> observationFromTypeSet = observedBetween.observedFrom.accept(this);
         Set<ResolvedType> observationToTypeSet = observedBetween.observedTo.accept(this);
 
-        Set<ResolvedType> scalarTypeSet =
-                ResolvedType.fromString("phylospec.types.Integer", componentResolver);
+        Set<ResolvedType> scalarTypeSet = ResolvedType.fromString("phylospec.types.Integer", componentResolver);
         scalarTypeSet.addAll(ResolvedType.fromString("phylospec.types.Real", componentResolver));
 
         if (!TypeUtils.canBeAssignedTo(observationFromTypeSet, scalarTypeSet, componentResolver)) {
-            throw new TypeError(
-                    "Invalid observation.",
-                    "Observations ranges have to be specified using numbers.");
+            throw new TypeError("Invalid observation.", "Observations ranges have to be specified using numbers.");
         }
 
         if (!TypeUtils.canBeAssignedTo(observationToTypeSet, scalarTypeSet, componentResolver)) {
-            throw new TypeError(
-                    "Invalid observation.",
-                    "Observations ranges have to be specified using numbers.");
+            throw new TypeError("Invalid observation.", "Observations ranges have to be specified using numbers.");
         }
 
-        Set<ResolvedType> observationTypeSet =
-                TypeUtils.getLowestCoverTypeSet(
-                        List.of(observationFromTypeSet, observationToTypeSet), componentResolver);
+        Set<ResolvedType> observationTypeSet = TypeUtils.getLowestCoverTypeSet(
+                List.of(observationFromTypeSet, observationToTypeSet), componentResolver);
 
         Set<ResolvedType> generatedDistributionTypeSet = observedBetween.stmt.accept(this);
 
@@ -530,12 +504,8 @@ public class TypeResolver
 
         Set<ResolvedType> generatedTypeSet = new HashSet<>();
         for (ResolvedType generatedDistType : generatedDistributionTypeSet) {
-            ResolvedType generatedType =
-                    TypeUtils.recoverTypeParameter(
-                            "phylospec.types.Distribution",
-                            "T",
-                            generatedDistType,
-                            componentResolver);
+            ResolvedType generatedType = TypeUtils.recoverTypeParameter(
+                    "phylospec.types.Distribution", "T", generatedDistType, componentResolver);
             if (generatedType == null) {
                 // this is not a distribution type directly
                 // it could still be a random variable though
@@ -578,15 +548,13 @@ public class TypeResolver
                     case String ignored -> Set.of("String");
                     case Integer value -> {
                         if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Probability");
-                        if (1 == value)
-                            yield Set.of("PositiveReal", "PositiveInteger", "Probability");
+                        if (1 == value) yield Set.of("PositiveReal", "PositiveInteger", "Probability");
                         if (0 < value) yield Set.of("PositiveInteger", "PositiveReal");
                         yield Set.of("Integer", "Real");
                     }
                     case Long value -> {
                         if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Probability");
-                        if (1 == value)
-                            yield Set.of("PositiveReal", "PositiveInteger", "Probability");
+                        if (1 == value) yield Set.of("PositiveReal", "PositiveInteger", "Probability");
                         if (0 < value) yield Set.of("PositiveInteger", "PositiveReal");
                         yield Set.of("Integer", "Real");
                     }
@@ -631,10 +599,8 @@ public class TypeResolver
 
             // check that we have a number literal
 
-            Set<ResolvedType> scalarTypeSet =
-                    ResolvedType.fromString("phylospec.types.Real", componentResolver);
-            scalarTypeSet.addAll(
-                    ResolvedType.fromString("phylospec.types.Integer", componentResolver));
+            Set<ResolvedType> scalarTypeSet = ResolvedType.fromString("phylospec.types.Real", componentResolver);
+            scalarTypeSet.addAll(ResolvedType.fromString("phylospec.types.Integer", componentResolver));
             if (!TypeUtils.canBeAssignedTo(resolvedTypeSet, scalarTypeSet, componentResolver)) {
                 throw new TypeError(
                         "Only numbers can have units.",
@@ -705,9 +671,7 @@ public class TypeResolver
             throw new TypeError(
                     expr,
                     "Variable `" + variableName + "` does not exist.",
-                    closestCandidate.isBlank()
-                            ? ""
-                            : "Do you mean `" + findClosestVariable(variableName) + "'?");
+                    closestCandidate.isBlank() ? "" : "Do you mean `" + findClosestVariable(variableName) + "'?");
         }
 
         return remember(expr, resolvedTypeSet);
@@ -731,15 +695,13 @@ public class TypeResolver
 
     @Override
     public Set<ResolvedType> visitUnary(Expr.Unary expr) {
-        List<TypeMatcher.Rule> typeMap =
-                List.of(
-                        new TypeMatcher.Rule(TokenType.BANG, "Boolean", "Boolean"),
-                        new TypeMatcher.Rule(TokenType.MINUS, "Real", "Real"),
-                        new TypeMatcher.Rule(TokenType.MINUS, "Integer", "Integer"));
+        List<TypeMatcher.Rule> typeMap = List.of(
+                new TypeMatcher.Rule(TokenType.BANG, "Boolean", "Boolean"),
+                new TypeMatcher.Rule(TokenType.MINUS, "Real", "Real"),
+                new TypeMatcher.Rule(TokenType.MINUS, "Integer", "Integer"));
 
         Set<ResolvedType> rightType = expr.right.accept(this);
-        Set<ResolvedType> resultType =
-                typeMatcher.findMatch(typeMap, new TypeMatcher.Query(expr.operator, rightType));
+        Set<ResolvedType> resultType = typeMatcher.findMatch(typeMap, new TypeMatcher.Query(expr.operator, rightType));
 
         if (resultType.isEmpty()) {
             throw new TypeError(
@@ -756,91 +718,59 @@ public class TypeResolver
 
     @Override
     public Set<ResolvedType> visitBinary(Expr.Binary expr) {
-        List<TypeMatcher.Rule> typeMap =
-                List.of(
-                        new TypeMatcher.Rule(
-                                TokenType.EQUAL_EQUAL, TypeMatcher.ANY, TypeMatcher.ANY, "Boolean"),
-                        new TypeMatcher.Rule(
-                                TokenType.BANG_EQUAL, TypeMatcher.ANY, TypeMatcher.ANY, "Boolean"),
-                        new TypeMatcher.Rule(TokenType.GREATER, "Real", "Real", "Boolean"),
-                        new TypeMatcher.Rule(TokenType.GREATER, "Integer", "Integer", "Boolean"),
-                        new TypeMatcher.Rule(TokenType.GREATER, "Integer", "Real", "Boolean"),
-                        new TypeMatcher.Rule(TokenType.GREATER, "Real", "Integer", "Boolean"),
-                        new TypeMatcher.Rule(TokenType.LESS, "Real", "Real", "Boolean"),
-                        new TypeMatcher.Rule(TokenType.LESS, "Integer", "Integer", "Boolean"),
-                        new TypeMatcher.Rule(TokenType.LESS, "Integer", "Real", "Boolean"),
-                        new TypeMatcher.Rule(TokenType.LESS, "Real", "Integer", "Boolean"),
-                        new TypeMatcher.Rule(TokenType.GREATER_EQUAL, "Real", "Real", "Boolean"),
-                        new TypeMatcher.Rule(
-                                TokenType.GREATER_EQUAL, "Integer", "Integer", "Boolean"),
-                        new TypeMatcher.Rule(TokenType.GREATER_EQUAL, "Integer", "Real", "Boolean"),
-                        new TypeMatcher.Rule(TokenType.GREATER_EQUAL, "Real", "Integer", "Boolean"),
-                        new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Real", "Real", "Boolean"),
-                        new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Integer", "Integer", "Boolean"),
-                        new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Integer", "Real", "Boolean"),
-                        new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Real", "Integer", "Boolean"),
-                        new TypeMatcher.Rule(
-                                TokenType.PLUS, "PositiveReal", "PositiveReal", "PositiveReal"),
-                        new TypeMatcher.Rule(
-                                TokenType.PLUS,
-                                "PositiveInteger",
-                                "PositiveInteger",
-                                "PositiveInteger"),
-                        new TypeMatcher.Rule(
-                                TokenType.PLUS, "PositiveInteger", "PositiveReal", "PositiveReal"),
-                        new TypeMatcher.Rule(
-                                TokenType.PLUS, "PositiveReal", "PositiveInteger", "PositiveReal"),
-                        new TypeMatcher.Rule(
-                                TokenType.PLUS,
-                                "NonNegativeReal",
-                                "NonNegativeReal",
-                                "NonNegativeReal"),
-                        new TypeMatcher.Rule(TokenType.PLUS, "Real", "Real", "Real"),
-                        new TypeMatcher.Rule(TokenType.PLUS, "Integer", "Integer", "Integer"),
-                        new TypeMatcher.Rule(TokenType.PLUS, "Integer", "Real", "Real"),
-                        new TypeMatcher.Rule(TokenType.PLUS, "Real", "Integer", "Real"),
-                        new TypeMatcher.Rule(TokenType.PLUS, "String", "String", "String"),
-                        new TypeMatcher.Rule(TokenType.MINUS, "Real", "Real", "Real"),
-                        new TypeMatcher.Rule(TokenType.MINUS, "Integer", "Integer", "Integer"),
-                        new TypeMatcher.Rule(TokenType.MINUS, "Integer", "Real", "Real"),
-                        new TypeMatcher.Rule(TokenType.MINUS, "Real", "Integer", "Real"),
-                        new TypeMatcher.Rule(
-                                TokenType.STAR, "PositiveReal", "PositiveReal", "PositiveReal"),
-                        new TypeMatcher.Rule(
-                                TokenType.STAR,
-                                "PositiveInteger",
-                                "PositiveInteger",
-                                "PositiveInteger"),
-                        new TypeMatcher.Rule(
-                                TokenType.STAR, "PositiveInteger", "PositiveReal", "PositiveReal"),
-                        new TypeMatcher.Rule(
-                                TokenType.STAR, "PositiveReal", "PositiveInteger", "PositiveReal"),
-                        new TypeMatcher.Rule(
-                                TokenType.STAR,
-                                "NonNegativeReal",
-                                "NonNegativeReal",
-                                "NonNegativeReal"),
-                        new TypeMatcher.Rule(TokenType.STAR, "Real", "Real", "Real"),
-                        new TypeMatcher.Rule(TokenType.STAR, "Integer", "Integer", "Integer"),
-                        new TypeMatcher.Rule(TokenType.STAR, "Integer", "Real", "Real"),
-                        new TypeMatcher.Rule(TokenType.STAR, "Real", "Integer", "Real"),
-                        new TypeMatcher.Rule(
-                                TokenType.SLASH, "PositiveReal", "PositiveReal", "PositiveReal"),
-                        new TypeMatcher.Rule(
-                                TokenType.SLASH,
-                                "NonNegativeReal",
-                                "NonNegativeReal",
-                                "NonNegativeReal"),
-                        new TypeMatcher.Rule(TokenType.SLASH, "Real", "Real", "Real"),
-                        new TypeMatcher.Rule(TokenType.SLASH, "Integer", "Integer", "Real"),
-                        new TypeMatcher.Rule(TokenType.SLASH, "Integer", "Real", "Real"),
-                        new TypeMatcher.Rule(TokenType.SLASH, "Real", "Integer", "Real"));
+        List<TypeMatcher.Rule> typeMap = List.of(
+                new TypeMatcher.Rule(TokenType.EQUAL_EQUAL, TypeMatcher.ANY, TypeMatcher.ANY, "Boolean"),
+                new TypeMatcher.Rule(TokenType.BANG_EQUAL, TypeMatcher.ANY, TypeMatcher.ANY, "Boolean"),
+                new TypeMatcher.Rule(TokenType.GREATER, "Real", "Real", "Boolean"),
+                new TypeMatcher.Rule(TokenType.GREATER, "Integer", "Integer", "Boolean"),
+                new TypeMatcher.Rule(TokenType.GREATER, "Integer", "Real", "Boolean"),
+                new TypeMatcher.Rule(TokenType.GREATER, "Real", "Integer", "Boolean"),
+                new TypeMatcher.Rule(TokenType.LESS, "Real", "Real", "Boolean"),
+                new TypeMatcher.Rule(TokenType.LESS, "Integer", "Integer", "Boolean"),
+                new TypeMatcher.Rule(TokenType.LESS, "Integer", "Real", "Boolean"),
+                new TypeMatcher.Rule(TokenType.LESS, "Real", "Integer", "Boolean"),
+                new TypeMatcher.Rule(TokenType.GREATER_EQUAL, "Real", "Real", "Boolean"),
+                new TypeMatcher.Rule(TokenType.GREATER_EQUAL, "Integer", "Integer", "Boolean"),
+                new TypeMatcher.Rule(TokenType.GREATER_EQUAL, "Integer", "Real", "Boolean"),
+                new TypeMatcher.Rule(TokenType.GREATER_EQUAL, "Real", "Integer", "Boolean"),
+                new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Real", "Real", "Boolean"),
+                new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Integer", "Integer", "Boolean"),
+                new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Integer", "Real", "Boolean"),
+                new TypeMatcher.Rule(TokenType.LESS_EQUAL, "Real", "Integer", "Boolean"),
+                new TypeMatcher.Rule(TokenType.PLUS, "PositiveReal", "PositiveReal", "PositiveReal"),
+                new TypeMatcher.Rule(TokenType.PLUS, "PositiveInteger", "PositiveInteger", "PositiveInteger"),
+                new TypeMatcher.Rule(TokenType.PLUS, "PositiveInteger", "PositiveReal", "PositiveReal"),
+                new TypeMatcher.Rule(TokenType.PLUS, "PositiveReal", "PositiveInteger", "PositiveReal"),
+                new TypeMatcher.Rule(TokenType.PLUS, "NonNegativeReal", "NonNegativeReal", "NonNegativeReal"),
+                new TypeMatcher.Rule(TokenType.PLUS, "Real", "Real", "Real"),
+                new TypeMatcher.Rule(TokenType.PLUS, "Integer", "Integer", "Integer"),
+                new TypeMatcher.Rule(TokenType.PLUS, "Integer", "Real", "Real"),
+                new TypeMatcher.Rule(TokenType.PLUS, "Real", "Integer", "Real"),
+                new TypeMatcher.Rule(TokenType.PLUS, "String", "String", "String"),
+                new TypeMatcher.Rule(TokenType.MINUS, "Real", "Real", "Real"),
+                new TypeMatcher.Rule(TokenType.MINUS, "Integer", "Integer", "Integer"),
+                new TypeMatcher.Rule(TokenType.MINUS, "Integer", "Real", "Real"),
+                new TypeMatcher.Rule(TokenType.MINUS, "Real", "Integer", "Real"),
+                new TypeMatcher.Rule(TokenType.STAR, "PositiveReal", "PositiveReal", "PositiveReal"),
+                new TypeMatcher.Rule(TokenType.STAR, "PositiveInteger", "PositiveInteger", "PositiveInteger"),
+                new TypeMatcher.Rule(TokenType.STAR, "PositiveInteger", "PositiveReal", "PositiveReal"),
+                new TypeMatcher.Rule(TokenType.STAR, "PositiveReal", "PositiveInteger", "PositiveReal"),
+                new TypeMatcher.Rule(TokenType.STAR, "NonNegativeReal", "NonNegativeReal", "NonNegativeReal"),
+                new TypeMatcher.Rule(TokenType.STAR, "Real", "Real", "Real"),
+                new TypeMatcher.Rule(TokenType.STAR, "Integer", "Integer", "Integer"),
+                new TypeMatcher.Rule(TokenType.STAR, "Integer", "Real", "Real"),
+                new TypeMatcher.Rule(TokenType.STAR, "Real", "Integer", "Real"),
+                new TypeMatcher.Rule(TokenType.SLASH, "PositiveReal", "PositiveReal", "PositiveReal"),
+                new TypeMatcher.Rule(TokenType.SLASH, "NonNegativeReal", "NonNegativeReal", "NonNegativeReal"),
+                new TypeMatcher.Rule(TokenType.SLASH, "Real", "Real", "Real"),
+                new TypeMatcher.Rule(TokenType.SLASH, "Integer", "Integer", "Real"),
+                new TypeMatcher.Rule(TokenType.SLASH, "Integer", "Real", "Real"),
+                new TypeMatcher.Rule(TokenType.SLASH, "Real", "Integer", "Real"));
 
         Set<ResolvedType> leftType = expr.left.accept(this);
         Set<ResolvedType> rightType = expr.right.accept(this);
         Set<ResolvedType> resultType =
-                typeMatcher.findMatch(
-                        typeMap, new TypeMatcher.Query(expr.operator, leftType, rightType));
+                typeMatcher.findMatch(typeMap, new TypeMatcher.Query(expr.operator, leftType, rightType));
 
         if (resultType.isEmpty()) {
             throw new TypeError(
@@ -919,9 +849,7 @@ public class TypeResolver
             throw new TypeError(
                     expr,
                     "The function `" + expr.functionName + "` does not exist.",
-                    "Are you looking for `"
-                            + componentResolver.findClosestComponent(expr.functionName)
-                            + "'?");
+                    "Are you looking for `" + componentResolver.findClosestComponent(expr.functionName) + "'?");
         }
 
         // check if generators are compatible with arguments
@@ -933,9 +861,8 @@ public class TypeResolver
                 // check if the generator is compatible
                 // throws a TypeError if not
 
-                TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication =
-                        TypeUtils.resolveGeneratedType(
-                                generator, resolvedArguments, firstArgumentName, componentResolver);
+                TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication = TypeUtils.resolveGeneratedType(
+                        generator, resolvedArguments, firstArgumentName, componentResolver);
 
                 // check type constraints and resolve generated type constraints
 
@@ -953,24 +880,17 @@ public class TypeResolver
 
         // throw errors if needed
         if (possibleReturnTypes.isEmpty() && errorMessages.isEmpty()) {
-            throw new TypeError(
-                    expr,
-                    "Function `"
-                            + expr.functionName
-                            + "` with the given arguments does not exist.");
+            throw new TypeError(expr, "Function `" + expr.functionName + "` with the given arguments does not exist.");
         } else if (possibleReturnTypes.isEmpty() && errorMessages.size() == 1) {
             throw lastError;
         } else if (possibleReturnTypes.isEmpty()) {
-            String description =
-                    "Function `" + expr.functionName + "` with the given arguments does not exist.";
+            String description = "Function `" + expr.functionName + "` with the given arguments does not exist.";
 
-            StringBuilder hint =
-                    new StringBuilder(
-                            "There are "
-                                    + generators.size()
-                                    + " versions of '"
-                                    + expr.functionName
-                                    + "'. Neither of them can be used:");
+            StringBuilder hint = new StringBuilder("There are "
+                    + generators.size()
+                    + " versions of '"
+                    + expr.functionName
+                    + "'. Neither of them can be used:");
 
             int i = 1;
             for (String error : errorMessages.stream().sorted().toList()) {
@@ -996,18 +916,15 @@ public class TypeResolver
 
         Set<ResolvedType> generatedTypeSet = new HashSet<>();
         for (ResolvedType expressionType : resolvedTypeSet) {
-            ResolvedType unwrappedExpressionType =
-                    TypeUtils.recoverTypeParameter(
-                            "phylospec.types.Distribution", "T", expressionType, componentResolver);
+            ResolvedType unwrappedExpressionType = TypeUtils.recoverTypeParameter(
+                    "phylospec.types.Distribution", "T", expressionType, componentResolver);
             generatedTypeSet.add(unwrappedExpressionType);
         }
 
         if (generatedTypeSet.isEmpty()) {
             throw new TypeError(
                     expr,
-                    "Expression of type `"
-                            + printType(resolvedTypeSet)
-                            + "` is not a distribution.",
+                    "Expression of type `" + printType(resolvedTypeSet) + "` is not a distribution.",
                     "After '~', you always need to provide a distribution. Do you want to use `=` instead?");
         }
 
@@ -1031,16 +948,14 @@ public class TypeResolver
         // single element. for each possible type combination, the lowest
         // cover is determined (the most specific supertype)
 
-        Set<ResolvedType> lcTypeSet =
-                TypeUtils.getLowestCoverTypeSet(elementTypeSets, componentResolver);
+        Set<ResolvedType> lcTypeSet = TypeUtils.getLowestCoverTypeSet(elementTypeSets, componentResolver);
 
         // build the Vector result type
 
         Type vectorComponent = componentResolver.resolveType("phylospec.types.Vector");
-        Set<ResolvedType> arrayTypeSet =
-                lcTypeSet.stream()
-                        .map(x -> new ResolvedType(vectorComponent, Map.of("T", x)))
-                        .collect(Collectors.toSet());
+        Set<ResolvedType> arrayTypeSet = lcTypeSet.stream()
+                .map(x -> new ResolvedType(vectorComponent, Map.of("T", x)))
+                .collect(Collectors.toSet());
 
         // we check the edge case where we have an array of number literals adding up to 1
         boolean onlyNumberLiterals = true;
@@ -1060,8 +975,7 @@ public class TypeResolver
         }
         if (onlyNumberLiterals && Math.abs(summedUpLiterals - 1.0) < 1e-10) {
             // this is a simplex
-            arrayTypeSet.addAll(
-                    ResolvedType.fromString("phylospec.types.Simplex", componentResolver));
+            arrayTypeSet.addAll(ResolvedType.fromString("phylospec.types.Simplex", componentResolver));
         }
 
         // attach the num property to the array types
@@ -1101,9 +1015,7 @@ public class TypeResolver
                     resolvedTypeParameterTypes,
                     componentResolver)) {
                 itemTypeSet.addAll(resolvedTypeParameterTypes.get("T"));
-                indexTypeSet.addAll(
-                        ResolvedType.fromString(
-                                "phylospec.types.NonNegativeInteger", componentResolver));
+                indexTypeSet.addAll(ResolvedType.fromString("phylospec.types.NonNegativeInteger", componentResolver));
                 numberOfIndicesRequired.add(2);
             }
 
@@ -1115,9 +1027,7 @@ public class TypeResolver
                     resolvedTypeParameterTypes,
                     componentResolver)) {
                 itemTypeSet.addAll(resolvedTypeParameterTypes.get("T"));
-                indexTypeSet.addAll(
-                        ResolvedType.fromString(
-                                "phylospec.types.NonNegativeInteger", componentResolver));
+                indexTypeSet.addAll(ResolvedType.fromString("phylospec.types.NonNegativeInteger", componentResolver));
                 numberOfIndicesRequired.add(1);
             }
         }
@@ -1172,9 +1082,7 @@ public class TypeResolver
         Set<ResolvedType> toTypeSet = range.to.accept(this);
 
         if (!TypeUtils.canBeAssignedTo(
-                fromTypeSet,
-                ResolvedType.fromString("Integer", componentResolver),
-                componentResolver)) {
+                fromTypeSet, ResolvedType.fromString("Integer", componentResolver), componentResolver)) {
             throw new TypeError(
                     range,
                     "The lower bound of the range is not an integer.",
@@ -1182,9 +1090,7 @@ public class TypeResolver
                     List.of("5:20"));
         }
         if (!TypeUtils.canBeAssignedTo(
-                toTypeSet,
-                ResolvedType.fromString("Integer", componentResolver),
-                componentResolver)) {
+                toTypeSet, ResolvedType.fromString("Integer", componentResolver), componentResolver)) {
             throw new TypeError(
                     range,
                     "The upper bound of the range is not an integer.",
@@ -1200,8 +1106,7 @@ public class TypeResolver
         // the type of the vector produced is the vector of the item type set
 
         Set<ResolvedType> listComprehensionTypeSet =
-                ResolvedType.fromString(
-                        "phylospec.types.Vector<T>", Map.of("T", itemTypeSet), componentResolver);
+                ResolvedType.fromString("phylospec.types.Vector<T>", Map.of("T", itemTypeSet), componentResolver);
 
         // resolve the range properties
 
@@ -1228,8 +1133,7 @@ public class TypeResolver
             typeParameters.add(type.accept(this));
         }
 
-        Set<ResolvedType> resolvedType =
-                ResolvedType.fromString(expr.name, typeParameters, componentResolver, true);
+        Set<ResolvedType> resolvedType = ResolvedType.fromString(expr.name, typeParameters, componentResolver, true);
         return remember(expr, resolvedType);
     }
 
@@ -1237,8 +1141,7 @@ public class TypeResolver
      * Check if the type resolver ignores the statement because it is in a custom block.
      */
     private boolean ignoreStmt(Stmt stmt) {
-        Set<Stmt.Block> blocksConsidered =
-                Set.of(Stmt.Block.NO_BLOCK, Stmt.Block.MODEL, Stmt.Block.DATA);
+        Set<Stmt.Block> blocksConsidered = Set.of(Stmt.Block.NO_BLOCK, Stmt.Block.MODEL, Stmt.Block.DATA);
         return (!blocksConsidered.contains(stmt.block));
     }
 
@@ -1285,9 +1188,7 @@ public class TypeResolver
             throw new TypeError(
                     astNode,
                     "Duplicate variable name.",
-                    "You have already used the variable name '"
-                            + variableName
-                            + "' before. Use another name instead.",
+                    "You have already used the variable name '" + variableName + "' before. Use another name instead.",
                     List.of());
         }
     }
@@ -1302,7 +1203,8 @@ public class TypeResolver
         if (type.size() == 1) {
             return type.iterator().next().toString();
         }
-        return String.join(" | ", type.stream().map(ResolvedType::toString).sorted().toList());
+        return String.join(
+                " | ", type.stream().map(ResolvedType::toString).sorted().toList());
     }
 
     /**

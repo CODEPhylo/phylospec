@@ -35,7 +35,6 @@ public class ComponentLibrary {
      */
     @JsonProperty("name")
     private String name;
-
     /**
      *
      * (Required)
@@ -43,7 +42,6 @@ public class ComponentLibrary {
      */
     @JsonProperty("version")
     private String version;
-
     /**
      *
      * (Required)
@@ -51,7 +49,6 @@ public class ComponentLibrary {
      */
     @JsonProperty("engine")
     private String engine;
-
     /**
      *
      * (Required)
@@ -59,7 +56,6 @@ public class ComponentLibrary {
      */
     @JsonProperty("engineVersion")
     private String engineVersion;
-
     /**
      *
      * (Required)
@@ -67,7 +63,6 @@ public class ComponentLibrary {
      */
     @JsonProperty("description")
     private String description;
-
     /**
      * List of authors or maintainers of the schema
      *
@@ -75,7 +70,6 @@ public class ComponentLibrary {
     @JsonProperty("authors")
     @JsonPropertyDescription("List of authors or maintainers of the schema")
     private List<String> authors = new ArrayList<String>();
-
     /**
      * License identifier, e.g., MIT
      *
@@ -83,7 +77,6 @@ public class ComponentLibrary {
     @JsonProperty("license")
     @JsonPropertyDescription("License identifier, e.g., MIT")
     private String license;
-
     /**
      *
      * (Required)
@@ -91,7 +84,6 @@ public class ComponentLibrary {
      */
     @JsonProperty("types")
     private List<Type> types = new ArrayList<Type>();
-
     /**
      *
      * (Required)
@@ -347,20 +339,14 @@ public class ComponentLibrary {
     @Override
     public int hashCode() {
         int result = 1;
-        result =
-                ((result * 31)
-                        + ((this.engineVersion == null) ? 0 : this.engineVersion.hashCode()));
+        result = ((result * 31) + ((this.engineVersion == null) ? 0 : this.engineVersion.hashCode()));
         result = ((result * 31) + ((this.license == null) ? 0 : this.license.hashCode()));
         result = ((result * 31) + ((this.types == null) ? 0 : this.types.hashCode()));
         result = ((result * 31) + ((this.engine == null) ? 0 : this.engine.hashCode()));
         result = ((result * 31) + ((this.name == null) ? 0 : this.name.hashCode()));
         result = ((result * 31) + ((this.generators == null) ? 0 : this.generators.hashCode()));
         result = ((result * 31) + ((this.description == null) ? 0 : this.description.hashCode()));
-        result =
-                ((result * 31)
-                        + ((this.additionalProperties == null)
-                                ? 0
-                                : this.additionalProperties.hashCode()));
+        result = ((result * 31) + ((this.additionalProperties == null) ? 0 : this.additionalProperties.hashCode()));
         result = ((result * 31) + ((this.version == null) ? 0 : this.version.hashCode()));
         result = ((result * 31) + ((this.authors == null) ? 0 : this.authors.hashCode()));
         return result;
@@ -376,54 +362,34 @@ public class ComponentLibrary {
         }
         ComponentLibrary rhs = ((ComponentLibrary) other);
         return (((((((((((this.engineVersion == rhs.engineVersion)
-                                                                                        || ((this
-                                                                                                                .engineVersion
-                                                                                                        != null)
-                                                                                                && this
-                                                                                                        .engineVersion
+                                                                                        || ((this.engineVersion != null)
+                                                                                                && this.engineVersion
                                                                                                         .equals(
                                                                                                                 rhs.engineVersion)))
-                                                                                && ((this.license
-                                                                                                == rhs.license)
-                                                                                        || ((this
-                                                                                                                .license
-                                                                                                        != null)
-                                                                                                && this
-                                                                                                        .license
-                                                                                                        .equals(
-                                                                                                                rhs.license))))
-                                                                        && ((this.types
-                                                                                        == rhs.types)
-                                                                                || ((this.types
-                                                                                                != null)
-                                                                                        && this
-                                                                                                .types
-                                                                                                .equals(
-                                                                                                        rhs.types))))
+                                                                                && ((this.license == rhs.license)
+                                                                                        || ((this.license != null)
+                                                                                                && this.license.equals(
+                                                                                                        rhs.license))))
+                                                                        && ((this.types == rhs.types)
+                                                                                || ((this.types != null)
+                                                                                        && this.types.equals(
+                                                                                                rhs.types))))
                                                                 && ((this.engine == rhs.engine)
                                                                         || ((this.engine != null)
-                                                                                && this.engine
-                                                                                        .equals(
-                                                                                                rhs.engine))))
+                                                                                && this.engine.equals(rhs.engine))))
                                                         && ((this.name == rhs.name)
-                                                                || ((this.name != null)
-                                                                        && this.name.equals(
-                                                                                rhs.name))))
+                                                                || ((this.name != null) && this.name.equals(rhs.name))))
                                                 && ((this.generators == rhs.generators)
                                                         || ((this.generators != null)
-                                                                && this.generators.equals(
-                                                                        rhs.generators))))
+                                                                && this.generators.equals(rhs.generators))))
                                         && ((this.description == rhs.description)
                                                 || ((this.description != null)
-                                                        && this.description.equals(
-                                                                rhs.description))))
+                                                        && this.description.equals(rhs.description))))
                                 && ((this.additionalProperties == rhs.additionalProperties)
                                         || ((this.additionalProperties != null)
-                                                && this.additionalProperties.equals(
-                                                        rhs.additionalProperties))))
+                                                && this.additionalProperties.equals(rhs.additionalProperties))))
                         && ((this.version == rhs.version)
                                 || ((this.version != null) && this.version.equals(rhs.version))))
-                && ((this.authors == rhs.authors)
-                        || ((this.authors != null) && this.authors.equals(rhs.authors))));
+                && ((this.authors == rhs.authors) || ((this.authors != null) && this.authors.equals(rhs.authors))));
     }
 }

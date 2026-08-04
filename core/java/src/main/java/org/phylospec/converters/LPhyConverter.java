@@ -47,8 +47,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     /**
      * Converts the given statements into an LPhy script.
      */
-    public static String convertToLPhy(
-            List<Stmt> statements, List<ComponentLibrary> componentLibraries) {
+    public static String convertToLPhy(List<Stmt> statements, List<ComponentLibrary> componentLibraries) {
         LPhyConverter converter = new LPhyConverter(statements, componentLibraries);
 
         // traverse the syntax tree to collect the LPhy statements
@@ -79,8 +78,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     public StringBuilder visitDecoratedStmt(Stmt.Decorated stmt) {
         // make sure we have a @observedAs decorator with one argument
         if (!stmt.decorator.functionName.equals("observedAs")) {
-            throw new LPhyConversionError(
-                    "Decorator " + stmt.decorator.functionName + " is not supported in LPhy.");
+            throw new LPhyConversionError("Decorator " + stmt.decorator.functionName + " is not supported in LPhy.");
         }
         if (stmt.decorator.arguments.length != 1) {
             throw new LPhyConversionError(
@@ -149,9 +147,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
             case Double value -> new StringBuilder(value.toString());
             case String value -> new StringBuilder("\"").append(value).append("\"");
             case Boolean value -> new StringBuilder(value.toString());
-            default ->
-                    throw new LPhyConversionError(
-                            "Literal " + expr.value + " is not supported in LPhy.");
+            default -> throw new LPhyConversionError("Literal " + expr.value + " is not supported in LPhy.");
         };
     }
 
@@ -166,9 +162,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
             return new StringBuilder().append("-").append(expr.right.accept(this));
         }
         throw new LPhyConversionError(
-                "Unary operation "
-                        + TokenType.getLexeme(expr.operator)
-                        + " is not supported in LPhy.");
+                "Unary operation " + TokenType.getLexeme(expr.operator) + " is not supported in LPhy.");
     }
 
     @Override
@@ -187,9 +181,7 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
         }
 
         throw new LPhyConversionError(
-                "Binary operation "
-                        + TokenType.getLexeme(expr.operator)
-                        + " is not supported in LPhy.");
+                "Binary operation " + TokenType.getLexeme(expr.operator) + " is not supported in LPhy.");
     }
 
     @Override
@@ -210,11 +202,10 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
     public StringBuilder visitDrawnArgument(Expr.DrawnArgument expr) {
         // we add a separate variable with the result of the draw
         String variableName = getAvailableVariableName(expr.name);
-        StringBuilder variableDeclaration =
-                new StringBuilder(variableName)
-                        .append(" ~ ")
-                        .append(expr.expression.accept(this))
-                        .append(";");
+        StringBuilder variableDeclaration = new StringBuilder(variableName)
+                .append(" ~ ")
+                .append(expr.expression.accept(this))
+                .append(";");
         addStatement(expr, variableDeclaration);
 
         // we now pass the new variable to the function
@@ -223,7 +214,10 @@ public class LPhyConverter implements AstVisitor<StringBuilder, StringBuilder, V
 
     @Override
     public StringBuilder visitGrouping(Expr.Grouping expr) {
-        return new StringBuilder().append("(").append(expr.expression.accept(this)).append(")");
+        return new StringBuilder()
+                .append("(")
+                .append(expr.expression.accept(this))
+                .append(")");
     }
 
     @Override

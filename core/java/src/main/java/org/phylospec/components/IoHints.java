@@ -27,7 +27,6 @@ public class IoHints {
 
     @JsonProperty("role")
     private IoHints.Role role;
-
     /**
      * Supported file extensions (e.g. [".nex", ".fasta"])
      *
@@ -35,7 +34,6 @@ public class IoHints {
     @JsonProperty("extensions")
     @JsonPropertyDescription("Supported file extensions (e.g. [\".nex\", \".fasta\"])")
     private List<String> extensions = new ArrayList<String>();
-
     /**
      * Name of the argument that accepts the file path
      *
@@ -140,11 +138,7 @@ public class IoHints {
         result = ((result * 31) + ((this.extensions == null) ? 0 : this.extensions.hashCode()));
         result = ((result * 31) + ((this.role == null) ? 0 : this.role.hashCode()));
         result = ((result * 31) + ((this.fileArgument == null) ? 0 : this.fileArgument.hashCode()));
-        result =
-                ((result * 31)
-                        + ((this.additionalProperties == null)
-                                ? 0
-                                : this.additionalProperties.hashCode()));
+        result = ((result * 31) + ((this.additionalProperties == null) ? 0 : this.additionalProperties.hashCode()));
         return result;
     }
 
@@ -158,13 +152,10 @@ public class IoHints {
         }
         IoHints rhs = ((IoHints) other);
         return (((((this.extensions == rhs.extensions)
-                                        || ((this.extensions != null)
-                                                && this.extensions.equals(rhs.extensions)))
-                                && ((this.role == rhs.role)
-                                        || ((this.role != null) && this.role.equals(rhs.role))))
+                                        || ((this.extensions != null) && this.extensions.equals(rhs.extensions)))
+                                && ((this.role == rhs.role) || ((this.role != null) && this.role.equals(rhs.role))))
                         && ((this.fileArgument == rhs.fileArgument)
-                                || ((this.fileArgument != null)
-                                        && this.fileArgument.equals(rhs.fileArgument))))
+                                || ((this.fileArgument != null) && this.fileArgument.equals(rhs.fileArgument))))
                 && ((this.additionalProperties == rhs.additionalProperties)
                         || ((this.additionalProperties != null)
                                 && this.additionalProperties.equals(rhs.additionalProperties))));
@@ -175,8 +166,7 @@ public class IoHints {
         DATA_INPUT("dataInput"),
         DATA_OUTPUT("dataOutput");
         private final String value;
-        private static final Map<String, IoHints.Role> CONSTANTS =
-                new HashMap<String, IoHints.Role>();
+        private static final Map<String, IoHints.Role> CONSTANTS = new HashMap<String, IoHints.Role>();
 
         static {
             for (IoHints.Role c : values()) {

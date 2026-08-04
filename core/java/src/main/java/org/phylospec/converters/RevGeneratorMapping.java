@@ -8,131 +8,84 @@ public class RevGeneratorMapping {
      * Takes a PhyloSpec generator name and an arguments map and returns the corresponding Rev expression. Returns
      * null if the generator cannot be mapped to Rev code.
      */
-    static StringBuilder map(
-            Expr.Call expr, Map<String, String> arguments, RevConverter converter) {
+    static StringBuilder map(Expr.Call expr, Map<String, String> arguments, RevConverter converter) {
         return switch (expr.functionName) {
             case "Exponential" -> build("dnExponential", "lambda", arg("rate", arguments));
-            case "Normal" ->
-                    build("dnNormal", "mean", arg("mean", arguments), "sd", arg("sd", arguments));
-            case "LogNormal" ->
-                    build(
-                            "dnLognormal",
-                            "mean",
-                            arg("meanlog", arguments),
-                            "sd",
-                            arg("sdlog", arguments));
-            case "Gamma" ->
-                    build(
-                            "dnGamma",
-                            "shape",
-                            arg("shape", arguments),
-                            "rate",
-                            arg("rate", arguments));
-            case "Beta" ->
-                    build(
-                            "dnBeta",
-                            "alpha",
-                            arg("alpha", arguments),
-                            "beta",
-                            arg("beta", arguments));
-            case "Uniform" ->
-                    build(
-                            "dnUniform",
-                            "lower",
-                            arg("lower", arguments),
-                            "upper",
-                            arg("upper", arguments));
+            case "Normal" -> build("dnNormal", "mean", arg("mean", arguments), "sd", arg("sd", arguments));
+            case "LogNormal" -> build("dnLognormal", "mean", arg("meanlog", arguments), "sd", arg("sdlog", arguments));
+            case "Gamma" -> build("dnGamma", "shape", arg("shape", arguments), "rate", arg("rate", arguments));
+            case "Beta" -> build("dnBeta", "alpha", arg("alpha", arguments), "beta", arg("beta", arguments));
+            case "Uniform" -> build("dnUniform", "lower", arg("lower", arguments), "upper", arg("upper", arguments));
             case "Dirichlet" -> build("dnDirichlet", "alpha", arg("alpha", arguments));
             case "FossilBirthDeath" ->
-                    build(
-                            "dnFossilizedBirthDeath",
-                            "originAge",
-                            arg("origin", arguments),
-                            "lambda",
-                            arg("birthRate", arguments),
-                            "mu",
-                            arg("deathRate", arguments),
-                            "psi",
-                            arg("samplingRate", arguments),
-                            "taxa",
-                            arg("taxa", arguments),
-                            "rho",
-                            arg("rho", arguments));
+                build(
+                        "dnFossilizedBirthDeath",
+                        "originAge",
+                        arg("origin", arguments),
+                        "lambda",
+                        arg("birthRate", arguments),
+                        "mu",
+                        arg("deathRate", arguments),
+                        "psi",
+                        arg("samplingRate", arguments),
+                        "taxa",
+                        arg("taxa", arguments),
+                        "rho",
+                        arg("rho", arguments));
             case "BirthDeath" ->
-                    build(
-                            "dnBirthDeath",
-                            "lambda",
-                            arg("birthRate", arguments),
-                            "mu",
-                            arg("deathRate", arguments),
-                            "rootAge",
-                            arg("rootHeight", arguments),
-                            "taxa",
-                            arg("taxa", arguments));
+                build(
+                        "dnBirthDeath",
+                        "lambda",
+                        arg("birthRate", arguments),
+                        "mu",
+                        arg("deathRate", arguments),
+                        "rootAge",
+                        arg("rootHeight", arguments),
+                        "taxa",
+                        arg("taxa", arguments));
             case "Coalescent" ->
-                    build(
-                            "dnCoalescent",
-                            "theta",
-                            arg("populationSize", arguments),
-                            "taxa",
-                            arg("taxa", arguments));
+                build("dnCoalescent", "theta", arg("populationSize", arguments), "taxa", arg("taxa", arguments));
             case "JC69" -> build("fnJC", "num_states", "4");
             case "K80" -> build("fnK80", "kappa", arg("kappa", arguments));
             case "F81" -> build("fnF81", "baseFrequencies", arg("baseFrequencies", arguments));
             case "HKY" ->
-                    build(
-                            "fnHKY",
-                            "kappa",
-                            arg("kappa", arguments),
-                            "baseFrequencies",
-                            arg("baseFrequencies", arguments));
+                build("fnHKY", "kappa", arg("kappa", arguments), "baseFrequencies", arg("baseFrequencies", arguments));
             case "GTR" ->
-                    build(
-                            "fnGTR",
-                            "exchangeRates",
-                            arg("rateMatrix", arguments),
-                            "baseFrequencies",
-                            arg("baseFrequencies", arguments));
+                build(
+                        "fnGTR",
+                        "exchangeRates",
+                        arg("rateMatrix", arguments),
+                        "baseFrequencies",
+                        arg("baseFrequencies", arguments));
             case "nexus" -> build("readDiscreteCharacterData", "file", arg("file", arguments));
             case "fasta" -> build("readDiscreteCharacterData", "file", arg("file", arguments));
             case "PhyloBM" ->
-                    build(
-                            "dnPhyloBrownianREML",
-                            "tree",
-                            arg("tree", arguments),
-                            "branchRates",
-                            arg("sigma", arguments));
+                build("dnPhyloBrownianREML", "tree", arg("tree", arguments), "branchRates", arg("sigma", arguments));
             case "PhyloOU" ->
-                    build(
-                            "dnPhyloOrnsteinUhlenbeckREML",
-                            "tree",
-                            arg("tree", arguments),
-                            "alpha",
-                            arg("alpha", arguments),
-                            "theta",
-                            arg("optimum", arguments),
-                            "sigma",
-                            arg("sigma", arguments),
-                            "rootStates",
-                            arg("rootValue", arguments));
+                build(
+                        "dnPhyloOrnsteinUhlenbeckREML",
+                        "tree",
+                        arg("tree", arguments),
+                        "alpha",
+                        arg("alpha", arguments),
+                        "theta",
+                        arg("optimum", arguments),
+                        "sigma",
+                        arg("sigma", arguments),
+                        "rootStates",
+                        arg("rootValue", arguments));
             case "PhyloCTMC" ->
-                    build(
-                            "dnPhyloCTMC",
-                            "tree",
-                            arg("tree", arguments),
-                            "Q",
-                            arg("Q", arguments),
-                            "siteRates",
-                            arg("siteRates", arguments, true),
-                            "branchRates",
-                            arg("branchRates", arguments, true));
-            case "IID" ->
-                    build(
-                            "dnIID",
-                            "numValues",
-                            arg("n", arguments),
-                            "valueDistribution",
-                            arg("base", arguments));
+                build(
+                        "dnPhyloCTMC",
+                        "tree",
+                        arg("tree", arguments),
+                        "Q",
+                        arg("Q", arguments),
+                        "siteRates",
+                        arg("siteRates", arguments, true),
+                        "branchRates",
+                        arg("branchRates", arguments, true));
+            case "IID" -> build("dnIID", "numValues", arg("n", arguments), "valueDistribution", arg("base", arguments));
             case "zip" -> {
                 // we have smth like zip(first=first, second=second)
                 // we convert it into
@@ -159,20 +112,17 @@ public class RevGeneratorMapping {
                 // start for loop
 
                 String indexVarName = converter.getNextAvailableVariableName("i");
-                converter.addSimpleRevStatement(
-                        "for (" + indexVarName + " in 1:" + firstListName + ".size()) {");
+                converter.addSimpleRevStatement("for (" + indexVarName + " in 1:" + firstListName + ".size()) {");
 
                 // assign  temp_zipped
 
-                RevStmt.Assignment firstExpressionStmt =
-                        converter.addRevAssignment(
-                                new RevStmt.Assignment(
-                                        "temp_zipped",
-                                        new String[] {indexVarName, "1"},
-                                        new StringBuilder(firstListName)
-                                                .append("[")
-                                                .append(indexVarName)
-                                                .append("]")));
+                RevStmt.Assignment firstExpressionStmt = converter.addRevAssignment(new RevStmt.Assignment(
+                        "temp_zipped",
+                        new String[] {indexVarName, "1"},
+                        new StringBuilder(firstListName)
+                                .append("[")
+                                .append(indexVarName)
+                                .append("]")));
                 String zippedVarName = firstExpressionStmt.variableName;
 
                 converter.addRevAssignment(
@@ -193,8 +143,7 @@ public class RevGeneratorMapping {
                 yield new StringBuilder(zippedVarName);
             }
             default ->
-                    throw new RevConverter.RevConversionError(
-                            "Generator " + expr.functionName + " is not supported.");
+                throw new RevConverter.RevConversionError("Generator " + expr.functionName + " is not supported.");
         };
     }
 

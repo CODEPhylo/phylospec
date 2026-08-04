@@ -26,7 +26,6 @@ public class Property {
 
     @JsonProperty("description")
     private String description;
-
     /**
      * Default value if not specified
      *
@@ -132,11 +131,7 @@ public class Property {
         int result = 1;
         result = ((result * 31) + ((this.description == null) ? 0 : this.description.hashCode()));
         result = ((result * 31) + ((this._default == null) ? 0 : this._default.hashCode()));
-        result =
-                ((result * 31)
-                        + ((this.additionalProperties == null)
-                                ? 0
-                                : this.additionalProperties.hashCode()));
+        result = ((result * 31) + ((this.additionalProperties == null) ? 0 : this.additionalProperties.hashCode()));
         result = ((result * 31) + ((this.type == null) ? 0 : this.type.hashCode()));
         return result;
     }
@@ -151,16 +146,12 @@ public class Property {
         }
         Property rhs = ((Property) other);
         return (((((this.description == rhs.description)
-                                        || ((this.description != null)
-                                                && this.description.equals(rhs.description)))
+                                        || ((this.description != null) && this.description.equals(rhs.description)))
                                 && ((this._default == rhs._default)
-                                        || ((this._default != null)
-                                                && this._default.equals(rhs._default))))
+                                        || ((this._default != null) && this._default.equals(rhs._default))))
                         && ((this.additionalProperties == rhs.additionalProperties)
                                 || ((this.additionalProperties != null)
-                                        && this.additionalProperties.equals(
-                                                rhs.additionalProperties))))
-                && ((this.type == rhs.type)
-                        || ((this.type != null) && this.type.equals(rhs.type))));
+                                        && this.additionalProperties.equals(rhs.additionalProperties))))
+                && ((this.type == rhs.type) || ((this.type != null) && this.type.equals(rhs.type))));
     }
 }

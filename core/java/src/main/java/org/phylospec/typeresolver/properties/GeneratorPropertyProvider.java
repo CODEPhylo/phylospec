@@ -19,8 +19,7 @@ public interface GeneratorPropertyProvider {
     /**
      * Resolves the properties for the generatedType based on the resolved arguments.
      */
-    void resolveGenerator(
-            ResolvedType generatedType, Map<String, Set<ResolvedType>> resolvedArguments);
+    void resolveGenerator(ResolvedType generatedType, Map<String, Set<ResolvedType>> resolvedArguments);
 
     /**
      * Returns all providers that can be discovered through {@link java.util.ServiceLoader}.
@@ -37,20 +36,16 @@ public interface GeneratorPropertyProvider {
      * Resolves a generator argument to its literal string value, if all of its candidate types
      * agree on one.
      */
-    static Optional<String> resolveLiteral(
-            Map<String, Set<ResolvedType>> resolvedArguments, String argumentName) {
+    static Optional<String> resolveLiteral(Map<String, Set<ResolvedType>> resolvedArguments, String argumentName) {
         Set<ResolvedType> argumentTypeSet = resolvedArguments.get(argumentName);
         if (argumentTypeSet == null || argumentTypeSet.isEmpty()) return Optional.empty();
 
-        Object literal =
-                TypePropertyEngine.getPropertyOnAgreement(argumentTypeSet, TypePropertyNames.VALUE);
+        Object literal = TypePropertyEngine.getPropertyOnAgreement(argumentTypeSet, TypePropertyNames.VALUE);
         return literal instanceof String stringValue ? Optional.of(stringValue) : Optional.empty();
     }
 
     /** Resolves a generator argument to a small on-disk file, if it names one. */
-    static Optional<Path> resolveFile(
-            Map<String, Set<ResolvedType>> resolvedArguments, String argumentName) {
-        return resolveLiteral(resolvedArguments, argumentName)
-                .flatMap(LightweightFileParsers::resolveSmallFile);
+    static Optional<Path> resolveFile(Map<String, Set<ResolvedType>> resolvedArguments, String argumentName) {
+        return resolveLiteral(resolvedArguments, argumentName).flatMap(LightweightFileParsers::resolveSmallFile);
     }
 }

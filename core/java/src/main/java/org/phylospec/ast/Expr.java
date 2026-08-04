@@ -107,8 +107,7 @@ public abstract class Expr extends AstNode {
     public static class StringTemplate extends Expr {
 
         /** A single piece of a string template, either literal text or an interpolated expression. */
-        public sealed interface Part
-                permits StringTemplate.StringPart, StringTemplate.ExpressionPart {}
+        public sealed interface Part permits StringTemplate.StringPart, StringTemplate.ExpressionPart {}
 
         public record StringPart(String value) implements Part {}
 
@@ -301,8 +300,7 @@ public abstract class Expr extends AstNode {
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Call call = (Call) o;
-            return Objects.equals(functionName, call.functionName)
-                    && Objects.deepEquals(arguments, call.arguments);
+            return Objects.equals(functionName, call.functionName) && Objects.deepEquals(arguments, call.arguments);
         }
 
         @Override

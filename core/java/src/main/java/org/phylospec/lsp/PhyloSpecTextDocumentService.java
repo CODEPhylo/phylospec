@@ -28,9 +28,7 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
 
     @Override
     public void didChange(DidChangeTextDocumentParams params) {
-        documents
-                .get(params.getTextDocument().getUri())
-                .applyContentChanges(params.getContentChanges());
+        documents.get(params.getTextDocument().getUri()).applyContentChanges(params.getContentChanges());
     }
 
     @Override
@@ -51,19 +49,16 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
         LspDocument lspDocument = this.documents.get(params.getTextDocument().getUri());
         MarkupContent markupContent = lspDocument.getHoverInfo(params.getPosition());
 
-        if (markupContent != null)
-            return CompletableFuture.completedFuture(new Hover(markupContent));
+        if (markupContent != null) return CompletableFuture.completedFuture(new Hover(markupContent));
         else return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(
-            CompletionParams position) {
+    public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams position) {
         LspDocument lspDocument = this.documents.get(position.getTextDocument().getUri());
         List<CompletionItem> completionItems = lspDocument.getCompletionItems(position);
 
-        return CompletableFuture.completedFuture(
-                Either.forRight(new CompletionList(completionItems)));
+        return CompletableFuture.completedFuture(Either.forRight(new CompletionList(completionItems)));
     }
 
     public void setRemoteProxy(LanguageClient remoteProxy) {

@@ -52,8 +52,7 @@ public abstract class ParsedTypeProperty {
             if (!(object instanceof Constant constant)) {
                 return false;
             }
-            return getPropertyName().equals(constant.getPropertyName())
-                    && this.value.equals(constant.value);
+            return getPropertyName().equals(constant.getPropertyName()) && this.value.equals(constant.value);
         }
 
         /**

@@ -23,8 +23,7 @@ public class PhyloSpecTest {
     @Test
     public void testPhyloParamAnnotation() throws NoSuchFieldException {
         // Get the field with the PhyloParam annotation
-        PhyloParam annotation =
-                TestModel.class.getDeclaredField("parameter").getAnnotation(PhyloParam.class);
+        PhyloParam annotation = TestModel.class.getDeclaredField("parameter").getAnnotation(PhyloParam.class);
 
         assertNotNull(annotation, "PhyloParam annotation should be present");
         assertEquals("testParam", annotation.value(), "Parameter name should match");
@@ -33,10 +32,7 @@ public class PhyloSpecTest {
     }
 
     // Simple test class with annotations
-    @PhyloSpec(
-            value = "TestModel",
-            category = PhyloSpec.Category.FUNCTION,
-            role = PhyloSpec.Role.SUBSTITUTION_MODEL)
+    @PhyloSpec(value = "TestModel", category = PhyloSpec.Category.FUNCTION, role = PhyloSpec.Role.SUBSTITUTION_MODEL)
     private static class TestModel {
         @PhyloParam(value = "testParam", defaultValue = "1.0")
         private double parameter;

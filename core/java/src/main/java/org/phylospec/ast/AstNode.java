@@ -3,10 +3,7 @@ package org.phylospec.ast;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.phylospec.lexer.Range;
 
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.SIMPLE_NAME,
-        include = JsonTypeInfo.As.PROPERTY,
-        property = "nodeType")
+@JsonTypeInfo(use = JsonTypeInfo.Id.SIMPLE_NAME, include = JsonTypeInfo.As.PROPERTY, property = "nodeType")
 public abstract class AstNode {
     private Range range;
 

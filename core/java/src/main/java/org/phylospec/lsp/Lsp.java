@@ -29,8 +29,7 @@ public class Lsp implements org.eclipse.lsp4j.services.LanguageServer {
             Lsp server = new Lsp();
 
             Launcher<LanguageClient> launcher =
-                    LSPLauncher.createServerLauncher(
-                            server, socket.getInputStream(), socket.getOutputStream());
+                    LSPLauncher.createServerLauncher(server, socket.getInputStream(), socket.getOutputStream());
             server.setRemoteProxy(launcher.getRemoteProxy());
             launcher.startListening();
         }
@@ -46,8 +45,7 @@ public class Lsp implements org.eclipse.lsp4j.services.LanguageServer {
         res.getCapabilities().setCompletionProvider(new CompletionOptions());
         res.getCapabilities().setHoverProvider(Boolean.TRUE);
         res.getCapabilities().setTextDocumentSync(TextDocumentSyncKind.Full);
-        res.getCapabilities()
-                .setDiagnosticProvider(new DiagnosticRegistrationOptions(false, false));
+        res.getCapabilities().setDiagnosticProvider(new DiagnosticRegistrationOptions(false, false));
 
         return CompletableFuture.supplyAsync(() -> res);
     }
