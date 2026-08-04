@@ -16,15 +16,8 @@ public class FromNewickProvider implements GeneratorPropertyProvider {
     @Override
     public void resolveGenerator(
             ResolvedType generatedType, Map<String, Set<ResolvedType>> resolvedArguments) {
-        Set<ResolvedType> newickTypeSet = resolvedArguments.get("newickString");
-        if (newickTypeSet == null || newickTypeSet.isEmpty()) return;
-        Object newickObj = TypePropertyEngine.getPropertyOnAgreement(newickTypeSet, LITERAL);
-
-        if (!(newickObj instanceof String newickString)) {
-            return;
-        }
-
-        LightweightFileParsers.parseNewick(newickString)
+        GeneratorPropertyProvider.resolveLiteral(resolvedArguments, "newickString")
+                .flatMap(LightweightFileParsers::parseNewick)
                 .ifPresent(
                         properties -> {
                             generatedType
