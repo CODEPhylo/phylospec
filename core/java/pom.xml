@@ -306,6 +306,14 @@
                         <importOrder />
                         <removeUnusedImports />
                     </java>
+
+                    <json>
+                        <includes>
+                            <include>src/**/*.json</include>
+                        </includes>
+                        <simple>
+                        </simple>
+                    </json>
                 </configuration>
                 <executions>
                     <execution>
