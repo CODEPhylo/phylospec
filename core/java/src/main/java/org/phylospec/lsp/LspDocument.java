@@ -426,7 +426,7 @@ class LspDocument implements ErrorEventListener {
             for (Generator generator : generators) {
                 if (distributionsOnly
                         && !getReadableName(generator.getGeneratedType())
-                                .startsWith("Distribution<")) {
+                                .startsWith("Distribution")) {
                     continue;
                 }
 
