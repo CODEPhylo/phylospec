@@ -19,14 +19,11 @@ import org.phylospec.typeresolver.TypeUtils;
 public class GeneratorPropertyResolver {
 
     private final List<ErrorEventListener> eventListeners;
-    private List<GeneratorPropertyProvider> providers = new ArrayList<>();
+    private final List<GeneratorPropertyProvider> providers;
 
     public GeneratorPropertyResolver() {
         eventListeners = new ArrayList<>();
-
-        for (GeneratorPropertyProvider hook : ServiceLoader.load(GeneratorPropertyProvider.class)) {
-            providers.add(hook);
-        }
+        providers = GeneratorPropertyProvider.loadProviders();
     }
 
     public void registerEventListener(ErrorEventListener listener) {
