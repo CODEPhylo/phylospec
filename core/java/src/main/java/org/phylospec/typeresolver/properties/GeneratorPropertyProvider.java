@@ -43,8 +43,7 @@ public interface GeneratorPropertyProvider {
         if (argumentTypeSet == null || argumentTypeSet.isEmpty()) return Optional.empty();
 
         Object literal =
-                TypePropertyEngine.getPropertyOnAgreement(
-                        argumentTypeSet, TypePropertyNames.LITERAL);
+                TypePropertyEngine.getPropertyOnAgreement(argumentTypeSet, TypePropertyNames.VALUE);
         return literal instanceof String stringValue ? Optional.of(stringValue) : Optional.empty();
     }
 

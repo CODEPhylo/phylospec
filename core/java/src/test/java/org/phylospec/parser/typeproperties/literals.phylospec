@@ -14,8 +14,8 @@ PositiveReal weight = 2.5
 // EXPECT TYPE_ERRORS
 
 // EXPECT TYPES
-// Boolean<;literal=true>
-// String<;literal=phylo>
-// PositiveInteger<;literal=4>
-// PositiveReal<;literal=2.5>
+// Boolean<;value=true>
+// String<;value=phylo>
+// PositiveInteger<;value=4>
+// PositiveReal<;value=2.5>
 // EXPECT TYPES
