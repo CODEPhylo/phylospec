@@ -7,7 +7,7 @@ public final class TypePropertyNames {
     public static final String NUM = "num";
     public static final String NUM_COLS = "numCols";
     public static final String NUM_ROWS = "numRows";
-    public static final String LITERAL = "literal";
+    public static final String VALUE = "value";
     public static final String NUM_TAXA = "numTaxa";
     public static final String NUM_SITES = "numSites";
     public static final String NUM_BRANCHES = "numBranches";
@@ -24,7 +24,7 @@ public final class TypePropertyNames {
             String inputName, String propertyName, boolean startOfSentence) {
         String article = startOfSentence ? "The" : "the";
         return switch (propertyName) {
-            case LITERAL -> article + " value of '" + inputName + "'";
+            case VALUE -> article + " value of '" + inputName + "'";
             case NUM -> article + " number of elements in '" + inputName + "'";
             case NUM_ROWS -> article + " number of rows in '" + inputName + "'";
             case NUM_COLS -> article + " number of columns in '" + inputName + "'";

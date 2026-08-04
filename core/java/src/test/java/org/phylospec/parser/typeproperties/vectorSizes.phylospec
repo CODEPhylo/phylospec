@@ -18,8 +18,8 @@ Vector<Real> spaced = linspace(start=0.0, end=1.0, num=5)
 // EXPECT TYPE_ERRORS
 
 // EXPECT TYPES
-// PositiveInteger<;literal=4>
-// PositiveInteger<;literal=4>
+// PositiveInteger<;value=4>
+// PositiveInteger<;value=4>
 // Vector<Real;num=3>
 // Vector<Real;num=4>
 // Vector<Real;num=4>

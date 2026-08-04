@@ -21,10 +21,10 @@ PositiveInteger treeBranches = numBranches(parsedTree)
 
 // EXPECT TYPES
 // Alignment<;numSites=898, numTaxa=12>
-// PositiveInteger<;literal=898>
-// PositiveInteger<;literal=12>
+// PositiveInteger<;value=898>
+// PositiveInteger<;value=12>
 // Tree<;numTaxa=3, numBranches=4>
 // Tree<;numTaxa=3, numBranches=4>
-// PositiveInteger<;literal=3>
-// PositiveInteger<;literal=4>
+// PositiveInteger<;value=3>
+// PositiveInteger<;value=4>
 // EXPECT TYPES
