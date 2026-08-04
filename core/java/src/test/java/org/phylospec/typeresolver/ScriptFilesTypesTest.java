@@ -58,54 +58,43 @@ public class ScriptFilesTypesTest {
 
         String source = String.join("\n", lines);
 
-        return DynamicTest.dynamicTest(
-                psPath.getFileName().toString(),
-                () -> {
-                    Lexer lexer = new Lexer(source);
-                    List<Token> tokens = lexer.scanTokens();
-                    Parser parser = new Parser(tokens);
-                    List<Stmt> statements = parser.parse();
-                    List<ComponentLibrary> componentLibraries =
-                            ComponentResolver.loadCoreComponentLibraries();
-                    ComponentResolver componentResolver = new ComponentResolver(componentLibraries);
-                    TypeResolver resolver = new TypeResolver(componentResolver);
+        return DynamicTest.dynamicTest(psPath.getFileName().toString(), () -> {
+            Lexer lexer = new Lexer(source);
+            List<Token> tokens = lexer.scanTokens();
+            Parser parser = new Parser(tokens);
+            List<Stmt> statements = parser.parse();
+            List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
+            ComponentResolver componentResolver = new ComponentResolver(componentLibraries);
+            TypeResolver resolver = new TypeResolver(componentResolver);
 
-                    List<String> actualResolutionErrors = new ArrayList<>();
-                    for (Stmt statement : statements) {
-                        try {
-                            statement.accept(resolver);
-                        } catch (TypeError e) {
-                            actualResolutionErrors.addAll(
-                                    Arrays.stream(e.getMessage().split("\n")).toList());
-                        }
-                    }
+            List<String> actualResolutionErrors = new ArrayList<>();
+            for (Stmt statement : statements) {
+                try {
+                    statement.accept(resolver);
+                } catch (TypeError e) {
+                    actualResolutionErrors.addAll(
+                            Arrays.stream(e.getMessage().split("\n")).toList());
+                }
+            }
 
-                    for (int i = 0;
-                            i
-                                    < Math.max(
-                                            expectedResolutionErrors.size(),
-                                            actualResolutionErrors.size());
-                            i++) {
-                        if (expectedResolutionErrors.size() <= i) {
-                            assertEquals(
-                                    "<no error>",
-                                    actualResolutionErrors.get(i).trim(),
-                                    "Resolution error mismatch " + i + " for: " + psPath);
-                        } else if (actualResolutionErrors.size() <= i) {
-                            assertEquals(
-                                    expectedResolutionErrors.get(i).trim(),
-                                    "<no error>",
-                                    "Resolution error mismatch " + i + " for: " + psPath);
-                        } else {
-                            String expected = expectedResolutionErrors.get(i).trim();
-                            String actual = actualResolutionErrors.get(i).trim();
-                            assertEquals(
-                                    expected,
-                                    actual,
-                                    "Resolution error mismatch " + i + " for: " + psPath);
-                        }
-                    }
-                });
+            for (int i = 0; i < Math.max(expectedResolutionErrors.size(), actualResolutionErrors.size()); i++) {
+                if (expectedResolutionErrors.size() <= i) {
+                    assertEquals(
+                            "<no error>",
+                            actualResolutionErrors.get(i).trim(),
+                            "Resolution error mismatch " + i + " for: " + psPath);
+                } else if (actualResolutionErrors.size() <= i) {
+                    assertEquals(
+                            expectedResolutionErrors.get(i).trim(),
+                            "<no error>",
+                            "Resolution error mismatch " + i + " for: " + psPath);
+                } else {
+                    String expected = expectedResolutionErrors.get(i).trim();
+                    String actual = actualResolutionErrors.get(i).trim();
+                    assertEquals(expected, actual, "Resolution error mismatch " + i + " for: " + psPath);
+                }
+            }
+        });
     }
 
     private List<String> extractExpectedResolutionErrors(List<String> lines) {

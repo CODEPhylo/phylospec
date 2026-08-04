@@ -58,8 +58,7 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
         if (!this.getCompatibleStochasticities().contains(stochasticity)) {
             throw new FailedTilingAttempt.Rejected(
-                    Stochasticity.getErrorMessage(
-                            "BEAST 2.8", stochasticity, this.getCompatibleStochasticities()));
+                    Stochasticity.getErrorMessage("BEAST 2.8", stochasticity, this.getCompatibleStochasticities()));
         }
 
         // collect TileInput fields from this template in declaration order
@@ -78,20 +77,16 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
                     continue;
                 } else {
                     throw new FailedTilingAttempt.Rejected(
-                            "BEAST 2.8 expects you to provide a value for '"
-                                    + tileInput.getKey()
-                                    + "'.");
+                            "BEAST 2.8 expects you to provide a value for '" + tileInput.getKey() + "'.");
                 }
             }
 
             Set<Tile<?, S>> compatible =
-                    tileInput.getCompatibleInputTiles(
-                            inputAstNode, allInputTiles, stochasticityResolver);
+                    tileInput.getCompatibleInputTiles(inputAstNode, allInputTiles, stochasticityResolver);
             if (compatible.isEmpty()) {
-                throw new FailedTilingAttempt.RejectedBoundary(
-                        "BEAST 2.8 cannot deal with the value you provided for "
-                                + tileInput.getKey().replace("$", "")
-                                + ".");
+                throw new FailedTilingAttempt.RejectedBoundary("BEAST 2.8 cannot deal with the value you provided for "
+                        + tileInput.getKey().replace("$", "")
+                        + ".");
             }
 
             compatibleInputTiles.add(compatible);
@@ -115,7 +110,11 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
                     if (child != null) {
                         // strip leading $ from template variable name
                         String varName = input.getKey().substring(1);
-                        sb.append(" (").append(varName).append(" ").append(child).append(")");
+                        sb.append(" (")
+                                .append(varName)
+                                .append(" ")
+                                .append(child)
+                                .append(")");
                     }
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
@@ -137,29 +136,24 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
             this(templateVariable, required, EnumSet.allOf(Stochasticity.class));
         }
 
-        public TemplateTileInput(
-                String templateVariable, Set<Stochasticity> acceptedStochasticities) {
+        public TemplateTileInput(String templateVariable, Set<Stochasticity> acceptedStochasticities) {
             this(templateVariable, true, acceptedStochasticities);
         }
 
         public TemplateTileInput(
-                String templateVariable,
-                boolean required,
-                Set<Stochasticity> acceptedStochasticities) {
+                String templateVariable, boolean required, Set<Stochasticity> acceptedStochasticities) {
             super(required, acceptedStochasticities);
             if (!templateVariable.startsWith("$")) {
-                throw new RuntimeException(
-                        "Invalid template variable '"
-                                + templateVariable
-                                + "'. A template variable has to start with a dollar sign (e.g. '$"
-                                + templateVariable
-                                + "'.");
+                throw new RuntimeException("Invalid template variable '"
+                        + templateVariable
+                        + "'. A template variable has to start with a dollar sign (e.g. '$"
+                        + templateVariable
+                        + "'.");
             }
             if (!this.isRequired() && !templateVariable.startsWith("$$")) {
-                throw new RuntimeException(
-                        "Invalid template variable '"
-                                + templateVariable
-                                + "'. An optional template variable has to start with two dollar signs.");
+                throw new RuntimeException("Invalid template variable '"
+                        + templateVariable
+                        + "'. An optional template variable has to start with two dollar signs.");
             }
             this.templateVariable = templateVariable;
         }

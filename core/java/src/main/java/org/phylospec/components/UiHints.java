@@ -146,11 +146,7 @@ public class UiHints {
     public int hashCode() {
         int result = 1;
         result = ((result * 31) + ((this.widget == null) ? 0 : this.widget.hashCode()));
-        result =
-                ((result * 31)
-                        + ((this.additionalProperties == null)
-                                ? 0
-                                : this.additionalProperties.hashCode()));
+        result = ((result * 31) + ((this.additionalProperties == null) ? 0 : this.additionalProperties.hashCode()));
         result = ((result * 31) + ((this.order == null) ? 0 : this.order.hashCode()));
         result = ((result * 31) + ((this.group == null) ? 0 : this.group.hashCode()));
         return result;
@@ -165,16 +161,11 @@ public class UiHints {
             return false;
         }
         UiHints rhs = ((UiHints) other);
-        return (((((this.widget == rhs.widget)
-                                        || ((this.widget != null)
-                                                && this.widget.equals(rhs.widget)))
+        return (((((this.widget == rhs.widget) || ((this.widget != null) && this.widget.equals(rhs.widget)))
                                 && ((this.additionalProperties == rhs.additionalProperties)
                                         || ((this.additionalProperties != null)
-                                                && this.additionalProperties.equals(
-                                                        rhs.additionalProperties))))
-                        && ((this.order == rhs.order)
-                                || ((this.order != null) && this.order.equals(rhs.order))))
-                && ((this.group == rhs.group)
-                        || ((this.group != null) && this.group.equals(rhs.group))));
+                                                && this.additionalProperties.equals(rhs.additionalProperties))))
+                        && ((this.order == rhs.order) || ((this.order != null) && this.order.equals(rhs.order))))
+                && ((this.group == rhs.group) || ((this.group != null) && this.group.equals(rhs.group))));
     }
 }

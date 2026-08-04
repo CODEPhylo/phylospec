@@ -22,8 +22,7 @@ public class RemoveGroupingTest {
                 new Stmt.Assignment(
                         new AstType.Atomic("Real"),
                         "a",
-                        new Expr.Binary(
-                                new Expr.Literal(10), TokenType.PLUS, new Expr.Literal(2))));
+                        new Expr.Binary(new Expr.Literal(10), TokenType.PLUS, new Expr.Literal(2))));
     }
 
     @Test
@@ -37,10 +36,7 @@ public class RemoveGroupingTest {
                                 new Expr.Literal(10),
                                 TokenType.PLUS,
                                 new Expr.Binary(
-                                        new Expr.Binary(
-                                                new Expr.Literal(100),
-                                                TokenType.STAR,
-                                                new Expr.Literal(5)),
+                                        new Expr.Binary(new Expr.Literal(100), TokenType.STAR, new Expr.Literal(5)),
                                         TokenType.PLUS,
                                         new Expr.Literal(2)))));
     }
@@ -54,11 +50,8 @@ public class RemoveGroupingTest {
                         "value",
                         new Expr.Call(
                                 "LogNormal",
-                                new Expr.AssignedArgument(
-                                        new Expr.Binary(
-                                                new Expr.Literal(100),
-                                                TokenType.PLUS,
-                                                new Expr.Literal(50))))));
+                                new Expr.AssignedArgument(new Expr.Binary(
+                                        new Expr.Literal(100), TokenType.PLUS, new Expr.Literal(50))))));
     }
 
     void testStatements(String source, Stmt... expectedStatements) {

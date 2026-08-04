@@ -27,8 +27,7 @@ public class PhyloSpecRegistry {
     private final Map<PhyloSpec.Role, List<Class<?>>> roleMap = new ConcurrentHashMap<>();
 
     // Maps classes to their parameter mappings
-    private final Map<Class<?>, Map<String, ParameterMapping>> parameterMappings =
-            new ConcurrentHashMap<>();
+    private final Map<Class<?>, Map<String, ParameterMapping>> parameterMappings = new ConcurrentHashMap<>();
 
     /**
      * Get the singleton instance of the registry.
@@ -149,10 +148,9 @@ public class PhyloSpecRegistry {
         }
 
         // Filter by category
-        List<Class<?>> filtered =
-                implementations.stream()
-                        .filter(cls -> cls.getAnnotation(PhyloSpec.class).category() == category)
-                        .collect(Collectors.toList());
+        List<Class<?>> filtered = implementations.stream()
+                .filter(cls -> cls.getAnnotation(PhyloSpec.class).category() == category)
+                .collect(Collectors.toList());
 
         return filtered.isEmpty() ? implementations.get(0) : filtered.get(0);
     }
@@ -210,11 +208,7 @@ public class PhyloSpecRegistry {
         private final String defaultValue;
 
         public ParameterMapping(
-                String phyloSpecName,
-                String implementationName,
-                Type type,
-                boolean required,
-                String defaultValue) {
+                String phyloSpecName, String implementationName, Type type, boolean required, String defaultValue) {
             this.phyloSpecName = phyloSpecName;
             this.implementationName = implementationName;
             this.type = type;
@@ -273,8 +267,7 @@ public class PhyloSpecRegistry {
      * to efficiently scan the classpath for annotations.
      */
     private static class ClassFinder {
-        public Set<Class<?>> findAnnotatedClasses(
-                String packageName, Class<? extends Annotation> annotation)
+        public Set<Class<?>> findAnnotatedClasses(String packageName, Class<? extends Annotation> annotation)
                 throws ReflectiveOperationException {
             // This is a simplified placeholder implementation
             // A real implementation would use a classpath scanning library

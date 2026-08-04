@@ -7,8 +7,7 @@ import org.phylospec.ast.*;
  * Resolves the stochasticity of each node of the AST tree: for each node, it is determined if it
  * represents a deterministic or stochastic expression.
  */
-public class StochasticityResolver
-        implements AstVisitor<Stochasticity, Stochasticity, Stochasticity> {
+public class StochasticityResolver implements AstVisitor<Stochasticity, Stochasticity, Stochasticity> {
 
     private final Map<AstNode, Stochasticity> stochasticityMap;
     private final Map<String, Stochasticity> variableStochasticityMap;
@@ -82,9 +81,7 @@ public class StochasticityResolver
     public Stochasticity visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
         observedBetween.stmt.accept(this);
         Stochasticity stochasticity =
-                Stochasticity.merge(
-                        observedBetween.observedFrom.accept(this),
-                        observedBetween.observedTo.accept(this));
+                Stochasticity.merge(observedBetween.observedFrom.accept(this), observedBetween.observedTo.accept(this));
         return remember(observedBetween, stochasticity);
     }
 
@@ -112,9 +109,7 @@ public class StochasticityResolver
         if (this.scopedIndexVariables.contains(expr.variableName)) {
             stochasticity = Stochasticity.DETERMINISTIC;
         } else {
-            stochasticity =
-                    variableStochasticityMap.getOrDefault(
-                            expr.variableName, Stochasticity.DETERMINISTIC);
+            stochasticity = variableStochasticityMap.getOrDefault(expr.variableName, Stochasticity.DETERMINISTIC);
         }
         return remember(expr, stochasticity);
     }
@@ -138,19 +133,15 @@ public class StochasticityResolver
     public Stochasticity visitBinary(Expr.Binary expr) {
         Stochasticity leftStochasticity = expr.left.accept(this);
         Stochasticity rightStochasticity = expr.right.accept(this);
-        return remember(
-                expr,
-                Stochasticity.nonConstant(
-                        Stochasticity.merge(leftStochasticity, rightStochasticity)));
+        return remember(expr, Stochasticity.nonConstant(Stochasticity.merge(leftStochasticity, rightStochasticity)));
     }
 
     @Override
     public Stochasticity visitCall(Expr.Call expr) {
         return remember(
                 expr,
-                Stochasticity.nonConstant(
-                        Stochasticity.merge(
-                                Arrays.stream(expr.arguments).map(x -> x.accept(this)).toList())));
+                Stochasticity.nonConstant(Stochasticity.merge(
+                        Arrays.stream(expr.arguments).map(x -> x.accept(this)).toList())));
     }
 
     @Override
@@ -173,7 +164,8 @@ public class StochasticityResolver
     public Stochasticity visitArray(Expr.Array expr) {
         return remember(
                 expr,
-                Stochasticity.merge(expr.elements.stream().map(x -> x.accept(this)).toList()));
+                Stochasticity.merge(
+                        expr.elements.stream().map(x -> x.accept(this)).toList()));
     }
 
     @Override

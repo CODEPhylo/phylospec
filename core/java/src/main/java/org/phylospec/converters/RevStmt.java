@@ -71,8 +71,8 @@ class RevStmt {
                         case DETERMINISTIC -> " := ";
                         case STOCHASTIC -> " ~ ";
                         default ->
-                                throw new RevConverter.RevConversionError(
-                                        "Undefined statement type. This should not happen.");
+                            throw new RevConverter.RevConversionError(
+                                    "Undefined statement type. This should not happen.");
                     });
 
             builder.append(expression);
@@ -106,8 +106,7 @@ class RevStmt {
                 return moves;
             }
 
-            ResolvedType elementType =
-                    TypeUtils.recoverTypeParameter("Vector", "T", type, componentResolver);
+            ResolvedType elementType = TypeUtils.recoverTypeParameter("Vector", "T", type, componentResolver);
             if (elementType != null) {
                 if (covers("PositiveReal", elementType)) {
                     return buildMove("mvVectorSingleElementScale");
@@ -131,7 +130,9 @@ class RevStmt {
 
         private boolean covers(String typeString, ResolvedType type) {
             return TypeUtils.covers(
-                    ResolvedType.fromString(typeString, componentResolver).iterator().next(),
+                    ResolvedType.fromString(typeString, componentResolver)
+                            .iterator()
+                            .next(),
                     type,
                     componentResolver);
         }

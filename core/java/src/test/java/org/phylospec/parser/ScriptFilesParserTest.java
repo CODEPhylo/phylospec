@@ -66,40 +66,34 @@ public class ScriptFilesParserTest {
 
         String source = String.join("\n", lines);
 
-        return DynamicTest.dynamicTest(
-                psPath.getFileName().toString(),
-                () -> {
-                    Lexer lexer = new Lexer(source);
-                    List<Token> tokens = lexer.scanTokens();
-                    Parser parser = new Parser(tokens);
-                    List<Stmt> statements = parser.parse();
+        return DynamicTest.dynamicTest(psPath.getFileName().toString(), () -> {
+            Lexer lexer = new Lexer(source);
+            List<Token> tokens = lexer.scanTokens();
+            Parser parser = new Parser(tokens);
+            List<Stmt> statements = parser.parse();
 
-                    AstPrinter printer = new AstPrinter();
-                    List<String> actualAstLines = new ArrayList<>();
-                    for (Stmt statement : statements) {
-                        actualAstLines.add(statement.accept(printer));
-                    }
+            AstPrinter printer = new AstPrinter();
+            List<String> actualAstLines = new ArrayList<>();
+            for (Stmt statement : statements) {
+                actualAstLines.add(statement.accept(printer));
+            }
 
-                    assertEquals(
-                            expectedAstLines.size(),
-                            actualAstLines.size(),
-                            "Wrong number of AST lines for: " + psPath);
+            assertEquals(expectedAstLines.size(), actualAstLines.size(), "Wrong number of AST lines for: " + psPath);
 
-                    for (int i = 0; i < expectedAstLines.size(); i++) {
-                        String expected = expectedAstLines.get(i).trim();
-                        String actual = actualAstLines.get(i).trim();
-                        assertEquals(
-                                expected, actual, "AST mismatch at index " + i + " for: " + psPath);
-                    }
+            for (int i = 0; i < expectedAstLines.size(); i++) {
+                String expected = expectedAstLines.get(i).trim();
+                String actual = actualAstLines.get(i).trim();
+                assertEquals(expected, actual, "AST mismatch at index " + i + " for: " + psPath);
+            }
 
-                    if (expectedTypeLines.isPresent()) {
-                        assertResolvedTypesMatch(expectedTypeLines.get(), statements, psPath);
-                    }
-                });
+            if (expectedTypeLines.isPresent()) {
+                assertResolvedTypesMatch(expectedTypeLines.get(), statements, psPath);
+            }
+        });
     }
 
-    private void assertResolvedTypesMatch(
-            List<String> expectedTypeLines, List<Stmt> statements, Path psPath) throws IOException {
+    private void assertResolvedTypesMatch(List<String> expectedTypeLines, List<Stmt> statements, Path psPath)
+            throws IOException {
         List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
         ComponentResolver componentResolver = new ComponentResolver(componentLibraries);
         TypeResolver resolver = new TypeResolver(componentResolver);
@@ -109,26 +103,21 @@ public class ScriptFilesParserTest {
             try {
                 Set<ResolvedType> statementTypes = statement.accept(resolver);
                 if (hasResolvedValue(statement, resolver)) {
-                    actualTypes.addAll(
-                            statementTypes.stream()
-                                    .sorted(Comparator.comparing(this::formatResolvedType))
-                                    .toList());
+                    actualTypes.addAll(statementTypes.stream()
+                            .sorted(Comparator.comparing(this::formatResolvedType))
+                            .toList());
                 }
             } catch (TypeError ignored) {
                 // type errors are checked by ScriptFilesTypesTest
 
                 Set<ResolvedType> variableTypes = recoverResolvedTypes(statement, resolver);
-                actualTypes.addAll(
-                        variableTypes.stream()
-                                .sorted(Comparator.comparing(this::formatResolvedType))
-                                .toList());
+                actualTypes.addAll(variableTypes.stream()
+                        .sorted(Comparator.comparing(this::formatResolvedType))
+                        .toList());
             }
         }
 
-        assertEquals(
-                expectedTypeLines.size(),
-                actualTypes.size(),
-                "Wrong number of resolved types for: " + psPath);
+        assertEquals(expectedTypeLines.size(), actualTypes.size(), "Wrong number of resolved types for: " + psPath);
 
         for (int index = 0; index < expectedTypeLines.size(); index++) {
             assertResolvedTypeMatches(
@@ -138,14 +127,10 @@ public class ScriptFilesParserTest {
         }
     }
 
-    private void assertResolvedTypeMatches(
-            ParsedType expected, ResolvedType actual, String location) {
+    private void assertResolvedTypeMatches(ParsedType expected, ResolvedType actual, String location) {
         String expectedName =
-                expected.getNamespace().isEmpty()
-                        ? expected.getAtomicTypeName()
-                        : expected.stripGenerics();
-        String actualName =
-                expected.getNamespace().isEmpty() ? actual.getUnqualifiedName() : actual.getName();
+                expected.getNamespace().isEmpty() ? expected.getAtomicTypeName() : expected.stripGenerics();
+        String actualName = expected.getNamespace().isEmpty() ? actual.getUnqualifiedName() : actual.getName();
         assertEquals(expectedName, actualName, "Type name mismatch for " + location);
 
         List<ParsedType> expectedParameters = expected.getTypeParameters();
@@ -204,15 +189,13 @@ public class ScriptFilesParserTest {
         List<String> parameters = new ArrayList<>();
         for (String parameterName : type.getParametersNames()) {
             ResolvedType parameterType = type.getParameterTypes().get(parameterName);
-            parameters.add(
-                    parameterType == null ? parameterName : formatResolvedType(parameterType));
+            parameters.add(parameterType == null ? parameterName : formatResolvedType(parameterType));
         }
 
-        List<String> properties =
-                type.properties().getPropertyNames().stream()
-                        .sorted()
-                        .map(name -> name + "=" + type.properties().get(name))
-                        .toList();
+        List<String> properties = type.properties().getPropertyNames().stream()
+                .sorted()
+                .map(name -> name + "=" + type.properties().get(name))
+                .toList();
         if (parameters.isEmpty() && properties.isEmpty()) {
             return type.getUnqualifiedName();
         }

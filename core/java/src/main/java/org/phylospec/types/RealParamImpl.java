@@ -16,11 +16,10 @@ public class RealParamImpl<D extends Real> implements RealScalar<D> {
         this.domain = domain;
 
         if (!isValid())
-            throw new IllegalArgumentException(
-                    "Initial value of "
-                            + value
-                            + " is not valid for domain "
-                            + domain.getClass().getName());
+            throw new IllegalArgumentException("Initial value of "
+                    + value
+                    + " is not valid for domain "
+                    + domain.getClass().getName());
     }
 
     @Override
@@ -32,8 +31,7 @@ public class RealParamImpl<D extends Real> implements RealScalar<D> {
     public Double get(int... idx) {
         // a scalar (rank 0 or size 1), only index 0 is valid.
         if (idx.length != 0)
-            throw new IllegalArgumentException(
-                    "Invalid argument for RealScalar ! " + Arrays.toString(idx));
+            throw new IllegalArgumentException("Invalid argument for RealScalar ! " + Arrays.toString(idx));
         return get();
     }
 

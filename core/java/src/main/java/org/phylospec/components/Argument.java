@@ -12,16 +12,7 @@ import java.util.Map;
 import javax.annotation.processing.Generated;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "name",
-    "type",
-    "required",
-    "recommended",
-    "default",
-    "dimension",
-    "description",
-    "uiHints"
-})
+@JsonPropertyOrder({"name", "type", "required", "recommended", "default", "dimension", "description", "uiHints"})
 @Generated("jsonschema2pojo")
 public class Argument {
 
@@ -296,11 +287,7 @@ public class Argument {
         result = ((result * 31) + ((this.uiHints == null) ? 0 : this.uiHints.hashCode()));
         result = ((result * 31) + ((this.name == null) ? 0 : this.name.hashCode()));
         result = ((result * 31) + ((this.description == null) ? 0 : this.description.hashCode()));
-        result =
-                ((result * 31)
-                        + ((this.additionalProperties == null)
-                                ? 0
-                                : this.additionalProperties.hashCode()));
+        result = ((result * 31) + ((this.additionalProperties == null) ? 0 : this.additionalProperties.hashCode()));
         result = ((result * 31) + ((this.type == null) ? 0 : this.type.hashCode()));
         result = ((result * 31) + ((this.dimension == null) ? 0 : this.dimension.hashCode()));
         result = ((result * 31) + ((this.required == null) ? 0 : this.required.hashCode()));
@@ -318,43 +305,30 @@ public class Argument {
         }
         Argument rhs = ((Argument) other);
         return ((((((((((this._default == rhs._default)
-                                                                                || ((this._default
-                                                                                                != null)
-                                                                                        && this
-                                                                                                ._default
-                                                                                                .equals(
-                                                                                                        rhs._default)))
-                                                                        && ((this.uiHints
-                                                                                        == rhs.uiHints)
-                                                                                || ((this.uiHints
-                                                                                                != null)
-                                                                                        && this
-                                                                                                .uiHints
-                                                                                                .equals(
-                                                                                                        rhs.uiHints))))
+                                                                                || ((this._default != null)
+                                                                                        && this._default.equals(
+                                                                                                rhs._default)))
+                                                                        && ((this.uiHints == rhs.uiHints)
+                                                                                || ((this.uiHints != null)
+                                                                                        && this.uiHints.equals(
+                                                                                                rhs.uiHints))))
                                                                 && ((this.name == rhs.name)
                                                                         || ((this.name != null)
-                                                                                && this.name.equals(
-                                                                                        rhs.name))))
+                                                                                && this.name.equals(rhs.name))))
                                                         && ((this.description == rhs.description)
                                                                 || ((this.description != null)
-                                                                        && this.description.equals(
-                                                                                rhs.description))))
-                                                && ((this.additionalProperties
-                                                                == rhs.additionalProperties)
+                                                                        && this.description.equals(rhs.description))))
+                                                && ((this.additionalProperties == rhs.additionalProperties)
                                                         || ((this.additionalProperties != null)
                                                                 && this.additionalProperties.equals(
                                                                         rhs.additionalProperties))))
                                         && ((this.type == rhs.type)
-                                                || ((this.type != null)
-                                                        && this.type.equals(rhs.type))))
+                                                || ((this.type != null) && this.type.equals(rhs.type))))
                                 && ((this.dimension == rhs.dimension)
-                                        || ((this.dimension != null)
-                                                && this.dimension.equals(rhs.dimension))))
+                                        || ((this.dimension != null) && this.dimension.equals(rhs.dimension))))
                         && ((this.required == rhs.required)
                                 || ((this.required != null) && this.required.equals(rhs.required))))
                 && ((this.recommended == rhs.recommended)
-                        || ((this.recommended != null)
-                                && this.recommended.equals(rhs.recommended))));
+                        || ((this.recommended != null) && this.recommended.equals(rhs.recommended))));
     }
 }

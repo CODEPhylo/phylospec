@@ -37,10 +37,8 @@ public class LexerTest {
         assertEquals(new Token(TokenType.GREATER, ">", null, 1, 17, 18), tokens.get(15));
         assertEquals(new Token(TokenType.GREATER_EQUAL, ">=", null, 1, 18, 20), tokens.get(16));
         assertEquals(new Token(TokenType.LESS_EQUAL, "<=", null, 1, 20, 22), tokens.get(17));
-        assertEquals(
-                new Token(TokenType.LEFT_SQUARE_BRACKET, "[", null, 1, 22, 23), tokens.get(18));
-        assertEquals(
-                new Token(TokenType.RIGHT_SQUARE_BRACKET, "]", null, 1, 23, 24), tokens.get(19));
+        assertEquals(new Token(TokenType.LEFT_SQUARE_BRACKET, "[", null, 1, 22, 23), tokens.get(18));
+        assertEquals(new Token(TokenType.RIGHT_SQUARE_BRACKET, "]", null, 1, 23, 24), tokens.get(19));
         assertEquals(new Token(TokenType.IMPORT, "use", null, 1, 24, 27), tokens.get(20));
         assertEquals(new Token(TokenType.FOR, "for", null, 1, 28, 31), tokens.get(21));
         assertEquals(new Token(TokenType.EOF, "", null, 1, 31, 31), tokens.get(22));
@@ -77,13 +75,7 @@ public class LexerTest {
         List<Token> tokens = lexer.scanTokens();
 
         assertEquals(
-                new Token(
-                        TokenType.STRING_END,
-                        "\"Hallo this is a string\"",
-                        "Hallo this is a string",
-                        1,
-                        0,
-                        24),
+                new Token(TokenType.STRING_END, "\"Hallo this is a string\"", "Hallo this is a string", 1, 0, 24),
                 tokens.get(0));
         assertEquals(new Token(TokenType.EOL, "\n", null, 1, 24, 25), tokens.get(1));
         assertEquals(
@@ -107,13 +99,9 @@ public class LexerTest {
         List<Token> tokens = lexer.scanTokens();
 
         assertEquals(
-                new Token(
-                        TokenType.STRING_PART, "\"Hallo this is a ", "Hallo this is a ", 1, 0, 17),
-                tokens.get(0));
-        assertEquals(
-                new Token(TokenType.IDENTIFIER, "interpolated", null, 1, 19, 31), tokens.get(1));
-        assertEquals(
-                new Token(TokenType.STRING_PART, " very ", " very ", 1, 32, 38), tokens.get(2));
+                new Token(TokenType.STRING_PART, "\"Hallo this is a ", "Hallo this is a ", 1, 0, 17), tokens.get(0));
+        assertEquals(new Token(TokenType.IDENTIFIER, "interpolated", null, 1, 19, 31), tokens.get(1));
+        assertEquals(new Token(TokenType.STRING_PART, " very ", " very ", 1, 32, 38), tokens.get(2));
         assertEquals(new Token(TokenType.IDENTIFIER, "cool", null, 1, 40, 44), tokens.get(3));
         assertEquals(new Token(TokenType.STRING_PART, " ", " ", 1, 45, 46), tokens.get(4));
         assertEquals(new Token(TokenType.IDENTIFIER, "string", null, 1, 48, 54), tokens.get(5));
@@ -148,8 +136,7 @@ public class LexerTest {
 
     @Test
     public void testMisc() {
-        String source =
-                "(),.-+/*=!~\ntrue\rfalse\r\n\"Hallo\"10\n\r\n10.5  // this is some comment\nsomeFun()";
+        String source = "(),.-+/*=!~\ntrue\rfalse\r\n\"Hallo\"10\n\r\n10.5  // this is some comment\nsomeFun()";
 
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
@@ -177,8 +164,7 @@ public class LexerTest {
         assertEquals(new Token(TokenType.EOL, "\r\n", null, 3, 5, 7), tokens.get(15));
 
         // 4th line: "Hallo" 10
-        assertEquals(
-                new Token(TokenType.STRING_END, "\"Hallo\"", "Hallo", 4, 0, 7), tokens.get(16));
+        assertEquals(new Token(TokenType.STRING_END, "\"Hallo\"", "Hallo", 4, 0, 7), tokens.get(16));
         assertEquals(new Token(TokenType.INT, "10", 10, 4, 7, 9), tokens.get(17));
         assertEquals(new Token(TokenType.EOL, "\n", null, 4, 9, 10), tokens.get(18));
 
@@ -236,12 +222,9 @@ public class LexerTest {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
 
-        assertEquals(
-                new Token(TokenType.OBSERVED_AS, "observed as", null, 1, 0, 11), tokens.get(0));
+        assertEquals(new Token(TokenType.OBSERVED_AS, "observed as", null, 1, 0, 11), tokens.get(0));
         assertEquals(new Token(TokenType.TRUE, "true", null, 1, 12, 16), tokens.get(1));
-        assertEquals(
-                new Token(TokenType.OBSERVED_BETWEEN, "observed between", null, 1, 17, 33),
-                tokens.get(2));
+        assertEquals(new Token(TokenType.OBSERVED_BETWEEN, "observed between", null, 1, 17, 33), tokens.get(2));
         assertEquals(new Token(TokenType.EOF, "", null, 1, 33, 33), tokens.get(3));
 
         assertEquals(4, tokens.size());
@@ -258,13 +241,7 @@ public class LexerTest {
             try {
                 tokens = new Lexer(input).scanTokens();
             } catch (Exception e) {
-                fail(
-                        "Lexer threw an exception on iteration "
-                                + i
-                                + " (input="
-                                + repr(input)
-                                + "): "
-                                + e);
+                fail("Lexer threw an exception on iteration " + i + " (input=" + repr(input) + "): " + e);
                 return;
             }
 
@@ -272,19 +249,12 @@ public class LexerTest {
             assertNotNull(tokens, "tokens must not be null (iter=" + i + ")");
 
             // invariant: last token is always EOF
-            assertEquals(
-                    TokenType.EOF,
-                    tokens.get(tokens.size() - 1).type,
-                    "last token must be EOF (iter=" + i + ")");
+            assertEquals(TokenType.EOF, tokens.get(tokens.size() - 1).type, "last token must be EOF (iter=" + i + ")");
 
             // invariant: all token ranges are internally consistent
             for (Token token : tokens) {
-                assertTrue(
-                        token.range.startLine >= 1,
-                        "startLine must be >= 1 (iter=" + i + ", token=" + token + ")");
-                assertTrue(
-                        token.range.start >= 0,
-                        "start must be >= 0 (iter=" + i + ", token=" + token + ")");
+                assertTrue(token.range.startLine >= 1, "startLine must be >= 1 (iter=" + i + ", token=" + token + ")");
+                assertTrue(token.range.start >= 0, "start must be >= 0 (iter=" + i + ", token=" + token + ")");
                 assertTrue(
                         token.range.endLine >= token.range.startLine,
                         "end must be >= start (iter=" + i + ", token=" + token + ")");

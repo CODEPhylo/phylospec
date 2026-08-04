@@ -20,8 +20,7 @@ public final class TypePropertyNames {
      * @param startOfSentence whether the description starts a sentence
      * @return a human-readable property description
      */
-    public static String describeProperty(
-            String inputName, String propertyName, boolean startOfSentence) {
+    public static String describeProperty(String inputName, String propertyName, boolean startOfSentence) {
         String article = startOfSentence ? "The" : "the";
         return switch (propertyName) {
             case VALUE -> article + " value of '" + inputName + "'";

@@ -38,8 +38,7 @@ public class Utils {
             return;
         }
 
-        visitor.accept(
-                variants.stream().map(x -> x.iterator().next()).collect(Collectors.toList()));
+        visitor.accept(variants.stream().map(x -> x.iterator().next()).collect(Collectors.toList()));
     }
 
     /// Calls the given visitor function for every combination of the given variants.
@@ -51,8 +50,7 @@ public class Utils {
     /// Compared to {@code visitCombinations}, here the order of the visitor calls matches the given
     // order of the
     /// variants.
-    public static <T> void visitOrderedCombinations(
-            List<List<T>> variants, Consumer<List<T>> visitor) {
+    public static <T> void visitOrderedCombinations(List<List<T>> variants, Consumer<List<T>> visitor) {
         boolean fullyResolved = true;
 
         for (int i = 0; i < variants.size(); i++) {
@@ -73,8 +71,7 @@ public class Utils {
             return;
         }
 
-        visitor.accept(
-                variants.stream().map(x -> x.iterator().next()).collect(Collectors.toList()));
+        visitor.accept(variants.stream().map(x -> x.iterator().next()).collect(Collectors.toList()));
     }
 
     public static int editDistance(String a, String b) {

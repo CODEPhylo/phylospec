@@ -42,9 +42,7 @@ public class GeneratorPropertyResolver {
      * the given generator.
      */
     public void processGenerator(
-            Expr.Call call,
-            Generator generator,
-            TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
+            Expr.Call call, Generator generator, TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
         ParsedType parsedGeneratedType = new ParsedType(generator.getGeneratedType());
         checkConstraints(call, generator, resolvedGeneratorApplication);
         resolveProviders(generator, resolvedGeneratorApplication);
@@ -52,11 +50,8 @@ public class GeneratorPropertyResolver {
     }
 
     private void checkConstraints(
-            Expr.Call call,
-            Generator generator,
-            TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
-        Map<String, Set<ResolvedType>> resolvedArguments =
-                resolvedGeneratorApplication.resolvedArguments();
+            Expr.Call call, Generator generator, TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
+        Map<String, Set<ResolvedType>> resolvedArguments = resolvedGeneratorApplication.resolvedArguments();
 
         for (String constraintString : generator.getConstraints()) {
             checkConstraint(call, constraintString, resolvedArguments);
@@ -64,9 +59,7 @@ public class GeneratorPropertyResolver {
     }
 
     private void checkConstraint(
-            Expr.Call call,
-            String constraintString,
-            Map<String, Set<ResolvedType>> resolvedArguments) {
+            Expr.Call call, String constraintString, Map<String, Set<ResolvedType>> resolvedArguments) {
         ParsedTypeConstraint constraint = new ParsedTypeConstraint(constraintString);
 
         Set<ResolvedType> leftInputTypeSet = resolvedArguments.get(constraint.getLeftInputName());
@@ -85,13 +78,10 @@ public class GeneratorPropertyResolver {
 
         for (ResolvedType leftInputType : leftInputTypeSet) {
             for (ResolvedType rightInputType : rightInputTypeSet) {
-                Object leftProperty =
-                        leftInputType.properties().get(constraint.getLeftPropertyName());
-                Object rightProperty =
-                        rightInputType.properties().get(constraint.getRightPropertyName());
+                Object leftProperty = leftInputType.properties().get(constraint.getLeftPropertyName());
+                Object rightProperty = rightInputType.properties().get(constraint.getRightPropertyName());
 
-                if (!(leftProperty instanceof Number leftNr)
-                        || !(rightProperty instanceof Number rightNr)) {
+                if (!(leftProperty instanceof Number leftNr) || !(rightProperty instanceof Number rightNr)) {
                     // these are somehow not numbers, or we don't know these properties
                     return;
                 }
@@ -115,22 +105,18 @@ public class GeneratorPropertyResolver {
 
         // all type combinations could be evaluated and none of them were successful
 
-        raiseWarning(
-                new Error(
-                        call.getRange(),
-                        "The inputs for '" + call.functionName + "' might be invalid.",
-                        constraint.errorMessage()));
+        raiseWarning(new Error(
+                call.getRange(),
+                "The inputs for '" + call.functionName + "' might be invalid.",
+                constraint.errorMessage()));
     }
 
     private void resolveProviders(
-            Generator generator,
-            TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
-        Map<String, Set<ResolvedType>> resolvedArguments =
-                resolvedGeneratorApplication.resolvedArguments();
+            Generator generator, TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
+        Map<String, Set<ResolvedType>> resolvedArguments = resolvedGeneratorApplication.resolvedArguments();
 
         for (GeneratorPropertyProvider provider : providers) {
-            if (provider.getGenerator()
-                    .equals(generator.getNamespace() + "." + generator.getName())) {
+            if (provider.getGenerator().equals(generator.getNamespace() + "." + generator.getName())) {
                 for (ResolvedType generatedType : resolvedGeneratorApplication.generatedTypeSet()) {
                     provider.resolveGenerator(generatedType, resolvedArguments);
                 }
@@ -139,20 +125,14 @@ public class GeneratorPropertyResolver {
     }
 
     private void resolveGenerator(
-            ParsedType parsedGeneratedType,
-            TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
+            ParsedType parsedGeneratedType, TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
         for (ResolvedType generatedType : resolvedGeneratorApplication.generatedTypeSet()) {
-            resolveTypeProperties(
-                    parsedGeneratedType,
-                    generatedType,
-                    resolvedGeneratorApplication.resolvedArguments());
+            resolveTypeProperties(parsedGeneratedType, generatedType, resolvedGeneratorApplication.resolvedArguments());
         }
     }
 
     private void resolveTypeProperties(
-            ParsedType parsedType,
-            ResolvedType generatedType,
-            Map<String, Set<ResolvedType>> resolvedArguments) {
+            ParsedType parsedType, ResolvedType generatedType, Map<String, Set<ResolvedType>> resolvedArguments) {
         // resolve the type properties of generatedType
         // this could be either a constant assignment (e.g. `Vector<Real; num=10`) or an assignment
         // of an input type property (e.g. `numBranches=inputTree.numBranches`).
@@ -169,16 +149,12 @@ public class GeneratorPropertyResolver {
             if (typeProperty instanceof ParsedTypeProperty.Constant constant) {
                 // this is a constant assignment (propertyName = constant)
 
-                generatedType
-                        .properties()
-                        .attach(propertyName, resolveConstant(constant.getValue()));
+                generatedType.properties().attach(propertyName, resolveConstant(constant.getValue()));
 
             } else if (typeProperty instanceof ParsedTypeProperty.Assignment assignment) {
                 // this is an input type assignment (propertyName = inputName.inputPropertyName)
 
-                generatedType
-                        .properties()
-                        .attach(propertyName, resolveAssignment(resolvedArguments, assignment));
+                generatedType.properties().attach(propertyName, resolveAssignment(resolvedArguments, assignment));
             }
         }
 
@@ -186,22 +162,19 @@ public class GeneratorPropertyResolver {
 
         List<ParsedType> parsedTypeParameters = parsedType.getTypeParameters();
         List<String> resolvedTypeParameterNames = generatedType.getParametersNames();
-        int parameterCount =
-                Math.min(parsedTypeParameters.size(), resolvedTypeParameterNames.size());
+        int parameterCount = Math.min(parsedTypeParameters.size(), resolvedTypeParameterNames.size());
 
         for (int index = 0; index < parameterCount; index++) {
             ResolvedType resolvedTypeParameter =
                     generatedType.getParameterTypes().get(resolvedTypeParameterNames.get(index));
             if (resolvedTypeParameter != null) {
-                resolveTypeProperties(
-                        parsedTypeParameters.get(index), resolvedTypeParameter, resolvedArguments);
+                resolveTypeProperties(parsedTypeParameters.get(index), resolvedTypeParameter, resolvedArguments);
             }
         }
     }
 
     private static Object resolveAssignment(
-            Map<String, Set<ResolvedType>> resolvedArguments,
-            ParsedTypeProperty.Assignment assignment) {
+            Map<String, Set<ResolvedType>> resolvedArguments, ParsedTypeProperty.Assignment assignment) {
         Set<ResolvedType> resolvedTypeSet = resolvedArguments.get(assignment.getInputName());
 
         if (resolvedTypeSet == null || resolvedTypeSet.isEmpty()) {
