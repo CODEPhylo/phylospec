@@ -93,6 +93,15 @@ class LspDocument implements ErrorEventListener {
 
     @Override
     public void errorDetected(Error error) {
+        emitDiagnostic(error, false);
+    }
+
+    @Override
+    public void warningDetected(Error warning) {
+        emitDiagnostic(warning, true);
+    }
+
+    private void emitDiagnostic(Error error, boolean isWarning) {
         StringBuilder text = new StringBuilder(error.description());
 
         if (!error.hint().isBlank()) {
@@ -111,36 +120,11 @@ class LspDocument implements ErrorEventListener {
                         new org.eclipse.lsp4j.Range(
                                 new Position(error.range().startLine - 1, error.range().start),
                                 new Position(error.range().endLine - 1, error.range().end)),
-                        text.toString()));
-
-        System.out.println(error.toStdOutString(content));
-    }
-
-    @Override
-    public void warningDetected(Error warning) {
-        StringBuilder text = new StringBuilder(warning.description());
-
-        if (!warning.hint().isBlank()) {
-            text.append("\n\n").append(warning.hint());
-        }
-
-        if (!warning.examples().isEmpty()) {
-            text.append("\n\nFor example:\n");
-            for (String example : warning.examples()) {
-                text.append("\n\t").append(example);
-            }
-        }
-
-        foundDiagnostics.add(
-                new Diagnostic(
-                        new org.eclipse.lsp4j.Range(
-                                new Position(warning.range().startLine - 1, warning.range().start),
-                                new Position(warning.range().endLine - 1, warning.range().end)),
                         text.toString(),
-                        DiagnosticSeverity.Warning,
+                        isWarning ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error,
                         null));
 
-        System.out.println(warning.toStdOutString(content, true));
+        System.out.println(error.toStdOutString(content, isWarning));
     }
 
     public void errorDetected(TypeError astNodeError, Stmt stmt) {
