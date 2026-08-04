@@ -77,6 +77,7 @@ class LspDocument implements ErrorEventListener {
         // run type resolver
 
         typeResolver = new TypeResolver(componentResolver);
+        typeResolver.registerEventListener(this);
         for (Stmt statement : statements) {
             try {
                 statement.accept(typeResolver);
@@ -92,6 +93,15 @@ class LspDocument implements ErrorEventListener {
 
     @Override
     public void errorDetected(Error error) {
+        emitDiagnostic(error, false);
+    }
+
+    @Override
+    public void warningDetected(Error warning) {
+        emitDiagnostic(warning, true);
+    }
+
+    private void emitDiagnostic(Error error, boolean isWarning) {
         StringBuilder text = new StringBuilder(error.description());
 
         if (!error.hint().isBlank()) {
@@ -110,9 +120,11 @@ class LspDocument implements ErrorEventListener {
                         new org.eclipse.lsp4j.Range(
                                 new Position(error.range().startLine - 1, error.range().start),
                                 new Position(error.range().endLine - 1, error.range().end)),
-                        text.toString()));
+                        text.toString(),
+                        isWarning ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error,
+                        null));
 
-        System.out.println(error.toStdOutString(content));
+        System.out.println(error.toStdOutString(content, isWarning));
     }
 
     public void errorDetected(TypeError astNodeError, Stmt stmt) {
@@ -157,7 +169,7 @@ class LspDocument implements ErrorEventListener {
                 if (1 < resolvedTypeSet.size()) {
                     hoverText
                             .append("_There are multiple versions of ")
-                            .append(getUnqualifiedName(typeNode.name))
+                            .append(getReadableName(typeNode.name))
                             .append(":_\n\n");
                 }
 
@@ -397,8 +409,8 @@ class LspDocument implements ErrorEventListener {
 
             for (Generator generator : generators) {
                 if (distributionsOnly
-                        && !getUnqualifiedName(generator.getGeneratedType())
-                                .startsWith("Distribution<")) {
+                        && !getReadableName(generator.getGeneratedType())
+                                .startsWith("Distribution")) {
                     continue;
                 }
 
@@ -422,7 +434,7 @@ class LspDocument implements ErrorEventListener {
 
             CompletionItem item;
             if (type != null) {
-                item = new CompletionItem(getUnqualifiedName(type.getName()));
+                item = new CompletionItem(getReadableName(type.getName()));
                 item.setKind(CompletionItemKind.TypeParameter);
                 item.setDocumentation(type.getDescription());
             } else {
@@ -571,7 +583,7 @@ class LspDocument implements ErrorEventListener {
      * Helper method to print the info for a generator.
      */
     private StringBuilder printGeneratorInfo(StringBuilder stringBuilder, Generator generator) {
-        stringBuilder.append(getUnqualifiedName(generator.getGeneratedType())).append(" ");
+        stringBuilder.append(getReadableName(generator.getGeneratedType())).append(" ");
         stringBuilder.append(generator.getName()).append("(");
 
         for (int i = 0; i < generator.getArguments().size(); i++) {
@@ -579,13 +591,13 @@ class LspDocument implements ErrorEventListener {
 
             if (argument.getRequired()) {
                 stringBuilder
-                        .append(getUnqualifiedName(argument.getType()))
+                        .append(getReadableName(argument.getType()))
                         .append(" ")
                         .append(argument.getName());
             } else {
                 stringBuilder
                         .append("[")
-                        .append(getUnqualifiedName(argument.getType()))
+                        .append(getReadableName(argument.getType()))
                         .append(" ")
                         .append(argument.getName())
                         .append("]");
@@ -600,8 +612,8 @@ class LspDocument implements ErrorEventListener {
         return stringBuilder;
     }
 
-    private static String getUnqualifiedName(String name) {
-        return ComponentResolver.getUnqualifiedName(name);
+    private static String getReadableName(String typeName) {
+        return new ParsedType(typeName).getAtomicTypeName();
     }
 
     /**

@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.util.*;
 import org.phylospec.Utils;
 import org.phylospec.typeresolver.TypeError;
-import org.phylospec.typeresolver.TypeUtils;
 
 /**
  * This class allows to register multiple component libraries and access
@@ -162,22 +161,26 @@ public class ComponentResolver {
         if (typeName == null) return null;
         if (typeParameters.contains(typeName)) return typeName;
 
+        ParsedType parsedType = new ParsedType(typeName);
+
         // get the fully qualified name for the base type
 
-        String unqualifiedBaseName = TypeUtils.stripGenerics(typeName);
+        String unqualifiedBaseName = parsedType.getAtomicTypeName();
         String bestQualifiedBaseName = null;
         int bestScore = -Integer.MAX_VALUE;
 
         String[] splitNamespace = splitNamespace(namespace);
 
         for (Type candidateType : this.knownTypes.values()) {
-            String unqualifiedCandidateBaseName = getUnqualifiedName(candidateType.getName());
+            ParsedType parsedCandidateType = new ParsedType(candidateType.getName());
+
+            String unqualifiedCandidateBaseName = parsedCandidateType.getAtomicTypeName();
             if (!Objects.equals(unqualifiedCandidateBaseName, unqualifiedBaseName)) continue;
 
             // these types have the same unqualified name. let's check how close their namespaces
             // are
 
-            String[] splitCandidateNamespace = splitNamespace(candidateType.getName());
+            String[] splitCandidateNamespace = parsedCandidateType.getSplitNamespace();
 
             int sharedPrefixLength = 0;
             for (int i = 0;
@@ -207,12 +210,28 @@ public class ComponentResolver {
 
         // get the fully qualified names for the parameter types
 
-        List<String> parameterTypesNames = TypeUtils.parseParameterTypes(typeName);
-        parameterTypesNames.replaceAll(
-                s -> this.getFullyQualifiedType(s, namespace, typeParameters));
+        List<String> parameterTypesNames = new ArrayList<>();
+        for (var parameter : parsedType.getTypeParameters()) {
+            String fullyQualifiedType =
+                    this.getFullyQualifiedType(
+                            parameter.getTypeString(), namespace, typeParameters);
+            parameterTypesNames.add(fullyQualifiedType);
+        }
 
-        if (!parameterTypesNames.isEmpty()) {
-            bestQualifiedBaseName += "<" + String.join(",", parameterTypesNames) + ">";
+        // add type parameters and properties
+
+        if (!parameterTypesNames.isEmpty() || !parsedType.getTypeProperties().isEmpty()) {
+            bestQualifiedBaseName += "<" + String.join(",", parameterTypesNames);
+
+            if (!parsedType.getTypeProperties().isEmpty()) {
+                bestQualifiedBaseName += ";";
+
+                List<String> propertyStrings =
+                        parsedType.getTypeProperties().stream().map(Object::toString).toList();
+                bestQualifiedBaseName += String.join(",", propertyStrings);
+            }
+
+            bestQualifiedBaseName += ">";
         }
 
         return bestQualifiedBaseName;
@@ -252,7 +271,8 @@ public class ComponentResolver {
             }
             for (Type type : library.getTypes()) {
                 if (type.getNamespace().equals(namespaceString)) {
-                    this.knownTypes.put(this.getUnqualifiedName(type.getName()), type);
+                    String atomicTypeName = new ParsedType(type.getName()).getAtomicTypeName();
+                    this.knownTypes.put(atomicTypeName, type);
                 }
             }
         }
@@ -287,7 +307,8 @@ public class ComponentResolver {
             for (Type type : library.getTypes()) {
                 if (type.getNamespace().equals(namespaceString)
                         || type.getNamespace().startsWith(namespaceStringWithDot)) {
-                    this.knownTypes.put(this.getUnqualifiedName(type.getName()), type);
+                    String atomicTypeName = new ParsedType(type.getName()).getAtomicTypeName();
+                    this.knownTypes.put(atomicTypeName, type);
                 }
             }
         }
@@ -301,7 +322,8 @@ public class ComponentResolver {
         for (List<Generator> generators : knownGenerators.values()) {
             for (Generator generator : generators) {
                 String generatedTypeName = generator.getGeneratedType();
-                checkTypeParameters(generatedTypeName, generator);
+                ParsedType generatedType = new ParsedType(generatedTypeName);
+                checkTypeParameters(generatedType, generator);
             }
         }
     }
@@ -309,27 +331,26 @@ public class ComponentResolver {
     /**
      * Recursively checks if potential generic parameters types are specified for the given typeName.
      */
-    private void checkTypeParameters(String typeName, Generator generator) {
-        String atomicGeneratedTypeName = TypeUtils.stripGenerics(typeName);
-        Type generatedType = resolveType(atomicGeneratedTypeName);
+    private void checkTypeParameters(ParsedType type, Generator generator) {
+        Type generatedType = resolveType(type.getTypeString());
 
-        List<String> specifiedParameterTypes = TypeUtils.parseParameterTypes(typeName);
+        List<ParsedType> specifiedParameterTypes = type.getTypeParameters();
 
         if (specifiedParameterTypes.size() != generatedType.getTypeParameters().size()) {
             throw new IllegalArgumentException(
                     "Invalid number of type parameters of the generated type of '"
                             + generator.getName()
                             + "'. Type '"
-                            + typeName
+                            + type.getAtomicTypeName()
                             + "' takes "
                             + generatedType.getTypeParameters().size()
-                            + " type paramters.");
+                            + " type parameters.");
         }
 
         // recursively check parameter types
 
-        for (String parameterType : specifiedParameterTypes) {
-            if (generator.getTypeParameters().contains(parameterType)) continue;
+        for (ParsedType parameterType : specifiedParameterTypes) {
+            if (generator.getTypeParameters().contains(parameterType.getTypeString())) continue;
             checkTypeParameters(parameterType, generator);
         }
     }
@@ -346,8 +367,8 @@ public class ComponentResolver {
      * Returns the {@link Type} corresponding to the given name. Returns null if the type has not been imported.
      */
     public Type resolveType(String typeName) {
-        typeName = TypeUtils.stripGenerics(typeName);
-        return knownTypes.get(typeName);
+        String typeNameWithoutGenerics = new ParsedType(typeName).stripGenerics();
+        return knownTypes.get(typeNameWithoutGenerics);
     }
 
     /**
@@ -371,28 +392,6 @@ public class ComponentResolver {
      */
     private static String[] splitNamespace(String namespace) {
         return namespace.split("\\.");
-    }
-
-    /**
-     * Gets the unqualified name (without the namespace).
-     */
-    public static String getUnqualifiedName(String name) {
-        String unqualifiedBaseName = getUnqualifiedAtomicName(TypeUtils.stripGenerics(name));
-        List<String> parameterTypes = TypeUtils.parseParameterTypes(name);
-
-        if (parameterTypes.isEmpty()) return unqualifiedBaseName;
-
-        return unqualifiedBaseName
-                + "<"
-                + parameterTypes.stream()
-                        .map(ComponentResolver::getUnqualifiedName)
-                        .collect(java.util.stream.Collectors.joining(", "))
-                + ">";
-    }
-
-    private static String getUnqualifiedAtomicName(String name) {
-        String[] splitNamespace = splitNamespace(name);
-        return splitNamespace[splitNamespace.length - 1];
     }
 
     /**
@@ -423,28 +422,27 @@ public class ComponentResolver {
      * Returns the existing component name which is the closest to the given name.
      */
     public String findClosestComponent(String componentName) {
-        String unqualifiedName = this.getUnqualifiedName(componentName);
+        String unqualifiedName = getUnqualifiedAtomicName(componentName);
         return getKnownGenerators().values().stream()
                 .flatMap(Collection::stream)
-                .map(Generator::getName)
-                .min(
-                        Comparator.comparingInt(
-                                x ->
-                                        Utils.editDistance(
-                                                this.getUnqualifiedName(x), unqualifiedName)))
+                .map(x -> getUnqualifiedAtomicName(x.getName()))
+                .min(Comparator.comparingInt(x -> Utils.editDistance(x, unqualifiedName)))
                 .orElse("");
+    }
+
+    private static String getUnqualifiedAtomicName(String name) {
+        String[] splitNamespace = splitNamespace(name);
+        return splitNamespace[splitNamespace.length - 1];
     }
 
     /**
      * Returns the existing type name which is the closest to the given name.
      */
     public String findClosestType(String typeName) {
-        String unqualifiedName = this.getUnqualifiedName(typeName);
+        String unqualifiedName = new ParsedType(typeName).getAtomicTypeName();
         return getKnownTypes().values().stream()
-                .map(x -> this.getUnqualifiedName(x.getName()))
-                .min(
-                        Comparator.comparingInt(
-                                x -> Utils.editDistance(this.getUnqualifiedName(x), typeName)))
+                .map(x -> new ParsedType(x.getName()).getAtomicTypeName())
+                .min(Comparator.comparingInt(x -> Utils.editDistance(x, unqualifiedName)))
                 .orElse("");
     }
 
