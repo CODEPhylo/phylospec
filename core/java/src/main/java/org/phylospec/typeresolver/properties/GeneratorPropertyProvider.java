@@ -1,6 +1,8 @@
 package org.phylospec.typeresolver.properties;
 
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.phylospec.typeresolver.ResolvedType;
 
@@ -15,4 +17,26 @@ public interface GeneratorPropertyProvider {
 
     void resolveGenerator(
             ResolvedType generatedType, Map<String, Set<ResolvedType>> resolvedArguments);
+
+    /**
+     * Resolves a generator argument to its literal string value, if all of its candidate types
+     * agree on one.
+     */
+    static Optional<String> resolveLiteral(
+            Map<String, Set<ResolvedType>> resolvedArguments, String argumentName) {
+        Set<ResolvedType> argumentTypeSet = resolvedArguments.get(argumentName);
+        if (argumentTypeSet == null || argumentTypeSet.isEmpty()) return Optional.empty();
+
+        Object literal =
+                TypePropertyEngine.getPropertyOnAgreement(
+                        argumentTypeSet, TypePropertyNames.LITERAL);
+        return literal instanceof String stringValue ? Optional.of(stringValue) : Optional.empty();
+    }
+
+    /** Resolves a generator argument to a small on-disk file, if it names one. */
+    static Optional<Path> resolveFile(
+            Map<String, Set<ResolvedType>> resolvedArguments, String argumentName) {
+        return resolveLiteral(resolvedArguments, argumentName)
+                .flatMap(LightweightFileParsers::resolveSmallFile);
+    }
 }
