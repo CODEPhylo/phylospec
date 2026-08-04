@@ -1,0 +1,30 @@
+Alignment alignment = fromNexus(file="src/test/java/org/phylospec/resources/primate-mtDNA.nex")
+PositiveInteger alignmentSites = numSites(alignment)
+PositiveInteger alignmentTaxa = numTaxa(alignment)
+Tree fileTree = fromTree(file="src/test/java/org/phylospec/resources/valid.newick")
+Tree parsedTree = fromNewick(newickString="((A, B), C);")
+PositiveInteger treeTaxa = numTaxa(parsedTree)
+PositiveInteger treeBranches = numBranches(parsedTree)
+
+// EXPECT AST
+// (AS Alignment alignment (CA fromNexus (AA file "src/test/java/org/phylospec/resources/primate-mtDNA.nex")))
+// (AS PositiveInteger alignmentSites (CA numSites (AA null alignment)))
+// (AS PositiveInteger alignmentTaxa (CA numTaxa (AA null alignment)))
+// (AS Tree fileTree (CA fromTree (AA file "src/test/java/org/phylospec/resources/valid.newick")))
+// (AS Tree parsedTree (CA fromNewick (AA newickString "((A, B), C);")))
+// (AS PositiveInteger treeTaxa (CA numTaxa (AA null parsedTree)))
+// (AS PositiveInteger treeBranches (CA numBranches (AA null parsedTree)))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS
+
+// EXPECT TYPES
+// Alignment<;numSites=898, numTaxa=12>
+// PositiveInteger<;value=898>
+// PositiveInteger<;value=12>
+// Tree<;numTaxa=3, numBranches=4>
+// Tree<;numTaxa=3, numBranches=4>
+// PositiveInteger<;value=3>
+// PositiveInteger<;value=4>
+// EXPECT TYPES

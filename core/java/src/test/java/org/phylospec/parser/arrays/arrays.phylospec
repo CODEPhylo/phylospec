@@ -32,3 +32,11 @@ Vector<Distribution<Real>> components = [
 
 // EXPECT TYPE_ERRORS
 // EXPECT TYPE_ERRORS
+
+// EXPECT TYPES
+// Vector<Real; num=3>
+// Vector<Real<;value=10.0>; num=1>
+// Vector<PositiveReal<;value=10.0>; num=1>
+// Vector<String<;value=10>; num=1>
+// Vector<Distribution<Real>; num=3>
+// EXPECT TYPES

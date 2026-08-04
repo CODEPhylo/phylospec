@@ -10,6 +10,7 @@ import org.phylospec.components.Type;
 import org.phylospec.errors.Error;
 import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.lexer.TokenType;
+import org.phylospec.typeresolver.properties.TypePropertyEngine;
 
 /// This class traverses an AST statement and resolves the types for each
 /// AST node and each variable.
@@ -39,6 +40,7 @@ public class TypeResolver
 
     private final ComponentResolver componentResolver;
     private final TypeMatcher typeMatcher;
+    private final TypePropertyEngine typePropertyEngine;
 
     public Map<AstNode, Set<ResolvedType>> resolvedTypes;
     private final List<Map<String, Set<ResolvedType>>> scopedVariableTypes;
@@ -56,12 +58,14 @@ public class TypeResolver
         this.scopedVariableTypes = new ArrayList<>();
         this.printer = new AstPrinter();
         this.eventListeners = new ArrayList<>();
+        this.typePropertyEngine = new TypePropertyEngine();
 
         createScope();
     }
 
     public void registerEventListener(ErrorEventListener listener) {
         this.eventListeners.add(listener);
+        this.typePropertyEngine.registerEventListener(listener);
     }
 
     /**
@@ -214,6 +218,7 @@ public class TypeResolver
             }
         }
 
+        typePropertyEngine.resolveAssignment(resolvedVariableTypeSet, resolvedExpressionTypeSet);
         enforceUniqueness(stmt.name, stmt);
 
         remember(stmt.name, resolvedVariableTypeSet);
@@ -298,6 +303,8 @@ public class TypeResolver
             }
         }
 
+        typePropertyEngine.resolveDraw(
+                resolvedVariableTypeSet, resolvedExpressionTypeSet, componentResolver);
         enforceUniqueness(stmt.name, stmt);
 
         remember(stmt.name, resolvedVariableTypeSet);
@@ -344,7 +351,6 @@ public class TypeResolver
         List<Set<ResolvedType>> rangeTypeSets = new ArrayList<>();
 
         for (int i = 0; i < indexed.indices.size(); i++) {
-            Expr.Variable indexVar = indexed.indices.get(i);
             Set<ResolvedType> rangeTypeSet = indexed.ranges.get(i).accept(this);
             rangeTypeSets.add(rangeTypeSet);
         }
@@ -373,10 +379,8 @@ public class TypeResolver
                 Set<ResolvedType> indexVarTypeSet = new HashSet<>();
                 for (ResolvedType rangeType : rangeTypeSet) {
                     ResolvedType indexVarType =
-                            TypeUtils.recoverType(
-                                            "phylospec.types.Vector", rangeType, componentResolver)
-                                    .getParameterTypes()
-                                    .get("T");
+                            TypeUtils.recoverTypeParameter(
+                                    "phylospec.types.Vector", "T", rangeType, componentResolver);
                     if (indexVarType != null) indexVarTypeSet.add(indexVarType);
                 }
 
@@ -412,6 +416,10 @@ public class TypeResolver
                             componentResolver);
         }
 
+        // attach the num properties
+
+        typePropertyEngine.resolveIndexed(indexed.indices.size(), rangeTypeSets, widenedTypeSet);
+
         // register the widened type in the outer scope under the variable name
 
         String variableName = indexed.statement.getName();
@@ -434,17 +442,17 @@ public class TypeResolver
 
         Set<ResolvedType> generatedTypeSet = new HashSet<>();
         for (ResolvedType generatedDistType : generatedDistributionTypeSet) {
-            ResolvedType recoveredDistributionType =
-                    TypeUtils.recoverType(
-                            "phylospec.types.Distribution", generatedDistType, componentResolver);
-            if (recoveredDistributionType == null) {
+            ResolvedType generatedType =
+                    TypeUtils.recoverTypeParameter(
+                            "phylospec.types.Distribution",
+                            "T",
+                            generatedDistType,
+                            componentResolver);
+            if (generatedType == null) {
                 // this is not a distribution type directly
                 // it could still be a random variable though
                 generatedTypeSet.add(generatedDistType);
             } else {
-                ResolvedType generatedType = recoveredDistributionType.getParameterTypes().get("T");
-                if (generatedType == null) continue;
-
                 generatedTypeSet.add(generatedType);
             }
         }
@@ -480,6 +488,10 @@ public class TypeResolver
                             + printType(generatedTypeSet)
                             + "' instead.");
         }
+
+        // check if type properties of the observation and generated object agree
+
+        typePropertyEngine.checkObservedAs(observedAs, generatedTypeSet, observationTypeSet);
 
         return generatedDistributionTypeSet;
     }
@@ -518,18 +530,17 @@ public class TypeResolver
 
         Set<ResolvedType> generatedTypeSet = new HashSet<>();
         for (ResolvedType generatedDistType : generatedDistributionTypeSet) {
-            ResolvedType recoveredDistributionType =
-                    TypeUtils.recoverType(
-                            "phylospec.types.Distribution", generatedDistType, componentResolver);
-            if (recoveredDistributionType == null) {
+            ResolvedType generatedType =
+                    TypeUtils.recoverTypeParameter(
+                            "phylospec.types.Distribution",
+                            "T",
+                            generatedDistType,
+                            componentResolver);
+            if (generatedType == null) {
                 // this is not a distribution type directly
                 // it could still be a random variable though
                 generatedTypeSet.add(generatedDistType);
-                continue;
             } else {
-                ResolvedType generatedType = recoveredDistributionType.getParameterTypes().get("T");
-                if (generatedType == null) continue;
-
                 generatedTypeSet.add(generatedType);
             }
         }
@@ -636,6 +647,10 @@ public class TypeResolver
 
             globalUnit = expr.unit;
         }
+
+        // attach literal property
+
+        typePropertyEngine.resolveLiteral(resolvedTypeSet, expr.value);
 
         return remember(expr, resolvedTypeSet);
     }
@@ -915,11 +930,20 @@ public class TypeResolver
         Set<String> errorMessages = new HashSet<>();
         for (Generator generator : generators) {
             try {
+                // check if the generator is compatible
+                // throws a TypeError if not
+
                 TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication =
                         TypeUtils.resolveGeneratedType(
                                 generator, resolvedArguments, firstArgumentName, componentResolver);
-                possibleReturnTypes.addAll(resolvedGeneratorApplication.generatedTypeSet());
 
+                // check type constraints and resolve generated type constraints
+
+                typePropertyEngine.processGenerator(expr, generator, resolvedGeneratorApplication);
+
+                // we remember the generated type set
+
+                possibleReturnTypes.addAll(resolvedGeneratorApplication.generatedTypeSet());
             } catch (TypeError e) {
                 e.attachAstNode(expr);
                 lastError = e;
@@ -972,16 +996,10 @@ public class TypeResolver
 
         Set<ResolvedType> generatedTypeSet = new HashSet<>();
         for (ResolvedType expressionType : resolvedTypeSet) {
-            TypeUtils.visitTypeAndParents(
-                    expressionType,
-                    x -> {
-                        if (x.getName().equals("phylospec.types.Distribution")) {
-                            generatedTypeSet.add(x.getParameterTypes().get("T"));
-                            return TypeUtils.Visitor.STOP;
-                        }
-                        return TypeUtils.Visitor.CONTINUE;
-                    },
-                    componentResolver);
+            ResolvedType unwrappedExpressionType =
+                    TypeUtils.recoverTypeParameter(
+                            "phylospec.types.Distribution", "T", expressionType, componentResolver);
+            generatedTypeSet.add(unwrappedExpressionType);
         }
 
         if (generatedTypeSet.isEmpty()) {
@@ -1040,11 +1058,14 @@ public class TypeResolver
 
             summedUpLiterals += ((Number) ((Expr.Literal) element).value).doubleValue();
         }
-        if (Math.abs(summedUpLiterals - 1.0) < 1e-10) {
+        if (onlyNumberLiterals && Math.abs(summedUpLiterals - 1.0) < 1e-10) {
             // this is a simplex
             arrayTypeSet.addAll(
                     ResolvedType.fromString("phylospec.types.Simplex", componentResolver));
         }
+
+        // attach the num property to the array types
+        typePropertyEngine.resolveArray(expr.elements.size(), arrayTypeSet);
 
         return remember(expr, arrayTypeSet);
     }
@@ -1125,8 +1146,10 @@ public class TypeResolver
 
         // check that the passed indices have the correct type
 
+        List<Set<ResolvedType>> resolvedIndexTypeSets = new ArrayList<>();
         for (Expr index : expr.indices) {
             Set<ResolvedType> resolvedIndexTypeSet = index.accept(this);
+            resolvedIndexTypeSets.add(resolvedIndexTypeSet);
             if (!TypeUtils.canBeAssignedTo(resolvedIndexTypeSet, indexTypeSet, componentResolver)) {
                 throw new TypeError(
                         "Invalid index.",
@@ -1137,6 +1160,8 @@ public class TypeResolver
                                 + "' as an index.");
             }
         }
+
+        typePropertyEngine.checkIndex(expr.indices, resolvedIndexTypeSets, containerTypeSet);
 
         return remember(expr, itemTypeSet);
     }
@@ -1177,6 +1202,10 @@ public class TypeResolver
         Set<ResolvedType> listComprehensionTypeSet =
                 ResolvedType.fromString(
                         "phylospec.types.Vector<T>", Map.of("T", itemTypeSet), componentResolver);
+
+        // resolve the range properties
+
+        typePropertyEngine.resolveRange(fromTypeSet, toTypeSet, listComprehensionTypeSet);
 
         return remember(range, listComprehensionTypeSet);
     }

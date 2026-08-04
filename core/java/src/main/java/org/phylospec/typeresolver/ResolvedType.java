@@ -6,6 +6,7 @@ import java.util.*;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.ParsedType;
 import org.phylospec.components.Type;
+import org.phylospec.typeresolver.properties.TypeProperties;
 
 /// This class represents a fully resolved type.
 ///
@@ -15,9 +16,11 @@ public class ResolvedType {
     ResolvedType(Type typeComponent, Map<String, ResolvedType> parameterTypes) {
         this.typeComponent = typeComponent;
         this.parameterTypes = parameterTypes;
+        this.typeProperties = new TypeProperties();
     }
 
     private final Map<String, ResolvedType> parameterTypes;
+    private final TypeProperties typeProperties;
     private final Type typeComponent;
 
     public Type getTypeComponent() {
@@ -47,6 +50,10 @@ public class ResolvedType {
 
     public List<String> getParametersNames() {
         return typeComponent.getTypeParameters();
+    }
+
+    public TypeProperties properties() {
+        return this.typeProperties;
     }
 
     /**

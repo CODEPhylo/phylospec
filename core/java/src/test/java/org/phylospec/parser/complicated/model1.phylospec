@@ -1,5 +1,5 @@
 Alignment observedAlignment = fromNexus(
-	file="alignment.nexus"
+	file="src/test/java/org/phylospec/resources/primate-mtDNA.nex"
 )
 
 QMatrix Q = hky(
@@ -16,7 +16,7 @@ Alignment alignment ~ PhyloCTMC(
 ) observed as observedAlignment
 
 // EXPECT AST
-// (AS Alignment observedAlignment (CA fromNexus (AA file "alignment.nexus")))
+// (AS Alignment observedAlignment (CA fromNexus (AA file "src/test/java/org/phylospec/resources/primate-mtDNA.nex")))
 // (AS QMatrix Q (CA hky (DA kappa (CA LogNormal (AA logSd 0.5) (AA logMean 1.0))) (DA baseFrequencies (CA Dirichlet (AA concentration (AR 2.0 2.0 2.0 2.0))))))
 // (DR Tree tree (CA Coalescent (AA taxa (CA taxa (AA null observedAlignment))) (DA populationSize (CA LogNormal (AA logMean 3.0) (AA logSd 2.0)))))
 // (OA (DR Alignment alignment (CA PhyloCTMC (AA null Q) (AA null tree))) observedAlignment)
@@ -25,3 +25,10 @@ Alignment alignment ~ PhyloCTMC(
 // EXPECT TYPE_ERRORS
 // Function `PhyloCTMC` takes no argument named `Q`. Do you mean 'tree'?
 // EXPECT TYPE_ERRORS
+
+// EXPECT TYPES
+// Alignment<;numSites=898, numTaxa=12>
+// QMatrix
+// Tree<;numTaxa=12>
+// Alignment<;numSites=898, numTaxa=12>
+// EXPECT TYPES

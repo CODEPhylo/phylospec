@@ -1,6 +1,9 @@
 package org.phylospec.lsp;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Path;
 import java.util.*;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -16,6 +19,7 @@ import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.ResolvedType;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
+import org.phylospec.workspace.Workspace;
 
 /**
  * This class implements the actual LSP responses for a given document.
@@ -42,6 +46,7 @@ class LspDocument implements ErrorEventListener {
         this.componentResolver = loadComponentResolver();
 
         updateContent(content);
+        updateWorkspace(uri);
     }
 
     private static ComponentResolver loadComponentResolver() {
@@ -631,5 +636,12 @@ class LspDocument implements ErrorEventListener {
 
     public void setRemoteProxy(LanguageClient remoteProxy) {
         this.client = remoteProxy;
+    }
+
+    /**
+     * Adds the workspace URI to the global workspace folders.
+     */
+    private void updateWorkspace(String client) {
+        Workspace.FOLDERS.add(Path.of(new File(URI.create(client)).getPath()).getParent());
     }
 }

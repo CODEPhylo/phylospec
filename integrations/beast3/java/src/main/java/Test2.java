@@ -7,9 +7,8 @@ public class Test2 {
 
     static void main(String[] args) throws IOException, ParserConfigurationException, SAXException {
         String source = """
-              Tree data = fromNewick("file.newick")
-              Rate birthRate ~ LogNormal(mean=1.0, logSd=2.0)
-              Tree tree ~ Yule(birthRate, taxa=taxa(data)) observed as data
+              String file = "/Users/ochsneto/Documents/PhyloSpec/rev-anaylsis/primate.nex"
+              Alignment data = fromNexus(file)
         """;
 
         PhyloSpecRunner parser = new PhyloSpecRunner(source);

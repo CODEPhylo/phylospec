@@ -106,9 +106,9 @@ class RevStmt {
                 return moves;
             }
 
-            ResolvedType vectorType = TypeUtils.recoverType("Vector", type, componentResolver);
-            if (vectorType != null) {
-                ResolvedType elementType = vectorType.getParameterTypes().get("T");
+            ResolvedType elementType =
+                    TypeUtils.recoverTypeParameter("Vector", "T", type, componentResolver);
+            if (elementType != null) {
                 if (covers("PositiveReal", elementType)) {
                     return buildMove("mvVectorSingleElementScale");
                 } else if (covers("Real", elementType)) {
