@@ -27,7 +27,6 @@ public class UiHints {
     @JsonProperty("widget")
     @JsonPropertyDescription("Suggested widget type (e.g., 'slider', 'checkbox', 'file-picker')")
     private String widget;
-
     /**
      * Display order relative to other arguments
      *
@@ -35,7 +34,6 @@ public class UiHints {
     @JsonProperty("order")
     @JsonPropertyDescription("Display order relative to other arguments")
     private Integer order;
-
     /**
      * Group name for organizing related arguments
      *

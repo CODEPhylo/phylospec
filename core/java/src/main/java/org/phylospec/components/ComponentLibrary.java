@@ -35,7 +35,6 @@ public class ComponentLibrary {
      */
     @JsonProperty("name")
     private String name;
-
     /**
      *
      * (Required)
@@ -43,7 +42,6 @@ public class ComponentLibrary {
      */
     @JsonProperty("version")
     private String version;
-
     /**
      *
      * (Required)
@@ -51,7 +49,6 @@ public class ComponentLibrary {
      */
     @JsonProperty("engine")
     private String engine;
-
     /**
      *
      * (Required)
@@ -59,7 +56,6 @@ public class ComponentLibrary {
      */
     @JsonProperty("engineVersion")
     private String engineVersion;
-
     /**
      *
      * (Required)
@@ -67,7 +63,6 @@ public class ComponentLibrary {
      */
     @JsonProperty("description")
     private String description;
-
     /**
      * List of authors or maintainers of the schema
      *
@@ -75,7 +70,6 @@ public class ComponentLibrary {
     @JsonProperty("authors")
     @JsonPropertyDescription("List of authors or maintainers of the schema")
     private List<String> authors = new ArrayList<String>();
-
     /**
      * License identifier, e.g., MIT
      *
@@ -83,7 +77,6 @@ public class ComponentLibrary {
     @JsonProperty("license")
     @JsonPropertyDescription("License identifier, e.g., MIT")
     private String license;
-
     /**
      *
      * (Required)
@@ -91,7 +84,6 @@ public class ComponentLibrary {
      */
     @JsonProperty("types")
     private List<Type> types = new ArrayList<Type>();
-
     /**
      *
      * (Required)
