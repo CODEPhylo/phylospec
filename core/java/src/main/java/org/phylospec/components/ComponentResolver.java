@@ -218,8 +218,20 @@ public class ComponentResolver {
             parameterTypesNames.add(fullyQualifiedType);
         }
 
-        if (!parameterTypesNames.isEmpty()) {
-            bestQualifiedBaseName += "<" + String.join(",", parameterTypesNames) + ">";
+        // add type parameters and properties
+
+        if (!parameterTypesNames.isEmpty() || !parsedType.getTypeProperties().isEmpty()) {
+            bestQualifiedBaseName += "<" + String.join(",", parameterTypesNames);
+
+            if (!parsedType.getTypeProperties().isEmpty()) {
+                bestQualifiedBaseName += ";";
+
+                List<String> propertyStrings =
+                        parsedType.getTypeProperties().stream().map(Object::toString).toList();
+                bestQualifiedBaseName += String.join(",", propertyStrings);
+            }
+
+            bestQualifiedBaseName += ">";
         }
 
         return bestQualifiedBaseName;
