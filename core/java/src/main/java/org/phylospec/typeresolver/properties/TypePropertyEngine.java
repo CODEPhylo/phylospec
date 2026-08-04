@@ -56,6 +56,7 @@ public class TypePropertyEngine {
             Set<ResolvedType> resolvedExpressionTypeSet,
             ComponentResolver componentResolver) {
         for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
+            // find the matching resolved types
             for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
                 ResolvedType unwrappedExpressionType =
                         TypeUtils.recoverTypeParameter(
@@ -63,7 +64,9 @@ public class TypePropertyEngine {
                                 "T",
                                 resolvedExpressionType,
                                 componentResolver);
-                copyProperties(unwrappedExpressionType, resolvedVariableType);
+                if (resolvedVariableType.getName().equals(unwrappedExpressionType.getName())) {
+                    copyProperties(unwrappedExpressionType, resolvedVariableType);
+                }
             }
         }
     }
@@ -78,6 +81,7 @@ public class TypePropertyEngine {
         } else {
             Object numRows = getPropertyOnAgreement(rangeTypeSets.get(0), NUM);
             Object numCols = getPropertyOnAgreement(rangeTypeSets.get(1), NUM);
+            attachToAll(containerTypeSet, NUM, numRows);
             attachToAll(containerTypeSet, NUM_ROWS, numRows);
             attachToAll(containerTypeSet, NUM_COLS, numCols);
         }
