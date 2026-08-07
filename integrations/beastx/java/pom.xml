@@ -26,6 +26,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Shared discovery and diagnostics for a locally installed native BEAGLE runtime. -->
+        <dependency>
+            <groupId>org.phylospec</groupId>
+            <artifactId>phylospec-beagle-runtime</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- BEAST X. Not on Maven Central; install locally first via
              integrations/beastx/install-beast-mcmc.sh (see README). -->
         <dependency>

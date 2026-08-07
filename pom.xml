@@ -43,6 +43,7 @@
 
     <modules>
         <module>core/java</module>
+        <module>integrations/beagle-runtime/java</module>
         <module>integrations/beast3/java</module>
         <module>integrations/beastx/java</module>
         <module>validation/beast3/java</module>

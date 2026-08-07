@@ -1,9 +1,8 @@
 package tiling.runner;
 
-import beagle.BeagleFactory;
-import beagle.ResourceDetails;
-
-import java.util.List;
+import org.phylospec.beagle.BeagleRuntimeLocator;
+import org.phylospec.beagle.BeagleRuntimeReport;
+import org.phylospec.beagle.BeagleRuntimeVerifier;
 
 /**
  * Verifies that a native BEAGLE implementation is available before
@@ -36,35 +35,39 @@ public final class BeagleBackendConfigurator {
 
         System.setProperty(JAVA_ONLY_PROPERTY, "false");
 
-        if (!nativeBeagleIsAvailable()) {
+        BeagleRuntimeVerifier.Result verification =
+                new BeagleRuntimeVerifier().verify();
+
+        if (!verification.available()) {
+            BeagleRuntimeLocator.Result runtimeSearch =
+                    new BeagleRuntimeLocator().locate();
             throw new IllegalStateException(
                     "Native BEAGLE is required by the current BEAST X "
                             + "likelihood implementation, but no native "
-                            + "BEAGLE resource could be loaded. Install "
+                            + "BEAGLE resource could be loaded. "
+                            + "No acceptable BEAGLE library plugins found. Install "
                             + "BEAGLE and configure java.library.path and "
                             + "BEAGLE_PLUGIN_PATH. The bundled pure-Java "
                             + "GeneralBeagleImpl cannot be used because "
                             + "getSiteLogLikelihoods() is not implemented."
+                            + System.lineSeparator()
+                            + BeagleRuntimeReport.renderVerification(verification)
+                            + System.lineSeparator()
+                            + BeagleRuntimeReport.render(runtimeSearch)
             );
         }
 
         configured = true;
 
         System.out.println(
-                "Likelihood backend: native BEAGLE"
+                "Likelihood backend: native BEAGLE " + verification.version()
         );
-    }
-
-    private static boolean nativeBeagleIsAvailable() {
-        try {
-            List<ResourceDetails> resources =
-                    BeagleFactory.getResourceDetails();
-
-            return resources != null
-                    && !resources.isEmpty();
-        } catch (LinkageError | RuntimeException exception) {
-            return false;
-        }
+        System.out.println(
+                "BEAGLE resources: "
+                        + verification.resources().stream()
+                        .map(resource -> resource.number() + ":" + resource.name())
+                        .toList()
+        );
     }
 
     private static IllegalStateException unsupportedJavaBackend() {

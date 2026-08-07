@@ -10,3 +10,5 @@ out
 /validation/beastx/java/target/
 **/state.backup.xml
 **/*.backup.xml
+
+/integrations/beagle-runtime/java/target/

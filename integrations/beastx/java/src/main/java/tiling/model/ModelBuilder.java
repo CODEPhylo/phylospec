@@ -58,6 +58,13 @@ public class ModelBuilder {
      * BEAST X tree likelihood objects.
      */
     private void materializePhyloCTMCLikelihoods(BeastXState beastState) {
+        boolean requiresBeagle = beastState.likelihoodDistributions.stream()
+                .anyMatch(BeastXPhyloCTMCLikelihoodSpec.class::isInstance);
+
+        if (!requiresBeagle) {
+            return;
+        }
+
         BeagleBackendConfigurator.requireNativeBackend();
 
         List<Likelihood> materializedLikelihoods =

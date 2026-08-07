@@ -6,7 +6,7 @@ import dr.inference.mcmc.MCMC;
 
 import tiling.runner.BeagleBackendConfigurator;
 
-import java.io.Reader;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,7 +26,10 @@ public class XmlRunner {
             );
         }
 
-        BeagleBackendConfigurator.requireNativeBackend();
+        String xml = Files.readString(xmlPath, StandardCharsets.UTF_8);
+        if (requiresNativeBeagle(xml)) {
+            BeagleBackendConfigurator.requireNativeBackend();
+        }
 
         BeastParser parser =
                 new BeastParser(
@@ -38,11 +41,7 @@ public class XmlRunner {
                         BeastVersion.INSTANCE
                 );
 
-        try (Reader reader =
-                     Files.newBufferedReader(
-                             xmlPath,
-                             StandardCharsets.UTF_8
-                     )) {
+        try (StringReader reader = new StringReader(xml)) {
             Object parsed =
                     parser.parse(reader, MCMC.class);
 
@@ -55,6 +54,12 @@ public class XmlRunner {
 
             return mcmc;
         }
+    }
+
+    static boolean requiresNativeBeagle(String xml) {
+        return xml.contains("<treeLikelihood")
+                || xml.contains("<ancestralTreeLikelihood")
+                || xml.contains("<markovJumpsTreeLikelihood");
     }
 
     public MCMC run(Path xmlPath) throws Exception {
