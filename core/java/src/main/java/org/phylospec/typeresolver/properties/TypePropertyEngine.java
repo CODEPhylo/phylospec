@@ -64,7 +64,10 @@ public class TypePropertyEngine {
                                 "T",
                                 resolvedExpressionType,
                                 componentResolver);
-                if (resolvedVariableType.getName().equals(unwrappedExpressionType.getName())) {
+                if (unwrappedExpressionType != null
+                        && resolvedVariableType
+                                .getName()
+                                .equals(unwrappedExpressionType.getName())) {
                     copyProperties(unwrappedExpressionType, resolvedVariableType);
                 }
             }
