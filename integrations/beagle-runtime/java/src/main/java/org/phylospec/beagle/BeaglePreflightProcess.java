@@ -89,9 +89,12 @@ public final class BeaglePreflightProcess {
         public Map<String, String> resolvedEnvironment() {
             java.util.LinkedHashMap<String, String> resolved =
                     new java.util.LinkedHashMap<>(environment);
-            resolved.putIfAbsent(
+            resolved.put(
                     BEAGLE_PLUGIN_PATH,
-                    installation.libraryDirectory().toString()
+                    mergePathEntries(
+                            installation.libraryDirectory(),
+                            resolved.getOrDefault(BEAGLE_PLUGIN_PATH, "")
+                    )
             );
             return Map.copyOf(resolved);
         }
@@ -113,8 +116,12 @@ public final class BeaglePreflightProcess {
         }
 
         private static String mergeLibraryPath(Path libraryDirectory, String configured) {
+            return mergePathEntries(libraryDirectory, configured);
+        }
+
+        private static String mergePathEntries(Path directory, String configured) {
             Set<String> entries = new LinkedHashSet<>();
-            entries.add(libraryDirectory.toString());
+            entries.add(directory.toString());
             for (String entry : configured.split(File.pathSeparator)) {
                 if (!entry.isBlank()) {
                     entries.add(entry);

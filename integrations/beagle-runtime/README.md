@@ -3,7 +3,8 @@
 This engine-independent module discovers and reports an existing native BEAGLE
 installation. BEAST X currently consumes it directly; the future common
 launcher will use the same API for BEAST 3. The module deliberately does not
-bundle or download platform-specific native libraries.
+bundle, download, or install platform-specific native libraries. It never
+invokes a package manager and never writes to system library directories.
 
 ## Structure
 
@@ -54,10 +55,13 @@ this verifier before materializing a native likelihood.
 explicit `Request` makes the preflight use the same Java executable, classpath,
 JVM arguments, environment, and timeout that an engine launch will use. It
 prepends the discovered library directory to `java.library.path`, preserves
-other library-path entries, supplies a default `BEAGLE_PLUGIN_PATH` only when
-one is not already configured, captures bounded output, and distinguishes an
-unavailable runtime from a native crash or timeout. `Request.fromCurrentJvm`
-is a convenience for diagnostics, not an engine-selection mechanism.
+other library-path entries, prepends the discovered directory to an existing
+`BEAGLE_PLUGIN_PATH` while preserving and de-duplicating its entries, captures
+bounded output, and distinguishes an unavailable runtime from a native crash
+or timeout. These changes apply only to the child process environment; the
+parent process and operating system configuration are not modified.
+`Request.fromCurrentJvm` is a convenience for diagnostics, not an
+engine-selection mechanism.
 
 The future PhyloSpec execution layer should reuse
 `Request.resolvedJvmArguments()` and `Request.resolvedEnvironment()` when it

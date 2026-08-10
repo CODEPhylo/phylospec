@@ -3,6 +3,7 @@ package org.phylospec.beagle;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -85,8 +86,38 @@ class BeaglePreflightProcessTest {
                         "-Djava.library.path=" + installation.libraryDirectory()
                 ) && argument.contains("/existing/native")
         ));
-        assertEquals("/custom/plugins",
-                request.resolvedEnvironment().get("BEAGLE_PLUGIN_PATH"));
+        assertEquals(
+                installation.libraryDirectory()
+                        + File.pathSeparator
+                        + "/custom/plugins",
+                request.resolvedEnvironment().get("BEAGLE_PLUGIN_PATH")
+        );
+    }
+
+    @Test
+    void doesNotDuplicateTheDiscoveredBeaglePluginPath() throws Exception {
+        BeagleRuntimeInstallation installation = installation();
+        String pluginPath = installation.libraryDirectory()
+                + File.pathSeparator
+                + "/custom/plugins"
+                + File.pathSeparator
+                + installation.libraryDirectory();
+
+        BeaglePreflightProcess.Request request = new BeaglePreflightProcess.Request(
+                installation,
+                javaExecutable(),
+                System.getProperty("surefire.test.class.path"),
+                List.of(),
+                Map.of("BEAGLE_PLUGIN_PATH", pluginPath),
+                Duration.ofSeconds(5)
+        );
+
+        assertEquals(
+                installation.libraryDirectory()
+                        + File.pathSeparator
+                        + "/custom/plugins",
+                request.resolvedEnvironment().get("BEAGLE_PLUGIN_PATH")
+        );
     }
 
     private BeaglePreflightProcess process(Class<?> factory) {
