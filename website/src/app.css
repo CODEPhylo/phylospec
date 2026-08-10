@@ -5,9 +5,11 @@
 
 @theme {
     --color-accent: #15897d;
+    --color-accent-secondary: #c2703d;
     --color-background: #fefefe;
     --color-light-gray: #f5f5f5;
     --color-accent-light: #f3f4f6;
+    --color-accent-secondary-light: #faf1ea;
 }
 
 @theme {
@@ -66,4 +68,50 @@ nav a:hover {
     left: 16px;
     top: 50%;
     transform: translateY(-50%);
+}
+
+/* Mermaid diagrams */
+
+.mermaid {
+    margin: 1.5em 0;
+}
+
+.mermaid foreignObject div,
+.mermaid .nodeLabel,
+.mermaid .edgeLabel {
+    font-family: var(--font-sans) !important;
+    font-size: 14.5px !important;
+}
+
+.mermaid .node rect,
+.mermaid .node polygon,
+.mermaid .node circle {
+    fill: var(--color-light-gray) !important;
+    stroke: var(--color-accent-light) !important;
+    stroke-width: 1px !important;
+    rx: 4px !important;
+    ry: 4px !important;
+}
+
+.mermaid .cluster rect {
+    fill: var(--color-background) !important;
+    stroke: var(--color-accent-light) !important;
+    stroke-width: 2px !important;
+    rx: 6px !important;
+    ry: 6px !important;
+}
+
+.mermaid .flowchart-link {
+    stroke: var(--color-accent) !important;
+    stroke-width: 1px !important;
+}
+
+.mermaid .arrowheadPath {
+    fill: var(--color-accent) !important;
+    stroke: none !important;
+}
+
+.mermaid .node rect {
+    fill: var(--color-accent-light) !important;
+    stroke: var(--color-accent) !important;
 }
