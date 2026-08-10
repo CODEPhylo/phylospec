@@ -27,15 +27,14 @@ public final class StrictClockTreeUpDownOperatorSelector implements JointOperato
         }
 
         List<Map.Entry<TreeModel, List<Parameter>>> entries =
-                new ArrayList<>(state.treeClockRateParameters.entrySet());
+                new ArrayList<>(state.treeStrictClockRateParameters.entrySet());
         entries.sort(Comparator.comparing(entry -> treeId(entry.getKey())));
 
         List<OperatorSpec> operators = new ArrayList<>();
         for (Map.Entry<TreeModel, List<Parameter>> entry : entries) {
             TreeModel tree = entry.getKey();
             if (!(tree instanceof DefaultTreeModel)
-                    || !state.treePriorDistributions.containsKey(tree)
-                    || state.treeRelaxedClockModels.containsKey(tree)) {
+                    || !state.treePriorDistributions.containsKey(tree)) {
                 continue;
             }
 

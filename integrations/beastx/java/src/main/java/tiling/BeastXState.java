@@ -52,17 +52,17 @@ public class BeastXState {
     public final List<AbstractDistributionLikelihood> calibrationPriorDistributions;
     public final List<Likelihood> likelihoodDistributions;
 
-    // Prior and likelihood components collected during tiling.
+    // Clock models associated with each tree.
     public final Map<TreeModel, List<Parameter>> treeClockRateParameters;
+    public final Map<TreeModel, List<Parameter>> treeStrictClockRateParameters;
     public final Map<TreeModel, RelaxedClockSpec> treeRelaxedClockModels;
 
-    // Clock models associated with each tree.
+    // Logger configuration collected from MCMC logger tiles.
     public final List<Logger> mcmcLoggers;
     public final List<ScreenLoggerSpec> screenLoggerSpecs;
     public final List<FileLoggerSpec> fileLoggerSpecs;
     public final List<TreeLoggerSpec> treeLoggerSpecs;
 
-    // Logger configuration collected from MCMC logger tiles.
     public final OperatorConfig operatorConfig;
     public final XmlPlan xmlPlan;
 
@@ -87,6 +87,7 @@ public class BeastXState {
         this.calibrationPriorDistributions = new ArrayList<>();
         this.likelihoodDistributions = new ArrayList<>();
         this.treeClockRateParameters = new HashMap<>();
+        this.treeStrictClockRateParameters = new HashMap<>();
         this.treeRelaxedClockModels = new HashMap<>();
         this.mcmcLoggers = new ArrayList<>();
         this.screenLoggerSpecs = new ArrayList<>();
@@ -242,6 +243,17 @@ public class BeastXState {
             Parameter clockRateParameter
     ) {
         this.treeClockRateParameters
+                .computeIfAbsent(treeModel, ignored -> new ArrayList<>())
+                .add(clockRateParameter);
+    }
+
+    // Records a strict-clock rate parameter and its general tree/clock association.
+    public void addTreeStrictClockRateParameter(
+            TreeModel treeModel,
+            Parameter clockRateParameter
+    ) {
+        addTreeClockRateParameter(treeModel, clockRateParameter);
+        this.treeStrictClockRateParameters
                 .computeIfAbsent(treeModel, ignored -> new ArrayList<>())
                 .add(clockRateParameter);
     }

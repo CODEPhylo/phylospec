@@ -1,5 +1,4 @@
 import dr.evomodel.operators.ExchangeOperator;
-import dr.evomodel.operators.NodeHeightScaleOperator;
 import dr.evomodel.operators.RandomWalkNodeHeightOperator;
 import dr.evomodel.operators.SubtreeSlideOperator;
 import dr.evomodel.operators.UniformNodeHeightOperator;
@@ -853,7 +852,7 @@ public class BeastXMCMCBuilderTest {
                 buildOperators(source);
 
         assertEquals(8, operators.size());
-        assertTrue(containsOperator(operators, NodeHeightScaleOperator.class));
+        assertTrue(containsScaleOperatorForVariable(operators, "tree.allInternalNodeHeights"));
         assertTrue(containsOperator(operators, UniformNodeHeightOperator.class));
         assertTrue(containsOperator(operators, RandomWalkNodeHeightOperator.class));
         assertTrue(containsOperator(operators, SubtreeSlideOperator.class));
@@ -892,7 +891,7 @@ public class BeastXMCMCBuilderTest {
         assertTrue(containsOperator(operators, ScaleOperator.class));
         assertTrue(containsOperator(operators, DeltaExchangeOperator.class));
 
-        assertTrue(containsOperator(operators, NodeHeightScaleOperator.class));
+        assertTrue(containsScaleOperatorForVariable(operators, "tree.allInternalNodeHeights"));
         assertTrue(containsOperator(operators, UniformNodeHeightOperator.class));
         assertTrue(containsOperator(operators, RandomWalkNodeHeightOperator.class));
         assertTrue(containsOperator(operators, SubtreeSlideOperator.class));
@@ -921,6 +920,17 @@ public class BeastXMCMCBuilderTest {
                 .anyMatch(operatorClass::isInstance);
     }
 
+    private boolean containsScaleOperatorForVariable(
+            List<MCMCOperator> operators,
+            String variableId
+    ) {
+        return operators.stream()
+                .filter(ScaleOperator.class::isInstance)
+                .map(ScaleOperator.class::cast)
+                .map(ScaleOperator::getVariable)
+                .anyMatch(variable -> variableId.equals(variable.getId()));
+    }
+
     @Test
     public void buildsTreeClockUpDownOperatorForStrictClockModel() throws Exception {
         String source =
@@ -946,7 +956,7 @@ public class BeastXMCMCBuilderTest {
                 buildOperators(source);
 
         assertTrue(containsOperator(operators, ScaleOperator.class));
-        assertTrue(containsOperator(operators, NodeHeightScaleOperator.class));
+        assertTrue(containsScaleOperatorForVariable(operators, "tree.allInternalNodeHeights"));
         assertTrue(containsOperator(operators, ExchangeOperator.class));
         assertTrue(containsOperator(operators, WilsonBalding.class));
         assertTrue(containsOperator(operators, UpDownOperator.class));
@@ -977,7 +987,7 @@ public class BeastXMCMCBuilderTest {
                 buildOperators(source);
 
         assertTrue(containsOperator(operators, ScaleOperator.class));
-        assertTrue(containsOperator(operators, NodeHeightScaleOperator.class));
+        assertTrue(containsScaleOperatorForVariable(operators, "tree.allInternalNodeHeights"));
         assertTrue(containsOperator(operators, ExchangeOperator.class));
         assertTrue(containsOperator(operators, WilsonBalding.class));
         assertTrue(containsOperator(operators, UpDownOperator.class));

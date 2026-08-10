@@ -1,7 +1,6 @@
 package tiling.operators;
 
 import dr.evomodel.operators.ExchangeOperator;
-import dr.evomodel.operators.NodeHeightScaleOperator;
 import dr.evomodel.operators.RandomWalkNodeHeightOperator;
 import dr.evomodel.operators.SubtreeSlideOperator;
 import dr.evomodel.operators.UniformNodeHeightOperator;
@@ -86,11 +85,20 @@ public final class OperatorBuilder {
                 spec.parameter(), lower, upper, spec.weight(), (int) spec.tuning());
     }
 
-    private NodeHeightScaleOperator nodeHeightScaleOperator(OperatorSpec spec) {
-        NodeHeightScaleOperator operator = new NodeHeightScaleOperator(
-                spec.tree(), spec.tuning(), true, AdaptationMode.DEFAULT);
-        operator.setWeight(spec.weight());
-        return operator;
+    private ScaleOperator nodeHeightScaleOperator(OperatorSpec spec) {
+        DefaultTreeModel tree = defaultTree(spec);
+        Parameter nodeHeights = tree.createNodeHeightsParameter(true, true, false);
+        nodeHeights.setId(tree.getId() + ".allInternalNodeHeights");
+        return new ScaleOperator(
+                nodeHeights,
+                true,
+                0,
+                spec.tuning(),
+                AdaptationMode.DEFAULT,
+                spec.weight(),
+                null,
+                1.0,
+                false);
     }
 
     private ScaleOperator rootScaleOperator(OperatorSpec spec) {
@@ -132,7 +140,7 @@ public final class OperatorBuilder {
             case INTEGER_SWAP -> "SwapOperator(parameter=%s, weight=%s, size=%d)"
                     .formatted(parameter, spec.weight(), (int) spec.tuning());
             case INTEGER_UNIFORM -> integerUniformSummary(spec, parameter);
-            case TREE_NODE_HEIGHT_SCALE -> "NodeHeightScaleOperator(tree=%s, weight=%s, scaleFactor=%s, scaleAll=true)"
+            case TREE_NODE_HEIGHT_SCALE -> "ScaleOperator(treeNodeHeights=%s.allInternalNodeHeights, weight=%s, scaleFactor=%s, scaleAll=true)"
                     .formatted(tree, spec.weight(), spec.tuning());
             case TREE_ROOT_SCALE -> "ScaleOperator(treeRoot=%s.rootHeight, weight=%s, scaleFactor=%s)"
                     .formatted(tree, spec.weight(), spec.tuning());
