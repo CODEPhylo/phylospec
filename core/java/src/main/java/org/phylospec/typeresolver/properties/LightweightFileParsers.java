@@ -160,12 +160,12 @@ final class LightweightFileParsers {
         }
     }
 
-    static Optional<Path> resolveSmallFile(String fileName) {
+    static Optional<Path> resolveSmallFile(String fileName, Workspace workspace) {
         try {
             Path directPath = Path.of(fileName);
             if (isSmallRegularFile(directPath)) return Optional.of(directPath);
 
-            for (Path folder : Workspace.FOLDERS) {
+            for (Path folder : workspace.FOLDERS) {
                 Path workspacePath = folder.resolve(fileName);
                 if (isSmallRegularFile(workspacePath)) return Optional.of(workspacePath);
             }

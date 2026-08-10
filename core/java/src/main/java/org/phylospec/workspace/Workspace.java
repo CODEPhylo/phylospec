@@ -10,5 +10,5 @@ import java.util.Set;
  */
 public class Workspace {
 
-    public static Set<Path> FOLDERS = new HashSet<>();
+    public Set<Path> FOLDERS = new HashSet<>();
 }

@@ -12,6 +12,7 @@ import org.phylospec.errors.Error;
 import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.typeresolver.ResolvedType;
 import org.phylospec.typeresolver.TypeUtils;
+import org.phylospec.workspace.Workspace;
 
 /**
  * Coordinates the inference, propagation, and validation of properties on resolved types.
@@ -22,9 +23,9 @@ public class TypePropertyEngine {
     private final List<ErrorEventListener> eventListeners;
     private final GeneratorPropertyResolver generatorPropertyResolver;
 
-    public TypePropertyEngine() {
+    public TypePropertyEngine(Workspace workspace) {
         eventListeners = new ArrayList<>();
-        generatorPropertyResolver = new GeneratorPropertyResolver();
+        generatorPropertyResolver = new GeneratorPropertyResolver(workspace);
     }
 
     public void registerEventListener(ErrorEventListener listener) {

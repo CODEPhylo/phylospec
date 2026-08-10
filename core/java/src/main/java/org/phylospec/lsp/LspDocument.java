@@ -29,6 +29,7 @@ import org.phylospec.workspace.Workspace;
 class LspDocument implements ErrorEventListener {
     private final String uri;
     private LanguageClient client;
+    private final Workspace workspace;
 
     private final ComponentResolver componentResolver;
 
@@ -42,10 +43,10 @@ class LspDocument implements ErrorEventListener {
     LspDocument(String uri, String content, LanguageClient client) {
         this.uri = uri;
         this.client = client;
+        this.workspace = getWorkspace(uri);
 
         this.componentResolver = loadComponentResolver();
 
-        updateWorkspace(uri);
         updateContent(content);
     }
 
@@ -81,7 +82,7 @@ class LspDocument implements ErrorEventListener {
 
         // run type resolver
 
-        typeResolver = new TypeResolver(componentResolver);
+        typeResolver = new TypeResolver(componentResolver, workspace);
         typeResolver.registerEventListener(this);
         for (Stmt statement : statements) {
             try {
@@ -639,9 +640,11 @@ class LspDocument implements ErrorEventListener {
     }
 
     /**
-     * Adds the workspace URI to the global workspace folders.
+     * Creates a Workspace pointing to the URI to the workspace folders.
      */
-    private void updateWorkspace(String client) {
-        Workspace.FOLDERS.add(Path.of(new File(URI.create(client)).getPath()).getParent());
+    private static Workspace getWorkspace(String uri) {
+        Workspace workspace = new Workspace();
+        workspace.FOLDERS.add(Path.of(new File(URI.create(uri)).getPath()).getParent());
+        return workspace;
     }
 }

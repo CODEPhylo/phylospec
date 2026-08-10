@@ -5,6 +5,7 @@ import static org.phylospec.typeresolver.properties.TypePropertyNames.*;
 import java.util.Map;
 import java.util.Set;
 import org.phylospec.typeresolver.ResolvedType;
+import org.phylospec.workspace.Workspace;
 
 public class FromTreeProvider implements GeneratorPropertyProvider {
 
@@ -15,8 +16,10 @@ public class FromTreeProvider implements GeneratorPropertyProvider {
 
     @Override
     public void resolveGenerator(
-            ResolvedType generatedType, Map<String, Set<ResolvedType>> resolvedArguments) {
-        GeneratorPropertyProvider.resolveFile(resolvedArguments, "file")
+            ResolvedType generatedType,
+            Map<String, Set<ResolvedType>> resolvedArguments,
+            Workspace workspace) {
+        GeneratorPropertyProvider.resolveFile(resolvedArguments, "file", workspace)
                 .flatMap(LightweightFileParsers::parseTree)
                 .ifPresent(
                         properties -> {
