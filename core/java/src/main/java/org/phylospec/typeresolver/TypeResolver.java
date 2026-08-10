@@ -11,6 +11,7 @@ import org.phylospec.errors.Error;
 import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.lexer.TokenType;
 import org.phylospec.typeresolver.properties.TypePropertyEngine;
+import org.phylospec.workspace.Workspace;
 
 /// This class traverses an AST statement and resolves the types for each
 /// AST node and each variable.
@@ -52,13 +53,17 @@ public class TypeResolver
     private final List<ErrorEventListener> eventListeners;
 
     public TypeResolver(ComponentResolver componentResolver) {
+        this(componentResolver, new Workspace());
+    }
+
+    public TypeResolver(ComponentResolver componentResolver, Workspace workspace) {
         this.componentResolver = componentResolver;
         this.typeMatcher = new TypeMatcher(componentResolver);
         this.resolvedTypes = new HashMap<>();
         this.scopedVariableTypes = new ArrayList<>();
         this.printer = new AstPrinter();
         this.eventListeners = new ArrayList<>();
-        this.typePropertyEngine = new TypePropertyEngine();
+        this.typePropertyEngine = new TypePropertyEngine(workspace);
 
         createScope();
     }

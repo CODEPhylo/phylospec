@@ -3,6 +3,7 @@ package org.phylospec.typeresolver.properties;
 import java.nio.file.Path;
 import java.util.*;
 import org.phylospec.typeresolver.ResolvedType;
+import org.phylospec.workspace.Workspace;
 
 /**
  * Provides generator-specific type properties that cannot be inferred from component metadata.
@@ -20,7 +21,9 @@ public interface GeneratorPropertyProvider {
      * Resolves the properties for the generatedType based on the resolved arguments.
      */
     void resolveGenerator(
-            ResolvedType generatedType, Map<String, Set<ResolvedType>> resolvedArguments);
+            ResolvedType generatedType,
+            Map<String, Set<ResolvedType>> resolvedArguments,
+            Workspace workspace);
 
     /**
      * Returns all providers that can be discovered through {@link java.util.ServiceLoader}.
@@ -49,8 +52,10 @@ public interface GeneratorPropertyProvider {
 
     /** Resolves a generator argument to a small on-disk file, if it names one. */
     static Optional<Path> resolveFile(
-            Map<String, Set<ResolvedType>> resolvedArguments, String argumentName) {
+            Map<String, Set<ResolvedType>> resolvedArguments,
+            String argumentName,
+            Workspace workspace) {
         return resolveLiteral(resolvedArguments, argumentName)
-                .flatMap(LightweightFileParsers::resolveSmallFile);
+                .flatMap(file -> LightweightFileParsers.resolveSmallFile(file, workspace));
     }
 }

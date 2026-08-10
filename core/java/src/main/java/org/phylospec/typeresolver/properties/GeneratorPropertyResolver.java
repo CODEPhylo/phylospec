@@ -10,6 +10,7 @@ import org.phylospec.errors.Error;
 import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.typeresolver.ResolvedType;
 import org.phylospec.typeresolver.TypeUtils;
+import org.phylospec.workspace.Workspace;
 
 /**
  * Resolves and validates type properties for generator applications. This includes declared
@@ -20,10 +21,12 @@ public class GeneratorPropertyResolver {
 
     private final List<ErrorEventListener> eventListeners;
     private final List<GeneratorPropertyProvider> providers;
+    private final Workspace workspace;
 
-    public GeneratorPropertyResolver() {
-        eventListeners = new ArrayList<>();
-        providers = GeneratorPropertyProvider.loadProviders();
+    public GeneratorPropertyResolver(Workspace workspace) {
+        this.eventListeners = new ArrayList<>();
+        this.providers = GeneratorPropertyProvider.loadProviders();
+        this.workspace = workspace;
     }
 
     public void registerEventListener(ErrorEventListener listener) {
@@ -132,7 +135,7 @@ public class GeneratorPropertyResolver {
             if (provider.getGenerator()
                     .equals(generator.getNamespace() + "." + generator.getName())) {
                 for (ResolvedType generatedType : resolvedGeneratorApplication.generatedTypeSet()) {
-                    provider.resolveGenerator(generatedType, resolvedArguments);
+                    provider.resolveGenerator(generatedType, resolvedArguments, workspace);
                 }
             }
         }
