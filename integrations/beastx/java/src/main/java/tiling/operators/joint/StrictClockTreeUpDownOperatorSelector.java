@@ -30,7 +30,7 @@ public final class StrictClockTreeUpDownOperatorSelector implements JointOperato
         }
 
         List<Map.Entry<TreeModel, List<Parameter>>> entries =
-                new ArrayList<>(state.treeClockRateParameters.entrySet());
+                new ArrayList<>(state.treeStrictClockRateParameters.entrySet());
         entries.sort(Comparator.comparing(entry -> id(entry.getKey())));
 
         List<OperatorSpec> operators = new ArrayList<>();
@@ -58,8 +58,7 @@ public final class StrictClockTreeUpDownOperatorSelector implements JointOperato
 
     private static boolean supportsJointMove(BeastXState state, TreeModel tree) {
         return tree instanceof DefaultTreeModel
-                && state.treePriorDistributions.containsKey(tree)
-                && !state.treeRelaxedClockModels.containsKey(tree);
+                && state.treePriorDistributions.containsKey(tree);
     }
 
     private static boolean isPositive(TypeToken<?> type) {

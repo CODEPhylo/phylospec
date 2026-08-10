@@ -23,6 +23,8 @@ import java.util.Map;
 /** Selects the common BEAUti-style operator set supported by PhyloSpec. */
 public final class OperatorSelector {
 
+    private static final double NO_TUNING = 0.0;
+
     private static final List<JointOperatorSelector> JOINT_OPERATOR_SELECTORS =
             List.of(new StrictClockTreeUpDownOperatorSelector());
 
@@ -125,17 +127,17 @@ public final class OperatorSelector {
                         tree, config.treeRootScaleWeight, config.treeRootScaleFactor));
             }
             operators.add(treeOperator(OperatorSpec.Family.TREE_UNIFORM_HEIGHT,
-                    tree, config.treeNodeHeightWeight, 0.0));
+                    tree, config.treeNodeHeightWeight, NO_TUNING));
             if (tree instanceof DefaultTreeModel) {
                 operators.add(treeOperator(OperatorSpec.Family.TREE_SUBTREE_SLIDE,
                         tree, config.treeSubtreeSlideWeight, config.treeSubtreeSlideSize));
             }
             operators.add(treeOperator(OperatorSpec.Family.TREE_NARROW_EXCHANGE,
-                    tree, config.treeNarrowExchangeWeight, 0.0));
+                    tree, config.treeNarrowExchangeWeight, NO_TUNING));
             operators.add(treeOperator(OperatorSpec.Family.TREE_WIDE_EXCHANGE,
-                    tree, config.treeWideExchangeWeight, 0.0));
+                    tree, config.treeWideExchangeWeight, NO_TUNING));
             operators.add(treeOperator(OperatorSpec.Family.TREE_WILSON_BALDING,
-                    tree, config.treeWilsonBaldingWeight, 0.0));
+                    tree, config.treeWilsonBaldingWeight, NO_TUNING));
         }
         return operators;
     }
