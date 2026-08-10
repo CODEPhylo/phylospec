@@ -5,7 +5,6 @@ import dr.evomodel.operators.SubtreeSlideOperator;
 import dr.evomodel.operators.UniformNodeHeightOperator;
 import dr.evomodel.operators.WilsonBalding;
 import dr.evomodel.tree.DefaultTreeModel;
-import dr.evomodel.tree.TreeModel;
 import dr.inference.model.Bounds;
 import dr.inference.model.Parameter;
 import dr.inference.operators.AdaptationMode;
@@ -18,560 +17,135 @@ import dr.inference.operators.ScaleOperator;
 import dr.inference.operators.SwapOperator;
 import dr.inference.operators.UniformIntegerOperator;
 import dr.inference.operators.UpDownOperator;
-import org.phylospec.domain.NonNegativeReal;
-import org.phylospec.domain.PositiveReal;
-import org.phylospec.tiling.TypeToken;
-import org.phylospec.types.RealScalar;
-import org.phylospec.types.RealVector;
-import org.phylospec.types.Simplex;
 import tiling.BeastXState;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
-public class OperatorBuilder {
+/** Materializes selected operator specifications for direct BEAST X execution. */
+public final class OperatorBuilder {
 
-    private static final TypeToken<?> SIMPLEX =
-            new TypeToken<Simplex>() {};
-
-    private static final TypeToken<?> POSITIVE_REAL_SCALAR =
-            new TypeToken<RealScalar<? extends PositiveReal>>() {};
-
-    private static final TypeToken<?> POSITIVE_REAL_VECTOR =
-            new TypeToken<RealVector<? extends PositiveReal>>() {};
-
-    private static final TypeToken<?> NON_NEGATIVE_REAL_SCALAR =
-            new TypeToken<RealScalar<? extends NonNegativeReal>>() {};
-
-    public List<MCMCOperator> build(BeastXState beastState) {
-        List<MCMCOperator> operators =
-                new ArrayList<>();
-
-        operators.addAll(buildParameterOperators(beastState));
-        operators.addAll(buildTreeOperators(beastState));
-        operators.addAll(buildTreeClockJointOperators(beastState));
-
-        return operators;
+    public List<MCMCOperator> build(BeastXState state) {
+        return new OperatorSelector().select(state).stream()
+                .filter(spec -> spec.weight() > 0.0)
+                .map(this::build)
+                .toList();
     }
 
-    public List<String> summarize(BeastXState beastState) {
-        List<String> summaries =
-                new ArrayList<>();
-
-        summaries.addAll(summarizeParameterOperators(beastState));
-        summaries.addAll(summarizeTreeOperators(beastState));
-        summaries.addAll(summarizeTreeClockJointOperators(beastState));
-
-        return summaries;
+    public List<String> summarize(BeastXState state) {
+        return new OperatorSelector().select(state).stream()
+                .filter(spec -> spec.weight() > 0.0)
+                .map(this::summarize)
+                .toList();
     }
 
-    private List<MCMCOperator> buildParameterOperators(BeastXState beastState) {
-        List<MCMCOperator> operators =
-                new ArrayList<>();
-
-        List<Map.Entry<Parameter, TypeToken<?>>> entries =
-                new ArrayList<>(beastState.stateNodes.entrySet());
-
-        entries.sort(Comparator.comparing(entry -> parameterId(entry.getKey())));
-
-        for (Map.Entry<Parameter, TypeToken<?>> entry : entries) {
-            Parameter parameter =
-                    entry.getKey();
-
-            if (isRelaxedClockRateCategoriesParameter(beastState, parameter)) {
-                operators.addAll(buildRelaxedClockCategoryOperators(parameter));
-            } else {
-                operators.add(buildParameterOperator(
-                        parameter,
-                        entry.getValue(),
-                        beastState.operatorConfig
-                ));
-            }
-        }
-
-        return operators;
+    private MCMCOperator build(OperatorSpec spec) {
+        return switch (spec.family()) {
+            case SCALE -> new ScaleOperator(
+                    spec.parameter(), spec.tuning(), AdaptationMode.DEFAULT, spec.weight());
+            case RANDOM_WALK -> new RandomWalkOperator(
+                    spec.parameter(), spec.tuning(),
+                    RandomWalkOperator.BoundaryCondition.reflecting,
+                    spec.weight(), AdaptationMode.DEFAULT);
+            case DELTA_EXCHANGE -> new DeltaExchangeOperator(
+                    spec.parameter(), null, spec.tuning(), spec.weight(), false,
+                    AdaptationMode.DEFAULT);
+            case INTEGER_RANDOM_WALK -> new RandomWalkIntegerOperator(
+                    spec.parameter(), (int) spec.tuning(), spec.weight());
+            case INTEGER_SWAP -> swapOperator(spec);
+            case INTEGER_UNIFORM -> uniformIntegerOperator(spec);
+            case TREE_SCALE -> treeScaleOperator(spec, false);
+            case TREE_ROOT_SCALE -> treeScaleOperator(spec, true);
+            case TREE_UNIFORM_HEIGHT -> new UniformNodeHeightOperator(spec.tree(), spec.weight());
+            case TREE_SUBTREE_SLIDE -> new SubtreeSlideOperator(
+                    defaultTree(spec), spec.tuning(), spec.weight(),
+                    true, false, false, false, AdaptationMode.DEFAULT, 0.234);
+            case TREE_NARROW_EXCHANGE -> new ExchangeOperator(
+                    ExchangeOperator.NARROW, spec.tree(), spec.weight());
+            case TREE_WIDE_EXCHANGE -> new ExchangeOperator(
+                    ExchangeOperator.WIDE, spec.tree(), spec.weight());
+            case TREE_WILSON_BALDING -> new WilsonBalding(spec.tree(), spec.weight());
+            case TREE_CLOCK_UP_DOWN -> treeClockUpDownOperator(spec);
+        };
     }
 
-    private List<String> summarizeParameterOperators(BeastXState beastState) {
-        List<String> summaries =
-                new ArrayList<>();
-
-        List<Map.Entry<Parameter, TypeToken<?>>> entries =
-                new ArrayList<>(beastState.stateNodes.entrySet());
-
-        entries.sort(Comparator.comparing(entry -> parameterId(entry.getKey())));
-
-        for (Map.Entry<Parameter, TypeToken<?>> entry : entries) {
-            Parameter parameter =
-                    entry.getKey();
-
-            if (isRelaxedClockRateCategoriesParameter(beastState, parameter)) {
-                summaries.addAll(summarizeRelaxedClockCategoryOperators(parameter));
-            } else {
-                summaries.add(summarizeParameterOperator(
-                        parameter,
-                        entry.getValue(),
-                        beastState.operatorConfig
-                ));
-            }
-        }
-
-        return summaries;
+    private SwapOperator swapOperator(OperatorSpec spec) {
+        SwapOperator operator = new SwapOperator(spec.parameter(), (int) spec.tuning());
+        operator.setWeight(spec.weight());
+        return operator;
     }
 
-    private List<MCMCOperator> buildTreeOperators(BeastXState beastState) {
-        List<MCMCOperator> operators =
-                new ArrayList<>();
-
-        List<TreeModel> treeModels =
-                new ArrayList<>(beastState.treePriorDistributions.keySet());
-
-        treeModels.sort(Comparator.comparing(OperatorBuilder::treeId));
-
-        for (TreeModel treeModel : treeModels) {
-            operators.addAll(buildDefaultTreeOperators(
-                    treeModel,
-                    beastState.operatorConfig
-            ));
-        }
-
-        return operators;
+    private UniformIntegerOperator uniformIntegerOperator(OperatorSpec spec) {
+        Bounds<Double> bounds = spec.parameter().getBounds();
+        int lower = (int) Math.ceil(bounds.getLowerLimit(0));
+        int upper = (int) Math.floor(bounds.getUpperLimit(0));
+        return new UniformIntegerOperator(
+                spec.parameter(), lower, upper, spec.weight(), (int) spec.tuning());
     }
 
-    private List<String> summarizeTreeOperators(BeastXState beastState) {
-        List<String> summaries =
-                new ArrayList<>();
-
-        List<TreeModel> treeModels =
-                new ArrayList<>(beastState.treePriorDistributions.keySet());
-
-        treeModels.sort(Comparator.comparing(OperatorBuilder::treeId));
-
-        for (TreeModel treeModel : treeModels) {
-            summaries.addAll(summarizeDefaultTreeOperators(
-                    treeModel,
-                    beastState.operatorConfig
-            ));
-        }
-
-        return summaries;
-    }
-
-    private List<MCMCOperator> buildTreeClockJointOperators(BeastXState beastState) {
-        List<MCMCOperator> operators =
-                new ArrayList<>();
-
-        if (beastState.operatorConfig.treeClockUpDownWeight <= 0.0) {
-            return operators;
-        }
-
-        List<Map.Entry<TreeModel, List<Parameter>>> entries =
-                new ArrayList<>(beastState.treeClockRateParameters.entrySet());
-
-        entries.sort(Comparator.comparing(entry -> treeId(entry.getKey())));
-
-        for (Map.Entry<TreeModel, List<Parameter>> entry : entries) {
-            TreeModel treeModel =
-                    entry.getKey();
-
-            if (!beastState.treePriorDistributions.containsKey(treeModel)) {
-                continue;
-            }
-
-            List<Parameter> clockRateParameters =
-                    new ArrayList<>(entry.getValue());
-
-            clockRateParameters.sort(Comparator.comparing(OperatorBuilder::parameterId));
-
-            for (Parameter clockRateParameter : clockRateParameters) {
-                TypeToken<?> typeToken =
-                        beastState.stateNodes.get(clockRateParameter);
-
-                if (typeToken != null && POSITIVE_REAL_SCALAR.isAssignableFrom(typeToken)) {
-                    operators.add(buildTreeClockUpDownOperator(
-                            treeModel,
-                            clockRateParameter,
-                            beastState.operatorConfig
-                    ));
-                }
-            }
-        }
-
-        return operators;
-    }
-
-    private List<String> summarizeTreeClockJointOperators(BeastXState beastState) {
-        List<String> summaries =
-                new ArrayList<>();
-
-        if (beastState.operatorConfig.treeClockUpDownWeight <= 0.0) {
-            return summaries;
-        }
-
-        List<Map.Entry<TreeModel, List<Parameter>>> entries =
-                new ArrayList<>(beastState.treeClockRateParameters.entrySet());
-
-        entries.sort(Comparator.comparing(entry -> treeId(entry.getKey())));
-
-        for (Map.Entry<TreeModel, List<Parameter>> entry : entries) {
-            TreeModel treeModel =
-                    entry.getKey();
-
-            if (!beastState.treePriorDistributions.containsKey(treeModel)) {
-                continue;
-            }
-
-            List<Parameter> clockRateParameters =
-                    new ArrayList<>(entry.getValue());
-
-            clockRateParameters.sort(Comparator.comparing(OperatorBuilder::parameterId));
-
-            for (Parameter clockRateParameter : clockRateParameters) {
-                TypeToken<?> typeToken =
-                        beastState.stateNodes.get(clockRateParameter);
-
-                if (typeToken != null && POSITIVE_REAL_SCALAR.isAssignableFrom(typeToken)) {
-                    summaries.add(summarizeTreeClockUpDownOperator(
-                            treeModel,
-                            clockRateParameter,
-                            beastState.operatorConfig
-                    ));
-                }
-            }
-        }
-
-        return summaries;
-    }
-
-    private MCMCOperator buildParameterOperator(
-            Parameter parameter,
-            TypeToken<?> typeToken,
-            BeastXState.OperatorConfig config
-    ) {
-        if (SIMPLEX.isAssignableFrom(typeToken)) {
-            return new DeltaExchangeOperator(
-                    parameter,
-                    config.parameterOperatorWeight
-            );
-        }
-
-        if (POSITIVE_REAL_SCALAR.isAssignableFrom(typeToken)
-                || POSITIVE_REAL_VECTOR.isAssignableFrom(typeToken)) {
-            return new ScaleOperator(
-                    parameter,
-                    config.parameterScaleFactor,
-                    AdaptationMode.DEFAULT,
-                    config.parameterOperatorWeight
-            );
-        }
-
-        return new RandomWalkOperator(
-                parameter,
-                config.randomWalkWindowSize,
-                RandomWalkOperator.BoundaryCondition.reflecting,
-                config.parameterOperatorWeight,
-                AdaptationMode.DEFAULT
-        );
-    }
-
-    private List<MCMCOperator> buildRelaxedClockCategoryOperators(
-            Parameter parameter
-    ) {
-        List<MCMCOperator> operators =
-                new ArrayList<>();
-
-        operators.add(new RandomWalkIntegerOperator(
-                parameter,
-                1,
-                10.0
-        ));
-
-        SwapOperator swapOperator =
-                new SwapOperator(parameter, 1);
-
-        swapOperator.setWeight(10.0);
-        operators.add(swapOperator);
-
-        Bounds<Double> bounds =
-                parameter.getBounds();
-
-        int lower =
-                (int) Math.ceil(
-                        bounds.getLowerLimit(0)
-                );
-
-        int upper =
-                (int) Math.floor(
-                        bounds.getUpperLimit(0)
-                );
-
-        operators.add(new UniformIntegerOperator(
-                parameter,
-                lower,
-                upper,
-                10.0,
-                1
-        ));
-
-        return operators;
-    }
-
-    private List<String> summarizeRelaxedClockCategoryOperators(
-            Parameter parameter
-    ) {
-        String id =
-                parameterId(parameter);
-
-        return List.of(
-                "RandomWalkIntegerOperator(parameter=%s, weight=10.0, windowSize=1)".formatted(id),
-                "SwapOperator(parameter=%s, weight=10.0, size=1)".formatted(id),
-                "UniformIntegerOperator(parameter=%s, weight=10.0, count=1)".formatted(id)
-        );
-    }
-
-    private boolean isRelaxedClockRateCategoriesParameter(
-            BeastXState state,
-            Parameter parameter
-    ) {
-        for (BeastXState.RelaxedClockSpec spec : state.treeRelaxedClockModels.values()) {
-            Parameter rateCategoriesParameter =
-                    spec.rateCategoriesParameter();
-
-            if (rateCategoriesParameter == parameter) {
-                return true;
-            }
-
-            String parameterId =
-                    parameter.getId();
-
-            String rateCategoriesId =
-                    rateCategoriesParameter.getId();
-
-            if (
-                    parameterId != null
-                            && rateCategoriesId != null
-                            && parameterId.equals(rateCategoriesId)
-            ) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private String summarizeParameterOperator(
-            Parameter parameter,
-            TypeToken<?> typeToken,
-            BeastXState.OperatorConfig config
-    ) {
-        if (SIMPLEX.isAssignableFrom(typeToken)) {
-            return "DeltaExchangeOperator(parameter=%s, weight=%s)".formatted(
-                    parameter.getId(),
-                    format(config.parameterOperatorWeight)
-            );
-        }
-
-        if (POSITIVE_REAL_SCALAR.isAssignableFrom(typeToken)
-                || POSITIVE_REAL_VECTOR.isAssignableFrom(typeToken)) {
-            return "ScaleOperator(parameter=%s, weight=%s, scaleFactor=%s)".formatted(
-                    parameter.getId(),
-                    format(config.parameterOperatorWeight),
-                    format(config.parameterScaleFactor)
-            );
-        }
-
-        return "RandomWalkOperator(parameter=%s, weight=%s, windowSize=%s, boundary=reflecting)".formatted(
-                parameter.getId(),
-                format(config.parameterOperatorWeight),
-                format(config.randomWalkWindowSize)
-        );
-    }
-
-    private List<MCMCOperator> buildDefaultTreeOperators(
-            TreeModel treeModel,
-            BeastXState.OperatorConfig config
-    ) {
-        List<MCMCOperator> operators =
-                new ArrayList<>();
-
-        if (treeModel instanceof DefaultTreeModel defaultTreeModel) {
-            operators.add(buildTreeScaleOperator(
-                    defaultTreeModel,
-                    config
-            ));
-        }
-
-        operators.add(new UniformNodeHeightOperator(
-                treeModel,
-                config.treeNodeHeightWeight
-        ));
-
-        operators.add(new ExchangeOperator(
-                ExchangeOperator.NARROW,
-                treeModel,
-                config.treeNarrowExchangeWeight
-        ));
-
-        operators.add(new ExchangeOperator(
-                ExchangeOperator.WIDE,
-                treeModel,
-                config.treeWideExchangeWeight
-        ));
-
-        if (treeModel instanceof DefaultTreeModel defaultTreeModel) {
-            operators.add(new SubtreeSlideOperator(
-                    defaultTreeModel,
-                    config.treeSubtreeSlideSize,
-                    config.treeSubtreeSlideWeight,
-                    true,
-                    false,
-                    false,
-                    false,
-                    AdaptationMode.DEFAULT,
-                    0.234
-            ));
-        }
-
-        operators.add(new WilsonBalding(
-                treeModel,
-                config.treeWilsonBaldingWeight
-        ));
-
-        return operators;
-    }
-
-    private List<String> summarizeDefaultTreeOperators(
-            TreeModel treeModel,
-            BeastXState.OperatorConfig config
-    ) {
-        List<String> summaries =
-                new ArrayList<>();
-
-        if (treeModel instanceof DefaultTreeModel) {
-            summaries.add("ScaleTreeOperator(tree=%s, weight=%s, scaleFactor=%s)".formatted(
-                    treeModel.getId(),
-                    format(config.treeScaleWeight),
-                    format(config.treeScaleFactor)
-            ));
-        }
-
-        summaries.add("UniformNodeHeightOperator(tree=%s, weight=%s)".formatted(
-                treeModel.getId(),
-                format(config.treeNodeHeightWeight)
-        ));
-
-        summaries.add("ExchangeOperator(tree=%s, mode=narrow, weight=%s)".formatted(
-                treeModel.getId(),
-                format(config.treeNarrowExchangeWeight)
-        ));
-
-        summaries.add("ExchangeOperator(tree=%s, mode=wide, weight=%s)".formatted(
-                treeModel.getId(),
-                format(config.treeWideExchangeWeight)
-        ));
-
-        if (treeModel instanceof DefaultTreeModel) {
-            summaries.add("SubtreeSlideOperator(tree=%s, weight=%s, size=%s)".formatted(
-                    treeModel.getId(),
-                    format(config.treeSubtreeSlideWeight),
-                    format(config.treeSubtreeSlideSize)
-            ));
-        }
-
-        summaries.add("WilsonBalding(tree=%s, weight=%s)".formatted(
-                treeModel.getId(),
-                format(config.treeWilsonBaldingWeight)
-        ));
-
-        return summaries;
-    }
-
-    private MCMCOperator buildTreeScaleOperator(
-            DefaultTreeModel treeModel,
-            BeastXState.OperatorConfig config
-    ) {
-        Parameter allInternalNodeHeights =
-                treeModel.createNodeHeightsParameter(true, true, false);
-
-        allInternalNodeHeights.setId(treeModel.getId() + ".allInternalNodeHeights");
+    private ScaleOperator treeScaleOperator(OperatorSpec spec, boolean rootOnly) {
+        DefaultTreeModel tree = defaultTree(spec);
+        Parameter heights = rootOnly
+                ? tree.getRootHeightParameter()
+                : tree.createNodeHeightsParameter(true, true, false);
+        heights.setId(OperatorSelector.treeId(tree)
+                + (rootOnly ? ".rootHeight" : ".allInternalNodeHeights"));
 
         return new ScaleOperator(
-                allInternalNodeHeights,
-                true,
-                0,
-                config.treeScaleFactor,
-                AdaptationMode.DEFAULT,
-                config.treeScaleWeight,
-                null,
-                1.0,
-                false
-        );
+                heights, !rootOnly, 0, spec.tuning(), AdaptationMode.DEFAULT,
+                spec.weight(), null, 1.0, false);
     }
 
-    private MCMCOperator buildTreeClockUpDownOperator(
-            TreeModel treeModel,
-            Parameter clockRateParameter,
-            BeastXState.OperatorConfig config
-    ) {
-        if (!(treeModel instanceof DefaultTreeModel defaultTreeModel)) {
-            throw new IllegalArgumentException(
-                    "Tree-clock up/down operators require a DefaultTreeModel."
-            );
-        }
-
-        Scalable[] up =
-                new Scalable[] {
-                        new Scalable.Default(clockRateParameter)
-                };
-
-        Parameter allInternalNodeHeights =
-                defaultTreeModel.createNodeHeightsParameter(true, true, false);
-        allInternalNodeHeights.setId(treeModel.getId() + ".allInternalNodeHeights");
-
-        Scalable[] down =
-                new Scalable[] {
-                        new Scalable.Default(allInternalNodeHeights)
-                };
+    private UpDownOperator treeClockUpDownOperator(OperatorSpec spec) {
+        DefaultTreeModel tree = defaultTree(spec);
+        Parameter heights = tree.createNodeHeightsParameter(true, true, false);
+        heights.setId(OperatorSelector.treeId(tree) + ".allInternalNodeHeights");
 
         return new UpDownOperator(
-                up,
-                down,
-                config.treeClockUpDownScaleFactor,
-                config.treeClockUpDownWeight,
-                AdaptationMode.DEFAULT
-        );
+                new Scalable[]{new Scalable.Default(spec.parameter())},
+                new Scalable[]{new Scalable.Default(heights)},
+                spec.tuning(), spec.weight(), AdaptationMode.DEFAULT);
     }
 
-    private String summarizeTreeClockUpDownOperator(
-            TreeModel treeModel,
-            Parameter clockRateParameter,
-            BeastXState.OperatorConfig config
-    ) {
-        return "UpDownOperator(up=[%s], down=[%s.allInternalNodeHeights], weight=%s, scaleFactor=%s)".formatted(
-                clockRateParameter.getId(),
-                treeModel.getId(),
-                format(config.treeClockUpDownWeight),
-                format(config.treeClockUpDownScaleFactor)
-        );
+    private DefaultTreeModel defaultTree(OperatorSpec spec) {
+        if (spec.tree() instanceof DefaultTreeModel tree) {
+            return tree;
+        }
+        throw new IllegalArgumentException(spec.family() + " requires a DefaultTreeModel.");
     }
 
-    private static String format(double value) {
-        return Double.toString(value);
-    }
-
-    private static String parameterId(Parameter parameter) {
-        String id =
-                parameter.getId();
-
-        return id == null ? "" : id;
-    }
-
-    private static String treeId(TreeModel treeModel) {
-        String id =
-                treeModel.getId();
-
-        return id == null ? "" : id;
+    private String summarize(OperatorSpec spec) {
+        String parameter = spec.parameter() == null
+                ? "" : OperatorSelector.parameterId(spec.parameter());
+        String tree = spec.tree() == null ? "" : OperatorSelector.treeId(spec.tree());
+        return switch (spec.family()) {
+            case SCALE -> "ScaleOperator(parameter=%s, weight=%s, scaleFactor=%s)"
+                    .formatted(parameter, spec.weight(), spec.tuning());
+            case RANDOM_WALK -> "RandomWalkOperator(parameter=%s, weight=%s, windowSize=%s, boundary=reflecting)"
+                    .formatted(parameter, spec.weight(), spec.tuning());
+            case DELTA_EXCHANGE -> "DeltaExchangeOperator(parameter=%s, weight=%s, delta=%s)"
+                    .formatted(parameter, spec.weight(), spec.tuning());
+            case INTEGER_RANDOM_WALK -> "RandomWalkIntegerOperator(parameter=%s, weight=%s, windowSize=%s)"
+                    .formatted(parameter, spec.weight(), (int) spec.tuning());
+            case INTEGER_SWAP -> "SwapOperator(parameter=%s, weight=%s, size=%s)"
+                    .formatted(parameter, spec.weight(), (int) spec.tuning());
+            case INTEGER_UNIFORM -> "UniformIntegerOperator(parameter=%s, weight=%s, count=%s)"
+                    .formatted(parameter, spec.weight(), (int) spec.tuning());
+            case TREE_SCALE -> "ScaleTreeOperator(tree=%s, weight=%s, scaleFactor=%s)"
+                    .formatted(tree, spec.weight(), spec.tuning());
+            case TREE_ROOT_SCALE -> "ScaleRootOperator(tree=%s, weight=%s, scaleFactor=%s)"
+                    .formatted(tree, spec.weight(), spec.tuning());
+            case TREE_UNIFORM_HEIGHT -> "UniformNodeHeightOperator(tree=%s, weight=%s)"
+                    .formatted(tree, spec.weight());
+            case TREE_SUBTREE_SLIDE -> "SubtreeSlideOperator(tree=%s, weight=%s, size=%s)"
+                    .formatted(tree, spec.weight(), spec.tuning());
+            case TREE_NARROW_EXCHANGE -> "ExchangeOperator(tree=%s, mode=narrow, weight=%s)"
+                    .formatted(tree, spec.weight());
+            case TREE_WIDE_EXCHANGE -> "ExchangeOperator(tree=%s, mode=wide, weight=%s)"
+                    .formatted(tree, spec.weight());
+            case TREE_WILSON_BALDING -> "WilsonBalding(tree=%s, weight=%s)"
+                    .formatted(tree, spec.weight());
+            case TREE_CLOCK_UP_DOWN -> "UpDownOperator(up=[%s], down=[%s.allInternalNodeHeights], weight=%s, scaleFactor=%s)"
+                    .formatted(parameter, tree, spec.weight(), spec.tuning());
+        };
     }
 }

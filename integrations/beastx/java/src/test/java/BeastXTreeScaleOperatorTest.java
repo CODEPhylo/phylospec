@@ -55,6 +55,19 @@ public class BeastXTreeScaleOperatorTest {
         assertEquals(0.4, directTreeScale.getScaleFactor());
         directTreeScale.doOperation();
 
+        ScaleOperator directRootScale =
+                operators.stream()
+                        .filter(ScaleOperator.class::isInstance)
+                        .map(ScaleOperator.class::cast)
+                        .filter(operator ->
+                                "tree.rootHeight".equals(operator.getVariable().getId())
+                        )
+                        .findFirst()
+                        .orElseThrow();
+
+        assertEquals(5.0, directRootScale.getWeight());
+        assertEquals(0.75, directRootScale.getScaleFactor());
+
         Path xmlPath =
                 XmlTestSupport.xmlPath("treeScaleOperator");
 
@@ -72,6 +85,17 @@ public class BeastXTreeScaleOperatorTest {
         XmlTestSupport.assertXmlContains(
                 xml,
                 "<parameter idref=\"tree.allInternalNodeHeights\"/>"
+        );
+
+        XmlTestSupport.assertXmlContains(
+                xml,
+                "<scaleOperator id=\"tree_rootScale\" scaleFactor=\"0.75\" "
+                        + "weight=\"5.0\" scaleAll=\"false\" ignoreBounds=\"true\">"
+        );
+
+        XmlTestSupport.assertXmlContains(
+                xml,
+                "<parameter idref=\"tree.rootHeight\"/>"
         );
 
         try (var reader = Files.newBufferedReader(xmlPath)) {

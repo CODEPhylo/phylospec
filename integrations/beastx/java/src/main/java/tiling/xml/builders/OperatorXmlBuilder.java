@@ -1,553 +1,143 @@
 package tiling.xml.builders;
 
 import dr.evomodel.tree.TreeModel;
-import dr.inference.model.Bounds;
 import dr.inference.model.Parameter;
 import tiling.BeastXState;
+import tiling.operators.OperatorSelector;
+import tiling.operators.OperatorSpec;
 import tiling.xml.XmlElement;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
-public class OperatorXmlBuilder {
+/** Materializes the shared BEAST X operator selection as XML. */
+public final class OperatorXmlBuilder {
 
     public List<XmlElement> buildOperators(BeastXState state) {
-        List<XmlElement> operators =
-                new ArrayList<>();
-
-        operators.addAll(buildParameterOperators(state));
-        operators.addAll(buildRelaxedClockCategoryOperators(state));
-        operators.addAll(buildTreeOperators(state));
-        operators.addAll(buildClockTreeUpDownOperators(state));
-
-        return operators;
+        return new OperatorSelector().select(state).stream()
+                .filter(spec -> spec.weight() > 0.0)
+                .map(this::build)
+                .toList();
     }
 
-    private List<XmlElement> buildParameterOperators(BeastXState state) {
-        List<XmlElement> operators =
-                new ArrayList<>();
-
-        List<Parameter> parameters =
-                new ArrayList<>(state.stateNodes.keySet());
-
-        parameters.removeIf(parameter -> isRelaxedClockRateCategoriesParameter(state, parameter));
-
-        parameters.sort(Comparator.comparing(OperatorXmlBuilder::parameterId));
-
-        for (Parameter parameter : parameters) {
-            if (isSimplexParameter(parameter)) {
-                operators.add(deltaExchangeOperator(state, parameter));
-            } else if (hasFiniteLowerAndUpperBounds(parameter)) {
-                operators.add(randomWalkOperator(state, parameter));
-            } else if (supportsScaleOperator(parameter)) {
-                operators.add(scaleOperator(state, parameter));
-            } else {
-                operators.add(randomWalkOperator(state, parameter));
-            }
-        }
-
-        return operators;
+    private XmlElement build(OperatorSpec spec) {
+        return switch (spec.family()) {
+            case SCALE -> parameterOperator(
+                    "scaleOperator", spec, "scale",
+                    "scaleFactor", format(spec.tuning()));
+            case RANDOM_WALK -> parameterOperator(
+                    "randomWalkOperator", spec, "randomWalk",
+                    "windowSize", format(spec.tuning()))
+                    .withAttribute("boundaryCondition", "reflecting");
+            case DELTA_EXCHANGE -> parameterOperator(
+                    "deltaExchange", spec, "deltaExchange",
+                    "delta", format(spec.tuning()));
+            case INTEGER_RANDOM_WALK -> parameterOperator(
+                    "randomWalkIntegerOperator", spec, "randomWalk",
+                    "windowSize", Integer.toString((int) spec.tuning()));
+            case INTEGER_SWAP -> parameterOperator(
+                    "swapOperator", spec, "swap",
+                    "size", Integer.toString((int) spec.tuning()))
+                    .withAttribute("autoOptimize", "false");
+            case INTEGER_UNIFORM -> parameterOperator(
+                    "uniformIntegerOperator", spec, "uniform",
+                    "count", Integer.toString((int) spec.tuning()));
+            case TREE_SCALE -> treeScaleOperator(spec, false);
+            case TREE_ROOT_SCALE -> treeScaleOperator(spec, true);
+            case TREE_UNIFORM_HEIGHT -> treeOperator(
+                    "nodeHeightOperator", spec, "uniformNodeHeight");
+            case TREE_SUBTREE_SLIDE -> treeOperator(
+                    "subtreeSlide", spec, "subtreeSlide")
+                    .withAttribute("size", format(spec.tuning()))
+                    .withAttribute("gaussian", "true");
+            case TREE_NARROW_EXCHANGE -> treeOperator(
+                    "narrowExchange", spec, "narrowExchange");
+            case TREE_WIDE_EXCHANGE -> treeOperator(
+                    "wideExchange", spec, "wideExchange");
+            case TREE_WILSON_BALDING -> treeOperator(
+                    "wilsonBalding", spec, "wilsonBalding");
+            case TREE_CLOCK_UP_DOWN -> treeClockUpDownOperator(spec);
+        };
     }
 
-    private List<XmlElement> buildClockTreeUpDownOperators(BeastXState state) {
-        List<XmlElement> operators =
-                new ArrayList<>();
-
-        Parameter clockRate =
-                findClockRateParameter(state);
-
-        if (clockRate == null) {
-            return operators;
-        }
-
-        List<TreeModel> trees =
-                new ArrayList<>(state.treePriorDistributions.keySet());
-
-        trees.sort(Comparator.comparing(OperatorXmlBuilder::treeId));
-
-        for (TreeModel treeModel : trees) {
-            if (hasRelaxedClockBranchRateModel(state, treeModel)) {
-                continue;
-            }
-
-            operators.add(
-                    clockTreeUpDownOperator(
-                            state,
-                            clockRate,
-                            treeModel
-                    )
-            );
-        }
-
-        return operators;
-    }
-
-    private List<XmlElement> buildTreeOperators(BeastXState state) {
-        List<XmlElement> operators =
-                new ArrayList<>();
-
-        List<TreeModel> trees =
-                new ArrayList<>(state.treePriorDistributions.keySet());
-
-        trees.sort(Comparator.comparing(OperatorXmlBuilder::treeId));
-
-        for (TreeModel treeModel : trees) {
-            String id =
-                    treeId(treeModel);
-
-            operators.add(
-                    treeScaleOperator(state, treeModel)
-            );
-
-            operators.add(
-                    uniformNodeHeightOperator(state, treeModel)
-            );
-
-            operators.add(
-                    treeOperator(
-                            "narrowExchange",
-                            id + "_narrowExchange",
-                            state.operatorConfig.treeNarrowExchangeWeight,
-                            treeModel
-                    )
-            );
-
-            operators.add(
-                    treeOperator(
-                            "wideExchange",
-                            id + "_wideExchange",
-                            state.operatorConfig.treeWideExchangeWeight,
-                            treeModel
-                    )
-            );
-
-            operators.add(
-                    subtreeSlideOperator(state, treeModel)
-            );
-
-            operators.add(
-                    treeOperator(
-                            "wilsonBalding",
-                            id + "_wilsonBalding",
-                            state.operatorConfig.treeWilsonBaldingWeight,
-                            treeModel
-                    )
-            );
-        }
-
-        return operators;
-    }
-
-    private XmlElement treeScaleOperator(
-            BeastXState state,
-            TreeModel treeModel
+    private XmlElement parameterOperator(
+            String element,
+            OperatorSpec spec,
+            String suffix,
+            String tuningName,
+            String tuningValue
     ) {
-        String id =
-                treeId(treeModel);
+        return XmlElement.element(element)
+                .withId(parameterId(spec.parameter()) + "_" + suffix)
+                .withAttribute(tuningName, tuningValue)
+                .withAttribute("weight", format(spec.weight()))
+                .withChild(parameterReference(spec.parameter()));
+    }
 
+    private XmlElement treeScaleOperator(OperatorSpec spec, boolean rootOnly) {
+        String treeId = treeId(spec.tree());
         return XmlElement.element("scaleOperator")
-                .withId(id + "_scale")
-                .withAttribute("scaleFactor", format(state.operatorConfig.treeScaleFactor))
-                .withAttribute("weight", format(state.operatorConfig.treeScaleWeight))
-                .withAttribute("scaleAll", "true")
+                .withId(treeId + (rootOnly ? "_rootScale" : "_scale"))
+                .withAttribute("scaleFactor", format(spec.tuning()))
+                .withAttribute("weight", format(spec.weight()))
+                .withAttribute("scaleAll", Boolean.toString(!rootOnly))
                 .withAttribute("ignoreBounds", "true")
-                .withChild(treeAllInternalNodeHeightsReference(treeModel));
-    }
-
-    private List<XmlElement> buildRelaxedClockCategoryOperators(
-            BeastXState state
-    ) {
-        List<Parameter> parameters =
-                state.treeRelaxedClockModels.values().stream()
-                        .map(BeastXState.RelaxedClockSpec::rateCategoriesParameter)
-                        .distinct()
-                        .sorted(Comparator.comparing(OperatorXmlBuilder::parameterId))
-                        .toList();
-
-        List<XmlElement> operators =
-                new ArrayList<>();
-
-        for (Parameter parameter : parameters) {
-            String id =
-                    parameterId(parameter);
-
-            operators.add(
-                    XmlElement.element("randomWalkIntegerOperator")
-                            .withId(id + "_randomWalk")
-                            .withAttribute("windowSize", "1")
-                            .withAttribute("weight", "10.0")
-                            .withChild(parameterReference(parameter))
-            );
-
-            operators.add(
-                    XmlElement.element("swapOperator")
-                            .withId(id + "_swap")
-                            .withAttribute("size", "1")
-                            .withAttribute("weight", "10.0")
-                            .withAttribute("autoOptimize", "false")
-                            .withChild(parameterReference(parameter))
-            );
-
-            operators.add(
-                    XmlElement.element("uniformIntegerOperator")
-                            .withId(id + "_uniform")
-                            .withAttribute("count", "1")
-                            .withAttribute("weight", "10.0")
-                            .withChild(parameterReference(parameter))
-            );
-        }
-
-        return operators;
-    }
-
-    private XmlElement uniformNodeHeightOperator(
-            BeastXState state,
-            TreeModel treeModel
-    ) {
-        String id =
-                treeId(treeModel);
-
-        return XmlElement.element("nodeHeightOperator")
-                .withId(id + "_uniformNodeHeight")
-                .withAttribute("weight", format(state.operatorConfig.treeNodeHeightWeight))
-                .withChild(XmlElement.ref("treeModel", id));
-    }
-
-    private boolean isRelaxedClockRateCategoriesParameter(
-            BeastXState state,
-            Parameter parameter
-    ) {
-        String parameterId =
-                parameter.getId();
-
-        for (BeastXState.RelaxedClockSpec spec : state.treeRelaxedClockModels.values()) {
-            Parameter rateCategoriesParameter =
-                    spec.rateCategoriesParameter();
-
-            if (rateCategoriesParameter == parameter) {
-                return true;
-            }
-
-            String rateCategoriesParameterId =
-                    rateCategoriesParameter.getId();
-
-            if (
-                    parameterId != null
-                            && rateCategoriesParameterId != null
-                            && parameterId.equals(rateCategoriesParameterId)
-            ) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private boolean hasRelaxedClockBranchRateModel(
-            BeastXState state,
-            TreeModel treeModel
-    ) {
-        if (state.treeRelaxedClockModels.containsKey(treeModel)) {
-            return true;
-        }
-
-        String treeModelId =
-                treeId(treeModel);
-
-        for (TreeModel registeredTreeModel : state.treeRelaxedClockModels.keySet()) {
-            if (treeModelId.equals(treeId(registeredTreeModel))) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private XmlElement scaleOperator(
-            BeastXState state,
-            Parameter parameter
-    ) {
-        String id =
-                parameterId(parameter);
-
-        return XmlElement.element("scaleOperator")
-                .withId(id + "_scale")
-                .withAttribute("scaleFactor", format(state.operatorConfig.parameterScaleFactor))
-                .withAttribute("weight", format(state.operatorConfig.parameterOperatorWeight))
-                .withChild(parameterReference(parameter));
-    }
-
-    private XmlElement randomWalkOperator(
-            BeastXState state,
-            Parameter parameter
-    ) {
-        String id =
-                parameterId(parameter);
-
-        return XmlElement.element("randomWalkOperator")
-                .withId(id + "_randomWalk")
-                .withAttribute("windowSize", format(state.operatorConfig.randomWalkWindowSize))
-                .withAttribute("weight", format(state.operatorConfig.parameterOperatorWeight))
-                .withAttribute("boundaryCondition", "reflecting")
-                .withChild(parameterReference(parameter));
-    }
-
-    private XmlElement deltaExchangeOperator(
-            BeastXState state,
-            Parameter parameter
-    ) {
-        String id =
-                parameterId(parameter);
-
-        return XmlElement.element("deltaExchange")
-                .withId(id + "_deltaExchange")
-                .withAttribute("delta", "0.01")
-                .withAttribute("weight", format(state.operatorConfig.parameterOperatorWeight))
-                .withChild(parameterReference(parameter));
-    }
-
-    private XmlElement clockTreeUpDownOperator(
-            BeastXState state,
-            Parameter clockRate,
-            TreeModel treeModel
-    ) {
-        String treeId =
-                treeId(treeModel);
-
-        String clockRateId =
-                parameterId(clockRate);
-
-        return XmlElement.element("upDownOperator")
-                .withId(treeId + "_" + clockRateId + "_upDown")
-                .withAttribute("scaleFactor", format(state.operatorConfig.treeClockUpDownScaleFactor))
-                .withAttribute("weight", format(state.operatorConfig.treeClockUpDownWeight))
-                .withChild(
-                        XmlElement.element("up")
-                                .withChild(parameterReference(clockRate))
-                )
-                .withChild(
-                        XmlElement.element("down")
-                                .withChild(treeAllInternalNodeHeightsReference(treeModel))
-                );
+                .withChild(XmlElement.ref(
+                        "parameter",
+                        treeId + (rootOnly ? ".rootHeight" : ".allInternalNodeHeights")));
     }
 
     private XmlElement treeOperator(
-            String elementName,
-            String id,
-            double weight,
-            TreeModel treeModel
+            String element,
+            OperatorSpec spec,
+            String suffix
     ) {
-        return XmlElement.element(elementName)
-                .withId(id)
-                .withAttribute("weight", format(weight))
-                .withChild(treeReference(treeModel));
+        return XmlElement.element(element)
+                .withId(treeId(spec.tree()) + "_" + suffix)
+                .withAttribute("weight", format(spec.weight()))
+                .withChild(treeReference(spec.tree()));
     }
 
-    private XmlElement subtreeSlideOperator(
-            BeastXState state,
-            TreeModel treeModel
-    ) {
-        String id =
-                treeId(treeModel);
-
-        return XmlElement.element("subtreeSlide")
-                .withId(id + "_subtreeSlide")
-                .withAttribute("weight", format(state.operatorConfig.treeSubtreeSlideWeight))
-                .withAttribute("size", format(state.operatorConfig.treeSubtreeSlideSize))
-                .withAttribute("gaussian", "true")
-                .withChild(treeReference(treeModel));
-    }
-
-    private Parameter findClockRateParameter(BeastXState state) {
-        List<Parameter> parameters =
-                new ArrayList<>(state.stateNodes.keySet());
-
-        parameters.removeIf(parameter -> isRelaxedClockRateCategoriesParameter(state, parameter));
-
-        parameters.sort(Comparator.comparing(OperatorXmlBuilder::parameterId));
-
-        for (Parameter parameter : parameters) {
-            String id =
-                    parameterId(parameter);
-
-            if ("clockRate".equals(id)) {
-                return parameter;
-            }
-        }
-
-        for (Parameter parameter : parameters) {
-            String id =
-                    parameterId(parameter);
-
-            if ("clock.rate".equals(id)) {
-                return parameter;
-            }
-        }
-
-        for (Parameter parameter : parameters) {
-            String id =
-                    parameterId(parameter)
-                            .toLowerCase();
-
-            if (id.contains("clockrate") || id.contains("clock.rate")) {
-                return parameter;
-            }
-        }
-
-        return null;
+    private XmlElement treeClockUpDownOperator(OperatorSpec spec) {
+        String treeId = treeId(spec.tree());
+        return XmlElement.element("upDownOperator")
+                .withId(treeId + "_" + parameterId(spec.parameter()) + "_upDown")
+                .withAttribute("scaleFactor", format(spec.tuning()))
+                .withAttribute("weight", format(spec.weight()))
+                .withChild(XmlElement.element("up")
+                        .withChild(parameterReference(spec.parameter())))
+                .withChild(XmlElement.element("down")
+                        .withChild(XmlElement.ref(
+                                "parameter", treeId + ".allInternalNodeHeights")));
     }
 
     private XmlElement parameterReference(Parameter parameter) {
         return XmlElement.ref("parameter", parameterId(parameter));
     }
 
-    private XmlElement treeReference(TreeModel treeModel) {
-        return XmlElement.ref("treeModel", treeId(treeModel));
-    }
-
-    private XmlElement treeAllInternalNodeHeightsReference(TreeModel treeModel) {
-        return XmlElement.ref(
-                "parameter",
-                treeId(treeModel) + ".allInternalNodeHeights"
-        );
-    }
-
-    private static boolean supportsScaleOperator(Parameter parameter) {
-        Bounds<Double> bounds =
-                parameter.getBounds();
-
-        if (bounds == null) {
-            return false;
-        }
-
-        boolean strictlyPositive =
-                true;
-
-        boolean strictlyNegative =
-                true;
-
-        for (int i = 0; i < parameter.getDimension(); i++) {
-            double lower =
-                    bounds.getLowerLimit(i);
-
-            double upper =
-                    bounds.getUpperLimit(i);
-
-            double value =
-                    parameter.getParameterValue(i);
-
-            if (!(lower >= 0.0 && value > 0.0)) {
-                strictlyPositive =
-                        false;
-            }
-
-            if (!(upper <= 0.0 && value < 0.0)) {
-                strictlyNegative =
-                        false;
-            }
-        }
-
-        return strictlyPositive || strictlyNegative;
-    }
-
-    private static boolean hasFiniteLowerAndUpperBounds(Parameter parameter) {
-        Bounds<Double> bounds =
-                parameter.getBounds();
-
-        if (bounds == null) {
-            return false;
-        }
-
-        double lower =
-                bounds.getLowerLimit(0);
-
-        double upper =
-                bounds.getUpperLimit(0);
-
-        return Double.isFinite(lower) && Double.isFinite(upper);
-    }
-
-    private static boolean isSimplexParameter(Parameter parameter) {
-        if (parameter.getDimension() <= 1) {
-            return false;
-        }
-
-        Bounds<Double> bounds =
-                parameter.getBounds();
-
-        if (bounds == null) {
-            return false;
-        }
-
-        double sum =
-                0.0;
-
-        for (int i = 0; i < parameter.getDimension(); i++) {
-            double lower =
-                    bounds.getLowerLimit(i);
-
-            double upper =
-                    bounds.getUpperLimit(i);
-
-            if (!approximatelyZero(lower) || !approximatelyOne(upper)) {
-                return false;
-            }
-
-            sum += parameter.getParameterValue(i);
-        }
-
-        return approximatelyOne(sum);
-    }
-
-    private static boolean approximatelyZero(double value) {
-        return Math.abs(value) < 1.0e-12;
-    }
-
-    private static boolean approximatelyOne(double value) {
-        return Math.abs(value - 1.0) < 1.0e-12;
+    private XmlElement treeReference(TreeModel tree) {
+        return XmlElement.ref("treeModel", treeId(tree));
     }
 
     private static String parameterId(Parameter parameter) {
-        String id =
-                parameter.getId();
-
+        String id = parameter.getId();
         if (id == null || id.isBlank()) {
-            id =
-                    parameter.getParameterName();
+            id = parameter.getParameterName();
         }
-
         if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("Cannot serialize unnamed BEAST X parameter.");
+            throw new IllegalArgumentException("Cannot serialize an operator for an unnamed parameter.");
         }
-
         return id;
     }
 
-    private static String treeId(TreeModel treeModel) {
-        String id =
-                treeModel.getId();
-
+    private static String treeId(TreeModel tree) {
+        String id = tree.getId();
         if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("Cannot serialize unnamed BEAST X tree model.");
+            throw new IllegalArgumentException("Cannot serialize an operator for an unnamed tree.");
         }
-
         return id;
     }
 
     private static String format(double value) {
-        if (Double.isNaN(value)) {
-            throw new IllegalArgumentException("Cannot serialize NaN as a BEAST X XML number.");
-        }
-
-        if (value == Double.POSITIVE_INFINITY) {
-            return "Infinity";
-        }
-
-        if (value == Double.NEGATIVE_INFINITY) {
-            return "-Infinity";
-        }
-
         return Double.toString(value);
     }
 }

@@ -389,9 +389,10 @@ public class BeastXRepresentativeModelsTest {
                 "Partitioned GTR/HKY model should have separate simplex operators."
         );
 
-        assertTrue(
-                Collections.frequency(summary.operators, "UpDownOperator") >= 2,
-                "Partitioned clock/site model should have coupled clock-tree operators."
+        assertEquals(
+                1,
+                Collections.frequency(summary.operators, "UpDownOperator"),
+                "A shared clock/tree target should have one coupled operator."
         );
 
         assertAnyContains(summary.operatorDetails, "DeltaExchangeOperator(parameter=firstBaseFrequencies");
