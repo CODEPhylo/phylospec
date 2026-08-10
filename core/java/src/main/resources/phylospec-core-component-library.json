@@ -139,12 +139,14 @@
       {
         "name": "Nucleotide",
         "description": "DNA/RNA nucleotide alphabet",
-        "namespace": "phylospec.types"
+        "namespace": "phylospec.types",
+        "extends": "Character"
       },
       {
         "name": "AminoAcid",
         "description": "Standard amino acid alphabet",
-        "namespace": "phylospec.types"
+        "namespace": "phylospec.types",
+        "extends": "Character"
       },
       {
         "name": "Sequence",
