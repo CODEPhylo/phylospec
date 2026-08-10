@@ -39,7 +39,7 @@ public class StrictClockTile extends GeneratorTile<StrictClockBranchRates, Beast
         Parameter clockRateParameter =
                 BeastXParameters.toParameter(clockRate);
 
-        beastState.addTreeClockRateParameter(
+        beastState.addTreeStrictClockRateParameter(
                 tree,
                 clockRateParameter
         );

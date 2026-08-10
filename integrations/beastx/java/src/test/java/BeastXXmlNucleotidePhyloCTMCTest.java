@@ -712,11 +712,11 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
         assertTrue(xml.contains("<rateCategories>"), xml);
         assertTrue(xml.contains("<treeLikelihood"), xml);
         assertTrue(xml.contains("<multiplicativeBranchRates idref="), xml);
-        assertFalse(xml.contains("branchRateCategories_randomWalk"), xml);
-        assertFalse(xml.contains("<narrowExchange"), xml);
-        assertFalse(xml.contains("<wideExchange"), xml);
-        assertFalse(xml.contains("<subtreeSlide"), xml);
-        assertFalse(xml.contains("<wilsonBalding"), xml);
+        assertTrue(xml.contains("branchRateCategories_randomWalk"), xml);
+        assertTrue(xml.contains("<narrowExchange"), xml);
+        assertTrue(xml.contains("<wideExchange"), xml);
+        assertTrue(xml.contains("<subtreeSlide"), xml);
+        assertTrue(xml.contains("<wilsonBalding"), xml);
 
         new XmlRunner()
                 .run(xmlPath);

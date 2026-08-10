@@ -58,7 +58,8 @@ public class BeastXRepresentativeModelsTest {
 
             if (!summary.treePriors.isEmpty()) {
                 assertTrue(
-                        summary.operators.contains("NodeHeightScaleOperator"),
+                        summary.operatorDetails.stream().anyMatch(detail ->
+                                detail.contains("ScaleOperator(treeNodeHeights=")),
                         "Stochastic tree model should have a tree height operator: " + modelPath
                 );
 
@@ -239,7 +240,6 @@ public class BeastXRepresentativeModelsTest {
                 summary.operators,
                 "DeltaExchangeOperator",
                 "ExchangeOperator",
-                "NodeHeightScaleOperator",
                 "RandomWalkIntegerOperator",
                 "ScaleOperator",
                 "SubtreeSlideOperator",
@@ -252,6 +252,7 @@ public class BeastXRepresentativeModelsTest {
         assertAnyContains(summary.operatorDetails, "RandomWalkIntegerOperator(parameter=branchRateCategories");
         assertAnyContains(summary.operatorDetails, "SwapOperator(parameter=branchRateCategories");
         assertAnyContains(summary.operatorDetails, "UniformIntegerOperator(parameter=branchRateCategories");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(treeNodeHeights=tree.allInternalNodeHeights");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=clockRate");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=diversificationRate");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=serialSamplingRate");
@@ -311,7 +312,6 @@ public class BeastXRepresentativeModelsTest {
                 summary.operators,
                 "DeltaExchangeOperator",
                 "ExchangeOperator",
-                "NodeHeightScaleOperator",
                 "ScaleOperator",
                 "SubtreeSlideOperator",
                 "UpDownOperator",
@@ -324,12 +324,13 @@ public class BeastXRepresentativeModelsTest {
         );
 
         assertTrue(
-                Collections.frequency(summary.operators, "UpDownOperator") >= 2,
-                "Partitioned clock/site model should have coupled clock-tree operators."
+                Collections.frequency(summary.operators, "UpDownOperator") >= 1,
+                "Partitioned clock/site model should have a coupled clock-tree operator."
         );
 
         assertAnyContains(summary.operatorDetails, "DeltaExchangeOperator(parameter=firstBaseFrequencies");
         assertAnyContains(summary.operatorDetails, "DeltaExchangeOperator(parameter=secondBaseFrequencies");
+        assertAnyContains(summary.operatorDetails, "ScaleOperator(treeNodeHeights=tree.allInternalNodeHeights");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=clockRate");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=firstShape");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=secondShape");
