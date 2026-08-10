@@ -999,7 +999,9 @@ public class TypeResolver
             ResolvedType unwrappedExpressionType =
                     TypeUtils.recoverTypeParameter(
                             "phylospec.types.Distribution", "T", expressionType, componentResolver);
-            generatedTypeSet.add(unwrappedExpressionType);
+            if (unwrappedExpressionType != null) {
+                generatedTypeSet.add(unwrappedExpressionType);
+            }
         }
 
         if (generatedTypeSet.isEmpty()) {

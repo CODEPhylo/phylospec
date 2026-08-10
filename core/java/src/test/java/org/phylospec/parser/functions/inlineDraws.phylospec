@@ -3,11 +3,14 @@ Vector<Rate> rates ~ StrictClock(
     clockRate~LogNormal(mean=1.0, logSd=0.4),
     tree
 )
+Real x ~ Normal(mean~1.0, sd=1.0)
 
 // EXPECT AST
 // (AS Tree tree (CA fromNewick (AA null "")))
 // (DR Vector<Rate> rates (CA StrictClock (DA clockRate (CA LogNormal (AA mean 1.0) (AA logSd 0.4))) (AA null tree)))
+// (DR Real x (CA Normal (DA mean 1.0) (AA sd 1.0)))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
+// Expression of type `PositiveReal | Probability` is not a distribution. After '~', you always need to provide a distribution. Do you want to use `=` instead?
 // EXPECT TYPE_ERRORS
