@@ -1317,7 +1317,7 @@
             },
             {
                 "name": "Poisson",
-                "generatedType": "Distribution<NonNegativeReal>",
+                "generatedType": "Distribution<NonNegativeInteger>",
                 "namespace": "phylospec.distributions",
                 "description": "Poisson distribution",
                 "arguments": [
