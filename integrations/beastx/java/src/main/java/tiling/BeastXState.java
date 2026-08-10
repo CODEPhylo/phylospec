@@ -303,6 +303,8 @@ public class BeastXState {
         public double randomWalkWindowSize = 1.0;
 
         public double treeScaleWeight = 5.0;
+        public double treeRootScaleWeight = 5.0;
+        public double treeRootScaleFactor = 0.75;
         public double treeSubtreeSlideSize = 15.0;
         public double treeSubtreeSlideWeight = 15.0;
         public double treeNarrowExchangeWeight = 15.0;
@@ -319,6 +321,8 @@ public class BeastXState {
                 case "parameterScaleFactor" -> this.parameterScaleFactor = value;
                 case "randomWalkWindowSize" -> this.randomWalkWindowSize = value;
                 case "treeScaleWeight" -> this.treeScaleWeight = value;
+                case "treeRootScaleWeight" -> this.treeRootScaleWeight = value;
+                case "treeRootScaleFactor" -> this.treeRootScaleFactor = value;
                 case "treeSubtreeSlideSize" -> this.treeSubtreeSlideSize = value;
                 case "treeSubtreeSlideWeight" -> this.treeSubtreeSlideWeight = value;
                 case "treeNarrowExchangeWeight" -> this.treeNarrowExchangeWeight = value;
@@ -349,6 +353,7 @@ public class BeastXState {
             return Set.of(
                     "parameterOperatorWeight",
                     "treeScaleWeight",
+                    "treeRootScaleWeight",
                     "treeSubtreeSlideWeight",
                     "treeNarrowExchangeWeight",
                     "treeWideExchangeWeight",
@@ -364,7 +369,8 @@ public class BeastXState {
             return Set.of(
                     "parameterScaleFactor",
                     "treeClockUpDownScaleFactor",
-                    "treeScaleFactor"
+                    "treeScaleFactor",
+                    "treeRootScaleFactor"
             ).contains(settingName);
         }
 

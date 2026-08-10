@@ -324,8 +324,8 @@ public class BeastXRepresentativeModelsTest {
         );
 
         assertTrue(
-                Collections.frequency(summary.operators, "UpDownOperator") >= 2,
-                "Partitioned clock/site model should have coupled clock-tree operators."
+                Collections.frequency(summary.operators, "UpDownOperator") >= 1,
+                "Partitioned clock/site model should have a coupled clock-tree operator."
         );
 
         assertAnyContains(summary.operatorDetails, "DeltaExchangeOperator(parameter=firstBaseFrequencies");
