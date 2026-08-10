@@ -45,8 +45,8 @@ class LspDocument implements ErrorEventListener {
 
         this.componentResolver = loadComponentResolver();
 
-        updateContent(content);
         updateWorkspace(uri);
+        updateContent(content);
     }
 
     private static ComponentResolver loadComponentResolver() {
