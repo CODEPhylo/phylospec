@@ -105,6 +105,19 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
         return this.getWiredUpTiles(usedInputs, compatibleInputTiles, node);
     }
 
+    /**
+     * Returns the GeneratorTileInput fields declared on this tile. Widens the access of the
+     * inherited (package-private-to-subclasses) getTileInputs() so callers outside this package,
+     * like the engine-specification generator, can inspect the tile's inputs.
+     */
+    public List<GeneratorTileInput<?, S>> getGeneratorTileInputs() {
+        List<GeneratorTileInput<?, S>> inputs = new ArrayList<>();
+        for (TileInput<?, S> input : this.getTileInputs()) {
+            inputs.add((GeneratorTileInput<?, S>) input);
+        }
+        return inputs;
+    }
+
     private String getArgumentName(
             Expr.Argument argument, int numPassedArguments, List<TileInput<?, S>> expectedInputs) {
         String argumentName = argument.name;

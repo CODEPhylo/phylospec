@@ -1,4 +1,6 @@
 **/.DS_Store
+/CLAUDE.md
+/generated/
 /core/java/target/
 /.idea/
 phylospec-core.iml
