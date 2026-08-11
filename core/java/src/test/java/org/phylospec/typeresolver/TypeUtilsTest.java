@@ -222,6 +222,30 @@ public class TypeUtilsTest {
                                 .iterator()
                                 .next(),
                         componentResolver));
+
+        // the lowest cover of aliases is determined through their aliased types
+        assertEquals(
+                resolvedTypeNamed("NonNegativeReal", "NonNegativeReal", componentResolver),
+                TypeUtils.getLowestCover(
+                        resolvedTypeNamed("Rate", "Rate", componentResolver),
+                        resolvedTypeNamed("Age", "Age", componentResolver),
+                        componentResolver));
+
+        // generic aliases preserve their resolved type parameters
+        assertEquals(
+                resolvedTypeNamed("Vector<Vector<Real>>", "Vector", componentResolver),
+                TypeUtils.getLowestCover(
+                        resolvedTypeNamed("Matrix<Real>", "Matrix", componentResolver),
+                        resolvedTypeNamed("Vector<Vector<PositiveReal>>", "Vector", componentResolver),
+                        componentResolver));
+    }
+
+    private static ResolvedType resolvedTypeNamed(
+            String typeString, String resolvedTypeName, ComponentResolver componentResolver) {
+        return ResolvedType.fromString(typeString, componentResolver).stream()
+                .filter(type -> type.getUnqualifiedName().equals(resolvedTypeName))
+                .findFirst()
+                .orElseThrow();
     }
 
     private static ComponentResolver buildComponentResolver() throws IOException {

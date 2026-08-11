@@ -277,10 +277,23 @@ public class TypeUtils {
     }
 
     /**
-     * Calls the visitor function on the type and every parent type.
+     * Calls the visitor function on the type and every parent and aliased type.
      */
     public static void visitParents(
             ResolvedType type, Function<ResolvedType, VisitorResult> visitor, ComponentResolver componentResolver) {
+        if (type.getAlias() != null) {
+            HashMap<String, Set<ResolvedType>> aliasedTypeParameters = new HashMap<>();
+            for (String name : type.getParameterTypes().keySet()) {
+                aliasedTypeParameters.put(name, Set.of(type.getParameterTypes().get(name)));
+            }
+
+            Set<ResolvedType> aliasedTypeSet =
+                    ResolvedType.fromString(type.getAlias(), aliasedTypeParameters, componentResolver, false);
+            for (ResolvedType aliasedType : aliasedTypeSet) {
+                visitTypeAndParents(aliasedType, visitor, componentResolver);
+            }
+        }
+
         if (type.getExtends() != null) {
             HashMap<String, Set<ResolvedType>> inheritedTypeParameters = new HashMap<>();
             for (String name : type.getParameterTypes().keySet()) {
