@@ -1,0 +1,10 @@
+Vector<Rate> branchRates = [1, 2]
+Integer a = num(branchRates)
+
+// EXPECT AST
+// (AS Vector<Rate> branchRates (AR 1 2))
+// (AS Integer a (CA num (AA null branchRates)))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS

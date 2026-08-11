@@ -44,6 +44,10 @@ public class ResolvedType {
         return typeComponent.getExtends();
     }
 
+    public String getAlias() {
+        return typeComponent.getAlias();
+    }
+
     public Map<String, ResolvedType> getParameterTypes() {
         return parameterTypes;
     }
@@ -201,9 +205,20 @@ public class ResolvedType {
 
         if (typeComponent.getAlias() != null) {
             // we have an alias
-            // we resolve the aliased type and return the set of both
-            Set<ResolvedType> aliasedTypeSet = ResolvedType.fromString(
-                    typeComponent.getAlias(), typeParameters, componentResolver, allowUnresolvedTypeParameter);
+            // we resolve the aliased type for every concrete parameter combination and return the set of both
+            Set<ResolvedType> aliasedTypeSet = new HashSet<>();
+            for (ResolvedType resultingType : resultingTypeSet) {
+                Map<String, Set<ResolvedType>> resolvedAliasParameters = new HashMap<>();
+                for (Map.Entry<String, ResolvedType> parameterType :
+                        resultingType.getParameterTypes().entrySet()) {
+                    resolvedAliasParameters.put(parameterType.getKey(), Set.of(parameterType.getValue()));
+                }
+                aliasedTypeSet.addAll(ResolvedType.fromString(
+                        typeComponent.getAlias(),
+                        resolvedAliasParameters,
+                        componentResolver,
+                        allowUnresolvedTypeParameter));
+            }
             resultingTypeSet.addAll(aliasedTypeSet);
         }
 
