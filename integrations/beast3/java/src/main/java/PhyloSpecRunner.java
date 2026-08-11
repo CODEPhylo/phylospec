@@ -4,7 +4,7 @@ import beastconfig.OperatorSelector;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
 import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.errors.TileApplicationError;
-import tiles.BeastCoreTileLibrary;
+import tiles.BeastTileLibraries;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.RemoveGroupings;
@@ -90,7 +90,12 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // perform tiling
 
-        EvaluateTiles<BEASTState> applyTiles = new EvaluateTiles<>(new BeastCoreTileLibrary().getTiles(), new ArrayList<>(), variableResolver, stochasticityResolver);
+        EvaluateTiles<BEASTState> applyTiles =
+                new EvaluateTiles<>(
+                        BeastTileLibraries.loadAll(),
+                        new ArrayList<>(),
+                        variableResolver,
+                        stochasticityResolver);
         BEASTState beastState = new BEASTState(runName);
         try {
             applyTiles.getBestTiling(statements);
@@ -122,7 +127,9 @@ public class PhyloSpecRunner implements ErrorEventListener {
         // add operators
 
         for (StateNode stateNode : beastState.stateNodes.keySet()) {
-            OperatorSelector.addDefaultOperators(stateNode, beastState);
+            if (!beastState.addPackageOperators(stateNode)) {
+                OperatorSelector.addDefaultOperators(stateNode, beastState);
+            }
         }
 
         // add loggers

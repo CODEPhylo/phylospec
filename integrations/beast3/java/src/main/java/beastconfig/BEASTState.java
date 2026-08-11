@@ -5,6 +5,7 @@ import beast.base.inference.*;
 import org.phylospec.tiling.TypeToken;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 /// Manages the BEAST state that is built up incrementally during tiling.
 ///
@@ -19,6 +20,7 @@ public class BEASTState {
     private final List<BEASTObject> beastObjects;
     private final Set<BEASTObject> initializedBeastObjects;
     private final Set<String> ids;
+    private final IdentityHashMap<StateNode, Consumer<BEASTState>> packageOperatorSelectors;
 
     public final HashMap<StateNode, TypeToken<?>> stateNodes;
     public final HashMap<CalculationNode, TypeToken<?>> calculationNodes;
@@ -44,6 +46,7 @@ public class BEASTState {
         this.operators = new HashMap<>();
         this.beastObjects = new ArrayList<>();
         this.ids = new HashSet<>();
+        this.packageOperatorSelectors = new IdentityHashMap<>();
         this.initializedBeastObjects = new HashSet<>();
         this.screenLoggers = new ArrayList<>();
         this.fileLoggers = new ArrayList<>();
@@ -174,6 +177,21 @@ public class BEASTState {
 
         this.addBEASTObject(operator);
         this.operators.put(operator, stateNodes);
+    }
+
+    /** Registers package-specific operator selection for a state node. */
+    public void setPackageOperatorSelector(
+            StateNode stateNode, Consumer<BEASTState> operatorSelector) {
+        this.packageOperatorSelectors.put(stateNode, operatorSelector);
+    }
+
+    /** Adds package-specific operators when a selector has been registered. */
+    public boolean addPackageOperators(StateNode stateNode) {
+        Consumer<BEASTState> operatorSelector = this.packageOperatorSelectors.get(stateNode);
+        if (operatorSelector == null) return false;
+
+        operatorSelector.accept(this);
+        return true;
     }
 
     /**
