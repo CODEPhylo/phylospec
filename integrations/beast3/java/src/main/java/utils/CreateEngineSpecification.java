@@ -1,3 +1,5 @@
+package utils;
+
 import beast.pkgmgmt.BEASTVersion;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.tiling.EngineSpecGenerator;

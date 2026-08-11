@@ -1,14 +1,12 @@
+package utils;
+
 import beast.base.inference.*;
-import beast.base.minimal.BeastMain;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.evolution.substitutionmodel.HKY;
-import beast.base.spec.inference.distribution.Exponential;
-import beast.base.spec.inference.distribution.LogNormal;
 import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.operator.ScaleOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
-import org.apache.commons.math4.legacy.analysis.function.Exp;
 import org.phylospec.parser.Parser;
 import org.xml.sax.SAXException;
 
