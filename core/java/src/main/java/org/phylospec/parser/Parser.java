@@ -109,13 +109,12 @@ public class Parser {
         // make sure that the last block has been closed
 
         if (currentBlock != Stmt.Block.NO_BLOCK) {
-            logError(
-                    new Error(
-                            currentBlockRange,
-                            "Unclosed block.",
-                            "You started a '"
-                                    + currentBlock
-                                    + "' block but did not close it. Use curly brackets to close the block."));
+            logError(new Error(
+                    currentBlockRange,
+                    "Unclosed block.",
+                    "You started a '"
+                            + currentBlock
+                            + "' block but did not close it. Use curly brackets to close the block."));
         }
 
         return statements;
@@ -180,13 +179,12 @@ public class Parser {
         // make sure that the last block has been closed
 
         if (currentBlock != Stmt.Block.NO_BLOCK) {
-            logError(
-                    new Error(
-                            currentBlockRange,
-                            "Unclosed block.",
-                            "You started a '"
-                                    + currentBlock
-                                    + "' block but did not close it. Use curly brackets to close the block."));
+            logError(new Error(
+                    currentBlockRange,
+                    "Unclosed block.",
+                    "You started a '"
+                            + currentBlock
+                            + "' block but did not close it. Use curly brackets to close the block."));
         }
 
         return expressions;
@@ -216,13 +214,12 @@ public class Parser {
         currentBlockRange = previous().range;
 
         advance(); // consume LEFT_BRACE
-        currentBlock =
-                switch (blockName) {
-                    case "data" -> Stmt.Block.DATA;
-                    case "model" -> Stmt.Block.MODEL;
-                    case "mcmc" -> Stmt.Block.MCMC;
-                    default -> new Stmt.Block.Custom(blockName);
-                };
+        currentBlock = switch (blockName) {
+            case "data" -> Stmt.Block.DATA;
+            case "model" -> Stmt.Block.MODEL;
+            case "mcmc" -> Stmt.Block.MCMC;
+            default -> new Stmt.Block.Custom(blockName);
+        };
     }
 
     private boolean isBlockEnd() {
@@ -243,13 +240,12 @@ public class Parser {
             List<String> namespace = new ArrayList<>();
 
             do {
-                namespace.add(
-                        consume(
-                                        TokenType.IDENTIFIER,
-                                        "Invalid import path.",
-                                        "Specify an import path consisting of names delimited with a period.",
-                                        List.of("use phylospec.io"))
-                                .lexeme);
+                namespace.add(consume(
+                                TokenType.IDENTIFIER,
+                                "Invalid import path.",
+                                "Specify an import path consisting of names delimited with a period.",
+                                List.of("use phylospec.io"))
+                        .lexeme);
             } while (match(TokenType.DOT));
 
             return remember(new Stmt.Import(namespace));
@@ -262,12 +258,11 @@ public class Parser {
         startAstNode();
 
         while (match(TokenType.AT)) {
-            Token decoratorName =
-                    consume(
-                            TokenType.IDENTIFIER,
-                            "Invalid hint.",
-                            "Directly follow the '@' with the name of the engine or extension you want to talk to.",
-                            List.of("@revbayes(discretize=true)"));
+            Token decoratorName = consume(
+                    TokenType.IDENTIFIER,
+                    "Invalid hint.",
+                    "Directly follow the '@' with the name of the engine or extension you want to talk to.",
+                    List.of("@revbayes(discretize=true)"));
             Expr.Variable decoratorNameVar = new Expr.Variable(decoratorName.lexeme);
 
             consume(
@@ -312,8 +307,7 @@ public class Parser {
         // give a helpful message
 
         Token currentToken = peek();
-        if (currentToken != null
-                && (currentToken.type == TokenType.EQUAL || currentToken.type == TokenType.TILDE)) {
+        if (currentToken != null && (currentToken.type == TokenType.EQUAL || currentToken.type == TokenType.TILDE)) {
             throw new Error(
                     currentToken.range,
                     "Missing type.",
@@ -323,32 +317,29 @@ public class Parser {
 
         // consume the variable name
 
-        Token nameToken =
-                consume(
-                        TokenType.IDENTIFIER,
-                        "Invalid variable name.",
-                        "Choose a variable name which starts with a letter and only consists of letters and digits.",
-                        List.of("Real number = 10"));
+        Token nameToken = consume(
+                TokenType.IDENTIFIER,
+                "Invalid variable name.",
+                "Choose a variable name which starts with a letter and only consists of letters and digits.",
+                List.of("Real number = 10"));
 
         // check if this is an indexed statement and parse the index if needed
 
         boolean isIndexed = match(TokenType.LEFT_SQUARE_BRACKET);
         List<Token> indices = new ArrayList<>();
         if (isIndexed) {
-            indices.add(
-                    consume(
-                            TokenType.IDENTIFIER,
-                            "Invalid index.",
-                            "Only letters can be used as an index.",
-                            List.of("Real x[i] = i for i in 1:3")));
+            indices.add(consume(
+                    TokenType.IDENTIFIER,
+                    "Invalid index.",
+                    "Only letters can be used as an index.",
+                    List.of("Real x[i] = i for i in 1:3")));
 
             while (match(TokenType.COMMA)) {
-                indices.add(
-                        consume(
-                                TokenType.IDENTIFIER,
-                                "Invalid index.",
-                                "Only letters can be used as an index.",
-                                List.of("Real x[i, j] = i for i in 1:3 for j in 1:3")));
+                indices.add(consume(
+                        TokenType.IDENTIFIER,
+                        "Invalid index.",
+                        "Only letters can be used as an index.",
+                        List.of("Real x[i, j] = i for i in 1:3 for j in 1:3")));
             }
 
             consume(
@@ -394,17 +385,11 @@ public class Parser {
                     "End index statements by indicating the range of the index variable.",
                     List.of("Real x[" + index.lexeme + "] = 1 for " + index.lexeme + " in 1:3"));
 
-            Token rangeIndex =
-                    consume(
-                            TokenType.IDENTIFIER,
-                            "Wrong range for index '" + index.lexeme + "'.",
-                            "End index statements by indicating the range of the index variable.",
-                            List.of(
-                                    "Real x["
-                                            + index.lexeme
-                                            + "] = 1 for "
-                                            + index.lexeme
-                                            + " in 1:3"));
+            Token rangeIndex = consume(
+                    TokenType.IDENTIFIER,
+                    "Wrong range for index '" + index.lexeme + "'.",
+                    "End index statements by indicating the range of the index variable.",
+                    List.of("Real x[" + index.lexeme + "] = 1 for " + index.lexeme + " in 1:3"));
 
             if (!Objects.equals(rangeIndex.lexeme, index.lexeme)) {
                 throw new Error(
@@ -470,10 +455,7 @@ public class Parser {
         startAstNode();
 
         Token typeNameToken =
-                consume(
-                        TokenType.IDENTIFIER,
-                        "Invalid type name.",
-                        "Type names can only consist of letters.");
+                consume(TokenType.IDENTIFIER, "Invalid type name.", "Type names can only consist of letters.");
 
         if (match(TokenType.LESS)) {
             // handle the special case of an empty generic (like "Real<>")
@@ -495,8 +477,7 @@ public class Parser {
                     "Generic type must be closed with a '>'.",
                     "Close the opening square brackets of the generic type with a '>'.");
 
-            return remember(
-                    new AstType.Generic(typeNameToken.lexeme, innerTypes.toArray(AstType[]::new)));
+            return remember(new AstType.Generic(typeNameToken.lexeme, innerTypes.toArray(AstType[]::new)));
         }
 
         return remember(new AstType.Atomic(typeNameToken.lexeme));
@@ -525,8 +506,7 @@ public class Parser {
 
         Expr expr = term();
 
-        while (match(
-                TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
+        while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
             Token operatorToken = previous();
             Expr rightExpr = term();
             expr = new Expr.Binary(expr, operatorToken.type, rightExpr);
@@ -809,9 +789,7 @@ public class Parser {
         while (true) {
             if (check(TokenType.IDENTIFIER)) {
                 Token interpolated = advance();
-                parts.add(
-                        new Expr.StringTemplate.ExpressionPart(
-                                new Expr.Variable(interpolated.lexeme)));
+                parts.add(new Expr.StringTemplate.ExpressionPart(new Expr.Variable(interpolated.lexeme)));
 
                 if (!check(TokenType.STRING_END, TokenType.STRING_PART)) {
                     throw new Error(
@@ -895,8 +873,7 @@ public class Parser {
     private Token peek() {
         if (skipNewLines) {
             int currentToPeek = current;
-            while (tokens.get(currentToPeek).type == TokenType.EOL
-                    && currentToPeek + 1 < tokens.size()) {
+            while (tokens.get(currentToPeek).type == TokenType.EOL && currentToPeek + 1 < tokens.size()) {
                 currentToPeek++;
             }
             return tokens.get(currentToPeek);
@@ -932,8 +909,7 @@ public class Parser {
      * Advances the cursor if the next token matches the expected token type. If this
      * is not the case, an error with the given correct code examples is raised.
      */
-    private Token consume(TokenType tokenType, String message, String hint, List<String> examples)
-            throws Error {
+    private Token consume(TokenType tokenType, String message, String hint, List<String> examples) throws Error {
         if (check(tokenType)) return advance();
 
         // we couldn't consume the requested token
@@ -945,12 +921,11 @@ public class Parser {
         } else {
             Token startToken = tokens.get(astNodeStartPositions.peek());
             Token currentToken = tokens.get(current);
-            range =
-                    new Range(
-                            startToken.range.startLine,
-                            currentToken.range.endLine,
-                            startToken.range.start,
-                            currentToken.range.end);
+            range = new Range(
+                    startToken.range.startLine,
+                    currentToken.range.endLine,
+                    startToken.range.start,
+                    currentToken.range.end);
         }
 
         throw new Error(range, message, hint, examples);

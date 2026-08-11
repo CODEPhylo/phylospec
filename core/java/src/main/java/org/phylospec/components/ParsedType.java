@@ -125,10 +125,7 @@ public class ParsedType {
         }
 
         int propertiesStart = findTopLevelDelimiter(genericContent, ';');
-        String parameters =
-                propertiesStart == -1
-                        ? genericContent
-                        : genericContent.substring(0, propertiesStart);
+        String parameters = propertiesStart == -1 ? genericContent : genericContent.substring(0, propertiesStart);
 
         return splitTopLevel(parameters, ',').stream()
                 .map(String::trim)
@@ -154,15 +151,13 @@ public class ParsedType {
     private static ParsedTypeProperty parseTypeProperty(String property) {
         int assignment = property.indexOf('=');
         if (assignment == -1) {
-            throw new IllegalArgumentException(
-                    "Type property must have the form 'property=value': " + property);
+            throw new IllegalArgumentException("Type property must have the form 'property=value': " + property);
         }
 
         String propertyName = property.substring(0, assignment).trim();
         String value = property.substring(assignment + 1).trim();
         if (propertyName.isEmpty() || value.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Type property must have a non-empty name and value: " + property);
+            throw new IllegalArgumentException("Type property must have a non-empty name and value: " + property);
         }
 
         Matcher inputPropertyReference = INPUT_PROPERTY_REFERENCE.matcher(value);

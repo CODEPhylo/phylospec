@@ -25,8 +25,7 @@ public class JSONConverter {
 
         List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
 
-        AttachComponentNamespaces resolveFullQualifiers =
-                new AttachComponentNamespaces(componentLibraries);
+        AttachComponentNamespaces resolveFullQualifiers = new AttachComponentNamespaces(componentLibraries);
         RemoveGroupings removeGroupings = new RemoveGroupings();
         EvaluateLiterals evaluateLiterals = new EvaluateLiterals();
 

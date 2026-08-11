@@ -55,36 +55,35 @@ public abstract class TypeToken<T> {
      * Needed when the type arguments are only known at runtime and cannot be written as a literal.
      */
     public static TypeToken<?> parameterized(Class<?> raw, Type... typeArgs) {
-        ParameterizedType pt =
-                new ParameterizedType() {
-                    @Override
-                    public Type[] getActualTypeArguments() {
-                        return typeArgs.clone();
-                    }
+        ParameterizedType pt = new ParameterizedType() {
+            @Override
+            public Type[] getActualTypeArguments() {
+                return typeArgs.clone();
+            }
 
-                    @Override
-                    public Type getRawType() {
-                        return raw;
-                    }
+            @Override
+            public Type getRawType() {
+                return raw;
+            }
 
-                    @Override
-                    public Type getOwnerType() {
-                        return null;
-                    }
+            @Override
+            public Type getOwnerType() {
+                return null;
+            }
 
-                    @Override
-                    public boolean equals(Object o) {
-                        if (!(o instanceof ParameterizedType other)) return false;
-                        return raw.equals(other.getRawType())
-                                && Arrays.equals(typeArgs, other.getActualTypeArguments())
-                                && Objects.equals(null, other.getOwnerType());
-                    }
+            @Override
+            public boolean equals(Object o) {
+                if (!(o instanceof ParameterizedType other)) return false;
+                return raw.equals(other.getRawType())
+                        && Arrays.equals(typeArgs, other.getActualTypeArguments())
+                        && Objects.equals(null, other.getOwnerType());
+            }
 
-                    @Override
-                    public int hashCode() {
-                        return Arrays.hashCode(typeArgs) ^ raw.hashCode();
-                    }
-                };
+            @Override
+            public int hashCode() {
+                return Arrays.hashCode(typeArgs) ^ raw.hashCode();
+            }
+        };
         return new TypeToken<>(pt) {};
     }
 
@@ -156,18 +155,15 @@ public abstract class TypeToken<T> {
         }
 
         if (target instanceof Class<?> targetClass) {
-            if (source instanceof Class<?> sourceClass)
-                return targetClass.isAssignableFrom(sourceClass);
-            if (source instanceof ParameterizedType pt)
-                return targetClass.isAssignableFrom((Class<?>) pt.getRawType());
+            if (source instanceof Class<?> sourceClass) return targetClass.isAssignableFrom(sourceClass);
+            if (source instanceof ParameterizedType pt) return targetClass.isAssignableFrom((Class<?>) pt.getRawType());
         }
 
         if (target instanceof ParameterizedType targetPt) {
             // walk the source's generic supertype chain to find a parameterized version of
             // targetRaw,
             // substituting any type variables along the way
-            Type resolvedSource =
-                    resolveAsParameterized(source, (Class<?>) targetPt.getRawType(), Map.of());
+            Type resolvedSource = resolveAsParameterized(source, (Class<?>) targetPt.getRawType(), Map.of());
             if (!(resolvedSource instanceof ParameterizedType sourcePt)) return false;
 
             Type[] targetArgs = targetPt.getActualTypeArguments();
@@ -188,8 +184,7 @@ public abstract class TypeToken<T> {
      * instantiation of {@code targetRaw}, substituting type variables as it descends.
      * Returns {@code null} if no match is found.
      */
-    private static Type resolveAsParameterized(
-            Type source, Class<?> targetRaw, Map<TypeVariable<?>, Type> subs) {
+    private static Type resolveAsParameterized(Type source, Class<?> targetRaw, Map<TypeVariable<?>, Type> subs) {
         if (source instanceof ParameterizedType pt) {
             Class<?> rawClass = (Class<?>) pt.getRawType();
             if (targetRaw.equals(rawClass)) return substituteType(pt, subs);
@@ -198,8 +193,7 @@ public abstract class TypeToken<T> {
             TypeVariable<?>[] params = rawClass.getTypeParameters();
             Type[] args = pt.getActualTypeArguments();
             Map<TypeVariable<?>, Type> newSubs = new HashMap<>(subs);
-            for (int i = 0; i < params.length; i++)
-                newSubs.put(params[i], substituteType(args[i], subs));
+            for (int i = 0; i < params.length; i++) newSubs.put(params[i], substituteType(args[i], subs));
 
             return resolveAsParameterized(rawClass, targetRaw, newSubs);
         }

@@ -40,8 +40,7 @@ public class TypePropertyEngine {
     }
 
     public void resolveAssignment(
-            Set<ResolvedType> resolvedVariableTypeSet,
-            Set<ResolvedType> resolvedExpressionTypeSet) {
+            Set<ResolvedType> resolvedVariableTypeSet, Set<ResolvedType> resolvedExpressionTypeSet) {
         for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
             // find the matching resolved types
             for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
@@ -59,16 +58,10 @@ public class TypePropertyEngine {
         for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
             // find the matching resolved types
             for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
-                ResolvedType unwrappedExpressionType =
-                        TypeUtils.recoverTypeParameter(
-                                "phylospec.types.Distribution",
-                                "T",
-                                resolvedExpressionType,
-                                componentResolver);
+                ResolvedType unwrappedExpressionType = TypeUtils.recoverTypeParameter(
+                        "phylospec.types.Distribution", "T", resolvedExpressionType, componentResolver);
                 if (unwrappedExpressionType != null
-                        && resolvedVariableType
-                                .getName()
-                                .equals(unwrappedExpressionType.getName())) {
+                        && resolvedVariableType.getName().equals(unwrappedExpressionType.getName())) {
                     copyProperties(unwrappedExpressionType, resolvedVariableType);
                 }
             }
@@ -76,9 +69,7 @@ public class TypePropertyEngine {
     }
 
     public void resolveIndexed(
-            int indexCount,
-            List<Set<ResolvedType>> rangeTypeSets,
-            Set<ResolvedType> containerTypeSet) {
+            int indexCount, List<Set<ResolvedType>> rangeTypeSets, Set<ResolvedType> containerTypeSet) {
         if (indexCount == 1) {
             Object num = getPropertyOnAgreement(rangeTypeSets.getFirst(), NUM);
             attachToAll(containerTypeSet, NUM, num);
@@ -92,27 +83,24 @@ public class TypePropertyEngine {
     }
 
     public void checkObservedAs(
-            Stmt.ObservedAs observedAs,
-            Set<ResolvedType> generatedTypeSet,
-            Set<ResolvedType> observationTypeSet) {
+            Stmt.ObservedAs observedAs, Set<ResolvedType> generatedTypeSet, Set<ResolvedType> observationTypeSet) {
         Set<String> commonProperties = getCommonProperties(generatedTypeSet);
         for (String propertyName : commonProperties) {
             Object generatedProperty = getPropertyOnAgreement(generatedTypeSet, propertyName);
             Object observedProperty = getPropertyOnAgreement(observationTypeSet, propertyName);
 
             if (disagreeIfKnown(generatedProperty, observedProperty)) {
-                raiseWarning(
-                        new Error(
-                                observedAs.getRange(),
-                                "The observation might not be compatible with the generated value.",
-                                propertyName
-                                        + " is "
-                                        + observedProperty
-                                        + " for the observation, but "
-                                        + generatedProperty
-                                        + " for '"
-                                        + observedAs.getName()
-                                        + "'."));
+                raiseWarning(new Error(
+                        observedAs.getRange(),
+                        "The observation might not be compatible with the generated value.",
+                        propertyName
+                                + " is "
+                                + observedProperty
+                                + " for the observation, but "
+                                + generatedProperty
+                                + " for '"
+                                + observedAs.getName()
+                                + "'."));
             }
         }
     }
@@ -132,9 +120,7 @@ public class TypePropertyEngine {
     }
 
     public void processGenerator(
-            Expr.Call call,
-            Generator generator,
-            TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
+            Expr.Call call, Generator generator, TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
         generatorPropertyResolver.processGenerator(call, generator, resolvedGeneratorApplication);
     }
 
@@ -145,9 +131,7 @@ public class TypePropertyEngine {
     }
 
     public void checkIndex(
-            List<Expr> indices,
-            List<Set<ResolvedType>> resolvedIndexTypeSets,
-            Set<ResolvedType> containerTypeSet) {
+            List<Expr> indices, List<Set<ResolvedType>> resolvedIndexTypeSets, Set<ResolvedType> containerTypeSet) {
         // check that the index is in range in case we have a num property
 
         // check the first dimension using the num property
@@ -159,11 +143,10 @@ public class TypePropertyEngine {
             long indexValue = indexNr.longValue();
             long sizeValue = sizeNr.longValue();
             if (indexValue < 1 || sizeValue < indexValue) {
-                raiseWarning(
-                        new Error(
-                                indices.getFirst().getRange(),
-                                "The index might be out of range.",
-                                "Use an index between 1 and " + sizeValue + "."));
+                raiseWarning(new Error(
+                        indices.getFirst().getRange(),
+                        "The index might be out of range.",
+                        "Use an index between 1 and " + sizeValue + "."));
             }
         }
 
@@ -177,20 +160,17 @@ public class TypePropertyEngine {
                 long indexValue = indexNr.longValue();
                 long sizeValue = sizeNr.longValue();
                 if (indexValue < 1 || sizeValue < indexValue) {
-                    raiseWarning(
-                            new Error(
-                                    indices.get(1).getRange(),
-                                    "The index might be out of range.",
-                                    "Use an index between 1 and " + sizeValue + "."));
+                    raiseWarning(new Error(
+                            indices.get(1).getRange(),
+                            "The index might be out of range.",
+                            "Use an index between 1 and " + sizeValue + "."));
                 }
             }
         }
     }
 
     public void resolveRange(
-            Set<ResolvedType> fromTypeSet,
-            Set<ResolvedType> toTypeSet,
-            Set<ResolvedType> listComprehensionTypeSet) {
+            Set<ResolvedType> fromTypeSet, Set<ResolvedType> toTypeSet, Set<ResolvedType> listComprehensionTypeSet) {
         // check if type range has literal properties and determine the result num property if
         // possible
 
@@ -224,9 +204,7 @@ public class TypePropertyEngine {
 
     public static Object getPropertyOnAgreement(Set<ResolvedType> typeSet, String propertyName) {
         Set<Object> properties =
-                typeSet.stream()
-                        .map(x -> x.properties().get(propertyName))
-                        .collect(Collectors.toSet());
+                typeSet.stream().map(x -> x.properties().get(propertyName)).collect(Collectors.toSet());
         if (properties.size() == 1) {
             return properties.iterator().next();
         } else {
@@ -250,10 +228,8 @@ public class TypePropertyEngine {
         int parameterCount = Math.min(targetParameterNames.size(), sourceParameterNames.size());
 
         for (int index = 0; index < parameterCount; index++) {
-            ResolvedType targetParameter =
-                    targetType.getParameterTypes().get(targetParameterNames.get(index));
-            ResolvedType sourceParameter =
-                    sourceType.getParameterTypes().get(sourceParameterNames.get(index));
+            ResolvedType targetParameter = targetType.getParameterTypes().get(targetParameterNames.get(index));
+            ResolvedType sourceParameter = sourceType.getParameterTypes().get(sourceParameterNames.get(index));
 
             if (targetParameter != null && sourceParameter != null) {
                 copyProperties(sourceParameter, targetParameter);

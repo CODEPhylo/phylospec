@@ -10,124 +10,84 @@ public class LPhyGeneratorMapping {
     static StringBuilder map(String phylospecGenerator, Map<String, String> arguments) {
         return switch (phylospecGenerator) {
             case "Exponential" -> build("Exp", "mean", "1/(" + arg("rate", arguments) + ")");
-            case "Normal" ->
-                    build("Normal", "mean", arg("mean", arguments), "sd", arg("sd", arguments));
+            case "Normal" -> build("Normal", "mean", arg("mean", arguments), "sd", arg("sd", arguments));
             case "LogNormal" ->
-                    build(
-                            "LogNormal",
-                            "meanlog",
-                            arg("meanlog", arguments),
-                            "sdlog",
-                            arg("sdlog", arguments));
+                build("LogNormal", "meanlog", arg("meanlog", arguments), "sdlog", arg("sdlog", arguments));
             case "Gamma" ->
-                    build(
-                            "Gamma",
-                            "shape",
-                            arg("shape", arguments),
-                            "scale",
-                            "1/(" + arg("rate", arguments) + ")");
-            case "Beta" ->
-                    build("Beta", "alpha", arg("alpha", arguments), "beta", arg("beta", arguments));
-            case "Uniform" ->
-                    build(
-                            "Uniform",
-                            "lower",
-                            arg("lower", arguments),
-                            "upper",
-                            arg("upper", arguments));
+                build("Gamma", "shape", arg("shape", arguments), "scale", "1/(" + arg("rate", arguments) + ")");
+            case "Beta" -> build("Beta", "alpha", arg("alpha", arguments), "beta", arg("beta", arguments));
+            case "Uniform" -> build("Uniform", "lower", arg("lower", arguments), "upper", arg("upper", arguments));
             case "Dirichlet" -> build("Dirichlet", "conc", arg("alpha", arguments));
-            case "Yule" ->
-                    build(
-                            "Yule",
-                            "lambda",
-                            arg("birthRate", arguments),
-                            "taxa",
-                            arg("taxa", arguments, true));
+            case "Yule" -> build("Yule", "lambda", arg("birthRate", arguments), "taxa", arg("taxa", arguments, true));
             case "FossilBirthDeath" ->
-                    build(
-                            "FossilBirthDeathTree",
-                            "lambda",
-                            arg("birthRate", arguments),
-                            "mu",
-                            arg("deathRate", arguments),
-                            "rho",
-                            arg("rho", arguments),
-                            "psi",
-                            arg("samplingRate", arguments),
-                            "taxa",
-                            arg("taxa", arguments, true));
+                build(
+                        "FossilBirthDeathTree",
+                        "lambda",
+                        arg("birthRate", arguments),
+                        "mu",
+                        arg("deathRate", arguments),
+                        "rho",
+                        arg("rho", arguments),
+                        "psi",
+                        arg("samplingRate", arguments),
+                        "taxa",
+                        arg("taxa", arguments, true));
             case "BirthDeath" ->
-                    build(
-                            "BirthDeath",
-                            "lambda",
-                            arg("birthRate", arguments),
-                            "mu",
-                            arg("deathRate", arguments),
-                            "rootAge",
-                            arg("rootHeight", arguments),
-                            "taxa",
-                            arg("taxa", arguments, true));
+                build(
+                        "BirthDeath",
+                        "lambda",
+                        arg("birthRate", arguments),
+                        "mu",
+                        arg("deathRate", arguments),
+                        "rootAge",
+                        arg("rootHeight", arguments),
+                        "taxa",
+                        arg("taxa", arguments, true));
             case "Coalescent" ->
-                    build(
-                            "Coalescent",
-                            "theta",
-                            arg("populationSize", arguments),
-                            "taxa",
-                            arg("taxa", arguments, true));
+                build("Coalescent", "theta", arg("populationSize", arguments), "taxa", arg("taxa", arguments, true));
             case "JC69" -> build("jukesCantor");
             case "K80" -> build("k80", "kappa", arg("kappa", arguments));
             case "F81" -> build("f81", "freq", arg("baseFrequencies", arguments));
-            case "HKY" ->
-                    build(
-                            "hky",
-                            "kappa",
-                            arg("kappa", arguments),
-                            "freq",
-                            arg("baseFrequencies", arguments));
+            case "HKY" -> build("hky", "kappa", arg("kappa", arguments), "freq", arg("baseFrequencies", arguments));
             case "GTR" ->
-                    build(
-                            "gtr",
-                            "rates",
-                            arg("rateMatrix", arguments),
-                            "freq",
-                            arg("baseFrequencies", arguments));
+                build("gtr", "rates", arg("rateMatrix", arguments), "freq", arg("baseFrequencies", arguments));
             case "nexus" -> build("readNexus", "file", arg("file", arguments));
             case "fasta" -> build("readFasta", "file", arg("file", arguments));
             case "PhyloBM" ->
-                    build(
-                            "PhyloBrownian",
-                            "tree",
-                            arg("tree", arguments),
-                            "diffRate",
-                            arg("sigma", arguments),
-                            "y0",
-                            arg("rootValue", arguments));
+                build(
+                        "PhyloBrownian",
+                        "tree",
+                        arg("tree", arguments),
+                        "diffRate",
+                        arg("sigma", arguments),
+                        "y0",
+                        arg("rootValue", arguments));
             case "PhyloOU" ->
-                    build(
-                            "PhyloOU",
-                            "tree",
-                            arg("tree", arguments),
-                            "diffRate",
-                            arg("sigma", arguments),
-                            "theta",
-                            arg("optimum", arguments),
-                            "alpha",
-                            arg("alpha", arguments),
-                            "y0",
-                            arg("rootValue", arguments));
+                build(
+                        "PhyloOU",
+                        "tree",
+                        arg("tree", arguments),
+                        "diffRate",
+                        arg("sigma", arguments),
+                        "theta",
+                        arg("optimum", arguments),
+                        "alpha",
+                        arg("alpha", arguments),
+                        "y0",
+                        arg("rootValue", arguments));
             case "PhyloCTMC" ->
-                    build(
-                            "PhyloCTMC",
-                            "tree",
-                            arg("tree", arguments),
-                            "Q",
-                            arg("Q", arguments),
-                            "siteRates",
-                            arg("siteRates", arguments, true),
-                            "branchRates",
-                            arg("branchRates", arguments, true),
-                            "L",
-                            arg("numSequences", arguments, true));
+                build(
+                        "PhyloCTMC",
+                        "tree",
+                        arg("tree", arguments),
+                        "Q",
+                        arg("Q", arguments),
+                        "siteRates",
+                        arg("siteRates", arguments, true),
+                        "branchRates",
+                        arg("branchRates", arguments, true),
+                        "L",
+                        arg("numSequences", arguments, true));
             case "IID" -> {
                 // we have smth like IID(base=Normal(...), n=5)
                 // we turn this into Normal(..., replicates=5)
@@ -146,8 +106,7 @@ public class LPhyGeneratorMapping {
                 yield builder;
             }
             default ->
-                    throw new LPhyConverter.LPhyConversionError(
-                            "Generator " + phylospecGenerator + " is not supported.");
+                throw new LPhyConverter.LPhyConversionError("Generator " + phylospecGenerator + " is not supported.");
         };
     }
 

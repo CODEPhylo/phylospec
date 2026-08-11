@@ -49,11 +49,7 @@ public class Properties {
     @Override
     public int hashCode() {
         int result = 1;
-        result =
-                ((result * 31)
-                        + ((this.additionalProperties == null)
-                                ? 0
-                                : this.additionalProperties.hashCode()));
+        result = ((result * 31) + ((this.additionalProperties == null) ? 0 : this.additionalProperties.hashCode()));
         return result;
     }
 
@@ -67,7 +63,6 @@ public class Properties {
         }
         Properties rhs = ((Properties) other);
         return ((this.additionalProperties == rhs.additionalProperties)
-                || ((this.additionalProperties != null)
-                        && this.additionalProperties.equals(rhs.additionalProperties)));
+                || ((this.additionalProperties != null) && this.additionalProperties.equals(rhs.additionalProperties)));
     }
 }

@@ -18,47 +18,37 @@ public class EvaluateScalarFunctionsTest {
     public void testLog() {
         testStatements(
                 "Real a = log(10)",
-                new Stmt.Assignment(
-                        new AstType.Atomic("Real"), "a", new Expr.Literal(2.302585092994046)));
+                new Stmt.Assignment(new AstType.Atomic("Real"), "a", new Expr.Literal(2.302585092994046)));
         testStatements(
                 "Real a ~ Exponential(log(10, base=10))",
                 new Stmt.Draw(
                         new AstType.Atomic("Real"),
                         "a",
-                        new Expr.Call(
-                                "Exponential",
-                                new Expr.AssignedArgument(null, new Expr.Literal(1.0)))));
+                        new Expr.Call("Exponential", new Expr.AssignedArgument(null, new Expr.Literal(1.0)))));
     }
 
     @Test
     public void testExp() {
         testStatements(
                 "Real a = exp(10)",
-                new Stmt.Assignment(
-                        new AstType.Atomic("Real"), "a", new Expr.Literal(22026.465794806718)));
+                new Stmt.Assignment(new AstType.Atomic("Real"), "a", new Expr.Literal(22026.465794806718)));
         testStatements(
                 "Real a ~ Exponential(exp(0))",
                 new Stmt.Draw(
                         new AstType.Atomic("Real"),
                         "a",
-                        new Expr.Call(
-                                "Exponential",
-                                new Expr.AssignedArgument(null, new Expr.Literal(1.0)))));
+                        new Expr.Call("Exponential", new Expr.AssignedArgument(null, new Expr.Literal(1.0)))));
     }
 
     @Test
     public void testSqrt() {
-        testStatements(
-                "Real a = sqrt(4)",
-                new Stmt.Assignment(new AstType.Atomic("Real"), "a", new Expr.Literal(2.0)));
+        testStatements("Real a = sqrt(4)", new Stmt.Assignment(new AstType.Atomic("Real"), "a", new Expr.Literal(2.0)));
         testStatements(
                 "Real a ~ Exponential(sqrt(0))",
                 new Stmt.Draw(
                         new AstType.Atomic("Real"),
                         "a",
-                        new Expr.Call(
-                                "Exponential",
-                                new Expr.AssignedArgument(null, new Expr.Literal(0.0)))));
+                        new Expr.Call("Exponential", new Expr.AssignedArgument(null, new Expr.Literal(0.0)))));
     }
 
     void testStatements(String source, Stmt... expectedStatements) {

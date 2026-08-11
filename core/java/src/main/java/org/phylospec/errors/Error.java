@@ -177,7 +177,10 @@ public final class Error extends Throwable {
         }
 
         if (!examples().isEmpty()) {
-            text.append("\n\n").append(BOLD).append("This could look like this:").append(RESET);
+            text.append("\n\n")
+                    .append(BOLD)
+                    .append("This could look like this:")
+                    .append(RESET);
             for (String example : examples()) {
                 text.append("\n\n").append(INDENT).append(CYAN).append(example).append(RESET);
             }

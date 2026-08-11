@@ -54,8 +54,7 @@ public abstract class AstType extends AstNode {
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Generic generic = (Generic) o;
-            return Objects.equals(name, generic.name)
-                    && Objects.deepEquals(typeParameters, generic.typeParameters);
+            return Objects.equals(name, generic.name) && Objects.deepEquals(typeParameters, generic.typeParameters);
         }
 
         @Override

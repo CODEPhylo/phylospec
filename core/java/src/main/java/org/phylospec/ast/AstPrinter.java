@@ -20,24 +20,12 @@ public class AstPrinter implements AstVisitor<String, String, String> {
 
     @Override
     public String visitAssignment(Stmt.Assignment stmt) {
-        return "(AS "
-                + stmt.type.accept(this)
-                + " "
-                + stmt.name
-                + " "
-                + stmt.expression.accept(this)
-                + ")";
+        return "(AS " + stmt.type.accept(this) + " " + stmt.name + " " + stmt.expression.accept(this) + ")";
     }
 
     @Override
     public String visitDraw(Stmt.Draw stmt) {
-        return "(DR "
-                + stmt.type.accept(this)
-                + " "
-                + stmt.name
-                + " "
-                + stmt.expression.accept(this)
-                + ")";
+        return "(DR " + stmt.type.accept(this) + " " + stmt.name + " " + stmt.expression.accept(this) + ")";
     }
 
     @Override
@@ -45,11 +33,10 @@ public class AstPrinter implements AstVisitor<String, String, String> {
         String result = "(IS " + indexed.statement.accept(this);
 
         for (int i = 0; i < indexed.indices.size(); i++) {
-            result +=
-                    " "
-                            + indexed.indices.get(i).variableName
-                            + " "
-                            + indexed.ranges.get(i).accept(this);
+            result += " "
+                    + indexed.indices.get(i).variableName
+                    + " "
+                    + indexed.ranges.get(i).accept(this);
         }
 
         result += ")";
@@ -58,11 +45,7 @@ public class AstPrinter implements AstVisitor<String, String, String> {
 
     @Override
     public String visitObservedAsStmt(Stmt.ObservedAs observedAs) {
-        return "(OA "
-                + observedAs.stmt.accept(this)
-                + " "
-                + observedAs.observedAs.accept(this)
-                + ")";
+        return "(OA " + observedAs.stmt.accept(this) + " " + observedAs.observedAs.accept(this) + ")";
     }
 
     @Override
@@ -115,8 +98,7 @@ public class AstPrinter implements AstVisitor<String, String, String> {
                         .append(((Expr.StringTemplate.StringPart) part).value())
                         .append("\"");
             } else {
-                result.append(
-                        ((Expr.StringTemplate.ExpressionPart) part).expression().variableName);
+                result.append(((Expr.StringTemplate.ExpressionPart) part).expression().variableName);
             }
 
             if (i < expr.parts.size() - 1) {

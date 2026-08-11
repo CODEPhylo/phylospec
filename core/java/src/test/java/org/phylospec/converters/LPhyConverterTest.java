@@ -60,37 +60,28 @@ public class LPhyConverterTest {
         Path lphyPath = psPath.getParent().resolve(lphyFileName);
 
         if (!Files.exists(lphyPath)) {
-            return DynamicTest.dynamicTest(
-                    psPath.getFileName().toString() + " (missing .lphy file)",
-                    () -> {
-                        System.err.println("Expected LPhy file not found: " + lphyPath);
-                    });
+            return DynamicTest.dynamicTest(psPath.getFileName().toString() + " (missing .lphy file)", () -> {
+                System.err.println("Expected LPhy file not found: " + lphyPath);
+            });
         }
 
         String expectedLPhy = Files.readString(lphyPath, StandardCharsets.UTF_8);
 
-        return DynamicTest.dynamicTest(
-                psPath.getFileName().toString(),
-                () -> {
-                    // Lex and parse the PhyloSpec file
-                    Lexer lexer = new Lexer(source);
-                    List<Token> tokens = lexer.scanTokens();
-                    Parser parser = new Parser(tokens);
-                    List<Stmt> statements = parser.parse();
+        return DynamicTest.dynamicTest(psPath.getFileName().toString(), () -> {
+            // Lex and parse the PhyloSpec file
+            Lexer lexer = new Lexer(source);
+            List<Token> tokens = lexer.scanTokens();
+            Parser parser = new Parser(tokens);
+            List<Stmt> statements = parser.parse();
 
-                    List<ComponentLibrary> componentLibraries =
-                            ComponentResolver.loadCoreComponentLibraries();
+            List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
 
-                    // Convert AST to LPhy using LPhyConverter
-                    String actualLPhyString =
-                            LPhyConverter.convertToLPhy(statements, componentLibraries)
-                                    .replace("\t", "    ");
-                    String expectedLPhyString = expectedLPhy.trim();
+            // Convert AST to LPhy using LPhyConverter
+            String actualLPhyString =
+                    LPhyConverter.convertToLPhy(statements, componentLibraries).replace("\t", "    ");
+            String expectedLPhyString = expectedLPhy.trim();
 
-                    assertEquals(
-                            expectedLPhyString,
-                            actualLPhyString,
-                            "LPhy conversion mismatch for: " + psPath);
-                });
+            assertEquals(expectedLPhyString, actualLPhyString, "LPhy conversion mismatch for: " + psPath);
+        });
     }
 }

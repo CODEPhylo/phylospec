@@ -121,14 +121,13 @@ class LspDocument implements ErrorEventListener {
             }
         }
 
-        foundDiagnostics.add(
-                new Diagnostic(
-                        new org.eclipse.lsp4j.Range(
-                                new Position(error.range().startLine - 1, error.range().start),
-                                new Position(error.range().endLine - 1, error.range().end)),
-                        text.toString(),
-                        isWarning ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error,
-                        null));
+        foundDiagnostics.add(new Diagnostic(
+                new org.eclipse.lsp4j.Range(
+                        new Position(error.range().startLine - 1, error.range().start),
+                        new Position(error.range().endLine - 1, error.range().end)),
+                text.toString(),
+                isWarning ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error,
+                null));
 
         System.out.println(error.toStdOutString(content, isWarning));
     }
@@ -230,8 +229,7 @@ class LspDocument implements ErrorEventListener {
                 }
             }
             case Expr.Variable variable -> {
-                Set<ResolvedType> resolvedTypeSet =
-                        typeResolver.resolveVariable(variable.variableName);
+                Set<ResolvedType> resolvedTypeSet = typeResolver.resolveVariable(variable.variableName);
 
                 if (1 < resolvedTypeSet.size()) {
                     hoverText
@@ -415,14 +413,14 @@ class LspDocument implements ErrorEventListener {
 
             for (Generator generator : generators) {
                 if (distributionsOnly
-                        && !getReadableName(generator.getGeneratedType())
-                                .startsWith("Distribution")) {
+                        && !getReadableName(generator.getGeneratedType()).startsWith("Distribution")) {
                     continue;
                 }
 
                 CompletionItem item = new CompletionItem(generator.getName());
                 item.setKind(CompletionItemKind.Function);
-                item.setDetail(printGeneratorInfo(new StringBuilder(), generator).toString());
+                item.setDetail(
+                        printGeneratorInfo(new StringBuilder(), generator).toString());
                 item.setDocumentation(generator.getDescription());
 
                 completionItems.add(item);
@@ -546,9 +544,7 @@ class LspDocument implements ErrorEventListener {
         if (lineTokens.size() == 1) return true;
 
         for (Token token : lineTokens) {
-            if (token.type != TokenType.IDENTIFIER
-                    && token.type != TokenType.LESS
-                    && token.type != TokenType.GREATER) {
+            if (token.type != TokenType.IDENTIFIER && token.type != TokenType.LESS && token.type != TokenType.GREATER) {
                 return false;
             }
         }
@@ -567,8 +563,7 @@ class LspDocument implements ErrorEventListener {
     /**
      * Appends argument descriptions for a generator.
      */
-    private static void printGeneratorArgumentDescriptions(
-            StringBuilder stringBuilder, Generator generator) {
+    private static void printGeneratorArgumentDescriptions(StringBuilder stringBuilder, Generator generator) {
         if (generator.getArguments().isEmpty()) return;
 
         for (Argument argument : generator.getArguments()) {

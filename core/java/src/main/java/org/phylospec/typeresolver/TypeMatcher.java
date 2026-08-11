@@ -53,10 +53,9 @@ class TypeMatcher {
                 }
 
                 if (allInputsMatch)
-                    resultTypesOfMatches.add(
-                            ResolvedType.fromString(rule.resultType, componentResolver)
-                                    .iterator()
-                                    .next());
+                    resultTypesOfMatches.add(ResolvedType.fromString(rule.resultType, componentResolver)
+                            .iterator()
+                            .next());
             }
         }
 

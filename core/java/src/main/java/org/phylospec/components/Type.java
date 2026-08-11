@@ -62,8 +62,7 @@ public class Type {
      *
      */
     @JsonProperty("typeProperties")
-    @JsonPropertyDescription(
-            "Possible type properties for more fine-grained validation (e.g., `num` for Vector<T>)")
+    @JsonPropertyDescription("Possible type properties for more fine-grained validation (e.g., `num` for Vector<T>)")
     private List<String> typeProperties = new ArrayList<String>();
 
     @JsonProperty("properties")
@@ -268,22 +267,14 @@ public class Type {
     @Override
     public int hashCode() {
         int result = 1;
-        result =
-                ((result * 31)
-                        + ((this.typeProperties == null) ? 0 : this.typeProperties.hashCode()));
+        result = ((result * 31) + ((this.typeProperties == null) ? 0 : this.typeProperties.hashCode()));
         result = ((result * 31) + ((this._extends == null) ? 0 : this._extends.hashCode()));
         result = ((result * 31) + ((this.name == null) ? 0 : this.name.hashCode()));
         result = ((result * 31) + ((this.namespace == null) ? 0 : this.namespace.hashCode()));
         result = ((result * 31) + ((this.description == null) ? 0 : this.description.hashCode()));
         result = ((result * 31) + ((this.alias == null) ? 0 : this.alias.hashCode()));
-        result =
-                ((result * 31)
-                        + ((this.additionalProperties == null)
-                                ? 0
-                                : this.additionalProperties.hashCode()));
-        result =
-                ((result * 31)
-                        + ((this.typeParameters == null) ? 0 : this.typeParameters.hashCode()));
+        result = ((result * 31) + ((this.additionalProperties == null) ? 0 : this.additionalProperties.hashCode()));
+        result = ((result * 31) + ((this.typeParameters == null) ? 0 : this.typeParameters.hashCode()));
         result = ((result * 31) + ((this.properties == null) ? 0 : this.properties.hashCode()));
         return result;
     }
@@ -298,43 +289,29 @@ public class Type {
         }
         Type rhs = ((Type) other);
         return ((((((((((this.typeProperties == rhs.typeProperties)
-                                                                                || ((this
-                                                                                                        .typeProperties
-                                                                                                != null)
-                                                                                        && this
-                                                                                                .typeProperties
-                                                                                                .equals(
-                                                                                                        rhs.typeProperties)))
-                                                                        && ((this._extends
-                                                                                        == rhs._extends)
-                                                                                || ((this._extends
-                                                                                                != null)
-                                                                                        && this
-                                                                                                ._extends
-                                                                                                .equals(
-                                                                                                        rhs._extends))))
+                                                                                || ((this.typeProperties != null)
+                                                                                        && this.typeProperties.equals(
+                                                                                                rhs.typeProperties)))
+                                                                        && ((this._extends == rhs._extends)
+                                                                                || ((this._extends != null)
+                                                                                        && this._extends.equals(
+                                                                                                rhs._extends))))
                                                                 && ((this.name == rhs.name)
                                                                         || ((this.name != null)
-                                                                                && this.name.equals(
-                                                                                        rhs.name))))
+                                                                                && this.name.equals(rhs.name))))
                                                         && ((this.namespace == rhs.namespace)
                                                                 || ((this.namespace != null)
-                                                                        && this.namespace.equals(
-                                                                                rhs.namespace))))
+                                                                        && this.namespace.equals(rhs.namespace))))
                                                 && ((this.description == rhs.description)
                                                         || ((this.description != null)
-                                                                && this.description.equals(
-                                                                        rhs.description))))
+                                                                && this.description.equals(rhs.description))))
                                         && ((this.alias == rhs.alias)
-                                                || ((this.alias != null)
-                                                        && this.alias.equals(rhs.alias))))
+                                                || ((this.alias != null) && this.alias.equals(rhs.alias))))
                                 && ((this.additionalProperties == rhs.additionalProperties)
                                         || ((this.additionalProperties != null)
-                                                && this.additionalProperties.equals(
-                                                        rhs.additionalProperties))))
+                                                && this.additionalProperties.equals(rhs.additionalProperties))))
                         && ((this.typeParameters == rhs.typeParameters)
-                                || ((this.typeParameters != null)
-                                        && this.typeParameters.equals(rhs.typeParameters))))
+                                || ((this.typeParameters != null) && this.typeParameters.equals(rhs.typeParameters))))
                 && ((this.properties == rhs.properties)
                         || ((this.properties != null) && this.properties.equals(rhs.properties))));
     }

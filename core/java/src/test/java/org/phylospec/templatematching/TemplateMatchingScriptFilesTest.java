@@ -49,47 +49,38 @@ public class TemplateMatchingScriptFilesTest {
         Map<String, String> expectedBindings = extractExpectedBindings(lines);
         boolean expectNoMatch = isNoMatch(lines);
 
-        return DynamicTest.dynamicTest(
-                psPath.getFileName().toString(),
-                () -> {
-                    // parse and simplify the query
-                    List<Token> queryTokens = new Lexer(querySource).scanTokens();
-                    List<AstNode> queryNodes = new Parser(queryTokens).parseStmtOrExpr();
-                    queryNodes = simplify(queryNodes);
-                    AstNode queryRoot = queryNodes.getLast();
-                    VariableResolver queryVariableResolver = new VariableResolver(queryNodes);
+        return DynamicTest.dynamicTest(psPath.getFileName().toString(), () -> {
+            // parse and simplify the query
+            List<Token> queryTokens = new Lexer(querySource).scanTokens();
+            List<AstNode> queryNodes = new Parser(queryTokens).parseStmtOrExpr();
+            queryNodes = simplify(queryNodes);
+            AstNode queryRoot = queryNodes.getLast();
+            VariableResolver queryVariableResolver = new VariableResolver(queryNodes);
 
-                    // run the template matcher
-                    AstTemplateMatcher matcher = new AstTemplateMatcher(templateSource);
-                    Map<String, AstNode> result = matcher.match(queryRoot, queryVariableResolver);
+            // run the template matcher
+            AstTemplateMatcher matcher = new AstTemplateMatcher(templateSource);
+            Map<String, AstNode> result = matcher.match(queryRoot, queryVariableResolver);
 
-                    if (expectNoMatch) {
-                        assertNull(result, "expected no match but got bindings: " + result);
-                    } else {
-                        assertNotNull(result, "expected a match but the matcher returned no match");
+            if (expectNoMatch) {
+                assertNull(result, "expected no match but got bindings: " + result);
+            } else {
+                assertNotNull(result, "expected a match but the matcher returned no match");
 
-                        AstPrinter printer = new AstPrinter();
-                        Map<String, String> actualBindings = new LinkedHashMap<>();
-                        for (Map.Entry<String, AstNode> entry : result.entrySet()) {
-                            actualBindings.put(
-                                    entry.getKey(), printNode(entry.getValue(), printer));
-                        }
+                AstPrinter printer = new AstPrinter();
+                Map<String, String> actualBindings = new LinkedHashMap<>();
+                for (Map.Entry<String, AstNode> entry : result.entrySet()) {
+                    actualBindings.put(entry.getKey(), printNode(entry.getValue(), printer));
+                }
 
-                        assertEquals(
-                                expectedBindings,
-                                actualBindings,
-                                "variable bindings do not match for: " + psPath);
-                    }
-                });
+                assertEquals(expectedBindings, actualBindings, "variable bindings do not match for: " + psPath);
+            }
+        });
     }
 
     // applies RemoveGroupings and EvaluateLiterals to a mixed list of Stmt/Expr nodes
     private List<AstNode> simplify(List<AstNode> nodes) {
         List<Stmt> stmts =
-                nodes.stream()
-                        .filter(n -> n instanceof Stmt)
-                        .map(n -> (Stmt) n)
-                        .collect(Collectors.toList());
+                nodes.stream().filter(n -> n instanceof Stmt).map(n -> (Stmt) n).collect(Collectors.toList());
 
         if (stmts.size() == nodes.size()) {
             stmts = new RemoveGroupings().transform(stmts);
@@ -100,14 +91,12 @@ public class TemplateMatchingScriptFilesTest {
         RemoveGroupings removeGroupings = new RemoveGroupings();
         EvaluateLiterals evaluateLiterals = new EvaluateLiterals();
         return nodes.stream()
-                .map(
-                        node -> {
-                            if (node instanceof Expr expr) {
-                                return (AstNode)
-                                        expr.accept(removeGroupings).accept(evaluateLiterals);
-                            }
-                            return node;
-                        })
+                .map(node -> {
+                    if (node instanceof Expr expr) {
+                        return (AstNode) expr.accept(removeGroupings).accept(evaluateLiterals);
+                    }
+                    return node;
+                })
                 .collect(Collectors.toList());
     }
 

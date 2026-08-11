@@ -12,10 +12,7 @@ public class WrappedTileApplicationError extends TileApplicationError {
     private final Exception beastException;
 
     public WrappedTileApplicationError(AstNode node, String description, Exception beastException) {
-        super(
-                node,
-                description,
-                "Check out the underlying BEAST 2.8 error:\n\n" + getError(beastException));
+        super(node, description, "Check out the underlying BEAST 2.8 error:\n\n" + getError(beastException));
         this.beastException = beastException;
     }
 

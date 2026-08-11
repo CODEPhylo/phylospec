@@ -118,8 +118,7 @@ public abstract class Tile<T, S> {
     }
 
     /** methods to apply a tiling */
-    private final Map<IdentityHashMap<Expr.Variable, Integer>, T> appliedWithIndexedVariables =
-            new HashMap<>();
+    private final Map<IdentityHashMap<Expr.Variable, Integer>, T> appliedWithIndexedVariables = new HashMap<>();
 
     /**
      * Applies the tile. Memoization is used to not apply the same tile twice.
@@ -144,8 +143,7 @@ public abstract class Tile<T, S> {
 
             boolean allMatch = true;
             for (Expr.Variable index : indexVariablesInScope.keySet()) {
-                if (!Objects.equals(
-                        indexVariablesInScope.get(index), previousIndexVariables.get(index)))
+                if (!Objects.equals(indexVariablesInScope.get(index), previousIndexVariables.get(index)))
                     allMatch = false;
             }
 
@@ -157,8 +155,7 @@ public abstract class Tile<T, S> {
 
         try {
             T result = this.applyTile(state, indexVariablesInScope);
-            this.appliedWithIndexedVariables.put(
-                    new IdentityHashMap<>(indexVariablesInScope), result);
+            this.appliedWithIndexedVariables.put(new IdentityHashMap<>(indexVariablesInScope), result);
             return result;
         } catch (TileApplicationError tilingError) {
             // attach node if needed
@@ -177,8 +174,7 @@ public abstract class Tile<T, S> {
     /**
      * Applies the tile. This method should be overridden by custom tiles.
      */
-    protected abstract T applyTile(
-            S beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables);
+    protected abstract T applyTile(S beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables);
 
     /* root node of an applied tile */
 
@@ -221,8 +217,7 @@ public abstract class Tile<T, S> {
     /**
      * Constructs an ID consisting of the given prefix, postfix, and index variables.
      */
-    protected String getId(
-            String prefix, IdentityHashMap<Expr.Variable, Integer> indexVariables, String postfix) {
+    protected String getId(String prefix, IdentityHashMap<Expr.Variable, Integer> indexVariables, String postfix) {
         StringBuilder builder = new StringBuilder(prefix);
 
         if (!indexVariables.isEmpty()) {

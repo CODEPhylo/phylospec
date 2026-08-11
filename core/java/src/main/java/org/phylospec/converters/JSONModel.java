@@ -16,16 +16,13 @@ public record JSONModel(List<Stmt> statements, String phyloSpecModel) {
      */
     public static String getJSONSchema() {
         SchemaGeneratorConfigBuilder configBuilder =
-                new SchemaGeneratorConfigBuilder(
-                        SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON);
+                new SchemaGeneratorConfigBuilder(SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON);
         configBuilder.forTypesInGeneral().withSubtypeResolver(new InnerClassesResolver());
         configBuilder
                 .forFields()
-                .withDescriptionResolver(
-                        field ->
-                                field.getAnnotation(JsonPropertyDescription.class) != null
-                                        ? field.getAnnotation(JsonPropertyDescription.class).value()
-                                        : null);
+                .withDescriptionResolver(field -> field.getAnnotation(JsonPropertyDescription.class) != null
+                        ? field.getAnnotation(JsonPropertyDescription.class).value()
+                        : null);
         SchemaGeneratorConfig config = configBuilder.build();
         SchemaGenerator generator = new SchemaGenerator(config);
         JsonNode jsonSchema = generator.generateSchema(JSONModel.class);
@@ -40,8 +37,7 @@ public record JSONModel(List<Stmt> statements, String phyloSpecModel) {
     static class InnerClassesResolver implements SubtypeResolver {
 
         @Override
-        public List<ResolvedType> findSubtypes(
-                ResolvedType declaredType, SchemaGenerationContext context) {
+        public List<ResolvedType> findSubtypes(ResolvedType declaredType, SchemaGenerationContext context) {
             TypeContext typeContext = context.getTypeContext();
             if (declaredType.getErasedType().getPackageName().startsWith("org.phylospec.ast")) {
                 return Arrays.stream(declaredType.getErasedType().getDeclaredClasses())

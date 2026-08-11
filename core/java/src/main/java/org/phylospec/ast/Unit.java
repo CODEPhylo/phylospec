@@ -9,15 +9,14 @@ public enum Unit {
     THOUSAND_YEARS,
     MILLION_YEARS;
 
-    static Map<String, Unit> mapping =
-            Map.of(
-                    "", IMPLICIT,
-                    "d", DAYS,
-                    "yr", YEARS,
-                    "kyr", THOUSAND_YEARS,
-                    "ka", THOUSAND_YEARS,
-                    "Myr", MILLION_YEARS,
-                    "Ma", MILLION_YEARS);
+    static Map<String, Unit> mapping = Map.of(
+            "", IMPLICIT,
+            "d", DAYS,
+            "yr", YEARS,
+            "kyr", THOUSAND_YEARS,
+            "ka", THOUSAND_YEARS,
+            "Myr", MILLION_YEARS,
+            "Ma", MILLION_YEARS);
 
     public static boolean isValidUnit(String string) {
         return mapping.containsKey(string);

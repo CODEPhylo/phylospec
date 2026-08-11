@@ -29,43 +29,39 @@ public interface CandidateTile<S> {
      * compatible input tiles, a wired-up tile is created.
      */
     default Set<Tile<?, S>> getWiredUpTiles(
-            List<TileInput<?, S>> tileInputs,
-            List<Set<Tile<?, S>>> compatibleInputTiles,
-            AstNode rootNode) {
+            List<TileInput<?, S>> tileInputs, List<Set<Tile<?, S>>> compatibleInputTiles, AstNode rootNode) {
         Set<Tile<?, S>> wiredUpTiles = new HashSet<>();
 
-        Utils.visitCombinations(
-                compatibleInputTiles,
-                inputs -> {
-                    Tile<?, S> wiredUpTile = this.createInstance();
+        Utils.visitCombinations(compatibleInputTiles, inputs -> {
+            Tile<?, S> wiredUpTile = this.createInstance();
 
-                    // get TileInput fields from fresh instance
+            // get TileInput fields from fresh instance
 
-                    Map<String, TileInput<?, S>> freshInputsByKey = new HashMap<>();
-                    for (TileInput<?, S> freshInput : wiredUpTile.getTileInputs()) {
-                        freshInputsByKey.put(freshInput.getKey(), freshInput);
-                    }
+            Map<String, TileInput<?, S>> freshInputsByKey = new HashMap<>();
+            for (TileInput<?, S> freshInput : wiredUpTile.getTileInputs()) {
+                freshInputsByKey.put(freshInput.getKey(), freshInput);
+            }
 
-                    // wire each input tile and accumulate weight
+            // wire each input tile and accumulate weight
 
-                    int totalWeight = this.getPriority().getWeight();
-                    for (int i = 0; i < tileInputs.size(); i++) {
-                        Tile<?, S> inputTile = inputs.get(i);
-                        String tileInputKey = tileInputs.get(i).getKey();
+            int totalWeight = this.getPriority().getWeight();
+            for (int i = 0; i < tileInputs.size(); i++) {
+                Tile<?, S> inputTile = inputs.get(i);
+                String tileInputKey = tileInputs.get(i).getKey();
 
-                        TileInput<?, S> freshInputTile = freshInputsByKey.get(tileInputKey);
-                        freshInputTile.setTile(inputTile);
+                TileInput<?, S> freshInputTile = freshInputsByKey.get(tileInputKey);
+                freshInputTile.setTile(inputTile);
 
-                        totalWeight += inputTile.getWeight();
-                    }
+                totalWeight += inputTile.getWeight();
+            }
 
-                    wiredUpTile.setWeight(totalWeight);
-                    wiredUpTile.setRootNode(rootNode);
+            wiredUpTile.setWeight(totalWeight);
+            wiredUpTile.setRootNode(rootNode);
 
-                    if (!wiredUpTile.isInconsistent(new IdentityHashMap<>())) {
-                        wiredUpTiles.add(wiredUpTile);
-                    }
-                });
+            if (!wiredUpTile.isInconsistent(new IdentityHashMap<>())) {
+                wiredUpTiles.add(wiredUpTile);
+            }
+        });
 
         return wiredUpTiles;
     }
@@ -91,16 +87,14 @@ public interface CandidateTile<S> {
      */
     default Tile<?, S> createInstance() {
         if (!(this instanceof Tile<?, ?> tile)) {
-            throw new RuntimeException(
-                    getClass().getSimpleName()
-                            + " does not inherit from Tile<?>. In that case, implement createInstance yourself.");
+            throw new RuntimeException(getClass().getSimpleName()
+                    + " does not inherit from Tile<?>. In that case, implement createInstance yourself.");
         }
 
         try {
             return tile.getClass().getDeclaredConstructor().newInstance();
         } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(
-                    "Tile " + getClass().getSimpleName() + " has no public no-arg constructor", e);
+            throw new RuntimeException("Tile " + getClass().getSimpleName() + " has no public no-arg constructor", e);
         }
     }
 }

@@ -61,8 +61,7 @@ public class ResolvedType {
      * be a generic type, and it must have been imported in the given {@link ComponentResolver}.
      * This method throws an error if the type parameters cannot be fully resolved from the given string.
      */
-    public static Set<ResolvedType> fromString(
-            String typeString, ComponentResolver componentResolver) {
+    public static Set<ResolvedType> fromString(String typeString, ComponentResolver componentResolver) {
         return ResolvedType.fromString(typeString, componentResolver, false);
     }
 
@@ -71,11 +70,8 @@ public class ResolvedType {
      * be a generic type, and it must have been imported in the given {@link ComponentResolver}.
      */
     public static Set<ResolvedType> fromString(
-            String typeString,
-            ComponentResolver componentResolver,
-            boolean allowUnresolvedTypeParameter) {
-        return ResolvedType.fromString(
-                typeString, new HashMap<>(), componentResolver, allowUnresolvedTypeParameter);
+            String typeString, ComponentResolver componentResolver, boolean allowUnresolvedTypeParameter) {
+        return ResolvedType.fromString(typeString, new HashMap<>(), componentResolver, allowUnresolvedTypeParameter);
     }
 
     /**
@@ -106,9 +102,7 @@ public class ResolvedType {
                             + " type parameters, but you provided "
                             + typeParameters.size()
                             + ".",
-                    "Provide exactly "
-                            + typeComponent.getTypeParameters().size()
-                            + " type parameters.");
+                    "Provide exactly " + typeComponent.getTypeParameters().size() + " type parameters.");
         }
 
         Map<String, Set<ResolvedType>> typeParameterMap = new HashMap<>();
@@ -116,8 +110,7 @@ public class ResolvedType {
             typeParameterMap.put(typeComponent.getTypeParameters().get(i), typeParameters.get(i));
         }
 
-        return ResolvedType.fromString(
-                typeString, typeParameterMap, componentResolver, allowUnresolvedTypeParameter);
+        return ResolvedType.fromString(typeString, typeParameterMap, componentResolver, allowUnresolvedTypeParameter);
     }
 
     /// Returns all [ResolvedType] objects that can be created based on the type name and the
@@ -131,9 +124,7 @@ public class ResolvedType {
     /// This method throws an error if the type parameters cannot be fully resolved from the given
     // string.
     public static Set<ResolvedType> fromString(
-            String typeString,
-            Map<String, Set<ResolvedType>> typeParameters,
-            ComponentResolver componentResolver) {
+            String typeString, Map<String, Set<ResolvedType>> typeParameters, ComponentResolver componentResolver) {
         return ResolvedType.fromString(typeString, typeParameters, componentResolver, false);
     }
 
@@ -174,12 +165,8 @@ public class ResolvedType {
                     inferredTypeParameters.add(typeParameters.get(typeParameterName));
                 } else {
                     // parameter type is another type (like Real) and we resolve it recursively
-                    inferredTypeParameters.add(
-                            ResolvedType.fromString(
-                                    typeParameterName,
-                                    typeParameters,
-                                    componentResolver,
-                                    allowUnresolvedTypeParameter));
+                    inferredTypeParameters.add(ResolvedType.fromString(
+                            typeParameterName, typeParameters, componentResolver, allowUnresolvedTypeParameter));
                 }
             }
         } else {
@@ -194,9 +181,7 @@ public class ResolvedType {
                 } else if (!allowUnresolvedTypeParameter) {
                     throw new TypeError(
                             "The type '" + typeString + "' does not exist.",
-                            "Are you looking for '"
-                                    + componentResolver.findClosestType(typeString)
-                                    + "'?");
+                            "Are you looking for '" + componentResolver.findClosestType(typeString) + "'?");
                 }
             }
         }
@@ -205,27 +190,20 @@ public class ResolvedType {
         // combinations to get the set of all fully resolved types
 
         Set<ResolvedType> resultingTypeSet = new HashSet<>();
-        visitCombinations(
-                inferredTypeParameters,
-                typeParamList -> {
-                    Map<String, ResolvedType> typeParamSet = new HashMap<>();
-                    for (int i = 0; i < typeParamList.size(); i++) {
-                        typeParamSet.put(
-                                typeComponent.getTypeParameters().get(i), typeParamList.get(i));
-                    }
+        visitCombinations(inferredTypeParameters, typeParamList -> {
+            Map<String, ResolvedType> typeParamSet = new HashMap<>();
+            for (int i = 0; i < typeParamList.size(); i++) {
+                typeParamSet.put(typeComponent.getTypeParameters().get(i), typeParamList.get(i));
+            }
 
-                    resultingTypeSet.add(new ResolvedType(typeComponent, typeParamSet));
-                });
+            resultingTypeSet.add(new ResolvedType(typeComponent, typeParamSet));
+        });
 
         if (typeComponent.getAlias() != null) {
             // we have an alias
             // we resolve the aliased type and return the set of both
-            Set<ResolvedType> aliasedTypeSet =
-                    ResolvedType.fromString(
-                            typeComponent.getAlias(),
-                            typeParameters,
-                            componentResolver,
-                            allowUnresolvedTypeParameter);
+            Set<ResolvedType> aliasedTypeSet = ResolvedType.fromString(
+                    typeComponent.getAlias(), typeParameters, componentResolver, allowUnresolvedTypeParameter);
             resultingTypeSet.addAll(aliasedTypeSet);
         }
 
@@ -236,8 +214,7 @@ public class ResolvedType {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         ResolvedType that = (ResolvedType) o;
-        return Objects.equals(parameterTypes, that.parameterTypes)
-                && Objects.equals(typeComponent, that.typeComponent);
+        return Objects.equals(parameterTypes, that.parameterTypes) && Objects.equals(typeComponent, that.typeComponent);
     }
 
     @Override

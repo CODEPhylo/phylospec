@@ -32,8 +32,7 @@ import org.phylospec.typeresolver.TypeResolver;
 public class Tools {
     public static void main(String[] args) throws IOException, JSONConverter.JsonConversionError {
         if (args.length == 0) {
-            throw new RuntimeException(
-                    "At least one argument with the tool name has to be provided.");
+            throw new RuntimeException("At least one argument with the tool name has to be provided.");
         }
 
         String toolName = args[0];
@@ -50,8 +49,7 @@ public class Tools {
     /** Parses the file and runs the type resolver to detect type errors. */
     private static void validate(String[] args) throws IOException {
         if (args.length != 2) {
-            throw new RuntimeException(
-                    "validate requires you to pass a path to a  phylospec file.");
+            throw new RuntimeException("validate requires you to pass a path to a  phylospec file.");
         }
 
         Path pylospecFile = Paths.get(args[1]);
@@ -73,8 +71,7 @@ public class Tools {
     }
 
     /** Parses the file, runs the type resolver, and prints a JSON representation of it to stdout. */
-    private static void convertToJson(String[] args)
-            throws IOException, JSONConverter.JsonConversionError {
+    private static void convertToJson(String[] args) throws IOException, JSONConverter.JsonConversionError {
         if (args.length != 2) {
             throw new RuntimeException("to-json requires you to pass a path to a  phylospec file.");
         }
@@ -100,8 +97,7 @@ public class Tools {
         List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
 
         String revString =
-                RevConverter.convertToRev(
-                        pylospecFile.getFileName().toString(), statements, componentLibraries);
+                RevConverter.convertToRev(pylospecFile.getFileName().toString(), statements, componentLibraries);
         System.out.println(revString);
     }
 
