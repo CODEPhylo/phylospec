@@ -242,10 +242,7 @@ public class EngineSpecificationSchema {
         sb.append(',');
         sb.append("installationInstructions");
         sb.append('=');
-        sb.append(
-                ((this.installationInstructions == null)
-                        ? "<null>"
-                        : this.installationInstructions));
+        sb.append(((this.installationInstructions == null) ? "<null>" : this.installationInstructions));
         sb.append(',');
         sb.append("installationWebsite");
         sb.append('=');
@@ -266,27 +263,14 @@ public class EngineSpecificationSchema {
     @Override
     public int hashCode() {
         int result = 1;
-        result =
-                ((result * 31)
-                        + ((this.engineVersion == null) ? 0 : this.engineVersion.hashCode()));
-        result =
-                ((result * 31)
-                        + ((this.installationInstructions == null)
-                                ? 0
-                                : this.installationInstructions.hashCode()));
-        result =
-                ((result * 31)
-                        + ((this.installationWebsite == null)
-                                ? 0
-                                : this.installationWebsite.hashCode()));
+        result = ((result * 31) + ((this.engineVersion == null) ? 0 : this.engineVersion.hashCode()));
+        result = ((result * 31)
+                + ((this.installationInstructions == null) ? 0 : this.installationInstructions.hashCode()));
+        result = ((result * 31) + ((this.installationWebsite == null) ? 0 : this.installationWebsite.hashCode()));
         result = ((result * 31) + ((this.dependsOn == null) ? 0 : this.dependsOn.hashCode()));
         result = ((result * 31) + ((this.name == null) ? 0 : this.name.hashCode()));
         result = ((result * 31) + ((this.generators == null) ? 0 : this.generators.hashCode()));
-        result =
-                ((result * 31)
-                        + ((this.additionalProperties == null)
-                                ? 0
-                                : this.additionalProperties.hashCode()));
+        result = ((result * 31) + ((this.additionalProperties == null) ? 0 : this.additionalProperties.hashCode()));
         return result;
     }
 
@@ -301,30 +285,22 @@ public class EngineSpecificationSchema {
         EngineSpecificationSchema rhs = ((EngineSpecificationSchema) other);
         return ((((((((this.engineVersion == rhs.engineVersion)
                                                                 || ((this.engineVersion != null)
-                                                                        && this.engineVersion
-                                                                                .equals(
-                                                                                        rhs.engineVersion)))
+                                                                        && this.engineVersion.equals(
+                                                                                rhs.engineVersion)))
                                                         && ((this.installationInstructions
                                                                         == rhs.installationInstructions)
-                                                                || ((this.installationInstructions
-                                                                                != null)
-                                                                        && this
-                                                                                .installationInstructions
-                                                                                .equals(
-                                                                                        rhs.installationInstructions))))
-                                                && ((this.installationWebsite
-                                                                == rhs.installationWebsite)
+                                                                || ((this.installationInstructions != null)
+                                                                        && this.installationInstructions.equals(
+                                                                                rhs.installationInstructions))))
+                                                && ((this.installationWebsite == rhs.installationWebsite)
                                                         || ((this.installationWebsite != null)
                                                                 && this.installationWebsite.equals(
                                                                         rhs.installationWebsite))))
                                         && ((this.dependsOn == rhs.dependsOn)
-                                                || ((this.dependsOn != null)
-                                                        && this.dependsOn.equals(rhs.dependsOn))))
-                                && ((this.name == rhs.name)
-                                        || ((this.name != null) && this.name.equals(rhs.name))))
+                                                || ((this.dependsOn != null) && this.dependsOn.equals(rhs.dependsOn))))
+                                && ((this.name == rhs.name) || ((this.name != null) && this.name.equals(rhs.name))))
                         && ((this.generators == rhs.generators)
-                                || ((this.generators != null)
-                                        && this.generators.equals(rhs.generators))))
+                                || ((this.generators != null) && this.generators.equals(rhs.generators))))
                 && ((this.additionalProperties == rhs.additionalProperties)
                         || ((this.additionalProperties != null)
                                 && this.additionalProperties.equals(rhs.additionalProperties))));

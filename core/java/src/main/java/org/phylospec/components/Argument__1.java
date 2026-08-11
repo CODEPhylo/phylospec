@@ -167,15 +167,9 @@ public class Argument__1 {
     public int hashCode() {
         int result = 1;
         result = ((result * 31) + ((this.name == null) ? 0 : this.name.hashCode()));
-        result =
-                ((result * 31)
-                        + ((this.additionalProperties == null)
-                                ? 0
-                                : this.additionalProperties.hashCode()));
+        result = ((result * 31) + ((this.additionalProperties == null) ? 0 : this.additionalProperties.hashCode()));
         result = ((result * 31) + ((this.type == null) ? 0 : this.type.hashCode()));
-        result =
-                ((result * 31)
-                        + ((this.canBeStochastic == null) ? 0 : this.canBeStochastic.hashCode()));
+        result = ((result * 31) + ((this.canBeStochastic == null) ? 0 : this.canBeStochastic.hashCode()));
         result = ((result * 31) + ((this.required == null) ? 0 : this.required.hashCode()));
         return result;
     }
@@ -192,10 +186,8 @@ public class Argument__1 {
         return ((((((this.name == rhs.name) || ((this.name != null) && this.name.equals(rhs.name)))
                                         && ((this.additionalProperties == rhs.additionalProperties)
                                                 || ((this.additionalProperties != null)
-                                                        && this.additionalProperties.equals(
-                                                                rhs.additionalProperties))))
-                                && ((this.type == rhs.type)
-                                        || ((this.type != null) && this.type.equals(rhs.type))))
+                                                        && this.additionalProperties.equals(rhs.additionalProperties))))
+                                && ((this.type == rhs.type) || ((this.type != null) && this.type.equals(rhs.type))))
                         && ((this.canBeStochastic == rhs.canBeStochastic)
                                 || ((this.canBeStochastic != null)
                                         && this.canBeStochastic.equals(rhs.canBeStochastic))))
