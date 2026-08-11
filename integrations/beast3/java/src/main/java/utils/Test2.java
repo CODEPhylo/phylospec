@@ -1,4 +1,5 @@
 import org.xml.sax.SAXException;
+import runner.PhyloSpecRunner;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;

@@ -1,3 +1,5 @@
+package runner;
+
 import beast.base.inference.*;
 import beastconfig.OperatorSelector;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
