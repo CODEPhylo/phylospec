@@ -38,6 +38,7 @@ public final class OperatorSelector {
     private static final TypeToken<?> INT_VECTOR =
             new TypeToken<IntVector<? extends org.phylospec.domain.Int>>() {};
 
+    /** Combines parameter, tree, and joint operator selections for the current state. */
     public List<OperatorSpec> select(BeastXState state) {
         List<OperatorSpec> operators = new ArrayList<>();
         operators.addAll(selectParameterOperators(state));
