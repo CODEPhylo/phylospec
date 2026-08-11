@@ -16,9 +16,7 @@ public class FromCsvProvider implements GeneratorPropertyProvider {
 
     @Override
     public void resolveGenerator(
-            ResolvedType generatedType,
-            Map<String, Set<ResolvedType>> resolvedArguments,
-            Workspace workspace) {
+            ResolvedType generatedType, Map<String, Set<ResolvedType>> resolvedArguments, Workspace workspace) {
         GeneratorPropertyProvider.resolveFile(resolvedArguments, "file", workspace)
                 .flatMap(LightweightFileParsers::parseCsv)
                 .ifPresent(numRows -> generatedType.properties().attach(NUM, numRows));

@@ -11,8 +11,7 @@ import org.phylospec.parser.Parser;
 public class VariableResolverTest {
     @Test
     public void testAssignmentsWithoutScopes() {
-        String model =
-                """
+        String model = """
                 Real a = 10
                 Real b = a * 100
                 String c = "Test${b}"
@@ -21,15 +20,10 @@ public class VariableResolverTest {
         List<Token> tokens = new Lexer(model).scanTokens();
         List<Stmt> statements = new Parser(tokens).parse();
 
-        Expr.Variable a =
-                (Expr.Variable)
-                        ((Expr.Binary) ((Stmt.Assignment) statements.get(1)).expression).left;
-        Expr.Variable b =
-                ((Expr.StringTemplate.ExpressionPart)
-                                ((Expr.StringTemplate)
-                                                ((Stmt.Assignment) statements.get(2)).expression)
-                                        .parts.get(1))
-                        .expression();
+        Expr.Variable a = (Expr.Variable) ((Expr.Binary) ((Stmt.Assignment) statements.get(1)).expression).left;
+        Expr.Variable b = ((Expr.StringTemplate.ExpressionPart)
+                        ((Expr.StringTemplate) ((Stmt.Assignment) statements.get(2)).expression).parts.get(1))
+                .expression();
 
         VariableResolver variableResolver = new VariableResolver(statements);
 
@@ -46,8 +40,7 @@ public class VariableResolverTest {
 
     @Test
     public void testDrawsWithoutScopes() {
-        String model =
-                """
+        String model = """
                 Real a = 10
                 Real b ~ Normal(mean=a, sd=a)
                 String c = [b]
@@ -57,19 +50,11 @@ public class VariableResolverTest {
         List<Stmt> statements = new Parser(tokens).parse();
 
         Expr.Variable a1 =
-                (Expr.Variable)
-                        ((Expr.Call) ((Stmt.Draw) statements.get(1)).expression)
-                                .arguments[0]
-                                .expression;
+                (Expr.Variable) ((Expr.Call) ((Stmt.Draw) statements.get(1)).expression).arguments[0].expression;
         Expr.Variable a2 =
-                (Expr.Variable)
-                        ((Expr.Call) ((Stmt.Draw) statements.get(1)).expression)
-                                .arguments[1]
-                                .expression;
+                (Expr.Variable) ((Expr.Call) ((Stmt.Draw) statements.get(1)).expression).arguments[1].expression;
         Expr.Variable b =
-                (Expr.Variable)
-                        ((Expr.Array) ((Stmt.Assignment) statements.get(2)).expression)
-                                .elements.getFirst();
+                (Expr.Variable) ((Expr.Array) ((Stmt.Assignment) statements.get(2)).expression).elements.getFirst();
 
         VariableResolver variableResolver = new VariableResolver(statements);
 
@@ -87,8 +72,7 @@ public class VariableResolverTest {
 
     @Test
     public void testScopes() {
-        String model =
-                """
+        String model = """
                 Real a = 10
                 Real b[a] = a * 100 for a in 1:a
                 """;
@@ -96,17 +80,10 @@ public class VariableResolverTest {
         List<Token> tokens = new Lexer(model).scanTokens();
         List<Stmt> statements = new Parser(tokens).parse();
 
-        Expr.Variable aRange =
-                (Expr.Variable) ((Expr.Range) ((Stmt.Indexed) statements.get(1)).ranges.get(0)).to;
+        Expr.Variable aRange = (Expr.Variable) ((Expr.Range) ((Stmt.Indexed) statements.get(1)).ranges.get(0)).to;
         Expr.Variable aIndex = ((Stmt.Indexed) statements.get(1)).indices.getFirst();
-        Expr.Variable aInner =
-                (Expr.Variable)
-                        ((Expr.Binary)
-                                        ((Stmt.Assignment)
-                                                        ((Stmt.Indexed) statements.get(1))
-                                                                .statement)
-                                                .expression)
-                                .left;
+        Expr.Variable aInner = (Expr.Variable)
+                ((Expr.Binary) ((Stmt.Assignment) ((Stmt.Indexed) statements.get(1)).statement).expression).left;
 
         VariableResolver variableResolver = new VariableResolver(statements);
 

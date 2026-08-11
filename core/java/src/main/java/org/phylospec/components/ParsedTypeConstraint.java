@@ -13,13 +13,11 @@ import java.util.regex.Pattern;
  * class can be used to parse these strings.
  */
 public class ParsedTypeConstraint {
-    private static final Pattern CONSTRAINT_PATTERN =
-            Pattern.compile(
-                    "^\\s*\\$?([A-Za-z_][A-Za-z0-9_]*)\\s*\\.\\s*"
-                            + "([A-Za-z_][A-Za-z0-9_]*)\\s*"
-                            + "(==|!=|>=|<=|=<|>|<)\\s*"
-                            + "\\$?([A-Za-z_][A-Za-z0-9_]*)\\s*\\.\\s*"
-                            + "([A-Za-z_][A-Za-z0-9_]*)\\s*$");
+    private static final Pattern CONSTRAINT_PATTERN = Pattern.compile("^\\s*\\$?([A-Za-z_][A-Za-z0-9_]*)\\s*\\.\\s*"
+            + "([A-Za-z_][A-Za-z0-9_]*)\\s*"
+            + "(==|!=|>=|<=|=<|>|<)\\s*"
+            + "\\$?([A-Za-z_][A-Za-z0-9_]*)\\s*\\.\\s*"
+            + "([A-Za-z_][A-Za-z0-9_]*)\\s*$");
 
     private final ConstraintType constraintType;
     private final String leftInputName;
@@ -36,8 +34,7 @@ public class ParsedTypeConstraint {
     public ParsedTypeConstraint(String constraint) {
         Matcher matcher = CONSTRAINT_PATTERN.matcher(constraint);
         if (!matcher.matches()) {
-            throw new IllegalArgumentException(
-                    "Type constraint must compare two input properties: " + constraint);
+            throw new IllegalArgumentException("Type constraint must compare two input properties: " + constraint);
         }
 
         this.leftInputName = matcher.group(1);
@@ -55,9 +52,7 @@ public class ParsedTypeConstraint {
             case "<=", "=<" -> ConstraintType.LESS_THAN;
             case ">" -> ConstraintType.GREATER;
             case ">=" -> ConstraintType.GREATER_THAN;
-            default ->
-                    throw new IllegalArgumentException(
-                            "Unsupported type constraint operator: " + operator);
+            default -> throw new IllegalArgumentException("Unsupported type constraint operator: " + operator);
         };
     }
 

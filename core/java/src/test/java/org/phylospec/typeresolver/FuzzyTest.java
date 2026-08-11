@@ -35,13 +35,7 @@ public class FuzzyTest {
                 List<Token> tokens = new Lexer(input).scanTokens();
                 statements = new Parser(tokens).parse();
             } catch (Exception e) {
-                fail(
-                        "Parser threw an exception on iteration "
-                                + i
-                                + " (input="
-                                + repr(input)
-                                + "): "
-                                + e);
+                fail("Parser threw an exception on iteration " + i + " (input=" + repr(input) + "): " + e);
                 return;
             }
 
@@ -50,13 +44,7 @@ public class FuzzyTest {
             } catch (TypeError e) {
                 // this is fine
             } catch (Exception e) {
-                fail(
-                        "Parser threw an exception on iteration "
-                                + i
-                                + " (input="
-                                + repr(input)
-                                + "): "
-                                + e);
+                fail("Parser threw an exception on iteration " + i + " (input=" + repr(input) + "): " + e);
                 return;
             }
 
@@ -139,13 +127,7 @@ public class FuzzyTest {
                 List<Token> tokens = new Lexer(input).scanTokens();
                 statements = new Parser(tokens).parse();
             } catch (Exception e) {
-                fail(
-                        "Parser threw an exception on iteration "
-                                + i
-                                + " (input="
-                                + repr(input)
-                                + "): "
-                                + e);
+                fail("Parser threw an exception on iteration " + i + " (input=" + repr(input) + "): " + e);
                 return;
             }
 
@@ -154,13 +136,7 @@ public class FuzzyTest {
             } catch (TypeError e) {
                 // this is fine
             } catch (Exception e) {
-                fail(
-                        "Parser threw an exception on iteration "
-                                + i
-                                + " (input="
-                                + repr(input)
-                                + "): "
-                                + e);
+                fail("Parser threw an exception on iteration " + i + " (input=" + repr(input) + "): " + e);
                 return;
             }
 

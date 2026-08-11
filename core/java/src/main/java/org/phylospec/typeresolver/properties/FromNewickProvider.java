@@ -16,17 +16,12 @@ public class FromNewickProvider implements GeneratorPropertyProvider {
 
     @Override
     public void resolveGenerator(
-            ResolvedType generatedType,
-            Map<String, Set<ResolvedType>> resolvedArguments,
-            Workspace workspace) {
+            ResolvedType generatedType, Map<String, Set<ResolvedType>> resolvedArguments, Workspace workspace) {
         GeneratorPropertyProvider.resolveLiteral(resolvedArguments, "newickString")
                 .flatMap(LightweightFileParsers::parseNewick)
-                .ifPresent(
-                        properties -> {
-                            generatedType
-                                    .properties()
-                                    .attach(NUM_BRANCHES, properties.numBranches());
-                            generatedType.properties().attach(NUM_TAXA, properties.numTaxa());
-                        });
+                .ifPresent(properties -> {
+                    generatedType.properties().attach(NUM_BRANCHES, properties.numBranches());
+                    generatedType.properties().attach(NUM_TAXA, properties.numTaxa());
+                });
     }
 }

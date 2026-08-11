@@ -22,8 +22,7 @@ public class TileApplicationError extends RuntimeException {
         this(node, description, hint, List.of());
     }
 
-    public TileApplicationError(
-            AstNode node, String description, String hint, List<String> examples) {
+    public TileApplicationError(AstNode node, String description, String hint, List<String> examples) {
         super(description + " " + hint);
         this.node = node;
         this.description = description;

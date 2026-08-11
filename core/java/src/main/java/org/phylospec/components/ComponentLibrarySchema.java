@@ -88,14 +88,8 @@ public class ComponentLibrarySchema {
     @Override
     public int hashCode() {
         int result = 1;
-        result =
-                ((result * 31)
-                        + ((this.componentLibrary == null) ? 0 : this.componentLibrary.hashCode()));
-        result =
-                ((result * 31)
-                        + ((this.additionalProperties == null)
-                                ? 0
-                                : this.additionalProperties.hashCode()));
+        result = ((result * 31) + ((this.componentLibrary == null) ? 0 : this.componentLibrary.hashCode()));
+        result = ((result * 31) + ((this.additionalProperties == null) ? 0 : this.additionalProperties.hashCode()));
         return result;
     }
 
@@ -109,8 +103,7 @@ public class ComponentLibrarySchema {
         }
         ComponentLibrarySchema rhs = ((ComponentLibrarySchema) other);
         return (((this.componentLibrary == rhs.componentLibrary)
-                        || ((this.componentLibrary != null)
-                                && this.componentLibrary.equals(rhs.componentLibrary)))
+                        || ((this.componentLibrary != null) && this.componentLibrary.equals(rhs.componentLibrary)))
                 && ((this.additionalProperties == rhs.additionalProperties)
                         || ((this.additionalProperties != null)
                                 && this.additionalProperties.equals(rhs.additionalProperties))));

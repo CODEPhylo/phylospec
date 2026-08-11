@@ -36,10 +36,7 @@ public class Range {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Range that = (Range) o;
-        return startLine == that.startLine
-                && endLine == that.endLine
-                && start == that.start
-                && end == that.end;
+        return startLine == that.startLine && endLine == that.endLine && start == that.start && end == that.end;
     }
 
     @Override

@@ -163,15 +163,14 @@ public class Lexer {
                     addToken(TokenType.GREATER);
                 }
                 break;
-            case '/':
-                {
-                    if (match('/')) {
-                        comment();
-                    } else {
-                        addToken(TokenType.SLASH);
-                    }
-                    break;
+            case '/': {
+                if (match('/')) {
+                    comment();
+                } else {
+                    addToken(TokenType.SLASH);
                 }
+                break;
+            }
 
             // EOL tokens
             case '\n':
@@ -206,12 +205,9 @@ public class Lexer {
                     number();
                 } else if (c == ';' && peek() == '\n') {
                     reportError(
-                            "';' is not allowed here.",
-                            "PhyloSpec does not use semicolons at the end of statements.");
+                            "';' is not allowed here.", "PhyloSpec does not use semicolons at the end of statements.");
                 } else {
-                    reportError(
-                            "'" + c + "' is not an allowed character.",
-                            "Only use letters or digits.");
+                    reportError("'" + c + "' is not an allowed character.", "Only use letters or digits.");
                 }
         }
     }
@@ -258,11 +254,7 @@ public class Lexer {
 
                 if (isAtEnd()) {
                     reportError(
-                            new Range(
-                                    startLine,
-                                    currentLine,
-                                    start - startLineStart,
-                                    current - currentLineStart),
+                            new Range(startLine, currentLine, start - startLineStart, current - currentLineStart),
                             "A string template must be terminated with an '}'.",
                             "Use curly brackets to add an variable name into a string.",
                             List.of("String name = \"file_{seed}.nex"));
@@ -286,11 +278,7 @@ public class Lexer {
 
         if (isAtEnd()) {
             reportError(
-                    new Range(
-                            startLine,
-                            currentLine,
-                            start - startLineStart,
-                            current - currentLineStart),
+                    new Range(startLine, currentLine, start - startLineStart, current - currentLineStart),
                     "A string must be terminated with an '\"'.",
                     "Use quotation marks to end the string.");
             return;
@@ -346,8 +334,7 @@ public class Lexer {
                 addToken(TokenType.FLOAT, Double.parseDouble(source.substring(start, current)));
             } catch (NumberFormatException ignored) {
                 reportError(
-                        "'" + source.substring(start, current) + "' is not a valid number.",
-                        "Try a smaller number.");
+                        "'" + source.substring(start, current) + "' is not a valid number.", "Try a smaller number.");
             }
         } else {
             // this number has no fractional part, it is thus an integer
@@ -355,8 +342,7 @@ public class Lexer {
                 addToken(TokenType.INT, Integer.parseInt(source.substring(start, current)));
             } catch (NumberFormatException e) {
                 reportError(
-                        "'" + source.substring(start, current) + "' is not a valid number.",
-                        "Try a smaller number.");
+                        "'" + source.substring(start, current) + "' is not a valid number.", "Try a smaller number.");
             }
         }
     }
@@ -453,9 +439,7 @@ public class Lexer {
      */
     private void addToken(TokenType type, Object literal) {
         String text = source.substring(start, current);
-        Range range =
-                new Range(
-                        startLine, currentLine, start - startLineStart, current - currentLineStart);
+        Range range = new Range(startLine, currentLine, start - startLineStart, current - currentLineStart);
         tokens.add(new Token(type, text, literal, range));
     }
 

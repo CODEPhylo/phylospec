@@ -16,27 +16,21 @@ public class EvaluateLiteralsTest {
 
     @Test
     public void testUnary() {
-        testStatements(
-                "Real a = -2",
-                new Stmt.Assignment(new AstType.Atomic("Real"), "a", new Expr.Literal(-2)));
+        testStatements("Real a = -2", new Stmt.Assignment(new AstType.Atomic("Real"), "a", new Expr.Literal(-2)));
         testStatements(
                 "Real a ~ Exponential(-2)",
                 new Stmt.Draw(
                         new AstType.Atomic("Real"),
                         "a",
-                        new Expr.Call(
-                                "Exponential",
-                                new Expr.AssignedArgument(null, new Expr.Literal(-2)))));
+                        new Expr.Call("Exponential", new Expr.AssignedArgument(null, new Expr.Literal(-2)))));
         testStatements(
-                "Boolean a = !false",
-                new Stmt.Assignment(new AstType.Atomic("Boolean"), "a", new Expr.Literal(true)));
+                "Boolean a = !false", new Stmt.Assignment(new AstType.Atomic("Boolean"), "a", new Expr.Literal(true)));
     }
 
     @Test
     public void testBinary() {
         testStatements(
-                "Real a = 10.0 + -2.0",
-                new Stmt.Assignment(new AstType.Atomic("Real"), "a", new Expr.Literal(8.0)));
+                "Real a = 10.0 + -2.0", new Stmt.Assignment(new AstType.Atomic("Real"), "a", new Expr.Literal(8.0)));
         testStatements(
                 "Real a = 5*10.0 + -2*1 - 5",
                 new Stmt.Assignment(new AstType.Atomic("Real"), "a", new Expr.Literal(43.0)));
@@ -51,9 +45,7 @@ public class EvaluateLiteralsTest {
                 new Stmt.Draw(
                         new AstType.Atomic("Real"),
                         "a",
-                        new Expr.Call(
-                                "Exponential",
-                                new Expr.AssignedArgument(null, new Expr.Literal(200)))));
+                        new Expr.Call("Exponential", new Expr.AssignedArgument(null, new Expr.Literal(200)))));
         testStatements(
                 "Boolean a = true == !false",
                 new Stmt.Assignment(new AstType.Atomic("Boolean"), "a", new Expr.Literal(true)));

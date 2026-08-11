@@ -60,40 +60,29 @@ public class RevConverterTest {
         Path revPath = psPath.getParent().resolve(revFileName);
 
         if (!Files.exists(revPath)) {
-            return DynamicTest.dynamicTest(
-                    psPath.getFileName().toString() + " (missing .rev file)",
-                    () -> {
-                        System.err.println("Expected Rev file not found: " + revPath);
-                    });
+            return DynamicTest.dynamicTest(psPath.getFileName().toString() + " (missing .rev file)", () -> {
+                System.err.println("Expected Rev file not found: " + revPath);
+            });
         }
 
         String expectedRev = Files.readString(revPath, StandardCharsets.UTF_8);
 
-        return DynamicTest.dynamicTest(
-                psPath.getFileName().toString(),
-                () -> {
-                    // Lex and parse the PhyloSpec file
-                    Lexer lexer = new Lexer(source);
-                    List<Token> tokens = lexer.scanTokens();
-                    Parser parser = new Parser(tokens);
-                    List<Stmt> statements = parser.parse();
+        return DynamicTest.dynamicTest(psPath.getFileName().toString(), () -> {
+            // Lex and parse the PhyloSpec file
+            Lexer lexer = new Lexer(source);
+            List<Token> tokens = lexer.scanTokens();
+            Parser parser = new Parser(tokens);
+            List<Stmt> statements = parser.parse();
 
-                    List<ComponentLibrary> componentLibraries =
-                            ComponentResolver.loadCoreComponentLibraries();
+            List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
 
-                    // Convert AST to Rev using RevConverter
-                    String actualRevString =
-                            RevConverter.convertToRev(
-                                            psPath.getFileName().toString(),
-                                            statements,
-                                            componentLibraries)
-                                    .replace("\t", "    ");
-                    String expectedRevString = expectedRev.trim();
+            // Convert AST to Rev using RevConverter
+            String actualRevString = RevConverter.convertToRev(
+                            psPath.getFileName().toString(), statements, componentLibraries)
+                    .replace("\t", "    ");
+            String expectedRevString = expectedRev.trim();
 
-                    assertEquals(
-                            expectedRevString,
-                            actualRevString,
-                            "Rev conversion mismatch for: " + psPath);
-                });
+            assertEquals(expectedRevString, actualRevString, "Rev conversion mismatch for: " + psPath);
+        });
     }
 }
