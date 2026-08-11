@@ -102,6 +102,10 @@ public abstract class TileInput<T, S> {
         return this.required;
     }
 
+    public Set<Stochasticity> getAcceptedStochasticities() {
+        return this.acceptedStochasticities;
+    }
+
     /**
      * Returns the type token produced by the input tile.
      */
