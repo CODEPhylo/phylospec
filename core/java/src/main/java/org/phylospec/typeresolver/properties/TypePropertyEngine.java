@@ -184,7 +184,7 @@ public class TypePropertyEngine {
         }
     }
 
-    private Set<String> getCommonProperties(Set<ResolvedType> typeSet) {
+    private static Set<String> getCommonProperties(Set<ResolvedType> typeSet) {
         if (typeSet.isEmpty()) return Set.of();
 
         Set<String> common = new HashSet<>();
@@ -234,6 +234,28 @@ public class TypePropertyEngine {
             if (targetParameter != null && sourceParameter != null) {
                 copyProperties(sourceParameter, targetParameter);
             }
+        }
+    }
+
+    public static void keepAgreementProperties(List<ResolvedType> typeList) {
+        Set<ResolvedType> typeSet = new HashSet<>(typeList);
+
+        if (typeList.isEmpty()) {
+            return;
+        }
+
+        Set<String> commonPropertiesNames = getCommonProperties(typeSet);
+        Map<String, Object> commonProperties = new HashMap<>();
+
+        for (String propertyName : commonPropertiesNames) {
+            Object commonProperty = getPropertyOnAgreement(typeSet, propertyName);
+            if (commonProperty != null) {
+                commonProperties.put(propertyName, commonProperty);
+            }
+        }
+
+        for (ResolvedType resolvedType : typeList) {
+            resolvedType.properties().replace(commonProperties);
         }
     }
 }

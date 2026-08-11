@@ -5,6 +5,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.phylospec.Utils;
 import org.phylospec.components.*;
+import org.phylospec.typeresolver.properties.TypePropertyEngine;
 
 public class TypeUtils {
 
@@ -218,6 +219,11 @@ public class TypeUtils {
      */
     public static ResolvedType getLowestCover(List<ResolvedType> typeSet, ComponentResolver componentResolver) {
         if (typeSet.size() == 1) return typeSet.getFirst();
+
+        // we only keep the properties where every type agrees
+        // this is a destructive operation. as type properties are
+        // conservative anyway, this is fine
+        TypePropertyEngine.keepAgreementProperties(typeSet);
 
         ResolvedType lowestCover = typeSet.getFirst();
         for (int i = 1; i < typeSet.size(); i++) {
