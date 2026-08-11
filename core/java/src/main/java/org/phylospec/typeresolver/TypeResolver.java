@@ -126,9 +126,10 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         return this.scopedVariableTypes.getLast().keySet();
     }
 
-    /**
+    /*
      * visitor functions
      */
+
     @Override
     public Set<ResolvedType> visitDecoratedStmt(Stmt.Decorated stmt) {
         if (this.ignoreStmt(stmt)) return Set.of();

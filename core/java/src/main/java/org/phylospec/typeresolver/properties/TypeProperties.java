@@ -23,6 +23,11 @@ public class TypeProperties {
         this.typeProperties.putAll(typeProperties.getProperties());
     }
 
+    public void replace(Map<String, Object> typeProperties) {
+        this.typeProperties.clear();
+        this.typeProperties.putAll(typeProperties);
+    }
+
     public Object get(String propertyName) {
         return this.typeProperties.get(propertyName);
     }
