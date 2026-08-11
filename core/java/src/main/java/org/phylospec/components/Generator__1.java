@@ -183,14 +183,8 @@ public class Generator__1 {
         result = ((result * 31) + ((this.name == null) ? 0 : this.name.hashCode()));
         result = ((result * 31) + ((this.namespace == null) ? 0 : this.namespace.hashCode()));
         result = ((result * 31) + ((this.arguments == null) ? 0 : this.arguments.hashCode()));
-        result =
-                ((result * 31)
-                        + ((this.additionalProperties == null)
-                                ? 0
-                                : this.additionalProperties.hashCode()));
-        result =
-                ((result * 31)
-                        + ((this.generatedType == null) ? 0 : this.generatedType.hashCode()));
+        result = ((result * 31) + ((this.additionalProperties == null) ? 0 : this.additionalProperties.hashCode()));
+        result = ((result * 31) + ((this.generatedType == null) ? 0 : this.generatedType.hashCode()));
         return result;
     }
 
@@ -205,17 +199,13 @@ public class Generator__1 {
         Generator__1 rhs = ((Generator__1) other);
         return ((((((this.name == rhs.name) || ((this.name != null) && this.name.equals(rhs.name)))
                                         && ((this.namespace == rhs.namespace)
-                                                || ((this.namespace != null)
-                                                        && this.namespace.equals(rhs.namespace))))
+                                                || ((this.namespace != null) && this.namespace.equals(rhs.namespace))))
                                 && ((this.arguments == rhs.arguments)
-                                        || ((this.arguments != null)
-                                                && this.arguments.equals(rhs.arguments))))
+                                        || ((this.arguments != null) && this.arguments.equals(rhs.arguments))))
                         && ((this.additionalProperties == rhs.additionalProperties)
                                 || ((this.additionalProperties != null)
-                                        && this.additionalProperties.equals(
-                                                rhs.additionalProperties))))
+                                        && this.additionalProperties.equals(rhs.additionalProperties))))
                 && ((this.generatedType == rhs.generatedType)
-                        || ((this.generatedType != null)
-                                && this.generatedType.equals(rhs.generatedType))));
+                        || ((this.generatedType != null) && this.generatedType.equals(rhs.generatedType))));
     }
 }

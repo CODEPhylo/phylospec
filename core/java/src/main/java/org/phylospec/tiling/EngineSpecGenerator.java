@@ -36,20 +36,20 @@ public class EngineSpecGenerator {
             String installationInstructions,
             String installationWebsite)
             throws IOException {
-        EngineSpecificationSchema schema =
-                generateEngineSpecification(
-                        tileLibrary,
-                        engineName,
-                        engineVersion,
-                        engineDependencies,
-                        installationInstructions,
-                        installationWebsite);
+        EngineSpecificationSchema schema = generateEngineSpecification(
+                tileLibrary,
+                engineName,
+                engineVersion,
+                engineDependencies,
+                installationInstructions,
+                installationWebsite);
 
         Path generatedDirectory = Path.of(GENERATED_DIRECTORY);
         Files.createDirectories(generatedDirectory);
 
-        File outputFile =
-                generatedDirectory.resolve(engineName + "-" + engineVersion + ".json").toFile();
+        File outputFile = generatedDirectory
+                .resolve(engineName + "-" + engineVersion + ".json")
+                .toFile();
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
@@ -68,8 +68,7 @@ public class EngineSpecGenerator {
             String installationWebsite) {
         ComponentResolver componentResolver;
         try {
-            componentResolver =
-                    new ComponentResolver(ComponentResolver.loadCoreComponentLibraries());
+            componentResolver = new ComponentResolver(ComponentResolver.loadCoreComponentLibraries());
         } catch (IOException e) {
             throw new RuntimeException("Could not load the core component library.", e);
         }
@@ -107,14 +106,12 @@ public class EngineSpecGenerator {
             GeneratorTile<?, ?> generatorTile, ComponentResolver componentResolver) {
         String phyloSpecGeneratorName = generatorTile.getPhyloSpecGeneratorName();
 
-        List<Generator> knownGenerators =
-                componentResolver.resolveGenerator(phyloSpecGeneratorName);
+        List<Generator> knownGenerators = componentResolver.resolveGenerator(phyloSpecGeneratorName);
         if (knownGenerators.isEmpty()) {
-            throw new IllegalStateException(
-                    "Tile implements generator '"
-                            + phyloSpecGeneratorName
-                            + "', which is not known to the core component library. Cannot"
-                            + " determine its namespace and generated type.");
+            throw new IllegalStateException("Tile implements generator '"
+                    + phyloSpecGeneratorName
+                    + "', which is not known to the core component library. Cannot"
+                    + " determine its namespace and generated type.");
         }
         Generator knownGenerator = knownGenerators.getFirst();
 
@@ -124,8 +121,7 @@ public class EngineSpecGenerator {
         generator.setGeneratedType(knownGenerator.getGeneratedType());
 
         List<Argument__1> arguments = new ArrayList<>();
-        for (GeneratorTile.GeneratorTileInput<?, ?> input :
-                generatorTile.getGeneratorTileInputs()) {
+        for (GeneratorTile.GeneratorTileInput<?, ?> input : generatorTile.getGeneratorTileInputs()) {
             arguments.add(generateArgumentSpecification(input, knownGenerator));
         }
         generator.setArguments(arguments);
@@ -142,8 +138,7 @@ public class EngineSpecGenerator {
         Argument__1 argument = new Argument__1();
         argument.setName(input.getPhylospecArgumentName());
         argument.setRequired(input.isRequired());
-        argument.setCanBeStochastic(
-                input.getAcceptedStochasticities().contains(Stochasticity.STOCHASTIC));
+        argument.setCanBeStochastic(input.getAcceptedStochasticities().contains(Stochasticity.STOCHASTIC));
 
         knownGenerator.getArguments().stream()
                 .filter(a -> a.getName().equals(input.getPhylospecArgumentName()))
