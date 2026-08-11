@@ -98,6 +98,10 @@ public class EngineSpecGenerator {
     /**
      * Builds the engine-specification entry for a single generator tile, looking up its namespace
      * and generated type from the core component library.
+     *
+     * <p>Throws if the tile's generator name isn't known to the core component library, since the
+     * resulting entry would otherwise be missing the namespace and type information the
+     * specification schema requires.
      */
     private static Generator__1 generateGeneratorSpecification(
             GeneratorTile<?, ?> generatorTile, ComponentResolver componentResolver) {
@@ -105,14 +109,19 @@ public class EngineSpecGenerator {
 
         List<Generator> knownGenerators =
                 componentResolver.resolveGenerator(phyloSpecGeneratorName);
-        Generator knownGenerator = knownGenerators.isEmpty() ? null : knownGenerators.getFirst();
+        if (knownGenerators.isEmpty()) {
+            throw new IllegalStateException(
+                    "Tile implements generator '"
+                            + phyloSpecGeneratorName
+                            + "', which is not known to the core component library. Cannot"
+                            + " determine its namespace and generated type.");
+        }
+        Generator knownGenerator = knownGenerators.getFirst();
 
         Generator__1 generator = new Generator__1();
         generator.setName(phyloSpecGeneratorName);
-        if (knownGenerator != null) {
-            generator.setNamespace(knownGenerator.getNamespace());
-            generator.setGeneratedType(knownGenerator.getGeneratedType());
-        }
+        generator.setNamespace(knownGenerator.getNamespace());
+        generator.setGeneratedType(knownGenerator.getGeneratedType());
 
         List<Argument__1> arguments = new ArrayList<>();
         for (GeneratorTile.GeneratorTileInput<?, ?> input :
@@ -136,12 +145,10 @@ public class EngineSpecGenerator {
         argument.setCanBeStochastic(
                 input.getAcceptedStochasticities().contains(Stochasticity.STOCHASTIC));
 
-        if (knownGenerator != null) {
-            knownGenerator.getArguments().stream()
-                    .filter(a -> a.getName().equals(input.getPhylospecArgumentName()))
-                    .findFirst()
-                    .ifPresent(a -> argument.setType(a.getType()));
-        }
+        knownGenerator.getArguments().stream()
+                .filter(a -> a.getName().equals(input.getPhylospecArgumentName()))
+                .findFirst()
+                .ifPresent(a -> argument.setType(a.getType()));
 
         return argument;
     }
