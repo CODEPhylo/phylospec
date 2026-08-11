@@ -5,6 +5,11 @@ module org.phylospec.beast3 {
     requires org.apache.commons.math4.legacy;
     requires transitive org.phylospec.core;
 
+    exports beastconfig;
+    exports tiling;
+    exports runner;
+
+    // we have to open the tiles to the core such that the tiling machinery can use reflection
     opens tiles to org.phylospec.core;
     opens tiles.branchmodels to org.phylospec.core;
     opens tiles.distributions to org.phylospec.core;
@@ -19,9 +24,6 @@ module org.phylospec.beast3 {
     opens tiles.sitemodels to org.phylospec.core;
     opens tiles.substitutionmodels to org.phylospec.core;
     opens tiles.trees to org.phylospec.core;
-    exports beastconfig;
-    exports tiling;
-    exports runner;
 
     provides org.phylospec.tiling.TileLibrary with tiles.BeastCoreTileLibrary;
 }

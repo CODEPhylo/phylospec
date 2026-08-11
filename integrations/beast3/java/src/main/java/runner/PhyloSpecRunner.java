@@ -4,6 +4,7 @@ import beast.base.inference.*;
 import beastconfig.OperatorSelector;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
 import org.phylospec.tiling.EvaluateTiles;
+import org.phylospec.tiling.TileLibrary;
 import org.phylospec.tiling.errors.TileApplicationError;
 import tiles.BeastCoreTileLibrary;
 import org.phylospec.ast.Stmt;
@@ -92,7 +93,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // perform tiling
 
-        EvaluateTiles<BEASTState> applyTiles = new EvaluateTiles<>(new BeastCoreTileLibrary().getTiles(), new ArrayList<>(), variableResolver, stochasticityResolver);
+        EvaluateTiles<BEASTState> applyTiles = new EvaluateTiles<>(TileLibrary.loadAll(), new ArrayList<>(), variableResolver, stochasticityResolver);
         BEASTState beastState = new BEASTState(runName);
         try {
             applyTiles.getBestTiling(statements);
@@ -137,6 +138,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         beastState.setInput(mcmc, mcmc.chainLengthInput, beastState.chainLength);
         beastState.setInput(mcmc, mcmc.startStateInput, state);
         beastState.setInput(mcmc, mcmc.posteriorInput, posterior);
+
         beastState.setInput(mcmc, mcmc.operatorsInput, new ArrayList<>(beastState.operators.keySet()));
         beastState.setInput(mcmc, mcmc.loggersInput, loggers);
 
