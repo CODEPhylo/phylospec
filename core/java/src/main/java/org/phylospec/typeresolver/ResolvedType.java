@@ -14,9 +14,13 @@ import org.phylospec.typeresolver.properties.TypeProperties;
 /// and a map binding the generic type parameters to other resolved types.
 public class ResolvedType {
     ResolvedType(Type typeComponent, Map<String, ResolvedType> parameterTypes) {
+        this(typeComponent, parameterTypes, new TypeProperties());
+    }
+
+    private ResolvedType(Type typeComponent, Map<String, ResolvedType> parameterTypes, TypeProperties typeProperties) {
         this.typeComponent = typeComponent;
         this.parameterTypes = parameterTypes;
-        this.typeProperties = new TypeProperties();
+        this.typeProperties = typeProperties;
     }
 
     private final Map<String, ResolvedType> parameterTypes;
@@ -58,6 +62,15 @@ public class ResolvedType {
 
     public TypeProperties properties() {
         return this.typeProperties;
+    }
+
+    /**
+     * Creates a shallow copy of this resolved type. The type component is shared with the
+     * original, but the parameter types map and the type properties are copied into
+     * independent instances.
+     */
+    public ResolvedType shallowCopy() {
+        return new ResolvedType(typeComponent, new HashMap<>(parameterTypes), typeProperties.copy());
     }
 
     /**
