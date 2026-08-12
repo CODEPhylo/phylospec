@@ -220,11 +220,6 @@ public class TypeUtils {
     public static ResolvedType getLowestCover(List<ResolvedType> typeSet, ComponentResolver componentResolver) {
         if (typeSet.size() == 1) return typeSet.getFirst();
 
-        // we only keep the properties where every type agrees
-        // this is a destructive operation. as type properties are
-        // conservative anyway, this is fine
-        TypePropertyEngine.keepAgreementProperties(typeSet);
-
         ResolvedType lowestCover = typeSet.getFirst();
         for (int i = 1; i < typeSet.size(); i++) {
             lowestCover = getLowestCover(lowestCover, typeSet.get(i), componentResolver);
@@ -241,8 +236,6 @@ public class TypeUtils {
      * and if all other covers of A and B cover C.
      */
     static ResolvedType getLowestCover(ResolvedType type1, ResolvedType type2, ComponentResolver componentResolver) {
-        if (type1.equals(type2)) return type1;
-
         Set<ResolvedType> parents1 = new HashSet<>();
         visitTypeAndParents(
                 type1,
@@ -263,6 +256,17 @@ public class TypeUtils {
                     return VisitorResult.CONTINUE;
                 },
                 componentResolver);
+
+        if (lowestCover[0] == null) {
+            return null;
+        }
+
+        // we only keep the properties where the two agree
+        Map<String, Object> commonProperties = TypePropertyEngine.getPropertiesInAgreement(List.of(type1, type2));
+
+        // create a fresh instance with the common properties
+        lowestCover[0] = lowestCover[0].shallowCopy();
+        lowestCover[0].properties().replace(commonProperties);
 
         return lowestCover[0];
     }

@@ -42,11 +42,8 @@ public class TypePropertyEngine {
     public void resolveAssignment(
             Set<ResolvedType> resolvedVariableTypeSet, Set<ResolvedType> resolvedExpressionTypeSet) {
         for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
-            // find the matching resolved types
             for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
-                if (resolvedVariableType.getName().equals(resolvedExpressionType.getName())) {
-                    copyProperties(resolvedExpressionType, resolvedVariableType);
-                }
+                copyProperties(resolvedExpressionType, resolvedVariableType);
             }
         }
     }
@@ -60,8 +57,7 @@ public class TypePropertyEngine {
             for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
                 ResolvedType unwrappedExpressionType = TypeUtils.recoverTypeParameter(
                         "phylospec.types.Distribution", "T", resolvedExpressionType, componentResolver);
-                if (unwrappedExpressionType != null
-                        && resolvedVariableType.getName().equals(unwrappedExpressionType.getName())) {
+                if (unwrappedExpressionType != null) {
                     copyProperties(unwrappedExpressionType, resolvedVariableType);
                 }
             }
@@ -237,11 +233,12 @@ public class TypePropertyEngine {
         }
     }
 
-    public static void keepAgreementProperties(List<ResolvedType> typeList) {
-        Set<ResolvedType> typeSet = new HashSet<>(typeList);
+    public static Map<String, Object> getPropertiesInAgreement(List<ResolvedType> typeList) {
+        Set<ResolvedType> typeSet = Collections.newSetFromMap(new IdentityHashMap<>());
+        typeSet.addAll(typeList);
 
         if (typeList.isEmpty()) {
-            return;
+            return new HashMap<>();
         }
 
         Set<String> commonPropertiesNames = getCommonProperties(typeSet);
@@ -254,8 +251,6 @@ public class TypePropertyEngine {
             }
         }
 
-        for (ResolvedType resolvedType : typeList) {
-            resolvedType.properties().replace(commonProperties);
-        }
+        return commonProperties;
     }
 }
