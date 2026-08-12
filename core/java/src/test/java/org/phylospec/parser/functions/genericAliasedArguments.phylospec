@@ -1,9 +1,13 @@
 Vector<Rate> branchRates = [1, 2]
 Integer a = num(branchRates)
+Matrix<Rate> rateMatrix = [[1, 2], [3, 4]]
+Integer b = num(rateMatrix)
 
 // EXPECT AST
 // (AS Vector<Rate> branchRates (AR 1 2))
 // (AS Integer a (CA num (AA null branchRates)))
+// (AS Matrix<Rate> rateMatrix (AR (AR 1 2) (AR 3 4)))
+// (AS Integer b (CA num (AA null rateMatrix)))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
