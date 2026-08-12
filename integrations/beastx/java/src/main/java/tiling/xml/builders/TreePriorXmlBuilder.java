@@ -16,6 +16,7 @@ import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import tiling.BeastXState;
+import tiling.params.BeastXDerivedScalarParameter;
 import tiling.xml.XmlElement;
 
 /**
@@ -185,8 +186,16 @@ public class TreePriorXmlBuilder {
         Parameter samplingProbability =
                 speciationVariable(fbdModel, 3, "sampling probability");
 
-        double origin =
-                fossilizedBirthDeathOrigin(state, treePrior);
+        if (birthRate instanceof BeastXDerivedScalarParameter
+                || deathRate instanceof BeastXDerivedScalarParameter) {
+            throw unsupported(
+                    "BEAST X XML export does not yet support the diversificationRate/turnover "
+                            + "FossilizedBirthDeath parameterization because its derived rates "
+                            + "must remain linked during MCMC.");
+        }
+
+        Parameter origin =
+                speciationVariable(fbdModel, 5, "origin");
 
         return XmlElement.element("birthDeathSerialSampling")
                 .withId(treePriorModelId(treePrior))
@@ -238,15 +247,15 @@ public class TreePriorXmlBuilder {
                         )
                 )
                 .withChild(
-                        XmlElement.element("origin")
-                                .withChild(
-                                        inlineParameterDefinition(
-                                                priorId(treePrior) + "_origin",
-                                                origin,
-                                                0.0,
-                                                null
-                                        )
-                                )
+                        parameterElement(
+                                state,
+                                "origin",
+                                origin,
+                                priorId(treePrior) + "_origin",
+                                origin.getParameterValue(0),
+                                0.0,
+                                null
+                        )
                 );
     }
 
@@ -693,19 +702,6 @@ public class TreePriorXmlBuilder {
 
     private static boolean approximatelyOne(double value) {
         return Math.abs(value - 1.0) < 1.0e-12;
-    }
-
-    private static double fossilizedBirthDeathOrigin(
-            BeastXState state,
-            AbstractModelLikelihood treePrior
-    ) {
-        TreeModel treeModel =
-                treeModelForPrior(state, treePrior);
-
-        double rootHeight =
-                treeModel.getNodeHeight(treeModel.getRoot());
-
-        return rootHeight + Math.max(1.0, rootHeight * 0.25);
     }
 
     private static TreeModel treeModelForPrior(

@@ -10,9 +10,9 @@ Rate diversificationRate ~ LogNormal(
     logSd=1.0
 )
 
-Rate turnover ~ LogNormal(
-    logMean=-1.0,
-    logSd=0.2
+Probability turnover ~ Beta(
+    alpha=2.0,
+    beta=8.0
 )
 
 Tree tree ~ FossilizedBirthDeath(

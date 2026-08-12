@@ -40,7 +40,7 @@ public class FossilizedBirthDeathTile extends GeneratorTile<
     GeneratorTileInput<RealScalar<? extends PositiveReal>, BeastXState> diversificationRateInput =
             new GeneratorTileInput<>("diversificationRate", false);
 
-    GeneratorTileInput<RealScalar<? extends PositiveReal>, BeastXState> turnoverInput =
+    GeneratorTileInput<RealScalar<UnitInterval>, BeastXState> turnoverInput =
             new GeneratorTileInput<>("turnover", false);
 
     GeneratorTileInput<RealScalar<? extends PositiveReal>, BeastXState> serialSamplingRateInput =
@@ -69,7 +69,7 @@ public class FossilizedBirthDeathTile extends GeneratorTile<
         RealScalar<? extends PositiveReal> diversificationRate =
                 this.diversificationRateInput.apply(beastState, indexVariables);
 
-        RealScalar<? extends PositiveReal> turnover =
+        RealScalar<UnitInterval> turnover =
                 this.turnoverInput.apply(beastState, indexVariables);
 
         RealScalar<? extends PositiveReal> serialSamplingRate =
@@ -190,6 +190,12 @@ public class FossilizedBirthDeathTile extends GeneratorTile<
                         InitialTreeBuilder.balancedTree(taxa, "FossilizedBirthDeath", rootAge)
                 );
 
+        double rootHeight =
+                defaultTreeModel.getNodeHeight(defaultTreeModel.getRoot());
+        Parameter originParameter =
+                new Parameter.Default(rootHeight + Math.max(1.0, rootHeight * 0.25));
+        originParameter.setId("fossilizedBirthDeath.origin");
+
         Parameter samplingProbabilityParameter =
                 samplingProbability == null
                         ? new Parameter.Default(1.0)
@@ -205,7 +211,7 @@ public class FossilizedBirthDeathTile extends GeneratorTile<
                         false,
                         new Parameter.Default(0.0),
                         false,
-                        null,
+                        originParameter,
                         Units.Type.YEARS
                 );
 

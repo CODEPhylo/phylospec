@@ -1602,7 +1602,7 @@
         "name": "FossilizedBirthDeath",
         "generatedType": "Distribution<Tree>",
         "namespace": "phylospec.distributions.tree",
-        "description": "Fossilized birth-death process for trees with fossil taxa, conditioned on the number of taxa and root age",
+        "description": "Fossilized birth-death process using speciation, extinction, and serial-sampling rates",
         "arguments": [
           {
             "name": "speciationRate",
@@ -1632,7 +1632,7 @@
           {
             "name": "rootAge",
             "type": "Age",
-            "description": "The age of the root",
+            "description": "Optional initial age of the root",
             "required": false
           },
           {
@@ -1647,7 +1647,7 @@
         "name": "FossilizedBirthDeath",
         "generatedType": "Distribution<Tree>",
         "namespace": "phylospec.distributions.tree",
-        "description": "Fossilized birth-death process for trees with fossil taxa, conditioned on the number of taxa and root age",
+        "description": "Fossilized birth-death process using net diversification, turnover, and serial-sampling rates",
         "arguments": [
           {
             "name": "diversificationRate",
@@ -1657,8 +1657,8 @@
           },
           {
             "name": "turnover",
-            "type": "Rate",
-            "description": "Turnover rate parameter",
+            "type": "Probability",
+            "description": "Turnover ratio (extinction rate divided by speciation rate)",
             "required": true
           },
           {
@@ -1677,7 +1677,7 @@
           {
             "name": "rootAge",
             "type": "Age",
-            "description": "The age of the root",
+            "description": "Optional initial age of the root",
             "required": false
           },
           {
