@@ -1,0 +1,12 @@
+#NEXUS
+
+BEGIN DATA;
+    DIMENSIONS NTAX=4 NCHAR=12;
+    FORMAT DATATYPE=DNA MISSING=? GAP=-;
+    MATRIX
+        taxon1_0.0    ACGTACGTACGT
+        taxon2_1.0    ACGTACGTACGA
+        taxon3_2.0    ACGTACGTACGG
+        taxon4_3.0    ACGTACGTACGC
+    ;
+END;

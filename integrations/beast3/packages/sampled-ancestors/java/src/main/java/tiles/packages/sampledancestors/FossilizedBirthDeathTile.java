@@ -1,6 +1,7 @@
 package tiles.packages.sampledancestors;
 
 import beast.base.evolution.tree.Tree;
+import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
@@ -20,15 +21,19 @@ public class FossilizedBirthDeathTile
         extends GeneratorTile<BoundDistribution<Tree, SABirthDeathModel>, BEASTState> {
 
     GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> speciationRateInput =
-            new GeneratorTileInput<>("speciationRate");
+            new GeneratorTileInput<>("speciationRate", false);
     GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> extinctionRateInput =
-            new GeneratorTileInput<>("extinctionRate");
+            new GeneratorTileInput<>("extinctionRate", false);
+    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> diversificationRateInput =
+            new GeneratorTileInput<>("diversificationRate", false);
+    GeneratorTileInput<RealScalar<UnitInterval>, BEASTState> turnoverInput =
+            new GeneratorTileInput<>("turnover", false);
     GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> serialSamplingRateInput =
             new GeneratorTileInput<>("serialSamplingRate");
     GeneratorTileInput<RealScalar<UnitInterval>, BEASTState> samplingProbabilityInput =
             new GeneratorTileInput<>("samplingProbability", false);
     GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> rootAgeInput =
-            new GeneratorTileInput<>("rootAge");
+            new GeneratorTileInput<>("rootAge", false);
     GeneratorTileInput<DecoratedAlignment, BEASTState> taxaInput =
             new GeneratorTileInput<>("taxa");
 
@@ -45,6 +50,10 @@ public class FossilizedBirthDeathTile
                 this.speciationRateInput.apply(beastState, indexVariables);
         RealScalar<? extends PositiveReal> extinctionRate =
                 this.extinctionRateInput.apply(beastState, indexVariables);
+        RealScalar<? extends PositiveReal> diversificationRate =
+                this.diversificationRateInput.apply(beastState, indexVariables);
+        RealScalar<UnitInterval> turnover =
+                this.turnoverInput.apply(beastState, indexVariables);
         RealScalar<? extends PositiveReal> serialSamplingRate =
                 this.serialSamplingRateInput.apply(beastState, indexVariables);
         RealScalar<UnitInterval> samplingProbability =
@@ -63,7 +72,9 @@ public class FossilizedBirthDeathTile
         beastState.setInput(defaultState, defaultState.taxaInput, taxaAlignment.alignment());
         beastState.setInput(defaultState, defaultState.m_taxonset, taxaAlignment.taxonSet());
         beastState.setInput(defaultState, defaultState.populationFunctionInput, populationFunction);
-        beastState.setInput(defaultState, defaultState.rootHeightInput, rootAge);
+        if (rootAge != null) {
+            beastState.setInput(defaultState, defaultState.rootHeightInput, rootAge);
+        }
         if (taxaAlignment.ages() != null) {
             defaultState.setDateTrait(taxaAlignment.ages());
         }
@@ -75,8 +86,29 @@ public class FossilizedBirthDeathTile
         }
 
         SABirthDeathModel model = new SABirthDeathModel();
-        beastState.setInput(model, model.birthRateInput, speciationRate);
-        beastState.setInput(model, model.deathRateInput, extinctionRate);
+        if (speciationRate != null && extinctionRate != null) {
+            beastState.setInput(model, model.birthRateInput, speciationRate);
+            beastState.setInput(model, model.deathRateInput, extinctionRate);
+        } else if (diversificationRate != null && turnover != null) {
+            DiversificationTurnoverRate<PositiveReal> birthRate =
+                    DiversificationTurnoverRate.birthRate();
+            beastState.setInput(
+                    birthRate, birthRate.diversificationRateInput, diversificationRate);
+            beastState.setInput(birthRate, birthRate.turnoverInput, turnover);
+
+            DiversificationTurnoverRate<NonNegativeReal> deathRate =
+                    DiversificationTurnoverRate.deathRate();
+            beastState.setInput(
+                    deathRate, deathRate.diversificationRateInput, diversificationRate);
+            beastState.setInput(deathRate, deathRate.turnoverInput, turnover);
+
+            beastState.setInput(model, model.birthRateInput, birthRate);
+            beastState.setInput(model, model.deathRateInput, deathRate);
+        } else {
+            throw new IllegalArgumentException(
+                    "FossilizedBirthDeath requires either speciation/extinction rates "
+                            + "or diversification/turnover.");
+        }
         beastState.setInput(model, model.samplingRateInput, serialSamplingRate);
         beastState.setInput(model, model.rhoProbability, samplingProbability);
         beastState.setInput(model, model.removalProbability, removalProbability);

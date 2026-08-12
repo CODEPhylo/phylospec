@@ -7,13 +7,13 @@ import org.phylospec.tiling.tiles.CandidateTile;
 import tiles.misc.LiteralTile;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class BeastTileLibrariesTest {
 
     @Test
-    public void discoversSampledAncestorsTiles() {
-        assertTrue(
+    public void doesNotIncludePackageTilesWithoutAnAdapter() {
+        assertFalse(
                 BeastTileLibraries.loadAll().stream()
                         .anyMatch(
                                 tile ->

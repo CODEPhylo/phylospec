@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="tiles.packages.sampledancestors.SampledAncestorsIntegrationTest" time="0.282" tests="4" errors="0" skipped="0" failures="0">
+  <properties>
+    <property name="java.specification.version" value="26"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/Users/adm-hhua361/Desktop/phylospec/integrations/beast3/packages/sampled-ancestors/java/target/test-classes:/Users/adm-hhua361/Desktop/phylospec/integrations/beast3/packages/sampled-ancestors/java/target/classes:/Users/adm-hhua361/Desktop/phylospec/integrations/beast3/java/target/classes:/Users/adm-hhua361/Desktop/phylospec/core/java/target/classes:/Users/adm-hhua361/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.20.0/jackson-databind-2.20.0.jar:/Users/adm-hhua361/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/3.0-rc5/jackson-annotations-3.0-rc5.jar:/Users/adm-hhua361/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.20.0/jackson-core-2.20.0.jar:/Users/adm-hhua361/.m2/repository/com/github/victools/jsonschema-generator/4.38.0/jsonschema-generator-4.38.0.jar:/Users/adm-hhua361/.m2/repository/com/fasterxml/classmate/1.7.0/classmate-1.7.0.jar:/Users/adm-hhua361/.m2/repository/org/slf4j/slf4j-api/2.0.16/slf4j-api-2.0.16.jar:/Users/adm-hhua361/.m2/repository/org/eclipse/lsp4j/org.eclipse.lsp4j/0.24.0/org.eclipse.lsp4j-0.24.0.jar:/Users/adm-hhua361/.m2/repository/org/eclipse/lsp4j/org.eclipse.lsp4j.jsonrpc/0.24.0/org.eclipse.lsp4j.jsonrpc-0.24.0.jar:/Users/adm-hhua361/.m2/repository/com/google/code/gson/gson/2.14.0/gson-2.14.0.jar:/Users/adm-hhua361/.m2/repository/com/google/errorprone/error_prone_annotations/2.48.0/error_prone_annotations-2.48.0.jar:/Users/adm-hhua361/.m2/repository/io/github/compevol/beast-base/2.8.0-beta4/beast-base-2.8.0-beta4.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-math4-legacy/4.0-beta1/commons-math4-legacy-4.0-beta1.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-numbers-field/1.1/commons-numbers-field-1.1.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-rng-client-api/1.5/commons-rng-client-api-1.5.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-math4-legacy-exception/4.0-beta1/commons-math4-legacy-exception-4.0-beta1.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-math4-legacy-core/4.0-beta1/commons-math4-legacy-core-4.0-beta1.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-math4-core/4.0-beta1/commons-math4-core-4.0-beta1.jar:/Users/adm-hhua361/.m2/repository/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-numbers-gamma/1.2/commons-numbers-gamma-1.2.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-numbers-fraction/1.2/commons-numbers-fraction-1.2.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-numbers-core/1.2/commons-numbers-core-1.2.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-numbers-combinatorics/1.2/commons-numbers-combinatorics-1.2.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-numbers-rootfinder/1.2/commons-numbers-rootfinder-1.2.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-rng-simple/1.6/commons-rng-simple-1.6.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-rng-core/1.6/commons-rng-core-1.6.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-rng-sampling/1.6/commons-rng-sampling-1.6.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-statistics-distribution/1.2/commons-statistics-distribution-1.2.jar:/Users/adm-hhua361/.m2/repository/io/github/beagle-dev/beagle/1.0.0/beagle-1.0.0.jar:/Users/adm-hhua361/.m2/repository/io/github/compevol/sampled-ancestors/2.3.0-beta1/sampled-ancestors-2.3.0-beta1.jar:/Users/adm-hhua361/.m2/repository/io/github/compevol/beast-pkgmgmt/2.8.0-beta1/beast-pkgmgmt-2.8.0-beta1.jar:/Users/adm-hhua361/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.1/junit-jupiter-5.10.1.jar:/Users/adm-hhua361/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.1/junit-jupiter-api-5.10.1.jar:/Users/adm-hhua361/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/adm-hhua361/.m2/repository/org/junit/platform/junit-platform-commons/1.10.1/junit-platform-commons-1.10.1.jar:/Users/adm-hhua361/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/adm-hhua361/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.1/junit-jupiter-params-5.10.1.jar:/Users/adm-hhua361/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.1/junit-jupiter-engine-5.10.1.jar:/Users/adm-hhua361/.m2/repository/org/junit/platform/junit-platform-engine/1.10.1/junit-platform-engine-1.10.1.jar:"/>
+    <property name="java.vm.vendor" value="Homebrew"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.vendor.url" value="https://github.com/Homebrew/homebrew-core/issues"/>
+    <property name="user.timezone" value="Pacific/Auckland"/>
+    <property name="os.name" value="Mac OS X"/>
+    <property name="java.vm.specification.version" value="26"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="user.country" value="NZ"/>
+    <property name="sun.boot.library.path" value="/opt/homebrew/Cellar/openjdk/26.0.1/libexec/openjdk.jdk/Contents/Home/lib"/>
+    <property name="sun.java.command" value="/Users/adm-hhua361/Desktop/phylospec/integrations/beast3/packages/sampled-ancestors/java/target/surefire/surefirebooter-20260812224053086_3.jar /Users/adm-hhua361/Desktop/phylospec/integrations/beast3/packages/sampled-ancestors/java/target/surefire 2026-08-12T22-40-52_344-jvmRun1 surefire-20260812224053086_1tmp surefire_0-20260812224053086_2tmp"/>
+    <property name="http.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="test" value="SampledAncestorsIntegrationTest"/>
+    <property name="surefire.test.class.path" value="/Users/adm-hhua361/Desktop/phylospec/integrations/beast3/packages/sampled-ancestors/java/target/test-classes:/Users/adm-hhua361/Desktop/phylospec/integrations/beast3/packages/sampled-ancestors/java/target/classes:/Users/adm-hhua361/Desktop/phylospec/integrations/beast3/java/target/classes:/Users/adm-hhua361/Desktop/phylospec/core/java/target/classes:/Users/adm-hhua361/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.20.0/jackson-databind-2.20.0.jar:/Users/adm-hhua361/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/3.0-rc5/jackson-annotations-3.0-rc5.jar:/Users/adm-hhua361/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.20.0/jackson-core-2.20.0.jar:/Users/adm-hhua361/.m2/repository/com/github/victools/jsonschema-generator/4.38.0/jsonschema-generator-4.38.0.jar:/Users/adm-hhua361/.m2/repository/com/fasterxml/classmate/1.7.0/classmate-1.7.0.jar:/Users/adm-hhua361/.m2/repository/org/slf4j/slf4j-api/2.0.16/slf4j-api-2.0.16.jar:/Users/adm-hhua361/.m2/repository/org/eclipse/lsp4j/org.eclipse.lsp4j/0.24.0/org.eclipse.lsp4j-0.24.0.jar:/Users/adm-hhua361/.m2/repository/org/eclipse/lsp4j/org.eclipse.lsp4j.jsonrpc/0.24.0/org.eclipse.lsp4j.jsonrpc-0.24.0.jar:/Users/adm-hhua361/.m2/repository/com/google/code/gson/gson/2.14.0/gson-2.14.0.jar:/Users/adm-hhua361/.m2/repository/com/google/errorprone/error_prone_annotations/2.48.0/error_prone_annotations-2.48.0.jar:/Users/adm-hhua361/.m2/repository/io/github/compevol/beast-base/2.8.0-beta4/beast-base-2.8.0-beta4.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-math4-legacy/4.0-beta1/commons-math4-legacy-4.0-beta1.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-numbers-field/1.1/commons-numbers-field-1.1.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-rng-client-api/1.5/commons-rng-client-api-1.5.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-math4-legacy-exception/4.0-beta1/commons-math4-legacy-exception-4.0-beta1.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-math4-legacy-core/4.0-beta1/commons-math4-legacy-core-4.0-beta1.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-math4-core/4.0-beta1/commons-math4-core-4.0-beta1.jar:/Users/adm-hhua361/.m2/repository/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-numbers-gamma/1.2/commons-numbers-gamma-1.2.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-numbers-fraction/1.2/commons-numbers-fraction-1.2.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-numbers-core/1.2/commons-numbers-core-1.2.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-numbers-combinatorics/1.2/commons-numbers-combinatorics-1.2.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-numbers-rootfinder/1.2/commons-numbers-rootfinder-1.2.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-rng-simple/1.6/commons-rng-simple-1.6.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-rng-core/1.6/commons-rng-core-1.6.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-rng-sampling/1.6/commons-rng-sampling-1.6.jar:/Users/adm-hhua361/.m2/repository/org/apache/commons/commons-statistics-distribution/1.2/commons-statistics-distribution-1.2.jar:/Users/adm-hhua361/.m2/repository/io/github/beagle-dev/beagle/1.0.0/beagle-1.0.0.jar:/Users/adm-hhua361/.m2/repository/io/github/compevol/sampled-ancestors/2.3.0-beta1/sampled-ancestors-2.3.0-beta1.jar:/Users/adm-hhua361/.m2/repository/io/github/compevol/beast-pkgmgmt/2.8.0-beta1/beast-pkgmgmt-2.8.0-beta1.jar:/Users/adm-hhua361/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.1/junit-jupiter-5.10.1.jar:/Users/adm-hhua361/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.1/junit-jupiter-api-5.10.1.jar:/Users/adm-hhua361/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/adm-hhua361/.m2/repository/org/junit/platform/junit-platform-commons/1.10.1/junit-platform-commons-1.10.1.jar:/Users/adm-hhua361/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/adm-hhua361/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.1/junit-jupiter-params-5.10.1.jar:/Users/adm-hhua361/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.1/junit-jupiter-engine-5.10.1.jar:/Users/adm-hhua361/.m2/repository/org/junit/platform/junit-platform-engine/1.10.1/junit-platform-engine-1.10.1.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/Users/adm-hhua361"/>
+    <property name="user.language" value="zh"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="jsonschema2pojo.skip" value="true"/>
+    <property name="java.version.date" value="2026-04-21"/>
+    <property name="java.home" value="/opt/homebrew/Cellar/openjdk/26.0.1/libexec/openjdk.jdk/Contents/Home"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/Users/adm-hhua361/Desktop/phylospec/integrations/beast3/packages/sampled-ancestors/java"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="apple.awt.application.name" value="ForkedBooter"/>
+    <property name="surefire.real.class.path" value="/Users/adm-hhua361/Desktop/phylospec/integrations/beast3/packages/sampled-ancestors/java/target/surefire/surefirebooter-20260812224053086_3.jar"/>
+    <property name="user.script" value="Hans"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
+    <property name="java.runtime.version" value="26.0.1"/>
+    <property name="user.name" value="adm-hhua361"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="26.5"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="surefire.failIfNoSpecifiedTests" value="false"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="java.vendor.version" value="Homebrew"/>
+    <property name="localRepository" value="/Users/adm-hhua361/.m2/repository"/>
+    <property name="java.vendor.url.bug" value="https://github.com/Homebrew/homebrew-core/issues"/>
+    <property name="java.io.tmpdir" value="/var/folders/tc/y5ws66m50cl12j8w1qm9v8fr0000gs/T/"/>
+    <property name="java.version" value="26.0.1"/>
+    <property name="user.dir" value="/Users/adm-hhua361/Desktop/phylospec/integrations/beast3/packages/sampled-ancestors/java"/>
+    <property name="os.arch" value="aarch64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/Users/adm-hhua361/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:."/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vendor" value="Homebrew"/>
+    <property name="java.vm.version" value="26.0.1"/>
+    <property name="stdin.encoding" value="UTF-8"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeBig"/>
+    <property name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
+    <property name="java.class.version" value="70.0"/>
+  </properties>
+  <testcase name="preservesDatedTipsInFossilizedBirthDeathTree" classname="tiles.packages.sampledancestors.SampledAncestorsIntegrationTest" time="0.23">
+    <system-out><![CDATA[taxon1_0.0: 12 4
+taxon2_1.0: 12 4
+taxon3_2.0: 12 4
+taxon4_3.0: 12 4
+Alignment(null)
+  4 taxa
+  12 sites
+  5 patterns
+
+taxon1_0.0: 12 4
+taxon2_1.0: 12 4
+taxon3_2.0: 12 4
+taxon4_3.0: 12 4
+Alignment(dated-simple)
+  4 taxa
+  12 sites
+  5 patterns
+
+taxon1_0.0 = 0.0 (0.0)
+taxon2_1.0 = 1.0 (1.0)
+taxon3_2.0 = 2.0 (2.0)
+taxon4_3.0 = 3.0 (3.0)
+taxon1_0.0 = 0.0 (0.0)
+taxon2_1.0 = 1.0 (1.0)
+taxon3_2.0 = 2.0 (2.0)
+taxon4_3.0 = 3.0 (3.0)
+]]></system-out>
+    <system-err><![CDATA[BEASTObjectStore found non-BEASTObject:
+java.lang.String false beast.base.core.BEASTObject false
+java.lang.Object false beast.base.core.BEASTObject false
+BEASTObjectStore found non-BEASTObject:
+java.lang.String false beast.base.core.BEASTObject false
+java.lang.Object false beast.base.core.BEASTObject false
+taxon1_0.0=0.0
+taxon2_1.0=1.0
+taxon3_2.0=2.0
+taxon4_3.0=3.0
+BEASTObjectStore found non-BEASTObject:
+java.lang.Boolean false beast.base.core.BEASTObject false
+java.lang.Object false beast.base.core.BEASTObject false
+BEASTObjectStore found non-BEASTObject:
+java.lang.Double false beast.base.core.BEASTObject false
+java.lang.Number false beast.base.core.BEASTObject false
+java.lang.Object false beast.base.core.BEASTObject false
+BEASTObjectStore found non-BEASTObject:
+java.lang.Boolean false beast.base.core.BEASTObject false
+java.lang.Object false beast.base.core.BEASTObject false
+BEASTObjectStore found non-BEASTObject:
+java.lang.Double false beast.base.core.BEASTObject false
+java.lang.Number false beast.base.core.BEASTObject false
+java.lang.Object false beast.base.core.BEASTObject false
+BEASTObjectStore found non-BEASTObject:
+java.lang.Double false beast.base.core.BEASTObject false
+java.lang.Number false beast.base.core.BEASTObject false
+java.lang.Object false beast.base.core.BEASTObject false
+BEASTObjectStore found non-BEASTObject:
+java.lang.Double false beast.base.core.BEASTObject false
+java.lang.Number false beast.base.core.BEASTObject false
+java.lang.Object false beast.base.core.BEASTObject false
+BEASTObjectStore found non-BEASTObject:
+java.lang.Double false beast.base.core.BEASTObject false
+java.lang.Number false beast.base.core.BEASTObject false
+java.lang.Object false beast.base.core.BEASTObject false
+taxon1_0.0=0.0
+taxon2_1.0=1.0
+taxon3_2.0=2.0
+taxon4_3.0=3.0
+]]></system-err>
+  </testcase>
+  <testcase name="buildsDiversificationTurnoverFossilizedBirthDeath" classname="tiles.packages.sampledancestors.SampledAncestorsIntegrationTest" time="0.022">
+    <system-out><![CDATA[taxon1_0.0: 12 4
+taxon2_1.0: 12 4
+taxon3_2.0: 12 4
+taxon4_3.0: 12 4
+Alignment(null)
+  4 taxa
+  12 sites
+  5 patterns
+
+taxon1_0.0: 12 4
+taxon2_1.0: 12 4
+taxon3_2.0: 12 4
+taxon4_3.0: 12 4
+Alignment(dated-simple)
+  4 taxa
+  12 sites
+  5 patterns
+
+]]></system-out>
+  </testcase>
+  <testcase name="discoversFossilizedBirthDeathTileThroughServiceLoader" classname="tiles.packages.sampledancestors.SampledAncestorsIntegrationTest" time="0.002"/>
+  <testcase name="buildsDirectRateFossilizedBirthDeathWithoutRootAge" classname="tiles.packages.sampledancestors.SampledAncestorsIntegrationTest" time="0.021">
+    <system-out><![CDATA[taxon1_0.0: 12 4
+taxon2_1.0: 12 4
+taxon3_2.0: 12 4
+taxon4_3.0: 12 4
+Alignment(null)
+  4 taxa
+  12 sites
+  5 patterns
+
+taxon1_0.0: 12 4
+taxon2_1.0: 12 4
+taxon3_2.0: 12 4
+taxon4_3.0: 12 4
+Alignment(dated-simple)
+  4 taxa
+  12 sites
+  5 patterns
+
+]]></system-out>
+  </testcase>
+</testsuite>

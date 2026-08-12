@@ -31,25 +31,89 @@ import tiles.BeastTileLibraries;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SampledAncestorsIntegrationTest {
 
     @Test
-    public void buildsAndInitializesDirectRateFossilizedBirthDeath() throws Exception {
-        String source =
-                """
-                Age rootAge ~ Gamma(rate=1.0, shape=2.0)
-                Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
-                Tree tree ~ FossilizedBirthDeath(
-                    speciationRate=1.0,
-                    extinctionRate=0.2,
-                    serialSamplingRate=0.1,
-                    samplingProbability=0.8,
-                    rootAge=rootAge,
-                    taxa=taxa(data)
-                )
-                """;
+    public void discoversFossilizedBirthDeathTileThroughServiceLoader() {
+        assertTrue(
+                BeastTileLibraries.loadAll().stream()
+                        .anyMatch(FossilizedBirthDeathTile.class::isInstance));
+    }
 
+    @Test
+    public void buildsDirectRateFossilizedBirthDeathWithoutRootAge() throws Exception {
+        BEASTState beastState =
+                buildState(
+                        """
+                        Alignment data = fromNexus("src/test/java/resources/dated-simple.nex")
+                        Tree tree ~ FossilizedBirthDeath(
+                            speciationRate=1.0,
+                            extinctionRate=0.2,
+                            serialSamplingRate=0.1,
+                            samplingProbability=0.8,
+                            taxa=taxa(data)
+                        )
+                        """);
+
+        assertFossilizedBirthDeathState(beastState);
+    }
+
+    @Test
+    public void buildsDiversificationTurnoverFossilizedBirthDeath() throws Exception {
+        BEASTState beastState =
+                buildState(
+                        """
+                        Alignment data = fromNexus("src/test/java/resources/dated-simple.nex")
+                        Tree tree ~ FossilizedBirthDeath(
+                            diversificationRate=0.8,
+                            turnover=0.2,
+                            serialSamplingRate=0.1,
+                            samplingProbability=0.8,
+                            rootAge=5.0,
+                            taxa=taxa(data)
+                        )
+                        """);
+
+        Tree tree = assertFossilizedBirthDeathState(beastState);
+        SABirthDeathModel model =
+                assertInstanceOf(SABirthDeathModel.class, beastState.priorDistributions.get(tree));
+
+        assertEquals(1.0, model.birthRateInput.get().get(), 1.0e-12);
+        assertEquals(0.2, model.deathRateInput.get().get(), 1.0e-12);
+    }
+
+    @Test
+    public void preservesDatedTipsInFossilizedBirthDeathTree() throws Exception {
+        BEASTState beastState =
+                buildState(
+                        """
+                        Alignment data = fromNexus(
+                            file="src/test/java/resources/dated-simple.nex",
+                            age=parse(regex=".*_(\\d+(?:\\.\\d+)?)$")
+                        )
+                        Tree tree ~ FossilizedBirthDeath(
+                            speciationRate=1.0,
+                            extinctionRate=0.2,
+                            serialSamplingRate=0.1,
+                            samplingProbability=0.8,
+                            rootAge=5.0,
+                            taxa=taxa(data)
+                        )
+                        """);
+
+        Tree tree = assertFossilizedBirthDeathState(beastState);
+        double oldestTipAge =
+                tree.getExternalNodes().stream()
+                        .mapToDouble(node -> node.getHeight())
+                        .max()
+                        .orElseThrow();
+
+        assertEquals(3.0, oldestTipAge, 1.0e-12);
+    }
+
+    private static BEASTState buildState(String source) throws Exception {
         List<Stmt> statements = new Parser(new Lexer(source).scanTokens()).parse();
         statements = new RemoveGroupings().transform(statements);
         statements = new EvaluateLiterals().transform(statements);
@@ -72,9 +136,10 @@ public class SampledAncestorsIntegrationTest {
                         stochasticityResolver);
         evaluateTiles.getBestTiling(statements);
 
-        BEASTState beastState =
-                evaluateTiles.applyBestTiling(new BEASTState("sampled-ancestors-test"));
+        return evaluateTiles.applyBestTiling(new BEASTState("sampled-ancestors-test"));
+    }
 
+    private static Tree assertFossilizedBirthDeathState(BEASTState beastState) {
         assertEquals(
                 1,
                 beastState.priorDistributions.values().stream()
@@ -107,10 +172,9 @@ public class SampledAncestorsIntegrationTest {
         assertOperatorCount(treeOperators, SAUniform.class, 1);
         assertOperatorCount(treeOperators, SAScaleOperator.class, 2);
 
-        assertInstanceOf(
-                SABirthDeathModel.class,
-                beastState.priorDistributions.get(tree));
+        assertInstanceOf(SABirthDeathModel.class, beastState.priorDistributions.get(tree));
         assertDoesNotThrow(beastState::initializeBEASTObjects);
+        return tree;
     }
 
     private static void assertOperatorCount(
