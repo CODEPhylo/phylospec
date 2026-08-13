@@ -64,7 +64,7 @@ public class TypePropertyEngine {
                         "phylospec.types.Distribution", "T", resolvedExpressionType, componentResolver);
                 if (unwrappedExpressionType != null
                         && TypeUtils.covers(resolvedExpressionType, unwrappedExpressionType, componentResolver)) {
-                    copyProperties(unwrappedExpressionType, resolvedVariableType);
+                    copyProperties(resolvedVariableType, unwrappedExpressionType);
                 }
             }
         }
