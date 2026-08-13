@@ -5,7 +5,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.phylospec.Utils;
 import org.phylospec.components.*;
-import org.phylospec.typeresolver.properties.TypePropertyEngine;
 
 public class TypeUtils {
 
@@ -250,7 +249,9 @@ public class TypeUtils {
                 type2,
                 x -> {
                     if (parents1.contains(x)) {
-                        lowestCover[0] = x;
+                        if (lowestCover[0] == null) {
+                            lowestCover[0] = ResolvedTypeSet.merge(parents1.get(x), x);
+                        }
                         return VisitorResult.STOP;
                     }
                     return VisitorResult.CONTINUE;
@@ -260,10 +261,6 @@ public class TypeUtils {
         if (lowestCover[0] == null) {
             return null;
         }
-
-        // we conciliate the properties while keeping the original ResolvedType objects intact
-        lowestCover[0] = lowestCover[0].shallowCopy();
-        lowestCover[0].properties().replace(TypePropertyEngine.getPropertiesInAgreement(type1, type2));
 
         return lowestCover[0];
     }
@@ -282,6 +279,8 @@ public class TypeUtils {
      */
     public static void visitParents(
             ResolvedType type, Function<ResolvedType, VisitorResult> visitor, ComponentResolver componentResolver) {
+        // visit aliases
+
         if (type.getAlias() != null) {
             HashMap<String, ResolvedTypeSet> aliasedTypeParameters = new HashMap<>();
             for (String name : type.getParameterTypes().keySet()) {
@@ -292,9 +291,12 @@ public class TypeUtils {
             ResolvedTypeSet aliasedTypeSet =
                     ResolvedType.fromString(type.getAlias(), aliasedTypeParameters, componentResolver, false);
             for (ResolvedType aliasedType : aliasedTypeSet) {
+                aliasedType.properties().attach(type.properties());
                 visitTypeAndParents(aliasedType, visitor, componentResolver);
             }
         }
+
+        // visit direct parents
 
         if (type.getExtends() != null) {
             HashMap<String, ResolvedTypeSet> inheritedTypeParameters = new HashMap<>();
@@ -306,9 +308,12 @@ public class TypeUtils {
             ResolvedTypeSet directlyExtendedTypeSet =
                     ResolvedType.fromString(type.getExtends(), inheritedTypeParameters, componentResolver, false);
             for (ResolvedType directlyExtendedType : directlyExtendedTypeSet) {
+                directlyExtendedType.properties().attach(type.properties());
                 visitTypeAndParents(directlyExtendedType, visitor, componentResolver);
             }
         }
+
+        // visit parents of the type parameter (we assume covariance everywhere)
 
         for (final String parameterName : type.getParameterTypes().keySet()) {
             ResolvedType parameterType = type.getParameterTypes().get(parameterName);
@@ -322,6 +327,7 @@ public class TypeUtils {
                         clonedTypeParams.put(parameterName, x);
 
                         ResolvedType clonedType = new ResolvedType(type.getTypeComponent(), clonedTypeParams);
+                        clonedType.properties().attach(type.properties());
                         if (visitor.apply(clonedType) == VisitorResult.STOP) return VisitorResult.STOP;
 
                         visitParents(clonedType, visitor, componentResolver);

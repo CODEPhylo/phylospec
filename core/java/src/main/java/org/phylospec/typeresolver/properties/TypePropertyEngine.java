@@ -40,10 +40,15 @@ public class TypePropertyEngine {
         }
     }
 
-    public void resolveAssignment(ResolvedTypeSet resolvedVariableTypeSet, ResolvedTypeSet resolvedExpressionTypeSet) {
+    public void resolveAssignment(
+            ResolvedTypeSet resolvedVariableTypeSet,
+            ResolvedTypeSet resolvedExpressionTypeSet,
+            ComponentResolver componentResolver) {
         for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
             for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
-                copyProperties(resolvedExpressionType, resolvedVariableType);
+                if (TypeUtils.covers(resolvedVariableType, resolvedExpressionType, componentResolver)) {
+                    copyProperties(resolvedExpressionType, resolvedVariableType);
+                }
             }
         }
     }
@@ -57,7 +62,8 @@ public class TypePropertyEngine {
             for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
                 ResolvedType unwrappedExpressionType = TypeUtils.recoverTypeParameter(
                         "phylospec.types.Distribution", "T", resolvedExpressionType, componentResolver);
-                if (unwrappedExpressionType != null) {
+                if (unwrappedExpressionType != null
+                        && TypeUtils.covers(resolvedExpressionType, unwrappedExpressionType, componentResolver)) {
                     copyProperties(unwrappedExpressionType, resolvedVariableType);
                 }
             }
@@ -232,17 +238,6 @@ public class TypePropertyEngine {
         }
     }
 
-    /**
-     * Returns the properties that every type in {@code typeList} agrees on. This is the
-     * reconciliation primitive {@link ResolvedTypeSet} uses when it merges two structurally-equal
-     * types on insertion.
-     *
-     * The types are collected into an identity-based set on purpose, not a {@link ResolvedTypeSet}
-     * or plain {@code HashSet}: the whole point of this method is to compare the properties of
-     * types that may be structurally equal (per {@link ResolvedType#equals}) but carry different
-     * properties. Deduping by structural equality here would collapse those instances into one
-     * before their properties could ever be compared, always reporting trivial "agreement".
-     */
     public static Map<String, Object> getPropertiesInAgreement(ResolvedType type1, ResolvedType type2) {
         Map<String, Object> commonProperties = new HashMap<>();
 

@@ -26,7 +26,6 @@ public class Property {
 
     @JsonProperty("description")
     private String description;
-
     /**
      * Default value if not specified
      *

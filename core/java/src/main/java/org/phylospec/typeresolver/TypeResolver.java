@@ -220,7 +220,7 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
             }
         }
 
-        typePropertyEngine.resolveAssignment(resolvedVariableTypeSet, resolvedExpressionTypeSet);
+        typePropertyEngine.resolveAssignment(resolvedVariableTypeSet, resolvedExpressionTypeSet, componentResolver);
         enforceUniqueness(stmt.name, stmt);
 
         remember(stmt.name, resolvedVariableTypeSet);

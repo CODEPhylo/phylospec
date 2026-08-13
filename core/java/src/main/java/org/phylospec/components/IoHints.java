@@ -27,7 +27,6 @@ public class IoHints {
 
     @JsonProperty("role")
     private IoHints.Role role;
-
     /**
      * Supported file extensions (e.g. [".nex", ".fasta"])
      *
@@ -35,7 +34,6 @@ public class IoHints {
     @JsonProperty("extensions")
     @JsonPropertyDescription("Supported file extensions (e.g. [\".nex\", \".fasta\"])")
     private List<String> extensions = new ArrayList<String>();
-
     /**
      * Name of the argument that accepts the file path
      *

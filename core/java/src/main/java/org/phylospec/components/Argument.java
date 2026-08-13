@@ -23,7 +23,6 @@ public class Argument {
      */
     @JsonProperty("name")
     private String name;
-
     /**
      *
      * (Required)
@@ -34,7 +33,6 @@ public class Argument {
 
     @JsonProperty("required")
     private Boolean required;
-
     /**
      * Indicates that this argument is recommended but not required
      *
@@ -42,7 +40,6 @@ public class Argument {
     @JsonProperty("recommended")
     @JsonPropertyDescription("Indicates that this argument is recommended but not required")
     private Boolean recommended;
-
     /**
      * Default value for this argument if not specified
      *
@@ -50,7 +47,6 @@ public class Argument {
     @JsonProperty("default")
     @JsonPropertyDescription("Default value for this argument if not specified")
     private Object _default;
-
     /**
      * Expected dimension of the argument. Can be a fixed integer or an expression that references other parts of the model
      *
@@ -59,7 +55,6 @@ public class Argument {
     @JsonPropertyDescription(
             "Expected dimension of the argument. Can be a fixed integer or an expression that references other parts of the model")
     private Object dimension;
-
     /**
      * Human-readable description of the argument
      *
@@ -67,7 +62,6 @@ public class Argument {
     @JsonProperty("description")
     @JsonPropertyDescription("Human-readable description of the argument")
     private String description;
-
     /**
      * UI hints for rendering this argument
      *

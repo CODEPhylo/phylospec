@@ -49,12 +49,12 @@ public class ResolvedTypeSet extends AbstractSet<ResolvedType> {
             ResolvedType existing = elements.get(candidate);
             elements.put(existing, merge(existing, candidate));
 
-            return true;
+            return false;
         } else {
             // we don't know this type yet
             elements.put(candidate, candidate);
 
-            return false;
+            return true;
         }
     }
 
@@ -65,7 +65,7 @@ public class ResolvedTypeSet extends AbstractSet<ResolvedType> {
 
     @Override
     public Iterator<ResolvedType> iterator() {
-        return elements.keySet().iterator();
+        return elements.values().iterator();
     }
 
     @Override
@@ -79,12 +79,12 @@ public class ResolvedTypeSet extends AbstractSet<ResolvedType> {
      * so instances shared elsewhere (e.g. the arguments of {@link TypeUtils#getLowestCover}) stay
      * untouched.
      */
-    private static ResolvedType merge(ResolvedType existing, ResolvedType candidate) {
+    public static ResolvedType merge(ResolvedType existing, ResolvedType candidate) {
         if (!existing.equals(candidate)) {
             throw new RuntimeException("Trying to merge two incompatible types. This should not happen.");
         }
 
-        ResolvedType merged = existing.shallowCopy();
+        ResolvedType merged = existing.deepCopy();
         merged.properties().replace(TypePropertyEngine.getPropertiesInAgreement(existing, candidate));
 
         for (String parameterName : merged.getParametersNames()) {
@@ -107,7 +107,7 @@ public class ResolvedTypeSet extends AbstractSet<ResolvedType> {
         // structural equality already guarantees a matching element exists; we additionally
         // require that its properties agree
 
-        for (ResolvedType element : elements.keySet()) {
+        for (ResolvedType element : elements.values()) {
             ResolvedType otherElement = other.elements.get(element);
             if (otherElement == null || !element.equalsIncludingProperties(otherElement)) {
                 return false;
@@ -123,9 +123,13 @@ public class ResolvedTypeSet extends AbstractSet<ResolvedType> {
         // hashCodeIncludingProperties so that property differences affect the hash too
 
         int hash = 0;
-        for (ResolvedType element : elements.keySet()) {
+        for (ResolvedType element : elements.values()) {
             hash += element.hashCodeIncludingProperties();
         }
         return hash;
+    }
+
+    public ResolvedType get(ResolvedType resolvedType) {
+        return elements.get(resolvedType);
     }
 }

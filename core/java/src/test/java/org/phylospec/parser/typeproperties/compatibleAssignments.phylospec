@@ -12,5 +12,5 @@ Rate aliased = 3.5
 // EXPECT TYPES
 // Real<;value=2.5>
 // PositiveReal<;value=3.5>
-// Rate<;value=3.5>
+// Rate<;value=null>
 // EXPECT TYPES

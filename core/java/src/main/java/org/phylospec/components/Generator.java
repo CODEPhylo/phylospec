@@ -41,7 +41,6 @@ public class Generator {
 
     @JsonProperty("namespace")
     private String namespace;
-
     /**
      *
      * (Required)
@@ -49,7 +48,6 @@ public class Generator {
      */
     @JsonProperty("generatedType")
     private String generatedType;
-
     /**
      * Type parameters for generic generators (e.g., ['T'] for Mixture<T>)
      *
@@ -57,7 +55,6 @@ public class Generator {
     @JsonProperty("typeParameters")
     @JsonPropertyDescription("Type parameters for generic generators (e.g., ['T'] for Mixture<T>)")
     private List<String> typeParameters = new ArrayList<String>();
-
     /**
      *
      * (Required)
@@ -65,7 +62,6 @@ public class Generator {
      */
     @JsonProperty("arguments")
     private List<Argument> arguments = new ArrayList<Argument>();
-
     /**
      * Type property constraints on the inputs.
      *
@@ -73,7 +69,6 @@ public class Generator {
     @JsonProperty("constraints")
     @JsonPropertyDescription("Type property constraints on the inputs.")
     private List<String> constraints = new ArrayList<String>();
-
     /**
      * File I/O metadata for data-loading or exporting functions
      *
@@ -81,7 +76,6 @@ public class Generator {
     @JsonProperty("ioHints")
     @JsonPropertyDescription("File I/O metadata for data-loading or exporting functions")
     private IoHints ioHints;
-
     /**
      * Example usage snippets for this generator
      *

@@ -1,17 +1,28 @@
 PositiveInteger copies = 4
 PositiveInteger copyOfCopies = copies
 Vector<Real> literalVector = [1.0, 2.0, 3.0]
+Vector<Vector<Real>> literalVectors = [[1.0], [2.0, 2.0]]
+Vector<Vector<Vector<Real>>> nested = [[[1.0]], [[2.0, 2.0]]]
 Vector<Real> repeated = repeat(value=2.0, num=copyOfCopies)
 Vector<Real> repeatedCopy = repeated
 Vector<Real> spaced = linspace(start=0.0, end=1.0, num=5)
+
+Vector<PositiveReal> p = [1.0, 2.0, 3.0]
+Vector<Real> r = [1.0, 2.0, 3.0]
+Vector<Vector<Real>> both = [p, r]
 
 // EXPECT AST
 // (AS PositiveInteger copies 4)
 // (AS PositiveInteger copyOfCopies copies)
 // (AS Vector<Real> literalVector (AR 1.0 2.0 3.0))
+// (AS Vector<Vector<Real>> literalVectors (AR (AR 1.0) (AR 2.0 2.0)))
+// (AS Vector<Vector<Vector<Real>>> nested (AR (AR (AR 1.0)) (AR (AR 2.0 2.0))))
 // (AS Vector<Real> repeated (CA repeat (AA value 2.0) (AA num copyOfCopies)))
 // (AS Vector<Real> repeatedCopy repeated)
 // (AS Vector<Real> spaced (CA linspace (AA start 0.0) (AA end 1.0) (AA num 5)))
+// (AS Vector<PositiveReal> p (AR 1.0 2.0 3.0))
+// (AS Vector<Real> r (AR 1.0 2.0 3.0))
+// (AS Vector<Vector<Real>> both (AR p r))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
@@ -21,7 +32,12 @@ Vector<Real> spaced = linspace(start=0.0, end=1.0, num=5)
 // PositiveInteger<;value=4>
 // PositiveInteger<;value=4>
 // Vector<Real;num=3>
+// Vector<Vector<Real;num=null,value=null>;num=2>
+// Vector<Vector<Vector<Real;num=null,value=null>;num=1>;num=2>
 // Vector<Real;num=4>
 // Vector<Real;num=4>
 // Vector<Real;num=5>
+// Vector<PositiveReal;num=3>
+// Vector<Real;num=3>
+// Vector<Vector<Real;num=3>;num=2>
 // EXPECT TYPES
