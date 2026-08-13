@@ -78,7 +78,7 @@ public class ResolvedType {
      * be a generic type, and it must have been imported in the given {@link ComponentResolver}.
      * This method throws an error if the type parameters cannot be fully resolved from the given string.
      */
-    public static Set<ResolvedType> fromString(String typeString, ComponentResolver componentResolver) {
+    public static ResolvedTypeSet fromString(String typeString, ComponentResolver componentResolver) {
         return ResolvedType.fromString(typeString, componentResolver, false);
     }
 
@@ -86,7 +86,7 @@ public class ResolvedType {
      * Creates a {@link ResolvedType} object based on the type name. Note that the given type must not
      * be a generic type, and it must have been imported in the given {@link ComponentResolver}.
      */
-    public static Set<ResolvedType> fromString(
+    public static ResolvedTypeSet fromString(
             String typeString, ComponentResolver componentResolver, boolean allowUnresolvedTypeParameter) {
         return ResolvedType.fromString(typeString, new HashMap<>(), componentResolver, allowUnresolvedTypeParameter);
     }
@@ -96,9 +96,9 @@ public class ResolvedType {
      * correct order.
      * Note that the given type must have been imported in the given {@link ComponentResolver}.
      */
-    public static Set<ResolvedType> fromString(
+    public static ResolvedTypeSet fromString(
             String typeString,
-            List<Set<ResolvedType>> typeParameters,
+            List<ResolvedTypeSet> typeParameters,
             ComponentResolver componentResolver,
             boolean allowUnresolvedTypeParameter) {
         // we build a map of the type parameters and then use the more general overloaded method
@@ -122,7 +122,7 @@ public class ResolvedType {
                     "Provide exactly " + typeComponent.getTypeParameters().size() + " type parameters.");
         }
 
-        Map<String, Set<ResolvedType>> typeParameterMap = new HashMap<>();
+        Map<String, ResolvedTypeSet> typeParameterMap = new HashMap<>();
         for (int i = 0; i < typeParameters.size(); i++) {
             typeParameterMap.put(typeComponent.getTypeParameters().get(i), typeParameters.get(i));
         }
@@ -140,8 +140,8 @@ public class ResolvedType {
     ///
     /// This method throws an error if the type parameters cannot be fully resolved from the given
     // string.
-    public static Set<ResolvedType> fromString(
-            String typeString, Map<String, Set<ResolvedType>> typeParameters, ComponentResolver componentResolver) {
+    public static ResolvedTypeSet fromString(
+            String typeString, Map<String, ResolvedTypeSet> typeParameters, ComponentResolver componentResolver) {
         return ResolvedType.fromString(typeString, typeParameters, componentResolver, false);
     }
 
@@ -152,9 +152,9 @@ public class ResolvedType {
     /// This method returns a set of [ResolvedType] objects because you can pass type sets for
     /// the type parameters. As an example, {@code Vector<T>} with {@code T = [Real, Integer]} will
     /// return {@code [Vector<Real>, Vector<Integer>]}.
-    public static Set<ResolvedType> fromString(
+    public static ResolvedTypeSet fromString(
             String typeString,
-            Map<String, Set<ResolvedType>> typeParameters,
+            Map<String, ResolvedTypeSet> typeParameters,
             ComponentResolver componentResolver,
             boolean allowUnresolvedTypeParameter) {
         Type typeComponent = componentResolver.resolveType(typeString);
@@ -167,7 +167,7 @@ public class ResolvedType {
         // resolve the possible type parameters
 
         List<ParsedType> typeParameterNames = new ParsedType(typeString).getTypeParameters();
-        List<Set<ResolvedType>> inferredTypeParameters = new ArrayList<>();
+        List<ResolvedTypeSet> inferredTypeParameters = new ArrayList<>();
 
         if (new ParsedType(typeString).isGeneric()) {
             // in this case, the given type string directly indicates the type parameters (e.g.
@@ -206,11 +206,11 @@ public class ResolvedType {
         // given all the possible types for every type parameter, we look at all possible
         // combinations to get the set of all fully resolved types
 
-        Set<ResolvedType> resultingTypeSet = new HashSet<>();
+        ResolvedTypeSet resultingTypeSet = new ResolvedTypeSet();
         visitCombinations(inferredTypeParameters, typeParamList -> {
             Map<String, ResolvedType> typeParamSet = new HashMap<>();
             for (int i = 0; i < typeParamList.size(); i++) {
-                typeParamSet.put(typeComponent.getTypeParameters().get(i), typeParamList.get(i));
+                typeParamSet.put(typeComponent.getTypeParameters().get(i), (ResolvedType) typeParamList.get(i));
             }
 
             resultingTypeSet.add(new ResolvedType(typeComponent, typeParamSet));
@@ -219,12 +219,12 @@ public class ResolvedType {
         if (typeComponent.getAlias() != null) {
             // we have an alias
             // we resolve the aliased type for every concrete parameter combination and return the set of both
-            Set<ResolvedType> aliasedTypeSet = new HashSet<>();
+            ResolvedTypeSet aliasedTypeSet = new ResolvedTypeSet();
             for (ResolvedType resultingType : resultingTypeSet) {
-                Map<String, Set<ResolvedType>> resolvedAliasParameters = new HashMap<>();
+                Map<String, ResolvedTypeSet> resolvedAliasParameters = new HashMap<>();
                 for (Map.Entry<String, ResolvedType> parameterType :
                         resultingType.getParameterTypes().entrySet()) {
-                    resolvedAliasParameters.put(parameterType.getKey(), Set.of(parameterType.getValue()));
+                    resolvedAliasParameters.put(parameterType.getKey(), ResolvedTypeSet.of(parameterType.getValue()));
                 }
                 aliasedTypeSet.addAll(ResolvedType.fromString(
                         typeComponent.getAlias(),
@@ -245,9 +245,21 @@ public class ResolvedType {
         return Objects.equals(parameterTypes, that.parameterTypes) && Objects.equals(typeComponent, that.typeComponent);
     }
 
+    public boolean equalsIncludingProperties(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        ResolvedType that = (ResolvedType) o;
+        return Objects.equals(parameterTypes, that.parameterTypes)
+                && Objects.equals(typeComponent, that.typeComponent)
+                && Objects.equals(properties(), that.properties());
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(parameterTypes, typeComponent);
+    }
+
+    public int hashCodeIncludingProperties() {
+        return Objects.hash(parameterTypes, typeComponent, properties());
     }
 
     @Override

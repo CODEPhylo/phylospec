@@ -14,7 +14,7 @@ public class TypeUtils {
      * A type A can be assigned to type B if B covers A.
      */
     public static boolean canBeAssignedTo(
-            Set<ResolvedType> assignedTypeSet, Set<ResolvedType> assigneeTypeSet, ComponentResolver componentResolver) {
+            ResolvedTypeSet assignedTypeSet, ResolvedTypeSet assigneeTypeSet, ComponentResolver componentResolver) {
         for (ResolvedType assignedType : assignedTypeSet) {
             for (ResolvedType assigneeType : assigneeTypeSet) {
                 if (covers(assigneeType, assignedType, componentResolver)) return true;
@@ -58,7 +58,7 @@ public class TypeUtils {
      */
     static ResolvedGeneratorApplication resolveGeneratedType(
             Generator generator,
-            Map<String, Set<ResolvedType>> resolvedArguments,
+            Map<String, ResolvedTypeSet> resolvedArguments,
             String firstArgumentName,
             ComponentResolver componentResolver) {
         List<Argument> parameters = generator.getArguments();
@@ -80,11 +80,11 @@ public class TypeUtils {
         // check passed types and resolve type parameters
 
         Map<String, List<ResolvedType>> possibleParameterTypeSets = new HashMap<>();
-        Map<String, Set<ResolvedType>> possibleArgumentTypeSets = new HashMap<>();
+        Map<String, ResolvedTypeSet> possibleArgumentTypeSets = new HashMap<>();
         for (Argument parameter : parameters) {
             String parameterName = parameter.getName();
 
-            Set<ResolvedType> resolvedArgumentTypeSet = resolvedArguments.get(parameterName);
+            ResolvedTypeSet resolvedArgumentTypeSet = resolvedArguments.get(parameterName);
 
             if (resolvedArgumentTypeSet == null && parameter == parameters.getFirst()) {
                 // there might be an unnamed argument
@@ -109,7 +109,7 @@ public class TypeUtils {
             // updated with the corresponding types for type parameters
 
             boolean foundMatch = false;
-            Set<ResolvedType> matchingArgumentTypeSet = new HashSet<>();
+            ResolvedTypeSet matchingArgumentTypeSet = new ResolvedTypeSet();
             for (ResolvedType possibleArgumentType : resolvedArgumentTypeSet) {
                 if (TypeUtils.checkAssignabilityAndResolveTypeParameters(
                         parameter.getType(),
@@ -140,11 +140,12 @@ public class TypeUtils {
         // this is not the most specific way to handle this, as we ignore any
         // dependencies within different type parameters
 
-        Map<String, Set<ResolvedType>> parameterTypeSets = new HashMap<>();
+        Map<String, ResolvedTypeSet> parameterTypeSets = new HashMap<>();
         for (String typeParameter : possibleParameterTypeSets.keySet()) {
             parameterTypeSets.put(
                     typeParameter,
-                    Set.of(TypeUtils.getLowestCover(possibleParameterTypeSets.get(typeParameter), componentResolver)));
+                    ResolvedTypeSet.of(
+                            TypeUtils.getLowestCover(possibleParameterTypeSets.get(typeParameter), componentResolver)));
         }
 
         // construct return type
@@ -156,7 +157,7 @@ public class TypeUtils {
     }
 
     public record ResolvedGeneratorApplication(
-            Set<ResolvedType> generatedTypeSet, Map<String, Set<ResolvedType>> resolvedArguments) {}
+            ResolvedTypeSet generatedTypeSet, Map<String, ResolvedTypeSet> resolvedArguments) {}
     ;
 
     /**
@@ -191,9 +192,8 @@ public class TypeUtils {
      * {@code typeSets}. Then, for every such combination, the lowest cover type is
      * determined. Then the set of all lowest covers is returned.
      */
-    static Set<ResolvedType> getLowestCoverTypeSet(
-            List<Set<ResolvedType>> typeSets, ComponentResolver componentResolver) {
-        if (typeSets.isEmpty()) return Set.of();
+    static ResolvedTypeSet getLowestCoverTypeSet(List<ResolvedTypeSet> typeSets, ComponentResolver componentResolver) {
+        if (typeSets.isEmpty()) return ResolvedTypeSet.empty();
 
         // we first remove duplicate type sets as this can quickly turn into a combinatorial
         // explosion
@@ -202,7 +202,7 @@ public class TypeUtils {
         Set<List<ResolvedType>> possibleElementTypeCombinations = new HashSet<>();
         Utils.visitCombinations(typeSets, possibleElementTypeCombinations::add);
 
-        Set<ResolvedType> lcTypeSet = new HashSet<>();
+        ResolvedTypeSet lcTypeSet = new ResolvedTypeSet();
         for (List<ResolvedType> combination : possibleElementTypeCombinations) {
             ResolvedType lowestCover = getLowestCover(combination, componentResolver);
             if (lowestCover != null) lcTypeSet.add(lowestCover);
@@ -236,7 +236,7 @@ public class TypeUtils {
      * and if all other covers of A and B cover C.
      */
     static ResolvedType getLowestCover(ResolvedType type1, ResolvedType type2, ComponentResolver componentResolver) {
-        Set<ResolvedType> parents1 = new HashSet<>();
+        ResolvedTypeSet parents1 = new ResolvedTypeSet();
         visitTypeAndParents(
                 type1,
                 x -> {
@@ -261,12 +261,9 @@ public class TypeUtils {
             return null;
         }
 
-        // we only keep the properties where the two agree
-        Map<String, Object> commonProperties = TypePropertyEngine.getPropertiesInAgreement(List.of(type1, type2));
-
-        // create a fresh instance with the common properties
+        // we conciliate the properties while keeping the original ResolvedType objects intact
         lowestCover[0] = lowestCover[0].shallowCopy();
-        lowestCover[0].properties().replace(commonProperties);
+        lowestCover[0].properties().replace(TypePropertyEngine.getPropertiesInAgreement(type1, type2));
 
         return lowestCover[0];
     }
@@ -286,12 +283,13 @@ public class TypeUtils {
     public static void visitParents(
             ResolvedType type, Function<ResolvedType, VisitorResult> visitor, ComponentResolver componentResolver) {
         if (type.getAlias() != null) {
-            HashMap<String, Set<ResolvedType>> aliasedTypeParameters = new HashMap<>();
+            HashMap<String, ResolvedTypeSet> aliasedTypeParameters = new HashMap<>();
             for (String name : type.getParameterTypes().keySet()) {
-                aliasedTypeParameters.put(name, Set.of(type.getParameterTypes().get(name)));
+                aliasedTypeParameters.put(
+                        name, ResolvedTypeSet.of(type.getParameterTypes().get(name)));
             }
 
-            Set<ResolvedType> aliasedTypeSet =
+            ResolvedTypeSet aliasedTypeSet =
                     ResolvedType.fromString(type.getAlias(), aliasedTypeParameters, componentResolver, false);
             for (ResolvedType aliasedType : aliasedTypeSet) {
                 visitTypeAndParents(aliasedType, visitor, componentResolver);
@@ -299,13 +297,13 @@ public class TypeUtils {
         }
 
         if (type.getExtends() != null) {
-            HashMap<String, Set<ResolvedType>> inheritedTypeParameters = new HashMap<>();
+            HashMap<String, ResolvedTypeSet> inheritedTypeParameters = new HashMap<>();
             for (String name : type.getParameterTypes().keySet()) {
                 inheritedTypeParameters.put(
-                        name, Set.of(type.getParameterTypes().get(name)));
+                        name, ResolvedTypeSet.of(type.getParameterTypes().get(name)));
             }
 
-            Set<ResolvedType> directlyExtendedTypeSet =
+            ResolvedTypeSet directlyExtendedTypeSet =
                     ResolvedType.fromString(type.getExtends(), inheritedTypeParameters, componentResolver, false);
             for (ResolvedType directlyExtendedType : directlyExtendedTypeSet) {
                 visitTypeAndParents(directlyExtendedType, visitor, componentResolver);
@@ -365,7 +363,7 @@ public class TypeUtils {
         ParsedType parsedRequiredType = new ParsedType(requiredTypeName);
 
         if (!parsedRequiredType.isGeneric()) {
-            Set<ResolvedType> requiredTypeSet = ResolvedType.fromString(requiredTypeName, componentResolver, true);
+            ResolvedTypeSet requiredTypeSet = ResolvedType.fromString(requiredTypeName, componentResolver, true);
 
             for (ResolvedType requiredType : requiredTypeSet) {
                 if (covers(requiredType, resolvedType, componentResolver)) {

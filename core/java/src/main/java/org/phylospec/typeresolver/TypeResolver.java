@@ -33,17 +33,17 @@ import org.phylospec.workspace.Workspace;
 /// statement1.accept(resolver);
 /// statement2.accept(resolver);
 ///
-/// Set<ResolvedType> exprType = resolver.resolveType(<some AST expression>);
+/// ResolvedTypeSet exprType = resolver.resolveType(<some AST expression>);
 /// ResolvedType varType = resolver.resolveVariable(<some var name>);
 /// ```
-public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedType>, Set<ResolvedType>> {
+public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet, ResolvedTypeSet> {
 
     private final ComponentResolver componentResolver;
     private final TypeMatcher typeMatcher;
     private final TypePropertyEngine typePropertyEngine;
 
-    public Map<AstNode, Set<ResolvedType>> resolvedTypes;
-    private final List<Map<String, Set<ResolvedType>>> scopedVariableTypes;
+    public Map<AstNode, ResolvedTypeSet> resolvedTypes;
+    private final List<Map<String, ResolvedTypeSet>> scopedVariableTypes;
 
     Unit globalUnit = Unit.IMPLICIT;
 
@@ -81,15 +81,15 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
      * or PositiveInteger. Another example are generators overloaded in
      * their return type.
      */
-    public Set<ResolvedType> resolveTypeSet(AstNode expression) {
-        return this.resolvedTypes.getOrDefault(expression, Set.of());
+    public ResolvedTypeSet resolveTypeSet(AstNode expression) {
+        return this.resolvedTypes.getOrDefault(expression, ResolvedTypeSet.empty());
     }
 
     /**
      * Returns the types associated with the given AST type node. Returns null if no
      * type is known.
      */
-    public Set<ResolvedType> resolveTypeSet(AstType astTypeNode) {
+    public ResolvedTypeSet resolveTypeSet(AstType astTypeNode) {
         return this.resolvedTypes.getOrDefault(astTypeNode, null);
     }
 
@@ -97,7 +97,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
      * Returns the types associated with the given AST statement node. Returns null if
      * no type is known.
      */
-    public Set<ResolvedType> resolveTypeSet(Stmt astTypeNode) {
+    public ResolvedTypeSet resolveTypeSet(Stmt astTypeNode) {
         return this.resolvedTypes.getOrDefault(astTypeNode, null);
     }
 
@@ -107,16 +107,16 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
      * Thus, every variable is only associated with a single type.
      * Returns an empty set if no type is known.
      */
-    public Set<ResolvedType> resolveVariable(String variableName) {
+    public ResolvedTypeSet resolveVariable(String variableName) {
         // we go through all nested scopes to check if we find the variable there
-        for (Map<String, Set<ResolvedType>> scope : scopedVariableTypes) {
+        for (Map<String, ResolvedTypeSet> scope : scopedVariableTypes) {
             if (scope.containsKey(variableName)) {
                 return scope.get(variableName);
             }
         }
 
         // we don't know this variable
-        return Set.of();
+        return ResolvedTypeSet.empty();
     }
 
     /**
@@ -131,25 +131,25 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
      */
 
     @Override
-    public Set<ResolvedType> visitDecoratedStmt(Stmt.Decorated stmt) {
-        if (this.ignoreStmt(stmt)) return Set.of();
+    public ResolvedTypeSet visitDecoratedStmt(Stmt.Decorated stmt) {
+        if (this.ignoreStmt(stmt)) return ResolvedTypeSet.empty();
         return remember(stmt, stmt.statement.accept(this));
     }
 
     @Override
-    public Set<ResolvedType> visitAssignment(Stmt.Assignment stmt) {
-        if (this.ignoreStmt(stmt)) return Set.of();
+    public ResolvedTypeSet visitAssignment(Stmt.Assignment stmt) {
+        if (this.ignoreStmt(stmt)) return ResolvedTypeSet.empty();
 
-        Set<ResolvedType> resolvedVariableTypeSet = stmt.type.accept(this);
+        ResolvedTypeSet resolvedVariableTypeSet = stmt.type.accept(this);
 
-        Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
+        ResolvedTypeSet resolvedExpressionTypeSet = stmt.expression.accept(this);
 
         if (!TypeUtils.canBeAssignedTo(resolvedExpressionTypeSet, resolvedVariableTypeSet, componentResolver)) {
             // expression cannot be assigned to this variable
             // we check if a draw would fix the problem and raise a more helpful message in that
             // case
 
-            Set<ResolvedType> resolvedDistributionTypeSet = new HashSet<>();
+            ResolvedTypeSet resolvedDistributionTypeSet = new ResolvedTypeSet();
             for (ResolvedType expressionType : resolvedExpressionTypeSet) {
                 TypeUtils.visitTypeAndParents(
                         expressionType,
@@ -228,17 +228,17 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitDraw(Stmt.Draw stmt) {
-        if (this.ignoreStmt(stmt)) return Set.of();
+    public ResolvedTypeSet visitDraw(Stmt.Draw stmt) {
+        if (this.ignoreStmt(stmt)) return ResolvedTypeSet.empty();
 
-        Set<ResolvedType> resolvedVariableTypeSet = stmt.type.accept(this);
+        ResolvedTypeSet resolvedVariableTypeSet = stmt.type.accept(this);
 
-        Set<ResolvedType> resolvedExpressionTypeSet = stmt.expression.accept(this);
+        ResolvedTypeSet resolvedExpressionTypeSet = stmt.expression.accept(this);
 
         // we are only interested in the expression types which are distributions,
         // because we want to draw a value
 
-        Set<ResolvedType> generatedTypeSet = new HashSet<>();
+        ResolvedTypeSet generatedTypeSet = new ResolvedTypeSet();
         for (ResolvedType expressionType : resolvedExpressionTypeSet) {
             TypeUtils.visitTypeAndParents(
                     expressionType,
@@ -310,7 +310,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitImport(Stmt.Import stmt) {
+    public ResolvedTypeSet visitImport(Stmt.Import stmt) {
         try {
             componentResolver.importNamespace(stmt.namespace);
         } catch (TypeError e) {
@@ -320,8 +320,8 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitIndexedStmt(Stmt.Indexed indexed) {
-        if (this.ignoreStmt(indexed)) return Set.of();
+    public ResolvedTypeSet visitIndexedStmt(Stmt.Indexed indexed) {
+        if (this.ignoreStmt(indexed)) return ResolvedTypeSet.empty();
 
         if (indexed.indices.size() != indexed.ranges.size()) {
             throw new TypeError(
@@ -346,10 +346,10 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         // evaluate each range
 
-        List<Set<ResolvedType>> rangeTypeSets = new ArrayList<>();
+        List<ResolvedTypeSet> rangeTypeSets = new ArrayList<>();
 
         for (int i = 0; i < indexed.indices.size(); i++) {
-            Set<ResolvedType> rangeTypeSet = indexed.ranges.get(i).accept(this);
+            ResolvedTypeSet rangeTypeSet = indexed.ranges.get(i).accept(this);
             rangeTypeSets.add(rangeTypeSet);
         }
 
@@ -357,11 +357,11 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         createScope();
 
-        Set<ResolvedType> innerTypeSet;
+        ResolvedTypeSet innerTypeSet;
         try {
             for (int i = 0; i < indexed.indices.size(); i++) {
                 Expr.Variable indexVar = indexed.indices.get(i);
-                Set<ResolvedType> rangeTypeSet = rangeTypeSets.get(i);
+                ResolvedTypeSet rangeTypeSet = rangeTypeSets.get(i);
 
                 if (!TypeUtils.canBeAssignedTo(
                         rangeTypeSet,
@@ -373,7 +373,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                             "Use integer expressions as the range bounds (e.g., '1:10').");
                 }
 
-                Set<ResolvedType> indexVarTypeSet = new HashSet<>();
+                ResolvedTypeSet indexVarTypeSet = new ResolvedTypeSet();
                 for (ResolvedType rangeType : rangeTypeSet) {
                     ResolvedType indexVarType =
                             TypeUtils.recoverTypeParameter("phylospec.types.Vector", "T", rangeType, componentResolver);
@@ -397,7 +397,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         // widen the result type: Vector<T> for one index, Matrix<T> for two
 
-        Set<ResolvedType> widenedTypeSet;
+        ResolvedTypeSet widenedTypeSet;
         if (indexed.indices.size() == 1) {
             widenedTypeSet =
                     ResolvedType.fromString("phylospec.types.Vector<T>", Map.of("T", innerTypeSet), componentResolver);
@@ -421,16 +421,16 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitObservedAsStmt(Stmt.ObservedAs observedAs) {
-        if (this.ignoreStmt(observedAs)) return Set.of();
+    public ResolvedTypeSet visitObservedAsStmt(Stmt.ObservedAs observedAs) {
+        if (this.ignoreStmt(observedAs)) return ResolvedTypeSet.empty();
 
-        Set<ResolvedType> observationTypeSet = observedAs.observedAs.accept(this);
-        Set<ResolvedType> generatedDistributionTypeSet = observedAs.stmt.accept(this);
+        ResolvedTypeSet observationTypeSet = observedAs.observedAs.accept(this);
+        ResolvedTypeSet generatedDistributionTypeSet = observedAs.stmt.accept(this);
 
         // go through generatedDistributionTypeSet, filter the Distribution<> ones and get the
         // actual underlying values
 
-        Set<ResolvedType> generatedTypeSet = new HashSet<>();
+        ResolvedTypeSet generatedTypeSet = new ResolvedTypeSet();
         for (ResolvedType generatedDistType : generatedDistributionTypeSet) {
             ResolvedType generatedType = TypeUtils.recoverTypeParameter(
                     "phylospec.types.Distribution", "T", generatedDistType, componentResolver);
@@ -483,13 +483,13 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
-        if (this.ignoreStmt(observedBetween)) return Set.of();
+    public ResolvedTypeSet visitObservedBetweenStmt(Stmt.ObservedBetween observedBetween) {
+        if (this.ignoreStmt(observedBetween)) return ResolvedTypeSet.empty();
 
-        Set<ResolvedType> observationFromTypeSet = observedBetween.observedFrom.accept(this);
-        Set<ResolvedType> observationToTypeSet = observedBetween.observedTo.accept(this);
+        ResolvedTypeSet observationFromTypeSet = observedBetween.observedFrom.accept(this);
+        ResolvedTypeSet observationToTypeSet = observedBetween.observedTo.accept(this);
 
-        Set<ResolvedType> scalarTypeSet = ResolvedType.fromString("phylospec.types.Integer", componentResolver);
+        ResolvedTypeSet scalarTypeSet = ResolvedType.fromString("phylospec.types.Integer", componentResolver);
         scalarTypeSet.addAll(ResolvedType.fromString("phylospec.types.Real", componentResolver));
 
         if (!TypeUtils.canBeAssignedTo(observationFromTypeSet, scalarTypeSet, componentResolver)) {
@@ -500,15 +500,15 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
             throw new TypeError("Invalid observation.", "Observations ranges have to be specified using numbers.");
         }
 
-        Set<ResolvedType> observationTypeSet = TypeUtils.getLowestCoverTypeSet(
+        ResolvedTypeSet observationTypeSet = TypeUtils.getLowestCoverTypeSet(
                 List.of(observationFromTypeSet, observationToTypeSet), componentResolver);
 
-        Set<ResolvedType> generatedDistributionTypeSet = observedBetween.stmt.accept(this);
+        ResolvedTypeSet generatedDistributionTypeSet = observedBetween.stmt.accept(this);
 
         // go through generatedDistributionTypeSet, filter the Distribution<> ones and get the
         // actual underlying values
 
-        Set<ResolvedType> generatedTypeSet = new HashSet<>();
+        ResolvedTypeSet generatedTypeSet = new ResolvedTypeSet();
         for (ResolvedType generatedDistType : generatedDistributionTypeSet) {
             ResolvedType generatedType = TypeUtils.recoverTypeParameter(
                     "phylospec.types.Distribution", "T", generatedDistType, componentResolver);
@@ -546,7 +546,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitLiteral(Expr.Literal expr) {
+    public ResolvedTypeSet visitLiteral(Expr.Literal expr) {
         // TODO: only specify the most specific type. this does not work atm due to a bug in
         // TypeMatcher
         Set<String> typeName =
@@ -580,7 +580,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                     default -> Set.of();
                 };
 
-        Set<ResolvedType> resolvedTypeSet = new HashSet<>();
+        ResolvedTypeSet resolvedTypeSet = new ResolvedTypeSet();
         for (String name : typeName) {
             resolvedTypeSet.addAll(ResolvedType.fromString(name, componentResolver));
         }
@@ -605,7 +605,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
             // check that we have a number literal
 
-            Set<ResolvedType> scalarTypeSet = ResolvedType.fromString("phylospec.types.Real", componentResolver);
+            ResolvedTypeSet scalarTypeSet = ResolvedType.fromString("phylospec.types.Real", componentResolver);
             scalarTypeSet.addAll(ResolvedType.fromString("phylospec.types.Integer", componentResolver));
             if (!TypeUtils.canBeAssignedTo(resolvedTypeSet, scalarTypeSet, componentResolver)) {
                 throw new TypeError(
@@ -628,13 +628,13 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitStringTemplate(Expr.StringTemplate expr) {
+    public ResolvedTypeSet visitStringTemplate(Expr.StringTemplate expr) {
         // we have to make sure that the interpolated expressions are all either strings or numbers
 
         for (Expr.StringTemplate.Part part : expr.parts) {
             if (part instanceof Expr.StringTemplate.ExpressionPart) {
                 Expr interpolatedExpr = ((Expr.StringTemplate.ExpressionPart) part).expression();
-                Set<ResolvedType> interpolatedTypeSet = interpolatedExpr.accept(this);
+                ResolvedTypeSet interpolatedTypeSet = interpolatedExpr.accept(this);
 
                 if (!(TypeUtils.canBeAssignedTo(
                                 interpolatedTypeSet,
@@ -667,9 +667,9 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitVariable(Expr.Variable expr) {
+    public ResolvedTypeSet visitVariable(Expr.Variable expr) {
         String variableName = expr.variableName;
-        Set<ResolvedType> resolvedTypeSet = resolveVariable(variableName);
+        ResolvedTypeSet resolvedTypeSet = resolveVariable(variableName);
 
         if (resolvedTypeSet.isEmpty()) {
             // there is no variable with this name
@@ -684,7 +684,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitTemplateVariable(Expr.TemplateVariable expr) {
+    public ResolvedTypeSet visitTemplateVariable(Expr.TemplateVariable expr) {
         // template variables are not allowed in normal PhyloSpec models
         throw new TypeError(
                 "Template variables are not allowed.",
@@ -692,7 +692,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitOptionalTemplateVariable(Expr.OptionalTemplateVariable expr) {
+    public ResolvedTypeSet visitOptionalTemplateVariable(Expr.OptionalTemplateVariable expr) {
         // optional template variables are not allowed in normal PhyloSpec models
         throw new TypeError(
                 "Template variables are not allowed.",
@@ -700,14 +700,14 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitUnary(Expr.Unary expr) {
+    public ResolvedTypeSet visitUnary(Expr.Unary expr) {
         List<TypeMatcher.Rule> typeMap = List.of(
                 new TypeMatcher.Rule(TokenType.BANG, "Boolean", "Boolean"),
                 new TypeMatcher.Rule(TokenType.MINUS, "Real", "Real"),
                 new TypeMatcher.Rule(TokenType.MINUS, "Integer", "Integer"));
 
-        Set<ResolvedType> rightType = expr.right.accept(this);
-        Set<ResolvedType> resultType = typeMatcher.findMatch(typeMap, new TypeMatcher.Query(expr.operator, rightType));
+        ResolvedTypeSet rightType = expr.right.accept(this);
+        ResolvedTypeSet resultType = typeMatcher.findMatch(typeMap, new TypeMatcher.Query(expr.operator, rightType));
 
         if (resultType.isEmpty()) {
             throw new TypeError(
@@ -723,7 +723,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitBinary(Expr.Binary expr) {
+    public ResolvedTypeSet visitBinary(Expr.Binary expr) {
         List<TypeMatcher.Rule> typeMap = List.of(
                 new TypeMatcher.Rule(TokenType.EQUAL_EQUAL, TypeMatcher.ANY, TypeMatcher.ANY, "Boolean"),
                 new TypeMatcher.Rule(TokenType.BANG_EQUAL, TypeMatcher.ANY, TypeMatcher.ANY, "Boolean"),
@@ -773,9 +773,9 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                 new TypeMatcher.Rule(TokenType.SLASH, "Integer", "Real", "Real"),
                 new TypeMatcher.Rule(TokenType.SLASH, "Real", "Integer", "Real"));
 
-        Set<ResolvedType> leftType = expr.left.accept(this);
-        Set<ResolvedType> rightType = expr.right.accept(this);
-        Set<ResolvedType> resultType =
+        ResolvedTypeSet leftType = expr.left.accept(this);
+        ResolvedTypeSet rightType = expr.right.accept(this);
+        ResolvedTypeSet resultType =
                 typeMatcher.findMatch(typeMap, new TypeMatcher.Query(expr.operator, leftType, rightType));
 
         if (resultType.isEmpty()) {
@@ -794,7 +794,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitCall(Expr.Call expr) {
+    public ResolvedTypeSet visitCall(Expr.Call expr) {
         // resolve arguments
 
         /* Rules for argument names:
@@ -806,7 +806,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
          * (5) If any argument has two values assigned to it, it is an error.
          */
 
-        Map<String, Set<ResolvedType>> resolvedArguments = new HashMap<>();
+        Map<String, ResolvedTypeSet> resolvedArguments = new HashMap<>();
         String firstArgumentName = null;
         for (int i = 0; i < expr.arguments.length; i++) {
             Expr.Argument argument = expr.arguments[i];
@@ -859,7 +859,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         }
 
         // check if generators are compatible with arguments
-        Set<ResolvedType> possibleReturnTypes = new HashSet<>();
+        ResolvedTypeSet possibleReturnTypes = new ResolvedTypeSet();
         TypeError lastError = null;
         Set<String> errorMessages = new HashSet<>();
         for (Generator generator : generators) {
@@ -910,17 +910,17 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitAssignedArgument(Expr.AssignedArgument expr) {
+    public ResolvedTypeSet visitAssignedArgument(Expr.AssignedArgument expr) {
         return remember(expr, expr.expression.accept(this));
     }
 
     @Override
-    public Set<ResolvedType> visitDrawnArgument(Expr.DrawnArgument expr) {
-        Set<ResolvedType> resolvedTypeSet = expr.expression.accept(this);
+    public ResolvedTypeSet visitDrawnArgument(Expr.DrawnArgument expr) {
+        ResolvedTypeSet resolvedTypeSet = expr.expression.accept(this);
 
         // we only consider Distribution types, because we want to draw the argument value
 
-        Set<ResolvedType> generatedTypeSet = new HashSet<>();
+        ResolvedTypeSet generatedTypeSet = new ResolvedTypeSet();
         for (ResolvedType expressionType : resolvedTypeSet) {
             ResolvedType unwrappedExpressionType = TypeUtils.recoverTypeParameter(
                     "phylospec.types.Distribution", "T", expressionType, componentResolver);
@@ -940,15 +940,15 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitGrouping(Expr.Grouping expr) {
+    public ResolvedTypeSet visitGrouping(Expr.Grouping expr) {
         return remember(expr, expr.expression.accept(this));
     }
 
     @Override
-    public Set<ResolvedType> visitArray(Expr.Array expr) {
+    public ResolvedTypeSet visitArray(Expr.Array expr) {
         // resolve the element types
 
-        List<Set<ResolvedType>> elementTypeSets =
+        List<ResolvedTypeSet> elementTypeSets =
                 expr.elements.stream().map(x -> x.accept(this)).collect(Collectors.toList());
 
         // get the most specific type compatible with the element types
@@ -956,14 +956,14 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         // single element. for each possible type combination, the lowest
         // cover is determined (the most specific supertype)
 
-        Set<ResolvedType> lcTypeSet = TypeUtils.getLowestCoverTypeSet(elementTypeSets, componentResolver);
+        ResolvedTypeSet lcTypeSet = TypeUtils.getLowestCoverTypeSet(elementTypeSets, componentResolver);
 
         // build the Vector result type
 
         Type vectorComponent = componentResolver.resolveType("phylospec.types.Vector");
-        Set<ResolvedType> arrayTypeSet = lcTypeSet.stream()
+        ResolvedTypeSet arrayTypeSet = lcTypeSet.stream()
                 .map(x -> new ResolvedType(vectorComponent, Map.of("T", x)))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(ResolvedTypeSet::new));
 
         // we check the edge case where we have an array of number literals adding up to 1
         boolean onlyNumberLiterals = true;
@@ -993,13 +993,13 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitIndex(Expr.Index expr) {
-        Set<ResolvedType> containerTypeSet = expr.object.accept(this);
+    public ResolvedTypeSet visitIndex(Expr.Index expr) {
+        ResolvedTypeSet containerTypeSet = expr.object.accept(this);
 
         // collect the possible index types and item types based on the resolved container types
 
-        Set<ResolvedType> itemTypeSet = new HashSet<>();
-        Set<ResolvedType> indexTypeSet = new HashSet<>();
+        ResolvedTypeSet itemTypeSet = new ResolvedTypeSet();
+        ResolvedTypeSet indexTypeSet = new ResolvedTypeSet();
         Set<Integer> numberOfIndicesRequired = new HashSet<>();
 
         for (ResolvedType possibleContainerType : containerTypeSet) {
@@ -1064,9 +1064,9 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         // check that the passed indices have the correct type
 
-        List<Set<ResolvedType>> resolvedIndexTypeSets = new ArrayList<>();
+        List<ResolvedTypeSet> resolvedIndexTypeSets = new ArrayList<>();
         for (Expr index : expr.indices) {
-            Set<ResolvedType> resolvedIndexTypeSet = index.accept(this);
+            ResolvedTypeSet resolvedIndexTypeSet = index.accept(this);
             resolvedIndexTypeSets.add(resolvedIndexTypeSet);
             if (!TypeUtils.canBeAssignedTo(resolvedIndexTypeSet, indexTypeSet, componentResolver)) {
                 throw new TypeError(
@@ -1085,9 +1085,9 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitRange(Expr.Range range) {
-        Set<ResolvedType> fromTypeSet = range.from.accept(this);
-        Set<ResolvedType> toTypeSet = range.to.accept(this);
+    public ResolvedTypeSet visitRange(Expr.Range range) {
+        ResolvedTypeSet fromTypeSet = range.from.accept(this);
+        ResolvedTypeSet toTypeSet = range.to.accept(this);
 
         if (!TypeUtils.canBeAssignedTo(
                 fromTypeSet, ResolvedType.fromString("Integer", componentResolver), componentResolver)) {
@@ -1108,12 +1108,12 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
 
         // the type of the items is the cover of the two bounds
 
-        Set<ResolvedType> itemTypeSet =
+        ResolvedTypeSet itemTypeSet =
                 TypeUtils.getLowestCoverTypeSet(List.of(fromTypeSet, toTypeSet), componentResolver);
 
         // the type of the vector produced is the vector of the item type set
 
-        Set<ResolvedType> listComprehensionTypeSet =
+        ResolvedTypeSet listComprehensionTypeSet =
                 ResolvedType.fromString("phylospec.types.Vector<T>", Map.of("T", itemTypeSet), componentResolver);
 
         // resolve the range properties
@@ -1124,7 +1124,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitAtomicType(AstType.Atomic expr) {
+    public ResolvedTypeSet visitAtomicType(AstType.Atomic expr) {
         try {
             return remember(expr, ResolvedType.fromString(expr.name, componentResolver, true));
         } catch (TypeError e) {
@@ -1133,15 +1133,15 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     }
 
     @Override
-    public Set<ResolvedType> visitGenericType(AstType.Generic expr) {
-        List<Set<ResolvedType>> typeParameters = new ArrayList<>();
+    public ResolvedTypeSet visitGenericType(AstType.Generic expr) {
+        List<ResolvedTypeSet> typeParameters = new ArrayList<>();
 
         // resolve the type parameters
         for (AstType type : expr.typeParameters) {
             typeParameters.add(type.accept(this));
         }
 
-        Set<ResolvedType> resolvedType = ResolvedType.fromString(expr.name, typeParameters, componentResolver, true);
+        ResolvedTypeSet resolvedType = ResolvedType.fromString(expr.name, typeParameters, componentResolver, true);
         return remember(expr, resolvedType);
     }
 
@@ -1171,22 +1171,22 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
         this.scopedVariableTypes.removeFirst();
     }
 
-    private Set<ResolvedType> remember(Stmt expr, Set<ResolvedType> resolvedType) {
+    private ResolvedTypeSet remember(Stmt expr, ResolvedTypeSet resolvedType) {
         resolvedTypes.put(expr, resolvedType);
         return resolvedType;
     }
 
-    private Set<ResolvedType> remember(Expr expr, Set<ResolvedType> resolvedType) {
+    private ResolvedTypeSet remember(Expr expr, ResolvedTypeSet resolvedType) {
         resolvedTypes.put(expr, resolvedType);
         return resolvedType;
     }
 
-    private Set<ResolvedType> remember(AstType expr, Set<ResolvedType> resolvedType) {
+    private ResolvedTypeSet remember(AstType expr, ResolvedTypeSet resolvedType) {
         resolvedTypes.put(expr, resolvedType);
         return resolvedType;
     }
 
-    private Set<ResolvedType> remember(String variableName, Set<ResolvedType> resolvedTypeSet) {
+    private ResolvedTypeSet remember(String variableName, ResolvedTypeSet resolvedTypeSet) {
         scopedVariableTypes.getFirst().put(variableName, resolvedTypeSet);
         return resolvedTypeSet;
     }
@@ -1204,7 +1204,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
     /**
      * helper functions to pretty-print types
      */
-    private static String printType(Set<ResolvedType> type) {
+    private static String printType(ResolvedTypeSet type) {
         if (type.isEmpty()) {
             return "unknown";
         }
