@@ -14,6 +14,6 @@ Real grid[i, j] = 1.0 for i in 1:3 for j in 1:num(draws)
 // EXPECT TYPES
 // Vector<Real<;value=2.0>;num=5>
 // Vector<Real;num=6>
-// Matrix<Real<;value=1.0>;numRows=3, numCols=6>
-// Vector<Vector<Real>;numRows=3, numCols=6>
+// Matrix<Real<;value=1.0>;numRows=3, numCols=6, value=null>
+// Vector<Vector<Real<;value=1.0>>;numRows=3, numCols=6, value=null>
 // EXPECT TYPES

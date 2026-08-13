@@ -1,6 +1,6 @@
 Vector<Integer> a = [1, 2]
 Vector<String> aa = ["3", "3"]
-Vector<String> aaa = ["3", "3", "4"]
+Vector<String> aaa = ["3", "3", "4", "3", "3"]
 Integer b = a[2]
 
 Vector<Integer> c = 1:1
@@ -8,7 +8,7 @@ Vector<Integer> c = 1:1
 // EXPECT AST
 // (AS Vector<Integer> a (AR 1 2))
 // (AS Vector<String> aa (AR "3" "3"))
-// (AS Vector<String> aaa (AR "3" "3" "4"))
+// (AS Vector<String> aaa (AR "3" "3" "4" "3" "3"))
 // (AS Integer b (IX a 2))
 // (AS Vector<Integer> c (R 1 1))
 // EXPECT AST
@@ -19,7 +19,7 @@ Vector<Integer> c = 1:1
 // EXPECT TYPES
 // Vector<Integer<;value=null>;num=2>
 // Vector<String<;value=3>;num=2>
-// Vector<String<;value=null>;num=3>
+// Vector<String<;value=null>;num=5>
 // Integer<;value=null>
 // Vector<Integer<;value=1>;num=1>
 // EXPECT TYPES

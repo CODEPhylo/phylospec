@@ -65,12 +65,17 @@ public class ResolvedType {
     }
 
     /**
-     * Creates a shallow copy of this resolved type. The type component is shared with the
-     * original, but the parameter types map and the type properties are copied into
+     * Creates a deep copy of this resolved type. The type component is shared with the
+     * original, but the parameter types and the type properties are copied into
      * independent instances.
      */
-    public ResolvedType shallowCopy() {
-        return new ResolvedType(typeComponent, new HashMap<>(parameterTypes), typeProperties.copy());
+    public ResolvedType deepCopy() {
+        Map<String, ResolvedType> copiedParameterTypes = new HashMap<>();
+        for (String parameterName : parameterTypes.keySet()) {
+            copiedParameterTypes.put(
+                    parameterName, parameterTypes.get(parameterName).deepCopy());
+        }
+        return new ResolvedType(typeComponent, copiedParameterTypes, typeProperties.copy());
     }
 
     /**
@@ -210,7 +215,9 @@ public class ResolvedType {
         visitCombinations(inferredTypeParameters, typeParamList -> {
             Map<String, ResolvedType> typeParamSet = new HashMap<>();
             for (int i = 0; i < typeParamList.size(); i++) {
-                typeParamSet.put(typeComponent.getTypeParameters().get(i), (ResolvedType) typeParamList.get(i));
+                typeParamSet.put(
+                        typeComponent.getTypeParameters().get(i),
+                        typeParamList.get(i).deepCopy());
             }
 
             resultingTypeSet.add(new ResolvedType(typeComponent, typeParamSet));

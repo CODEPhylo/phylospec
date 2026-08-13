@@ -34,7 +34,6 @@ public class Type {
      */
     @JsonProperty("name")
     private String name;
-
     /**
      *
      * (Required)
@@ -48,7 +47,6 @@ public class Type {
 
     @JsonProperty("alias")
     private String alias;
-
     /**
      * Type parameters for generic types (e.g., ['T'] for Vector<T>)
      *
@@ -56,7 +54,6 @@ public class Type {
     @JsonProperty("typeParameters")
     @JsonPropertyDescription("Type parameters for generic types (e.g., ['T'] for Vector<T>)")
     private List<String> typeParameters = new ArrayList<String>();
-
     /**
      * Possible type properties for more fine-grained validation (e.g., `num` for Vector<T>)
      *
@@ -67,7 +64,6 @@ public class Type {
 
     @JsonProperty("properties")
     private Properties properties;
-
     /**
      * Namespace for this type
      *
