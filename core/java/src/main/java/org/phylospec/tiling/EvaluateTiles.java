@@ -127,7 +127,7 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
         Utils.visitOrderedCombinations(possibleTiles, tiles -> {
             if (foundBestTile[0]) {
                 // we've already found the (greedy) best one
-                return TypeUtils.Visitor.STOP;
+                return TypeUtils.VisitorResult.STOP;
             }
 
             // check for consistency across the statement tiles
@@ -135,7 +135,7 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
             IdentityHashMap<AstNode, Tile<?, ?>> assignments = new IdentityHashMap<>();
 
             for (Tile<?, ?> tile : tiles) {
-                if (tile.isInconsistent(assignments)) return TypeUtils.Visitor.CONTINUE;
+                if (tile.isInconsistent(assignments)) return TypeUtils.VisitorResult.CONTINUE;
             }
 
             // we found a consistent tiling
@@ -149,7 +149,7 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
             bestTiles.addAll(tiles);
 
             foundBestTile[0] = true;
-            return TypeUtils.Visitor.STOP;
+            return TypeUtils.VisitorResult.STOP;
         });
 
         if (!foundBestTile[0]) {

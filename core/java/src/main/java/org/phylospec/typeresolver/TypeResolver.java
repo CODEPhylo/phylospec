@@ -157,7 +157,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                                 resolvedDistributionTypeSet.add(
                                         x.getParameterTypes().get("T"));
                             }
-                            return TypeUtils.Visitor.CONTINUE;
+                            return TypeUtils.VisitorResult.CONTINUE;
                         },
                         componentResolver);
             }
@@ -245,7 +245,7 @@ public class TypeResolver implements AstVisitor<Set<ResolvedType>, Set<ResolvedT
                         if (x.getName().equals("phylospec.types.Distribution")) {
                             generatedTypeSet.add(x.getParameterTypes().get("T"));
                         }
-                        return TypeUtils.Visitor.CONTINUE;
+                        return TypeUtils.VisitorResult.CONTINUE;
                     },
                     componentResolver);
         }
