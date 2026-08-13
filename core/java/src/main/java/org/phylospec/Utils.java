@@ -1,11 +1,10 @@
 package org.phylospec;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.phylospec.typeresolver.TypeUtils;
 
 public class Utils {
 
@@ -48,30 +47,35 @@ public class Utils {
     /// in {@code variants}.
     ///
     /// Compared to {@code visitCombinations}, here the order of the visitor calls matches the given
-    // order of the
-    /// variants.
-    public static <T> void visitOrderedCombinations(List<List<T>> variants, Consumer<List<T>> visitor) {
-        boolean fullyResolved = true;
+    /// order of the variants. Furthermore, the visitor can return `TypeUtils.Visitor.STOP` to signal
+    /// that no more visits have to be made.
+    public static <T> void visitOrderedCombinations(
+            List<? extends List<T>> variants, Function<List<T>, TypeUtils.Visitor> visitor) {
+        // we have one combination object which we re-use
+        List<T> combination = new ArrayList<>(Collections.nCopies(variants.size(), null));
+        visitOrderedCombinations(variants, 0, combination, visitor);
+    }
 
-        for (int i = 0; i < variants.size(); i++) {
-            List<T> parameterTypeSet = variants.get(i);
+    private static <T> TypeUtils.Visitor visitOrderedCombinations(
+            List<? extends List<T>> variants,
+            int index,
+            List<T> combination,
+            Function<List<T>, TypeUtils.Visitor> visitor) {
 
-            if (parameterTypeSet.size() == 1) continue;
-
-            for (T parameterType : parameterTypeSet) {
-                List<T> clonedParameterTypeSet = new ArrayList<>();
-                clonedParameterTypeSet.add(parameterType);
-
-                List<List<T>> clonedTypeParams = new ArrayList<>(variants);
-                clonedTypeParams.set(i, clonedParameterTypeSet);
-
-                visitOrderedCombinations(clonedTypeParams, visitor);
-            }
-
-            return;
+        if (index == variants.size()) {
+            return visitor.apply(combination);
         }
 
-        visitor.accept(variants.stream().map(x -> x.iterator().next()).collect(Collectors.toList()));
+        for (T variant : variants.get(index)) {
+            combination.set(index, variant);
+            TypeUtils.Visitor result = visitOrderedCombinations(variants, index + 1, combination, visitor);
+
+            if (result == TypeUtils.Visitor.STOP) {
+                return TypeUtils.Visitor.STOP;
+            }
+        }
+
+        return TypeUtils.Visitor.CONTINUE;
     }
 
     public static int editDistance(String a, String b) {
