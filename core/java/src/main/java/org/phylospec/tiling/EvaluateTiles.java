@@ -8,6 +8,7 @@ import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.CandidateTile;
 import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.typeresolver.StochasticityResolver;
+import org.phylospec.typeresolver.TypeUtils;
 import org.phylospec.typeresolver.VariableResolver;
 
 /**
@@ -126,7 +127,7 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
         Utils.visitOrderedCombinations(possibleTiles, tiles -> {
             if (foundBestTile[0]) {
                 // we've already found the (greedy) best one
-                return;
+                return TypeUtils.Visitor.STOP;
             }
 
             // check for consistency across the statement tiles
@@ -134,7 +135,7 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
             IdentityHashMap<AstNode, Tile<?, ?>> assignments = new IdentityHashMap<>();
 
             for (Tile<?, ?> tile : tiles) {
-                if (tile.isInconsistent(assignments)) return;
+                if (tile.isInconsistent(assignments)) return TypeUtils.Visitor.CONTINUE;
             }
 
             // we found a consistent tiling
@@ -146,7 +147,9 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
 
             bestTiles.clear();
             bestTiles.addAll(tiles);
+
             foundBestTile[0] = true;
+            return TypeUtils.Visitor.STOP;
         });
 
         if (!foundBestTile[0]) {
