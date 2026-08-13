@@ -125,11 +125,6 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
         boolean[] foundBestTile = new boolean[] {false};
 
         Utils.visitOrderedCombinations(possibleTiles, tiles -> {
-            if (foundBestTile[0]) {
-                // we've already found the (greedy) best one
-                return TypeUtils.VisitorResult.STOP;
-            }
-
             // check for consistency across the statement tiles
 
             IdentityHashMap<AstNode, Tile<?, ?>> assignments = new IdentityHashMap<>();
