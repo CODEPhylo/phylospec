@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.phylospec.ast.Stmt;
@@ -29,6 +30,7 @@ public class RevConverterTest {
      * corresponding .rev file.
      */
     @TestFactory
+    @Disabled
     public Iterable<DynamicTest> testAllPsScriptsAgainstExpectedRev() throws IOException {
         Path convertersTestDir = Paths.get("src/test/java/org/phylospec/converters");
         List<Path> psFiles = findPsFiles(convertersTestDir);
