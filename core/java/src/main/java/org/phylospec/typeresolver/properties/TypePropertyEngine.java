@@ -63,8 +63,8 @@ public class TypePropertyEngine {
                 ResolvedType unwrappedExpressionType = TypeUtils.recoverTypeParameter(
                         "phylospec.types.Distribution", "T", resolvedExpressionType, componentResolver);
                 if (unwrappedExpressionType != null
-                        && TypeUtils.covers(resolvedExpressionType, unwrappedExpressionType, componentResolver)) {
-                    copyProperties(resolvedVariableType, unwrappedExpressionType);
+                        && TypeUtils.covers(resolvedVariableType, unwrappedExpressionType, componentResolver)) {
+                    copyProperties(unwrappedExpressionType, resolvedVariableType);
                 }
             }
         }
@@ -108,10 +108,7 @@ public class TypePropertyEngine {
 
     private boolean disagreeIfKnown(Object a, Object b) {
         if (a == null || b == null) return false;
-        if (a instanceof Number aNumber && b instanceof Number bNumber) {
-            return Double.compare(aNumber.doubleValue(), bNumber.doubleValue()) != 0;
-        }
-        return !a.equals(b);
+        return !propertiesAgree(a, b);
     }
 
     public void resolveLiteral(ResolvedTypeSet resolvedTypeSet, Object value) {
@@ -247,9 +244,16 @@ public class TypePropertyEngine {
             Object type1Property = type1.properties().get(name);
             Object type2Property = type2.properties().get(name);
 
-            if (type1Property.equals(type2Property)) commonProperties.put(name, type1Property);
+            if (propertiesAgree(type1Property, type2Property)) commonProperties.put(name, type1Property);
         }
 
         return commonProperties;
+    }
+
+    private static boolean propertiesAgree(Object a, Object b) {
+        if (a instanceof Number aNumber && b instanceof Number bNumber) {
+            return Double.compare(aNumber.doubleValue(), bNumber.doubleValue()) == 0;
+        }
+        return a.equals(b);
     }
 }
