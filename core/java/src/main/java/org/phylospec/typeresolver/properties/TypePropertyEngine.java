@@ -11,6 +11,7 @@ import org.phylospec.components.Generator;
 import org.phylospec.errors.Error;
 import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.typeresolver.ResolvedType;
+import org.phylospec.typeresolver.ResolvedTypeSet;
 import org.phylospec.typeresolver.TypeUtils;
 import org.phylospec.workspace.Workspace;
 
@@ -39,8 +40,7 @@ public class TypePropertyEngine {
         }
     }
 
-    public void resolveAssignment(
-            Set<ResolvedType> resolvedVariableTypeSet, Set<ResolvedType> resolvedExpressionTypeSet) {
+    public void resolveAssignment(ResolvedTypeSet resolvedVariableTypeSet, ResolvedTypeSet resolvedExpressionTypeSet) {
         for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
             for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
                 copyProperties(resolvedExpressionType, resolvedVariableType);
@@ -49,8 +49,8 @@ public class TypePropertyEngine {
     }
 
     public void resolveDraw(
-            Set<ResolvedType> resolvedVariableTypeSet,
-            Set<ResolvedType> resolvedExpressionTypeSet,
+            ResolvedTypeSet resolvedVariableTypeSet,
+            ResolvedTypeSet resolvedExpressionTypeSet,
             ComponentResolver componentResolver) {
         for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
             // find the matching resolved types
@@ -64,8 +64,7 @@ public class TypePropertyEngine {
         }
     }
 
-    public void resolveIndexed(
-            int indexCount, List<Set<ResolvedType>> rangeTypeSets, Set<ResolvedType> containerTypeSet) {
+    public void resolveIndexed(int indexCount, List<ResolvedTypeSet> rangeTypeSets, ResolvedTypeSet containerTypeSet) {
         if (indexCount == 1) {
             Object num = getPropertyOnAgreement(rangeTypeSets.getFirst(), NUM);
             attachToAll(containerTypeSet, NUM, num);
@@ -79,7 +78,7 @@ public class TypePropertyEngine {
     }
 
     public void checkObservedAs(
-            Stmt.ObservedAs observedAs, Set<ResolvedType> generatedTypeSet, Set<ResolvedType> observationTypeSet) {
+            Stmt.ObservedAs observedAs, ResolvedTypeSet generatedTypeSet, ResolvedTypeSet observationTypeSet) {
         Set<String> commonProperties = getCommonProperties(generatedTypeSet);
         for (String propertyName : commonProperties) {
             Object generatedProperty = getPropertyOnAgreement(generatedTypeSet, propertyName);
@@ -109,7 +108,7 @@ public class TypePropertyEngine {
         return !a.equals(b);
     }
 
-    public void resolveLiteral(Set<ResolvedType> resolvedTypeSet, Object value) {
+    public void resolveLiteral(ResolvedTypeSet resolvedTypeSet, Object value) {
         for (ResolvedType resolvedType : resolvedTypeSet) {
             resolvedType.properties().attach(VALUE, value);
         }
@@ -120,14 +119,14 @@ public class TypePropertyEngine {
         generatorPropertyResolver.processGenerator(call, generator, resolvedGeneratorApplication);
     }
 
-    public void resolveArray(int numElements, Set<ResolvedType> arrayTypeSet) {
+    public void resolveArray(int numElements, ResolvedTypeSet arrayTypeSet) {
         for (ResolvedType resolvedType : arrayTypeSet) {
             resolvedType.properties().attach(NUM, numElements);
         }
     }
 
     public void checkIndex(
-            List<Expr> indices, List<Set<ResolvedType>> resolvedIndexTypeSets, Set<ResolvedType> containerTypeSet) {
+            List<Expr> indices, List<ResolvedTypeSet> resolvedIndexTypeSets, ResolvedTypeSet containerTypeSet) {
         // check that the index is in range in case we have a num property
 
         // check the first dimension using the num property
@@ -166,7 +165,7 @@ public class TypePropertyEngine {
     }
 
     public void resolveRange(
-            Set<ResolvedType> fromTypeSet, Set<ResolvedType> toTypeSet, Set<ResolvedType> listComprehensionTypeSet) {
+            ResolvedTypeSet fromTypeSet, ResolvedTypeSet toTypeSet, ResolvedTypeSet listComprehensionTypeSet) {
         // check if type range has literal properties and determine the result num property if
         // possible
 
@@ -180,7 +179,7 @@ public class TypePropertyEngine {
         }
     }
 
-    private static Set<String> getCommonProperties(Set<ResolvedType> typeSet) {
+    private static Set<String> getCommonProperties(ResolvedTypeSet typeSet) {
         if (typeSet.isEmpty()) return Set.of();
 
         Set<String> common = new HashSet<>();
@@ -198,7 +197,7 @@ public class TypePropertyEngine {
         return common;
     }
 
-    public static Object getPropertyOnAgreement(Set<ResolvedType> typeSet, String propertyName) {
+    public static Object getPropertyOnAgreement(ResolvedTypeSet typeSet, String propertyName) {
         Set<Object> properties =
                 typeSet.stream().map(x -> x.properties().get(propertyName)).collect(Collectors.toSet());
         if (properties.size() == 1) {
@@ -208,7 +207,7 @@ public class TypePropertyEngine {
         }
     }
 
-    private void attachToAll(Set<ResolvedType> typeSet, String propertyName, Object value) {
+    private void attachToAll(ResolvedTypeSet typeSet, String propertyName, Object value) {
         for (ResolvedType type : typeSet) {
             type.properties().attach(propertyName, value);
         }
@@ -233,22 +232,27 @@ public class TypePropertyEngine {
         }
     }
 
-    public static Map<String, Object> getPropertiesInAgreement(List<ResolvedType> typeList) {
-        Set<ResolvedType> typeSet = Collections.newSetFromMap(new IdentityHashMap<>());
-        typeSet.addAll(typeList);
-
-        if (typeList.isEmpty()) {
-            return new HashMap<>();
-        }
-
-        Set<String> commonPropertiesNames = getCommonProperties(typeSet);
+    /**
+     * Returns the properties that every type in {@code typeList} agrees on. This is the
+     * reconciliation primitive {@link ResolvedTypeSet} uses when it merges two structurally-equal
+     * types on insertion.
+     *
+     * The types are collected into an identity-based set on purpose, not a {@link ResolvedTypeSet}
+     * or plain {@code HashSet}: the whole point of this method is to compare the properties of
+     * types that may be structurally equal (per {@link ResolvedType#equals}) but carry different
+     * properties. Deduping by structural equality here would collapse those instances into one
+     * before their properties could ever be compared, always reporting trivial "agreement".
+     */
+    public static Map<String, Object> getPropertiesInAgreement(ResolvedType type1, ResolvedType type2) {
         Map<String, Object> commonProperties = new HashMap<>();
 
-        for (String propertyName : commonPropertiesNames) {
-            Object commonProperty = getPropertyOnAgreement(typeSet, propertyName);
-            if (commonProperty != null) {
-                commonProperties.put(propertyName, commonProperty);
-            }
+        for (String name : type1.properties().getPropertyNames()) {
+            if (!type2.properties().has(name)) continue;
+
+            Object type1Property = type1.properties().get(name);
+            Object type2Property = type2.properties().get(name);
+
+            if (type1Property.equals(type2Property)) commonProperties.put(name, type1Property);
         }
 
         return commonProperties;

@@ -58,4 +58,16 @@ public class TypeProperties {
     private Map<String, Object> getProperties() {
         return this.typeProperties;
     }
+
+    @Override
+    public int hashCode() {
+        return this.typeProperties.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        TypeProperties that = (TypeProperties) o;
+        return this.typeProperties.equals(that.typeProperties);
+    }
 }

@@ -9,6 +9,7 @@ import org.phylospec.components.ParsedTypeProperty;
 import org.phylospec.errors.Error;
 import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.typeresolver.ResolvedType;
+import org.phylospec.typeresolver.ResolvedTypeSet;
 import org.phylospec.typeresolver.TypeUtils;
 import org.phylospec.workspace.Workspace;
 
@@ -54,7 +55,7 @@ public class GeneratorPropertyResolver {
 
     private void checkConstraints(
             Expr.Call call, Generator generator, TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
-        Map<String, Set<ResolvedType>> resolvedArguments = resolvedGeneratorApplication.resolvedArguments();
+        Map<String, ResolvedTypeSet> resolvedArguments = resolvedGeneratorApplication.resolvedArguments();
 
         for (String constraintString : generator.getConstraints()) {
             checkConstraint(call, constraintString, resolvedArguments);
@@ -62,11 +63,11 @@ public class GeneratorPropertyResolver {
     }
 
     private void checkConstraint(
-            Expr.Call call, String constraintString, Map<String, Set<ResolvedType>> resolvedArguments) {
+            Expr.Call call, String constraintString, Map<String, ResolvedTypeSet> resolvedArguments) {
         ParsedTypeConstraint constraint = new ParsedTypeConstraint(constraintString);
 
-        Set<ResolvedType> leftInputTypeSet = resolvedArguments.get(constraint.getLeftInputName());
-        Set<ResolvedType> rightInputTypeSet = resolvedArguments.get(constraint.getRightInputName());
+        ResolvedTypeSet leftInputTypeSet = resolvedArguments.get(constraint.getLeftInputName());
+        ResolvedTypeSet rightInputTypeSet = resolvedArguments.get(constraint.getRightInputName());
 
         if (leftInputTypeSet == null || rightInputTypeSet == null) {
             // we don't know about this input
@@ -116,7 +117,7 @@ public class GeneratorPropertyResolver {
 
     private void resolveProviders(
             Generator generator, TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
-        Map<String, Set<ResolvedType>> resolvedArguments = resolvedGeneratorApplication.resolvedArguments();
+        Map<String, ResolvedTypeSet> resolvedArguments = resolvedGeneratorApplication.resolvedArguments();
 
         for (GeneratorPropertyProvider provider : providers) {
             if (provider.getGenerator().equals(generator.getNamespace() + "." + generator.getName())) {
@@ -135,7 +136,7 @@ public class GeneratorPropertyResolver {
     }
 
     private void resolveTypeProperties(
-            ParsedType parsedType, ResolvedType generatedType, Map<String, Set<ResolvedType>> resolvedArguments) {
+            ParsedType parsedType, ResolvedType generatedType, Map<String, ResolvedTypeSet> resolvedArguments) {
         // resolve the type properties of generatedType
         // this could be either a constant assignment (e.g. `Vector<Real; num=10`) or an assignment
         // of an input type property (e.g. `numBranches=inputTree.numBranches`).
@@ -177,8 +178,8 @@ public class GeneratorPropertyResolver {
     }
 
     private static Object resolveAssignment(
-            Map<String, Set<ResolvedType>> resolvedArguments, ParsedTypeProperty.Assignment assignment) {
-        Set<ResolvedType> resolvedTypeSet = resolvedArguments.get(assignment.getInputName());
+            Map<String, ResolvedTypeSet> resolvedArguments, ParsedTypeProperty.Assignment assignment) {
+        ResolvedTypeSet resolvedTypeSet = resolvedArguments.get(assignment.getInputName());
 
         if (resolvedTypeSet == null || resolvedTypeSet.isEmpty()) {
             // we cannot determine the input types

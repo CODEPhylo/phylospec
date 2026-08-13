@@ -26,13 +26,13 @@ class TypeMatcher {
      * @param query the query that is matched against the rules.
      * @return the resulting type or null if no match is found.
      */
-    Set<ResolvedType> findMatch(List<Rule> rules, Query query) {
+    ResolvedTypeSet findMatch(List<Rule> rules, Query query) {
         // we first enumerate all possible input type combinations
         Set<List<ResolvedType>> inputCombinations = new HashSet<>();
         Utils.visitCombinations(Arrays.stream(query.inputTypes).toList(), inputCombinations::add);
 
         // we now find all rules where the rule input types cover the actual input types
-        Set<ResolvedType> resultTypesOfMatches = new HashSet<>();
+        ResolvedTypeSet resultTypesOfMatches = new ResolvedTypeSet();
         for (List<ResolvedType> inputCombination : inputCombinations) {
             for (Rule rule : rules) {
                 if (rule.operation != query.operation) continue;
@@ -75,12 +75,12 @@ class TypeMatcher {
     }
 
     static class Query {
-        public Query(TokenType operation, Set<ResolvedType>... inputTypes) {
+        public Query(TokenType operation, ResolvedTypeSet... inputTypes) {
             this.operation = operation;
             this.inputTypes = inputTypes;
         }
 
         TokenType operation;
-        Set<ResolvedType>[] inputTypes;
+        ResolvedTypeSet[] inputTypes;
     }
 }

@@ -16,9 +16,7 @@ public class Utils {
     ///
     /// If the order of the visitor calls is important, consider using {@code
     // visitOrderedCombinations}.
-    public static <T> void visitCombinations(List<Set<T>> variants, Consumer<List<T>> visitor) {
-        boolean fullyResolved = true;
-
+    public static <T> void visitCombinations(List<? extends Set<T>> variants, Consumer<List<T>> visitor) {
         for (int i = 0; i < variants.size(); i++) {
             Set<T> parameterTypeSet = variants.get(i);
 
