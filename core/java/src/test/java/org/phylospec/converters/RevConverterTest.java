@@ -29,8 +29,8 @@ public class RevConverterTest {
      * converts it to Rev using RevConverter, and compares the result with the
      * corresponding .rev file.
      */
+    @Disabled("Disabled as the Rev converter is deprecated and does not support the current standard.")
     @TestFactory
-    @Disabled
     public Iterable<DynamicTest> testAllPsScriptsAgainstExpectedRev() throws IOException {
         Path convertersTestDir = Paths.get("src/test/java/org/phylospec/converters");
         List<Path> psFiles = findPsFiles(convertersTestDir);

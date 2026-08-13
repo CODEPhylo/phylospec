@@ -195,9 +195,9 @@ public class RevConverter implements AstVisitor<Void, StringBuilder, Void> {
                     t -> {
                         if (t.getName().equals("Distribution")) {
                             stochasticity[0] = Stochasticity.STOCHASTIC;
-                            return TypeUtils.Visitor.STOP;
+                            return TypeUtils.VisitorResult.STOP;
                         }
-                        return TypeUtils.Visitor.CONTINUE;
+                        return TypeUtils.VisitorResult.CONTINUE;
                     },
                     componentResolver);
         }

@@ -49,18 +49,20 @@ public class Utils {
     /// Compared to {@code visitCombinations}, here the order of the visitor calls matches the given
     /// order of the variants. Furthermore, the visitor can return `TypeUtils.Visitor.STOP` to signal
     /// that no more visits have to be made.
+    ///
+    /// Note that the object passed to the visitor is reused across visits.
     public static <T> void visitOrderedCombinations(
-            List<? extends List<T>> variants, Function<List<T>, TypeUtils.Visitor> visitor) {
+            List<? extends List<T>> variants, Function<List<T>, TypeUtils.VisitorResult> visitor) {
         // we have one combination object which we re-use
         List<T> combination = new ArrayList<>(Collections.nCopies(variants.size(), null));
         visitOrderedCombinations(variants, 0, combination, visitor);
     }
 
-    private static <T> TypeUtils.Visitor visitOrderedCombinations(
+    private static <T> TypeUtils.VisitorResult visitOrderedCombinations(
             List<? extends List<T>> variants,
             int index,
             List<T> combination,
-            Function<List<T>, TypeUtils.Visitor> visitor) {
+            Function<List<T>, TypeUtils.VisitorResult> visitor) {
 
         if (index == variants.size()) {
             return visitor.apply(combination);
@@ -68,14 +70,14 @@ public class Utils {
 
         for (T variant : variants.get(index)) {
             combination.set(index, variant);
-            TypeUtils.Visitor result = visitOrderedCombinations(variants, index + 1, combination, visitor);
+            TypeUtils.VisitorResult result = visitOrderedCombinations(variants, index + 1, combination, visitor);
 
-            if (result == TypeUtils.Visitor.STOP) {
-                return TypeUtils.Visitor.STOP;
+            if (result == TypeUtils.VisitorResult.STOP) {
+                return TypeUtils.VisitorResult.STOP;
             }
         }
 
-        return TypeUtils.Visitor.CONTINUE;
+        return TypeUtils.VisitorResult.CONTINUE;
     }
 
     public static int editDistance(String a, String b) {

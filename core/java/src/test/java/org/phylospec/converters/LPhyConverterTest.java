@@ -29,7 +29,7 @@ public class LPhyConverterTest {
      * converts it to LPhy using LPhyConverter, and compares the result with the
      * corresponding .lphy file.
      */
-    @Disabled
+    @Disabled("Disabled as the LPhy converter is deprecated and does not support the current standard.")
     @TestFactory
     public Iterable<DynamicTest> testAllPsScriptsAgainstExpectedLPhy() throws IOException {
         Path convertersTestDir = Paths.get("src/test/java/org/phylospec/converters");

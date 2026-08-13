@@ -35,9 +35,9 @@ public class TypeUtils {
                 t -> {
                     if (t.getName().equals(typeName)) {
                         recoveredType[0] = t;
-                        return Visitor.STOP;
+                        return VisitorResult.STOP;
                     }
-                    return Visitor.CONTINUE;
+                    return VisitorResult.CONTINUE;
                 },
                 componentResolver);
 
@@ -175,9 +175,9 @@ public class TypeUtils {
                 x -> {
                     if (x.equals(query)) {
                         covers[0] = true;
-                        return Visitor.STOP;
+                        return VisitorResult.STOP;
                     }
-                    return Visitor.CONTINUE;
+                    return VisitorResult.CONTINUE;
                 },
                 componentResolver);
         return covers[0];
@@ -242,7 +242,7 @@ public class TypeUtils {
                 type1,
                 x -> {
                     parents1.add(x);
-                    return Visitor.CONTINUE;
+                    return VisitorResult.CONTINUE;
                 },
                 componentResolver);
 
@@ -252,9 +252,9 @@ public class TypeUtils {
                 x -> {
                     if (parents1.contains(x)) {
                         lowestCover[0] = x;
-                        return Visitor.STOP;
+                        return VisitorResult.STOP;
                     }
-                    return Visitor.CONTINUE;
+                    return VisitorResult.CONTINUE;
                 },
                 componentResolver);
 
@@ -265,8 +265,8 @@ public class TypeUtils {
      * Calls the visitor function on the type and every parent type.
      */
     public static void visitTypeAndParents(
-            ResolvedType type, Function<ResolvedType, Visitor> visitor, ComponentResolver componentResolver) {
-        if (visitor.apply(type) == Visitor.STOP) return;
+            ResolvedType type, Function<ResolvedType, VisitorResult> visitor, ComponentResolver componentResolver) {
+        if (visitor.apply(type) == VisitorResult.STOP) return;
         visitParents(type, visitor, componentResolver);
     }
 
@@ -274,7 +274,7 @@ public class TypeUtils {
      * Calls the visitor function on the type and every parent type.
      */
     public static void visitParents(
-            ResolvedType type, Function<ResolvedType, Visitor> visitor, ComponentResolver componentResolver) {
+            ResolvedType type, Function<ResolvedType, VisitorResult> visitor, ComponentResolver componentResolver) {
         if (type.getExtends() != null) {
             HashMap<String, Set<ResolvedType>> inheritedTypeParameters = new HashMap<>();
             for (String name : type.getParameterTypes().keySet()) {
@@ -301,11 +301,11 @@ public class TypeUtils {
                         clonedTypeParams.put(parameterName, x);
 
                         ResolvedType clonedType = new ResolvedType(type.getTypeComponent(), clonedTypeParams);
-                        if (visitor.apply(clonedType) == Visitor.STOP) return Visitor.STOP;
+                        if (visitor.apply(clonedType) == VisitorResult.STOP) return VisitorResult.STOP;
 
                         visitParents(clonedType, visitor, componentResolver);
 
-                        return Visitor.CONTINUE;
+                        return VisitorResult.CONTINUE;
                     },
                     componentResolver);
         }
@@ -367,11 +367,11 @@ public class TypeUtils {
                 resolvedType,
                 type -> {
                     if (!Objects.equals(type.getName(), requiredTypeComponent.getName())) {
-                        return Visitor.CONTINUE;
+                        return VisitorResult.CONTINUE;
                     }
                     if (requiredParameterTypeNames.size()
                             != type.getParametersNames().size()) {
-                        return Visitor.CONTINUE;
+                        return VisitorResult.CONTINUE;
                     }
 
                     // the atomic type matches, let's recursively check all type parameters
@@ -392,9 +392,9 @@ public class TypeUtils {
                     if (foundMatchForAll) {
                         // all type parameters match as well
                         foundMatch[0] = true;
-                        return Visitor.STOP;
+                        return VisitorResult.STOP;
                     } else {
-                        return Visitor.CONTINUE;
+                        return VisitorResult.CONTINUE;
                     }
                 },
                 componentResolver);
@@ -414,7 +414,7 @@ public class TypeUtils {
         return true;
     }
 
-    public enum Visitor {
+    public enum VisitorResult {
         STOP,
         CONTINUE
     }
