@@ -255,9 +255,16 @@ public class ResolvedType {
     public boolean equalsIncludingProperties(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         ResolvedType that = (ResolvedType) o;
-        return Objects.equals(parameterTypes, that.parameterTypes)
-                && Objects.equals(typeComponent, that.typeComponent)
-                && Objects.equals(properties(), that.properties());
+
+        if (!Objects.equals(parameterTypes, that.parameterTypes)) return false;
+        // we also have to check the properties of the parameter types
+        for (String key : parameterTypes.keySet()) {
+            if (!parameterTypes.get(key).equalsIncludingProperties(that.parameterTypes.get(key))) {
+                return false;
+            }
+        }
+
+        return Objects.equals(typeComponent, that.typeComponent) && Objects.equals(properties(), that.properties());
     }
 
     @Override
@@ -266,7 +273,13 @@ public class ResolvedType {
     }
 
     public int hashCodeIncludingProperties() {
-        return Objects.hash(parameterTypes, typeComponent, properties());
+        int hash = Objects.hash(typeComponent, properties());
+
+        for (ResolvedType parameterType : parameterTypes.values()) {
+            hash += parameterType.hashCodeIncludingProperties();
+        }
+
+        return hash;
     }
 
     @Override
