@@ -1,5 +1,6 @@
 package org.phylospec.tiling;
 
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -134,6 +135,58 @@ public abstract class TypeToken<T> {
     @Override
     public int hashCode() {
         return type.hashCode();
+    }
+
+    /**
+     * Returns a human-readable rendering of the type, mirroring how it would be written in Java
+     * source but with package names stripped, e.g. {@code Map<String, List<Integer>>}.
+     * Wildcards are collapsed to their bound, so {@code ? extends Real<? extends Real>} renders
+     * as {@code Real<Real>}.
+     */
+    @Override
+    public String toString() {
+        return typeName(type);
+    }
+
+    /** Recursively renders a {@link Type} using simple (package-less) class names. */
+    private static String typeName(Type type) {
+        if (type instanceof Class<?> clazz) {
+            if (clazz.isArray()) return typeName(clazz.getComponentType()) + "[]";
+            return clazz.getSimpleName();
+        }
+
+        if (type instanceof ParameterizedType pt) {
+            StringBuilder sb = new StringBuilder(typeName(pt.getRawType()));
+            Type[] args = pt.getActualTypeArguments();
+            if (args.length > 0) {
+                sb.append('<');
+                for (int i = 0; i < args.length; i++) {
+                    if (i > 0) sb.append(", ");
+                    sb.append(typeName(args[i]));
+                }
+                sb.append('>');
+            }
+            return sb.toString();
+        }
+
+        if (type instanceof GenericArrayType gat) {
+            return typeName(gat.getGenericComponentType()) + "[]";
+        }
+
+        // wildcards are rendered as their bound alone, so `? extends Real` reads as `Real`
+        if (type instanceof WildcardType wildcard) {
+            Type[] lower = wildcard.getLowerBounds();
+            if (lower.length > 0) return typeName(lower[0]);
+
+            Type[] upper = wildcard.getUpperBounds();
+            if (upper.length > 0 && !upper[0].equals(Object.class)) return typeName(upper[0]);
+
+            return "?";
+        }
+
+        if (type instanceof TypeVariable<?> tv) return tv.getName();
+
+        return type.getTypeName();
     }
 
     /**
