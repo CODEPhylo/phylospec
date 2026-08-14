@@ -167,7 +167,7 @@ public abstract class Tile<T, S> {
         } catch (Exception e) {
             // we wrap the exception into a tiling error
             throw new WrappedTileApplicationError(
-                    this.getRootNode(), "Creating the BEAST 2.8 objects did not work.", e);
+                    this.getRootNode(), "Creating the engine objects did not work.", e);
         }
     }
 

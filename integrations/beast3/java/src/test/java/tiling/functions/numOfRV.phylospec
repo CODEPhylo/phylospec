@@ -2,7 +2,7 @@ Simplex simplex ~ Dirichlet(concentration=repeat(value=2.0, num=4))
 Int a = num(vector=simplex)
 
 // EXPECTED_TILES
-// Unsupported operation. BEAST 2.8 does not support a random variable for 'vector'.
+// Unsupported operation. Your engine does not support a random variable for 'vector'.
 // EXPECTED_TILES
 
 // EXPECTED BEAST STATE

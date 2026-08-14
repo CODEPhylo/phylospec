@@ -45,7 +45,8 @@ public abstract class TileInput<T, S> {
         try {
             this.tile = (Tile<T, S>) tile;
         } catch (ClassCastException e) {
-            throw new RuntimeException("Incompatible tile assigned to a tile input. This should not happen.");
+            throw new RuntimeException(
+                    "Incompatible tile assigned to a tile input. This should not happen.");
         }
     }
 
@@ -61,8 +62,12 @@ public abstract class TileInput<T, S> {
         // check the stochasticity of the input node
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(inputAstNode);
         if (!this.acceptedStochasticities.contains(stochasticity)) {
-            throw new FailedTilingAttempt.RejectedBoundary(Stochasticity.getErrorMessage(
-                    "BEAST 2.8", this.getKey(), stochasticity, this.acceptedStochasticities));
+            throw new FailedTilingAttempt.RejectedBoundary(
+                    Stochasticity.getErrorMessage(
+                            "Your engine",
+                            this.getKey(),
+                            stochasticity,
+                            this.acceptedStochasticities));
         }
 
         Set<Tile<?, S>> potentialInputs = possibleInputTiles.get(inputAstNode);
