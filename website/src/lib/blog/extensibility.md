@@ -72,6 +72,8 @@ author: "Tobia Ochsner"
 
 # On Ownership and Extensibility
 
+**Feel free to share your opinion on this post in the corresponding <a href="https://github.com/CODEPhylo/phylospec/discussions/66" target="_blank">GitHub Discussion</a>.**
+
 PhyloSpec models exist in an ecosystem. They use components from component libraries maintained by different groups, and get executed by engines that release on their own schedule. As time passes, questions around provenance, versioning, and dependency resolution become relevant. This post proposes ways to answer these—starting with where components and engine specifications live, who depends on what, and why we can mostly avoid relying on version numbers.
 
 ## Repositories
@@ -240,3 +242,5 @@ Optionally, a JSON manifest file accompanies a PhyloSpec script. It can contain 
 - Versions only matter for two purposes: provenance by creating a run receipt and keeping tooling's behavior stable by pinning a repository in the manifest.
 - Compatibility itself (whether a model can run against a given component library or engine) is decided by shape. This lets libraries and engines keep evolving independently.
 - We introduce two small files: `model.manifest.json` with metadata on the model and the repository version used to design the analysis, and `model.receipt.json` with the engine versions used to execute a run.
+
+**Feel free to share your opinion on this post in the corresponding <a href="https://github.com/CODEPhylo/phylospec/discussions/66" target="_blank">GitHub Discussion</a>.**
