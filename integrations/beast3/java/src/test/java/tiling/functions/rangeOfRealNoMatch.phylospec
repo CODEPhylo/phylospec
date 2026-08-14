@@ -3,7 +3,7 @@ Vector<Integer> intervalStartTimes2 = range(
 )
 
 // EXPECTED_TILES
-// Unsupported operation. BEAST 2.8 cannot deal with the value you provided for the 'start' argument for 'range'.
+// Unsupported operation. Your engine cannot deal with the value you provided for the 'start' argument for 'range' (expected a IntScalarParam<Int>).
 // EXPECTED_TILES
 
 // EXPECTED BEAST STATE

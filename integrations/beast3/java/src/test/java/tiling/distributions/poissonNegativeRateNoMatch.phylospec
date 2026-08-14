@@ -2,7 +2,7 @@ Real c = -1.0
 Int x ~ Poisson(rate=c)
 
 // EXPECTED_TILES
-// Unsupported operation. BEAST 2.8 cannot deal with the value you provided for the 'rate' argument for 'Poisson'.
+// Unsupported operation. Your engine cannot deal with the value you provided for the 'rate' argument for 'Poisson' (expected a RealScalar<NonNegativeReal>).
 // EXPECTED_TILES
 
 // EXPECTED BEAST STATE

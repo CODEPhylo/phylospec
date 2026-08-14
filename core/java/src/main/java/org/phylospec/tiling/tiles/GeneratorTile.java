@@ -34,7 +34,8 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
         if (!this.getCompatibleStochasticities().contains(stochasticity)) {
             throw new FailedTilingAttempt.Rejected(
-                    Stochasticity.getErrorMessage("BEAST 2.8", stochasticity, this.getCompatibleStochasticities()));
+                    Stochasticity.getErrorMessage(
+                            "Your engine", stochasticity, this.getCompatibleStochasticities()));
         }
 
         // the generator has the right name and stochasticity
@@ -51,7 +52,8 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
         List<TileInput<?, S>> usedInputs = new ArrayList<>();
         Set<String> givenPhyloSpecArgumentNames = new HashSet<>();
         for (Expr.Argument argument : call.arguments) {
-            String argumentName = this.getArgumentName(argument, call.arguments.length, expectedInputs);
+            String argumentName =
+                    this.getArgumentName(argument, call.arguments.length, expectedInputs);
 
             givenPhyloSpecArgumentNames.add(argumentName);
             TileInput<?, S> argumentInput = expectedInputsByArgument.get(argumentName);
@@ -60,22 +62,27 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
                 // Generator has an argument for which no Input field is defined in the tile
                 // we cannot tile
                 throw new FailedTilingAttempt.Rejected(
-                        "You cannot pass a value to the '" + argumentName + "' argument to run this in BEAST.");
+                        "You cannot pass a value to the '"
+                                + argumentName
+                                + "' argument to run this.");
             }
 
             // for each argument tile, we check if its generated BEAST 2.8 type is compatible with
             // this input
 
             Set<Tile<?, S>> currentCompatibleInputTiles =
-                    argumentInput.getCompatibleInputTiles(argument, inputTiles, stochasticityResolver);
+                    argumentInput.getCompatibleInputTiles(
+                            argument, inputTiles, stochasticityResolver);
 
             if (currentCompatibleInputTiles.isEmpty()) {
                 throw new FailedTilingAttempt.RejectedBoundary(
-                        "BEAST 2.8 cannot deal with the value you provided for the '"
+                        "Your engine cannot deal with the value you provided for the '"
                                 + argumentName
                                 + "' argument for '"
                                 + this.getPhyloSpecGeneratorName()
-                                + "'.");
+                                + "' (expected a "
+                                + argumentInput.getTypeToken().toString()
+                                + ").");
             }
 
             compatibleInputTiles.add(currentCompatibleInputTiles);
@@ -92,7 +99,9 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
                 // a required argument is missing
                 // we cannot tile this
                 throw new FailedTilingAttempt.Rejected(
-                        "BEAST 2.8 expects you to provide a value for the '" + input.getKey() + "' argument.");
+                        "Your engine expects you to provide a value for the '"
+                                + input.getKey()
+                                + "' argument.");
             }
         }
 
@@ -164,12 +173,15 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
             this(phylospecArgumentName, required, EnumSet.allOf(Stochasticity.class));
         }
 
-        public GeneratorTileInput(String phylospecArgumentName, Set<Stochasticity> acceptedStochasticities) {
+        public GeneratorTileInput(
+                String phylospecArgumentName, Set<Stochasticity> acceptedStochasticities) {
             this(phylospecArgumentName, true, acceptedStochasticities);
         }
 
         public GeneratorTileInput(
-                String phylospecArgumentName, boolean required, Set<Stochasticity> acceptedStochasticities) {
+                String phylospecArgumentName,
+                boolean required,
+                Set<Stochasticity> acceptedStochasticities) {
             super(required, acceptedStochasticities);
             this.phylospecArgumentName = phylospecArgumentName;
         }
