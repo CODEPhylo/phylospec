@@ -82,7 +82,7 @@ There is a <a href="https://github.com/tochsner/phylospec-repository" target="_b
 
 **Component libraries** contain components (generators and types) that make up a phylogenetic analysis. They are hand-authored. An example is the core component library.
 
-**Engine specifications** describe the components implemented by an engine, as well as the limitations of this implementation. They also provide instructions on how to install an engine. They should be auto-generated from the engine code. Examples are the engine specifications for BEAST 2 or RevBayes. In the case of the BEAST 2 ecosystem, we also use the term engine to refer to packages, as they implement their own set of components.
+**Engine specifications** describe the components implemented by an engine, as well as the limitations of this implementation. They also provide instructions on how to install an engine. They should be auto-generated from the engine code. Examples are the engine specifications for BEAST 2 or RevBayes. In the case of the BEAST 2 ecosystem, we also treat packages as dedicated engines, as they implement their own set of components.
 
 A repository contains every version of each component library and engine specification side by side.
 
@@ -123,6 +123,9 @@ For provenance, only the versions of the engines used to execute the model ultim
 {
   "modelName": "model.phylospec",
   "modelHash": "91de323fa50d8ae9d3d430976030d3a",
+  "inputHashes": {
+    "alignment.nex": "91de323fa50d8ae9d3d43097630d32a"
+  },
   "outputHashes": {
     "model.trees": "91de323fa50d8ae9d3d43097630d32a",
     "model.log": "91de323fa50d8ae9d3d43097600d32a"
@@ -148,11 +151,11 @@ There are three types of dependencies:
 2. An engine implements a component in a component library.
 3. An engine can require another engine.
 
-We use shape-based dependencies for the first two types. In contrast, we only specify unversioned dependencies among engines, because package resolution and versioning are already managed by the different package managers.
+We use shape-based dependencies for the first two types. In contrast, we specify unversioned dependencies among engines in the engine specifications. We use unversioned dependencies because package resolution and versioning are already managed by the different package managers.
 
 #### Shape-Based Dependencies
 
-Components can ultimately be reduced down to their shape (type parameters for types, input and return types for generators) and the semantic meaning given by the name. We leverage this by introducing **shape-based dependencies**. What does this mean?
+Components can ultimately be reduced down to their shape (type parameters for types; arguments, input and return types for generators) and the semantic meaning given by the name. We leverage this by introducing **shape-based dependencies**. What does this mean?
 
 A component library A depends on component library B if it uses types defined in B. With version-based dependencies, we would explicitly specify the versions of B that are compatible with A. With shape-based dependencies, we say A is compatible with B if the types used in A have the same shape as their definitions in B.
 
@@ -172,11 +175,11 @@ Equipped with shape-based dependencies, we can now talk about dependency resolut
 
 #### Resolution of Compatible Component Libraries
 
+Given a PhyloSpec model and its imported components and a repository, we need to find the most recent compatible combination of libraries covering all components.
+
 A component library A is compatible with another CL B if, for all types defined in A or B, all type usages match up with their definitions.
 
-Given a PhyloSpec model and its imported components and a repository, we then need to find the most recent compatible combination of libraries covering all components. This can be formulated as a custom backtracking algorithm or as a SAT problem.
-
-To simplify resolution for tooling, we can precompute the compatibilities at the repository level using CI/CD.
+The resolution can be formulated as a custom backtracking algorithm or as a SAT problem. To simplify things for tooling, we can precompute the compatibilities at the repository level using CI/CD.
 
 #### Resolution of Compatible Engines
 
@@ -186,7 +189,7 @@ As an input for this, we have the generator shapes used in the model, the suppor
 
 <Mermaid string={engineSupport} class="mermaid" />
 
-Note that the version floors are not declared engine dependencies; they are the lowest version of each engine whose supported shapes still cover what the model needs. The engines’ native package managers remain responsible for resolving more fine-grained dependencies and determining whether these engines can be installed together.
+Note that the version ranges are not declared engine dependencies; they are the versions of each engine whose supported shapes still cover what the model needs. The engines’ native package managers remain responsible for resolving more fine-grained dependencies and determining whether these engines can be installed together.
 
 One can use a custom backtracking algorithm or a more general SAT solver to solve this task.
 
