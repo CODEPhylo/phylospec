@@ -136,6 +136,11 @@ import java.util.List;
 public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
 
     @Override
+    public Class<BeastXState> getStateType() {
+        return BeastXState.class;
+    }
+
+    @Override
     public List<CandidateTile<BeastXState>> getTiles() {
         List<CandidateTile<BeastXState>> tiles = new ArrayList<>();
 
