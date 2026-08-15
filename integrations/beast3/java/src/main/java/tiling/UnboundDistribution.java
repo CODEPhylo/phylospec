@@ -1,6 +1,7 @@
 package tiling;
 
 import beast.base.inference.StateNode;
+import beastconfig.BEASTState;
 
 import java.util.function.Consumer;
 
@@ -27,6 +28,16 @@ public class UnboundDistribution<T extends StateNode, O extends beast.base.infer
      */
     public void bind(Object observedStateNode) {
         this.setStateNodeFunc.accept((T) observedStateNode);
+    }
+
+    /**
+     * Wires the given observed value into the distribution and registers the distribution
+     * as a likelihood in the given BEAST state — the observed-data counterpart of
+     * {@link BoundDistribution#bindAndRegisterAsPrior}.
+     */
+    public void bindAndRegisterAsLikelihood(BEASTState beastState, Object observedValue, String id) {
+        this.bind(observedValue);
+        beastState.addLikelihoodDistribution(this.distribution, id);
     }
 
 }
