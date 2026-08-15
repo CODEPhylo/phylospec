@@ -24,14 +24,10 @@ public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw, BEASTState> {
 
         String id = this.getId(this.getRootNode().name, indexVariables, "");
 
-        // we initialize the state node and add it to the BEAST state
+        // we delegate wiring the state node, registering it (and its prior and operators)
+        // in the BEAST state, to the bound distribution itself
 
-        evaluatedDistribution.bind();
-        beastState.addStateNode(evaluatedDistribution.stateNode, this.getTypeToken(), id);
-        beastState.addPriorDistribution(evaluatedDistribution.stateNode, evaluatedDistribution.distribution, id + "_prior");
-
-        // we return the initialized state node
-        return evaluatedDistribution.stateNode;
+        return evaluatedDistribution.bindAndRegisterAsPrior(beastState, this.getTypeToken(), id);
     }
 
     @Override
