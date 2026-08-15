@@ -6,6 +6,7 @@ import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
+import beastconfig.OperatorSelector;
 import org.phylospec.ast.Expr;
 import tiling.BoundDistribution;
 import org.phylospec.tiling.tiles.GeneratorTile;
@@ -36,7 +37,8 @@ public class NormalTile extends GeneratorTile<BoundDistribution<RealScalarParam<
         return new BoundDistribution<>(
                 distribution,
                 defaultState,
-                param -> beastState.setInput(distribution, distribution.paramInput, param)
+                param -> beastState.setInput(distribution, distribution.paramInput, param),
+                OperatorSelector.getDefaultOperators(defaultState, beastState)
         );
     }
 

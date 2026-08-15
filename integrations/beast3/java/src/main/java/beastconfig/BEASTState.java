@@ -31,6 +31,7 @@ public class BEASTState {
     public final List<Distribution> likelihoodDistributions;
 
     public final HashMap<Operator, Set<StateNode>> operators;
+    private final Set<StateNode> tileHandledOperators;
 
     public final List<ScreenLoggerSpec<BEASTObject>> screenLoggerSpecs;
     public final List<FileLoggerSpec<BEASTObject>> fileLoggerSpecs;
@@ -49,6 +50,7 @@ public class BEASTState {
         this.priorDistributions = new HashMap<>();
         this.likelihoodDistributions = new ArrayList<>();
         this.operators = new HashMap<>();
+        this.tileHandledOperators = new HashSet<>();
         this.beastObjects = new ArrayList<>();
         this.ids = new HashSet<>();
         this.initializedBeastObjects = new HashSet<>();
@@ -181,6 +183,26 @@ public class BEASTState {
 
         this.addBEASTObject(operator);
         this.operators.put(operator, stateNodes);
+    }
+
+    /**
+     * Registers the given operators for a state node that has already been added via
+     * {@link #addStateNode}, and marks the state node as having explicit tile-chosen
+     * operators (so {@link OperatorSelector}'s type-based fallback skips it).
+     */
+    public void addOperators(StateNode stateNode, List<Operator> operators) {
+        this.tileHandledOperators.add(stateNode);
+        for (Operator operator : operators) {
+            this.addOperator(operator, stateNode);
+        }
+    }
+
+    /**
+     * Returns whether a tile has explicitly chosen operators for the given state node,
+     * via {@link #addOperators}.
+     */
+    public boolean isOperatorSelectionHandled(StateNode stateNode) {
+        return this.tileHandledOperators.contains(stateNode);
     }
 
     /**
