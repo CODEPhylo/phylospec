@@ -86,13 +86,18 @@ public class LoggerSelector {
 
     /**
      * Builds a BEAST tree logger according to the given specs.
+     * If the spec does not name a tree, all loggable trees in the state are logged.
      */
     public static Logger buildTreeLogger(TreeLoggerSpec<Tree> spec, BEASTState beastState) {
         Logger logger = new Logger();
         beastState.setInput(logger, logger.everyInput, spec.logEvery());
         beastState.setInput(logger, logger.fileNameInput, spec.fileName());
         beastState.setInput(logger, logger.modeInput, beast.base.inference.Logger.LOGMODE.tree);
-        beastState.setInput(logger, logger.loggersInput, List.of(spec.tree()));
+
+        List<BEASTObject> trees =
+                spec.tree() != null ? List.of(spec.tree()) : new ArrayList<>(getLoggableTrees(beastState));
+        beastState.setInput(logger, logger.loggersInput, trees);
+
         return logger;
     }
 

@@ -37,6 +37,9 @@ public class BEASTState implements TiledState<BEASTObject, Tree> {
     public final List<FileLoggerSpec<BEASTObject>> fileLoggerSpecs;
     public final List<TreeLoggerSpec<Tree>> treeLoggerSpecs;
 
+    /// The loggers built from the specs, cached so that they are only built once.
+    private List<beast.base.inference.Logger> builtLoggers;
+
     /**
      * Creates a new BEAST state with the given run name.
      */
@@ -184,6 +187,7 @@ public class BEASTState implements TiledState<BEASTObject, Tree> {
     /**
      * Adds a given screen logger to the BEAST state.
      */
+    @Override
     public void addScreenLoggerSpec(ScreenLoggerSpec<BEASTObject> logger) {
         this.screenLoggerSpecs.add(logger);
     }
@@ -191,6 +195,7 @@ public class BEASTState implements TiledState<BEASTObject, Tree> {
     /**
      * Adds a given file logger to the BEAST state.
      */
+    @Override
     public void addFileLoggerSpec(FileLoggerSpec<BEASTObject> logger) {
         this.fileLoggerSpecs.add(logger);
     }
@@ -198,16 +203,23 @@ public class BEASTState implements TiledState<BEASTObject, Tree> {
     /**
      * Adds a given tree logger to the BEAST state.
      */
+    @Override
     public void addTreeLoggerSpec(TreeLoggerSpec<Tree> logger) {
         this.treeLoggerSpecs.add(logger);
     }
 
     /**
-     * Constructs loggers from the registered logger specs.
+     * Constructs loggers from the registered logger specs, filling in the default loggers that
+     * the specs do not already cover. The loggers are built once and cached, so repeated calls
+     * return the same logger instances rather than duplicates.
      */
     public List<beast.base.inference.Logger> buildLoggers(
             CompoundDistribution posterior, CompoundDistribution prior, CompoundDistribution likelihood
     ) {
+        if (this.builtLoggers != null) {
+            return this.builtLoggers;
+        }
+
         // add missing loggers
 
         LoggerSelector.addMissingLoggerSpecs(this);
@@ -227,6 +239,8 @@ public class BEASTState implements TiledState<BEASTObject, Tree> {
         for (TreeLoggerSpec<Tree> spec : this.treeLoggerSpecs) {
             loggers.add(LoggerSelector.buildTreeLogger(spec, this));
         }
+
+        this.builtLoggers = loggers;
 
         return loggers;
     }
