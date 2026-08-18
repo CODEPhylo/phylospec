@@ -1,19 +1,18 @@
-package org.phylospec.tiling.tiles.loggers;
+package tiles.mcmc;
 
 import java.util.IdentityHashMap;
 import java.util.Set;
+
+import beast.base.evolution.tree.Tree;
+import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import org.phylospec.tiling.tiles.TemplateTile;
-import org.phylospec.tiling.tiles.TiledState;
 import org.phylospec.typeresolver.Stochasticity;
 
 /// Matches a `treeLogger(...)` declaration in the `mcmc` block and registers a
 /// [org.phylospec.tiling.mcmc.TreeLoggerSpec] on the state.
-///
-/// @param <S> the tiled state the spec is registered on
-/// @param <T> the type of the logged tree
-public class TreeLoggerTile<S extends TiledState<?, T>, T> extends TemplateTile<Void, S> {
+public class TreeLoggerTile extends TemplateTile<Void, BEASTState> {
 
     @Override
     protected String getPhyloSpecTemplate() {
@@ -27,17 +26,17 @@ public class TreeLoggerTile<S extends TiledState<?, T>, T> extends TemplateTile<
                 }""";
     }
 
-    public TemplateTileInput<Integer, S> logEveryInput =
+    public TemplateTileInput<Integer, BEASTState> logEveryInput =
             new TemplateTileInput<>("$logEvery", Set.of(Stochasticity.CONSTANT));
-    public TemplateTileInput<String, S> fileNameInput =
+    public TemplateTileInput<String, BEASTState> fileNameInput =
             new TemplateTileInput<>("$fileName", Set.of(Stochasticity.CONSTANT));
-    public TemplateTileInput<T, S> treeInput = new TemplateTileInput<>("$$tree", false);
+    public TemplateTileInput<Tree, BEASTState> treeInput = new TemplateTileInput<>("$$tree", false);
 
     @Override
-    protected Void applyTile(S state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    protected Void applyTile(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Integer logEvery = this.logEveryInput.apply(state, indexVariables);
         String fileName = this.fileNameInput.apply(state, indexVariables);
-        T tree = this.treeInput.apply(state, indexVariables);
+        Tree tree = this.treeInput.apply(state, indexVariables);
 
         state.addTreeLoggerSpec(new TreeLoggerSpec<>(logEvery, fileName, tree));
 

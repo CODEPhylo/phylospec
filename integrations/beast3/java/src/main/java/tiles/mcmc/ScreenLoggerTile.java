@@ -1,20 +1,17 @@
-package org.phylospec.tiling.tiles.loggers;
+package tiles.mcmc;
 
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+
+import beast.base.core.BEASTObject;
+import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.tiles.TemplateTile;
-import org.phylospec.tiling.tiles.TiledState;
-import org.phylospec.typeresolver.Stochasticity;
+import org.phylospec.typeresolver.Stochasticity;;
 
 /// Matches a `screenLogger(...)` declaration in the `mcmc` block and registers a
 /// [org.phylospec.tiling.mcmc.ScreenLoggerSpec] on the state.
-///
-/// @param <S> the tiled state the spec is registered on
-/// @param <O> the type of the logged parameters
-public class ScreenLoggerTile<S extends TiledState<O, ?>, O> extends TemplateTile<Void, S> {
+public class ScreenLoggerTile extends TemplateTile<Void, BEASTState> {
 
     @Override
     protected String getPhyloSpecTemplate() {
@@ -27,17 +24,18 @@ public class ScreenLoggerTile<S extends TiledState<O, ?>, O> extends TemplateTil
                 }""";
     }
 
-    public TemplateTileInput<Integer, S> logEveryInput =
+    public TemplateTileInput<Integer, BEASTState> logEveryInput =
             new TemplateTileInput<>("$logEvery", Set.of(Stochasticity.CONSTANT));
-    public TemplateTileInput<List<O>, S> parametersInput =
+    public TemplateTileInput<List<? extends BEASTObject>, BEASTState> parametersInput =
             new TemplateTileInput<>("$$parameters", false);
 
     @Override
-    protected Void applyTile(S state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    protected Void applyTile(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Integer logEvery = this.logEveryInput.apply(state, indexVariables);
-        List<O> parameters = this.parametersInput.apply(state, indexVariables);
+        List<? extends BEASTObject> parameters = this.parametersInput.apply(state, indexVariables);
 
-        state.addScreenLoggerSpec(new ScreenLoggerSpec<>(logEvery, parameters));
+        List<BEASTObject> generalParameters = new ArrayList<>(Objects.requireNonNullElse(parameters, List.of()));
+        state.addScreenLoggerSpec(new ScreenLoggerSpec<>(logEvery, generalParameters));
 
         return null;
     }

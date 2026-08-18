@@ -1,20 +1,20 @@
-package org.phylospec.tiling.tiles.loggers;
+package tiles.mcmc;
 
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
+
+import beast.base.core.BEASTObject;
+import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.tiles.TemplateTile;
-import org.phylospec.tiling.tiles.TiledState;
 import org.phylospec.typeresolver.Stochasticity;
 
 /// Matches a `fileLogger(...)` declaration in the `mcmc` block and registers a
 /// [org.phylospec.tiling.mcmc.FileLoggerSpec] on the state.
-///
-/// @param <S> the tiled state the spec is registered on
-/// @param <O> the type of the logged parameters
-public class FileLoggerTile<S extends TiledState<O, ?>, O> extends TemplateTile<Void, S> {
+public class FileLoggerTile extends TemplateTile<Void, BEASTState> {
 
     @Override
     protected String getPhyloSpecTemplate() {
@@ -28,20 +28,21 @@ public class FileLoggerTile<S extends TiledState<O, ?>, O> extends TemplateTile<
                 }""";
     }
 
-    public TemplateTileInput<Integer, S> logEveryInput =
+    public TemplateTileInput<Integer, BEASTState> logEveryInput =
             new TemplateTileInput<>("$logEvery", Set.of(Stochasticity.CONSTANT));
-    public TemplateTileInput<String, S> fileNameInput =
+    public TemplateTileInput<String, BEASTState> fileNameInput =
             new TemplateTileInput<>("$fileName", Set.of(Stochasticity.CONSTANT));
-    public TemplateTileInput<List<O>, S> parametersInput =
+    public TemplateTileInput<List<? extends BEASTObject>, BEASTState> parametersInput =
             new TemplateTileInput<>("$$parameters", false);
 
     @Override
-    protected Void applyTile(S state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    protected Void applyTile(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Integer logEvery = this.logEveryInput.apply(state, indexVariables);
         String fileName = this.fileNameInput.apply(state, indexVariables);
-        List<O> parameters = this.parametersInput.apply(state, indexVariables);
+        List<? extends BEASTObject> parameters = this.parametersInput.apply(state, indexVariables);
 
-        state.addFileLoggerSpec(new FileLoggerSpec<>(logEvery, fileName, parameters));
+        List<BEASTObject> generalParameters = new ArrayList<>(parameters);
+        state.addFileLoggerSpec(new FileLoggerSpec<>(logEvery, fileName, generalParameters));
 
         return null;
     }
