@@ -7,7 +7,6 @@ import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
-import org.phylospec.tiling.tiles.TiledState;
 
 import java.util.*;
 
@@ -16,7 +15,7 @@ import java.util.*;
 /// Tracks state nodes, calculation nodes, distributions, operators, and loggers.
 /// Provides utilities for assigning unique IDs, wiring inputs, and initializing
 /// BEAST objects in the correct order.
-public class BEASTState implements TiledState<BEASTObject, Tree> {
+public class BEASTState {
 
     public final String runName;
     public long chainLength = 10_00_000;
@@ -187,7 +186,6 @@ public class BEASTState implements TiledState<BEASTObject, Tree> {
     /**
      * Adds a given screen logger to the BEAST state.
      */
-    @Override
     public void addScreenLoggerSpec(ScreenLoggerSpec<BEASTObject> logger) {
         this.screenLoggerSpecs.add(logger);
     }
@@ -195,7 +193,6 @@ public class BEASTState implements TiledState<BEASTObject, Tree> {
     /**
      * Adds a given file logger to the BEAST state.
      */
-    @Override
     public void addFileLoggerSpec(FileLoggerSpec<BEASTObject> logger) {
         this.fileLoggerSpecs.add(logger);
     }
@@ -203,7 +200,6 @@ public class BEASTState implements TiledState<BEASTObject, Tree> {
     /**
      * Adds a given tree logger to the BEAST state.
      */
-    @Override
     public void addTreeLoggerSpec(TreeLoggerSpec<Tree> logger) {
         this.treeLoggerSpecs.add(logger);
     }
