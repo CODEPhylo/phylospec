@@ -11,7 +11,6 @@ import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /// Selects and adds logger specs and loggers to the BEAST state based on the available loggable objects.
