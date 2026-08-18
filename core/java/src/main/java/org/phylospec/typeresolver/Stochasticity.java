@@ -37,10 +37,7 @@ public enum Stochasticity {
     }
 
     public static String getErrorMessage(
-            String engine,
-            String valueName,
-            Stochasticity stochasticity,
-            Set<Stochasticity> expectedStochasticities) {
+            String engine, String valueName, Stochasticity stochasticity, Set<Stochasticity> expectedStochasticities) {
         if (expectedStochasticities.size() == 1) {
             return engine
                     + " expects a "
@@ -51,17 +48,11 @@ public enum Stochasticity {
                     + stochasticity
                     + ".";
         }
-        return "Your engine does not support a "
-                + stochasticity.toString()
-                + " for '"
-                + valueName
-                + "'.";
+        return "Your engine does not support a " + stochasticity.toString() + " for '" + valueName + "'.";
     }
 
     public static String getErrorMessage(
-            String engine,
-            Stochasticity stochasticity,
-            Set<Stochasticity> expectedStochasticities) {
+            String engine, Stochasticity stochasticity, Set<Stochasticity> expectedStochasticities) {
         if (expectedStochasticities.size() == 1) {
             return engine
                     + " expects a "

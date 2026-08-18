@@ -11,12 +11,8 @@ public class WrappedTileApplicationError extends TileApplicationError {
 
     private final Exception engineException;
 
-    public WrappedTileApplicationError(
-            AstNode node, String description, Exception engineException) {
-        super(
-                node,
-                description,
-                "Check out the underlying engine error:\n\n" + getError(engineException));
+    public WrappedTileApplicationError(AstNode node, String description, Exception engineException) {
+        super(node, description, "Check out the underlying engine error:\n\n" + getError(engineException));
         this.engineException = engineException;
     }
 
