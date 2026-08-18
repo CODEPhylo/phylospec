@@ -1,8 +1,12 @@
 package beastconfig;
 
 import beast.base.core.*;
+import beast.base.evolution.tree.Tree;
 import beast.base.inference.*;
 import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.mcmc.FileLoggerSpec;
+import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
+import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 
 import java.util.*;
 
@@ -28,9 +32,9 @@ public class BEASTState {
 
     public final HashMap<Operator, Set<StateNode>> operators;
 
-    public final List<beast.base.inference.Logger> screenLoggers;
-    public final List<beast.base.inference.Logger> fileLoggers;
-    public final List<beast.base.inference.Logger> treeLoggers;
+    public final List<ScreenLoggerSpec<BEASTObject>> screenLoggerSpecs;
+    public final List<FileLoggerSpec<BEASTObject>> fileLoggerSpecs;
+    public final List<TreeLoggerSpec<Tree>> treeLoggerSpecs;
 
     /**
      * Creates a new BEAST state with the given run name.
@@ -45,9 +49,9 @@ public class BEASTState {
         this.beastObjects = new ArrayList<>();
         this.ids = new HashSet<>();
         this.initializedBeastObjects = new HashSet<>();
-        this.screenLoggers = new ArrayList<>();
-        this.fileLoggers = new ArrayList<>();
-        this.treeLoggers = new ArrayList<>();
+        this.screenLoggerSpecs = new ArrayList<>();
+        this.fileLoggerSpecs = new ArrayList<>();
+        this.treeLoggerSpecs = new ArrayList<>();
     }
 
     /**
@@ -179,32 +183,58 @@ public class BEASTState {
     /**
      * Adds a given screen logger to the BEAST state.
      */
-    public void addScreenLogger(beast.base.inference.Logger logger) {
-        this.screenLoggers.add(logger);
+    public void addScreenLoggerSpec(ScreenLoggerSpec<BEASTObject> logger) {
+        this.screenLoggerSpecs.add(logger);
     }
 
     /**
      * Adds a given file logger to the BEAST state.
      */
-    public void addFileLogger(beast.base.inference.Logger logger) {
-        this.fileLoggers.add(logger);
+    public void addFileLoggerSpec(FileLoggerSpec<BEASTObject> logger) {
+        this.fileLoggerSpecs.add(logger);
     }
 
     /**
      * Adds a given tree logger to the BEAST state.
      */
-    public void addTreeLogger(beast.base.inference.Logger logger) {
-        this.treeLoggers.add(logger);
+    public void addTreeLoggerSpec(TreeLoggerSpec<Tree> logger) {
+        this.treeLoggerSpecs.add(logger);
     }
 
     /**
-     * Returns all registered loggers.
+     * Constructs loggers from the registered logger specs.
      */
-    public List<beast.base.inference.Logger> getLoggers() {
+    public List<beast.base.inference.Logger> constructLoggerObjects() {
         List<beast.base.inference.Logger> loggers = new ArrayList<>();
-        loggers.addAll(this.screenLoggers);
-        loggers.addAll(this.fileLoggers);
-        loggers.addAll(this.treeLoggers);
+
+        // build loggers from specs
+
+        for (ScreenLoggerSpec<BEASTObject> spec : this.screenLoggerSpecs) {
+            Logger logger = new Logger();
+            this.setInput(logger, logger.everyInput, spec.logEvery());
+            this.setInput(logger, logger.sortModeInput, Logger.SORTMODE.smart);
+            this.setInput(logger, logger.sanitiseHeadersInput, true);
+            this.setInput(logger, logger.loggersInput, spec.parameters());
+            loggers.add(logger);
+        }
+
+        for (FileLoggerSpec<BEASTObject> spec : this.fileLoggerSpecs) {
+            Logger logger = new Logger();
+            this.setInput(logger, logger.everyInput, spec.logEvery());
+            this.setInput(logger, logger.fileNameInput, spec.fileName());
+            this.setInput(logger, logger.loggersInput, spec.parameters());
+            loggers.add(logger);
+        }
+
+        for (TreeLoggerSpec<Tree> spec : this.treeLoggerSpecs) {
+            Logger logger = new Logger();
+            this.setInput(logger, logger.everyInput, spec.logEvery());
+            this.setInput(logger, logger.fileNameInput, spec.fileName());
+            this.setInput(logger, logger.modeInput, beast.base.inference.Logger.LOGMODE.tree);
+            this.setInput(logger, logger.loggersInput, List.of(spec.tree()));
+            loggers.add(logger);
+        }
+
         return loggers;
     }
 

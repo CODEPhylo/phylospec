@@ -128,7 +128,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // add loggers
 
-        LoggerSelector.addMissingLoggers(beastState, posterior, prior, likelihood);
+        LoggerSelector.addMissingLoggerSpecs(beastState, posterior, prior, likelihood);
 
         // create MCMC object
 
@@ -137,7 +137,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         beastState.setInput(mcmc, mcmc.startStateInput, state);
         beastState.setInput(mcmc, mcmc.posteriorInput, posterior);
         beastState.setInput(mcmc, mcmc.operatorsInput, new ArrayList<>(beastState.operators.keySet()));
-        beastState.setInput(mcmc, mcmc.loggersInput, beastState.getLoggers());
+        beastState.setInput(mcmc, mcmc.loggersInput, beastState.constructLoggerObjects());
 
         // run
 

@@ -1,13 +1,14 @@
 package tiles.mcmc;
 
 import beast.base.core.BEASTObject;
-import beast.base.inference.Logger;
 import beastconfig.LoggerSelector;
 import org.phylospec.ast.Expr;
+import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.tiling.tiles.TemplateTile;
 import beastconfig.BEASTState;
 
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
@@ -42,17 +43,7 @@ public class FileLoggerTile extends TemplateTile<Void, BEASTState> {
         String fileName = this.fileNameInput.apply(beastState, indexVariables);
         List<BEASTObject> parameters = this.parametersInput.apply(beastState, indexVariables);
 
-        if (parameters == null) {
-            parameters = LoggerSelector.getLoggableObjects(beastState);
-        }
-
-        Logger logger = new Logger();
-        beastState.setInput(logger, logger.everyInput, logEvery);
-        beastState.setInput(logger, logger.fileNameInput, fileName);
-        beastState.setInput(logger, logger.loggersInput, parameters);
-        beastState.setInput(logger, logger.sanitiseHeadersInput, true);
-        beastState.setInput(logger, logger.sortModeInput, Logger.SORTMODE.smart);
-        beastState.addFileLogger(logger);
+        beastState.addFileLoggerSpec(new FileLoggerSpec<>(logEvery, fileName, parameters, new HashMap<>()));
 
         return null;
     }
