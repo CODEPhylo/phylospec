@@ -166,8 +166,7 @@ public abstract class Tile<T, S> {
             throw tilingError;
         } catch (Exception e) {
             // we wrap the exception into a tiling error
-            throw new WrappedTileApplicationError(
-                    this.getRootNode(), "Creating the engine objects did not work.", e);
+            throw new WrappedTileApplicationError(this.getRootNode(), "Creating the engine objects did not work.", e);
         }
     }
 
