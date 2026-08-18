@@ -7,6 +7,7 @@ import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
+import org.phylospec.tiling.tiles.TiledState;
 
 import java.util.*;
 
@@ -15,7 +16,7 @@ import java.util.*;
 /// Tracks state nodes, calculation nodes, distributions, operators, and loggers.
 /// Provides utilities for assigning unique IDs, wiring inputs, and initializing
 /// BEAST objects in the correct order.
-public class BEASTState {
+public class BEASTState implements TiledState<BEASTObject, Tree> {
 
     public final String runName;
     public long chainLength = 10_00_000;
