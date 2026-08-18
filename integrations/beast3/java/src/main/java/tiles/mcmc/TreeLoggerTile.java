@@ -1,15 +1,13 @@
 package tiles.mcmc;
 
-import beast.base.core.BEASTObject;
-import beast.base.inference.Logger;
-import beastconfig.LoggerSelector;
+import beast.base.evolution.tree.Tree;
 import org.phylospec.ast.Expr;
+import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.tiling.tiles.TemplateTile;
 import beastconfig.BEASTState;
 
 import java.util.IdentityHashMap;
-import java.util.List;
 import java.util.Set;
 
 public class TreeLoggerTile extends TemplateTile<Void, BEASTState> {
@@ -21,7 +19,7 @@ public class TreeLoggerTile extends TemplateTile<Void, BEASTState> {
                     Logger treeLogger = treeLogger(
                         logEvery=$logEvery,
                         file=$fileName,
-                        trees=$$trees
+                        tree=$$tree
                     )
                 }""";
     }
@@ -32,7 +30,7 @@ public class TreeLoggerTile extends TemplateTile<Void, BEASTState> {
     public TemplateTileInput<String, BEASTState> fileNameInput = new TemplateTileInput<>(
             "$fileName", Set.of(Stochasticity.CONSTANT)
     );
-    public TemplateTileInput<List<BEASTObject>, BEASTState> treesInput = new TemplateTileInput<>(
+    public TemplateTileInput<Tree, BEASTState> treesInput = new TemplateTileInput<>(
             "$$trees", false
     );
 
@@ -40,18 +38,9 @@ public class TreeLoggerTile extends TemplateTile<Void, BEASTState> {
     protected Void applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Integer logEvery = this.logEveryInput.apply(beastState, indexVariables);
         String fileName = this.fileNameInput.apply(beastState, indexVariables);
-        List<BEASTObject> parameters = this.treesInput.apply(beastState, indexVariables);
+        Tree tree = this.treesInput.apply(beastState, indexVariables);
 
-        if (parameters == null) {
-            parameters = LoggerSelector.getLoggableTrees(beastState);
-        }
-
-        Logger logger = new Logger();
-        beastState.setInput(logger, logger.everyInput, logEvery);
-        beastState.setInput(logger, logger.modeInput, Logger.LOGMODE.tree);
-        beastState.setInput(logger, logger.fileNameInput, fileName);
-        beastState.setInput(logger, logger.loggersInput, parameters);
-        beastState.addTreeLogger(logger);
+        beastState.addTreeLoggerSpec(new TreeLoggerSpec<>(logEvery, fileName, tree));
         
         return null;
     }

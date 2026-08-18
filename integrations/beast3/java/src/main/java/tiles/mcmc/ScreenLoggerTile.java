@@ -1,13 +1,14 @@
 package tiles.mcmc;
 
 import beast.base.core.BEASTObject;
-import beast.base.inference.Logger;
 import beastconfig.LoggerSelector;
 import org.phylospec.ast.Expr;
+import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.tiling.tiles.TemplateTile;
 import beastconfig.BEASTState;
 
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
@@ -37,14 +38,8 @@ public class ScreenLoggerTile extends TemplateTile<Void, BEASTState> {
         Integer logEvery = this.logEveryInput.apply(beastState, indexVariables);
         List<BEASTObject> parameters = this.parametersInput.apply(beastState, indexVariables);
 
-        if (parameters == null) {
-            parameters = LoggerSelector.getLoggableObjects(beastState);
-        }
+        beastState.addScreenLoggerSpec(new ScreenLoggerSpec<>(logEvery, parameters, new HashMap<>()));
 
-        Logger logger = new Logger();
-        beastState.setInput(logger, logger.everyInput, logEvery);
-        beastState.setInput(logger, logger.loggersInput, parameters);
-        beastState.addScreenLogger(logger);
         return null;
     }
 
