@@ -34,7 +34,7 @@ public class ScreenLoggerTile extends TemplateTile<Void, BEASTState> {
         Integer logEvery = this.logEveryInput.apply(state, indexVariables);
         List<? extends BEASTObject> parameters = this.parametersInput.apply(state, indexVariables);
 
-        List<BEASTObject> generalParameters = new ArrayList<>(Objects.requireNonNullElse(parameters, List.of()));
+        List<BEASTObject> generalParameters = parameters != null ? new ArrayList<>(parameters) : null;
         state.addScreenLoggerSpec(new ScreenLoggerSpec<>(logEvery, generalParameters));
 
         return null;

@@ -18,19 +18,15 @@ import java.util.List;
 ///
 /// If no screen or file loggers are present, default loggers are created that log all loggable
 /// objects (state nodes and calculation nodes). If no tree loggers are present, a default tree
-/// logger is created for all trees in the state.
+/// logger is created for all trees in the state. Every screen and file logger always logs the
+/// posterior, prior and likelihood.
 public class LoggerSelector {
 
     /**
      * Adds the missing loggers specs.
      */
-    public static void addMissingLoggerSpecs(
-            BEASTState beastState, CompoundDistribution posterior, CompoundDistribution prior, CompoundDistribution likelihood
-    ) {
+    public static void addMissingLoggerSpecs(BEASTState beastState) {
         List<BEASTObject> loggableObjects = getLoggableObjects(beastState);
-        loggableObjects.add(posterior);
-        loggableObjects.add(prior);
-        loggableObjects.add(likelihood);
 
         if (beastState.screenLoggerSpecs.isEmpty()) {
             beastState.addScreenLoggerSpec(new ScreenLoggerSpec<>(1000, loggableObjects));
@@ -54,17 +50,17 @@ public class LoggerSelector {
     /**
      * Builds a BEAST screen logger according to the given specs.
      */
-    public static Logger buildScreenLogger(ScreenLoggerSpec<BEASTObject> spec, BEASTState beastState) {
+    public static Logger buildScreenLogger(
+            ScreenLoggerSpec<BEASTObject> spec, BEASTState beastState,
+            CompoundDistribution posterior, CompoundDistribution prior, CompoundDistribution likelihood
+    ) {
         Logger logger = new Logger();
         beastState.setInput(logger, logger.everyInput, spec.logEvery());
         beastState.setInput(logger, logger.sortModeInput, Logger.SORTMODE.smart);
         beastState.setInput(logger, logger.sanitiseHeadersInput, true);
 
-        if (spec.parameters() != null) {
-            beastState.setInput(logger, logger.loggersInput, spec.parameters());
-        } else {
-            beastState.setInput(logger, logger.loggersInput, getLoggableObjects(beastState));
-        }
+        List<BEASTObject> parameters = spec.parameters() != null ? spec.parameters() : getLoggableObjects(beastState);
+        beastState.setInput(logger, logger.loggersInput, withDistributions(parameters, posterior, prior, likelihood));
 
         return logger;
     }
@@ -72,18 +68,18 @@ public class LoggerSelector {
     /**
      * Builds a BEAST file logger according to the given specs.
      */
-    public static Logger buildFileLogger(FileLoggerSpec<BEASTObject> spec, BEASTState beastState) {
+    public static Logger buildFileLogger(
+            FileLoggerSpec<BEASTObject> spec, BEASTState beastState,
+            CompoundDistribution posterior, CompoundDistribution prior, CompoundDistribution likelihood
+    ) {
         Logger logger = new Logger();
         beastState.setInput(logger, logger.everyInput, spec.logEvery());
         beastState.setInput(logger, logger.fileNameInput, spec.fileName());
         beastState.setInput(logger, logger.sortModeInput, Logger.SORTMODE.smart);
         beastState.setInput(logger, logger.sanitiseHeadersInput, true);
 
-        if (spec.parameters() != null) {
-            beastState.setInput(logger, logger.loggersInput, spec.parameters());
-        } else {
-            beastState.setInput(logger, logger.loggersInput, getLoggableObjects(beastState));
-        }
+        List<BEASTObject> parameters = spec.parameters() != null ? spec.parameters() : getLoggableObjects(beastState);
+        beastState.setInput(logger, logger.loggersInput, withDistributions(parameters, posterior, prior, likelihood));
 
         return logger;
     }
@@ -98,6 +94,25 @@ public class LoggerSelector {
         beastState.setInput(logger, logger.modeInput, beast.base.inference.Logger.LOGMODE.tree);
         beastState.setInput(logger, logger.loggersInput, List.of(spec.tree()));
         return logger;
+    }
+
+    /**
+     * Returns the given loggables prefixed with the posterior, prior and likelihood.
+     * Loggables that are already among these distributions are not added twice.
+     */
+    private static List<BEASTObject> withDistributions(
+            List<BEASTObject> loggables,
+            CompoundDistribution posterior, CompoundDistribution prior, CompoundDistribution likelihood
+    ) {
+        List<BEASTObject> combined = new ArrayList<>(List.of(posterior, prior, likelihood));
+
+        for (BEASTObject loggable : loggables) {
+            if (!combined.contains(loggable)) {
+                combined.add(loggable);
+            }
+        }
+
+        return combined;
     }
 
     /**

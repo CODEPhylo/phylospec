@@ -41,7 +41,7 @@ public class FileLoggerTile extends TemplateTile<Void, BEASTState> {
         String fileName = this.fileNameInput.apply(state, indexVariables);
         List<? extends BEASTObject> parameters = this.parametersInput.apply(state, indexVariables);
 
-        List<BEASTObject> generalParameters = new ArrayList<>(parameters);
+        List<BEASTObject> generalParameters = parameters != null ? new ArrayList<>(parameters) : null;
         state.addFileLoggerSpec(new FileLoggerSpec<>(logEvery, fileName, generalParameters));
 
         return null;
