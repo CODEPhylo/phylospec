@@ -7,7 +7,7 @@ import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.tiles.TemplateTile;
-import org.phylospec.typeresolver.Stochasticity;;
+import org.phylospec.typeresolver.Stochasticity;
 
 /// Matches a `screenLogger(...)` declaration in the `mcmc` block and registers a
 /// [org.phylospec.tiling.mcmc.ScreenLoggerSpec] on the state.
