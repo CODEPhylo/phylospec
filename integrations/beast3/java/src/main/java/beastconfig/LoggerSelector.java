@@ -5,6 +5,7 @@ import beast.base.core.Loggable;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeStatLogger;
 import beast.base.inference.CompoundDistribution;
+import beast.base.inference.Logger;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
@@ -50,10 +51,38 @@ public class LoggerSelector {
         }
     }
 
+    public static Logger buildScreenLogger(ScreenLoggerSpec<BEASTObject> spec, BEASTState beastState) {
+        Logger logger = new Logger();
+        beastState.setInput(logger, logger.everyInput, spec.logEvery());
+        beastState.setInput(logger, logger.sortModeInput, Logger.SORTMODE.smart);
+        beastState.setInput(logger, logger.sanitiseHeadersInput, true);
+        beastState.setInput(logger, logger.loggersInput, spec.parameters());
+        return logger;
+    }
+
+    public static Logger buildFileLogger(FileLoggerSpec<BEASTObject> spec, BEASTState beastState) {
+        Logger logger = new Logger();
+        beastState.setInput(logger, logger.everyInput, spec.logEvery());
+        beastState.setInput(logger, logger.fileNameInput, spec.fileName());
+        beastState.setInput(logger, logger.sortModeInput, Logger.SORTMODE.smart);
+        beastState.setInput(logger, logger.sanitiseHeadersInput, true);
+        beastState.setInput(logger, logger.loggersInput, spec.parameters());
+        return logger;
+    }
+
+    public static Logger buildTreeLogger(TreeLoggerSpec<Tree> spec, BEASTState beastState) {
+        Logger logger = new Logger();
+        beastState.setInput(logger, logger.everyInput, spec.logEvery());
+        beastState.setInput(logger, logger.fileNameInput, spec.fileName());
+        beastState.setInput(logger, logger.modeInput, beast.base.inference.Logger.LOGMODE.tree);
+        beastState.setInput(logger, logger.loggersInput, List.of(spec.tree()));
+        return logger;
+    }
+
     /**
      * Returns all state nodes which can be logged by a screen or file logger.
      */
-    public static List<BEASTObject> getLoggableObjects(BEASTState beastState) {
+    private static List<BEASTObject> getLoggableObjects(BEASTState beastState) {
         List<BEASTObject> loggables = new ArrayList<>();
 
         for (BEASTObject object : beastState.stateNodes.keySet()) {

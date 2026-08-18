@@ -204,35 +204,27 @@ public class BEASTState {
     /**
      * Constructs loggers from the registered logger specs.
      */
-    public List<beast.base.inference.Logger> constructLoggerObjects() {
-        List<beast.base.inference.Logger> loggers = new ArrayList<>();
+    public List<beast.base.inference.Logger> buildLoggers(
+            CompoundDistribution posterior, CompoundDistribution prior, CompoundDistribution likelihood
+    ) {
+        // add missing loggers
+
+        LoggerSelector.addMissingLoggerSpecs(this, posterior, prior, likelihood);
 
         // build loggers from specs
 
+        List<beast.base.inference.Logger> loggers = new ArrayList<>();
+
         for (ScreenLoggerSpec<BEASTObject> spec : this.screenLoggerSpecs) {
-            Logger logger = new Logger();
-            this.setInput(logger, logger.everyInput, spec.logEvery());
-            this.setInput(logger, logger.sortModeInput, Logger.SORTMODE.smart);
-            this.setInput(logger, logger.sanitiseHeadersInput, true);
-            this.setInput(logger, logger.loggersInput, spec.parameters());
-            loggers.add(logger);
+            loggers.add(LoggerSelector.buildScreenLogger(spec, this));
         }
 
         for (FileLoggerSpec<BEASTObject> spec : this.fileLoggerSpecs) {
-            Logger logger = new Logger();
-            this.setInput(logger, logger.everyInput, spec.logEvery());
-            this.setInput(logger, logger.fileNameInput, spec.fileName());
-            this.setInput(logger, logger.loggersInput, spec.parameters());
-            loggers.add(logger);
+            loggers.add(LoggerSelector.buildFileLogger(spec, this));
         }
 
         for (TreeLoggerSpec<Tree> spec : this.treeLoggerSpecs) {
-            Logger logger = new Logger();
-            this.setInput(logger, logger.everyInput, spec.logEvery());
-            this.setInput(logger, logger.fileNameInput, spec.fileName());
-            this.setInput(logger, logger.modeInput, beast.base.inference.Logger.LOGMODE.tree);
-            this.setInput(logger, logger.loggersInput, List.of(spec.tree()));
-            loggers.add(logger);
+            loggers.add(LoggerSelector.buildTreeLogger(spec, this));
         }
 
         return loggers;

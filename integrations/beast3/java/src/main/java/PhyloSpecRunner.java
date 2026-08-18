@@ -1,5 +1,4 @@
 import beast.base.inference.*;
-import beastconfig.LoggerSelector;
 import beastconfig.OperatorSelector;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
 import org.phylospec.tiling.EvaluateTiles;
@@ -126,9 +125,9 @@ public class PhyloSpecRunner implements ErrorEventListener {
             OperatorSelector.addDefaultOperators(stateNode, beastState);
         }
 
-        // add loggers
+        // build loggers
 
-        LoggerSelector.addMissingLoggerSpecs(beastState, posterior, prior, likelihood);
+        List<Logger> loggers = beastState.buildLoggers(posterior, prior, likelihood);
 
         // create MCMC object
 
@@ -137,7 +136,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         beastState.setInput(mcmc, mcmc.startStateInput, state);
         beastState.setInput(mcmc, mcmc.posteriorInput, posterior);
         beastState.setInput(mcmc, mcmc.operatorsInput, new ArrayList<>(beastState.operators.keySet()));
-        beastState.setInput(mcmc, mcmc.loggersInput, beastState.constructLoggerObjects());
+        beastState.setInput(mcmc, mcmc.loggersInput, loggers);
 
         // run
 
