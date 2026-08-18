@@ -210,18 +210,18 @@ public class BEASTState implements TiledState<BEASTObject, Tree> {
     ) {
         // add missing loggers
 
-        LoggerSelector.addMissingLoggerSpecs(this, posterior, prior, likelihood);
+        LoggerSelector.addMissingLoggerSpecs(this);
 
         // build loggers from specs
 
         List<beast.base.inference.Logger> loggers = new ArrayList<>();
 
         for (ScreenLoggerSpec<BEASTObject> spec : this.screenLoggerSpecs) {
-            loggers.add(LoggerSelector.buildScreenLogger(spec, this));
+            loggers.add(LoggerSelector.buildScreenLogger(spec, this, posterior, prior, likelihood));
         }
 
         for (FileLoggerSpec<BEASTObject> spec : this.fileLoggerSpecs) {
-            loggers.add(LoggerSelector.buildFileLogger(spec, this));
+            loggers.add(LoggerSelector.buildFileLogger(spec, this, posterior, prior, likelihood));
         }
 
         for (TreeLoggerSpec<Tree> spec : this.treeLoggerSpecs) {

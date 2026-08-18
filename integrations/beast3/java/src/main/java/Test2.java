@@ -25,9 +25,8 @@ public class Test2 {
            ) observed as data
            
            mcmc {
-            Logger logger = screenLogger(
-                logEvery=10000,
-                parameters=[kappa]
+            Logger logger = treeLogger(
+                logEvery=10000, file="hjallo.log", tree
             )
            }
         """;
