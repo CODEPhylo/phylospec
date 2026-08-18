@@ -59,7 +59,13 @@ public class LoggerSelector {
         beastState.setInput(logger, logger.everyInput, spec.logEvery());
         beastState.setInput(logger, logger.sortModeInput, Logger.SORTMODE.smart);
         beastState.setInput(logger, logger.sanitiseHeadersInput, true);
-        beastState.setInput(logger, logger.loggersInput, spec.parameters());
+
+        if (spec.parameters() != null) {
+            beastState.setInput(logger, logger.loggersInput, spec.parameters());
+        } else {
+            beastState.setInput(logger, logger.loggersInput, getLoggableObjects(beastState));
+        }
+
         return logger;
     }
 
@@ -72,7 +78,13 @@ public class LoggerSelector {
         beastState.setInput(logger, logger.fileNameInput, spec.fileName());
         beastState.setInput(logger, logger.sortModeInput, Logger.SORTMODE.smart);
         beastState.setInput(logger, logger.sanitiseHeadersInput, true);
-        beastState.setInput(logger, logger.loggersInput, spec.parameters());
+
+        if (spec.parameters() != null) {
+            beastState.setInput(logger, logger.loggersInput, spec.parameters());
+        } else {
+            beastState.setInput(logger, logger.loggersInput, getLoggableObjects(beastState));
+        }
+
         return logger;
     }
 

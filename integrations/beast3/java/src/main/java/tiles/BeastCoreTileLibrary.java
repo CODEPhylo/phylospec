@@ -1,12 +1,7 @@
 package tiles;
 
-import beast.base.core.BEASTObject;
-import beast.base.evolution.tree.Tree;
 import beastconfig.BEASTState;
 import org.phylospec.tiling.TileLibrary;
-import org.phylospec.tiling.tiles.loggers.FileLoggerTile;
-import org.phylospec.tiling.tiles.loggers.ScreenLoggerTile;
-import org.phylospec.tiling.tiles.loggers.TreeLoggerTile;
 import org.phylospec.tiling.tiles.CandidateTile;
 import tiles.misc.RangeTile;
 import tiles.rpn.BinaryTile;
@@ -131,9 +126,9 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new VectorSiteRatesErrorTile());
 
         tiles.add(new ChainLengthTile());
-        tiles.add(new ScreenLoggerTile<>());
-        tiles.add(new FileLoggerTile<>());
-        tiles.add(new TreeLoggerTile<>());
+        tiles.add(new ScreenLoggerTile());
+        tiles.add(new FileLoggerTile());
+        tiles.add(new TreeLoggerTile());
 
         return tiles;
     }
