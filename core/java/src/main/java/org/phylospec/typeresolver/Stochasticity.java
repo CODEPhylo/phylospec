@@ -48,7 +48,7 @@ public enum Stochasticity {
                     + stochasticity
                     + ".";
         }
-        return "Your engine does not support a " + stochasticity.toString() + " for '" + valueName + "'.";
+        return engine + " does not support a " + stochasticity.toString() + " for '" + valueName + "'.";
     }
 
     public static String getErrorMessage(
@@ -61,6 +61,6 @@ public enum Stochasticity {
                     + stochasticity
                     + ".";
         }
-        return "Your engine does not support a " + stochasticity.toString() + " here.";
+        return engine + " does not support a " + stochasticity.toString() + " here.";
     }
 }

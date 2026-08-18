@@ -58,7 +58,7 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
         Stochasticity stochasticity = stochasticityResolver.getStochasticity(node);
         if (!this.getCompatibleStochasticities().contains(stochasticity)) {
             throw new FailedTilingAttempt.Rejected(
-                    Stochasticity.getErrorMessage("BEAST 2.8", stochasticity, this.getCompatibleStochasticities()));
+                    Stochasticity.getErrorMessage("Your engine", stochasticity, this.getCompatibleStochasticities()));
         }
 
         // collect TileInput fields from this template in declaration order
@@ -77,16 +77,19 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
                     continue;
                 } else {
                     throw new FailedTilingAttempt.Rejected(
-                            "BEAST 2.8 expects you to provide a value for '" + tileInput.getKey() + "'.");
+                            "Your engine expects you to provide a value for '" + tileInput.getKey() + "'.");
                 }
             }
 
             Set<Tile<?, S>> compatible =
                     tileInput.getCompatibleInputTiles(inputAstNode, allInputTiles, stochasticityResolver);
             if (compatible.isEmpty()) {
-                throw new FailedTilingAttempt.RejectedBoundary("BEAST 2.8 cannot deal with the value you provided for "
-                        + tileInput.getKey().replace("$", "")
-                        + ".");
+                throw new FailedTilingAttempt.RejectedBoundary(
+                        "Your engine cannot deal with the value you provided for "
+                                + tileInput.getKey().replace("$", "")
+                                + " (expected a "
+                                + tileInput.getTypeToken()
+                                + ").");
             }
 
             compatibleInputTiles.add(compatible);
