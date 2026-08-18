@@ -33,10 +33,10 @@ public class LoggerSelector {
         loggableObjects.add(likelihood);
 
         if (beastState.screenLoggerSpecs.isEmpty()) {
-            beastState.addScreenLoggerSpec(new ScreenLoggerSpec<>(1000, loggableObjects, new HashMap<>()));
+            beastState.addScreenLoggerSpec(new ScreenLoggerSpec<>(1000, loggableObjects));
         }
         if (beastState.fileLoggerSpecs.isEmpty()) {
-            beastState.addFileLoggerSpec(new FileLoggerSpec<>(1000, beastState.runName + ".log", loggableObjects, new HashMap<>()));
+            beastState.addFileLoggerSpec(new FileLoggerSpec<>(1000, beastState.runName + ".log", loggableObjects));
         }
 
         List<Tree> loggableTrees = getLoggableTrees(beastState);
@@ -51,6 +51,9 @@ public class LoggerSelector {
         }
     }
 
+    /**
+     * Builds a BEAST screen logger according to the given specs.
+     */
     public static Logger buildScreenLogger(ScreenLoggerSpec<BEASTObject> spec, BEASTState beastState) {
         Logger logger = new Logger();
         beastState.setInput(logger, logger.everyInput, spec.logEvery());
@@ -60,6 +63,9 @@ public class LoggerSelector {
         return logger;
     }
 
+    /**
+     * Builds a BEAST file logger according to the given specs.
+     */
     public static Logger buildFileLogger(FileLoggerSpec<BEASTObject> spec, BEASTState beastState) {
         Logger logger = new Logger();
         beastState.setInput(logger, logger.everyInput, spec.logEvery());
@@ -70,6 +76,9 @@ public class LoggerSelector {
         return logger;
     }
 
+    /**
+     * Builds a BEAST tree logger according to the given specs.
+     */
     public static Logger buildTreeLogger(TreeLoggerSpec<Tree> spec, BEASTState beastState) {
         Logger logger = new Logger();
         beastState.setInput(logger, logger.everyInput, spec.logEvery());
@@ -108,7 +117,7 @@ public class LoggerSelector {
     /**
      * Returns all state nodes which can be logged by a tree logger.
      */
-    public static List<Tree> getLoggableTrees(BEASTState beastState) {
+    private static List<Tree> getLoggableTrees(BEASTState beastState) {
         List<Tree> loggables = new ArrayList<>();
 
         for (BEASTObject object : beastState.stateNodes.keySet()) {
