@@ -52,8 +52,11 @@ public class ResolvedType {
         return typeComponent.getAlias();
     }
 
+    /**
+     * Returns an unmodifiable view of the resolved type parameters.
+     */
     public Map<String, ResolvedType> getParameterTypes() {
-        return parameterTypes;
+        return Collections.unmodifiableMap(parameterTypes);
     }
 
     public List<String> getParametersNames() {
@@ -76,6 +79,20 @@ public class ResolvedType {
                     parameterName, parameterTypes.get(parameterName).deepCopy());
         }
         return new ResolvedType(typeComponent, copiedParameterTypes, typeProperties.copy());
+    }
+
+    /**
+     * Creates a new resolved type with the given parameter types added to the ones already known.
+     * The parameter types and the properties are copied into independent instances, and neither
+     * this type nor the given ones are mutated.
+     */
+    public ResolvedType withParameterTypes(Map<String, ResolvedType> additionalParameterTypes) {
+        ResolvedType copy = deepCopy();
+        for (Map.Entry<String, ResolvedType> parameterType : additionalParameterTypes.entrySet()) {
+            copy.parameterTypes.put(
+                    parameterType.getKey(), parameterType.getValue().deepCopy());
+        }
+        return copy;
     }
 
     /**

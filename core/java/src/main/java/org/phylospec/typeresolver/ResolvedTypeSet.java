@@ -84,16 +84,17 @@ public class ResolvedTypeSet extends AbstractSet<ResolvedType> {
             throw new RuntimeException("Trying to merge two incompatible types. This should not happen.");
         }
 
-        ResolvedType merged = existing.deepCopy();
-        merged.properties().replace(TypePropertyEngine.getPropertiesInAgreement(existing, candidate));
-
-        for (String parameterName : merged.getParametersNames()) {
+        Map<String, ResolvedType> mergedParameterTypes = new HashMap<>();
+        for (String parameterName : existing.getParametersNames()) {
             ResolvedType existingParameter = existing.getParameterTypes().get(parameterName);
             ResolvedType candidateParameter = candidate.getParameterTypes().get(parameterName);
             if (existingParameter != null && candidateParameter != null) {
-                merged.getParameterTypes().put(parameterName, merge(existingParameter, candidateParameter));
+                mergedParameterTypes.put(parameterName, merge(existingParameter, candidateParameter));
             }
         }
+
+        ResolvedType merged = existing.withParameterTypes(mergedParameterTypes);
+        merged.properties().replace(TypePropertyEngine.getPropertiesInAgreement(existing, candidate));
 
         return merged;
     }
