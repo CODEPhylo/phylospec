@@ -2,19 +2,17 @@ package tiles.misc;
 
 import beast.base.inference.StateNode;
 import beastconfig.BEASTState;
+import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.tiling.TypeToken;
-import tiling.BoundDistribution;
 import org.phylospec.tiling.tiles.AstNodeTile;
-
-import java.util.IdentityHashMap;
+import tiling.BoundDistribution;
 
 public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw, BEASTState> {
 
-    AstNodeTileInput<BoundDistribution<?, ?>, Stmt.Draw, BEASTState> expressionInput = new AstNodeTileInput<>(
-            "expression", expr -> expr.expression
-    );
+    AstNodeTileInput<BoundDistribution<?, ?>, Stmt.Draw, BEASTState> expressionInput =
+            new AstNodeTileInput<>("expression", expr -> expr.expression);
 
     @Override
     public StateNode applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
@@ -40,5 +38,4 @@ public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw, BEASTState> {
         // we return a more general StateNode
         return new TypeToken<StateNode>() {};
     }
-
 }

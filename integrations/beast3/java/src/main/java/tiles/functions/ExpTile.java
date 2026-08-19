@@ -3,13 +3,12 @@ package tiles.functions;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
-import org.phylospec.ast.Expr;
-import org.phylospec.typeresolver.Stochasticity;
-import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
-
 import java.util.IdentityHashMap;
 import java.util.Set;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.typeresolver.Stochasticity;
 
 public class ExpTile extends GeneratorTile<RealScalarParam<PositiveReal>, BEASTState> {
 
@@ -18,14 +17,13 @@ public class ExpTile extends GeneratorTile<RealScalarParam<PositiveReal>, BEASTS
         return "exp";
     }
 
-    GeneratorTileInput<RealScalarParam<? extends Real>, BEASTState> xInput = new GeneratorTileInput<>(
-            "x", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
-    );
+    GeneratorTileInput<RealScalarParam<? extends Real>, BEASTState> xInput =
+            new GeneratorTileInput<>("x", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
-    public RealScalarParam<PositiveReal> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    public RealScalarParam<PositiveReal> applyTile(
+            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalarParam<? extends Real> variable = this.xInput.apply(beastState, indexVariables);
         return new RealScalarParam<>(Math.exp(variable.get()), PositiveReal.INSTANCE);
     }
-
 }

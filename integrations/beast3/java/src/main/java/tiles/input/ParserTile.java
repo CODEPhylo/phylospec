@@ -1,15 +1,14 @@
 package tiles.input;
 
-import org.phylospec.ast.Expr;
-import org.phylospec.typeresolver.Stochasticity;
-import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
-import org.phylospec.tiling.errors.TileApplicationError;
-
 import java.util.IdentityHashMap;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.typeresolver.Stochasticity;
 
 public class ParserTile {
 
@@ -20,18 +19,18 @@ public class ParserTile {
             return "parse";
         }
 
-        GeneratorTileInput<String, BEASTState> delimiterInput = new GeneratorTileInput<>(
-                "delimiter", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
-        );
-        GeneratorTileInput<Integer, BEASTState> partInput = new GeneratorTileInput<>(
-                "part", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
-        );
+        GeneratorTileInput<String, BEASTState> delimiterInput =
+                new GeneratorTileInput<>("delimiter", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
+        GeneratorTileInput<Integer, BEASTState> partInput =
+                new GeneratorTileInput<>("part", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
         @Override
-        public DelimiterParser applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-            return new DelimiterParser(this.delimiterInput.apply(beastState, indexVariables), this.partInput.apply(beastState, indexVariables));
+        public DelimiterParser applyTile(
+                BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+            return new DelimiterParser(
+                    this.delimiterInput.apply(beastState, indexVariables),
+                    this.partInput.apply(beastState, indexVariables));
         }
-
     }
 
     public static class Regex extends GeneratorTile<RegexParser, BEASTState> {
@@ -47,7 +46,6 @@ public class ParserTile {
         public RegexParser applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
             return new RegexParser(this.regexInput.apply(beastState, indexVariables));
         }
-
     }
 
     public sealed interface Parser {
@@ -68,7 +66,6 @@ public class ParserTile {
         public String parse(String raw) {
             return raw.split(Pattern.quote(this.delimiter))[this.part - 1];
         }
-
     }
 
     public static final class RegexParser implements Parser {
@@ -87,9 +84,9 @@ public class ParserTile {
             if (matcher.find()) {
                 return matcher.group(1);
             } else {
-                throw new TileApplicationError("Regex cannot be matched for input '" + raw + " '.", "Is the regex correct?");
+                throw new TileApplicationError(
+                        "Regex cannot be matched for input '" + raw + " '.", "Is the regex correct?");
             }
         }
     }
-
 }

@@ -1,14 +1,13 @@
 package tiles.input;
 
 import beast.base.spec.evolution.alignment.FilteredAlignment;
-import org.phylospec.ast.Expr;
-import org.phylospec.typeresolver.Stochasticity;
-import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
-import org.phylospec.tiling.errors.TileApplicationError;
-
 import java.util.IdentityHashMap;
 import java.util.Set;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.typeresolver.Stochasticity;
 
 public class SubsetTile extends GeneratorTile<DecoratedAlignment, BEASTState> {
 
@@ -18,15 +17,12 @@ public class SubsetTile extends GeneratorTile<DecoratedAlignment, BEASTState> {
     }
 
     GeneratorTileInput<DecoratedAlignment, BEASTState> alignmentInput = new GeneratorTileInput<>("alignment");
-    GeneratorTileInput<Integer, BEASTState> startInput = new GeneratorTileInput<>(
-            "start", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
-    );
-    GeneratorTileInput<Integer, BEASTState> endInput = new GeneratorTileInput<>(
-            "end", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
-    );
+    GeneratorTileInput<Integer, BEASTState> startInput =
+            new GeneratorTileInput<>("start", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
+    GeneratorTileInput<Integer, BEASTState> endInput =
+            new GeneratorTileInput<>("end", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
     GeneratorTileInput<Integer, BEASTState> codonPositionInput = new GeneratorTileInput<>(
-            "codonPosition", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
-    );
+            "codonPosition", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
     public DecoratedAlignment applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
@@ -38,23 +34,22 @@ public class SubsetTile extends GeneratorTile<DecoratedAlignment, BEASTState> {
         if (start != null && end != null && end < start) {
             throw new TileApplicationError(
                     "Your start index is bigger than your end index.",
-                    "Choose a start index which is smaller than the end index."
-            );
+                    "Choose a start index which is smaller than the end index.");
         }
         if (start != null && alignment.alignment().getSiteCount() < start) {
             throw new TileApplicationError(
                     "Your start index is bigger than the total number of sites.",
-                    "Choose a start index which is smaller than the total number of sites " + alignment.alignment().getSiteCount() + "."
-            );
+                    "Choose a start index which is smaller than the total number of sites "
+                            + alignment.alignment().getSiteCount() + ".");
         }
         if (end != null && alignment.alignment().getSiteCount() < end) {
             throw new TileApplicationError(
                     "Your end index is bigger than the total number of sites.",
-                    "Choose a end index which is smaller than the total number of sites (" + alignment.alignment().getSiteCount() + ")."
-            );
+                    "Choose a end index which is smaller than the total number of sites ("
+                            + alignment.alignment().getSiteCount() + ").");
         }
 
-        String filterString  = "";
+        String filterString = "";
         filterString += start == null ? "1" : start;
         filterString += "-";
         filterString += end == null ? "" : end;
@@ -66,5 +61,4 @@ public class SubsetTile extends GeneratorTile<DecoratedAlignment, BEASTState> {
 
         return new DecoratedAlignment(filteredAlignment, alignment.taxonSet(), alignment.ages());
     }
-
 }

@@ -4,10 +4,9 @@ import beast.base.spec.domain.Int;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.IntScalar;
 import beastconfig.BEASTState;
+import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.AstNodeTile;
-
-import java.util.IdentityHashMap;
 
 public class IndexVariableTile extends AstNodeTile<IntScalar<Int>, Expr.Variable, BEASTState> {
 
@@ -24,7 +23,7 @@ public class IndexVariableTile extends AstNodeTile<IntScalar<Int>, Expr.Variable
         // {@code EvaluateTiles} should never actually create a tile for any variable which is not
         // an index variable
 
-        throw new RuntimeException("Tile applied for an variable AST node which is not an index variable. This should not happen.");
+        throw new RuntimeException(
+                "Tile applied for an variable AST node which is not an index variable. This should not happen.");
     }
-
 }

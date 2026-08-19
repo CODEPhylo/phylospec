@@ -16,7 +16,6 @@ import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -106,5 +105,4 @@ public class OperatorSelector {
 
         return operators;
     }
-
 }

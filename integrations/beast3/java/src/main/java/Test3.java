@@ -1,10 +1,9 @@
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 public class Test3 {
 
@@ -14,5 +13,4 @@ public class Test3 {
         PhyloSpecRunner parser = new PhyloSpecRunner(source);
         parser.runPhyloSpec(path.getFileName().toString());
     }
-
 }

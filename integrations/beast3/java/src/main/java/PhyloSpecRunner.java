@@ -1,10 +1,12 @@
 import beast.base.inference.*;
-import org.phylospec.ast.transformers.EvaluateScalarFunctions;
-import org.phylospec.tiling.EvaluateTiles;
-import org.phylospec.tiling.TileLibrary;
-import org.phylospec.tiling.errors.TileApplicationError;
+import beastconfig.BEASTState;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.xml.parsers.ParserConfigurationException;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
+import org.phylospec.ast.transformers.EvaluateScalarFunctions;
 import org.phylospec.ast.transformers.RemoveGroupings;
 import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
@@ -14,17 +16,14 @@ import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Range;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
+import org.phylospec.tiling.EvaluateTiles;
+import org.phylospec.tiling.TileLibrary;
+import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import org.xml.sax.SAXException;
-import beastconfig.BEASTState;
-
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /// Top-level entry point for running a PhyloSpec model against BEAST 3.
 ///
@@ -89,7 +88,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // perform tiling
 
-        EvaluateTiles<BEASTState> applyTiles = new EvaluateTiles<>(TileLibrary.loadAll(BEASTState.class), variableResolver, stochasticityResolver);
+        EvaluateTiles<BEASTState> applyTiles =
+                new EvaluateTiles<>(TileLibrary.loadAll(BEASTState.class), variableResolver, stochasticityResolver);
         BEASTState beastState = new BEASTState(runName);
         try {
             applyTiles.getBestTiling(statements);

@@ -1,9 +1,8 @@
 package tiles.mcmc;
 
-import java.util.*;
-
 import beast.base.core.BEASTObject;
 import beastconfig.BEASTState;
+import java.util.*;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.tiles.TemplateTile;

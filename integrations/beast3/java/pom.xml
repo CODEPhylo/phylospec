@@ -78,6 +78,41 @@
                     </archive>
                 </configuration>
             </plugin>
+
+            <!-- Spotless plugin for auto format -->
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>3.8.0</version>
+                <configuration>
+                    <java>
+                        <palantirJavaFormat>
+                            <style>PALANTIR</style>
+                            <formatJavadoc>false</formatJavadoc>
+                        </palantirJavaFormat>
+
+                        <importOrder />
+                        <removeUnusedImports />
+                    </java>
+
+                    <json>
+                        <includes>
+                            <include>src/**/*.json</include>
+                        </includes>
+                        <simple>
+                        </simple>
+                    </json>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>format-on-compile</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>apply</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>

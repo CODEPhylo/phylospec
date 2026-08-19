@@ -6,12 +6,11 @@ import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeStatLogger;
 import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Logger;
+import java.util.ArrayList;
+import java.util.List;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /// Selects and adds logger specs and loggers to the BEAST state based on the available loggable objects.
 ///
@@ -39,9 +38,7 @@ public class LoggerSelector {
         if (!loggableTrees.isEmpty() && beastState.treeLoggerSpecs.isEmpty()) {
             for (Tree tree : loggableTrees) {
                 String name = loggableTrees.size() == 1 ? "" : "-" + tree.getID();
-                beastState.addTreeLoggerSpec(new TreeLoggerSpec<>(
-                        1000, beastState.runName + name + ".trees", tree
-                ));
+                beastState.addTreeLoggerSpec(new TreeLoggerSpec<>(1000, beastState.runName + name + ".trees", tree));
             }
         }
     }
@@ -50,9 +47,11 @@ public class LoggerSelector {
      * Builds a BEAST screen logger according to the given specs.
      */
     public static Logger buildScreenLogger(
-            ScreenLoggerSpec<BEASTObject> spec, BEASTState beastState,
-            CompoundDistribution posterior, CompoundDistribution prior, CompoundDistribution likelihood
-    ) {
+            ScreenLoggerSpec<BEASTObject> spec,
+            BEASTState beastState,
+            CompoundDistribution posterior,
+            CompoundDistribution prior,
+            CompoundDistribution likelihood) {
         Logger logger = new Logger();
         beastState.setInput(logger, logger.everyInput, spec.logEvery());
         beastState.setInput(logger, logger.sortModeInput, Logger.SORTMODE.smart);
@@ -68,9 +67,11 @@ public class LoggerSelector {
      * Builds a BEAST file logger according to the given specs.
      */
     public static Logger buildFileLogger(
-            FileLoggerSpec<BEASTObject> spec, BEASTState beastState,
-            CompoundDistribution posterior, CompoundDistribution prior, CompoundDistribution likelihood
-    ) {
+            FileLoggerSpec<BEASTObject> spec,
+            BEASTState beastState,
+            CompoundDistribution posterior,
+            CompoundDistribution prior,
+            CompoundDistribution likelihood) {
         Logger logger = new Logger();
         beastState.setInput(logger, logger.everyInput, spec.logEvery());
         beastState.setInput(logger, logger.fileNameInput, spec.fileName());
@@ -113,8 +114,9 @@ public class LoggerSelector {
      */
     private static List<BEASTObject> withDistributions(
             List<BEASTObject> loggables,
-            CompoundDistribution posterior, CompoundDistribution prior, CompoundDistribution likelihood
-    ) {
+            CompoundDistribution posterior,
+            CompoundDistribution prior,
+            CompoundDistribution likelihood) {
         List<BEASTObject> combined = new ArrayList<>(List.of(posterior, prior, likelihood));
 
         for (BEASTObject loggable : loggables) {
@@ -171,5 +173,4 @@ public class LoggerSelector {
 
         return loggables;
     }
-
 }

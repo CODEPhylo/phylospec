@@ -3,10 +3,9 @@ package tiles.rpn;
 import beast.base.core.BEASTInterface;
 import beast.base.spec.type.Tensor;
 import beastconfig.BEASTState;
-import org.phylospec.lexer.TokenType;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.phylospec.lexer.TokenType;
 
 /**
  * Holds an in-progress RPN expression as a string together with the BEAST tensors it
@@ -14,7 +13,8 @@ import java.util.List;
  */
 public record RPNCalculationResult(String calculation, List<Tensor> inputs, List<String> names) {
 
-    public static RPNCalculationResult combine(TokenType operand, RPNCalculationResult left, RPNCalculationResult right) {
+    public static RPNCalculationResult combine(
+            TokenType operand, RPNCalculationResult left, RPNCalculationResult right) {
         String calculation = "";
         List<Tensor> inputs = new ArrayList<>();
         List<String> names = new ArrayList<>();
@@ -42,7 +42,8 @@ public record RPNCalculationResult(String calculation, List<Tensor> inputs, List
     public static RPNCalculationResult combineUnary(String operand, RPNCalculationResult right) {
         // add right operand
 
-        String calculation = right.calculation;;
+        String calculation = right.calculation;
+        ;
         List<Tensor> inputs = new ArrayList<>(right.inputs);
         List<String> names = new ArrayList<>(right.names);
 
@@ -63,5 +64,4 @@ public record RPNCalculationResult(String calculation, List<Tensor> inputs, List
         String name = rightBeastObject.getID();
         return new RPNCalculationResult(name, List.of(right), List.of(name));
     }
-
 }
