@@ -11,6 +11,7 @@ import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
 import beastconfig.BEASTState;
+import beastconfig.OperatorSelector;
 import tiling.BoundDistribution;
 
 import java.util.IdentityHashMap;
@@ -54,7 +55,8 @@ public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coales
         return new BoundDistribution<>(
                 model,
                 defaultState,
-                tree -> beastState.setInput(model, model.treeInput, tree)
+                tree -> beastState.setInput(model, model.treeInput, tree),
+                OperatorSelector.getDefaultOperators(defaultState, beastState)
         );
     }
 
