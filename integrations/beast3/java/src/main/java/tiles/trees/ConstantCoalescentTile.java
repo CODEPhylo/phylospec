@@ -59,7 +59,7 @@ public class ConstantCoalescentTile extends GeneratorTile<BoundDistribution<Tree
                 model,
                 defaultState,
                 tree -> beastState.setInput(model, model.treeInput, tree),
-                stateNode -> OperatorSelector.getDefaultOperators(stateNode, beastState)
+                OperatorSelector::getDefaultOperators
         );
     }
 

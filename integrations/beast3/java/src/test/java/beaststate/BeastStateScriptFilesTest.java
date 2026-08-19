@@ -18,7 +18,6 @@ import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiles.BeastCoreTileLibrary;
-import tiles.OperatorTileLibrary;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -82,7 +81,7 @@ public class BeastStateScriptFilesTest {
 
             // tile each statement
 
-            EvaluateTiles<BEASTState> evaluateTiles = new EvaluateTiles<>(new BeastCoreTileLibrary().getTiles(), new ArrayList<>(), variableResolver, stochasticityResolver);
+            EvaluateTiles<BEASTState> evaluateTiles = new EvaluateTiles<>(new BeastCoreTileLibrary().getTiles(), variableResolver, stochasticityResolver);
             List<Tile<?, BEASTState>> bestTilings = null;
             try {
                 bestTilings = evaluateTiles.getBestTiling(statements);

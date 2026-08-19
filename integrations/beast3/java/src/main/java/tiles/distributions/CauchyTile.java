@@ -38,7 +38,7 @@ public class CauchyTile extends GeneratorTile<BoundDistribution<RealScalarParam<
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
-                stateNode -> OperatorSelector.getDefaultOperators(stateNode, beastState)
+                OperatorSelector::getDefaultOperators
         );
     }
 

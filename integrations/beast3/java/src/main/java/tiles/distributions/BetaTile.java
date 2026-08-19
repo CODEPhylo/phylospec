@@ -38,7 +38,7 @@ public class BetaTile extends GeneratorTile<BoundDistribution<RealScalarParam<Un
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
-                stateNode -> OperatorSelector.getDefaultOperators(stateNode, beastState)
+                OperatorSelector::getDefaultOperators
         );
     }
 

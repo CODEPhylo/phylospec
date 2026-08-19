@@ -32,8 +32,7 @@ public class OperatorSelector {
     /**
      * Builds and returns the default operators for the given state node's runtime type,
      * with their inputs already wired via {@link BEASTState#setInput}. Does not register
-     * the operators into the BEAST state; callers are responsible for that
-     * (see {@link #addDefaultOperators}).
+     * the operators into the BEAST state; callers are responsible for that.
      */
     public static List<Operator> getDefaultOperators(StateNode stateNode, BEASTState beastState) {
         List<Operator> operators = new ArrayList<>();
@@ -117,16 +116,6 @@ public class OperatorSelector {
         }
 
         return operators;
-    }
-
-    /**
-     * Adds the default operators for the given state node, unless a tile has already
-     * explicitly chosen operators for it (see {@link BEASTState#addOperators}).
-     */
-    public static void addDefaultOperators(StateNode stateNode, BEASTState beastState) {
-        if (!beastState.isOperatorSelectionHandled(stateNode)) {
-            beastState.addOperators(stateNode, getDefaultOperators(stateNode, beastState));
-        }
     }
 
 }

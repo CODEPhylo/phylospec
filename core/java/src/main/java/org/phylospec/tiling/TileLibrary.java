@@ -20,7 +20,7 @@ public abstract class TileLibrary<S> {
     public static <S> List<CandidateTile<S>> loadAll(Class<S> stateType) {
         List<CandidateTile<S>> all = new ArrayList<>();
         for (TileLibrary<?> library : ServiceLoader.load(TileLibrary.class)) {
-            if (library.getStateType() == stateType) {
+            if (library.getStateType().isAssignableFrom(stateType)) {
                 @SuppressWarnings("unchecked")
                 TileLibrary<S> typed = (TileLibrary<S>) library;
                 all.addAll(typed.getTiles());

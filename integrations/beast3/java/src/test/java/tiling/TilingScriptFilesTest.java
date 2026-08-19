@@ -5,7 +5,6 @@ import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.Tile;
 import tiles.BeastCoreTileLibrary;
-import tiles.OperatorTileLibrary;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.phylospec.ast.Stmt;
@@ -81,7 +80,7 @@ public class TilingScriptFilesTest {
 
             List<String> actualTileLines = new ArrayList<>();
 
-            EvaluateTiles<BEASTState> evaluateTiles = new EvaluateTiles(new BeastCoreTileLibrary().getTiles(), new ArrayList<>(), variableResolver, stochasticityResolver);
+            EvaluateTiles<BEASTState> evaluateTiles = new EvaluateTiles(new BeastCoreTileLibrary().getTiles(), variableResolver, stochasticityResolver);
             List<Tile<?, BEASTState>> bestTilings = null;
             try {
                 bestTilings = evaluateTiles.getBestTiling(statements);

@@ -38,7 +38,7 @@ public class LogNormalTile extends GeneratorTile<BoundDistribution<RealScalarPar
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
-                stateNode -> OperatorSelector.getDefaultOperators(stateNode, beastState)
+                OperatorSelector::getDefaultOperators
         );
     }
 

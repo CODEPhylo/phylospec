@@ -11,8 +11,9 @@ import java.util.function.Consumer;
 /// binding must always be triggered with an explicit observed state node.
 public class UnboundDistribution<T extends StateNode, O extends beast.base.inference.Distribution> {
 
-    public final O distribution;
+    protected final O distribution;
     protected Consumer<T> setStateNodeFunc;
+    protected boolean hasBeenConsumed = false;
 
     /**
      * Constructs an unbound distribution wrapping the given BEAST distribution and
@@ -26,11 +27,22 @@ public class UnboundDistribution<T extends StateNode, O extends beast.base.infer
     /**
      * Wires the given observed value into the distribution and registers the distribution
      * as a likelihood in the given BEAST state — the observed-data counterpart of
-     * {@link BoundDistribution#bindAndRegisterAsPrior}.
+     * {@link BoundDistribution#draw}.
      */
-    public void bindAndRegisterAsLikelihood(BEASTState beastState, Object observedValue, String id) {
+    public void observeAs(BEASTState beastState, Object observedValue, String likelihoodId) {
+        this.markAsConsumed();
         this.setStateNodeFunc.accept((T) observedValue);
-        beastState.addLikelihoodDistribution(this.distribution, id);
+        beastState.addLikelihoodDistribution(this.distribution, likelihoodId);
     }
 
+    protected void markAsConsumed() {
+        if (this.hasBeenConsumed) {
+            throw new RuntimeException("Trying to consume a distribution twice. This should not happen.");
+        }
+        this.hasBeenConsumed = true;
+    }
+
+    public O getDistribution() {
+        return distribution;
+    }
 }

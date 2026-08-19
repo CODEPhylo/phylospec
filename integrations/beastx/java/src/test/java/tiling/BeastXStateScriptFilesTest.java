@@ -87,7 +87,6 @@ public class BeastXStateScriptFilesTest {
             EvaluateTiles<BeastXState> evaluateTiles =
                     new EvaluateTiles<>(
                             new BeastXCoreTileLibrary().getTiles(),
-                            new ArrayList<>(),
                             variableResolver,
                             stochasticityResolver
                     );
