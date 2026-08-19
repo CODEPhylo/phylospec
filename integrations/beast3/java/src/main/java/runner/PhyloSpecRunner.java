@@ -6,7 +6,6 @@ import org.phylospec.ast.transformers.EvaluateScalarFunctions;
 import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.TileLibrary;
 import org.phylospec.tiling.errors.TileApplicationError;
-import tiles.BeastCoreTileLibrary;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.RemoveGroupings;
@@ -93,7 +92,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // perform tiling
 
-        EvaluateTiles<BEASTState> applyTiles = new EvaluateTiles<>(TileLibrary.loadAll(), new ArrayList<>(), variableResolver, stochasticityResolver);
+        EvaluateTiles<BEASTState> applyTiles = new EvaluateTiles<>(TileLibrary.loadAll(BEASTState.class), new ArrayList<>(), variableResolver, stochasticityResolver);
         BEASTState beastState = new BEASTState(runName);
         try {
             applyTiles.getBestTiling(statements);
