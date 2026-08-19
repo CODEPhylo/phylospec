@@ -56,7 +56,7 @@ public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coales
                 model,
                 defaultState,
                 tree -> beastState.setInput(model, model.treeInput, tree),
-                OperatorSelector.getDefaultOperators(defaultState, beastState)
+                stateNode -> OperatorSelector.getDefaultOperators(stateNode, beastState)
         );
     }
 

@@ -35,10 +35,10 @@ public class OffsetTile extends TemplateTile<RealScalarParam<Real>, BEASTState> 
         Double offset = this.offsetInput.apply(beastState, indexVariables);
 
         OffsetReal offsetDistribution = new OffsetReal(distribution.distribution, offset);
-        beastState.addStateNode(distribution.stateNode, this.getTypeToken(), "offset");
-        beastState.addPriorDistribution(distribution.stateNode, offsetDistribution, "offset_prior");
+        beastState.addStateNode(distribution.getStateNode(), this.getTypeToken(), "offset");
+        beastState.addPriorDistribution(distribution.getStateNode(), offsetDistribution, "offset_prior");
 
-        return distribution.stateNode;
+        return distribution.getStateNode();
     }
 
 }

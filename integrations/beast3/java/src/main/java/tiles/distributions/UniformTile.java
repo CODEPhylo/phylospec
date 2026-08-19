@@ -36,8 +36,8 @@ public class UniformTile extends GeneratorTile<BoundDistribution<RealScalarParam
         return new BoundDistribution<>(
                 distribution,
                 defaultState,
-                param -> beastState.setInput(distribution, distribution.paramInput, param),
-                OperatorSelector.getDefaultOperators(defaultState, beastState)
+                stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
+                stateNode -> OperatorSelector.getDefaultOperators(stateNode, beastState)
         );
     }
 
