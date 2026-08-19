@@ -196,17 +196,23 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
         // if this is the case, we try to attach the resolved parameter types
         // so far, this only works if the type is not extended
 
+        ResolvedTypeSet completedVariableTypeSet = new ResolvedTypeSet();
         for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
-            if (resolvedVariableType.hasUnresolvedParameterTypes()) {
+            // we must not fill in the parameter types by mutating the type in place, because they
+            // are part of its hash code and it is used as a key inside the type set
+
+            ResolvedType completedVariableType = resolvedVariableType;
+            if (completedVariableType.hasUnresolvedParameterTypes()) {
                 // find the matching resolved types
                 for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
-                    if (resolvedVariableType.getName().equals(resolvedExpressionType.getName())) {
-                        resolvedVariableType.getParameterTypes().putAll(resolvedExpressionType.getParameterTypes());
+                    if (completedVariableType.getName().equals(resolvedExpressionType.getName())) {
+                        completedVariableType =
+                                completedVariableType.withParameterTypes(resolvedExpressionType.getParameterTypes());
                     }
                 }
             }
 
-            if (resolvedVariableType.hasUnresolvedParameterTypes()) {
+            if (completedVariableType.hasUnresolvedParameterTypes()) {
                 // we weren't able to resolve all parameter types based on the assigned expression
                 throw new TypeError(
                         stmt,
@@ -218,7 +224,10 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
                                 + " parameter types, but you specified none. Add the type parameters using brackets.",
                         List.of("Vector<Real>"));
             }
+
+            completedVariableTypeSet.add(completedVariableType);
         }
+        resolvedVariableTypeSet = completedVariableTypeSet;
 
         typePropertyEngine.resolveAssignment(resolvedVariableTypeSet, resolvedExpressionTypeSet, componentResolver);
         enforceUniqueness(stmt.name, stmt);
@@ -278,17 +287,23 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
         // if this is the case, we try to attach the resolved parameter types
         // so far, this only works if the type is not extended
 
+        ResolvedTypeSet completedVariableTypeSet = new ResolvedTypeSet();
         for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
-            if (resolvedVariableType.hasUnresolvedParameterTypes()) {
+            // we must not fill in the parameter types by mutating the type in place, because they
+            // are part of its hash code and it is used as a key inside the type set
+
+            ResolvedType completedVariableType = resolvedVariableType;
+            if (completedVariableType.hasUnresolvedParameterTypes()) {
                 // find the matching resolved types
                 for (ResolvedType generatedType : generatedTypeSet) {
-                    if (resolvedVariableType.getName().equals(generatedType.getName())) {
-                        resolvedVariableType.getParameterTypes().putAll(generatedType.getParameterTypes());
+                    if (completedVariableType.getName().equals(generatedType.getName())) {
+                        completedVariableType =
+                                completedVariableType.withParameterTypes(generatedType.getParameterTypes());
                     }
                 }
             }
 
-            if (resolvedVariableType.hasUnresolvedParameterTypes()) {
+            if (completedVariableType.hasUnresolvedParameterTypes()) {
                 // we weren't able to resolve all parameter types based on the assigned expression
                 throw new TypeError(
                         stmt,
@@ -300,7 +315,10 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
                                 + " parameter types, but you specified none. Add the type parameters using brackets.",
                         List.of("Vector<Real>"));
             }
+
+            completedVariableTypeSet.add(completedVariableType);
         }
+        resolvedVariableTypeSet = completedVariableTypeSet;
 
         typePropertyEngine.resolveDraw(resolvedVariableTypeSet, resolvedExpressionTypeSet, componentResolver);
         enforceUniqueness(stmt.name, stmt);
