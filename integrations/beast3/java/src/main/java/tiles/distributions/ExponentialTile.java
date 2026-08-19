@@ -8,6 +8,7 @@ import org.phylospec.ast.Expr;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
+import beastconfig.OperatorSelector;
 import tiling.BoundDistribution;
 
 import java.util.IdentityHashMap;
@@ -40,7 +41,8 @@ public class ExponentialTile extends GeneratorTile<BoundDistribution<RealScalarP
         return new BoundDistribution<>(
                 distribution,
                 defaultState,
-                param -> beastState.setInput(distribution, distribution.paramInput, param)
+                param -> beastState.setInput(distribution, distribution.paramInput, param),
+                OperatorSelector.getDefaultOperators(defaultState, beastState)
         );
     }
 

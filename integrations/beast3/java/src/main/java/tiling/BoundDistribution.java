@@ -23,15 +23,6 @@ public class BoundDistribution<T extends StateNode, O extends beast.base.inferen
 
     /**
      * Constructs a bound distribution with the given BEAST distribution, default state node,
-     * and the setter used to attach a state node to the distribution. The default state node
-     * falls back to {@link beastconfig.OperatorSelector}'s type-based default operators.
-     */
-    public BoundDistribution(O distribution, T defaultState, Consumer<T> setStateNodeFunc) {
-        this(distribution, defaultState, setStateNodeFunc, null);
-    }
-
-    /**
-     * Constructs a bound distribution with the given BEAST distribution, default state node,
      * the setter used to attach a state node to the distribution, and the operators to
      * register for the default state node once it is bound.
      */
