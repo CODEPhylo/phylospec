@@ -38,7 +38,7 @@ public class BoundDistribution<T extends StateNode, O extends beast.base.inferen
     public T draw(BEASTState beastState, TypeToken<?> typeToken, String stateId) {
         this.markAsConsumed();
         this.setStateNodeFunc.accept(this.stateNode);
-        beastState.addStateNode(this.stateNode, typeToken, stateId);
+        beastState.addStateNodeWithoutOperators(this.stateNode, typeToken, stateId);
         beastState.addPriorDistribution(this.stateNode, this.distribution, stateId + "_prior");
         beastState.addOperators(this.stateNode, this.operatorFactory.apply(this.stateNode, beastState));
         return this.stateNode;

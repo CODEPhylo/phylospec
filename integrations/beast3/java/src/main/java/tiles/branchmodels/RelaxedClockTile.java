@@ -9,6 +9,7 @@ import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
+import beastconfig.OperatorSelector;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.TileApplicationError;
@@ -58,8 +59,10 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel, BEASTSt
         int numBranches = 2 * tree.getTaxaNames().length - 2;
         int[] rateArray = new int[numBranches];
         IntVectorParam<NonNegativeInt> rateCategories = new IntVectorParam<>(rateArray, NonNegativeInt.INSTANCE);
-        beastState.addStateNode(rateCategories, new TypeToken<IntVectorParam<NonNegativeInt>>() {
+
+        beastState.addStateNodeWithoutOperators(rateCategories, new TypeToken<IntVectorParam<NonNegativeInt>>() {
         }, id);
+        beastState.addOperators(rateCategories, OperatorSelector.getDefaultOperators(rateCategories, beastState));
 
         // init the relaxed clock
 
