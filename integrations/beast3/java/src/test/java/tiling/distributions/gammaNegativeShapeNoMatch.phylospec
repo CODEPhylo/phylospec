@@ -2,7 +2,7 @@ Real c = -1.0
 Real x ~ Gamma(shape=c, rate=1.0)
 
 // EXPECTED_TILES
-// Unsupported operation. Your engine cannot deal with the value you provided for the 'shape' argument for 'Gamma' (expected a RealScalar<PositiveReal>).
+// Unsupported operation. Your engine cannot deal with the value you provided for the 'shape' argument for 'Gamma' (expected type RealScalar<PositiveReal>).
 // EXPECTED_TILES
 
 // EXPECTED BEAST STATE

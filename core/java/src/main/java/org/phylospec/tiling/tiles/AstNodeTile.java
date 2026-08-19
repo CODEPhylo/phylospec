@@ -58,7 +58,7 @@ public abstract class AstNodeTile<T, N extends AstNode, S> extends Tile<T, S> im
                 throw new FailedTilingAttempt.RejectedBoundary(
                         "Your engine cannot deal with the value you provided for "
                                 + tileInput.getKey()
-                                + " (expected a "
+                                + " (expected type "
                                 + tileInput.getTypeToken().toString()
                                 + ").");
             }

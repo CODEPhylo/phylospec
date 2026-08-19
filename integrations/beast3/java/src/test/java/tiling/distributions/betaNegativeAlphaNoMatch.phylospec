@@ -2,7 +2,7 @@ Real c = -2.0
 Real x ~ Beta(alpha=c, beta=1.0)
 
 // EXPECTED_TILES
-// Unsupported operation. Your engine cannot deal with the value you provided for the 'alpha' argument for 'Beta' (expected a RealScalar<PositiveReal>).
+// Unsupported operation. Your engine cannot deal with the value you provided for the 'alpha' argument for 'Beta' (expected type RealScalar<PositiveReal>).
 // EXPECTED_TILES
 
 // EXPECTED BEAST STATE

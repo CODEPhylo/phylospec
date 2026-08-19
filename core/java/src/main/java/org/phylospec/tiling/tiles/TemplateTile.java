@@ -87,7 +87,7 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
                 throw new FailedTilingAttempt.RejectedBoundary(
                         "Your engine cannot deal with the value you provided for "
                                 + tileInput.getKey().replace("$", "")
-                                + " (expected a "
+                                + " (expected type "
                                 + tileInput.getTypeToken()
                                 + ").");
             }
