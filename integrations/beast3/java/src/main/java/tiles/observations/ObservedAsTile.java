@@ -39,7 +39,7 @@ public class ObservedAsTile extends TemplateTile<StateNode, BEASTState> {
 
         // we register the distribution as a likelihood with the given state node as parameter
 
-        evaluatedDistribution.bindAndRegisterAsLikelihood(beastState, observedStateNode, id);
+        evaluatedDistribution.observeAs(beastState, observedStateNode, id);
 
         // we return the observed state
 

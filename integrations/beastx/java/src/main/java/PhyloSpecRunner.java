@@ -395,7 +395,6 @@ public class PhyloSpecRunner implements ErrorEventListener {
         EvaluateTiles<BeastXState> applyTiles =
                 new EvaluateTiles<>(
                         TileLibrary.loadAll(BeastXState.class),
-                        new ArrayList<>(),
                         parsed.variableResolver,
                         parsed.stochasticityResolver
                 );

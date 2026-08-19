@@ -34,17 +34,19 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel, BEASTSt
 
     @Override
     protected UCRelaxedClockModel applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        UnboundDistribution<? extends RealScalarParam<? extends PositiveReal>, ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>> base = this.baseInput.apply(beastState, indexVariables);
+        BoundDistribution<? extends RealScalarParam<? extends PositiveReal>, ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>> base = this.baseInput.apply(beastState, indexVariables);
         RealScalarParam<PositiveReal> clockRate = this.clockRateInput.apply(beastState, indexVariables);
         Tree tree = this.treeInput.apply(beastState, indexVariables);
 
         // make sure that the distribution has mean rate 1.0
 
-        beastState.initBEASTObject(base.distribution);
-        if (1E-6 < Math.abs(base.distribution.getMean() - 1.0)) {
+        ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double> distribution = base.getDistribution();
+
+        beastState.initBEASTObject(distribution);
+        if (1E-6 < Math.abs(distribution.getMean() - 1.0)) {
             throw new TileApplicationError(
                     this.getRootNode(),
-                    "Base distribution used for the relaxed clock should have a mean of 1.0. You use a distribution with mean " + base.distribution.getMean() + ".",
+                    "Base distribution used for the relaxed clock should have a mean of 1.0. You use a distribution with mean " + distribution.getMean() + ".",
                     "Use a distribution with mean 1.0.",
                     List.of("LogNormal(mean=1.0, logSd=0.1)")
             );
@@ -64,7 +66,7 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel, BEASTSt
 
         UCRelaxedClockModel relaxedClockModel = new UCRelaxedClockModel();
         // TODO: use type safe version of this
-        relaxedClockModel.rateDistInput.setValue(base.distribution, relaxedClockModel);
+        relaxedClockModel.rateDistInput.setValue(distribution, relaxedClockModel);
         beastState.setInput(relaxedClockModel, relaxedClockModel.meanRateInput, clockRate);
         beastState.setInput(relaxedClockModel, relaxedClockModel.treeInput, tree);
         beastState.setInput(relaxedClockModel, relaxedClockModel.categoryInput, rateCategories);

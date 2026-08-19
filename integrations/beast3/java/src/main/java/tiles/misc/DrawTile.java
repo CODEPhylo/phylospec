@@ -27,7 +27,7 @@ public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw, BEASTState> {
         // we delegate wiring the state node, registering it (and its prior and operators)
         // in the BEAST state, to the bound distribution itself
 
-        return evaluatedDistribution.bindAndRegisterAsPrior(beastState, this.getTypeToken(), id);
+        return evaluatedDistribution.draw(beastState, this.getTypeToken(), id);
     }
 
     @Override

@@ -30,8 +30,7 @@ public class BEASTState {
     public final HashMap<StateNode, Distribution> priorDistributions;
     public final List<Distribution> likelihoodDistributions;
 
-    public final HashMap<Operator, Set<StateNode>> operators;
-    private final Set<StateNode> tileHandledOperators;
+    public final List<Operator> operators;
 
     public final List<ScreenLoggerSpec<BEASTObject>> screenLoggerSpecs;
     public final List<FileLoggerSpec<BEASTObject>> fileLoggerSpecs;
@@ -49,8 +48,7 @@ public class BEASTState {
         this.calculationNodes = new HashMap<>();
         this.priorDistributions = new HashMap<>();
         this.likelihoodDistributions = new ArrayList<>();
-        this.operators = new HashMap<>();
-        this.tileHandledOperators = new HashSet<>();
+        this.operators = new ArrayList<>();
         this.beastObjects = new ArrayList<>();
         this.ids = new HashSet<>();
         this.initializedBeastObjects = new HashSet<>();
@@ -161,6 +159,26 @@ public class BEASTState {
     }
 
     /**
+     * Registers the given operators for a state node that has already been added via
+     * {@link #addStateNode}, and marks the state node as having explicit tile-chosen
+     * operators (so {@link OperatorSelector}'s type-based fallback skips it).
+     */
+    public void addOperators(StateNode stateNode, List<Operator> operators) {
+        this.addOperators(Set.of(stateNode), operators);
+    }
+
+    /**
+     * Registers the given operators for a state node that has already been added via
+     * {@link #addStateNode}, and marks the state node as having explicit tile-chosen
+     * operators (so {@link OperatorSelector}'s type-based fallback skips it).
+     */
+    public void addOperators(Set<StateNode> stateNodes, List<Operator> operators) {
+        for (Operator operator : operators) {
+            this.addOperator(operator, stateNodes);
+        }
+    }
+
+    /**
      * Adds a given operator to the BEAST state.
      */
     public void addOperator(Operator operator, StateNode stateNode) {
@@ -178,31 +196,11 @@ public class BEASTState {
                 id.append(stateNode.getID()).append("_");
             }
             id.append("operator");
-            operator.setID(id.toString());
+            operator.setID(this.getAvailableID(id.toString()));
         }
 
         this.addBEASTObject(operator);
-        this.operators.put(operator, stateNodes);
-    }
-
-    /**
-     * Registers the given operators for a state node that has already been added via
-     * {@link #addStateNode}, and marks the state node as having explicit tile-chosen
-     * operators (so {@link OperatorSelector}'s type-based fallback skips it).
-     */
-    public void addOperators(StateNode stateNode, List<Operator> operators) {
-        this.tileHandledOperators.add(stateNode);
-        for (Operator operator : operators) {
-            this.addOperator(operator, stateNode);
-        }
-    }
-
-    /**
-     * Returns whether a tile has explicitly chosen operators for the given state node,
-     * via {@link #addOperators}.
-     */
-    public boolean isOperatorSelectionHandled(StateNode stateNode) {
-        return this.tileHandledOperators.contains(stateNode);
+        this.operators.add(operator);
     }
 
     /**

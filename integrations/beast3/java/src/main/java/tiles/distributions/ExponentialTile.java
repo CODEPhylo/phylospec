@@ -42,7 +42,7 @@ public class ExponentialTile extends GeneratorTile<BoundDistribution<RealScalarP
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
-                stateNode -> OperatorSelector.getDefaultOperators(stateNode, beastState)
+                OperatorSelector::getDefaultOperators
         );
     }
 
