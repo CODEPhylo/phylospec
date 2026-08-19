@@ -124,7 +124,7 @@ public class BEASTState {
     /**
      * Adds a given state node to the BEAST state.
      */
-    public void addStateNode(StateNode stateNode, TypeToken<?> typeToken, String id) {
+    public void addStateNodeWithoutOperators(StateNode stateNode, TypeToken<?> typeToken, String id) {
         stateNode.setID(this.getAvailableID(id));
         this.addBEASTObject(stateNode);
         this.stateNodes.put(stateNode, typeToken);
