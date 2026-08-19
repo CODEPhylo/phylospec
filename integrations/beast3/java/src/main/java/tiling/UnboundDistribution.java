@@ -24,19 +24,12 @@ public class UnboundDistribution<T extends StateNode, O extends beast.base.infer
     }
 
     /**
-     * Wires the given observed state node into the distribution via the setter.
-     */
-    public void bind(Object observedStateNode) {
-        this.setStateNodeFunc.accept((T) observedStateNode);
-    }
-
-    /**
      * Wires the given observed value into the distribution and registers the distribution
      * as a likelihood in the given BEAST state — the observed-data counterpart of
      * {@link BoundDistribution#bindAndRegisterAsPrior}.
      */
     public void bindAndRegisterAsLikelihood(BEASTState beastState, Object observedValue, String id) {
-        this.bind(observedValue);
+        this.setStateNodeFunc.accept((T) observedValue);
         beastState.addLikelihoodDistribution(this.distribution, id);
     }
 
