@@ -2,7 +2,7 @@ Real c = -1.0
 Real x ~ Cauchy(location=0.0, scale=c)
 
 // EXPECTED_TILES
-// Unsupported operation. Your engine cannot deal with the value you provided for the 'scale' argument for 'Cauchy' (expected a RealScalar<PositiveReal>).
+// Unsupported operation. Your engine cannot deal with the value you provided for the 'scale' argument for 'Cauchy' (expected type RealScalar<PositiveReal>).
 // EXPECTED_TILES
 
 // EXPECTED BEAST STATE

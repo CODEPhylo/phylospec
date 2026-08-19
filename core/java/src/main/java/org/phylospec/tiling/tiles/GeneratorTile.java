@@ -63,7 +63,7 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
                         "You cannot pass a value to the '" + argumentName + "' argument to run this.");
             }
 
-            // for each argument tile, we check if its generated BEAST 2.8 type is compatible with
+            // for each argument tile, we check if its generated type is compatible with
             // this input
 
             Set<Tile<?, S>> currentCompatibleInputTiles =
@@ -75,7 +75,7 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
                                 + argumentName
                                 + "' argument for '"
                                 + this.getPhyloSpecGeneratorName()
-                                + "' (expected a "
+                                + "' (expected type "
                                 + argumentInput.getTypeToken().toString()
                                 + ").");
             }

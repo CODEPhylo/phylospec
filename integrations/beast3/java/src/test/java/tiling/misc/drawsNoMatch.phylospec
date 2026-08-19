@@ -3,7 +3,7 @@ Real c = -1.0
 Real d ~ Normal(mean=a, sd=c)
 
 // EXPECTED_TILES
-// Unsupported operation. Your engine cannot deal with the value you provided for the 'sd' argument for 'Normal' (expected a RealScalar<PositiveReal>).
+// Unsupported operation. Your engine cannot deal with the value you provided for the 'sd' argument for 'Normal' (expected type RealScalar<PositiveReal>).
 // EXPECTED_TILES
 
 // EXPECTED BEAST STATE

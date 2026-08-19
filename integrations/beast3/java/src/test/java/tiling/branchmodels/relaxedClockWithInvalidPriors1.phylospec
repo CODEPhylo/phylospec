@@ -11,7 +11,7 @@ Distribution<Vector<Rate>> dist = RelaxedClock(
 )
 
 // EXPECTED_TILES
-// Unsupported operation. Your engine cannot deal with the value you provided for the 'base' argument for 'RelaxedClock' (expected a BoundDistribution<RealScalarParam<PositiveReal>, ScalarDistribution<RealScalar<PositiveReal>, Double>>).
+// Unsupported operation. Your engine cannot deal with the value you provided for the 'base' argument for 'RelaxedClock' (expected type BoundDistribution<RealScalarParam<PositiveReal>, ScalarDistribution<RealScalar<PositiveReal>, Double>>).
 // EXPECTED_TILES
 
 // EXPECTED BEAST STATE
