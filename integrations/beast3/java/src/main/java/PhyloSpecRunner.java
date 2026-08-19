@@ -1,10 +1,8 @@
 import beast.base.inference.*;
-import beastconfig.OperatorSelector;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
 import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.TileLibrary;
 import org.phylospec.tiling.errors.TileApplicationError;
-import tiles.BeastCoreTileLibrary;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.RemoveGroupings;

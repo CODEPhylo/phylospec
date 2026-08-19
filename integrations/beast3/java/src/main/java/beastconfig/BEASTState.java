@@ -159,18 +159,14 @@ public class BEASTState {
     }
 
     /**
-     * Registers the given operators for a state node that has already been added via
-     * {@link #addStateNode}, and marks the state node as having explicit tile-chosen
-     * operators (so {@link OperatorSelector}'s type-based fallback skips it).
+     * Adds all given operators to the BEAST state, naming each of them after the given state node.
      */
     public void addOperators(StateNode stateNode, List<Operator> operators) {
         this.addOperators(Set.of(stateNode), operators);
     }
 
     /**
-     * Registers the given operators for a state node that has already been added via
-     * {@link #addStateNode}, and marks the state node as having explicit tile-chosen
-     * operators (so {@link OperatorSelector}'s type-based fallback skips it).
+     * Adds all given operators to the BEAST state, naming each of them after the given state nodes.
      */
     public void addOperators(Set<StateNode> stateNodes, List<Operator> operators) {
         for (Operator operator : operators) {
@@ -179,14 +175,16 @@ public class BEASTState {
     }
 
     /**
-     * Adds a given operator to the BEAST state.
+     * Adds a given operator to the BEAST state, naming it after the given state node if it has no
+     * ID yet.
      */
     public void addOperator(Operator operator, StateNode stateNode) {
         this.addOperator(operator, Set.of(stateNode));
     }
 
     /**
-     * Adds a given operator to the BEAST state.
+     * Adds a given operator to the BEAST state, naming it after the given state nodes if it has no
+     * ID yet.
      */
     public void addOperator(Operator operator, Set<StateNode> stateNodes) {
         // set id

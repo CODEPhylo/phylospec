@@ -14,7 +14,6 @@ import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiling.BoundDistribution;
-import tiling.UnboundDistribution;
 
 import java.util.IdentityHashMap;
 import java.util.List;
