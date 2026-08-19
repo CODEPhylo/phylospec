@@ -122,7 +122,8 @@ public class BEASTState {
     }
 
     /**
-     * Adds a given state node to the BEAST state.
+     * Adds a given state node to the BEAST state without registering any operators for it. The
+     * caller is responsible for adding operators via {@link #addOperators}.
      */
     public void addStateNodeWithoutOperators(StateNode stateNode, TypeToken<?> typeToken, String id) {
         stateNode.setID(this.getAvailableID(id));
@@ -162,13 +163,13 @@ public class BEASTState {
      * Adds all given operators to the BEAST state, naming each of them after the given state node.
      */
     public void addOperators(StateNode stateNode, List<Operator> operators) {
-        this.addOperators(Set.of(stateNode), operators);
+        this.addOperators(List.of(stateNode), operators);
     }
 
     /**
      * Adds all given operators to the BEAST state, naming each of them after the given state nodes.
      */
-    public void addOperators(Set<StateNode> stateNodes, List<Operator> operators) {
+    public void addOperators(List<StateNode> stateNodes, List<Operator> operators) {
         for (Operator operator : operators) {
             this.addOperator(operator, stateNodes);
         }
@@ -179,14 +180,14 @@ public class BEASTState {
      * ID yet.
      */
     public void addOperator(Operator operator, StateNode stateNode) {
-        this.addOperator(operator, Set.of(stateNode));
+        this.addOperator(operator, List.of(stateNode));
     }
 
     /**
      * Adds a given operator to the BEAST state, naming it after the given state nodes if it has no
      * ID yet.
      */
-    public void addOperator(Operator operator, Set<StateNode> stateNodes) {
+    public void addOperator(Operator operator, List<StateNode> stateNodes) {
         // set id
         if (operator.getID() == null) {
             StringBuilder id = new StringBuilder();

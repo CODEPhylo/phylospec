@@ -25,14 +25,14 @@ public class DrawTile extends AstNodeTile<StateNode, Stmt.Draw, BEASTState> {
         String id = this.getId(this.getRootNode().name, indexVariables, "");
 
         // we delegate wiring the state node, registering it (and its prior and operators)
-        // in the BEAST state, to the bound distribution itself
+        // in the BEAST state, to the drawable distribution itself
 
         return evaluatedDistribution.draw(beastState, this.getTypeToken(), id);
     }
 
     @Override
     public TypeToken<?> getTypeToken() {
-        // we first try to get the state node type from the BoundDistribution input
+        // we first try to get the state node type from the DrawableDistribution input
         TypeToken<?> resolved = TypeToken.firstConcreteTypeArg(this.expressionInput.getTypeToken());
         if (resolved != null) return resolved;
 

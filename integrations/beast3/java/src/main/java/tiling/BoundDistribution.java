@@ -17,7 +17,7 @@ public class BoundDistribution<T extends StateNode, O extends beast.base.inferen
     private final BiFunction<T, BEASTState, List<Operator>> operatorFactory;
 
     /**
-     * Constructs a bound distribution with the given BEAST distribution, the default state node,
+     * Constructs a drawable distribution with the given BEAST distribution, the default state node,
      * the setter that attaches a parameter value to the distribution, and the factory
      * building the operators to register for the default state node when it is drawn.
      */

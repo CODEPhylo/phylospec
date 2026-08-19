@@ -20,7 +20,7 @@ import beast.base.spec.inference.parameter.RealVectorParam;
 import java.util.ArrayList;
 import java.util.List;
 
-/// Selects and adds the appropriate MCMC operators for a given state node.
+/// Selects the appropriate MCMC operators for a given state node.
 ///
 /// Assigns a default set of operators based on the runtime type of the state node.
 /// Trees receive a standard suite of tree operators; scalar and vector parameters receive

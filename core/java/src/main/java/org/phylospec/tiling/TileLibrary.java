@@ -15,7 +15,8 @@ public abstract class TileLibrary<S> {
 
     /**
      * Discovers all TileLibrary implementations on the classpath and collects the tiles of
-     * those whose state type matches {@code stateType}.
+     * those that apply to {@code stateType}, that is, those whose state type is {@code stateType}
+     * itself or a supertype of it.
      */
     public static <S> List<CandidateTile<S>> loadAll(Class<S> stateType) {
         List<CandidateTile<S>> all = new ArrayList<>();
