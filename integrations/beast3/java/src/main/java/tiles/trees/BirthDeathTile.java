@@ -66,7 +66,7 @@ public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthD
                 birthDeathModel,
                 defaultState,
                 tree -> beastState.setInput(birthDeathModel, birthDeathModel.treeInput, tree),
-                stateNode -> OperatorSelector.getDefaultOperators(stateNode, beastState)
+                OperatorSelector::getDefaultOperators
         );
     }
 

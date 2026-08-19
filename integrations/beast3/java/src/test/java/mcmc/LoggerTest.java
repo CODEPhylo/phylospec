@@ -208,7 +208,6 @@ public class LoggerTest {
         EvaluateTiles<BEASTState> evaluateTiles =
                 new EvaluateTiles<>(
                         new BeastCoreTileLibrary().getTiles(),
-                        new ArrayList<>(),
                         variableResolver,
                         stochasticityResolver);
 

@@ -38,7 +38,7 @@ public class GammaTile extends GeneratorTile<BoundDistribution<RealScalarParam<P
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
-                stateNode -> OperatorSelector.getDefaultOperators(stateNode, beastState)
+                OperatorSelector::getDefaultOperators
         );
     }
 
