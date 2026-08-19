@@ -59,7 +59,7 @@ public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>, 
                 yuleModel,
                 defaultState,
                 tree -> beastState.setInput(yuleModel, yuleModel.treeInput, tree),
-                OperatorSelector.getDefaultOperators(defaultState, beastState)
+                stateNode -> OperatorSelector.getDefaultOperators(stateNode, beastState)
         );
     }
 
