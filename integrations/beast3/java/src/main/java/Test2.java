@@ -31,7 +31,7 @@ public class Test2 {
            }
         """;
 
-        PhyloSpecRunner<?, ?> parser = new Beast3Runner(source);
+        PhyloSpecRunner parser = new PhyloSpecRunner(source);
         parser.runPhyloSpec("Test2");
     }
 
