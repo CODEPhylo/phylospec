@@ -16,6 +16,10 @@ jobs:
           java-version: '25'
           distribution: 'zulu'
           architecture: x64
+          cache: maven
 
       - name: run formatter
         run: sh scripts/format.sh
+
+      - name: run tests
+        run: mvn -B -pl core/java,integrations/beast3/java -am test
