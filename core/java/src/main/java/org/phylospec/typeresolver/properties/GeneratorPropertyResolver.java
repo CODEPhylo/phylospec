@@ -64,8 +64,19 @@ public class GeneratorPropertyResolver {
 
     private void checkConstraint(
             Expr.Call call, String constraintString, Map<String, ResolvedTypeSet> resolvedArguments) {
-        ParsedTypeConstraint constraint = new ParsedTypeConstraint(constraintString);
+        ParsedTypeConstraint constraint = ParsedTypeConstraint.parse(constraintString);
 
+        if (constraint instanceof ParsedTypeConstraint.PropertyComparison propertyComparison) {
+            checkPropertyConstraint(call, propertyComparison, resolvedArguments);
+        } else if (constraint instanceof ParsedTypeConstraint.ConstantComparison constantComparison) {
+            checkConstantConstraint(call, constantComparison, resolvedArguments);
+        }
+    }
+
+    private void checkPropertyConstraint(
+            Expr.Call call,
+            ParsedTypeConstraint.PropertyComparison constraint,
+            Map<String, ResolvedTypeSet> resolvedArguments) {
         ResolvedTypeSet leftInputTypeSet = resolvedArguments.get(constraint.getLeftInputName());
         ResolvedTypeSet rightInputTypeSet = resolvedArguments.get(constraint.getRightInputName());
 
@@ -90,17 +101,7 @@ public class GeneratorPropertyResolver {
                     return;
                 }
 
-                boolean fulfilled =
-                        switch (constraint.getConstraintType()) {
-                            case EQUALITY -> leftNr.doubleValue() == rightNr.doubleValue();
-                            case INEQUALITY -> leftNr.doubleValue() != rightNr.doubleValue();
-                            case LESS -> leftNr.doubleValue() < rightNr.doubleValue();
-                            case LESS_THAN -> leftNr.doubleValue() <= rightNr.doubleValue();
-                            case GREATER -> leftNr.doubleValue() > rightNr.doubleValue();
-                            case GREATER_THAN -> leftNr.doubleValue() >= rightNr.doubleValue();
-                        };
-
-                if (fulfilled) {
+                if (isFulfilled(constraint, leftNr.doubleValue(), rightNr.doubleValue())) {
                     // there are type inputs for which the constraint could be fulfilled :)
                     return;
                 }
@@ -109,6 +110,57 @@ public class GeneratorPropertyResolver {
 
         // all type combinations could be evaluated and none of them were successful
 
+        raiseConstraintWarning(call, constraint);
+    }
+
+    private void checkConstantConstraint(
+            Expr.Call call,
+            ParsedTypeConstraint.ConstantComparison constraint,
+            Map<String, ResolvedTypeSet> resolvedArguments) {
+        ResolvedTypeSet leftInputTypeSet = resolvedArguments.get(constraint.getLeftInputName());
+
+        if (leftInputTypeSet == null) {
+            // we don't know about this input
+            // let's ignore this constraint
+            return;
+        }
+
+        if (leftInputTypeSet.isEmpty()) {
+            // there are no possible types. this is an issue but not related to this constraint
+            return;
+        }
+
+        for (ResolvedType leftInputType : leftInputTypeSet) {
+            Object leftProperty = leftInputType.properties().get(constraint.getLeftPropertyName());
+
+            if (!(leftProperty instanceof Number leftNr)) {
+                // this is somehow not a number, or we don't know this property
+                return;
+            }
+
+            if (isFulfilled(constraint, leftNr.doubleValue(), constraint.getConstant())) {
+                // there are type inputs for which the constraint could be fulfilled :)
+                return;
+            }
+        }
+
+        // all types could be evaluated and none of them were successful
+
+        raiseConstraintWarning(call, constraint);
+    }
+
+    private static boolean isFulfilled(ParsedTypeConstraint constraint, double leftValue, double rightValue) {
+        return switch (constraint.getConstraintType()) {
+            case EQUALITY -> leftValue == rightValue;
+            case INEQUALITY -> leftValue != rightValue;
+            case LESS -> leftValue < rightValue;
+            case LESS_THAN -> leftValue <= rightValue;
+            case GREATER -> leftValue > rightValue;
+            case GREATER_THAN -> leftValue >= rightValue;
+        };
+    }
+
+    private void raiseConstraintWarning(Expr.Call call, ParsedTypeConstraint constraint) {
         raiseWarning(new Error(
                 call.getRange(),
                 "The inputs for '" + call.functionName + "' might be invalid.",
