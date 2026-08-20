@@ -110,8 +110,9 @@ public class EngineSpecGenerator {
 
         // add generator descriptions
 
-        // there might be multiple tiles with the same generator description (namespace + name + argument names)
-        // we collapse them into one using a set
+        // there might be multiple tiles with the same generator description (namespace, name and
+        // arguments including their stochasticity), we collapse them into one using a set. tiles
+        // that differ in the accepted stochasticity stay separate entries
         Set<Generator__1> generators = new LinkedHashSet<>();
 
         for (CandidateTile<S> candidateTile : tileLibrary.getTiles()) {
