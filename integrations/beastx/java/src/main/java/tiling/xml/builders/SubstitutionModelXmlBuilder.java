@@ -14,6 +14,7 @@ import dr.evomodel.substmodel.nucleotide.GTR;
 import dr.evomodel.substmodel.nucleotide.HKY;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
+import dr.inference.model.VectorSliceParameter;
 import tiling.xml.XmlElement;
 
 import java.util.ArrayList;
@@ -337,6 +338,21 @@ public class SubstitutionModelXmlBuilder {
         List<Parameter> rateParameters =
                 gtrRateParameters(gtr);
 
+        Parameter relativeRates =
+                jointGTRRatesParameter(rateParameters);
+
+        if (relativeRates != null) {
+            return model.withChild(
+                    XmlElement.element("rates")
+                            .withChild(
+                                    parameterOrInlineVectorDefinition(
+                                            substitutionModelId + "_rates",
+                                            relativeRates
+                                    )
+                            )
+            );
+        }
+
         if (allGTRRatesAreInline(rateParameters)) {
             return model.withChild(
                     XmlElement.element("rates")
@@ -466,6 +482,55 @@ public class SubstitutionModelXmlBuilder {
         return XmlElement.element("parameter")
                 .withId(fallbackId)
                 .withAttribute("value", String.join(" ", values));
+    }
+
+    private XmlElement parameterOrInlineVectorDefinition(
+            String fallbackId,
+            Parameter parameter
+    ) {
+        if (hasId(parameter)) {
+            return XmlElement.ref("parameter", parameter.getId());
+        }
+
+        List<String> values =
+                new ArrayList<>();
+
+        for (double value : parameter.getParameterValues()) {
+            values.add(format(value));
+        }
+
+        return XmlElement.element("parameter")
+                .withId(fallbackId)
+                .withAttribute("value", String.join(" ", values));
+    }
+
+    private Parameter jointGTRRatesParameter(List<Parameter> rateParameters) {
+        Parameter relativeRates =
+                null;
+
+        for (int i = 0; i < rateParameters.size(); i++) {
+            Parameter rate =
+                    rateParameters.get(i);
+
+            if (!(rate instanceof VectorSliceParameter slice)
+                    || slice.getParameterCount() != 1) {
+                return null;
+            }
+
+            Parameter candidate =
+                    slice.getParameter(0);
+
+            if (candidate.getDimension() != 6
+                    || (relativeRates != null && relativeRates != candidate)
+                    || !approximatelyEqual(rate.getParameterValue(0), candidate.getParameterValue(i))) {
+                return null;
+            }
+
+            relativeRates =
+                    candidate;
+        }
+
+        return relativeRates;
     }
 
     private List<Parameter> gtrRateParameters(GTR gtr) {

@@ -5,19 +5,18 @@ import dr.inference.model.Parameter;
 import dr.math.UnivariateFunction;
 import dr.math.distributions.Distribution;
 import org.phylospec.ast.Expr;
-import org.phylospec.domain.NonNegativeInt;
 import org.phylospec.domain.UnitInterval;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
-import tiling.params.BeastXIntScalarParam;
+import tiling.params.BeastXBoolScalarParam;
 import tiling.params.BeastXRealScalarParam;
 
 import java.util.IdentityHashMap;
 
 public class BernoulliTile extends GeneratorTile<
-        BoundDistribution<BeastXIntScalarParam<NonNegativeInt>, DistributionLikelihood>,
+        BoundDistribution<BeastXBoolScalarParam, DistributionLikelihood>,
         BeastXState
         > {
 
@@ -30,7 +29,7 @@ public class BernoulliTile extends GeneratorTile<
             new GeneratorTileInput<>("p");
 
     @Override
-    public BoundDistribution<BeastXIntScalarParam<NonNegativeInt>, DistributionLikelihood> applyTile(
+    public BoundDistribution<BeastXBoolScalarParam, DistributionLikelihood> applyTile(
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
@@ -48,16 +47,8 @@ public class BernoulliTile extends GeneratorTile<
         Parameter.Default defaultParameter =
                 new Parameter.Default(p.get() >= 0.5 ? 1.0 : 0.0);
 
-        defaultParameter.addBounds(
-                0.0,
-                1.0
-        );
-
-        BeastXIntScalarParam<NonNegativeInt> defaultState =
-                new BeastXIntScalarParam<>(
-                        defaultParameter,
-                        NonNegativeInt.INSTANCE
-                );
+        BeastXBoolScalarParam defaultState =
+                new BeastXBoolScalarParam(defaultParameter);
 
         return new BoundDistribution<>(
                 likelihood,

@@ -111,6 +111,7 @@ import tiles.substitutionmodels.K80Tile;
 import tiles.substitutionmodels.F81Tile;
 import tiles.substitutionmodels.HKYTile;
 import tiles.substitutionmodels.GTRTile;
+import tiles.substitutionmodels.GTRRelativeRatesTile;
 import tiles.substitutionmodels.JTTTile;
 import tiles.substitutionmodels.WAGTile;
 import tiles.substitutionmodels.LGTile;
@@ -273,6 +274,7 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new F81Tile());
         tiles.add(new HKYTile());
         tiles.add(new GTRTile());
+        tiles.add(new GTRRelativeRatesTile());
         tiles.add(new JTTTile());
         tiles.add(new WAGTile());
         tiles.add(new LGTile());

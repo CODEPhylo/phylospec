@@ -6,6 +6,7 @@ import dr.inference.model.Bounds;
 import dr.inference.model.Parameter;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.TypeToken;
+import org.phylospec.types.BoolScalar;
 import org.phylospec.types.IntScalar;
 import org.phylospec.types.IntVector;
 import org.phylospec.types.RealScalar;
@@ -37,6 +38,7 @@ public final class OperatorSelector {
             new TypeToken<IntScalar<? extends org.phylospec.domain.Int>>() {};
     private static final TypeToken<?> INT_VECTOR =
             new TypeToken<IntVector<? extends org.phylospec.domain.Int>>() {};
+    private static final TypeToken<?> BOOLEAN = new TypeToken<BoolScalar>() {};
 
     public List<OperatorSpec> select(BeastXState state) {
         List<OperatorSpec> operators = new ArrayList<>();
@@ -60,6 +62,12 @@ public final class OperatorSelector {
 
             if (isRelaxedClockCategories(state, parameter)) {
                 operators.addAll(integerOperators(parameter, 10.0));
+            } else if (BOOLEAN.isAssignableFrom(type)) {
+                operators.add(parameterOperator(
+                        OperatorSpec.Family.BIT_FLIP,
+                        parameter,
+                        state.operatorConfig.parameterOperatorWeight,
+                        NO_TUNING));
             } else if (SIMPLEX.isAssignableFrom(type)) {
                 operators.add(parameterOperator(
                         OperatorSpec.Family.DELTA_EXCHANGE,

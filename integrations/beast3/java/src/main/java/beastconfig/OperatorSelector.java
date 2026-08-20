@@ -8,6 +8,7 @@ import beast.base.evolution.tree.Tree;
 import beast.base.inference.StateNode;
 import beast.base.spec.evolution.operator.ScaleTreeOperator;
 import beast.base.spec.inference.operator.BitFlipOperator;
+import beast.base.spec.inference.operator.DeltaExchangeOperator;
 import beast.base.spec.inference.operator.IntRandomWalkOperator;
 import beast.base.spec.inference.operator.ScaleOperator;
 import beast.base.spec.inference.operator.SwapOperator;
@@ -15,6 +16,7 @@ import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.inference.parameter.SimplexParam;
 
 /// Selects and adds the appropriate MCMC operators for a given state node.
 ///
@@ -69,7 +71,16 @@ public class OperatorSelector {
             beastState.addOperator(scaleOperator, stateNode);
         }
 
-        if (stateNode instanceof RealVectorParam<?> realVector) {
+        if (stateNode instanceof SimplexParam simplex) {
+            DeltaExchangeOperator deltaExchangeOperator = new DeltaExchangeOperator();
+            beastState.setInput(
+                    deltaExchangeOperator,
+                    deltaExchangeOperator.rvparameterInput,
+                    simplex);
+            beastState.setInput(deltaExchangeOperator, deltaExchangeOperator.deltaInput, 0.01);
+            beastState.setInput(deltaExchangeOperator, deltaExchangeOperator.m_pWeight, 5.0);
+            beastState.addOperator(deltaExchangeOperator, stateNode);
+        } else if (stateNode instanceof RealVectorParam<?> realVector) {
             ScaleOperator scaleOperator = new ScaleOperator();
             beastState.setInput(scaleOperator, scaleOperator.parameterInput, realVector);
             beastState.setInput(scaleOperator, scaleOperator.m_pWeight, 5.0);

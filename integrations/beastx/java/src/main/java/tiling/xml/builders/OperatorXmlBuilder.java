@@ -41,6 +41,10 @@ public final class OperatorXmlBuilder {
             case INTEGER_UNIFORM -> parameterOperator(
                     "uniformIntegerOperator", spec, "uniform",
                     "count", Integer.toString((int) spec.tuning()));
+            case BIT_FLIP -> XmlElement.element("bitFlipOperator")
+                    .withId(parameterId(spec.parameter()) + "_bitFlip")
+                    .withAttribute("weight", format(spec.weight()))
+                    .withChild(parameterReference(spec.parameter()));
             case TREE_NODE_HEIGHT_SCALE -> nodeHeightScaleOperator(spec);
             case TREE_ROOT_SCALE -> rootScaleOperator(spec);
             case TREE_UNIFORM_HEIGHT -> treeOperator(

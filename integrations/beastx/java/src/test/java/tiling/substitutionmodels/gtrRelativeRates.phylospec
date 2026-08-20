@@ -1,0 +1,17 @@
+QMatrix q = gtr(
+    relativeRates~Dirichlet(
+        concentration=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    ),
+    baseFrequencies~Dirichlet(
+        concentration=[1.0, 1.0, 1.0, 1.0]
+    )
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED BEASTX STATE
+// SN: relativeRates, baseFrequencies
+// P: relativeRates_prior, baseFrequencies_prior
+// EXPECTED BEASTX STATE
