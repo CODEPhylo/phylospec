@@ -87,18 +87,15 @@ public class EngineSpecGenerator {
     }
 
     /**
-     * Builds the engine-specification entry for a single generator tile, looking up its namespace
-     * and generated type from the core component library.
-     *
-     * <p>Throws if the tile's generator name isn't known to the core component library, since the
-     * resulting entry would otherwise be missing the namespace and type information the
-     * specification schema requires.
+     * Builds the engine-specification entry for a single generator tile. The namespace is only set
+     * if the tile specifies one.
      */
     private static Generator__1 generateGeneratorSpecification(GeneratorTile<?, ?> generatorTile) {
         String phyloSpecGeneratorName = generatorTile.getPhyloSpecGeneratorName();
 
         Generator__1 generator = new Generator__1();
         generator.setName(phyloSpecGeneratorName);
+        generatorTile.getNamespace().ifPresent(generator::setNamespace);
 
         List<Argument__1> arguments = new ArrayList<>();
         for (GeneratorTile.GeneratorTileInput<?, ?> input : generatorTile.getGeneratorTileInputs()) {

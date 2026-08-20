@@ -18,6 +18,14 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
 
     public abstract String getPhyloSpecGeneratorName();
 
+    /**
+     * Returns the PhyloSpec namespace this generator lives in, if the tile knows it. Tiles that
+     * don't override this leave the namespace unspecified.
+     */
+    public Optional<String> getNamespace() {
+        return Optional.empty();
+    }
+
     @Override
     public Set<Tile<?, S>> tryToTile(
             AstNode node,
