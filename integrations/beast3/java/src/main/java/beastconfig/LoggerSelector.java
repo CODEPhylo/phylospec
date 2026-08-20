@@ -95,6 +95,13 @@ public class LoggerSelector {
 
         List<BEASTObject> trees =
                 spec.tree() != null ? List.of(spec.tree()) : new ArrayList<>(getLoggableTrees(beastState));
+
+        if (trees.isEmpty()) {
+            throw new RuntimeException("A custom tree logger is provided, but the model does not seem to contain a tree.");
+        } else if (1 < trees.size()) {
+            throw new RuntimeException("A custom tree logger is provided, but the model has more than one tree. Specify the tree to log with 'tree=<treeName>'");
+        }
+
         beastState.setInput(logger, logger.loggersInput, trees);
 
         return logger;
