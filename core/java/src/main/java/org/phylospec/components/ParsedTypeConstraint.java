@@ -6,42 +6,57 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Represents a comparison between properties of two component inputs. An example is
- * `tree.numBranches == branchRates.num`. Such constraints can be used to formalize
- * conditions that have to be met such that a generator can be applied.
+ * Represents a comparison between a property of a component input and either the property of
+ * another component input or a constant. Examples are `tree.numBranches == branchRates.num`
+ * and `baseFrequencies.num == 4`. Such constraints can be used to formalize conditions that
+ * have to be met such that a generator can be applied.
  * The constraints are usually given as strings by the JSON component definitions. This
  * class can be used to parse these strings.
  */
-public class ParsedTypeConstraint {
-    private static final Pattern CONSTRAINT_PATTERN = Pattern.compile("^\\s*\\$?([A-Za-z_][A-Za-z0-9_]*)\\s*\\.\\s*"
+public abstract class ParsedTypeConstraint {
+    private static final Pattern CONSTRAINT_PATTERN = Pattern.compile("^\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*\\.\\s*"
             + "([A-Za-z_][A-Za-z0-9_]*)\\s*"
             + "(==|!=|>=|<=|=<|>|<)\\s*"
-            + "\\$?([A-Za-z_][A-Za-z0-9_]*)\\s*\\.\\s*"
-            + "([A-Za-z_][A-Za-z0-9_]*)\\s*$");
+            + "(?:([A-Za-z_][A-Za-z0-9_]*)\\s*\\.\\s*([A-Za-z_][A-Za-z0-9_]*)"
+            + "|([+-]?(?:[0-9]+\\.?[0-9]*|\\.[0-9]+)))\\s*$");
 
     private final ConstraintType constraintType;
     private final String leftInputName;
     private final String leftPropertyName;
-    private final String rightInputName;
-    private final String rightPropertyName;
+
+    private ParsedTypeConstraint(ConstraintType constraintType, String leftInputName, String leftPropertyName) {
+        this.constraintType = constraintType;
+        this.leftInputName = leftInputName;
+        this.leftPropertyName = leftPropertyName;
+    }
 
     /**
-     * Parses a comparison between two input property references.
+     * Parses a comparison of an input property with another input property or with a constant.
      *
      * @param constraint the constraint to parse
-     * @throws IllegalArgumentException if the constraint does not compare two input properties
+     * @return a {@link PropertyComparison} or a {@link ConstantComparison}, depending on the right side
+     * @throws IllegalArgumentException if the constraint does not compare an input property with
+     *     another input property or a constant
      */
-    public ParsedTypeConstraint(String constraint) {
+    public static ParsedTypeConstraint parse(String constraint) {
         Matcher matcher = CONSTRAINT_PATTERN.matcher(constraint);
         if (!matcher.matches()) {
-            throw new IllegalArgumentException("Type constraint must compare two input properties: " + constraint);
+            throw new IllegalArgumentException(
+                    "Type constraint must compare an input property with an input property or a number: " + constraint);
         }
 
-        this.leftInputName = matcher.group(1);
-        this.leftPropertyName = matcher.group(2);
-        this.constraintType = parseConstraintType(matcher.group(3));
-        this.rightInputName = matcher.group(4);
-        this.rightPropertyName = matcher.group(5);
+        ConstraintType constraintType = parseConstraintType(matcher.group(3));
+        String leftInputName = matcher.group(1);
+        String leftPropertyName = matcher.group(2);
+
+        String constant = matcher.group(6);
+        if (constant != null) {
+            return new ConstantComparison(
+                    constraintType, leftInputName, leftPropertyName, Double.parseDouble(constant));
+        }
+
+        return new PropertyComparison(
+                constraintType, leftInputName, leftPropertyName, matcher.group(4), matcher.group(5));
     }
 
     private static ConstraintType parseConstraintType(String operator) {
@@ -84,24 +99,6 @@ public class ParsedTypeConstraint {
     }
 
     /**
-     * Returns the input name on the right side of the comparison.
-     *
-     * @return the right input name
-     */
-    public String getRightInputName() {
-        return rightInputName;
-    }
-
-    /**
-     * Returns the property name on the right side of the comparison.
-     *
-     * @return the right property name
-     */
-    public String getRightPropertyName() {
-        return rightPropertyName;
-    }
-
-    /**
      * Returns a human-readable error message.
      *
      * @return the message
@@ -111,9 +108,16 @@ public class ParsedTypeConstraint {
                 + " must "
                 + describeComparison(constraintType)
                 + " "
-                + describeProperty(rightInputName, rightPropertyName, false)
+                + describeRightSide()
                 + ".";
     }
+
+    /**
+     * Describes the right side of the comparison in a human-readable way.
+     *
+     * @return the description
+     */
+    protected abstract String describeRightSide();
 
     private static String describeComparison(ConstraintType constraintType) {
         return switch (constraintType) {
@@ -124,6 +128,81 @@ public class ParsedTypeConstraint {
             case GREATER -> "be greater than";
             case GREATER_THAN -> "be greater than or equal to";
         };
+    }
+
+    /**
+     * Represents a comparison of two input properties, such as `tree.numBranches == branchRates.num`.
+     */
+    public static final class PropertyComparison extends ParsedTypeConstraint {
+        private final String rightInputName;
+        private final String rightPropertyName;
+
+        private PropertyComparison(
+                ConstraintType constraintType,
+                String leftInputName,
+                String leftPropertyName,
+                String rightInputName,
+                String rightPropertyName) {
+            super(constraintType, leftInputName, leftPropertyName);
+            this.rightInputName = rightInputName;
+            this.rightPropertyName = rightPropertyName;
+        }
+
+        /**
+         * Returns the input name on the right side of the comparison.
+         *
+         * @return the right input name
+         */
+        public String getRightInputName() {
+            return rightInputName;
+        }
+
+        /**
+         * Returns the property name on the right side of the comparison.
+         *
+         * @return the right property name
+         */
+        public String getRightPropertyName() {
+            return rightPropertyName;
+        }
+
+        @Override
+        protected String describeRightSide() {
+            return describeProperty(rightInputName, rightPropertyName, false);
+        }
+    }
+
+    /**
+     * Represents a comparison of an input property with a constant, such as `baseFrequencies.num == 4`.
+     */
+    public static final class ConstantComparison extends ParsedTypeConstraint {
+        private final double constant;
+
+        private ConstantComparison(
+                ConstraintType constraintType, String leftInputName, String leftPropertyName, double constant) {
+            super(constraintType, leftInputName, leftPropertyName);
+            this.constant = constant;
+        }
+
+        /**
+         * Returns the constant on the right side of the comparison.
+         *
+         * @return the constant
+         */
+        public double getConstant() {
+            return constant;
+        }
+
+        @Override
+        protected String describeRightSide() {
+            // print whole numbers without a trailing `.0`
+
+            if (constant == Math.rint(constant) && !Double.isInfinite(constant)) {
+                return Long.toString((long) constant);
+            }
+
+            return Double.toString(constant);
+        }
     }
 
     /**
