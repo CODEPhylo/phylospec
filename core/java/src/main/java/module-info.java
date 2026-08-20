@@ -24,4 +24,12 @@ module org.phylospec.core {
     exports org.phylospec.types;
 
     uses org.phylospec.tiling.TileLibrary;
+    uses org.phylospec.typeresolver.properties.GeneratorPropertyProvider;
+
+    provides org.phylospec.typeresolver.properties.GeneratorPropertyProvider with
+            org.phylospec.typeresolver.properties.FromCsvProvider,
+            org.phylospec.typeresolver.properties.FromFastaProvider,
+            org.phylospec.typeresolver.properties.FromNewickProvider,
+            org.phylospec.typeresolver.properties.FromNexusProvider,
+            org.phylospec.typeresolver.properties.FromTreeProvider;
 }
