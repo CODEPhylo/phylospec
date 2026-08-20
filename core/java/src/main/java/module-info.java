@@ -22,6 +22,7 @@ module org.phylospec.core {
     exports org.phylospec.tiling.tiles;
     exports org.phylospec.typeresolver;
     exports org.phylospec.types;
+    exports org.phylospec.tiling.mcmc;
 
     uses org.phylospec.tiling.TileLibrary;
     uses org.phylospec.typeresolver.properties.GeneratorPropertyProvider;
