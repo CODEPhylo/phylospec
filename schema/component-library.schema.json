@@ -119,6 +119,10 @@
         "name": {
           "type": "string"
         },
+        "overloadName": {
+          "type": "string",
+          "description": "Stable name disambiguating overloads that share a namespace and name. Required when a (namespace, name) pair holds more than one generator."
+        },
         "description": {
           "type": "string"
         },
