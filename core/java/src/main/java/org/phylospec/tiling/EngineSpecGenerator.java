@@ -11,9 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.phylospec.components.Argument__1;
-import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.EngineSpecificationSchema;
-import org.phylospec.components.Generator;
 import org.phylospec.components.Generator__1;
 import org.phylospec.tiling.tiles.CandidateTile;
 import org.phylospec.tiling.tiles.GeneratorTile;
@@ -66,12 +64,7 @@ public class EngineSpecGenerator {
             List<String> engineDependencies,
             String installationInstructions,
             String installationWebsite) {
-        ComponentResolver componentResolver;
-        try {
-            componentResolver = new ComponentResolver(ComponentResolver.loadCoreComponentLibraries());
-        } catch (IOException e) {
-            throw new RuntimeException("Could not load the core component library.", e);
-        }
+        // initialize schema
 
         EngineSpecificationSchema schema = new EngineSpecificationSchema();
         schema.setName(engineName);
@@ -80,14 +73,13 @@ public class EngineSpecGenerator {
         schema.setInstallationInstructions(installationInstructions);
         schema.setInstallationWebsite(installationWebsite);
 
-        // multiple tiles can implement the same PhyloSpec generator with different Java type
-        // bounds (e.g. an "x: Int" and an "x: Real" overload); those are indistinguishable from
-        // the specification's point of view, so we deduplicate identical entries
+        // add generator descriptions
+
         Set<Generator__1> generators = new LinkedHashSet<>();
         for (CandidateTile<S> candidateTile : tileLibrary.getTiles()) {
-            if (!(candidateTile instanceof GeneratorTile<?, ?> generatorTile)) continue;
-
-            generators.add(generateGeneratorSpecification(generatorTile, componentResolver));
+            if (candidateTile instanceof GeneratorTile<?, ?> generatorTile) {
+                generators.add(generateGeneratorSpecification(generatorTile));
+            }
         }
         schema.setGenerators(new ArrayList<>(generators));
 
@@ -102,49 +94,22 @@ public class EngineSpecGenerator {
      * resulting entry would otherwise be missing the namespace and type information the
      * specification schema requires.
      */
-    private static Generator__1 generateGeneratorSpecification(
-            GeneratorTile<?, ?> generatorTile, ComponentResolver componentResolver) {
+    private static Generator__1 generateGeneratorSpecification(GeneratorTile<?, ?> generatorTile) {
         String phyloSpecGeneratorName = generatorTile.getPhyloSpecGeneratorName();
-
-        List<Generator> knownGenerators = componentResolver.resolveGenerator(phyloSpecGeneratorName);
-        if (knownGenerators.isEmpty()) {
-            throw new IllegalStateException("Tile implements generator '"
-                    + phyloSpecGeneratorName
-                    + "', which is not known to the core component library. Cannot"
-                    + " determine its namespace and generated type.");
-        }
-        Generator knownGenerator = knownGenerators.getFirst();
 
         Generator__1 generator = new Generator__1();
         generator.setName(phyloSpecGeneratorName);
-        generator.setNamespace(knownGenerator.getNamespace());
-        generator.setGeneratedType(knownGenerator.getGeneratedType());
 
         List<Argument__1> arguments = new ArrayList<>();
         for (GeneratorTile.GeneratorTileInput<?, ?> input : generatorTile.getGeneratorTileInputs()) {
-            arguments.add(generateArgumentSpecification(input, knownGenerator));
+            Argument__1 argument = new Argument__1();
+            argument.setName(input.getPhylospecArgumentName());
+            argument.setRequired(input.isRequired());
+            argument.setCanBeStochastic(input.getAcceptedStochasticities().contains(Stochasticity.STOCHASTIC));
+            arguments.add(argument);
         }
         generator.setArguments(arguments);
 
         return generator;
-    }
-
-    /**
-     * Builds the engine-specification entry for a single generator argument, looking up its
-     * canonical type from the matching argument of the core component library's generator.
-     */
-    private static Argument__1 generateArgumentSpecification(
-            GeneratorTile.GeneratorTileInput<?, ?> input, Generator knownGenerator) {
-        Argument__1 argument = new Argument__1();
-        argument.setName(input.getPhylospecArgumentName());
-        argument.setRequired(input.isRequired());
-        argument.setCanBeStochastic(input.getAcceptedStochasticities().contains(Stochasticity.STOCHASTIC));
-
-        knownGenerator.getArguments().stream()
-                .filter(a -> a.getName().equals(input.getPhylospecArgumentName()))
-                .findFirst()
-                .ifPresent(a -> argument.setType(a.getType()));
-
-        return argument;
     }
 }
