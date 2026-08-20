@@ -13,7 +13,8 @@ import java.util.regex.Pattern;
  * The constraints are usually given as strings by the JSON component definitions. This
  * class can be used to parse these strings.
  */
-public abstract class ParsedTypeConstraint {
+public abstract sealed class ParsedTypeConstraint
+        permits ParsedTypeConstraint.PropertyComparison, ParsedTypeConstraint.ConstantComparison {
     private static final Pattern CONSTRAINT_PATTERN = Pattern.compile("^\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*\\.\\s*"
             + "([A-Za-z_][A-Za-z0-9_]*)\\s*"
             + "(==|!=|>=|<=|=<|>|<)\\s*"

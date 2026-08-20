@@ -66,10 +66,11 @@ public class GeneratorPropertyResolver {
             Expr.Call call, String constraintString, Map<String, ResolvedTypeSet> resolvedArguments) {
         ParsedTypeConstraint constraint = ParsedTypeConstraint.parse(constraintString);
 
-        if (constraint instanceof ParsedTypeConstraint.PropertyComparison propertyComparison) {
-            checkPropertyConstraint(call, propertyComparison, resolvedArguments);
-        } else if (constraint instanceof ParsedTypeConstraint.ConstantComparison constantComparison) {
-            checkConstantConstraint(call, constantComparison, resolvedArguments);
+        switch (constraint) {
+            case ParsedTypeConstraint.PropertyComparison propertyComparison ->
+                checkPropertyConstraint(call, propertyComparison, resolvedArguments);
+            case ParsedTypeConstraint.ConstantComparison constantComparison ->
+                checkConstantConstraint(call, constantComparison, resolvedArguments);
         }
     }
 
