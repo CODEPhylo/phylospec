@@ -153,9 +153,9 @@ public class EngineSpecGenerator {
 
     /**
      * Validates a generator tile against the component library: the generator it implements has to
-     * exist, and its arguments have to be declared in the same relative order as in the component
-     * library. The resolver is only used for these checks, the engine specification itself is built
-     * from the tile alone.
+     * exist, its arguments have to be known, and its first argument has to be the one the component
+     * library expects in first position. The resolver is only used for these checks, the engine
+     * specification itself is built from the tile alone.
      */
     private static void validateGeneratorTile(GeneratorTile<?, ?> generatorTile, ComponentResolver componentResolver) {
         String phyloSpecGeneratorName = generatorTile.getPhyloSpecGeneratorName();
@@ -203,45 +203,30 @@ public class EngineSpecGenerator {
                     + ".");
         }
 
-        // a tile may leave out optional arguments and mix arguments of different overloads, so we
-        // only require that its arguments do not contradict the order of any overload
+        // first argument can be passed positionally, so it is the only one whose position
+        // has to agree with the component library. the remaining arguments are passed by name and
+        // may be declared in any order, or left out entirely
 
-        for (Generator knownGenerator : knownGenerators) {
-            List<String> expectedOrder = knownGenerator.getArguments().stream()
-                    .map(Argument::getName)
-                    .toList();
+        if (tileArgumentNames.isEmpty()) return;
 
-            List<String> tileOrderForThisOverload =
-                    tileArgumentNames.stream().filter(expectedOrder::contains).toList();
+        String tileFirstArgumentName = tileArgumentNames.getFirst();
 
-            if (!isOrderedSubsequence(tileOrderForThisOverload, expectedOrder)) {
-                throw new IllegalStateException("The tile '"
-                        + generatorTile.getClass().getSimpleName()
-                        + "' declares the arguments "
-                        + tileArgumentNames
-                        + " for the generator '"
-                        + phyloSpecGeneratorName
-                        + "', which contradicts the argument order "
-                        + expectedOrder
-                        + " of the component library.");
-            }
+        List<String> expectedFirstArgumentNames = knownGenerators.stream()
+                .map(Generator::getArguments)
+                .filter(arguments -> !arguments.isEmpty())
+                .map(arguments -> arguments.getFirst().getName())
+                .toList();
+
+        if (!expectedFirstArgumentNames.contains(tileFirstArgumentName)) {
+            throw new IllegalStateException("The tile '"
+                    + generatorTile.getClass().getSimpleName()
+                    + "' declares '"
+                    + tileFirstArgumentName
+                    + "' as the first argument of the generator '"
+                    + phyloSpecGeneratorName
+                    + "', but the component library expects one of "
+                    + expectedFirstArgumentNames
+                    + ".");
         }
-    }
-
-    /**
-     * Returns whether all elements of the candidate appear in the reference in the same relative
-     * order.
-     */
-    private static boolean isOrderedSubsequence(List<String> candidate, List<String> reference) {
-        int referenceIndex = 0;
-        for (String element : candidate) {
-            while (referenceIndex < reference.size()
-                    && !reference.get(referenceIndex).equals(element)) {
-                referenceIndex++;
-            }
-            if (referenceIndex == reference.size()) return false;
-            referenceIndex++;
-        }
-        return true;
     }
 }
