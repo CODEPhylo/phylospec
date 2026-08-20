@@ -37,12 +37,12 @@ public class Generator {
     @JsonProperty("name")
     private String name;
     /**
-     * Stable name disambiguating overloads that share a namespace and name. Required when a (namespace, name) pair holds more than one generator.
+     * Stable name disambiguating overloads that share a namespace and name, without repeating the generator name (e.g. 'real' and 'integer' for the two overloads of 'sum'). Required when a (namespace, name) pair holds more than one generator, and unique within that pair. Part of the public contract: never rename or reuse it.
      *
      */
     @JsonProperty("overloadName")
     @JsonPropertyDescription(
-            "Stable name disambiguating overloads that share a namespace and name. Required when a (namespace, name) pair holds more than one generator.")
+            "Stable name disambiguating overloads that share a namespace and name, without repeating the generator name (e.g. 'real' and 'integer' for the two overloads of 'sum'). Required when a (namespace, name) pair holds more than one generator, and unique within that pair. Part of the public contract: never rename or reuse it.")
     private String overloadName;
 
     @JsonProperty("description")
@@ -117,7 +117,7 @@ public class Generator {
     }
 
     /**
-     * Stable name disambiguating overloads that share a namespace and name. Required when a (namespace, name) pair holds more than one generator.
+     * Stable name disambiguating overloads that share a namespace and name, without repeating the generator name (e.g. 'real' and 'integer' for the two overloads of 'sum'). Required when a (namespace, name) pair holds more than one generator, and unique within that pair. Part of the public contract: never rename or reuse it.
      *
      */
     @JsonProperty("overloadName")
@@ -126,7 +126,7 @@ public class Generator {
     }
 
     /**
-     * Stable name disambiguating overloads that share a namespace and name. Required when a (namespace, name) pair holds more than one generator.
+     * Stable name disambiguating overloads that share a namespace and name, without repeating the generator name (e.g. 'real' and 'integer' for the two overloads of 'sum'). Required when a (namespace, name) pair holds more than one generator, and unique within that pair. Part of the public contract: never rename or reuse it.
      *
      */
     @JsonProperty("overloadName")

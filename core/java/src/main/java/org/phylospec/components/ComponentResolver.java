@@ -140,6 +140,7 @@ public class ComponentResolver {
         // validate imported components
 
         this.checkTypeParameters();
+        this.checkOverloadNames();
     }
 
     /**
@@ -336,6 +337,80 @@ public class ComponentResolver {
             if (generator.getTypeParameters().contains(parameterType.getTypeString())) continue;
             checkTypeParameters(parameterType, generator);
         }
+    }
+
+    /**
+     * Checks that the overloads of a generator can be addressed individually.
+     * Overloads are generators registered under the same fully qualified name, possibly
+     * coming from different component libraries. Each of them needs a unique overload name.
+     * A generator which is the only one with its name does not need an overload name.
+     */
+    private void checkOverloadNames() {
+        Map<String, List<Generator>> overloadsByName = new LinkedHashMap<>();
+        for (ComponentLibrary library : componentLibraries) {
+            for (Generator generator : library.getGenerators()) {
+                overloadsByName
+                        .computeIfAbsent(getFullyQualifiedName(generator), x -> new ArrayList<>())
+                        .add(generator);
+            }
+        }
+
+        for (Map.Entry<String, List<Generator>> entry : overloadsByName.entrySet()) {
+            String qualifiedName = entry.getKey();
+            List<Generator> overloads = entry.getValue();
+            Set<String> seenOverloadNames = new HashSet<>();
+
+            for (Generator generator : overloads) {
+                String overloadName = generator.getOverloadName();
+
+                if (overloadName == null) {
+                    if (overloads.size() > 1) {
+                        throw new IllegalArgumentException(
+                                "The generator '"
+                                        + qualifiedName
+                                        + "' has "
+                                        + overloads.size()
+                                        + " overloads, but at least one of them has no overload name. Every overload needs an overload name to be addressable.");
+                    }
+                    continue;
+                }
+
+                if (!isValidOverloadName(overloadName)) {
+                    throw new IllegalArgumentException(
+                            "The overload name '"
+                                    + overloadName
+                                    + "' of the generator '"
+                                    + qualifiedName
+                                    + "' is not a valid identifier. Overload names have to start with a letter or an underscore and may only contain letters, digits and underscores.");
+                }
+
+                if (!seenOverloadNames.add(overloadName)) {
+                    throw new IllegalArgumentException("The overload name '"
+                            + overloadName
+                            + "' is used by multiple overloads of the generator '"
+                            + qualifiedName
+                            + "'. Overload names have to be unique among the overloads of a generator.");
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns whether the given overload name is a valid identifier, which mirrors
+     * what the component library schema allows.
+     */
+    private static boolean isValidOverloadName(String overloadName) {
+        if (overloadName.isEmpty()) return false;
+
+        char first = overloadName.charAt(0);
+        if (!Character.isLetter(first) && first != '_') return false;
+
+        for (int i = 1; i < overloadName.length(); i++) {
+            char character = overloadName.charAt(i);
+            if (!Character.isLetterOrDigit(character) && character != '_') return false;
+        }
+
+        return true;
     }
 
     /**
