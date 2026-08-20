@@ -158,7 +158,10 @@ public class EngineSpecGenerator {
      * specification itself is built from the tile alone.
      */
     private static void validateGeneratorTile(GeneratorTile<?, ?> generatorTile, ComponentResolver componentResolver) {
-        String phyloSpecGeneratorName = generatorTile.getPhyloSpecGeneratorName();
+        // if the tile knows its namespace, we resolve the qualified name. otherwise a tile could be
+        // validated against a same-named generator of another imported namespace
+
+        String phyloSpecGeneratorName = getResolvableGeneratorName(generatorTile);
 
         // validate that we know the generator
 
@@ -228,5 +231,20 @@ public class EngineSpecGenerator {
                     + expectedFirstArgumentNames
                     + ".");
         }
+    }
+
+    /**
+     * Returns the name under which the generator of the given tile can be resolved in a component
+     * library. This is the qualified name if the tile specifies its namespace, and the plain
+     * generator name otherwise.
+     */
+    private static String getResolvableGeneratorName(GeneratorTile<?, ?> generatorTile) {
+        String generatorName = generatorTile.getPhyloSpecGeneratorName();
+
+        return generatorTile
+                .getNamespace()
+                .map(namespace ->
+                        generatorName.startsWith(namespace + ".") ? generatorName : namespace + "." + generatorName)
+                .orElse(generatorName);
     }
 }
