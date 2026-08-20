@@ -1360,7 +1360,7 @@
         },
         {
             "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
-            "overloadName": "taxa",
+            "overloadName": "conditionOnTaxa",
             "name": "Yule",
             "namespace": "phylospec.distributions.tree",
             "description": "Yule pure-birth process for trees conditioned on the number of taxa",
@@ -1382,7 +1382,7 @@
         },
         {
             "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
-            "overloadName": "rootAge",
+            "overloadName": "conditionOnRootAge",
             "name": "Yule",
             "namespace": "phylospec.distributions.tree",
             "description": "Yule pure-birth process for trees conditioned on the root age",
@@ -1410,7 +1410,7 @@
         },
         {
             "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
-            "overloadName": "rates",
+            "overloadName": "birthDeath",
             "name": "BirthDeath",
             "namespace": "phylospec.distributions.tree",
             "description": "Birth-death process for trees of extant taxa. Conditioned on the root age if given, otherwise conditioned on the number of extant taxa",
@@ -1450,7 +1450,7 @@
         },
         {
             "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
-            "overloadName": "diversification",
+            "overloadName": "diversificationTurnover",
             "name": "BirthDeath",
             "namespace": "phylospec.distributions.tree",
             "description": "Birth-death process for trees of extant taxa. Conditioned on the root age if given, otherwise conditioned on the number of extant taxa",
@@ -1565,7 +1565,7 @@
         },
         {
             "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
-            "overloadName": "rates",
+            "overloadName": "speciationExtinction",
             "name": "FossilizedBirthDeath",
             "namespace": "phylospec.distributions.tree",
             "description": "Fossilized birth-death process for trees with fossil taxa, conditioned on the number of taxa and root age",
@@ -1611,7 +1611,7 @@
         },
         {
             "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
-            "overloadName": "diversification",
+            "overloadName": "diversificationTurnover",
             "name": "FossilizedBirthDeath",
             "namespace": "phylospec.distributions.tree",
             "description": "Fossilized birth-death process for trees with fossil taxa, conditioned on the number of taxa and root age",
