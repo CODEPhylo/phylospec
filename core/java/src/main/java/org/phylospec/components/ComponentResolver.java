@@ -375,15 +375,6 @@ public class ComponentResolver {
                     continue;
                 }
 
-                if (!isValidOverloadName(overloadName)) {
-                    throw new IllegalArgumentException(
-                            "The overload name '"
-                                    + overloadName
-                                    + "' of the generator '"
-                                    + qualifiedName
-                                    + "' is not a valid identifier. Overload names have to start with a letter or an underscore and may only contain letters, digits and underscores.");
-                }
-
                 if (!seenOverloadNames.add(overloadName)) {
                     throw new IllegalArgumentException("The overload name '"
                             + overloadName
@@ -393,24 +384,6 @@ public class ComponentResolver {
                 }
             }
         }
-    }
-
-    /**
-     * Returns whether the given overload name is a valid identifier, which mirrors
-     * what the component library schema allows.
-     */
-    private static boolean isValidOverloadName(String overloadName) {
-        if (overloadName.isEmpty()) return false;
-
-        char first = overloadName.charAt(0);
-        if (!Character.isLetter(first) && first != '_') return false;
-
-        for (int i = 1; i < overloadName.length(); i++) {
-            char character = overloadName.charAt(i);
-            if (!Character.isLetterOrDigit(character) && character != '_') return false;
-        }
-
-        return true;
     }
 
     /**
