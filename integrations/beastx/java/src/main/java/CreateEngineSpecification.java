@@ -3,6 +3,7 @@ import org.phylospec.tiling.EngineSpecGenerator;
 import tiles.BeastXCoreTileLibrary;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -14,6 +15,7 @@ public class CreateEngineSpecification {
         BeastVersion beastVersion = new BeastVersion();
 
         EngineSpecGenerator.writeEngineSpecification(
+                Path.of("generated"),
                 new BeastXCoreTileLibrary(),
                 "beastX",
                 beastVersion.getVersion(),
