@@ -37,12 +37,12 @@ public class Generator {
     @JsonProperty("name")
     private String name;
     /**
-     * Stable name disambiguating overloads that share a namespace and name. Required when a (namespace, name) pair holds more than one generator, and unique within that pair.
+     * Stable name disambiguating overloads that share a namespace and name. Unique among the generators sharing a (namespace, name) pair; an overload which omits it uses the name 'default', so at most one overload of a generator may omit it.
      *
      */
     @JsonProperty("overloadName")
     @JsonPropertyDescription(
-            "Stable name disambiguating overloads that share a namespace and name. Required when a (namespace, name) pair holds more than one generator, and unique within that pair.")
+            "Stable name disambiguating overloads that share a namespace and name. Unique among the generators sharing a (namespace, name) pair; an overload which omits it uses the name 'default', so at most one overload of a generator may omit it.")
     private String overloadName;
 
     @JsonProperty("description")
@@ -117,7 +117,7 @@ public class Generator {
     }
 
     /**
-     * Stable name disambiguating overloads that share a namespace and name. Required when a (namespace, name) pair holds more than one generator, and unique within that pair.
+     * Stable name disambiguating overloads that share a namespace and name. Unique among the generators sharing a (namespace, name) pair; an overload which omits it uses the name 'default', so at most one overload of a generator may omit it.
      *
      */
     @JsonProperty("overloadName")
@@ -126,7 +126,7 @@ public class Generator {
     }
 
     /**
-     * Stable name disambiguating overloads that share a namespace and name. Required when a (namespace, name) pair holds more than one generator, and unique within that pair.
+     * Stable name disambiguating overloads that share a namespace and name. Unique among the generators sharing a (namespace, name) pair; an overload which omits it uses the name 'default', so at most one overload of a generator may omit it.
      *
      */
     @JsonProperty("overloadName")
