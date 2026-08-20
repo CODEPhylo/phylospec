@@ -8,6 +8,7 @@ import beast.base.spec.type.RealScalar;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
+import beastconfig.OperatorSelector;
 import tiling.BoundDistribution;
 
 import java.util.IdentityHashMap;
@@ -36,7 +37,8 @@ public class LogNormalTile extends GeneratorTile<BoundDistribution<RealScalarPar
         return new BoundDistribution<>(
                 distribution,
                 defaultState,
-                param -> beastState.setInput(distribution, distribution.paramInput, param)
+                stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
+                OperatorSelector::getDefaultOperators
         );
     }
 

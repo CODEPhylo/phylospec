@@ -7,6 +7,7 @@ import beast.base.spec.type.RealVector;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
+import beastconfig.OperatorSelector;
 import tiling.BoundDistribution;
 
 import java.util.Arrays;
@@ -37,7 +38,8 @@ public class DirichletTile extends GeneratorTile<BoundDistribution<SimplexParam,
         return new BoundDistribution<>(
                 distribution,
                 defaultState,
-                param -> beastState.setInput(distribution, distribution.paramInput, param)
+                stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
+                OperatorSelector::getDefaultOperators
         );
     }
 

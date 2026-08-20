@@ -6,6 +6,7 @@ import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
+import beastconfig.OperatorSelector;
 import org.phylospec.ast.Expr;
 import tiling.BoundDistribution;
 import org.phylospec.tiling.tiles.TemplateTile;
@@ -34,11 +35,15 @@ public class OffsetTile extends TemplateTile<RealScalarParam<Real>, BEASTState> 
         );
         Double offset = this.offsetInput.apply(beastState, indexVariables);
 
-        OffsetReal offsetDistribution = new OffsetReal(distribution.distribution, offset);
-        beastState.addStateNode(distribution.stateNode, this.getTypeToken(), "offset");
-        beastState.addPriorDistribution(distribution.stateNode, offsetDistribution, "offset_prior");
+        beastState.addStateNodeWithoutOperators(distribution.getStateNode(), this.getTypeToken(), "offset");
+        beastState.addOperators(
+                distribution.getStateNode(), OperatorSelector.getDefaultOperators(distribution.getStateNode(), beastState)
+        );
 
-        return distribution.stateNode;
+        OffsetReal offsetDistribution = new OffsetReal(distribution.getDistribution(), offset);
+        beastState.addPriorDistribution(distribution.getStateNode(), offsetDistribution, "offset_prior");
+
+        return distribution.getStateNode();
     }
 
 }

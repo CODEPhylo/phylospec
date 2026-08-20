@@ -30,7 +30,7 @@ public class BEASTState {
     public final HashMap<StateNode, Distribution> priorDistributions;
     public final List<Distribution> likelihoodDistributions;
 
-    public final HashMap<Operator, Set<StateNode>> operators;
+    public final List<Operator> operators;
 
     public final List<ScreenLoggerSpec<BEASTObject>> screenLoggerSpecs;
     public final List<FileLoggerSpec<BEASTObject>> fileLoggerSpecs;
@@ -48,7 +48,7 @@ public class BEASTState {
         this.calculationNodes = new HashMap<>();
         this.priorDistributions = new HashMap<>();
         this.likelihoodDistributions = new ArrayList<>();
-        this.operators = new HashMap<>();
+        this.operators = new ArrayList<>();
         this.beastObjects = new ArrayList<>();
         this.ids = new HashSet<>();
         this.initializedBeastObjects = new HashSet<>();
@@ -122,9 +122,10 @@ public class BEASTState {
     }
 
     /**
-     * Adds a given state node to the BEAST state.
+     * Adds a given state node to the BEAST state without registering any operators for it. The
+     * caller is responsible for adding operators via {@link #addOperators}.
      */
-    public void addStateNode(StateNode stateNode, TypeToken<?> typeToken, String id) {
+    public void addStateNodeWithoutOperators(StateNode stateNode, TypeToken<?> typeToken, String id) {
         stateNode.setID(this.getAvailableID(id));
         this.addBEASTObject(stateNode);
         this.stateNodes.put(stateNode, typeToken);
@@ -159,16 +160,34 @@ public class BEASTState {
     }
 
     /**
-     * Adds a given operator to the BEAST state.
+     * Adds all given operators to the BEAST state, naming each of them after the given state node.
      */
-    public void addOperator(Operator operator, StateNode stateNode) {
-        this.addOperator(operator, Set.of(stateNode));
+    public void addOperators(StateNode stateNode, List<Operator> operators) {
+        this.addOperators(List.of(stateNode), operators);
     }
 
     /**
-     * Adds a given operator to the BEAST state.
+     * Adds all given operators to the BEAST state, naming each of them after the given state nodes.
      */
-    public void addOperator(Operator operator, Set<StateNode> stateNodes) {
+    public void addOperators(List<StateNode> stateNodes, List<Operator> operators) {
+        for (Operator operator : operators) {
+            this.addOperator(operator, stateNodes);
+        }
+    }
+
+    /**
+     * Adds a given operator to the BEAST state, naming it after the given state node if it has no
+     * ID yet.
+     */
+    public void addOperator(Operator operator, StateNode stateNode) {
+        this.addOperator(operator, List.of(stateNode));
+    }
+
+    /**
+     * Adds a given operator to the BEAST state, naming it after the given state nodes if it has no
+     * ID yet.
+     */
+    public void addOperator(Operator operator, List<StateNode> stateNodes) {
         // set id
         if (operator.getID() == null) {
             StringBuilder id = new StringBuilder();
@@ -176,11 +195,11 @@ public class BEASTState {
                 id.append(stateNode.getID()).append("_");
             }
             id.append("operator");
-            operator.setID(id.toString());
+            operator.setID(this.getAvailableID(id.toString()));
         }
 
         this.addBEASTObject(operator);
-        this.operators.put(operator, stateNodes);
+        this.operators.add(operator);
     }
 
     /**

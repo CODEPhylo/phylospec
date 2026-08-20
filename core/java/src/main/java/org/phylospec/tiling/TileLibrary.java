@@ -7,14 +7,25 @@ import org.phylospec.tiling.tiles.CandidateTile;
 
 public abstract class TileLibrary<S> {
 
+    /** Returns the state type this library's tiles apply to. */
+    public abstract Class<S> getStateType();
+
     /** Returns all tiles registered in this library. */
     public abstract List<CandidateTile<S>> getTiles();
 
-    /** Discovers all TileLibrary implementations on the classpath and collects their tiles. */
-    public static <S> List<CandidateTile<S>> loadAll() {
+    /**
+     * Discovers all TileLibrary implementations on the classpath and collects the tiles of
+     * those that apply to {@code stateType}, that is, those whose state type is {@code stateType}
+     * itself or a supertype of it.
+     */
+    public static <S> List<CandidateTile<S>> loadAll(Class<S> stateType) {
         List<CandidateTile<S>> all = new ArrayList<>();
-        for (TileLibrary<S> library : ServiceLoader.load(TileLibrary.class)) {
-            all.addAll(library.getTiles());
+        for (TileLibrary<?> library : ServiceLoader.load(TileLibrary.class)) {
+            if (library.getStateType().isAssignableFrom(stateType)) {
+                @SuppressWarnings("unchecked")
+                TileLibrary<S> typed = (TileLibrary<S>) library;
+                all.addAll(typed.getTiles());
+            }
         }
         return all;
     }

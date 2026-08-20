@@ -19,12 +19,10 @@ import org.phylospec.typeresolver.VariableResolver;
 public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
 
     private final List<CandidateTile<S>> candidateTiles;
-    private final List<Tile<?, ?>> operatorTiles; // TODO: operatorTiles not supported atm
 
     private List<Tile<?, S>> bestTiles;
 
     private final IdentityHashMap<AstNode, Set<Tile<?, S>>> evaluatedTiles;
-    private final List<Tile<?, ?>> matchedOperatorTiles;
 
     private final VariableResolver variableResolver;
     private final StochasticityResolver stochasticityResolver;
@@ -46,11 +44,9 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
 
     public EvaluateTiles(
             List<CandidateTile<S>> candidateTiles,
-            List<Tile<?, ?>> operatorTiles,
             VariableResolver variableResolver,
             StochasticityResolver stochasticityResolver) {
         this.candidateTiles = candidateTiles;
-        this.operatorTiles = operatorTiles;
         this.variableResolver = variableResolver;
         this.stochasticityResolver = stochasticityResolver;
         this.currentIndexVariables = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -58,7 +54,6 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
         this.consumedStatements = Collections.newSetFromMap(new IdentityHashMap<>());
         this.allFailures = new IdentityHashMap<>();
         this.depthCache = new IdentityHashMap<>();
-        this.matchedOperatorTiles = new ArrayList<>();
     }
 
     /**

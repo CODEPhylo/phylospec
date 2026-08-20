@@ -9,12 +9,12 @@ import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
+import beastconfig.OperatorSelector;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiling.BoundDistribution;
-import tiling.UnboundDistribution;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -34,17 +34,19 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel, BEASTSt
 
     @Override
     protected UCRelaxedClockModel applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        UnboundDistribution<? extends RealScalarParam<? extends PositiveReal>, ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>> base = this.baseInput.apply(beastState, indexVariables);
+        BoundDistribution<? extends RealScalarParam<? extends PositiveReal>, ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>> base = this.baseInput.apply(beastState, indexVariables);
         RealScalarParam<PositiveReal> clockRate = this.clockRateInput.apply(beastState, indexVariables);
         Tree tree = this.treeInput.apply(beastState, indexVariables);
 
         // make sure that the distribution has mean rate 1.0
 
-        beastState.initBEASTObject(base.distribution);
-        if (1E-6 < Math.abs(base.distribution.getMean() - 1.0)) {
+        ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double> distribution = base.getDistribution();
+
+        beastState.initBEASTObject(distribution);
+        if (1E-6 < Math.abs(distribution.getMean() - 1.0)) {
             throw new TileApplicationError(
                     this.getRootNode(),
-                    "Base distribution used for the relaxed clock should have a mean of 1.0. You use a distribution with mean " + base.distribution.getMean() + ".",
+                    "Base distribution used for the relaxed clock should have a mean of 1.0. You use a distribution with mean " + distribution.getMean() + ".",
                     "Use a distribution with mean 1.0.",
                     List.of("LogNormal(mean=1.0, logSd=0.1)")
             );
@@ -57,14 +59,16 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel, BEASTSt
         int numBranches = 2 * tree.getTaxaNames().length - 2;
         int[] rateArray = new int[numBranches];
         IntVectorParam<NonNegativeInt> rateCategories = new IntVectorParam<>(rateArray, NonNegativeInt.INSTANCE);
-        beastState.addStateNode(rateCategories, new TypeToken<IntVectorParam<NonNegativeInt>>() {
+
+        beastState.addStateNodeWithoutOperators(rateCategories, new TypeToken<IntVectorParam<NonNegativeInt>>() {
         }, id);
+        beastState.addOperators(rateCategories, OperatorSelector.getDefaultOperators(rateCategories, beastState));
 
         // init the relaxed clock
 
         UCRelaxedClockModel relaxedClockModel = new UCRelaxedClockModel();
         // TODO: use type safe version of this
-        relaxedClockModel.rateDistInput.setValue(base.distribution, relaxedClockModel);
+        relaxedClockModel.rateDistInput.setValue(distribution, relaxedClockModel);
         beastState.setInput(relaxedClockModel, relaxedClockModel.meanRateInput, clockRate);
         beastState.setInput(relaxedClockModel, relaxedClockModel.treeInput, tree);
         beastState.setInput(relaxedClockModel, relaxedClockModel.categoryInput, rateCategories);

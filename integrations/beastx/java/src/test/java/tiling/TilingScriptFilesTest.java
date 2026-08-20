@@ -80,7 +80,7 @@ public class TilingScriptFilesTest {
 
             List<String> actualTileLines = new ArrayList<>();
 
-            EvaluateTiles<BeastXState> evaluateTiles = new EvaluateTiles(new BeastXCoreTileLibrary().getTiles(), new ArrayList<>(), variableResolver, stochasticityResolver);
+            EvaluateTiles<BeastXState> evaluateTiles = new EvaluateTiles(new BeastXCoreTileLibrary().getTiles(), variableResolver, stochasticityResolver);
             List<Tile<?, BeastXState>> bestTilings = null;
             try {
                 bestTilings = evaluateTiles.getBestTiling(statements);

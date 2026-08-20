@@ -7,6 +7,7 @@ import beast.base.spec.type.RealScalar;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
+import beastconfig.OperatorSelector;
 import tiling.BoundDistribution;
 
 import java.util.IdentityHashMap;
@@ -36,7 +37,8 @@ public class GammaTile extends GeneratorTile<BoundDistribution<RealScalarParam<P
         return new BoundDistribution<>(
                 distribution,
                 defaultState,
-                param -> beastState.setInput(distribution, distribution.paramInput, param)
+                stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
+                OperatorSelector::getDefaultOperators
         );
     }
 

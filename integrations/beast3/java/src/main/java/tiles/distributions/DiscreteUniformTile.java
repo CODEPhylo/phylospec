@@ -7,6 +7,7 @@ import beast.base.spec.type.IntScalar;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
+import beastconfig.OperatorSelector;
 import tiling.BoundDistribution;
 
 import java.util.IdentityHashMap;
@@ -35,7 +36,8 @@ public class DiscreteUniformTile extends GeneratorTile<BoundDistribution<IntScal
         return new BoundDistribution<>(
                 distribution,
                 defaultState,
-                param -> beastState.setInput(distribution, distribution.paramInput, param)
+                stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
+                OperatorSelector::getDefaultOperators
         );
     }
 

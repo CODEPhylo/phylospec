@@ -11,6 +11,7 @@ import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
 import beastconfig.BEASTState;
+import beastconfig.OperatorSelector;
 import tiling.BoundDistribution;
 
 import java.util.IdentityHashMap;
@@ -57,7 +58,8 @@ public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>, 
         return new BoundDistribution<>(
                 yuleModel,
                 defaultState,
-                tree -> beastState.setInput(yuleModel, yuleModel.treeInput, tree)
+                tree -> beastState.setInput(yuleModel, yuleModel.treeInput, tree),
+                OperatorSelector::getDefaultOperators
         );
     }
 

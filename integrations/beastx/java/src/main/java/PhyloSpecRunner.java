@@ -12,13 +12,13 @@ import org.phylospec.lexer.Range;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
+import org.phylospec.tiling.TileLibrary;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import org.xml.sax.SAXException;
-import tiles.BeastXTileLibraries;
 import tiling.BeastXModel;
 import tiling.BeastXState;
 import tiling.runner.RunMode;
@@ -394,8 +394,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         // Load all BEAST X backend tiles and prepare the tiling evaluator.
         EvaluateTiles<BeastXState> applyTiles =
                 new EvaluateTiles<>(
-                        BeastXTileLibraries.loadAll(),
-                        new ArrayList<>(),
+                        TileLibrary.loadAll(BeastXState.class),
                         parsed.variableResolver,
                         parsed.stochasticityResolver
                 );

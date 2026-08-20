@@ -1,9 +1,8 @@
 import beast.base.inference.*;
-import beastconfig.OperatorSelector;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
 import org.phylospec.tiling.EvaluateTiles;
+import org.phylospec.tiling.TileLibrary;
 import org.phylospec.tiling.errors.TileApplicationError;
-import tiles.BeastCoreTileLibrary;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.RemoveGroupings;
@@ -90,7 +89,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // perform tiling
 
-        EvaluateTiles<BEASTState> applyTiles = new EvaluateTiles<>(new BeastCoreTileLibrary().getTiles(), new ArrayList<>(), variableResolver, stochasticityResolver);
+        EvaluateTiles<BEASTState> applyTiles = new EvaluateTiles<>(TileLibrary.loadAll(BEASTState.class), variableResolver, stochasticityResolver);
         BEASTState beastState = new BEASTState(runName);
         try {
             applyTiles.getBestTiling(statements);
@@ -119,12 +118,6 @@ public class PhyloSpecRunner implements ErrorEventListener {
         posterior.setID(beastState.getAvailableID("posterior"));
         beastState.setInput(posterior, posterior.pDistributions, List.of(prior, likelihood));
 
-        // add operators
-
-        for (StateNode stateNode : beastState.stateNodes.keySet()) {
-            OperatorSelector.addDefaultOperators(stateNode, beastState);
-        }
-
         // build loggers
 
         List<Logger> loggers = beastState.buildLoggers(posterior, prior, likelihood);
@@ -135,7 +128,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         beastState.setInput(mcmc, mcmc.chainLengthInput, beastState.chainLength);
         beastState.setInput(mcmc, mcmc.startStateInput, state);
         beastState.setInput(mcmc, mcmc.posteriorInput, posterior);
-        beastState.setInput(mcmc, mcmc.operatorsInput, new ArrayList<>(beastState.operators.keySet()));
+        beastState.setInput(mcmc, mcmc.operatorsInput, beastState.operators);
         beastState.setInput(mcmc, mcmc.loggersInput, loggers);
 
         // run
