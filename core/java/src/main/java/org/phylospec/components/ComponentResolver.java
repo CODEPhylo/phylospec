@@ -14,6 +14,11 @@ import org.phylospec.typeresolver.TypeError;
  */
 public class ComponentResolver {
 
+    /**
+     * The overload name used by an overload which does not declare one itself.
+     */
+    public static final String DEFAULT_OVERLOAD_NAME = "default";
+
     final List<ComponentLibrary> componentLibraries;
     final Set<String> knownNamespaces;
 
@@ -343,7 +348,9 @@ public class ComponentResolver {
      * Checks that the overloads of a generator can be addressed individually.
      * Overloads are generators registered under the same fully qualified name, possibly
      * coming from different component libraries. Each of them needs a unique overload name.
-     * A generator which is the only one with its name does not need an overload name.
+     * An overload which does not declare one uses {@link #DEFAULT_OVERLOAD_NAME}, so a generator
+     * without overloads never needs an overload name, and a second library may add an overload to
+     * a generator declared without one elsewhere.
      */
     private void checkOverloadNames() {
         Map<String, List<Generator>> overloadsByName = new LinkedHashMap<>();
@@ -364,15 +371,8 @@ public class ComponentResolver {
                 String overloadName = generator.getOverloadName();
 
                 if (overloadName == null) {
-                    if (overloads.size() > 1) {
-                        throw new IllegalArgumentException(
-                                "The generator '"
-                                        + qualifiedName
-                                        + "' has "
-                                        + overloads.size()
-                                        + " overloads, but at least one of them has no overload name. Every overload needs an overload name to be addressable.");
-                    }
-                    continue;
+                    // an overload without an explicit name falls back to the default name
+                    overloadName = DEFAULT_OVERLOAD_NAME;
                 }
 
                 if (!seenOverloadNames.add(overloadName)) {
@@ -380,7 +380,9 @@ public class ComponentResolver {
                             + overloadName
                             + "' is used by multiple overloads of the generator '"
                             + qualifiedName
-                            + "'. Overload names have to be unique among the overloads of a generator.");
+                            + "'. Overload names have to be unique among the overloads of a generator. Overloads which do not declare an overload name use '"
+                            + DEFAULT_OVERLOAD_NAME
+                            + "'.");
                 }
             }
         }
