@@ -48,7 +48,6 @@
       "type": "object",
       "required": [
         "name",
-        "namespace",
         "arguments"
       ],
       "properties": {
