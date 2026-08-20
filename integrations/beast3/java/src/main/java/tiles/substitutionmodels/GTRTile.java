@@ -5,11 +5,10 @@ import beast.base.spec.evolution.substitutionmodel.Frequencies;
 import beast.base.spec.evolution.substitutionmodel.GTR;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.Simplex;
+import beastconfig.BEASTState;
+import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
-import beastconfig.BEASTState;
-
-import java.util.IdentityHashMap;
 
 public class GTRTile extends GeneratorTile<GTR, BEASTState> {
 
@@ -54,5 +53,4 @@ public class GTRTile extends GeneratorTile<GTR, BEASTState> {
 
         return gtr;
     }
-
 }

@@ -1,13 +1,12 @@
 package tiles.functions;
 
-import org.phylospec.ast.Expr;
-import org.phylospec.typeresolver.Stochasticity;
 import beastconfig.BEASTState;
-import org.phylospec.tiling.tiles.GeneratorTile;
-import org.phylospec.tiling.errors.TileApplicationError;
-
 import java.util.IdentityHashMap;
 import java.util.Set;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.typeresolver.Stochasticity;
 
 public class EnvTile extends GeneratorTile<String, BEASTState> {
 
@@ -16,9 +15,8 @@ public class EnvTile extends GeneratorTile<String, BEASTState> {
         return "env";
     }
 
-    GeneratorTileInput<String, BEASTState> variableInput = new GeneratorTileInput<>(
-            "variable", true, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
-    );
+    GeneratorTileInput<String, BEASTState> variableInput =
+            new GeneratorTileInput<>("variable", true, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
     public String applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
@@ -27,12 +25,9 @@ public class EnvTile extends GeneratorTile<String, BEASTState> {
 
         if (value == null) {
             throw new TileApplicationError(
-                    "Environment variable '" + variable + "' is not set.",
-                    "Set the environment variable."
-            );
+                    "Environment variable '" + variable + "' is not set.", "Set the environment variable.");
         }
 
         return value;
     }
-
 }

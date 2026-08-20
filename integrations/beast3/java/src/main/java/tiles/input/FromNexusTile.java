@@ -4,16 +4,15 @@ import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.tree.TraitSet;
 import beast.base.parser.NexusParser;
-import org.phylospec.ast.Expr;
-import org.phylospec.typeresolver.Stochasticity;
-import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
-import org.phylospec.tiling.errors.TileApplicationError;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.IdentityHashMap;
 import java.util.Set;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.typeresolver.Stochasticity;
 
 public class FromNexusTile extends GeneratorTile<DecoratedAlignment, BEASTState> {
 
@@ -22,9 +21,8 @@ public class FromNexusTile extends GeneratorTile<DecoratedAlignment, BEASTState>
         return "fromNexus";
     }
 
-    GeneratorTileInput<String, BEASTState> fileInput = new GeneratorTileInput<>(
-            "file", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
-    );
+    GeneratorTileInput<String, BEASTState> fileInput =
+            new GeneratorTileInput<>("file", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
     GeneratorTileInput<ParserTile.Parser, BEASTState> ageInput = new GeneratorTileInput<>("age", false);
     GeneratorTileInput<ParserTile.Parser, BEASTState> dateInput = new GeneratorTileInput<>("date", false);
 
@@ -38,9 +36,7 @@ public class FromNexusTile extends GeneratorTile<DecoratedAlignment, BEASTState>
             nexusParser.parseFile(file);
         } catch (IOException e) {
             throw new TileApplicationError(
-                    "File not found.",
-                    "'" + path + "' could not be found. Does it exist? Select a valid file path."
-            );
+                    "File not found.", "'" + path + "' could not be found. Does it exist? Select a valid file path.");
         }
 
         Alignment alignment = nexusParser.m_alignment;
@@ -83,5 +79,4 @@ public class FromNexusTile extends GeneratorTile<DecoratedAlignment, BEASTState>
 
         return new DecoratedAlignment(alignment, taxonSet, ageTraitSet);
     }
-
 }

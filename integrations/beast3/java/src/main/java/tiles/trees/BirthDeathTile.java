@@ -8,14 +8,13 @@ import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
 import beast.base.spec.evolution.tree.coalescent.RandomTree;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
+import beastconfig.BEASTState;
+import beastconfig.OperatorSelector;
+import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
-import beastconfig.BEASTState;
-import beastconfig.OperatorSelector;
 import tiling.BoundDistribution;
-
-import java.util.IdentityHashMap;
 
 public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthDeathGernhard08Model>, BEASTState> {
 
@@ -24,15 +23,21 @@ public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthD
         return "BirthDeath";
     }
 
-    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> diversificationRateInput = new GeneratorTileInput<>("diversificationRate");
-    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> turnoverInput = new GeneratorTileInput<>("turnover");
-    GeneratorTileInput<RealScalar<UnitInterval>, BEASTState> samplingProbabilityInput = new GeneratorTileInput<>("samplingProbability", false);
+    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> diversificationRateInput =
+            new GeneratorTileInput<>("diversificationRate");
+    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> turnoverInput =
+            new GeneratorTileInput<>("turnover");
+    GeneratorTileInput<RealScalar<UnitInterval>, BEASTState> samplingProbabilityInput =
+            new GeneratorTileInput<>("samplingProbability", false);
     GeneratorTileInput<DecoratedAlignment, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
-    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> rootAgeInput = new GeneratorTileInput<>("rootAge", false);
+    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> rootAgeInput =
+            new GeneratorTileInput<>("rootAge", false);
 
     @Override
-    public BoundDistribution<Tree, BirthDeathGernhard08Model> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        RealScalar<? extends PositiveReal> diversificationRate = this.diversificationRateInput.apply(beastState, indexVariables);
+    public BoundDistribution<Tree, BirthDeathGernhard08Model> applyTile(
+            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+        RealScalar<? extends PositiveReal> diversificationRate =
+                this.diversificationRateInput.apply(beastState, indexVariables);
         RealScalar<? extends PositiveReal> turnover = this.turnoverInput.apply(beastState, indexVariables);
         RealScalar<UnitInterval> samplingProbability = this.samplingProbabilityInput.apply(beastState, indexVariables);
         RealScalar<? extends PositiveReal> rootAge = this.rootAgeInput.apply(beastState, indexVariables);
@@ -41,7 +46,10 @@ public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthD
         // initialize initial state
 
         ConstantPopulation populationFunction = new ConstantPopulation();
-        beastState.setInput(populationFunction, populationFunction.popSizeParameter, new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+        beastState.setInput(
+                populationFunction,
+                populationFunction.popSizeParameter,
+                new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
 
         RandomTree defaultState = new RandomTree();
         beastState.setInput(defaultState, defaultState.taxaInput, taxaAlignment.alignment());
@@ -59,15 +67,14 @@ public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthD
         BirthDeathGernhard08Model birthDeathModel = new BirthDeathGernhard08Model();
         beastState.setInput(birthDeathModel, birthDeathModel.birthDiffRateParameterInput, diversificationRate);
         beastState.setInput(birthDeathModel, birthDeathModel.relativeDeathRateParameterInput, turnover);
-        if (samplingProbability != null) beastState.setInput(birthDeathModel, birthDeathModel.sampleProbabilityInput, samplingProbability);
+        if (samplingProbability != null)
+            beastState.setInput(birthDeathModel, birthDeathModel.sampleProbabilityInput, samplingProbability);
         if (rootAge != null) beastState.setInput(birthDeathModel, birthDeathModel.originHeightParameterInput, rootAge);
 
         return new BoundDistribution<>(
                 birthDeathModel,
                 defaultState,
                 tree -> beastState.setInput(birthDeathModel, birthDeathModel.treeInput, tree),
-                OperatorSelector::getDefaultOperators
-        );
+                OperatorSelector::getDefaultOperators);
     }
-
 }

@@ -7,14 +7,13 @@ import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
 import beast.base.spec.evolution.tree.coalescent.RandomTree;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
+import beastconfig.BEASTState;
+import beastconfig.OperatorSelector;
+import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
-import beastconfig.BEASTState;
-import beastconfig.OperatorSelector;
 import tiling.BoundDistribution;
-
-import java.util.IdentityHashMap;
 
 public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>, BEASTState> {
 
@@ -23,12 +22,15 @@ public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>, 
         return "Yule";
     }
 
-    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> birthRateInput = new GeneratorTileInput<>("birthRate");
+    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> birthRateInput =
+            new GeneratorTileInput<>("birthRate");
     GeneratorTileInput<DecoratedAlignment, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
-    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> rootAgeInput = new GeneratorTileInput<>("rootAge", false);
+    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> rootAgeInput =
+            new GeneratorTileInput<>("rootAge", false);
 
     @Override
-    public BoundDistribution<Tree, YuleModel> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    public BoundDistribution<Tree, YuleModel> applyTile(
+            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<? extends PositiveReal> birthRate = this.birthRateInput.apply(beastState, indexVariables);
         RealScalar<? extends PositiveReal> rootAge = this.rootAgeInput.apply(beastState, indexVariables);
         DecoratedAlignment taxaAlignment = this.taxaInput.apply(beastState, indexVariables);
@@ -36,7 +38,10 @@ public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>, 
         // initialize initial state
 
         ConstantPopulation populationFunction = new ConstantPopulation();
-        beastState.setInput(populationFunction, populationFunction.popSizeParameter, new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+        beastState.setInput(
+                populationFunction,
+                populationFunction.popSizeParameter,
+                new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
 
         RandomTree defaultState = new RandomTree();
         beastState.setInput(defaultState, defaultState.taxaInput, taxaAlignment.alignment());
@@ -59,8 +64,6 @@ public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>, 
                 yuleModel,
                 defaultState,
                 tree -> beastState.setInput(yuleModel, yuleModel.treeInput, tree),
-                OperatorSelector::getDefaultOperators
-        );
+                OperatorSelector::getDefaultOperators);
     }
-
 }

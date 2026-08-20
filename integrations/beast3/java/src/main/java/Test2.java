@@ -1,7 +1,6 @@
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 public class Test2 {
 
@@ -12,7 +11,7 @@ public class Test2 {
            Tree tree ~ Yule(
                birthRate=1.0, taxa=taxa(data)
            )
-           
+
            Rate kappa ~ LogNormal(logMean=1.0, logSd=0.5)
 
            Alignment alignment ~ PhyloCTMC(
@@ -23,7 +22,7 @@ public class Test2 {
                baseFrequencies~Dirichlet(repeat(1.0, num=4))
              ),
            ) observed as data
-           
+
            mcmc {
             Logger logger = treeLogger(
                 logEvery=10000, file="hjallo.log", tree
@@ -34,5 +33,4 @@ public class Test2 {
         PhyloSpecRunner parser = new PhyloSpecRunner(source);
         parser.runPhyloSpec("Test2");
     }
-
 }

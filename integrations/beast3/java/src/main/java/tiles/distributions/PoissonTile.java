@@ -5,13 +5,12 @@ import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.inference.distribution.Poisson;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.RealScalar;
-import org.phylospec.ast.Expr;
-import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import beastconfig.OperatorSelector;
-import tiling.BoundDistribution;
-
 import java.util.IdentityHashMap;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import tiling.BoundDistribution;
 
 public class PoissonTile extends GeneratorTile<BoundDistribution<IntScalarParam<NonNegativeInt>, Poisson>, BEASTState> {
 
@@ -23,7 +22,8 @@ public class PoissonTile extends GeneratorTile<BoundDistribution<IntScalarParam<
     GeneratorTileInput<RealScalar<NonNegativeReal>, BEASTState> rateInput = new GeneratorTileInput<>("rate");
 
     @Override
-    public BoundDistribution<IntScalarParam<NonNegativeInt>, Poisson> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    public BoundDistribution<IntScalarParam<NonNegativeInt>, Poisson> applyTile(
+            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<NonNegativeReal> rate = this.rateInput.apply(beastState, indexVariables);
 
         Poisson distribution = new Poisson();
@@ -35,8 +35,6 @@ public class PoissonTile extends GeneratorTile<BoundDistribution<IntScalarParam<
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
-                OperatorSelector::getDefaultOperators
-        );
+                OperatorSelector::getDefaultOperators);
     }
-
 }

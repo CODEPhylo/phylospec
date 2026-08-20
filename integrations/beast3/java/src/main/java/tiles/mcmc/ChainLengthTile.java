@@ -1,19 +1,18 @@
 package tiles.mcmc;
 
-import org.phylospec.ast.AstNode;
-import org.phylospec.ast.Expr;
-import org.phylospec.ast.Stmt;
-import org.phylospec.typeresolver.Stochasticity;
-import org.phylospec.typeresolver.StochasticityResolver;
-import org.phylospec.typeresolver.VariableResolver;
-import org.phylospec.tiling.tiles.TemplateTile;
 import beastconfig.BEASTState;
-import org.phylospec.tiling.errors.FailedTilingAttempt;
-import org.phylospec.tiling.tiles.Tile;
-
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
+import org.phylospec.ast.AstNode;
+import org.phylospec.ast.Expr;
+import org.phylospec.ast.Stmt;
+import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.tiling.tiles.TemplateTile;
+import org.phylospec.tiling.tiles.Tile;
+import org.phylospec.typeresolver.Stochasticity;
+import org.phylospec.typeresolver.StochasticityResolver;
+import org.phylospec.typeresolver.VariableResolver;
 
 public class ChainLengthTile extends TemplateTile<Void, BEASTState> {
 
@@ -25,13 +24,18 @@ public class ChainLengthTile extends TemplateTile<Void, BEASTState> {
                 }""";
     }
 
-    public TemplateTileInput<Integer, BEASTState> chainLengthInput = new TemplateTileInput<>(
-            "$chainLength", Set.of(Stochasticity.CONSTANT)
-    );
+    public TemplateTileInput<Integer, BEASTState> chainLengthInput =
+            new TemplateTileInput<>("$chainLength", Set.of(Stochasticity.CONSTANT));
 
     @Override
-    public Set<Tile<?, BEASTState>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?, BEASTState>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
-        // make sure that the variable name is actually chainLength, as the template matcher usually ignores variable names
+    public Set<Tile<?, BEASTState>> tryToTile(
+            AstNode node,
+            Map<AstNode, Set<Tile<?, BEASTState>>> allInputTiles,
+            VariableResolver variableResolver,
+            StochasticityResolver stochasticityResolver)
+            throws FailedTilingAttempt {
+        // make sure that the variable name is actually chainLength, as the template matcher usually ignores variable
+        // names
 
         if (!(node instanceof Stmt.Assignment assignment)) throw new FailedTilingAttempt.Irrelevant();
         if (!assignment.name.equals("chainLength")) throw new FailedTilingAttempt.Irrelevant();
@@ -44,5 +48,4 @@ public class ChainLengthTile extends TemplateTile<Void, BEASTState> {
         beastState.chainLength = this.chainLengthInput.apply(beastState, indexVariables);
         return null;
     }
-
 }

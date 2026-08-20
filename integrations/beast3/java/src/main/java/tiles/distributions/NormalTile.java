@@ -7,11 +7,10 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
 import beastconfig.OperatorSelector;
-import org.phylospec.ast.Expr;
-import tiling.BoundDistribution;
-import org.phylospec.tiling.tiles.GeneratorTile;
-
 import java.util.IdentityHashMap;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import tiling.BoundDistribution;
 
 public class NormalTile extends GeneratorTile<BoundDistribution<RealScalarParam<Real>, Normal>, BEASTState> {
 
@@ -24,7 +23,8 @@ public class NormalTile extends GeneratorTile<BoundDistribution<RealScalarParam<
     GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> sdInput = new GeneratorTileInput<>("sd");
 
     @Override
-    public BoundDistribution<RealScalarParam<Real>, Normal> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    public BoundDistribution<RealScalarParam<Real>, Normal> applyTile(
+            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<Real> mean = this.meanInput.apply(beastState, indexVariables);
         RealScalar<PositiveReal> sd = this.sdInput.apply(beastState, indexVariables);
 
@@ -38,8 +38,6 @@ public class NormalTile extends GeneratorTile<BoundDistribution<RealScalarParam<
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
-                OperatorSelector::getDefaultOperators
-        );
+                OperatorSelector::getDefaultOperators);
     }
-
 }

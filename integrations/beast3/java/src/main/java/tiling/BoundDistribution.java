@@ -3,15 +3,15 @@ package tiling;
 import beast.base.inference.Operator;
 import beast.base.inference.StateNode;
 import beastconfig.BEASTState;
-import org.phylospec.tiling.TypeToken;
-
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import org.phylospec.tiling.TypeToken;
 
 /// An {@link UnboundDistribution} that additionally carries a default state node, so it can be
 /// resolved without a value supplied from the outside.
-public class BoundDistribution<T extends StateNode, O extends beast.base.inference.Distribution> extends UnboundDistribution<T, O> {
+public class BoundDistribution<T extends StateNode, O extends beast.base.inference.Distribution>
+        extends UnboundDistribution<T, O> {
 
     private final T stateNode;
     private final BiFunction<T, BEASTState, List<Operator>> operatorFactory;
@@ -21,7 +21,11 @@ public class BoundDistribution<T extends StateNode, O extends beast.base.inferen
      * the setter that attaches a parameter value to the distribution, and the factory
      * building the operators to register for the default state node when it is drawn.
      */
-    public BoundDistribution(O distribution, T defaultState, Consumer<T> setStateNodeFunc, BiFunction<T, BEASTState, List<Operator>> operatorFactory) {
+    public BoundDistribution(
+            O distribution,
+            T defaultState,
+            Consumer<T> setStateNodeFunc,
+            BiFunction<T, BEASTState, List<Operator>> operatorFactory) {
         super(distribution, setStateNodeFunc);
         this.stateNode = defaultState;
         this.operatorFactory = operatorFactory;
@@ -47,5 +51,4 @@ public class BoundDistribution<T extends StateNode, O extends beast.base.inferen
     public T getStateNode() {
         return this.stateNode;
     }
-
 }
