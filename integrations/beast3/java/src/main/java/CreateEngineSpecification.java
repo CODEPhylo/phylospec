@@ -1,4 +1,5 @@
 import beast.pkgmgmt.BEASTVersion;
+import org.phylospec.components.ComponentResolver;
 import org.phylospec.tiling.EngineSpecGenerator;
 import tiles.BeastCoreTileLibrary;
 
@@ -18,6 +19,7 @@ public class CreateEngineSpecification {
         EngineSpecGenerator.writeEngineSpecification(
                 Path.of("generated"),
                 new BeastCoreTileLibrary(),
+                new ComponentResolver(ComponentResolver.loadCoreComponentLibraries()),
                 "beast2",
                 versionString,
                 List.of(),
