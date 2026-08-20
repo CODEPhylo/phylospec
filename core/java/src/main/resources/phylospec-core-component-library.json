@@ -1887,7 +1887,8 @@
                 "description": "Nucleotide frequencies",
                 "type": "Simplex",
                 "required": true
-            }]
+            }],
+            "constraints": ["baseFrequencies.num == 4"]
         },
         {
             "generatedType": "QMatrix",
@@ -1907,7 +1908,8 @@
                     "type": "Simplex",
                     "required": true
                 }
-            ]
+            ],
+            "constraints": ["baseFrequencies.num == 4"]
         },
         {
             "generatedType": "QMatrix",
@@ -1957,7 +1959,8 @@
                     "type": "Simplex",
                     "required": true
                 }
-            ]
+            ],
+            "constraints": ["baseFrequencies.num == 4"]
         },
         {
             "generatedType": "QMatrix",
@@ -1969,7 +1972,8 @@
                 "description": "Amino acid frequencies",
                 "type": "Simplex",
                 "required": false
-            }]
+            }],
+            "constraints": ["baseFrequencies.num == 20"]
         },
         {
             "generatedType": "QMatrix",
@@ -1981,7 +1985,8 @@
                 "description": "Amino acid frequencies",
                 "type": "Simplex",
                 "required": false
-            }]
+            }],
+            "constraints": ["baseFrequencies.num == 20"]
         },
         {
             "generatedType": "QMatrix",
@@ -1993,7 +1998,8 @@
                 "description": "Amino acid frequencies",
                 "type": "Simplex",
                 "required": false
-            }]
+            }],
+            "constraints": ["baseFrequencies.num == 20"]
         },
         {
             "generatedType": "QMatrix",
@@ -2019,7 +2025,8 @@
                     "type": "Simplex",
                     "required": true
                 }
-            ]
+            ],
+            "constraints": ["baseFrequencies.num == 61"]
         },
         {
             "generatedType": "QMatrix",
