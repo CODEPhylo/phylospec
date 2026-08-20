@@ -26,10 +26,10 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel, BEASTSt
         return "RelaxedClock";
     }
 
-    GeneratorTileInput<RealScalarParam<PositiveReal>, BEASTState> clockRateInput = new GeneratorTileInput<>("clockRate");
     GeneratorTileInput<BoundDistribution<? extends RealScalarParam<? extends PositiveReal>, ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>>, BEASTState> baseInput = new GeneratorTileInput<>(
             "base"
     );
+    GeneratorTileInput<RealScalarParam<PositiveReal>, BEASTState> clockRateInput = new GeneratorTileInput<>("clockRate");
     GeneratorTileInput<Tree, BEASTState> treeInput = new GeneratorTileInput<>("tree");
 
     @Override
