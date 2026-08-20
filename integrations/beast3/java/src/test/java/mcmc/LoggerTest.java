@@ -97,6 +97,23 @@ public class LoggerTest {
     }
 
     @Test
+    public void testTreeLoggerWithoutTreeFailsWhenTheModelHasMultipleTrees() {
+        Built built =
+                tile(
+                        MODEL
+                                + """
+                                Tree otherTree ~ Yule(birthRate=birthRate, taxa=taxa(data))
+                                mcmc {
+                                    Logger logger = treeLogger(logEvery=500, file="trees.trees")
+                                }
+                                """);
+
+        // multiple trees in one tree-mode logger would produce an invalid NEXUS file
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> buildLoggers(built));
+        assertTrue(exception.getMessage().contains("more than one tree"));
+    }
+
+    @Test
     public void testExplicitScreenLoggerReplacesTheDefaultOne() {
         Built built =
                 tile(
