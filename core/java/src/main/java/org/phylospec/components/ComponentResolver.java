@@ -373,6 +373,8 @@ public class ComponentResolver {
                 if (overloadName == null) {
                     // an overload without an explicit name falls back to the default name
                     overloadName = DEFAULT_OVERLOAD_NAME;
+                    // we also set the overload name to the default
+                    generator.setOverloadName(DEFAULT_OVERLOAD_NAME);
                 }
 
                 if (!seenOverloadNames.add(overloadName)) {
