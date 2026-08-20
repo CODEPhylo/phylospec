@@ -36,9 +36,6 @@ public class RelaxedClockTile extends GeneratorTile<BranchRateModel, BeastXState
         return "RelaxedClock";
     }
 
-    GeneratorTileInput<RealScalar<PositiveReal>, BeastXState> clockRateInput =
-            new GeneratorTileInput<>("clockRate");
-
     GeneratorTileInput<
             BoundDistribution<
                     ? extends BeastXRealScalarParam<? extends PositiveReal>,
@@ -47,6 +44,9 @@ public class RelaxedClockTile extends GeneratorTile<BranchRateModel, BeastXState
             BeastXState
             > baseInput =
             new GeneratorTileInput<>("base");
+
+    GeneratorTileInput<RealScalar<PositiveReal>, BeastXState> clockRateInput =
+            new GeneratorTileInput<>("clockRate");
 
     GeneratorTileInput<TreeModel, BeastXState> treeInput =
             new GeneratorTileInput<>("tree");
