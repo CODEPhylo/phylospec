@@ -12,7 +12,7 @@ import java.util.Map;
 import javax.annotation.processing.Generated;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"name", "type", "required", "canBeStochastic"})
+@JsonPropertyOrder({"name", "required", "canBeStochastic"})
 @Generated("jsonschema2pojo")
 public class Argument__1 {
 
@@ -23,10 +23,6 @@ public class Argument__1 {
      */
     @JsonProperty("name")
     private String name;
-
-    @JsonProperty("type")
-    private String type;
-
     /**
      * Whether this argument is required
      * (Required)
@@ -35,7 +31,6 @@ public class Argument__1 {
     @JsonProperty("required")
     @JsonPropertyDescription("Whether this argument is required")
     private Boolean required;
-
     /**
      * Whether this argument can be a stochastic node
      * (Required)
@@ -66,16 +61,6 @@ public class Argument__1 {
     @JsonProperty("name")
     public void setName(String name) {
         this.name = name;
-    }
-
-    @JsonProperty("type")
-    public String getType() {
-        return type;
-    }
-
-    @JsonProperty("type")
-    public void setType(String type) {
-        this.type = type;
     }
 
     /**
@@ -139,10 +124,6 @@ public class Argument__1 {
         sb.append('=');
         sb.append(((this.name == null) ? "<null>" : this.name));
         sb.append(',');
-        sb.append("type");
-        sb.append('=');
-        sb.append(((this.type == null) ? "<null>" : this.type));
-        sb.append(',');
         sb.append("required");
         sb.append('=');
         sb.append(((this.required == null) ? "<null>" : this.required));
@@ -168,7 +149,6 @@ public class Argument__1 {
         int result = 1;
         result = ((result * 31) + ((this.name == null) ? 0 : this.name.hashCode()));
         result = ((result * 31) + ((this.additionalProperties == null) ? 0 : this.additionalProperties.hashCode()));
-        result = ((result * 31) + ((this.type == null) ? 0 : this.type.hashCode()));
         result = ((result * 31) + ((this.canBeStochastic == null) ? 0 : this.canBeStochastic.hashCode()));
         result = ((result * 31) + ((this.required == null) ? 0 : this.required.hashCode()));
         return result;
@@ -183,11 +163,10 @@ public class Argument__1 {
             return false;
         }
         Argument__1 rhs = ((Argument__1) other);
-        return ((((((this.name == rhs.name) || ((this.name != null) && this.name.equals(rhs.name)))
-                                        && ((this.additionalProperties == rhs.additionalProperties)
-                                                || ((this.additionalProperties != null)
-                                                        && this.additionalProperties.equals(rhs.additionalProperties))))
-                                && ((this.type == rhs.type) || ((this.type != null) && this.type.equals(rhs.type))))
+        return (((((this.name == rhs.name) || ((this.name != null) && this.name.equals(rhs.name)))
+                                && ((this.additionalProperties == rhs.additionalProperties)
+                                        || ((this.additionalProperties != null)
+                                                && this.additionalProperties.equals(rhs.additionalProperties))))
                         && ((this.canBeStochastic == rhs.canBeStochastic)
                                 || ((this.canBeStochastic != null)
                                         && this.canBeStochastic.equals(rhs.canBeStochastic))))

@@ -39,7 +39,6 @@ public class EngineSpecificationSchema {
     @JsonProperty("name")
     @JsonPropertyDescription("Name of the engine")
     private String name;
-
     /**
      * Version of the engine this specification targets
      * (Required)
@@ -48,7 +47,6 @@ public class EngineSpecificationSchema {
     @JsonProperty("engineVersion")
     @JsonPropertyDescription("Version of the engine this specification targets")
     private String engineVersion;
-
     /**
      * Names of other engines this engine depends on
      * (Required)
@@ -57,7 +55,6 @@ public class EngineSpecificationSchema {
     @JsonProperty("dependsOn")
     @JsonPropertyDescription("Names of other engines this engine depends on")
     private List<String> dependsOn = new ArrayList<String>();
-
     /**
      *
      * (Required)
@@ -65,7 +62,6 @@ public class EngineSpecificationSchema {
      */
     @JsonProperty("generators")
     private List<Generator__1> generators = new ArrayList<Generator__1>();
-
     /**
      * Human-readable instructions for installing the engine
      * (Required)
@@ -74,7 +70,6 @@ public class EngineSpecificationSchema {
     @JsonProperty("installationInstructions")
     @JsonPropertyDescription("Human-readable instructions for installing the engine")
     private String installationInstructions;
-
     /**
      * URL of the website with installation information for the engine
      * (Required)

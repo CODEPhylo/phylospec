@@ -19,14 +19,12 @@ import org.phylospec.typeresolver.Stochasticity;
 
 public class EngineSpecGenerator {
 
-    /** Directory the generated engine specifications are written to, relative to the repo root. */
-    private static final String GENERATED_DIRECTORY = "generated";
-
     /**
      * Generates an engine specification for the given tile library and engine metadata, and
      * writes it as JSON to "generated/<engine-name>-<engine-version>.json".
      */
     public static <S> void writeEngineSpecification(
+            Path generatedDirectory,
             TileLibrary<S> tileLibrary,
             String engineName,
             String engineVersion,
@@ -42,7 +40,6 @@ public class EngineSpecGenerator {
                 installationInstructions,
                 installationWebsite);
 
-        Path generatedDirectory = Path.of(GENERATED_DIRECTORY);
         Files.createDirectories(generatedDirectory);
 
         File outputFile = generatedDirectory
@@ -74,6 +71,9 @@ public class EngineSpecGenerator {
         schema.setInstallationWebsite(installationWebsite);
 
         // add generator descriptions
+
+        // there might be multiple tiles with the same generator description (namespace + name + argument names)
+        // we collapse them into one using a set
 
         Set<Generator__1> generators = new LinkedHashSet<>();
         for (CandidateTile<S> candidateTile : tileLibrary.getTiles()) {
