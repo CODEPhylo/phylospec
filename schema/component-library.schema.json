@@ -121,8 +121,7 @@
         },
         "overloadName": {
           "type": "string",
-          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
-          "description": "Stable name disambiguating overloads that share a namespace and name, without repeating the generator name (e.g. 'real' and 'integer' for the two overloads of 'sum'). Required when a (namespace, name) pair holds more than one generator, and unique within that pair. Part of the public contract: never rename or reuse it."
+          "description": "Stable name disambiguating overloads that share a namespace and name. Required when a (namespace, name) pair holds more than one generator, and unique within that pair."
         },
         "description": {
           "type": "string"
