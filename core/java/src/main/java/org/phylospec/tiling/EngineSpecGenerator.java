@@ -160,6 +160,8 @@ public class EngineSpecGenerator {
     private static void validateGeneratorTile(GeneratorTile<?, ?> generatorTile, ComponentResolver componentResolver) {
         String phyloSpecGeneratorName = generatorTile.getPhyloSpecGeneratorName();
 
+        // validate that we know the generator
+
         List<Generator> knownGenerators = componentResolver.resolveGenerator(phyloSpecGeneratorName);
         if (knownGenerators.isEmpty()) {
             throw new IllegalStateException("The tile '"
@@ -170,6 +172,8 @@ public class EngineSpecGenerator {
                     + componentResolver.findClosestComponent(phyloSpecGeneratorName)
                     + "'?");
         }
+
+        // validate that the arguments are known and declared in correct order
 
         List<String> tileArgumentNames = generatorTile.getGeneratorTileInputs().stream()
                 .map(GeneratorTile.GeneratorTileInput::getPhylospecArgumentName)
