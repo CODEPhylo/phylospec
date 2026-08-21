@@ -2,8 +2,6 @@
   "componentLibrary": {
     "name": "PhyloSpec Core",
     "version": "1.4.0",
-    "engine": "PhyloSpec",
-    "engineVersion": "1.0.0",
     "description": "Library containing the core components.",
     "types": [
       {

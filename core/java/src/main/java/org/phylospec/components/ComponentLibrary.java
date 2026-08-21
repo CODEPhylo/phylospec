@@ -14,17 +14,7 @@ import java.util.Map;
 import javax.annotation.processing.Generated;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "name",
-    "version",
-    "engine",
-    "engineVersion",
-    "description",
-    "authors",
-    "license",
-    "types",
-    "generators"
-})
+@JsonPropertyOrder({"name", "version", "description", "authors", "license", "types", "generators"})
 @Generated("jsonschema2pojo")
 public class ComponentLibrary {
 
@@ -42,20 +32,6 @@ public class ComponentLibrary {
      */
     @JsonProperty("version")
     private String version;
-    /**
-     *
-     * (Required)
-     *
-     */
-    @JsonProperty("engine")
-    private String engine;
-    /**
-     *
-     * (Required)
-     *
-     */
-    @JsonProperty("engineVersion")
-    private String engineVersion;
     /**
      *
      * (Required)
@@ -133,46 +109,6 @@ public class ComponentLibrary {
     @JsonProperty("version")
     public void setVersion(String version) {
         this.version = version;
-    }
-
-    /**
-     *
-     * (Required)
-     *
-     */
-    @JsonProperty("engine")
-    public String getEngine() {
-        return engine;
-    }
-
-    /**
-     *
-     * (Required)
-     *
-     */
-    @JsonProperty("engine")
-    public void setEngine(String engine) {
-        this.engine = engine;
-    }
-
-    /**
-     *
-     * (Required)
-     *
-     */
-    @JsonProperty("engineVersion")
-    public String getEngineVersion() {
-        return engineVersion;
-    }
-
-    /**
-     *
-     * (Required)
-     *
-     */
-    @JsonProperty("engineVersion")
-    public void setEngineVersion(String engineVersion) {
-        this.engineVersion = engineVersion;
     }
 
     /**
@@ -296,14 +232,6 @@ public class ComponentLibrary {
         sb.append('=');
         sb.append(((this.version == null) ? "<null>" : this.version));
         sb.append(',');
-        sb.append("engine");
-        sb.append('=');
-        sb.append(((this.engine == null) ? "<null>" : this.engine));
-        sb.append(',');
-        sb.append("engineVersion");
-        sb.append('=');
-        sb.append(((this.engineVersion == null) ? "<null>" : this.engineVersion));
-        sb.append(',');
         sb.append("description");
         sb.append('=');
         sb.append(((this.description == null) ? "<null>" : this.description));
@@ -339,10 +267,8 @@ public class ComponentLibrary {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result * 31) + ((this.engineVersion == null) ? 0 : this.engineVersion.hashCode()));
         result = ((result * 31) + ((this.license == null) ? 0 : this.license.hashCode()));
         result = ((result * 31) + ((this.types == null) ? 0 : this.types.hashCode()));
-        result = ((result * 31) + ((this.engine == null) ? 0 : this.engine.hashCode()));
         result = ((result * 31) + ((this.name == null) ? 0 : this.name.hashCode()));
         result = ((result * 31) + ((this.generators == null) ? 0 : this.generators.hashCode()));
         result = ((result * 31) + ((this.description == null) ? 0 : this.description.hashCode()));
@@ -361,22 +287,10 @@ public class ComponentLibrary {
             return false;
         }
         ComponentLibrary rhs = ((ComponentLibrary) other);
-        return (((((((((((this.engineVersion == rhs.engineVersion)
-                                                                                        || ((this.engineVersion != null)
-                                                                                                && this.engineVersion
-                                                                                                        .equals(
-                                                                                                                rhs.engineVersion)))
-                                                                                && ((this.license == rhs.license)
-                                                                                        || ((this.license != null)
-                                                                                                && this.license.equals(
-                                                                                                        rhs.license))))
-                                                                        && ((this.types == rhs.types)
-                                                                                || ((this.types != null)
-                                                                                        && this.types.equals(
-                                                                                                rhs.types))))
-                                                                && ((this.engine == rhs.engine)
-                                                                        || ((this.engine != null)
-                                                                                && this.engine.equals(rhs.engine))))
+        return (((((((((this.license == rhs.license) || ((this.license != null) && this.license.equals(rhs.license)))
+                                                                && ((this.types == rhs.types)
+                                                                        || ((this.types != null)
+                                                                                && this.types.equals(rhs.types))))
                                                         && ((this.name == rhs.name)
                                                                 || ((this.name != null) && this.name.equals(rhs.name))))
                                                 && ((this.generators == rhs.generators)
