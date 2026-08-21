@@ -14,9 +14,6 @@ import org.phylospec.typeresolver.TypeError;
  */
 public class ComponentResolver {
 
-    /** The central repository the component libraries are distributed through. */
-    public static final String CENTRAL_REPOSITORY_URI = "https://github.com/tochsner/phylospec-repository.git";
-
     final List<ComponentLibrary> componentLibraries;
     final Set<String> knownNamespaces;
 
@@ -26,7 +23,7 @@ public class ComponentResolver {
     /**
      * Registers the newest version of every component library of the given repository.
      */
-    public ComponentResolver(ComponentRepository repository) {
+    public ComponentResolver(PhyloSpecRepository repository) {
         this(repository.getLatestLibraries());
     }
 
@@ -70,32 +67,6 @@ public class ComponentResolver {
         libraries.add(loadLibraryFromInputStream(
                 ComponentResolver.class.getResourceAsStream("/phylospec-core-component-library.json")));
         return libraries;
-    }
-
-    /**
-     * Loads all component libraries of the given repository, including all their versions.
-     * <p>
-     * The repository is cached on disk, so it is only downloaded if the remote has changed. If
-     * there is no internet connection, the cached version is used.
-     */
-    public static ComponentRepository loadRepository(String repoUri) throws IOException {
-        return ComponentRepository.load(repoUri);
-    }
-
-    /**
-     * Loads all component libraries of the central PhyloSpec repository, including all their versions.
-     * <p>
-     * If the repository can neither be reached nor found in the cache, this falls back to the
-     * core component library bundled with this package.
-     */
-    public static ComponentRepository loadCentralRepository() throws IOException {
-        try {
-            return loadRepository(CENTRAL_REPOSITORY_URI);
-        } catch (IOException e) {
-            // we have neither an internet connection nor a cached version, so we fall back to
-            // the bundled core component library
-            return new ComponentRepository(CENTRAL_REPOSITORY_URI, loadCoreComponentLibraries());
-        }
     }
 
     /**
