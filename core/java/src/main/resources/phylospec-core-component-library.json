@@ -1,5 +1,4 @@
 {"componentLibrary": {
-    "engineVersion": "1.0.0",
     "types": [
         {
             "name": "Boolean",
@@ -197,7 +196,6 @@
             "description": "Description of how to parse a value from a string"
         }
     ],
-    "engine": "PhyloSpec",
     "name": "PhyloSpec Core",
     "generators": [
         {

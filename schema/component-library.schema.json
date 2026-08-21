@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://phylospec.org/schemas/component-library-schema-v3.json",
-  "title": "Component Library Schema v3",
+  "$id": "https://phylospec.org/schemas/component-library-schema-v4.json",
+  "title": "Component Library Schema v4",
   "description": "Schema for validating component libraries with enhanced metadata, UI hints, and examples",
   "type": "object",
   "required": [
@@ -13,8 +13,6 @@
       "required": [
         "name",
         "version",
-        "engine",
-        "engineVersion",
         "description",
         "types",
         "generators"
@@ -26,12 +24,6 @@
         "version": {
           "type": "string",
           "pattern": "^\\d+\\.\\d+\\.\\d+$"
-        },
-        "engine": {
-          "type": "string"
-        },
-        "engineVersion": {
-          "type": "string"
         },
         "description": {
           "type": "string"

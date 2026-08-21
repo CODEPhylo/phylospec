@@ -11,7 +11,7 @@ import java.util.Map;
 import javax.annotation.processing.Generated;
 
 /**
- * Component Library Schema v3
+ * Component Library Schema v4
  * <p>
  * Schema for validating component libraries with enhanced metadata, UI hints, and examples
  *
