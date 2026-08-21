@@ -8,6 +8,7 @@ import dr.inference.model.Variable;
 import dr.inference.model.VectorSliceParameter;
 import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
+import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.Simplex;
 import tiling.BeastXState;
@@ -34,11 +35,16 @@ public class GTRRelativeRatesTile extends GeneratorTile<GTR, BeastXState> {
         Simplex baseFrequencies = baseFrequenciesInput.apply(beastState, indexVariables);
 
         if (relativeRates.size() != 6) {
-            throw new IllegalArgumentException("GTR requires exactly six relative rates.");
+            throw new TileApplicationError(
+                    this.getRootNode(),
+                    "GTR requires exactly six relative rates.",
+                    "Provide a six-dimensional relativeRates simplex in AC, AG, AT, CG, CT, GT order.");
         }
         if (baseFrequencies.size() != 4) {
-            throw new IllegalArgumentException(
-                    "GTR requires exactly four nucleotide base frequencies: A, C, G, T.");
+            throw new TileApplicationError(
+                    this.getRootNode(),
+                    "GTR requires exactly four nucleotide base frequencies: A, C, G, T.",
+                    "Provide a four-dimensional baseFrequencies simplex in A, C, G, T order.");
         }
 
         Parameter ratesParameter = parameter(relativeRates);

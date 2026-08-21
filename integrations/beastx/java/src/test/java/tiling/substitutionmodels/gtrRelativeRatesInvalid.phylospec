@@ -1,0 +1,20 @@
+QMatrix q = gtr(
+    relativeRates~Dirichlet(
+        concentration=[1.0, 1.0, 1.0, 1.0, 1.0]
+    ),
+    baseFrequencies~Dirichlet(
+        concentration=[1.0, 1.0, 1.0, 1.0]
+    )
+)
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED_APPLICATION_ERRORS
+// GTR requires exactly six relative rates. Provide a six-dimensional relativeRates simplex in AC, AG, AT, CG, CT, GT order.
+// EXPECTED_APPLICATION_ERRORS
+
+// EXPECTED BEASTX STATE
+// NO_STATE
+// EXPECTED BEASTX STATE

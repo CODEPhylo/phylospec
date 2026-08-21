@@ -9,6 +9,7 @@ import beast.base.spec.type.Simplex;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
+import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 
 /** Maps a joint six-dimensional relative-rate simplex to BEAST 2.8 GTR inputs. */
@@ -32,7 +33,10 @@ public class GTRRelativeRatesTile extends GeneratorTile<GTR, BEASTState> {
         Simplex baseFrequencies = baseFrequenciesInput.apply(beastState, indexVariables);
 
         if (relativeRates.size() != 6) {
-            throw new IllegalArgumentException("GTR requires exactly six relative rates.");
+            throw new TileApplicationError(
+                    this.getRootNode(),
+                    "GTR requires exactly six relative rates.",
+                    "Provide a six-dimensional relativeRates simplex in AC, AG, AT, CG, CT, GT order.");
         }
 
         Frequencies frequencies = new Frequencies();
