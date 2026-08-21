@@ -1,4 +1,4 @@
-package org.phylospec.components;
+package org.phylospec.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -13,6 +13,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import org.phylospec.components.ComponentLibrary;
+import org.phylospec.components.ComponentResolver;
+import org.phylospec.components.EngineSpecificationSchema;
 
 /**
  * A PhyloSpec repository holding all component libraries and engine specifications of a
