@@ -9,6 +9,7 @@ import dr.evomodel.tree.DefaultTreeModel;
 import dr.inference.model.Bounds;
 import dr.inference.model.Parameter;
 import dr.inference.operators.AdaptationMode;
+import dr.inference.operators.BitFlipOperator;
 import dr.inference.operators.DeltaExchangeOperator;
 import dr.inference.operators.MCMCOperator;
 import dr.inference.operators.RandomWalkIntegerOperator;
@@ -54,6 +55,7 @@ public final class OperatorBuilder {
                     spec.parameter(), (int) spec.tuning(), spec.weight());
             case INTEGER_SWAP -> swapOperator(spec);
             case INTEGER_UNIFORM -> uniformIntegerOperator(spec);
+            case BIT_FLIP -> new BitFlipOperator(spec.parameter(), spec.weight(), false);
             case TREE_NODE_HEIGHT_SCALE -> nodeHeightScaleOperator(spec);
             case TREE_ROOT_SCALE -> rootScaleOperator(spec);
             case TREE_UNIFORM_HEIGHT ->
@@ -140,6 +142,8 @@ public final class OperatorBuilder {
             case INTEGER_SWAP -> "SwapOperator(parameter=%s, weight=%s, size=%d)"
                     .formatted(parameter, spec.weight(), (int) spec.tuning());
             case INTEGER_UNIFORM -> integerUniformSummary(spec, parameter);
+            case BIT_FLIP -> "BitFlipOperator(parameter=%s, weight=%s)"
+                    .formatted(parameter, spec.weight());
             case TREE_NODE_HEIGHT_SCALE -> "ScaleOperator(treeNodeHeights=%s.allInternalNodeHeights, weight=%s, scaleFactor=%s, scaleAll=true)"
                     .formatted(tree, spec.weight(), spec.tuning());
             case TREE_ROOT_SCALE -> "ScaleOperator(treeRoot=%s.rootHeight, weight=%s, scaleFactor=%s)"

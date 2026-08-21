@@ -18,6 +18,7 @@ public record OperatorSpec(
         INTEGER_RANDOM_WALK,
         INTEGER_SWAP,
         INTEGER_UNIFORM,
+        BIT_FLIP,
         TREE_NODE_HEIGHT_SCALE,
         TREE_ROOT_SCALE,
         TREE_UNIFORM_HEIGHT,

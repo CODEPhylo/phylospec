@@ -3,7 +3,7 @@ Probability p ~ Beta(
     beta=8.0
 )
 
-NonNegativeInt success ~ Bernoulli(
+Boolean success ~ Bernoulli(
     p=p
 )
 

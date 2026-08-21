@@ -836,6 +836,20 @@ public class BeastXMCMCBuilderTest {
     }
 
     @Test
+    public void buildsBitFlipOperatorForBernoulliParameter() throws Exception {
+        String source =
+                """
+                Boolean success ~ Bernoulli(p=0.25)
+                """;
+
+        List<MCMCOperator> operators =
+                buildOperators(source);
+
+        assertEquals(1, operators.size());
+        assertTrue(containsOperator(operators, BitFlipOperator.class));
+    }
+
+    @Test
     public void buildsDefaultTreeOperatorsForStochasticTree() throws Exception {
         String source =
                 """

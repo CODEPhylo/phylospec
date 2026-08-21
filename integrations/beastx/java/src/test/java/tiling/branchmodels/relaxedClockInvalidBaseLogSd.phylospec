@@ -9,7 +9,7 @@ Vector<Rate> branchRates ~ RelaxedClock(
 )
 
 // EXPECTED_TILES
-// Unsupported operation. Your engine cannot deal with the value you provided for the 'logSd' argument for 'LogNormal' (expected a RealScalar<PositiveReal>).
+// Unsupported operation. Your engine cannot deal with the value you provided for the 'logSd' argument for 'LogNormal' (expected type RealScalar<PositiveReal>).
 // EXPECTED_TILES
 
 // EXPECTED BEASTX STATE

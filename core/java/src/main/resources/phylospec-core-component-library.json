@@ -1227,10 +1227,10 @@
             ]
         },
         {
-            "generatedType": "Distribution<NonNegativeInteger>",
+            "generatedType": "Distribution<Boolean>",
             "name": "Bernoulli",
             "namespace": "phylospec.distributions",
-            "description": "Bernoulli distribution (either 0 or 1)",
+            "description": "Bernoulli distribution (either false or true)",
             "arguments": [{
                 "name": "p",
                 "description": "Probability of success",
@@ -1949,6 +1949,26 @@
                     "name": "rateGT",
                     "description": "Substitution rate for G to T",
                     "type": "Rate",
+                    "required": true
+                },
+                {
+                    "name": "baseFrequencies",
+                    "description": "Nucleotide frequencies",
+                    "type": "Simplex",
+                    "required": true
+                }
+            ]
+        },
+        {
+            "generatedType": "QMatrix",
+            "name": "gtr",
+            "namespace": "phylospec.functions.substitution",
+            "description": "General Time-Reversible model with joint relative rates",
+            "arguments": [
+                {
+                    "name": "relativeRates",
+                    "description": "Relative substitution rates in AC, AG, AT, CG, CT, GT order",
+                    "type": "Simplex",
                     "required": true
                 },
                 {

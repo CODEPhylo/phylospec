@@ -1,13 +1,16 @@
 import dr.evolution.alignment.SimpleAlignment;
 import dr.evolution.datatype.AminoAcids;
 import dr.evolution.datatype.Codons;
+import dr.evolution.datatype.Nucleotides;
 import dr.evolution.sequence.Sequence;
 import dr.evolution.util.Taxon;
 import dr.evomodel.substmodel.FrequencyModel;
 import dr.evomodel.substmodel.aminoacid.AminoAcidModelType;
 import dr.evomodel.substmodel.aminoacid.EmpiricalAminoAcidModel;
 import dr.evomodel.substmodel.codon.GY94CodonModel;
+import dr.evomodel.substmodel.nucleotide.GTR;
 import dr.inference.model.Parameter;
+import dr.inference.model.VectorSliceParameter;
 import org.junit.jupiter.api.Test;
 import tiling.xml.XmlElement;
 import tiling.xml.builders.AlignmentXmlBuilder;
@@ -20,6 +23,33 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BeastXXmlComponentBuilderTest {
+
+    @Test
+    public void buildsJointGTRRelativeRatesXmlComponentLayer() {
+        Parameter relativeRates =
+                new Parameter.Default(new double[] {0.1, 0.2, 0.1, 0.2, 0.1, 0.3});
+        relativeRates.setId("relativeRates");
+
+        GTR model =
+                new GTR(
+                        slice(relativeRates, 0),
+                        slice(relativeRates, 1),
+                        slice(relativeRates, 2),
+                        slice(relativeRates, 3),
+                        slice(relativeRates, 4),
+                        slice(relativeRates, 5),
+                        new FrequencyModel(
+                                Nucleotides.INSTANCE,
+                                new double[] {0.25, 0.25, 0.25, 0.25}));
+
+        String xml =
+                toXml(new SubstitutionModelXmlBuilder()
+                        .buildSubstitutionModel(model, "gtr"));
+
+        assertTrue(xml.contains("<rates>"), xml);
+        assertTrue(xml.contains("<parameter idref=\"relativeRates\""), xml);
+        assertTrue(!xml.contains("<rateAC>"), xml);
+    }
 
     @Test
     public void buildsWAGEmpiricalAminoAcidSubstitutionModelXmlComponentLayer() {
@@ -176,6 +206,13 @@ public class BeastXXmlComponentBuilderTest {
         assertTrue(xml.contains("<aminoAcidModel"), xml);
         assertTrue(xml.contains("type=\"" + expectedXmlType + "\""), xml);
         assertTrue(xml.contains("<frequencyModel idref=\"protein_likelihood_substitutionModel_frequencies\"/>"), xml);
+    }
+
+    private VectorSliceParameter slice(Parameter parameter, int index) {
+        VectorSliceParameter slice =
+                new VectorSliceParameter(null, index);
+        slice.addParameter(parameter);
+        return slice;
     }
 
     private static String toXml(List<XmlElement> elements) {

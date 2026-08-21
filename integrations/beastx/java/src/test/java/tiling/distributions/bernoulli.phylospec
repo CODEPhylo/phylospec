@@ -1,4 +1,4 @@
-NonNegativeInt success ~ Bernoulli(
+Boolean success ~ Bernoulli(
     p=0.25
 )
 
