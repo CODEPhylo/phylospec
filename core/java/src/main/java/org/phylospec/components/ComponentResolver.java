@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import org.phylospec.Utils;
+import org.phylospec.repository.PhyloSpecRepository;
 import org.phylospec.typeresolver.TypeError;
 
 /**

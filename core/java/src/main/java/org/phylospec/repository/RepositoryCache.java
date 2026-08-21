@@ -1,4 +1,4 @@
-package org.phylospec.components;
+package org.phylospec.repository;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
