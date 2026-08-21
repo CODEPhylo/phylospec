@@ -14,11 +14,21 @@ import org.phylospec.typeresolver.TypeError;
  */
 public class ComponentResolver {
 
+    /** The central repository the component libraries are distributed through. */
+    public static final String CENTRAL_REPOSITORY_URI = "https://github.com/tochsner/phylospec-repository.git";
+
     final List<ComponentLibrary> componentLibraries;
     final Set<String> knownNamespaces;
 
     private final Map<String, List<Generator>> knownGenerators; // there might be multiple generators with the same name
     private final Map<String, Type> knownTypes;
+
+    /**
+     * Registers the newest version of every component library of the given repository.
+     */
+    public ComponentResolver(ComponentRepository repository) {
+        this(repository.getLatestLibraries());
+    }
 
     public ComponentResolver(List<ComponentLibrary> componentLibraries) {
         this.componentLibraries = new ArrayList<>();
@@ -63,12 +73,38 @@ public class ComponentResolver {
     }
 
     /**
+     * Loads all component libraries of the given repository, including all their versions.
+     * <p>
+     * The repository is cached on disk, so it is only downloaded if the remote has changed. If
+     * there is no internet connection, the cached version is used.
+     */
+    public static ComponentRepository loadRepository(String repoUri) throws IOException {
+        return ComponentRepository.load(repoUri);
+    }
+
+    /**
+     * Loads all component libraries of the central PhyloSpec repository, including all their versions.
+     * <p>
+     * If the repository can neither be reached nor found in the cache, this falls back to the
+     * core component library bundled with this package.
+     */
+    public static ComponentRepository loadCentralRepository() throws IOException {
+        try {
+            return loadRepository(CENTRAL_REPOSITORY_URI);
+        } catch (IOException e) {
+            // we have neither an internet connection nor a cached version, so we fall back to
+            // the bundled core component library
+            return new ComponentRepository(CENTRAL_REPOSITORY_URI, loadCoreComponentLibraries());
+        }
+    }
+
+    /**
      * Registers a component library.
      * Note that this does not make the types and generators resolvable ("import" them).
      * For this, the appropriate namespace has to be imported first using either
      * `importEntireNamespace` or `importNamespace`.
      */
-    public void registerComponentLibrary(ComponentLibrary library) {
+    private void registerComponentLibrary(ComponentLibrary library) {
         componentLibraries.add(library);
 
         // register namespaces
