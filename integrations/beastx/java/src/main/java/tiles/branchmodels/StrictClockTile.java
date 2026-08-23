@@ -8,6 +8,7 @@ import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import tiling.BeastXState;
+import tiling.operators.ParameterRole;
 import tiling.params.BeastXParameters;
 
 import java.util.IdentityHashMap;
@@ -38,6 +39,10 @@ public class StrictClockTile extends GeneratorTile<StrictClockBranchRates, Beast
 
         Parameter clockRateParameter =
                 BeastXParameters.toParameter(clockRate);
+
+        beastState.addParameterRole(
+                clockRateParameter,
+                ParameterRole.CLOCK_RATE);
 
         beastState.addTreeStrictClockRateParameter(
                 tree,

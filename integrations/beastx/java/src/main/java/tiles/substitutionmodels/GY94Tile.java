@@ -12,6 +12,7 @@ import org.phylospec.types.RealScalar;
 import org.phylospec.types.Simplex;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
+import tiling.operators.ParameterRole;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -70,10 +71,24 @@ public class GY94Tile extends GeneratorTile<GY94CodonModel, BeastXState> {
         FrequencyModel frequencyModel =
                 new FrequencyModel(codons, baseFrequencies.getDoubleArray());
 
+        Parameter kappaParameter = toParameter(kappa);
+        Parameter omegaParameter = toParameter(omega);
+
+        if (kappa instanceof BeastXRealScalarParam<?>) {
+            beastState.addParameterRole(
+                    kappaParameter,
+                    ParameterRole.SUBSTITUTION_SCALE);
+        }
+        if (omega instanceof BeastXRealScalarParam<?>) {
+            beastState.addParameterRole(
+                    omegaParameter,
+                    ParameterRole.SUBSTITUTION_SCALE);
+        }
+
         return new GY94CodonModel(
                 codons,
-                toParameter(kappa),
-                toParameter(omega),
+                kappaParameter,
+                omegaParameter,
                 frequencyModel
         );
     }

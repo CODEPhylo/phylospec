@@ -14,8 +14,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-/** Selects joint tree/clock moves for stochastic strict-clock models. */
-public final class StrictClockTreeUpDownOperatorSelector implements JointOperatorSelector {
+/** Selects the BEAUti default joint tree/clock moves for estimated clock rates. */
+public final class TreeClockUpDownOperatorSelector implements JointOperatorSelector {
 
     private static final TypeToken<?> POSITIVE_REAL_SCALAR =
             new TypeToken<RealScalar<? extends PositiveReal>>() {};
@@ -27,7 +27,7 @@ public final class StrictClockTreeUpDownOperatorSelector implements JointOperato
         }
 
         List<Map.Entry<TreeModel, List<Parameter>>> entries =
-                new ArrayList<>(state.treeStrictClockRateParameters.entrySet());
+                new ArrayList<>(state.treeClockRateParameters.entrySet());
         entries.sort(Comparator.comparing(entry -> treeId(entry.getKey())));
 
         List<OperatorSpec> operators = new ArrayList<>();
@@ -40,7 +40,7 @@ public final class StrictClockTreeUpDownOperatorSelector implements JointOperato
 
             entry.getValue().stream()
                     .distinct()
-                    .sorted(Comparator.comparing(StrictClockTreeUpDownOperatorSelector::parameterId))
+                    .sorted(Comparator.comparing(TreeClockUpDownOperatorSelector::parameterId))
                     .filter(parameter -> isPositiveClockRate(state, parameter))
                     .map(parameter -> new OperatorSpec(
                             OperatorSpec.Family.TREE_CLOCK_UP_DOWN,

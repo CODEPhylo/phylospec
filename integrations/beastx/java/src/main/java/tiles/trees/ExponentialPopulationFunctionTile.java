@@ -11,6 +11,7 @@ import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
+import tiling.operators.ParameterRole;
 
 import java.util.IdentityHashMap;
 
@@ -38,10 +39,20 @@ public class ExponentialPopulationFunctionTile extends GeneratorTile<Demographic
         RealScalar<? extends Real> growthRate =
                 this.growthRateInput.apply(beastState, indexVariables);
 
+        Parameter populationSizeParameter = toParameter(populationSize);
+        Parameter growthRateParameter = toParameter(growthRate);
+
+        beastState.addParameterRole(
+                populationSizeParameter,
+                ParameterRole.DEMOGRAPHIC_SCALE);
+        beastState.addParameterRole(
+                growthRateParameter,
+                ParameterRole.DEMOGRAPHIC_GROWTH_RATE);
+
         return new ExponentialGrowthModel(
                 "exponentialPopulation",
-                toParameter(populationSize),
-                toParameter(growthRate),
+                populationSizeParameter,
+                growthRateParameter,
                 Units.Type.YEARS,
                 true
         );

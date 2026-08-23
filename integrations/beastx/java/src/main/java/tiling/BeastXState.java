@@ -11,12 +11,15 @@ import dr.inference.model.Parameter;
 import dr.inference.model.Statistic;
 import org.phylospec.tiling.TypeToken;
 import tiling.model.StartingTreeSpec;
+import tiling.operators.ParameterRole;
 import tiling.params.BeastXParam;
 import tiling.xml.XmlPlan;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +41,7 @@ public class BeastXState {
     // BEAST X parameters that are part of the MCMC state.
     public final Map<Parameter, TypeToken<?>> stateNodes;
     public final Map<String, Parameter> stateNodesByPhyloSpecName;
+    private final Map<Parameter, EnumSet<ParameterRole>> parameterRoles;
 
     // Deterministic or derived calculation nodes created by helper tiles.
     public final Map<Statistic, TypeToken<?>> calculationNodes;
@@ -77,6 +81,7 @@ public class BeastXState {
         this.runName = runName;
         this.stateNodes = new HashMap<>();
         this.stateNodesByPhyloSpecName = new HashMap<>();
+        this.parameterRoles = new IdentityHashMap<>();
         this.calculationNodes = new HashMap<>();
         this.calculationNodesByPhyloSpecName = new HashMap<>();
         this.treeModelsByPhyloSpecName = new HashMap<>();
@@ -130,6 +135,19 @@ public class BeastXState {
         parameter.setId(this.getAvailableID(id));
         this.stateNodes.put(parameter, typeToken);
         this.stateNodesByPhyloSpecName.put(id, parameter);
+    }
+
+    /** Records how a parameter is used by a BEAST X model component. */
+    public void addParameterRole(Parameter parameter, ParameterRole role) {
+        this.parameterRoles
+                .computeIfAbsent(parameter, ignored -> EnumSet.noneOf(ParameterRole.class))
+                .add(role);
+    }
+
+    /** Returns the model roles registered for a parameter. */
+    public Set<ParameterRole> getParameterRoles(Parameter parameter) {
+        Set<ParameterRole> roles = this.parameterRoles.get(parameter);
+        return roles == null ? Set.of() : Set.copyOf(roles);
     }
 
     // Registers a deterministic or derived statistic created during tiling.
@@ -305,25 +323,17 @@ public class BeastXState {
     * These values can be overridden by operator-configuration tiles.
     * */
     public static class OperatorConfig {
-        public double treeScaleFactor = 0.75;
-        public double treeUniformNodeHeightWeight = 15.0;
-        public double treeRandomWalkNodeHeightWeight = 15.0;
-        public double treeRandomWalkNodeHeightSize = 0.05;
-
         public double parameterOperatorWeight = 1.0;
         public double parameterScaleFactor = 0.75;
         public double randomWalkWindowSize = 1.0;
+        public double substitutionOperatorWeight = 1.0;
+        public double siteModelOperatorWeight = 1.0;
+        public double clockRateOperatorWeight = 3.0;
+        public double demographicOperatorWeight = 3.0;
+        public double serialTreePriorOperatorWeight = 1.0;
+        public double relaxedClockCategoryWeight = 10.0;
 
-        public double treeScaleWeight = 5.0;
-        public double treeRootScaleWeight = 5.0;
-        public double treeRootScaleFactor = 0.75;
-        public double treeSubtreeSlideSize = 15.0;
-        public double treeSubtreeSlideWeight = 15.0;
-        public double treeNarrowExchangeWeight = 15.0;
-        public double treeWideExchangeWeight = 5.0;
-        public double treeWilsonBaldingWeight = 5.0;
-
-        public double treeClockUpDownWeight = 5.0;
+        public double treeClockUpDownWeight = 3.0;
         public double treeClockUpDownScaleFactor = 0.75;
 
         // Updates one supported operator setting by name.
@@ -332,24 +342,14 @@ public class BeastXState {
                 case "parameterOperatorWeight" -> this.parameterOperatorWeight = value;
                 case "parameterScaleFactor" -> this.parameterScaleFactor = value;
                 case "randomWalkWindowSize" -> this.randomWalkWindowSize = value;
-                case "treeScaleWeight" -> this.treeScaleWeight = value;
-                case "treeRootScaleWeight" -> this.treeRootScaleWeight = value;
-                case "treeRootScaleFactor" -> this.treeRootScaleFactor = value;
-                case "treeSubtreeSlideSize" -> this.treeSubtreeSlideSize = value;
-                case "treeSubtreeSlideWeight" -> this.treeSubtreeSlideWeight = value;
-                case "treeNarrowExchangeWeight" -> this.treeNarrowExchangeWeight = value;
-                case "treeWideExchangeWeight" -> this.treeWideExchangeWeight = value;
-                case "treeWilsonBaldingWeight" -> this.treeWilsonBaldingWeight = value;
+                case "substitutionOperatorWeight" -> this.substitutionOperatorWeight = value;
+                case "siteModelOperatorWeight" -> this.siteModelOperatorWeight = value;
+                case "clockRateOperatorWeight" -> this.clockRateOperatorWeight = value;
+                case "demographicOperatorWeight" -> this.demographicOperatorWeight = value;
+                case "serialTreePriorOperatorWeight" -> this.serialTreePriorOperatorWeight = value;
+                case "relaxedClockCategoryWeight" -> this.relaxedClockCategoryWeight = value;
                 case "treeClockUpDownWeight" -> this.treeClockUpDownWeight = value;
                 case "treeClockUpDownScaleFactor" -> this.treeClockUpDownScaleFactor = value;
-                case "treeScaleFactor" -> this.treeScaleFactor = value;
-                case "treeNodeHeightWeight" -> {
-                    this.treeUniformNodeHeightWeight = value / 2.0;
-                    this.treeRandomWalkNodeHeightWeight = value / 2.0;
-                }
-                case "treeUniformNodeHeightWeight" -> this.treeUniformNodeHeightWeight = value;
-                case "treeRandomWalkNodeHeightWeight" -> this.treeRandomWalkNodeHeightWeight = value;
-                case "treeRandomWalkNodeHeightSize" -> this.treeRandomWalkNodeHeightSize = value;
                 default -> throw new IllegalArgumentException("Unsupported BEAST X operator setting: " + settingName);
             }
         }
@@ -364,33 +364,26 @@ public class BeastXState {
         public static boolean isWeight(String settingName) {
             return Set.of(
                     "parameterOperatorWeight",
-                    "treeScaleWeight",
-                    "treeRootScaleWeight",
-                    "treeSubtreeSlideWeight",
-                    "treeNarrowExchangeWeight",
-                    "treeWideExchangeWeight",
-                    "treeWilsonBaldingWeight",
-                    "treeClockUpDownWeight",
-                    "treeNodeHeightWeight",
-                    "treeUniformNodeHeightWeight",
-                    "treeRandomWalkNodeHeightWeight"
+                    "substitutionOperatorWeight",
+                    "siteModelOperatorWeight",
+                    "clockRateOperatorWeight",
+                    "demographicOperatorWeight",
+                    "serialTreePriorOperatorWeight",
+                    "relaxedClockCategoryWeight",
+                    "treeClockUpDownWeight"
             ).contains(settingName);
         }
 
         public static boolean isScaleFactor(String settingName) {
             return Set.of(
                     "parameterScaleFactor",
-                    "treeClockUpDownScaleFactor",
-                    "treeScaleFactor",
-                    "treeRootScaleFactor"
+                    "treeClockUpDownScaleFactor"
             ).contains(settingName);
         }
 
         public static boolean isPositiveSetting(String settingName) {
             return Set.of(
-                    "randomWalkWindowSize",
-                    "treeSubtreeSlideSize",
-                    "treeRandomWalkNodeHeightSize"
+                    "randomWalkWindowSize"
             ).contains(settingName);
         }
     }

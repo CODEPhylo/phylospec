@@ -133,7 +133,7 @@ public class AutoOperatorConfigTile extends Tile<Void, BeastXState> implements C
                 throw new TileApplicationError(
                         assignment,
                         "MCMC operator weight must not be negative.",
-                        "Use a non-negative value, for example treeScaleWeight=5.0."
+                        "Use a non-negative value, for example demographicOperatorWeight=3.0."
                 );
             }
 
@@ -143,7 +143,7 @@ public class AutoOperatorConfigTile extends Tile<Void, BeastXState> implements C
         throw new TileApplicationError(
                 assignment,
                 "Unsupported MCMC operator setting.",
-                "Use a supported setting such as parameterScaleFactor, treeScaleWeight, or treeClockUpDownWeight."
+                "Use a supported setting such as parameterScaleFactor, clockRateOperatorWeight, or treeClockUpDownWeight."
         );
     }
 

@@ -12,6 +12,7 @@ import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.Simplex;
 import tiling.BeastXState;
+import tiling.operators.ParameterRole;
 import tiling.params.BeastXSimplexParam;
 
 /** Maps a joint six-dimensional relative-rate simplex to BEAST X GTR inputs. */
@@ -48,6 +49,16 @@ public class GTRRelativeRatesTile extends GeneratorTile<GTR, BeastXState> {
         }
 
         Parameter ratesParameter = parameter(relativeRates);
+        if (relativeRates instanceof BeastXSimplexParam) {
+            beastState.addParameterRole(
+                    ratesParameter,
+                    ParameterRole.SUBSTITUTION_SIMPLEX);
+        }
+        if (baseFrequencies instanceof BeastXSimplexParam beastXBaseFrequencies) {
+            beastState.addParameterRole(
+                    beastXBaseFrequencies.getParameter(),
+                    ParameterRole.SUBSTITUTION_SIMPLEX);
+        }
         return new GTR(
                 slice(ratesParameter, 0),
                 slice(ratesParameter, 1),

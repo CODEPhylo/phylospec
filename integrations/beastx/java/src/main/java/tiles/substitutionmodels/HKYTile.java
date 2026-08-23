@@ -9,6 +9,7 @@ import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import org.phylospec.types.Simplex;
 import tiling.BeastXState;
+import tiling.operators.ParameterRole;
 import tiling.params.BeastXRealScalarParam;
 import tiling.params.BeastXSimplexParam;
 
@@ -50,7 +51,16 @@ public class HKYTile extends GeneratorTile<HKY, BeastXState> {
         FrequencyModel frequencies =
                 frequencyModel(baseFrequencies);
 
+        if (baseFrequencies instanceof BeastXSimplexParam beastXBaseFrequencies) {
+            beastState.addParameterRole(
+                    beastXBaseFrequencies.getParameter(),
+                    ParameterRole.SUBSTITUTION_SIMPLEX);
+        }
+
         if (kappaScalar instanceof BeastXRealScalarParam<?> beastXKappa) {
+            beastState.addParameterRole(
+                    beastXKappa.getParameter(),
+                    ParameterRole.SUBSTITUTION_SCALE);
             return new HKY(beastXKappa.getParameter(), frequencies);
         }
 

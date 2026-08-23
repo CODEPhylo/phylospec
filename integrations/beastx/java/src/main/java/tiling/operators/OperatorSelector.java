@@ -1,6 +1,5 @@
 package tiling.operators;
 
-import dr.evomodel.tree.DefaultTreeModel;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.model.Bounds;
 import dr.inference.model.Parameter;
@@ -14,20 +13,28 @@ import org.phylospec.types.RealVector;
 import org.phylospec.types.Simplex;
 import tiling.BeastXState;
 import tiling.operators.joint.JointOperatorSelector;
-import tiling.operators.joint.StrictClockTreeUpDownOperatorSelector;
+import tiling.operators.joint.TreeClockUpDownOperatorSelector;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-/** Selects the common operator set used by direct and XML BEAST X output. */
+/**
+ * Selects the supported subset of the BEAUti 10.5 default operator set used by
+ * direct and XML output.
+ * Model roles take precedence; unclaimed PhyloSpec parameters use type-based
+ * fallback operators so backend-specific models remain usable.
+ */
 public final class OperatorSelector {
 
     private static final double NO_TUNING = 0.0;
+    private static final double BEAUTI_DELTA = 0.01;
+    private static final double BEAUTI_SUBTREE_LEAP_SIZE = 1.0;
 
     private static final List<JointOperatorSelector> JOINT_SELECTORS =
-            List.of(new StrictClockTreeUpDownOperatorSelector());
+            List.of(new TreeClockUpDownOperatorSelector());
 
     private static final TypeToken<?> SIMPLEX = new TypeToken<Simplex>() {};
     private static final TypeToken<?> POSITIVE_REAL_SCALAR =
@@ -59,9 +66,78 @@ public final class OperatorSelector {
         for (Map.Entry<Parameter, TypeToken<?>> entry : entries) {
             Parameter parameter = entry.getKey();
             TypeToken<?> type = entry.getValue();
+            Set<ParameterRole> roles = state.getParameterRoles(parameter);
+            BeastXState.OperatorConfig config = state.operatorConfig;
 
-            if (isRelaxedClockCategories(state, parameter)) {
-                operators.addAll(integerOperators(parameter, 10.0));
+            if (roles.contains(ParameterRole.RELAXED_CLOCK_CATEGORIES)) {
+                operators.add(parameterOperator(
+                        OperatorSpec.Family.INTEGER_SWAP,
+                        parameter,
+                        config.relaxedClockCategoryWeight,
+                        1.0));
+                operators.add(parameterOperator(
+                        OperatorSpec.Family.INTEGER_UNIFORM,
+                        parameter,
+                        config.relaxedClockCategoryWeight,
+                        1.0));
+            } else if (roles.contains(ParameterRole.SUBSTITUTION_SIMPLEX)) {
+                operators.add(parameterOperator(
+                        OperatorSpec.Family.DELTA_EXCHANGE,
+                        parameter,
+                        config.substitutionOperatorWeight,
+                        BEAUTI_DELTA));
+            } else if (roles.contains(ParameterRole.SITE_MODEL_PROPORTION)) {
+                operators.add(parameterOperator(
+                        OperatorSpec.Family.RANDOM_WALK_LOGIT,
+                        parameter,
+                        config.siteModelOperatorWeight,
+                        config.parameterScaleFactor));
+            } else if (roles.contains(ParameterRole.TREE_PRIOR_PROPORTION)) {
+                operators.add(parameterOperator(
+                        OperatorSpec.Family.RANDOM_WALK_LOGIT,
+                        parameter,
+                        config.demographicOperatorWeight,
+                        config.parameterScaleFactor));
+            } else if (roles.contains(ParameterRole.SERIAL_TREE_PRIOR_PROPORTION)) {
+                operators.add(parameterOperator(
+                        OperatorSpec.Family.RANDOM_WALK_LOGIT,
+                        parameter,
+                        config.serialTreePriorOperatorWeight,
+                        config.parameterScaleFactor));
+            } else if (roles.contains(ParameterRole.DEMOGRAPHIC_GROWTH_RATE)) {
+                operators.add(parameterOperator(
+                        OperatorSpec.Family.RANDOM_WALK,
+                        parameter,
+                        config.demographicOperatorWeight,
+                        config.randomWalkWindowSize));
+            } else if (roles.contains(ParameterRole.CLOCK_RATE)) {
+                operators.add(parameterOperator(
+                        OperatorSpec.Family.SCALE,
+                        parameter,
+                        config.clockRateOperatorWeight,
+                        config.parameterScaleFactor));
+            } else if (roles.contains(ParameterRole.DEMOGRAPHIC_SCALE)
+                    || roles.contains(ParameterRole.TREE_PRIOR_SCALE)) {
+                operators.add(parameterOperator(
+                        OperatorSpec.Family.SCALE,
+                        parameter,
+                        config.demographicOperatorWeight,
+                        config.parameterScaleFactor));
+            } else if (roles.contains(ParameterRole.SERIAL_TREE_PRIOR_SCALE)) {
+                operators.add(parameterOperator(
+                        OperatorSpec.Family.SCALE,
+                        parameter,
+                        config.serialTreePriorOperatorWeight,
+                        config.parameterScaleFactor));
+            } else if (roles.contains(ParameterRole.SUBSTITUTION_SCALE)
+                    || roles.contains(ParameterRole.SITE_MODEL_SCALE)) {
+                operators.add(parameterOperator(
+                        OperatorSpec.Family.SCALE,
+                        parameter,
+                        roles.contains(ParameterRole.SITE_MODEL_SCALE)
+                                ? config.siteModelOperatorWeight
+                                : config.substitutionOperatorWeight,
+                        config.parameterScaleFactor));
             } else if (BOOLEAN.isAssignableFrom(type)) {
                 operators.add(parameterOperator(
                         OperatorSpec.Family.BIT_FLIP,
@@ -73,7 +149,7 @@ public final class OperatorSelector {
                         OperatorSpec.Family.DELTA_EXCHANGE,
                         parameter,
                         state.operatorConfig.parameterOperatorWeight,
-                        0.01));
+                        BEAUTI_DELTA));
             } else if (isInteger(type)) {
                 operators.addAll(integerOperators(
                         parameter,
@@ -122,37 +198,20 @@ public final class OperatorSelector {
         trees.sort(Comparator.comparing(OperatorSelector::treeId));
 
         List<OperatorSpec> operators = new ArrayList<>();
-        BeastXState.OperatorConfig config = state.operatorConfig;
         for (TreeModel tree : trees) {
-            if (tree instanceof DefaultTreeModel) {
-                operators.add(treeOperator(
-                        OperatorSpec.Family.TREE_NODE_HEIGHT_SCALE,
-                        tree, config.treeScaleWeight, config.treeScaleFactor));
-                operators.add(treeOperator(
-                        OperatorSpec.Family.TREE_ROOT_SCALE,
-                        tree, config.treeRootScaleWeight, config.treeRootScaleFactor));
-            }
+            double subtreeLeapWeight = Math.max(tree.getExternalNodeCount(), 30.0);
+            double fixedHeightSprWeight = Math.max(subtreeLeapWeight / 10.0, 3.0);
+
             operators.add(treeOperator(
-                    OperatorSpec.Family.TREE_UNIFORM_HEIGHT,
-                    tree, config.treeUniformNodeHeightWeight, NO_TUNING));
+                    OperatorSpec.Family.TREE_SUBTREE_LEAP,
+                    tree,
+                    subtreeLeapWeight,
+                    BEAUTI_SUBTREE_LEAP_SIZE));
             operators.add(treeOperator(
-                    OperatorSpec.Family.TREE_RANDOM_WALK_HEIGHT,
-                    tree, config.treeRandomWalkNodeHeightWeight,
-                    config.treeRandomWalkNodeHeightSize));
-            if (tree instanceof DefaultTreeModel) {
-                operators.add(treeOperator(
-                        OperatorSpec.Family.TREE_SUBTREE_SLIDE,
-                        tree, config.treeSubtreeSlideWeight, config.treeSubtreeSlideSize));
-            }
-            operators.add(treeOperator(
-                    OperatorSpec.Family.TREE_NARROW_EXCHANGE,
-                    tree, config.treeNarrowExchangeWeight, NO_TUNING));
-            operators.add(treeOperator(
-                    OperatorSpec.Family.TREE_WIDE_EXCHANGE,
-                    tree, config.treeWideExchangeWeight, NO_TUNING));
-            operators.add(treeOperator(
-                    OperatorSpec.Family.TREE_WILSON_BALDING,
-                    tree, config.treeWilsonBaldingWeight, NO_TUNING));
+                    OperatorSpec.Family.TREE_FIXED_HEIGHT_SPR,
+                    tree,
+                    fixedHeightSprWeight,
+                    NO_TUNING));
         }
         return operators;
     }
@@ -197,14 +256,6 @@ public final class OperatorSelector {
             }
         }
         return true;
-    }
-
-    private static boolean isRelaxedClockCategories(BeastXState state, Parameter parameter) {
-        String id = parameterId(parameter);
-        return state.treeRelaxedClockModels.values().stream()
-                .map(BeastXState.RelaxedClockSpec::rateCategoriesParameter)
-                .anyMatch(candidate -> candidate == parameter
-                        || (!id.isBlank() && id.equals(parameterId(candidate))));
     }
 
     static String parameterId(Parameter parameter) {
