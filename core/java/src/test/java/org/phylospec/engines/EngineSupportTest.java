@@ -7,8 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
@@ -26,15 +24,14 @@ import org.phylospec.parser.Parser;
 
 public class EngineSupportTest {
 
-    private static final Path SPECIFICATION_PATH =
-            Path.of("src/test/java/org/phylospec/engines/test-engine-specification.json");
+    private static final String SPECIFICATION_RESOURCE = "/test-engine-specification.json";
 
     private static EngineSupport support;
     private static ComponentResolver componentResolver;
 
     @BeforeAll
     public static void loadEngineAndComponents() throws IOException {
-        try (InputStream specificationStream = Files.newInputStream(SPECIFICATION_PATH)) {
+        try (InputStream specificationStream = EngineSupportTest.class.getResourceAsStream(SPECIFICATION_RESOURCE)) {
             EngineSpecificationSchema engine =
                     new ObjectMapper().readValue(specificationStream, EngineSpecificationSchema.class);
             support = EngineSupport.of(engine);
