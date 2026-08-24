@@ -57,49 +57,17 @@ public class TypeUtils {
      */
     static ResolvedGeneratorApplication resolveGeneratedType(
             Generator generator,
-            Map<String, ResolvedTypeSet> resolvedArguments,
-            String firstArgumentName,
+            Map<String, ResolvedTypeSet> resolvedArgumentTypeSets,
             ComponentResolver componentResolver) {
-        List<Argument> parameters = generator.getArguments();
-
-        // make sure we don't pass any unknown arguments
-
-        Set<String> parameterNames = parameters.stream().map(Argument::getName).collect(Collectors.toSet());
-        for (String argument : resolvedArguments.keySet()) {
-            if (!parameterNames.contains(argument) && (!Objects.equals(firstArgumentName, argument))) {
-                String closestMatch = parameterNames.stream()
-                        .min(Comparator.comparingInt(x -> Utils.editDistance(x, argument)))
-                        .orElse("");
-                throw new TypeError(
-                        "Function `" + generator.getName() + "` takes no argument named `" + argument + "`.",
-                        "Do you mean '" + closestMatch + "'?");
-            }
-        }
-
         // check passed types and resolve type parameters
 
         Map<String, List<ResolvedType>> possibleParameterTypeSets = new HashMap<>();
         Map<String, ResolvedTypeSet> possibleArgumentTypeSets = new HashMap<>();
-        for (Argument parameter : parameters) {
+        for (Argument parameter : generator.getArguments()) {
             String parameterName = parameter.getName();
 
-            ResolvedTypeSet resolvedArgumentTypeSet = resolvedArguments.get(parameterName);
-
-            if (resolvedArgumentTypeSet == null && parameter == parameters.getFirst()) {
-                // there might be an unnamed argument
-                resolvedArgumentTypeSet = resolvedArguments.get(firstArgumentName);
-                parameterName = parameters.getFirst().getName();
-            }
-
+            ResolvedTypeSet resolvedArgumentTypeSet = resolvedArgumentTypeSets.get(parameterName);
             if (resolvedArgumentTypeSet == null) {
-                if (parameter.getRequired()) {
-                    throw new TypeError("Function `"
-                            + generator.getName()
-                            + "` takes the required argument `"
-                            + parameterName
-                            + "`.");
-                }
-
                 continue;
             }
 

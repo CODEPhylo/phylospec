@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import org.phylospec.Utils;
 import org.phylospec.ast.*;
+import org.phylospec.components.Argument;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
 import org.phylospec.components.Type;
@@ -813,58 +814,11 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
 
     @Override
     public ResolvedTypeSet visitCall(Expr.Call expr) {
-        // resolve arguments
+        // resolve argument type sets
 
-        /* Rules for argument names:
-         * (1) If an argument name is given, the value is assigned that argument.
-         * If no argument name is given:
-         *      (2) If only one argument is passed, the value is assigned to the single required argument.
-         *      (3) If a variable is passed, the value is assigned the argument with the name of the variable.
-         *      (4) If the value is not a variable, and this is the first given argument, it is assigned the first argument.
-         * (5) If any argument has two values assigned to it, it is an error.
-         */
-
-        Map<String, ResolvedTypeSet> resolvedArguments = new HashMap<>();
-        String firstArgumentName = null;
-        for (int i = 0; i < expr.arguments.length; i++) {
-            Expr.Argument argument = expr.arguments[i];
-
-            if (argument.name != null) {
-                // rule (1)
-                resolvedArguments.put(argument.name, argument.accept(this));
-            } else if (argument.expression instanceof Expr.Variable variable) {
-                // any argument can drop the name if a variable name is passed with the same name
-                if (resolvedArguments.containsKey(variable.variableName)) {
-                    // rule (5)
-                    throw new TypeError(
-                            argument,
-                            "Argument '" + variable.variableName + "' specified multiple times.",
-                            "You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than '"
-                                    + variable.variableName
-                                    + "', set it explicitly with '<argument>="
-                                    + variable.variableName
-                                    + "'.");
-                }
-
-                // rule (3)
-                resolvedArguments.put(variable.variableName, argument.accept(this));
-
-                if (expr.arguments.length == 1) {
-                    // if there is only one argument given, the given value is always assigned
-                    // rule (2)
-                    firstArgumentName = variable.variableName;
-                }
-            } else if (i == 0) {
-                // the first argument does not need a name
-                // rule (4)
-                resolvedArguments.put(null, argument.accept(this));
-            } else {
-                // we are not in a situation where the argument name can be dropped
-                throw new TypeError(
-                        argument,
-                        "Argument name not specified.",
-                        "You have to specify the name of the argument here using 'name=<value>'. You can only omit the argument name for the first argument or when your variable has the same name as the argument.");
-            }
+        Map<Expr.Argument, ResolvedTypeSet> resolvedPositionalArguments = new IdentityHashMap<>();
+        for (Expr.Argument argument : expr.arguments) {
+            resolvedPositionalArguments.put(argument, argument.accept(this));
         }
 
         // fetch all compatible generators
@@ -877,16 +831,73 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
         }
 
         // check if generators are compatible with arguments
+
         ResolvedTypeSet possibleReturnTypes = new ResolvedTypeSet();
         TypeError lastError = null;
         Set<String> errorMessages = new HashSet<>();
         for (Generator generator : generators) {
+            // resolve argument names and the corresponding type sets
+
+            Map<String, Expr.Argument> resolvedArguments = null;
+            try {
+                resolvedArguments = expr.resolveArgumentNames(generator);
+            } catch (ArgumentResolutionError.UnknownName e) {
+                String closestMatch = generator.getArguments().stream()
+                        .map(Argument::getName)
+                        .min(Comparator.comparingInt(x -> Utils.editDistance(x, e.name)))
+                        .orElse("");
+
+                TypeError error = new TypeError(
+                        expr,
+                        "Function `" + generator.getName() + "` takes no argument named `" + e.name + "`.",
+                        "Do you mean '" + closestMatch + "'?");
+
+                lastError = error;
+                errorMessages.add(error.getMessage());
+                continue;
+            } catch (ArgumentResolutionError.MissingRequired e) {
+                TypeError error = new TypeError(
+                        expr, "Function `" + generator.getName() + "` takes the required argument `" + e.name + "`.");
+
+                lastError = error;
+                errorMessages.add(error.getMessage());
+                continue;
+            } catch (ArgumentResolutionError.MissingName e) {
+                TypeError error = new TypeError(
+                        e.argument,
+                        "Argument name not specified.",
+                        "You have to specify the name of the argument here using 'name=<value>'. You can only omit the argument name for the first argument or when your variable has the same name as the argument.");
+
+                lastError = error;
+                errorMessages.add(error.getMessage());
+                continue;
+            } catch (ArgumentResolutionError.DuplicateName e) {
+                TypeError error = new TypeError(
+                        e.argument,
+                        "Argument '" + e.name + "' specified multiple times.",
+                        "You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than '"
+                                + e.name
+                                + "', set it explicitly with '<argument>="
+                                + e.name
+                                + "'.");
+
+                lastError = error;
+                errorMessages.add(error.getMessage());
+                continue;
+            }
+
+            Map<String, ResolvedTypeSet> resolvedArgumentTypeSets = new HashMap<>();
+            for (String argumentName : resolvedArguments.keySet()) {
+                resolvedArgumentTypeSets.put(
+                        argumentName, resolvedPositionalArguments.get(resolvedArguments.get(argumentName)));
+            }
+
             try {
                 // check if the generator is compatible
                 // throws a TypeError if not
 
-                TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication = TypeUtils.resolveGeneratedType(
-                        generator, resolvedArguments, firstArgumentName, componentResolver);
+                TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication =
+                        TypeUtils.resolveGeneratedType(generator, resolvedArgumentTypeSets, componentResolver);
 
                 // check type constraints and resolve generated type constraints
 

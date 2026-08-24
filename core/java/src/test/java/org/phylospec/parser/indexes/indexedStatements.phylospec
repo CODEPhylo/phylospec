@@ -16,7 +16,7 @@ Vector<Real> vector6 = vector2
 
 Real vector7[i] = 2.5*j for i in 1:10
 
-Real x[i] ~ Normal(0.0, sd=1.0) for i in 1:10
+Real x[i] ~ Normal(mean=0.0, sd=1.0) for i in 1:10
 Real y = x[1]
 
 Real z = matrix[1, 1]
@@ -36,7 +36,7 @@ Integer b[a] = a for a in 1:a
 // (AS Vector<Integer> vector5 vector2)
 // (AS Vector<Real> vector6 vector2)
 // (IS (AS Real vector7 (* 2.5 j)) i (R 1 10))
-// (IS (DR Real x (CA Normal (AA null 0.0) (AA sd 1.0))) i (R 1 10))
+// (IS (DR Real x (CA Normal (AA mean 0.0) (AA sd 1.0))) i (R 1 10))
 // (AS Real y (IX x 1))
 // (AS Real z (IX matrix 1 1))
 // (AS Real zz (IX matrix 1 (- 1)))

@@ -6,8 +6,8 @@ Real b ~ Normal(mean, sd) // ✅
 Real c ~ Normal(mean=mean, sd=mean) // ✅
 Real d ~ Normal(sd, mean) // ✅
 Real e ~ Normal(mean, sd=2.0) // ✅
-Real f ~ Normal(100.0, sd) // ✅
 
+Real f ~ Normal(100.0, sd) // 🚫
 Real g ~ Normal(100.0, 20) // 🚫
 Real h ~ Normal(mean, 20) // 🚫
 Real i ~ Normal(mean, mean) // 🚫
@@ -36,6 +36,7 @@ Real m ~ Normal(mean=1.0, mean, sd=1.0) // 🚫
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
+// Argument name not specified. You have to specify the name of the argument here using 'name=<value>'. You can only omit the argument name for the first argument or when your variable has the same name as the argument.
 // Argument name not specified. You have to specify the name of the argument here using 'name=<value>'. You can only omit the argument name for the first argument or when your variable has the same name as the argument.
 // Argument name not specified. You have to specify the name of the argument here using 'name=<value>'. You can only omit the argument name for the first argument or when your variable has the same name as the argument.
 // Argument 'mean' specified multiple times. You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than 'mean', set it explicitly with '<argument>=mean'.
