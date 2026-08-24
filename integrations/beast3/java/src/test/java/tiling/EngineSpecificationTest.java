@@ -3,6 +3,7 @@ package tiling;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import beast.pkgmgmt.BEASTVersion;
 import java.io.IOException;
@@ -63,5 +64,15 @@ public class EngineSpecificationTest {
                 assertNotNull(argument.getCanBeStochastic());
             }
         }
+
+        Generator__1 strictClock = generators.stream()
+                .filter(generator -> "StrictClock".equals(generator.getName()))
+                .findFirst()
+                .orElseThrow();
+
+        assertEquals(
+                List.of("clockRate", "tree"),
+                strictClock.getArguments().stream().map(Argument__1::getName).toList());
+        assertTrue(strictClock.getArguments().stream().allMatch(Argument__1::getRequired));
     }
 }

@@ -11,6 +11,7 @@ module org.phylospec.core {
     requires transitive org.eclipse.lsp4j.jsonrpc;
 
     exports org.phylospec;
+    exports org.phylospec.annotations;
     exports org.phylospec.ast;
     exports org.phylospec.ast.transformers;
     exports org.phylospec.components;

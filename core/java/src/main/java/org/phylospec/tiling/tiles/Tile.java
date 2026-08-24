@@ -107,6 +107,7 @@ public abstract class Tile<T, S> {
                 field.setAccessible(true);
                 try {
                     TileInput<?, S> input = (TileInput<?, S>) field.get(this);
+                    this.configureTileInput(field, input);
                     input.resolveTypeFromField(field);
                     inputs.add(input);
                 } catch (IllegalAccessException e) {
@@ -115,6 +116,14 @@ public abstract class Tile<T, S> {
             }
         }
         return inputs;
+    }
+
+    /**
+     * Gives specialized tile templates a chance to attach field metadata before an input is used.
+     * Ordinary tiles do not need to override this hook.
+     */
+    protected void configureTileInput(Field field, TileInput<?, S> input) {
+        // Default tiles obtain all input metadata from their constructors and generic field types.
     }
 
     /** methods to apply a tiling */
