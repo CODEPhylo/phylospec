@@ -313,52 +313,40 @@ public abstract class Expr extends AstNode {
             // we report the failures in a fixed order of relevance rather than in argument order
 
             Map<String, Argument> boundArguments = new LinkedHashMap<>();
-            ArgumentResolutionError missingName = null;
-            ArgumentResolutionError duplicateName = null;
-            ArgumentResolutionError unknownName = null;
+            ArgumentResolutionError missingNameError = null;
+            ArgumentResolutionError duplicateNameError = null;
+            ArgumentResolutionError unknownNameError = null;
 
             for (Argument argument : arguments) {
                 String parameterName = resolveArgumentName(argument, parameterNames, requiredParameters);
 
                 if (parameterName == null) {
                     // the argument name is omitted where it cannot be inferred
-                    if (missingName == null) missingName = new ArgumentResolutionError.MissingName(argument);
+                    if (missingNameError == null) missingNameError = new ArgumentResolutionError.MissingName(argument);
                 } else if (!parameterNames.contains(parameterName)) {
-                    if (unknownName == null) {
-                        unknownName = new ArgumentResolutionError.UnknownName(argument, parameterName, parameterNames);
+                    if (unknownNameError == null) {
+                        unknownNameError =
+                                new ArgumentResolutionError.UnknownName(argument, parameterName, parameterNames);
                     }
                 } else if (boundArguments.containsKey(parameterName)) {
-                    if (duplicateName == null) {
-                        duplicateName = new ArgumentResolutionError.DuplicateName(argument, parameterName);
+                    if (duplicateNameError == null) {
+                        duplicateNameError = new ArgumentResolutionError.DuplicateName(argument, parameterName);
                     }
                 } else {
                     boundArguments.put(parameterName, argument);
                 }
             }
 
+            // report the failures, most relevant first
+
+            if (missingNameError != null) throw missingNameError;
+            if (duplicateNameError != null) throw duplicateNameError;
+            if (unknownNameError != null) throw unknownNameError;
+
             List<String> missingRequiredNames = requiredParameters.stream()
                     .map(Parameter::name)
                     .filter(name -> !boundArguments.containsKey(name))
                     .toList();
-
-            // report the failures, most relevant first
-            // a missing required argument is usually just the consequence of an argument we could
-            // not place, so we only lead with it when more arguments are missing than we failed to
-            // place, which means at least one of them is missing on its own
-
-            if (missingName != null) throw missingName;
-            if (duplicateName != null) throw duplicateName;
-
-            // every argument we did not bind failed with an unknown name, because the other two
-            // kinds of failure would have been reported above
-
-            int unplacedArguments = arguments.length - boundArguments.size();
-            if (unplacedArguments < missingRequiredNames.size()) {
-                throw new ArgumentResolutionError.MissingRequired(missingRequiredNames.getFirst());
-            }
-
-            if (unknownName != null) throw unknownName;
-
             if (!missingRequiredNames.isEmpty()) {
                 throw new ArgumentResolutionError.MissingRequired(missingRequiredNames.getFirst());
             }
@@ -397,7 +385,7 @@ public abstract class Expr extends AstNode {
         }
 
         /**
-         * One parameter declared by the callee, as far as argument resolution is concerned.
+         * One parameter declared by the callee, used for argument resolution.
          */
         public record Parameter(String name, boolean required) {}
 
