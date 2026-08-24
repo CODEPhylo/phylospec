@@ -1,6 +1,7 @@
 package org.phylospec.engines;
 
 import java.util.*;
+import java.util.stream.Stream;
 import org.phylospec.ast.ArgumentResolutionError;
 import org.phylospec.ast.AstVisitor;
 import org.phylospec.ast.Expr;
@@ -16,12 +17,15 @@ import org.phylospec.typeresolver.StochasticityResolver;
 public final class EngineSupport {
 
     private final Map<String, List<Generator__1>> implementedGenerators = new LinkedHashMap<>();
+    private final List<String> engineNames = new ArrayList<>();
     boolean noEngineLoaded;
 
     public EngineSupport(List<EngineSpecificationSchema> engines) {
         noEngineLoaded = engines.isEmpty();
 
         for (EngineSpecificationSchema engine : engines) {
+            engineNames.add(engine.getName());
+
             for (Generator__1 generator : engine.getGenerators()) {
                 implementedGenerators
                         .computeIfAbsent(getUnqualifiedName(generator.getName()), name -> new ArrayList<>())
@@ -60,9 +64,11 @@ public final class EngineSupport {
 
         // check support for each call
 
-        return new ModelSupport(calls.stream()
-                .map(call -> supports(call, stochasticityResolver))
-                .toList());
+        return new ModelSupport(
+                engineNames,
+                calls.stream()
+                        .map(call -> supports(call, stochasticityResolver))
+                        .toList());
     }
 
     /**
@@ -208,9 +214,7 @@ public final class EngineSupport {
      */
     private static ArgumentSupport getArgumentSupport(
             List<Generator__1> candidates, Expr.Argument passedArgument, StochasticityResolver stochasticityResolver) {
-        String argumentName = passedArgument.name != null
-                ? passedArgument.name
-                : passedArgument.expression instanceof Expr.Variable variable ? variable.variableName : null;
+        String argumentName = getArgumentName(passedArgument);
 
         // an argument that is passed positionally names no argument of its own
         // if there was a generator with exactly one required argument, we would
@@ -235,6 +239,12 @@ public final class EngineSupport {
         return isOffered ? ArgumentSupport.STOCHASTICITY_UNSUPPORTED : ArgumentSupport.NOT_OFFERED;
     }
 
+    static String getArgumentName(Expr.Argument passedArgument) {
+        if (passedArgument.name != null) return passedArgument.name;
+        if (passedArgument.expression instanceof Expr.Variable variable) return variable.variableName;
+        return null;
+    }
+
     /* helper functions for names */
 
     /**
@@ -254,21 +264,10 @@ public final class EngineSupport {
         PARTIAL_SUPPORT,
         NO_SUPPORT;
 
-        private static Support of(boolean isFullySupported, boolean isAnyPartSupported) {
+        /** Derives the support of a whole from whether it runs and from which of its parts are supported. */
+        static Support of(boolean isFullySupported, Stream<Boolean> supportedParts) {
             if (isFullySupported) return FULL_SUPPORT;
-            return isAnyPartSupported ? PARTIAL_SUPPORT : NO_SUPPORT;
-        }
-    }
-
-    public record ModelSupport(List<CallSupport> callSupport) {
-
-        public boolean isFullySupported() {
-            return callSupport.stream().allMatch(CallSupport::isFullySupported);
-        }
-
-        public Support support() {
-            return Support.of(
-                    isFullySupported(), callSupport.stream().anyMatch(call -> call.support() != Support.NO_SUPPORT));
+            return supportedParts.anyMatch(part -> part) ? PARTIAL_SUPPORT : NO_SUPPORT;
         }
     }
 
@@ -285,7 +284,7 @@ public final class EngineSupport {
     public record CallSupport(Expr.Call call, boolean isFullySupported, List<ArgumentSupport> argumentSupport) {
 
         public Support support() {
-            return Support.of(isFullySupported, argumentSupport.stream().anyMatch(ArgumentSupport::isSupported));
+            return Support.of(isFullySupported, argumentSupport.stream().map(ArgumentSupport::isSupported));
         }
     }
 
@@ -293,7 +292,7 @@ public final class EngineSupport {
 
         public Support support() {
             return Support.of(
-                    isFullySupported, argumentSupport.values().stream().anyMatch(ArgumentSupport::isSupported));
+                    isFullySupported, argumentSupport.values().stream().map(ArgumentSupport::isSupported));
         }
     }
 }

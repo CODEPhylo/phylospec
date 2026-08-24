@@ -1,7 +1,6 @@
 package org.phylospec.lsp;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.*;
@@ -9,6 +8,7 @@ import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.phylospec.ast.*;
 import org.phylospec.components.*;
+import org.phylospec.engines.EngineSupport;
 import org.phylospec.errors.Error;
 import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.lexer.Lexer;
@@ -16,7 +16,6 @@ import org.phylospec.lexer.Range;
 import org.phylospec.lexer.Token;
 import org.phylospec.lexer.TokenType;
 import org.phylospec.parser.Parser;
-import org.phylospec.repository.PhyloSpecRepository;
 import org.phylospec.typeresolver.ResolvedType;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
@@ -33,6 +32,7 @@ class LspDocument implements ErrorEventListener {
     private final Workspace workspace;
 
     private final ComponentResolver componentResolver;
+    private final EngineRegistry engineRegistry;
 
     private String content;
     private List<Token> tokens;
@@ -41,26 +41,22 @@ class LspDocument implements ErrorEventListener {
     TypeResolver typeResolver;
     private final List<Diagnostic> foundDiagnostics = new ArrayList<>();
 
-    LspDocument(String uri, String content, LanguageClient client) {
+    LspDocument(String uri, String content, LanguageClient client, EngineRegistry engineRegistry) {
         this.uri = uri;
         this.client = client;
         this.workspace = getWorkspace(uri);
 
-        this.componentResolver = loadComponentResolver();
+        this.engineRegistry = engineRegistry;
+        this.componentResolver = engineRegistry.getComponentResolver();
 
         updateContent(content);
     }
 
-    private static ComponentResolver loadComponentResolver() {
-
-        List<ComponentLibrary> componentLibraries = null;
-        try {
-            PhyloSpecRepository repo = PhyloSpecRepository.loadCentral();
-            componentLibraries = repo.getLatestLibraries();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return new ComponentResolver(componentLibraries);
+    /**
+     * Returns the content the document currently holds.
+     */
+    String getContent() {
+        return content;
     }
 
     /**
@@ -94,6 +90,11 @@ class LspDocument implements ErrorEventListener {
                 errorDetected(error, statement);
             }
         }
+
+        // check whether the engines can run the model
+
+        EngineSupport engineSupport = new EngineSupport(engineRegistry.getSelectedEngines());
+        engineSupport.supports(statements).getWarnings().forEach(this::warningDetected);
 
         // publish diagnostics
 

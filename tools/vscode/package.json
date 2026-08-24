@@ -41,6 +41,20 @@
         "scopeName": "source.phylospec",
         "path": "./syntaxes/phylospec.json"
       }
+    ],
+    "commands": [
+      {
+        "command": "phylospec.addEngine",
+        "title": "PhyloSpec: Add Engine"
+      },
+      {
+        "command": "phylospec.removeEngine",
+        "title": "PhyloSpec: Remove Engine"
+      },
+      {
+        "command": "phylospec.listEngines",
+        "title": "PhyloSpec: List Engines"
+      }
     ]
   },
   "scripts": {
