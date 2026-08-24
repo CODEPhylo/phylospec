@@ -34,7 +34,7 @@ public class EngineSupportTest {
         try (InputStream specificationStream = EngineSupportTest.class.getResourceAsStream(SPECIFICATION_RESOURCE)) {
             EngineSpecificationSchema engine =
                     new ObjectMapper().readValue(specificationStream, EngineSpecificationSchema.class);
-            support = EngineSupport.of(engine);
+            support = new EngineSupport(engine);
         }
 
         componentResolver = new ComponentResolver(ComponentResolver.loadCoreComponentLibraries());
@@ -106,7 +106,7 @@ public class EngineSupportTest {
         Generator jc69 = componentResolver.resolveGenerator("jc69").getFirst();
         assertTrue(jc69.getArguments().isEmpty());
 
-        assertFalse(EngineSupport.of(engine).supports(jc69).isFullySupported());
+        assertFalse(new EngineSupport(engine).supports(jc69).isFullySupported());
     }
 
     @Test
@@ -124,7 +124,7 @@ public class EngineSupportTest {
         engine.setGenerators(List.of(foreign));
 
         Generator jc69 = componentResolver.resolveGenerator("jc69").getFirst();
-        assertFalse(EngineSupport.of(engine).supports(jc69).isFullySupported());
+        assertFalse(new EngineSupport(engine).supports(jc69).isFullySupported());
     }
 
     /* calls */
@@ -318,7 +318,7 @@ public class EngineSupportTest {
     public void testEnginesAreTakenTogether() {
         // neither engine implements both generators, but between them they cover the model
 
-        EngineSupport engines = EngineSupport.of(List.of(
+        EngineSupport engines = new EngineSupport(List.of(
                 engine("treeEngine", engineGenerator("Yule", null, "birthRate", "taxa")),
                 engine("distributionEngine", engineGenerator("LogNormal", null, "meanlog", "sdlog"))));
 
@@ -333,7 +333,7 @@ public class EngineSupportTest {
         // a call is run by a single engine, so two engines that each offer one of the arguments do
         // not add up to an engine that offers both
 
-        EngineSupport engines = EngineSupport.of(List.of(
+        EngineSupport engines = new EngineSupport(List.of(
                 engine("birthRateEngine", engineGenerator("Yule", null, "birthRate")),
                 engine("taxaEngine", engineGenerator("Yule", null, "taxa"))));
 
@@ -354,7 +354,7 @@ public class EngineSupportTest {
     public void testOverloadsOfTheSameEngine() {
         // an engine may list a generator twice to declare two shapes it takes
 
-        EngineSupport engine = EngineSupport.of(engine(
+        EngineSupport engine = new EngineSupport(engine(
                 "overloadingEngine",
                 engineGenerator("PhyloCTMC", null, "tree", "qMatrix", "siteRates", "branchRates"),
                 engineGenerator("PhyloCTMC", null, "tree", "siteQMatrices", "siteRates", "branchRates")));
@@ -372,7 +372,7 @@ public class EngineSupportTest {
         Generator jc69 = componentResolver.resolveGenerator("jc69").getFirst();
 
         EngineSupport engine =
-                EngineSupport.of(engine("namespacedEngine", engineGenerator("jc69", jc69.getNamespace())));
+                new EngineSupport(engine("namespacedEngine", engineGenerator("jc69", jc69.getNamespace())));
 
         assertTrue(engine.supports(jc69).isFullySupported());
     }
@@ -383,7 +383,7 @@ public class EngineSupportTest {
         // two apart where both sides give one
 
         EngineSupport namespaced =
-                EngineSupport.of(engine("namespacedEngine", engineGenerator("exp", "some.other.library", "x")));
+                new EngineSupport(engine("namespacedEngine", engineGenerator("exp", "some.other.library", "x")));
 
         assertTrue(namespaced
                 .supports(new Expr.Call("exp", new Expr.AssignedArgument("x", new Expr.Literal(1.0))))
@@ -412,7 +412,7 @@ public class EngineSupportTest {
     public void testUnimplementedGeneratorWithoutArguments() {
         // there is no argument to offer, so an engine that does not implement it offers nothing
 
-        EngineSupport engine = EngineSupport.of(engine("emptyEngine", engineGenerator("somethingElse", null)));
+        EngineSupport engine = new EngineSupport(engine("emptyEngine", engineGenerator("somethingElse", null)));
 
         EngineSupport.CallSupport jc69 = engine.supports(new Expr.Call("jc69"));
 
