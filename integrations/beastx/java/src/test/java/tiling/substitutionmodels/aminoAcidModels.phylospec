@@ -1,19 +1,19 @@
 QMatrix defaultJTT = jtt()
 
 QMatrix customJTT = jtt(
-    baseFrequencies = repeat(0.05, num=20)
+    baseFrequencies = repeat(value=0.05, num=20)
 )
 
 QMatrix defaultWAG = wag()
 
 QMatrix customWAG = wag(
-    baseFrequencies = repeat(0.05, num=20)
+    baseFrequencies = repeat(value=0.05, num=20)
 )
 
 QMatrix defaultLG = lg()
 
 QMatrix customLG = lg(
-    baseFrequencies = repeat(0.05, num=20)
+    baseFrequencies = repeat(value=0.05, num=20)
 )
 
 // EXPECTED_TILES

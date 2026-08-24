@@ -2,8 +2,8 @@ Real x ~ Normal(mean=1.0, sd=2.0)
 PositiveReal y ~ LogNormal(logMean=0.0, logSd=1.0)
 
 Real naturalLog = log(x * x + 4.0)
-Real baseLog = log(x * x + 4.0, base=2)
-Real mixed = exp(log(x * x + y + 4.0, base=2))
+Real baseLog = log(x=x * x + 4.0, base=2)
+Real mixed = exp(log(x=x * x + y + 4.0, base=2))
 
 // EXPECTED_TILES
 // TILING_SUCCESS
