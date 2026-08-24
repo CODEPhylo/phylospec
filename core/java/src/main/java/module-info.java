@@ -9,13 +9,13 @@ module org.phylospec.core {
     requires org.eclipse.jgit;
     requires transitive org.eclipse.lsp4j;
     requires transitive org.eclipse.lsp4j.jsonrpc;
-    requires org.phylospec.core;
 
     exports org.phylospec;
     exports org.phylospec.ast;
     exports org.phylospec.ast.transformers;
     exports org.phylospec.components;
     exports org.phylospec.domain;
+    exports org.phylospec.engines;
     exports org.phylospec.errors;
     exports org.phylospec.lexer;
     exports org.phylospec.parser;
