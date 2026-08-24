@@ -1,0 +1,94 @@
+{
+    "engineVersion": "1.0.0",
+    "installationInstructions": "Not a real engine.",
+    "installationWebsite": "https://example.org",
+    "dependsOn": [],
+    "name": "testEngine",
+    "generators": [
+        {
+            "name": "Yule",
+            "arguments": [
+                {
+                    "canBeStochastic": true,
+                    "name": "birthRate",
+                    "required": true
+                },
+                {
+                    "canBeStochastic": true,
+                    "name": "rootAge",
+                    "required": false
+                },
+                {
+                    "canBeStochastic": false,
+                    "name": "taxa",
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "PhyloCTMC",
+            "arguments": [
+                {
+                    "canBeStochastic": true,
+                    "name": "tree",
+                    "required": true
+                },
+                {
+                    "canBeStochastic": true,
+                    "name": "qMatrix",
+                    "required": true
+                },
+                {
+                    "canBeStochastic": true,
+                    "name": "branchRates",
+                    "required": false
+                },
+                {
+                    "canBeStochastic": true,
+                    "name": "siteRates",
+                    "required": false
+                }
+            ]
+        },
+        {
+            "name": "exp",
+            "arguments": [{
+                "canBeStochastic": true,
+                "name": "x",
+                "required": true
+            }]
+        },
+        {
+            "name": "jc69",
+            "arguments": []
+        },
+        {
+            "name": "taxa",
+            "arguments": [{
+                "canBeStochastic": false,
+                "name": "alignment",
+                "required": true
+            }]
+        },
+        {
+            "name": "fromNexus",
+            "arguments": [
+                {
+                    "canBeStochastic": false,
+                    "name": "file",
+                    "required": true
+                },
+                {
+                    "canBeStochastic": true,
+                    "name": "age",
+                    "required": false
+                },
+                {
+                    "canBeStochastic": false,
+                    "name": "speciesName",
+                    "required": false
+                }
+            ]
+        }
+    ]
+}
