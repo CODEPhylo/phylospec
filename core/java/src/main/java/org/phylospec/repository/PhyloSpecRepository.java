@@ -1,6 +1,7 @@
 package org.phylospec.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.zafarkhaja.semver.Version;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -44,17 +45,20 @@ public class PhyloSpecRepository {
     /**
      * Loads all component libraries and engine specifications of the central PhyloSpec
      * repository, including all their versions.
-     * If the repository can neither be reached nor found in the cache, this falls back to the
-     * core component library bundled with this package.
+     * If the repository can neither be reached nor found in the cache, an
+     * {@link OfflineException} is thrown.
      */
     public static PhyloSpecRepository loadCentral() throws IOException {
-        try {
-            return load(CENTRAL_REPOSITORY_URI);
-        } catch (IOException e) {
-            // we have neither an internet connection nor a cached version, so we fall back to
-            // the bundled core component library
-            return new PhyloSpecRepository(ComponentResolver.loadCoreComponentLibraries(), List.of());
-        }
+        return load(CENTRAL_REPOSITORY_URI);
+    }
+
+    /**
+     * Loads the core component library bundled with this package.
+     * This does not need any network access, but it only contains the single core component
+     * library this package was built with.
+     */
+    public static PhyloSpecRepository loadBundled() throws IOException {
+        return new PhyloSpecRepository(ComponentResolver.loadCoreComponentLibraries(), List.of());
     }
 
     /**
@@ -249,58 +253,16 @@ public class PhyloSpecRepository {
      * is newer than the second one.
      */
     private static int compareVersions(String version, String otherVersion) {
-        String[] parts = getVersionParts(version);
-        String[] otherParts = getVersionParts(otherVersion);
+        Optional<Version> parsedVersion = Version.tryParse(version, false);
+        Optional<Version> otherParsedVersion = Version.tryParse(otherVersion, false);
 
-        for (int i = 0; i < Math.max(parts.length, otherParts.length); i++) {
-            int part = i < parts.length ? parseVersionPart(parts[i]) : 0;
-            int otherPart = i < otherParts.length ? parseVersionPart(otherParts[i]) : 0;
-
-            if (part != otherPart) return Integer.compare(part, otherPart);
+        // versions which are no valid semantic versions are always considered to be older
+        if (parsedVersion.isEmpty() || otherParsedVersion.isEmpty()) {
+            if (parsedVersion.isPresent()) return 1;
+            if (otherParsedVersion.isPresent()) return -1;
+            return version.compareTo(otherVersion);
         }
 
-        // the versions only differ in their pre-release suffix (e.g. 2.8.0 and 2.8.0-beta4).
-        // a release is always newer than a pre-release of the same version
-
-        String preRelease = getPreRelease(version);
-        String otherPreRelease = getPreRelease(otherVersion);
-
-        if (preRelease.isEmpty() || otherPreRelease.isEmpty()) {
-            return Integer.compare(otherPreRelease.length(), preRelease.length());
-        }
-
-        return preRelease.compareTo(otherPreRelease);
-    }
-
-    /**
-     * Splits the version number into its parts, ignoring any pre-release suffix.
-     */
-    private static String[] getVersionParts(String version) {
-        int preReleaseStart = version.indexOf('-');
-        if (preReleaseStart != -1) version = version.substring(0, preReleaseStart);
-        return version.split("\\.");
-    }
-
-    /**
-     * Returns the pre-release suffix of the version number, or an empty string if it does not
-     * have one.
-     */
-    private static String getPreRelease(String version) {
-        int preReleaseStart = version.indexOf('-');
-        if (preReleaseStart == -1) return "";
-        return version.substring(preReleaseStart + 1);
-    }
-
-    /**
-     * Parses a single part of a version number.
-     */
-    private static int parseVersionPart(String part) {
-        StringBuilder digits = new StringBuilder();
-        for (int i = 0; i < part.length() && Character.isDigit(part.charAt(i)); i++) {
-            digits.append(part.charAt(i));
-        }
-
-        if (digits.isEmpty()) return 0;
-        return Integer.parseInt(digits.toString());
+        return parsedVersion.get().compareTo(otherParsedVersion.get());
     }
 }
