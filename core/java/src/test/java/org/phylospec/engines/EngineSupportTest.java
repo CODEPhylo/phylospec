@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -324,6 +325,150 @@ public class EngineSupportTest {
                 .isFullySupported());
     }
 
+    /* several engines */
+
+    @Test
+    public void testEnginesAreTakenTogether() {
+        // neither engine implements both generators, but between them they cover the model
+
+        EngineSupport engines = EngineSupport.of(List.of(
+                engine("treeEngine", engineGenerator("Yule", null, "birthRate", "taxa")),
+                engine("distributionEngine", engineGenerator("LogNormal", null, "meanlog", "sdlog"))));
+
+        assertTrue(engines.supports(parse("""
+                Real rate ~ LogNormal(meanlog=0.2, sdlog=1.0)
+                Tree tree ~ Yule(birthRate=rate, taxa=taxa)
+                """)).isFullySupported());
+    }
+
+    @Test
+    public void testOneEngineHasToTakeTheWholeCall() {
+        // a call is run by a single engine, so two engines that each offer one of the arguments do
+        // not add up to an engine that offers both
+
+        EngineSupport engines = EngineSupport.of(List.of(
+                engine("birthRateEngine", engineGenerator("Yule", null, "birthRate")),
+                engine("taxaEngine", engineGenerator("Yule", null, "taxa"))));
+
+        EngineSupport.CallSupport yule = engines.supports(new Expr.Call(
+                "Yule",
+                new Expr.AssignedArgument("birthRate", new Expr.Literal(1.0)),
+                new Expr.AssignedArgument("taxa", new Expr.Variable("data"))));
+
+        assertFalse(yule.isFullySupported());
+
+        // both arguments are offered by some engine, so neither of them is to blame on its own
+
+        assertEquals(EngineSupport.Support.PARTIAL_SUPPORT, yule.support());
+        assertEquals(List.of(true, true), yule.argumentSupport());
+    }
+
+    @Test
+    public void testOverloadsOfTheSameEngine() {
+        // an engine may list a generator twice to declare two shapes it takes
+
+        EngineSupport engine = EngineSupport.of(engine(
+                "overloadingEngine",
+                engineGenerator("PhyloCTMC", null, "tree", "qMatrix", "siteRates", "branchRates"),
+                engineGenerator("PhyloCTMC", null, "tree", "siteQMatrices", "siteRates", "branchRates")));
+
+        assertTrue(
+                engine.supports(getOverloadWithArgument("PhyloCTMC", "qMatrix")).isFullySupported());
+        assertTrue(engine.supports(getOverloadWithArgument("PhyloCTMC", "siteQMatrices"))
+                .isFullySupported());
+    }
+
+    /* namespaces */
+
+    @Test
+    public void testMatchingNamespaceIsCovered() {
+        Generator jc69 = componentResolver.resolveGenerator("jc69").getFirst();
+
+        EngineSupport engine =
+                EngineSupport.of(engine("namespacedEngine", engineGenerator("jc69", jc69.getNamespace())));
+
+        assertTrue(engine.supports(jc69).isFullySupported());
+    }
+
+    @Test
+    public void testNamespaceIsIgnoredWhereOnlyOneSideNamesIt() {
+        // an engine specification generally leaves the namespace out, so a namespace only tells the
+        // two apart where both sides give one
+
+        EngineSupport namespaced =
+                EngineSupport.of(engine("namespacedEngine", engineGenerator("exp", "some.other.library", "x")));
+
+        assertTrue(namespaced
+                .supports(new Expr.Call("exp", new Expr.AssignedArgument("x", new Expr.Literal(1.0))))
+                .isFullySupported());
+
+        // and the other way around: the engine names no namespace, the call does
+
+        assertTrue(support.supports(
+                        new Expr.Call("some.other.library.exp", new Expr.AssignedArgument("x", new Expr.Literal(1.0))))
+                .isFullySupported());
+    }
+
+    /* things without parts */
+
+    @Test
+    public void testGeneratorWithoutArguments() {
+        EngineSupport.GeneratorSupport jc69 =
+                support.supports(componentResolver.resolveGenerator("jc69").getFirst());
+
+        assertTrue(jc69.isFullySupported());
+        assertEquals(EngineSupport.Support.FULL_SUPPORT, jc69.support());
+        assertTrue(jc69.argumentSupport().isEmpty());
+    }
+
+    @Test
+    public void testUnimplementedGeneratorWithoutArguments() {
+        // there is no argument to offer, so an engine that does not implement it offers nothing
+
+        EngineSupport engine = EngineSupport.of(engine("emptyEngine", engineGenerator("somethingElse", null)));
+
+        EngineSupport.CallSupport jc69 = engine.supports(new Expr.Call("jc69"));
+
+        assertFalse(jc69.isFullySupported());
+        assertEquals(EngineSupport.Support.NO_SUPPORT, jc69.support());
+        assertTrue(jc69.argumentSupport().isEmpty());
+    }
+
+    @Test
+    public void testModelWithoutCalls() {
+        EngineSupport.ModelSupport empty = support.supports(List.of());
+
+        assertTrue(empty.isFullySupported());
+        assertEquals(EngineSupport.Support.FULL_SUPPORT, empty.support());
+        assertTrue(empty.callSupport().isEmpty());
+    }
+
+    /* order and identity */
+
+    @Test
+    public void testArgumentSupportKeepsTheDeclaredOrder() {
+        Generator phyloCtmc = getOverloadWithArgument("PhyloCTMC", "siteQMatrices");
+
+        EngineSupport.GeneratorSupport siteQMatrices = support.supports(phyloCtmc);
+
+        assertEquals(
+                getArgumentNames(phyloCtmc),
+                List.copyOf(siteQMatrices.argumentSupport().keySet()));
+    }
+
+    @Test
+    public void testEqualCallsAreReportedSeparately() {
+        // two calls of a model can be equal to each other, so they are kept in a list
+
+        EngineSupport.ModelSupport model = support.supports(parse("""
+                QMatrix first = jc69()
+                QMatrix second = jc69()
+                """));
+
+        assertEquals(2, model.callSupport().size());
+        assertTrue(model.isFullySupported());
+    }
+
     /* helper functions */
 
     private static List<Stmt> parse(String source) {
@@ -348,5 +493,23 @@ public class EngineSupportTest {
         argument.setRequired(required);
         argument.setCanBeStochastic(false);
         return argument;
+    }
+
+    private static EngineSpecificationSchema engine(String name, Generator__1... generators) {
+        EngineSpecificationSchema engine = new EngineSpecificationSchema();
+        engine.setName(name);
+        engine.setEngineVersion("1.0.0");
+        engine.setGenerators(List.of(generators));
+        return engine;
+    }
+
+    private static Generator__1 engineGenerator(String name, String namespace, String... argumentNames) {
+        Generator__1 generator = new Generator__1();
+        generator.setName(name);
+        generator.setNamespace(namespace);
+        generator.setArguments(Arrays.stream(argumentNames)
+                .map(argument -> engineArgument(argument, true))
+                .toList());
+        return generator;
     }
 }
