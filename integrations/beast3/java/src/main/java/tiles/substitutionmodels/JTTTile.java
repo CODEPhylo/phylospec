@@ -3,11 +3,10 @@ package tiles.substitutionmodels;
 import beast.base.spec.evolution.substitutionmodel.Frequencies;
 import beast.base.spec.evolution.substitutionmodel.JTT;
 import beast.base.spec.type.Simplex;
+import beastconfig.BEASTState;
+import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
-import beastconfig.BEASTState;
-
-import java.util.IdentityHashMap;
 
 public class JTTTile extends GeneratorTile<JTT, BEASTState> {
 
@@ -37,5 +36,4 @@ public class JTTTile extends GeneratorTile<JTT, BEASTState> {
 
         return jtt;
     }
-
 }

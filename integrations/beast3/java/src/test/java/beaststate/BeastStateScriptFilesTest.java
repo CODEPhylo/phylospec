@@ -1,9 +1,21 @@
 package beaststate;
 
-import beastconfig.BEASTState;
+import static org.junit.jupiter.api.Assertions.*;
+
 import beast.base.inference.CalculationNode;
 import beast.base.inference.Distribution;
 import beast.base.inference.StateNode;
+import beastconfig.BEASTState;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.phylospec.ast.*;
@@ -18,19 +30,6 @@ import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiles.BeastCoreTileLibrary;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class BeastStateScriptFilesTest {
 
@@ -49,8 +48,7 @@ public class BeastStateScriptFilesTest {
 
     private List<Path> findPsFiles(Path root) throws IOException {
         try (Stream<Path> paths = Files.walk(root)) {
-            return paths
-                    .filter(Files::isRegularFile)
+            return paths.filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().endsWith(".phylospec"))
                     .collect(Collectors.toList());
         }
@@ -81,7 +79,8 @@ public class BeastStateScriptFilesTest {
 
             // tile each statement
 
-            EvaluateTiles<BEASTState> evaluateTiles = new EvaluateTiles<>(new BeastCoreTileLibrary().getTiles(), variableResolver, stochasticityResolver);
+            EvaluateTiles<BEASTState> evaluateTiles =
+                    new EvaluateTiles<>(new BeastCoreTileLibrary().getTiles(), variableResolver, stochasticityResolver);
             List<Tile<?, BEASTState>> bestTilings = null;
             try {
                 bestTilings = evaluateTiles.getBestTiling(statements);
@@ -89,10 +88,14 @@ public class BeastStateScriptFilesTest {
                 // tiling failed
             }
 
-            boolean tilingSucceeded = bestTilings != null && bestTilings.stream().noneMatch(t -> t == null);
+            boolean tilingSucceeded =
+                    bestTilings != null && bestTilings.stream().noneMatch(t -> t == null);
             if (!tilingSucceeded) {
-                assertNotNull(expectedStateLines, "Tiling failed but no EXPECTED BEAST STATE block found in: " + psPath);
-                assertTrue(expectedStateLines.size() == 1 && expectedStateLines.get(0).trim().equals("NO_STATE"),
+                assertNotNull(
+                        expectedStateLines, "Tiling failed but no EXPECTED BEAST STATE block found in: " + psPath);
+                assertTrue(
+                        expectedStateLines.size() == 1
+                                && expectedStateLines.get(0).trim().equals("NO_STATE"),
                         "Tiling failed but EXPECTED BEAST STATE does not contain NO_STATE in: " + psPath);
                 return;
             }
@@ -155,9 +158,13 @@ public class BeastStateScriptFilesTest {
             // compare
 
             assertEquals(expectedStateNodeIds, actualStateNodeIds, "State node ID mismatch for: " + psPath);
-            assertEquals(expectedCalculationNodeIds, actualCalculationNodeIds, "Calculation node ID mismatch for: " + psPath);
+            assertEquals(
+                    expectedCalculationNodeIds,
+                    actualCalculationNodeIds,
+                    "Calculation node ID mismatch for: " + psPath);
             assertEquals(expectedPriorIds, actualPriorIds, "Prior distribution ID mismatch for: " + psPath);
-            assertEquals(expectedLikelihoodIds, actualLikelihoodIds, "Likelihood distribution ID mismatch for: " + psPath);
+            assertEquals(
+                    expectedLikelihoodIds, actualLikelihoodIds, "Likelihood distribution ID mismatch for: " + psPath);
         });
     }
 
@@ -203,5 +210,4 @@ public class BeastStateScriptFilesTest {
 
         return expected;
     }
-
 }

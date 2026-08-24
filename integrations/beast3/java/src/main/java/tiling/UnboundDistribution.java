@@ -2,7 +2,6 @@ package tiling;
 
 import beast.base.inference.StateNode;
 import beastconfig.BEASTState;
-
 import java.util.function.Consumer;
 
 /// A BEAST distribution that is not yet attached to the value it describes, paired with the

@@ -3,12 +3,11 @@ package beastconfig;
 import beast.base.core.*;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.*;
+import java.util.*;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
-
-import java.util.*;
 
 /// Manages the BEAST state that is built up incrementally during tiling.
 ///
@@ -229,8 +228,7 @@ public class BEASTState {
      * return the same logger instances rather than duplicates.
      */
     public List<beast.base.inference.Logger> buildLoggers(
-            CompoundDistribution posterior, CompoundDistribution prior, CompoundDistribution likelihood
-    ) {
+            CompoundDistribution posterior, CompoundDistribution prior, CompoundDistribution likelihood) {
         if (this.builtLoggers != null) {
             return this.builtLoggers;
         }
@@ -274,5 +272,4 @@ public class BEASTState {
             }
         }
     }
-
 }

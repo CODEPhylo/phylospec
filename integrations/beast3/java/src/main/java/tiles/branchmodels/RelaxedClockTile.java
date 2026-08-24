@@ -10,14 +10,13 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
 import beastconfig.OperatorSelector;
+import java.util.IdentityHashMap;
+import java.util.List;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiling.BoundDistribution;
-
-import java.util.IdentityHashMap;
-import java.util.List;
 
 public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel, BEASTState> {
 
@@ -26,15 +25,23 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel, BEASTSt
         return "RelaxedClock";
     }
 
-    GeneratorTileInput<BoundDistribution<? extends RealScalarParam<? extends PositiveReal>, ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>>, BEASTState> baseInput = new GeneratorTileInput<>(
-            "base"
-    );
-    GeneratorTileInput<RealScalarParam<PositiveReal>, BEASTState> clockRateInput = new GeneratorTileInput<>("clockRate");
+    GeneratorTileInput<
+                    BoundDistribution<
+                            ? extends RealScalarParam<? extends PositiveReal>,
+                            ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>>,
+                    BEASTState>
+            baseInput = new GeneratorTileInput<>("base");
+    GeneratorTileInput<RealScalarParam<PositiveReal>, BEASTState> clockRateInput =
+            new GeneratorTileInput<>("clockRate");
     GeneratorTileInput<Tree, BEASTState> treeInput = new GeneratorTileInput<>("tree");
 
     @Override
-    protected UCRelaxedClockModel applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        BoundDistribution<? extends RealScalarParam<? extends PositiveReal>, ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>> base = this.baseInput.apply(beastState, indexVariables);
+    protected UCRelaxedClockModel applyTile(
+            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+        BoundDistribution<
+                        ? extends RealScalarParam<? extends PositiveReal>,
+                        ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>>
+                base = this.baseInput.apply(beastState, indexVariables);
         RealScalarParam<PositiveReal> clockRate = this.clockRateInput.apply(beastState, indexVariables);
         Tree tree = this.treeInput.apply(beastState, indexVariables);
 
@@ -46,10 +53,10 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel, BEASTSt
         if (1E-6 < Math.abs(distribution.getMean() - 1.0)) {
             throw new TileApplicationError(
                     this.getRootNode(),
-                    "Base distribution used for the relaxed clock should have a mean of 1.0. You use a distribution with mean " + distribution.getMean() + ".",
+                    "Base distribution used for the relaxed clock should have a mean of 1.0. You use a distribution with mean "
+                            + distribution.getMean() + ".",
                     "Use a distribution with mean 1.0.",
-                    List.of("LogNormal(mean=1.0, logSd=0.1)")
-            );
+                    List.of("LogNormal(mean=1.0, logSd=0.1)"));
         }
 
         // init the branch rate categories
@@ -60,8 +67,7 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel, BEASTSt
         int[] rateArray = new int[numBranches];
         IntVectorParam<NonNegativeInt> rateCategories = new IntVectorParam<>(rateArray, NonNegativeInt.INSTANCE);
 
-        beastState.addStateNodeWithoutOperators(rateCategories, new TypeToken<IntVectorParam<NonNegativeInt>>() {
-        }, id);
+        beastState.addStateNodeWithoutOperators(rateCategories, new TypeToken<IntVectorParam<NonNegativeInt>>() {}, id);
         beastState.addOperators(rateCategories, OperatorSelector.getDefaultOperators(rateCategories, beastState));
 
         // init the relaxed clock
@@ -75,5 +81,4 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel, BEASTSt
 
         return relaxedClockModel;
     }
-
 }

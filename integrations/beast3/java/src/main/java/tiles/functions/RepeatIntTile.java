@@ -4,15 +4,14 @@ import beast.base.spec.domain.Int;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
-import org.phylospec.ast.Expr;
-import org.phylospec.typeresolver.Stochasticity;
-import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
-import org.phylospec.tiling.TypeToken;
-
 import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.Set;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.typeresolver.Stochasticity;
 
 public class RepeatIntTile extends GeneratorTile<IntVectorParam<Int>, BEASTState> {
 
@@ -21,13 +20,10 @@ public class RepeatIntTile extends GeneratorTile<IntVectorParam<Int>, BEASTState
         return "repeat";
     }
 
-    GeneratorTileInput<IntScalarParam<? extends Int>, BEASTState> valueInput = new GeneratorTileInput<>(
-            "value", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
-    );
-    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>, BEASTState> numInput = new GeneratorTileInput<>(
-            "num",
-            Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
-    );
+    GeneratorTileInput<IntScalarParam<? extends Int>, BEASTState> valueInput =
+            new GeneratorTileInput<>("value", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
+    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>, BEASTState> numInput =
+            new GeneratorTileInput<>("num", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
     public TypeToken<?> getTypeToken() {
@@ -40,7 +36,8 @@ public class RepeatIntTile extends GeneratorTile<IntVectorParam<Int>, BEASTState
     }
 
     @Override
-    public IntVectorParam<Int> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    public IntVectorParam<Int> applyTile(
+            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         int value = this.valueInput.apply(beastState, indexVariables).get();
         int num = this.numInput.apply(beastState, indexVariables).get();
 
@@ -49,5 +46,4 @@ public class RepeatIntTile extends GeneratorTile<IntVectorParam<Int>, BEASTState
 
         return new IntVectorParam<>(values, Int.INSTANCE);
     }
-
 }

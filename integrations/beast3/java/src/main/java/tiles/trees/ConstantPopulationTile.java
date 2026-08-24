@@ -4,11 +4,10 @@ import beast.base.evolution.tree.coalescent.PopulationFunction;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
 import beast.base.spec.type.RealScalar;
+import beastconfig.BEASTState;
+import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
-import beastconfig.BEASTState;
-
-import java.util.IdentityHashMap;
 
 public class ConstantPopulationTile extends GeneratorTile<PopulationFunction, BEASTState> {
 
@@ -17,7 +16,8 @@ public class ConstantPopulationTile extends GeneratorTile<PopulationFunction, BE
         return "constantPopulationFunction";
     }
 
-    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> populationSizeInput = new GeneratorTileInput<>("populationSize");
+    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> populationSizeInput =
+            new GeneratorTileInput<>("populationSize");
 
     @Override
     public PopulationFunction applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
@@ -28,5 +28,4 @@ public class ConstantPopulationTile extends GeneratorTile<PopulationFunction, BE
 
         return constantPopulation;
     }
-
 }

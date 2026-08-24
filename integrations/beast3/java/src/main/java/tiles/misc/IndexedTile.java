@@ -3,22 +3,19 @@ package tiles.misc;
 import beast.base.spec.domain.Int;
 import beast.base.spec.type.IntScalar;
 import beastconfig.BEASTState;
-import org.phylospec.ast.Expr;
-import org.phylospec.tiling.tiles.AstNodeTile;
-import org.phylospec.tiling.errors.TileApplicationError;
-import org.phylospec.tiling.TypeToken;
-
 import java.util.IdentityHashMap;
 import java.util.List;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.tiles.AstNodeTile;
 
 public class IndexedTile extends AstNodeTile<Object, Expr.Index, BEASTState> {
 
-    AstNodeTileInput<List<?>, Expr.Index, BEASTState> vectorInput = new AstNodeTileInput<>(
-            "vector", expr -> expr.object
-    );
-    AstNodeTileInput<? extends IntScalar<? extends Int>, Expr.Index, BEASTState> firstIndexInput = new AstNodeTileInput<>(
-            "index", expr -> expr.indices.getFirst()
-    );
+    AstNodeTileInput<List<?>, Expr.Index, BEASTState> vectorInput =
+            new AstNodeTileInput<>("vector", expr -> expr.object);
+    AstNodeTileInput<? extends IntScalar<? extends Int>, Expr.Index, BEASTState> firstIndexInput =
+            new AstNodeTileInput<>("index", expr -> expr.indices.getFirst());
 
     @Override
     public Object applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
@@ -28,22 +25,19 @@ public class IndexedTile extends AstNodeTile<Object, Expr.Index, BEASTState> {
         if (index == 0) {
             throw new TileApplicationError(
                     "Index " + index + " is smaller than 1",
-                    "PhyloSpec uses 1-based indexing. Use an index which is between 1 and " + vector.size() + "."
-            );
+                    "PhyloSpec uses 1-based indexing. Use an index which is between 1 and " + vector.size() + ".");
         }
 
         if (index < 0) {
             throw new TileApplicationError(
                     "Index " + index + " is smaller than 1",
-                    "Use an index which is between 1 and " + vector.size() + "."
-            );
+                    "Use an index which is between 1 and " + vector.size() + ".");
         }
 
         if (vector.size() < index) {
             throw new TileApplicationError(
                     "Index " + index + " is greater than the number of elements.",
-                    "Use an index which is between 1 and " + vector.size() + "."
-            );
+                    "Use an index which is between 1 and " + vector.size() + ".");
         }
 
         // index - 1 because PhyloSpec uses 1-indexing and Java uses 0-indexing
@@ -59,6 +53,4 @@ public class IndexedTile extends AstNodeTile<Object, Expr.Index, BEASTState> {
         // we return the basic vector type
         return super.getTypeToken();
     }
-
-
 }

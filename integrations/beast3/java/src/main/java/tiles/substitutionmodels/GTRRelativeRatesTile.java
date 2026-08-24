@@ -26,9 +26,7 @@ public class GTRRelativeRatesTile extends GeneratorTile<GTR, BEASTState> {
     }
 
     @Override
-    public GTR applyTile(
-            BEASTState beastState,
-            IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    public GTR applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Simplex relativeRates = relativeRatesInput.apply(beastState, indexVariables);
         Simplex baseFrequencies = baseFrequenciesInput.apply(beastState, indexVariables);
 

@@ -2,10 +2,9 @@ package tiles.branchmodels;
 
 import beast.base.spec.evolution.branchratemodel.Base;
 import beastconfig.BEASTState;
+import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.TemplateTile;
-
-import java.util.IdentityHashMap;
 
 /// This tile matches any draw where the drawn distribution is covered with a tile producing a BEAST branch model.
 /// The branch model is then directly used as the output of this tile.
@@ -20,13 +19,11 @@ public class DrawnBranchRatesTile extends TemplateTile<Base, BEASTState> {
         return "Any branchRates ~ $branchRateDistribution";
     }
 
-    TemplateTileInput<? extends Base, BEASTState> branchRateDistributionInput = new TemplateTileInput<>(
-            "$branchRateDistribution"
-    );
+    TemplateTileInput<? extends Base, BEASTState> branchRateDistributionInput =
+            new TemplateTileInput<>("$branchRateDistribution");
 
     @Override
     protected Base applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         return this.branchRateDistributionInput.apply(beastState, indexVariables);
     }
-
 }

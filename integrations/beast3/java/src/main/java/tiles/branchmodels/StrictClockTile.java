@@ -4,11 +4,10 @@ import beast.base.evolution.tree.Tree;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.evolution.branchratemodel.StrictClockModel;
 import beast.base.spec.type.RealScalar;
+import beastconfig.BEASTState;
+import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
-import beastconfig.BEASTState;
-
-import java.util.IdentityHashMap;
 
 public class StrictClockTile extends GeneratorTile<StrictClockModel, BEASTState> {
 
@@ -30,5 +29,4 @@ public class StrictClockTile extends GeneratorTile<StrictClockModel, BEASTState>
 
         return strictClockModel;
     }
-
 }

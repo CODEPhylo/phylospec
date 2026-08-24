@@ -3,11 +3,10 @@ package tiles.sitemodels;
 import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.spec.evolution.sitemodel.SiteModel;
 import beastconfig.BEASTState;
-import org.phylospec.ast.Expr;
-import org.phylospec.tiling.tiles.TemplateTile;
-import org.phylospec.tiling.Partial;
-
 import java.util.IdentityHashMap;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.Partial;
+import org.phylospec.tiling.tiles.TemplateTile;
 
 /// This tile matches any draw where the drawn distribution is covered with a tile producing a BEAST substitution model.
 /// The substitution model is then directly used as the output of this tile.
@@ -22,13 +21,12 @@ public class DrawnSiteRatesTile extends TemplateTile<Partial<SiteModel, Substitu
         return "Any siteRates ~ $siteRateDistribution";
     }
 
-    TemplateTileInput<? extends Partial<SiteModel, SubstitutionModel>, BEASTState> siteRateDistributionInput = new TemplateTileInput<>(
-            "$siteRateDistribution"
-    );
+    TemplateTileInput<? extends Partial<SiteModel, SubstitutionModel>, BEASTState> siteRateDistributionInput =
+            new TemplateTileInput<>("$siteRateDistribution");
 
     @Override
-    protected Partial<SiteModel, SubstitutionModel> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    protected Partial<SiteModel, SubstitutionModel> applyTile(
+            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         return this.siteRateDistributionInput.apply(beastState, indexVariables);
     }
-
 }

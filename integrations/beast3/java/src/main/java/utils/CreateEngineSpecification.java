@@ -1,13 +1,12 @@
 package utils;
 
 import beast.pkgmgmt.BEASTVersion;
-import org.phylospec.components.ComponentResolver;
-import org.phylospec.tiling.EngineSpecGenerator;
-import tiles.BeastCoreTileLibrary;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import org.phylospec.components.ComponentResolver;
+import org.phylospec.tiling.EngineSpecGenerator;
+import tiles.BeastCoreTileLibrary;
 
 /**
  * Generates the BEAST 2 engine specification and writes it to the generated folder.
@@ -16,7 +15,8 @@ public class CreateEngineSpecification {
 
     static void main() throws IOException {
         BEASTVersion beastVersion = new BEASTVersion();
-        String versionString = beastVersion.getVersion() + (beastVersion.isPrerelease() ? ("-" + beastVersion.getPrereleaseDescription()) : "");
+        String versionString = beastVersion.getVersion()
+                + (beastVersion.isPrerelease() ? ("-" + beastVersion.getPrereleaseDescription()) : "");
 
         EngineSpecGenerator.writeEngineSpecification(
                 Path.of("generated"),
@@ -26,8 +26,6 @@ public class CreateEngineSpecification {
                 versionString,
                 List.of(),
                 "Open the website and download BEAST 2 for your operating system.",
-                "https://www.beast2.org/"
-        );
+                "https://www.beast2.org/");
     }
-
 }

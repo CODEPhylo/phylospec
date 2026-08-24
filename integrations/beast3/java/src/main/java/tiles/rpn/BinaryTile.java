@@ -2,19 +2,18 @@ package tiles.rpn;
 
 import beast.base.spec.type.Tensor;
 import beastconfig.BEASTState;
-import org.phylospec.ast.AstNode;
-import org.phylospec.ast.Expr;
-import org.phylospec.lexer.TokenType;
-import org.phylospec.typeresolver.StochasticityResolver;
-import org.phylospec.typeresolver.VariableResolver;
-import org.phylospec.tiling.tiles.AstNodeTile;
-import org.phylospec.tiling.errors.FailedTilingAttempt;
-import org.phylospec.tiling.tiles.Tile;
-import org.phylospec.tiling.TypeToken;
-
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
+import org.phylospec.ast.AstNode;
+import org.phylospec.ast.Expr;
+import org.phylospec.lexer.TokenType;
+import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.tiling.tiles.AstNodeTile;
+import org.phylospec.tiling.tiles.Tile;
+import org.phylospec.typeresolver.StochasticityResolver;
+import org.phylospec.typeresolver.VariableResolver;
 
 /**
  * Tiles a binary arithmetic expression ({@code +}, {@code -}, {@code *}, {@code /}) into an
@@ -31,7 +30,12 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
     }
 
     @Override
-    public Set<Tile<?, BEASTState>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?, BEASTState>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
+    public Set<Tile<?, BEASTState>> tryToTile(
+            AstNode node,
+            Map<AstNode, Set<Tile<?, BEASTState>>> allInputTiles,
+            VariableResolver variableResolver,
+            StochasticityResolver stochasticityResolver)
+            throws FailedTilingAttempt {
         if (!(node instanceof Expr.Binary binary)) throw new FailedTilingAttempt.Irrelevant();
 
         // check if we support the operator
@@ -44,21 +48,19 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
 
     @Override
     public TypeToken<?> getTypeToken() {
-        return new TypeToken<RPNCalculationResult>() {
-        };
+        return new TypeToken<RPNCalculationResult>() {};
     }
 
     public static class RpnRpn extends BinaryTile {
 
-        AstNodeTileInput<RPNCalculationResult, Expr.Binary, BEASTState> leftInput = new AstNodeTileInput<>(
-                "leftExpression", expr -> expr.left
-        );
-        AstNodeTileInput<RPNCalculationResult, Expr.Binary, BEASTState> rightInput = new AstNodeTileInput<>(
-                "rightExpression", expr -> expr.right
-        );
+        AstNodeTileInput<RPNCalculationResult, Expr.Binary, BEASTState> leftInput =
+                new AstNodeTileInput<>("leftExpression", expr -> expr.left);
+        AstNodeTileInput<RPNCalculationResult, Expr.Binary, BEASTState> rightInput =
+                new AstNodeTileInput<>("rightExpression", expr -> expr.right);
 
         @Override
-        protected RPNCalculationResult applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+        protected RPNCalculationResult applyTile(
+                BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
             RPNCalculationResult leftRpn = this.leftInput.apply(beastState, indexVariables);
             RPNCalculationResult rightRpn = this.rightInput.apply(beastState, indexVariables);
 
@@ -70,15 +72,14 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
 
     public static class RpnReal extends BinaryTile {
 
-        AstNodeTileInput<RPNCalculationResult, Expr.Binary, BEASTState> leftInput = new AstNodeTileInput<>(
-                "leftExpression", expr -> expr.left
-        );
-        AstNodeTileInput<? extends Tensor<?, ?>, Expr.Binary, BEASTState> rightInput = new AstNodeTileInput<>(
-                "rightExpression", expr -> expr.right
-        );
+        AstNodeTileInput<RPNCalculationResult, Expr.Binary, BEASTState> leftInput =
+                new AstNodeTileInput<>("leftExpression", expr -> expr.left);
+        AstNodeTileInput<? extends Tensor<?, ?>, Expr.Binary, BEASTState> rightInput =
+                new AstNodeTileInput<>("rightExpression", expr -> expr.right);
 
         @Override
-        protected RPNCalculationResult applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+        protected RPNCalculationResult applyTile(
+                BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
             RPNCalculationResult leftRpn = this.leftInput.apply(beastState, indexVariables);
 
             Tensor<?, ?> right = this.rightInput.apply(beastState, indexVariables);
@@ -92,15 +93,14 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
 
     public static class RealRpn extends BinaryTile {
 
-        AstNodeTileInput<? extends Tensor<?, ?>, Expr.Binary, BEASTState> leftInput = new AstNodeTileInput<>(
-                "leftExpression", expr -> expr.left
-        );
-        AstNodeTileInput<RPNCalculationResult, Expr.Binary, BEASTState> rightInput = new AstNodeTileInput<>(
-                "rightExpression", expr -> expr.right
-        );
+        AstNodeTileInput<? extends Tensor<?, ?>, Expr.Binary, BEASTState> leftInput =
+                new AstNodeTileInput<>("leftExpression", expr -> expr.left);
+        AstNodeTileInput<RPNCalculationResult, Expr.Binary, BEASTState> rightInput =
+                new AstNodeTileInput<>("rightExpression", expr -> expr.right);
 
         @Override
-        protected RPNCalculationResult applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+        protected RPNCalculationResult applyTile(
+                BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
             Tensor<?, ?> left = this.leftInput.apply(beastState, indexVariables);
             RPNCalculationResult leftRpn = RPNCalculationResult.from(left, beastState);
 
@@ -114,15 +114,14 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
 
     public static class RealReal extends BinaryTile {
 
-        AstNodeTileInput<? extends Tensor<?, ?>, Expr.Binary, BEASTState> leftInput = new AstNodeTileInput<>(
-                "leftExpression", expr -> expr.left
-        );
-        AstNodeTileInput<? extends Tensor<?, ?>, Expr.Binary, BEASTState> rightInput = new AstNodeTileInput<>(
-                "rightExpression", expr -> expr.right
-        );
+        AstNodeTileInput<? extends Tensor<?, ?>, Expr.Binary, BEASTState> leftInput =
+                new AstNodeTileInput<>("leftExpression", expr -> expr.left);
+        AstNodeTileInput<? extends Tensor<?, ?>, Expr.Binary, BEASTState> rightInput =
+                new AstNodeTileInput<>("rightExpression", expr -> expr.right);
 
         @Override
-        protected RPNCalculationResult applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+        protected RPNCalculationResult applyTile(
+                BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
             Tensor<?, ?> left = this.leftInput.apply(beastState, indexVariables);
             RPNCalculationResult leftRpn = RPNCalculationResult.from(left, beastState);
 
@@ -134,5 +133,4 @@ public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.
             return RPNCalculationResult.combine(operation, leftRpn, rightRpn);
         }
     }
-
 }

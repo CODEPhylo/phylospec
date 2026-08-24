@@ -2,13 +2,12 @@ package tiles.observations;
 
 import beast.base.inference.StateNode;
 import beastconfig.BEASTState;
+import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
-import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.tiles.TemplateTile;
 import tiling.UnboundDistribution;
-
-import java.util.IdentityHashMap;
 
 public class ObservedAsTile extends TemplateTile<StateNode, BEASTState> {
 
@@ -17,12 +16,14 @@ public class ObservedAsTile extends TemplateTile<StateNode, BEASTState> {
         return "Any x ~ $distribution observed as $observation";
     }
 
-    TemplateTileInput<UnboundDistribution<? extends StateNode, ?>, BEASTState> distributionInput = new TemplateTileInput<>("$distribution");
+    TemplateTileInput<UnboundDistribution<? extends StateNode, ?>, BEASTState> distributionInput =
+            new TemplateTileInput<>("$distribution");
     TemplateTileInput<? extends StateNode, BEASTState> observationInput = new TemplateTileInput<>("$observation");
 
     @Override
     public StateNode applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        UnboundDistribution<? extends StateNode, ?> evaluatedDistribution = this.distributionInput.apply(beastState, indexVariables);
+        UnboundDistribution<? extends StateNode, ?> evaluatedDistribution =
+                this.distributionInput.apply(beastState, indexVariables);
         StateNode observedStateNode = this.observationInput.apply(beastState, indexVariables);
 
         // find the ID
@@ -50,5 +51,4 @@ public class ObservedAsTile extends TemplateTile<StateNode, BEASTState> {
     public TypeToken<?> getTypeToken() {
         return this.observationInput.getTypeToken();
     }
-
 }
