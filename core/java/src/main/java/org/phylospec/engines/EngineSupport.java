@@ -38,7 +38,7 @@ public final class EngineSupport {
     /* support methods */
 
     /**
-     * Returns how well the engines implement every generator the given model calls.
+     * Returns how well the engines implement every generator the given model calls. Stochasticities are ignored.
      */
     public ModelSupport supports(List<Stmt> model) {
         // init StochasticityResolver
@@ -69,7 +69,7 @@ public final class EngineSupport {
     /**
      * Returns how well the engines implement the given generator. Full support means an engine
      * offers every declared argument, including the ones that are not required, as any model may
-     * use them.
+     * use them. Stochasticities are ignored.
      */
     public GeneratorSupport supports(Generator generator) {
         List<String> declaredArguments =
@@ -101,7 +101,7 @@ public final class EngineSupport {
     /**
      * Returns how well the engines implement the generator called by the given call, with the
      * arguments the call actually passes. The stochasticity of the arguments is not taken into
-     * account, as it cannot be told from a call on its own.
+     * account, as it cannot be told from a call on its own. Stochasticities are ignored.
      */
     public CallSupport supports(Expr.Call call) {
         return supports(call, null);
@@ -110,7 +110,7 @@ public final class EngineSupport {
     /**
      * Returns how well the engines implement the generator called by the given call, with the
      * arguments the call actually passes and with the stochasticity the given resolver assigns to
-     * them. The resolver has to have walked the whole model the call belongs to.
+     * them.
      */
     public CallSupport supports(Expr.Call call, StochasticityResolver stochasticityResolver) {
         if (noEngineLoaded) {

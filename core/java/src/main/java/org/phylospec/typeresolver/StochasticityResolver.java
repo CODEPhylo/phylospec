@@ -15,7 +15,7 @@ public class StochasticityResolver implements AstVisitor<Stochasticity, Stochast
     private final Set<String> scopedIndexVariables;
 
     public StochasticityResolver() {
-        this.stochasticityMap = new HashMap<>();
+        this.stochasticityMap = new IdentityHashMap<>();
         this.variableStochasticityMap = new HashMap<>();
         this.scopedIndexVariables = new HashSet<>();
     }
