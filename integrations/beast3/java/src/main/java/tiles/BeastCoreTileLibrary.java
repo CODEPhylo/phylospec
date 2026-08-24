@@ -1,27 +1,26 @@
 package tiles;
 
 import beastconfig.BEASTState;
+import java.util.ArrayList;
+import java.util.List;
 import org.phylospec.tiling.TileLibrary;
 import org.phylospec.tiling.tiles.CandidateTile;
-import tiles.misc.RangeTile;
-import tiles.rpn.BinaryTile;
-import tiles.rpn.ExpRPNTile;
-import tiles.rpn.LogRPNTile;
-import tiles.rpn.RPNAssignmentTile;
 import tiles.branchmodels.*;
+import tiles.distributions.*;
 import tiles.errors.*;
 import tiles.functions.*;
 import tiles.input.*;
 import tiles.mcmc.*;
-import tiles.observations.*;
-import tiles.sitemodels.*;
-import tiles.trees.*;
-import tiles.distributions.*;
 import tiles.misc.*;
+import tiles.misc.RangeTile;
+import tiles.observations.*;
+import tiles.rpn.BinaryTile;
+import tiles.rpn.ExpRPNTile;
+import tiles.rpn.LogRPNTile;
+import tiles.rpn.RPNAssignmentTile;
+import tiles.sitemodels.*;
 import tiles.substitutionmodels.*;
-
-import java.util.ArrayList;
-import java.util.List;
+import tiles.trees.*;
 
 /**
  * This class loads all known tiles into a static field.

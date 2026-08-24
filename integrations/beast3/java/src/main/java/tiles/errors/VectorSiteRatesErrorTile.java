@@ -5,14 +5,13 @@ import beast.base.evolution.tree.Tree;
 import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import beastconfig.BEASTState;
+import java.util.IdentityHashMap;
+import java.util.List;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.tiling.tiles.TilePriority;
 import tiling.UnboundDistribution;
-
-import java.util.IdentityHashMap;
-import java.util.List;
 
 /**
  * This tile applies when a user specifies site rates using a vector instead of 'DiscreteGammaInv'. This is currently
@@ -45,28 +44,28 @@ public class VectorSiteRatesErrorTile extends TemplateTile<UnboundDistribution<A
                           branchRates=$$branchRates,
                           siteRates=$siteRates
                         )
-                        """
-        );
+                        """);
     }
 
     TemplateTileInput<Tree, BEASTState> treeInput = new TemplateTileInput<>("$tree");
     TemplateTileInput<?, BEASTState> substitutionModelInput = new TemplateTileInput<>("$substitutionModel", true);
     TemplateTileInput<?, BEASTState> branchRatesInput = new TemplateTileInput<>("$$branchRates", false);
-    TemplateTileInput<? extends RealVectorParam<?>, BEASTState> siteRatesInput = new TemplateTileInput<>("$siteRates", true);
+    TemplateTileInput<? extends RealVectorParam<?>, BEASTState> siteRatesInput =
+            new TemplateTileInput<>("$siteRates", true);
 
     @Override
-    public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    public UnboundDistribution<Alignment, TreeLikelihood> applyTile(
+            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         throw new TileApplicationError(
                 this.rootNode,
                 "Explicit site rates are not supported by BEAST 2.8.",
                 "Use 'DiscreteGammaInv' to specify varying site rates, or don't specify any site rates for constant rates.",
-                List.of("Vector<Rate> siteRates ~ DiscreteGammaInv(shape=1.0, numCategories=4, invariantProportion=0.1, numSites=numSites(data))")
-        );
+                List.of(
+                        "Vector<Rate> siteRates ~ DiscreteGammaInv(shape=1.0, numCategories=4, invariantProportion=0.1, numSites=numSites(data))"));
     }
 
     @Override
     public TilePriority getPriority() {
         return TilePriority.ERROR;
     }
-
 }

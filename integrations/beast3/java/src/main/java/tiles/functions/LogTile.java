@@ -5,13 +5,12 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
-import org.phylospec.ast.Expr;
-import org.phylospec.typeresolver.Stochasticity;
 import beastconfig.BEASTState;
-import org.phylospec.tiling.tiles.GeneratorTile;
-
 import java.util.IdentityHashMap;
 import java.util.Set;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.typeresolver.Stochasticity;
 
 public class LogTile extends GeneratorTile<RealScalarParam<Real>, BEASTState> {
 
@@ -20,15 +19,14 @@ public class LogTile extends GeneratorTile<RealScalarParam<Real>, BEASTState> {
         return "log";
     }
 
-    GeneratorTileInput<RealScalarParam<? extends PositiveReal>, BEASTState> xInput = new GeneratorTileInput<>(
-            "x", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
-    );
-    GeneratorTileInput<IntScalarParam<? extends PositiveInt>, BEASTState> basisInput = new GeneratorTileInput<>(
-            "base", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
-    );
+    GeneratorTileInput<RealScalarParam<? extends PositiveReal>, BEASTState> xInput =
+            new GeneratorTileInput<>("x", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
+    GeneratorTileInput<IntScalarParam<? extends PositiveInt>, BEASTState> basisInput =
+            new GeneratorTileInput<>("base", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
-    public RealScalarParam<Real> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    public RealScalarParam<Real> applyTile(
+            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalarParam<? extends PositiveReal> x = this.xInput.apply(beastState, indexVariables);
         IntScalarParam<? extends PositiveInt> basis = this.basisInput.apply(beastState, indexVariables);
 
@@ -40,5 +38,4 @@ public class LogTile extends GeneratorTile<RealScalarParam<Real>, BEASTState> {
             return new RealScalarParam<>(Math.log(x.get()) / Math.log(basis.get()), Real.INSTANCE);
         }
     }
-
 }

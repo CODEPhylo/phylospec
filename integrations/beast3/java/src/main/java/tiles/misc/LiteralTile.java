@@ -4,19 +4,18 @@ import beast.base.spec.domain.*;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beastconfig.BEASTState;
-import org.phylospec.ast.AstNode;
-import org.phylospec.ast.Expr;
-import org.phylospec.typeresolver.StochasticityResolver;
-import org.phylospec.typeresolver.VariableResolver;
-import org.phylospec.tiling.errors.FailedTilingAttempt;
-import org.phylospec.tiling.tiles.Tile;
-import org.phylospec.tiling.TypeToken;
-import org.phylospec.tiling.tiles.AstNodeTile;
-
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
+import org.phylospec.ast.AstNode;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.tiling.tiles.AstNodeTile;
+import org.phylospec.tiling.tiles.Tile;
+import org.phylospec.typeresolver.StochasticityResolver;
+import org.phylospec.typeresolver.VariableResolver;
 
 /**
  * This tile matches any literals (e.g. 10, 5.0, "hallo").
@@ -29,8 +28,7 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BEASTState> {
     private final T value;
 
     public LiteralTile() {
-        this(new TypeToken<>() {
-        }, null, null);
+        this(new TypeToken<>() {}, null, null);
     }
 
     public LiteralTile(TypeToken<T> typeToken, T value, Expr.Literal astNode) {
@@ -40,41 +38,46 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BEASTState> {
     }
 
     @Override
-    public Set<Tile<?, BEASTState>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?, BEASTState>>> allInputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
+    public Set<Tile<?, BEASTState>> tryToTile(
+            AstNode node,
+            Map<AstNode, Set<Tile<?, BEASTState>>> allInputTiles,
+            VariableResolver variableResolver,
+            StochasticityResolver stochasticityResolver)
+            throws FailedTilingAttempt {
         if (!(node instanceof Expr.Literal literal)) throw new FailedTilingAttempt.Irrelevant();
 
         // depending on the actual literal, we return different tiles
 
         if (literal.value instanceof String string) {
-            return Set.of(new LiteralTile<String>(new TypeToken<String>() {
-            }, string, literal));
+            return Set.of(new LiteralTile<String>(new TypeToken<String>() {}, string, literal));
         }
 
         if (literal.value instanceof Integer number) {
             Set<Tile<?, BEASTState>> tiles = new HashSet<>();
 
-            tiles.add(new LiteralTile<>(new TypeToken<>() {
-            }, number, literal));
-            tiles.add(new LiteralTile<>(new TypeToken<>() {
-            }, number.doubleValue(), literal));
+            tiles.add(new LiteralTile<>(new TypeToken<>() {}, number, literal));
+            tiles.add(new LiteralTile<>(new TypeToken<>() {}, number.doubleValue(), literal));
 
-            tiles.add(new LiteralTile<>(new TypeToken<>() {
-            }, new IntScalarParam<>(number, Int.INSTANCE), literal));
-            tiles.add(new LiteralTile<>(new TypeToken<>() {
-            }, new RealScalarParam<>(number.doubleValue(), Real.INSTANCE), literal));
+            tiles.add(new LiteralTile<>(new TypeToken<>() {}, new IntScalarParam<>(number, Int.INSTANCE), literal));
+            tiles.add(new LiteralTile<>(
+                    new TypeToken<>() {}, new RealScalarParam<>(number.doubleValue(), Real.INSTANCE), literal));
 
             if (0 <= number) {
-                tiles.add(new LiteralTile<>(new TypeToken<>() {
-                }, new IntScalarParam<>(number, NonNegativeInt.INSTANCE), literal));
-                tiles.add(new LiteralTile<>(new TypeToken<>() {
-                }, new RealScalarParam<>(number.doubleValue(), NonNegativeReal.INSTANCE), literal));
+                tiles.add(new LiteralTile<>(
+                        new TypeToken<>() {}, new IntScalarParam<>(number, NonNegativeInt.INSTANCE), literal));
+                tiles.add(new LiteralTile<>(
+                        new TypeToken<>() {},
+                        new RealScalarParam<>(number.doubleValue(), NonNegativeReal.INSTANCE),
+                        literal));
             }
 
             if (0 < number) {
-                tiles.add(new LiteralTile<>(new TypeToken<>() {
-                }, new IntScalarParam<>(number, PositiveInt.INSTANCE), literal));
-                tiles.add(new LiteralTile<>(new TypeToken<>() {
-                }, new RealScalarParam<>(number.doubleValue(), PositiveReal.INSTANCE), literal));
+                tiles.add(new LiteralTile<>(
+                        new TypeToken<>() {}, new IntScalarParam<>(number, PositiveInt.INSTANCE), literal));
+                tiles.add(new LiteralTile<>(
+                        new TypeToken<>() {},
+                        new RealScalarParam<>(number.doubleValue(), PositiveReal.INSTANCE),
+                        literal));
             }
 
             return tiles;
@@ -83,25 +86,23 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BEASTState> {
         if (literal.value instanceof Double number) {
             Set<Tile<?, BEASTState>> tiles = new HashSet<>();
 
-            tiles.add(new LiteralTile<>(new TypeToken<>() {
-            }, number, literal));
+            tiles.add(new LiteralTile<>(new TypeToken<>() {}, number, literal));
 
-            tiles.add(new LiteralTile<>(new TypeToken<>() {
-            }, new RealScalarParam<>(number, Real.INSTANCE), literal));
+            tiles.add(new LiteralTile<>(new TypeToken<>() {}, new RealScalarParam<>(number, Real.INSTANCE), literal));
 
             if (0 <= number) {
-                tiles.add(new LiteralTile<>(new TypeToken<>() {
-                }, new RealScalarParam<>(number, NonNegativeReal.INSTANCE), literal));
+                tiles.add(new LiteralTile<>(
+                        new TypeToken<>() {}, new RealScalarParam<>(number, NonNegativeReal.INSTANCE), literal));
             }
 
             if (0 < number) {
-                tiles.add(new LiteralTile<>(new TypeToken<>() {
-                }, new RealScalarParam<>(number, PositiveReal.INSTANCE), literal));
+                tiles.add(new LiteralTile<>(
+                        new TypeToken<>() {}, new RealScalarParam<>(number, PositiveReal.INSTANCE), literal));
             }
 
             if (0 < number && number < 1) {
-                tiles.add(new LiteralTile<>(new TypeToken<>() {
-                }, new RealScalarParam<>(number, UnitInterval.INSTANCE), literal));
+                tiles.add(new LiteralTile<>(
+                        new TypeToken<>() {}, new RealScalarParam<>(number, UnitInterval.INSTANCE), literal));
             }
 
             return tiles;
@@ -122,7 +123,6 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BEASTState> {
 
     @Override
     public Tile<?, BEASTState> createInstance() {
-        return new LiteralTile<>(new TypeToken<>() {
-        }, null, null);
+        return new LiteralTile<>(new TypeToken<>() {}, null, null);
     }
 }

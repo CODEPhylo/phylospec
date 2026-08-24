@@ -1,12 +1,11 @@
 package tiles.mcmc;
 
+import beast.base.core.BEASTObject;
+import beastconfig.BEASTState;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
-
-import beast.base.core.BEASTObject;
-import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.tiles.TemplateTile;

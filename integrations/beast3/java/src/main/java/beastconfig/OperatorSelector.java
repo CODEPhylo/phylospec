@@ -18,7 +18,6 @@ import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.spec.inference.parameter.SimplexParam;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -81,10 +80,7 @@ public class OperatorSelector {
 
         if (stateNode instanceof SimplexParam simplex) {
             DeltaExchangeOperator deltaExchangeOperator = new DeltaExchangeOperator();
-            beastState.setInput(
-                    deltaExchangeOperator,
-                    deltaExchangeOperator.rvparameterInput,
-                    simplex);
+            beastState.setInput(deltaExchangeOperator, deltaExchangeOperator.rvparameterInput, simplex);
             beastState.setInput(deltaExchangeOperator, deltaExchangeOperator.deltaInput, 0.01);
             beastState.setInput(deltaExchangeOperator, deltaExchangeOperator.m_pWeight, 5.0);
             beastState.addOperator(deltaExchangeOperator, stateNode);
@@ -117,5 +113,4 @@ public class OperatorSelector {
 
         return operators;
     }
-
 }

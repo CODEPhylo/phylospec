@@ -2,15 +2,14 @@ package mcmc;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.util.*;
-
 import beast.base.core.BEASTObject;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Logger;
 import beastconfig.BEASTState;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.*;
 import org.junit.jupiter.api.Test;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
@@ -28,8 +27,7 @@ import tiles.BeastCoreTileLibrary;
 /// [beastconfig.LoggerSelector] builds from them.
 public class LoggerTest {
 
-    private static final String MODEL =
-            """
+    private static final String MODEL = """
             Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
             Rate birthRate ~ LogNormal(logMean=1.0, logSd=0.5)
             Tree tree ~ Yule(birthRate=birthRate, taxa=taxa(data))
@@ -59,10 +57,7 @@ public class LoggerTest {
 
     @Test
     public void testTreeLoggerWithoutTreeLogsAllLoggableTrees() {
-        Built built =
-                tile(
-                        MODEL
-                                + """
+        Built built = tile(MODEL + """
                                 mcmc {
                                     Logger logger = treeLogger(logEvery=500, file="trees.trees")
                                 }
@@ -79,10 +74,7 @@ public class LoggerTest {
 
     @Test
     public void testTreeLoggerWithExplicitTree() {
-        Built built =
-                tile(
-                        MODEL
-                                + """
+        Built built = tile(MODEL + """
                                 mcmc {
                                     Logger logger = treeLogger(logEvery=500, file="trees.trees", tree=tree)
                                 }
@@ -98,10 +90,7 @@ public class LoggerTest {
 
     @Test
     public void testTreeLoggerWithoutTreeFailsWhenTheModelHasMultipleTrees() {
-        Built built =
-                tile(
-                        MODEL
-                                + """
+        Built built = tile(MODEL + """
                                 Tree otherTree ~ Yule(birthRate=birthRate, taxa=taxa(data))
                                 mcmc {
                                     Logger logger = treeLogger(logEvery=500, file="trees.trees")
@@ -115,10 +104,7 @@ public class LoggerTest {
 
     @Test
     public void testExplicitScreenLoggerReplacesTheDefaultOne() {
-        Built built =
-                tile(
-                        MODEL
-                                + """
+        Built built = tile(MODEL + """
                                 mcmc {
                                     Logger logger = screenLogger(logEvery=7)
                                 }
@@ -153,10 +139,7 @@ public class LoggerTest {
 
     @Test
     public void testFileLoggerWithExplicitParameters() {
-        Built built =
-                tile(
-                        MODEL
-                                + """
+        Built built = tile(MODEL + """
                                 mcmc {
                                     Logger logger = fileLogger(logEvery=100, file="out.log", parameters=[birthRate])
                                 }
@@ -180,8 +163,7 @@ public class LoggerTest {
         Built built = tile(MODEL);
 
         List<Logger> first = buildLoggers(built);
-        List<Logger> second =
-                built.state().buildLoggers(built.posterior(), built.prior(), built.likelihood());
+        List<Logger> second = built.state().buildLoggers(built.posterior(), built.prior(), built.likelihood());
 
         assertSame(first, second);
         assertEquals(1, built.state().screenLoggerSpecs.size());
@@ -206,10 +188,7 @@ public class LoggerTest {
         stochasticityResolver.visitStatements(statements);
 
         EvaluateTiles<BEASTState> evaluateTiles =
-                new EvaluateTiles<>(
-                        new BeastCoreTileLibrary().getTiles(),
-                        variableResolver,
-                        stochasticityResolver);
+                new EvaluateTiles<>(new BeastCoreTileLibrary().getTiles(), variableResolver, stochasticityResolver);
 
         BEASTState state = new BEASTState("test");
 
@@ -217,9 +196,7 @@ public class LoggerTest {
         System.setOut(new PrintStream(OutputStream.nullOutputStream()));
         try {
             List<Tile<?, BEASTState>> bestTilings = evaluateTiles.getBestTiling(statements);
-            assertTrue(
-                    bestTilings.stream().noneMatch(Objects::isNull),
-                    "The source could not be tiled: " + source);
+            assertTrue(bestTilings.stream().noneMatch(Objects::isNull), "The source could not be tiled: " + source);
 
             for (Tile<?, BEASTState> tile : bestTilings) {
                 tile.apply(state, new IdentityHashMap<>());

@@ -1,10 +1,9 @@
 package tiles.mcmc;
 
-import java.util.IdentityHashMap;
-import java.util.Set;
-
 import beast.base.evolution.tree.Tree;
 import beastconfig.BEASTState;
+import java.util.IdentityHashMap;
+import java.util.Set;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import org.phylospec.tiling.tiles.TemplateTile;

@@ -10,19 +10,33 @@ module org.phylospec.beast3 {
     exports runner;
 
     // we have to open the tiles to the core such that the tiling machinery can use reflection
-    opens tiles to org.phylospec.core;
-    opens tiles.branchmodels to org.phylospec.core;
-    opens tiles.distributions to org.phylospec.core;
-    opens tiles.errors to org.phylospec.core;
-    opens tiles.functions to org.phylospec.core;
-    opens tiles.input to org.phylospec.core;
-    opens tiles.mcmc to org.phylospec.core;
-    opens tiles.misc to org.phylospec.core;
-    opens tiles.observations to org.phylospec.core;
-    opens tiles.rpn to org.phylospec.core;
-    opens tiles.sitemodels to org.phylospec.core;
-    opens tiles.substitutionmodels to org.phylospec.core;
-    opens tiles.trees to org.phylospec.core;
+    opens tiles to
+            org.phylospec.core;
+    opens tiles.branchmodels to
+            org.phylospec.core;
+    opens tiles.distributions to
+            org.phylospec.core;
+    opens tiles.errors to
+            org.phylospec.core;
+    opens tiles.functions to
+            org.phylospec.core;
+    opens tiles.input to
+            org.phylospec.core;
+    opens tiles.mcmc to
+            org.phylospec.core;
+    opens tiles.misc to
+            org.phylospec.core;
+    opens tiles.observations to
+            org.phylospec.core;
+    opens tiles.rpn to
+            org.phylospec.core;
+    opens tiles.sitemodels to
+            org.phylospec.core;
+    opens tiles.substitutionmodels to
+            org.phylospec.core;
+    opens tiles.trees to
+            org.phylospec.core;
 
-    provides org.phylospec.tiling.TileLibrary with tiles.BeastCoreTileLibrary;
+    provides org.phylospec.tiling.TileLibrary with
+            tiles.BeastCoreTileLibrary;
 }

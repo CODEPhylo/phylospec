@@ -5,15 +5,15 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.LogNormal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
-import org.phylospec.ast.Expr;
-import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import beastconfig.OperatorSelector;
+import java.util.IdentityHashMap;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import tiling.BoundDistribution;
 
-import java.util.IdentityHashMap;
-
-public class LogNormalRealSpaceTile extends GeneratorTile<BoundDistribution<RealScalarParam<PositiveReal>, LogNormal>, BEASTState> {
+public class LogNormalRealSpaceTile
+        extends GeneratorTile<BoundDistribution<RealScalarParam<PositiveReal>, LogNormal>, BEASTState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
@@ -24,7 +24,8 @@ public class LogNormalRealSpaceTile extends GeneratorTile<BoundDistribution<Real
     GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> logSdInput = new GeneratorTileInput<>("logSd");
 
     @Override
-    public BoundDistribution<RealScalarParam<PositiveReal>, LogNormal> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    public BoundDistribution<RealScalarParam<PositiveReal>, LogNormal> applyTile(
+            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<Real> mean = this.meanInput.apply(beastState, indexVariables);
         RealScalar<PositiveReal> logSd = this.logSdInput.apply(beastState, indexVariables);
 
@@ -39,8 +40,6 @@ public class LogNormalRealSpaceTile extends GeneratorTile<BoundDistribution<Real
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
-                OperatorSelector::getDefaultOperators
-        );
+                OperatorSelector::getDefaultOperators);
     }
-
 }

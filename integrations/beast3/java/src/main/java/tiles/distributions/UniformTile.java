@@ -4,13 +4,12 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.Uniform;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
-import org.phylospec.ast.Expr;
-import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import beastconfig.OperatorSelector;
-import tiling.BoundDistribution;
-
 import java.util.IdentityHashMap;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import tiling.BoundDistribution;
 
 public class UniformTile extends GeneratorTile<BoundDistribution<RealScalarParam<Real>, Uniform>, BEASTState> {
 
@@ -23,7 +22,8 @@ public class UniformTile extends GeneratorTile<BoundDistribution<RealScalarParam
     GeneratorTileInput<RealScalar<Real>, BEASTState> upperInput = new GeneratorTileInput<>("upper");
 
     @Override
-    public BoundDistribution<RealScalarParam<Real>, Uniform> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    public BoundDistribution<RealScalarParam<Real>, Uniform> applyTile(
+            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<Real> lower = this.lowerInput.apply(beastState, indexVariables);
         RealScalar<Real> upper = this.upperInput.apply(beastState, indexVariables);
 
@@ -37,8 +37,6 @@ public class UniformTile extends GeneratorTile<BoundDistribution<RealScalarParam
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
-                OperatorSelector::getDefaultOperators
-        );
+                OperatorSelector::getDefaultOperators);
     }
-
 }

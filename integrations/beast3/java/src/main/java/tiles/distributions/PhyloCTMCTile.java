@@ -10,12 +10,11 @@ import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beastconfig.BEASTState;
-import org.phylospec.ast.Expr;
-import org.phylospec.tiling.tiles.GeneratorTile;
-import org.phylospec.tiling.Partial;
-import tiling.UnboundDistribution;
-
 import java.util.IdentityHashMap;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.Partial;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import tiling.UnboundDistribution;
 
 public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, TreeLikelihood>, BEASTState> {
 
@@ -25,22 +24,27 @@ public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, 
     }
 
     GeneratorTileInput<Tree, BEASTState> treeInput = new GeneratorTileInput<>("tree");
-    GeneratorTileInput<SubstitutionModel, BEASTState> substitutionModelInput = new GeneratorTileInput<>("qMatrix", true);
+    GeneratorTileInput<SubstitutionModel, BEASTState> substitutionModelInput =
+            new GeneratorTileInput<>("qMatrix", true);
     GeneratorTileInput<Base, BEASTState> branchRateModelInput = new GeneratorTileInput<>("branchRates", false);
-    GeneratorTileInput<Partial<SiteModel, SubstitutionModel>, BEASTState> partialSiteRateModel = new GeneratorTileInput<>("siteRates", false);
+    GeneratorTileInput<Partial<SiteModel, SubstitutionModel>, BEASTState> partialSiteRateModel =
+            new GeneratorTileInput<>("siteRates", false);
 
     @Override
-    public UnboundDistribution<Alignment, TreeLikelihood> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    public UnboundDistribution<Alignment, TreeLikelihood> applyTile(
+            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Tree tree = this.treeInput.apply(beastState, indexVariables);
         SubstitutionModel substitutionModel = this.substitutionModelInput.apply(beastState, indexVariables);
         Base branchRateModel = this.branchRateModelInput.apply(beastState, indexVariables);
-        Partial<SiteModel, SubstitutionModel> partialSiteModel = this.partialSiteRateModel.apply(beastState, indexVariables);
+        Partial<SiteModel, SubstitutionModel> partialSiteModel =
+                this.partialSiteRateModel.apply(beastState, indexVariables);
 
         // initialize clock model
 
         if (branchRateModel == null) {
             branchRateModel = new StrictClockModel();
-            beastState.setInput(branchRateModel, branchRateModel.meanRateInput, new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+            beastState.setInput(
+                    branchRateModel, branchRateModel.meanRateInput, new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
         }
 
         // initialize site model
@@ -61,9 +65,6 @@ public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, 
         beastState.setInput(treeLikelihood, treeLikelihood.branchRateModelInput, branchRateModel);
 
         return new UnboundDistribution<>(
-                treeLikelihood,
-                data -> beastState.setInput(treeLikelihood, treeLikelihood.dataInput, data)
-        );
+                treeLikelihood, data -> beastState.setInput(treeLikelihood, treeLikelihood.dataInput, data));
     }
-
 }

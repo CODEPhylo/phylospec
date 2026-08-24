@@ -1,21 +1,8 @@
 package tiling;
 
-import beastconfig.BEASTState;
-import org.phylospec.tiling.EvaluateTiles;
-import org.phylospec.tiling.errors.TileApplicationError;
-import org.phylospec.tiling.tiles.Tile;
-import tiles.BeastCoreTileLibrary;
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.TestFactory;
-import org.phylospec.ast.Stmt;
-import org.phylospec.ast.transformers.EvaluateLiterals;
-import org.phylospec.ast.transformers.RemoveGroupings;
-import org.phylospec.lexer.Lexer;
-import org.phylospec.lexer.Token;
-import org.phylospec.parser.Parser;
-import org.phylospec.typeresolver.StochasticityResolver;
-import org.phylospec.typeresolver.VariableResolver;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import beastconfig.BEASTState;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -26,9 +13,20 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
+import org.phylospec.ast.Stmt;
+import org.phylospec.ast.transformers.EvaluateLiterals;
+import org.phylospec.ast.transformers.RemoveGroupings;
+import org.phylospec.lexer.Lexer;
+import org.phylospec.lexer.Token;
+import org.phylospec.parser.Parser;
+import org.phylospec.tiling.EvaluateTiles;
+import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.tiles.Tile;
+import org.phylospec.typeresolver.StochasticityResolver;
+import org.phylospec.typeresolver.VariableResolver;
+import tiles.BeastCoreTileLibrary;
 
 public class TilingScriptFilesTest {
 
@@ -46,8 +44,7 @@ public class TilingScriptFilesTest {
 
     private List<Path> findPsFiles(Path root) throws IOException {
         try (Stream<Path> paths = Files.walk(root)) {
-            return paths
-                    .filter(Files::isRegularFile)
+            return paths.filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().endsWith(".phylospec"))
                     .collect(Collectors.toList());
         }
@@ -80,7 +77,8 @@ public class TilingScriptFilesTest {
 
             List<String> actualTileLines = new ArrayList<>();
 
-            EvaluateTiles<BEASTState> evaluateTiles = new EvaluateTiles(new BeastCoreTileLibrary().getTiles(), variableResolver, stochasticityResolver);
+            EvaluateTiles<BEASTState> evaluateTiles =
+                    new EvaluateTiles(new BeastCoreTileLibrary().getTiles(), variableResolver, stochasticityResolver);
             List<Tile<?, BEASTState>> bestTilings = null;
             try {
                 bestTilings = evaluateTiles.getBestTiling(statements);
@@ -100,10 +98,12 @@ public class TilingScriptFilesTest {
 
             // apply tiles if tiling succeeded and compare application errors
 
-            List<String> expectedApplicationErrorLines = extractExpectedBlockLines(lines, "EXPECTED_APPLICATION_ERRORS");
+            List<String> expectedApplicationErrorLines =
+                    extractExpectedBlockLines(lines, "EXPECTED_APPLICATION_ERRORS");
             List<String> actualApplicationErrorLines = new ArrayList<>();
 
-            boolean tilingSucceeded = bestTilings != null && bestTilings.stream().noneMatch(t -> t == null);
+            boolean tilingSucceeded =
+                    bestTilings != null && bestTilings.stream().noneMatch(t -> t == null);
             if (tilingSucceeded) {
                 PrintStream original = System.out;
                 System.setOut(new PrintStream(OutputStream.nullOutputStream()));
@@ -119,9 +119,20 @@ public class TilingScriptFilesTest {
                 }
             }
 
-            assertEquals(expectedApplicationErrorLines.size(), actualApplicationErrorLines.size(), "Wrong number of application error lines for: " + psPath);
+            assertEquals(
+                    expectedApplicationErrorLines.size(),
+                    actualApplicationErrorLines.size(),
+                    "Wrong number of application error lines for: " + psPath);
             for (int i = 0; i < expectedApplicationErrorLines.size(); i++) {
-                assertEquals(expectedApplicationErrorLines.get(i).trim(), actualApplicationErrorLines.get(i).trim().lines().findFirst().orElseThrow(), "Application error mismatch at index " + i + " for: " + psPath);
+                assertEquals(
+                        expectedApplicationErrorLines.get(i).trim(),
+                        actualApplicationErrorLines
+                                .get(i)
+                                .trim()
+                                .lines()
+                                .findFirst()
+                                .orElseThrow(),
+                        "Application error mismatch at index " + i + " for: " + psPath);
             }
         });
     }
@@ -161,5 +172,4 @@ public class TilingScriptFilesTest {
 
         return expected;
     }
-
 }

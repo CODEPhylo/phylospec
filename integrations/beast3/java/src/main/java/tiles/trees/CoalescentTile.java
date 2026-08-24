@@ -7,14 +7,13 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
 import beast.base.spec.evolution.tree.coalescent.RandomTree;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beastconfig.BEASTState;
+import beastconfig.OperatorSelector;
+import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.input.DecoratedAlignment;
-import beastconfig.BEASTState;
-import beastconfig.OperatorSelector;
 import tiling.BoundDistribution;
-
-import java.util.IdentityHashMap;
 
 public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coalescent>, BEASTState> {
 
@@ -27,14 +26,18 @@ public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coales
     GeneratorTileInput<DecoratedAlignment, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
 
     @Override
-    public BoundDistribution<Tree, Coalescent> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    public BoundDistribution<Tree, Coalescent> applyTile(
+            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         PopulationFunction populationSize = this.populationSizeInput.apply(beastState, indexVariables);
         DecoratedAlignment taxaAlignment = this.taxaInput.apply(beastState, indexVariables);
 
         // initialize initial state
 
         ConstantPopulation populationFunction = new ConstantPopulation();
-        beastState.setInput(populationFunction, populationFunction.popSizeParameter, new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+        beastState.setInput(
+                populationFunction,
+                populationFunction.popSizeParameter,
+                new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
 
         RandomTree defaultState = new RandomTree();
         beastState.setInput(defaultState, defaultState.taxaInput, taxaAlignment.alignment());
@@ -56,8 +59,6 @@ public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coales
                 model,
                 defaultState,
                 tree -> beastState.setInput(model, model.treeInput, tree),
-                OperatorSelector::getDefaultOperators
-        );
+                OperatorSelector::getDefaultOperators);
     }
-
 }

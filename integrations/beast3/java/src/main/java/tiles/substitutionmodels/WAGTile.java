@@ -3,11 +3,10 @@ package tiles.substitutionmodels;
 import beast.base.spec.evolution.substitutionmodel.Frequencies;
 import beast.base.spec.evolution.substitutionmodel.WAG;
 import beast.base.spec.type.Simplex;
+import beastconfig.BEASTState;
+import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
-import beastconfig.BEASTState;
-
-import java.util.IdentityHashMap;
 
 public class WAGTile extends GeneratorTile<WAG, BEASTState> {
 
@@ -37,5 +36,4 @@ public class WAGTile extends GeneratorTile<WAG, BEASTState> {
 
         return wag;
     }
-
 }

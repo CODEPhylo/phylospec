@@ -5,13 +5,12 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.Cauchy;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
-import org.phylospec.ast.Expr;
-import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import beastconfig.OperatorSelector;
-import tiling.BoundDistribution;
-
 import java.util.IdentityHashMap;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import tiling.BoundDistribution;
 
 public class CauchyTile extends GeneratorTile<BoundDistribution<RealScalarParam<Real>, Cauchy>, BEASTState> {
 
@@ -24,7 +23,8 @@ public class CauchyTile extends GeneratorTile<BoundDistribution<RealScalarParam<
     GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> scaleInput = new GeneratorTileInput<>("scale");
 
     @Override
-    public BoundDistribution<RealScalarParam<Real>, Cauchy> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    public BoundDistribution<RealScalarParam<Real>, Cauchy> applyTile(
+            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<Real> location = this.locationInput.apply(beastState, indexVariables);
         RealScalar<PositiveReal> scale = this.scaleInput.apply(beastState, indexVariables);
 
@@ -38,8 +38,6 @@ public class CauchyTile extends GeneratorTile<BoundDistribution<RealScalarParam<
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
-                OperatorSelector::getDefaultOperators
-        );
+                OperatorSelector::getDefaultOperators);
     }
-
 }

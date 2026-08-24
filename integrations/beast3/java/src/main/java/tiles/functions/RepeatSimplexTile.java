@@ -5,22 +5,21 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.SimplexParam;
-import org.phylospec.ast.AstNode;
-import org.phylospec.ast.Expr;
-import org.phylospec.typeresolver.Stochasticity;
-import org.phylospec.typeresolver.StochasticityResolver;
-import org.phylospec.typeresolver.VariableResolver;
-import org.phylospec.tiling.tiles.GeneratorTile;
-import tiles.misc.AssignedArgumentTile;
 import beastconfig.BEASTState;
-import org.phylospec.tiling.errors.FailedTilingAttempt;
-import org.phylospec.tiling.tiles.Tile;
-
 import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.phylospec.ast.AstNode;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.Tile;
+import org.phylospec.typeresolver.Stochasticity;
+import org.phylospec.typeresolver.StochasticityResolver;
+import org.phylospec.typeresolver.VariableResolver;
+import tiles.misc.AssignedArgumentTile;
 
 /**
  * This tile applies to repeat(value, num) calls which produce a simplex (value*num=1.0).
@@ -32,33 +31,40 @@ public class RepeatSimplexTile extends GeneratorTile<SimplexParam, BEASTState> {
         return "repeat";
     }
 
-    GeneratorTileInput<RealScalarParam<? extends Real>, BEASTState> valueInput = new GeneratorTileInput<>(
-            "value", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
-    );
-    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>, BEASTState> numInput = new GeneratorTileInput<>(
-            "num", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
-    );
+    GeneratorTileInput<RealScalarParam<? extends Real>, BEASTState> valueInput =
+            new GeneratorTileInput<>("value", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
+    GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>, BEASTState> numInput =
+            new GeneratorTileInput<>("num", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
-    public Set<Tile<?, BEASTState>> tryToTile(AstNode node, Map<AstNode, Set<Tile<?, BEASTState>>> inputTiles, VariableResolver variableResolver, StochasticityResolver stochasticityResolver) throws FailedTilingAttempt {
+    public Set<Tile<?, BEASTState>> tryToTile(
+            AstNode node,
+            Map<AstNode, Set<Tile<?, BEASTState>>> inputTiles,
+            VariableResolver variableResolver,
+            StochasticityResolver stochasticityResolver)
+            throws FailedTilingAttempt {
         Set<Tile<?, BEASTState>> tiles = super.tryToTile(node, inputTiles, variableResolver, stochasticityResolver);
 
         // we further have to check if both value and input are literals and if value*num = 1.0
 
-        tiles = tiles.stream().filter(tile -> {
-            if (!(tile instanceof RepeatSimplexTile simplexTile)) return false;
+        tiles = tiles.stream()
+                .filter(tile -> {
+                    if (!(tile instanceof RepeatSimplexTile simplexTile)) return false;
 
-            if (!((Tile<?, BEASTState>) simplexTile.valueInput.getTile() instanceof AssignedArgumentTile valueArgTile)) return false;
-            if (!((Tile<?, BEASTState>) simplexTile.numInput.getTile() instanceof AssignedArgumentTile numArgTile)) return false;
+                    if (!((Tile<?, BEASTState>) simplexTile.valueInput.getTile()
+                            instanceof AssignedArgumentTile valueArgTile)) return false;
+                    if (!((Tile<?, BEASTState>) simplexTile.numInput.getTile()
+                            instanceof AssignedArgumentTile numArgTile)) return false;
 
-            if (!(valueArgTile.getRootNode().expression instanceof Expr.Literal valueLiteral)) return false;
-            if (!(numArgTile.getRootNode().expression instanceof Expr.Literal numLiteral)) return false;
+                    if (!(valueArgTile.getRootNode().expression instanceof Expr.Literal valueLiteral)) return false;
+                    if (!(numArgTile.getRootNode().expression instanceof Expr.Literal numLiteral)) return false;
 
-            if (!(valueLiteral.value instanceof Double value)) return false;
-            if (!(numLiteral.value instanceof Integer num)) return false;
+                    if (!(valueLiteral.value instanceof Double value)) return false;
+                    if (!(numLiteral.value instanceof Integer num)) return false;
 
-            return Math.abs(1.0 - value * num) < 1e-6;
-        }).collect(Collectors.toSet());
+                    return Math.abs(1.0 - value * num) < 1e-6;
+                })
+                .collect(Collectors.toSet());
 
         return tiles;
     }
@@ -73,5 +79,4 @@ public class RepeatSimplexTile extends GeneratorTile<SimplexParam, BEASTState> {
 
         return new SimplexParam(values);
     }
-
 }

@@ -4,13 +4,12 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.distribution.Gamma;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
-import org.phylospec.ast.Expr;
-import org.phylospec.tiling.tiles.GeneratorTile;
 import beastconfig.BEASTState;
 import beastconfig.OperatorSelector;
-import tiling.BoundDistribution;
-
 import java.util.IdentityHashMap;
+import org.phylospec.ast.Expr;
+import org.phylospec.tiling.tiles.GeneratorTile;
+import tiling.BoundDistribution;
 
 public class GammaTile extends GeneratorTile<BoundDistribution<RealScalarParam<PositiveReal>, Gamma>, BEASTState> {
 
@@ -23,7 +22,8 @@ public class GammaTile extends GeneratorTile<BoundDistribution<RealScalarParam<P
     GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> rateInput = new GeneratorTileInput<>("rate");
 
     @Override
-    public BoundDistribution<RealScalarParam<PositiveReal>, Gamma> applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    public BoundDistribution<RealScalarParam<PositiveReal>, Gamma> applyTile(
+            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<PositiveReal> shape = this.shapeInput.apply(beastState, indexVariables);
         RealScalar<PositiveReal> rate = this.rateInput.apply(beastState, indexVariables);
 
@@ -38,8 +38,6 @@ public class GammaTile extends GeneratorTile<BoundDistribution<RealScalarParam<P
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
-                OperatorSelector::getDefaultOperators
-        );
+                OperatorSelector::getDefaultOperators);
     }
-
 }
