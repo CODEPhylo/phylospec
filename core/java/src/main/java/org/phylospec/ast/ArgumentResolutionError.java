@@ -23,12 +23,12 @@ public abstract sealed class ArgumentResolutionError extends RuntimeException {
     public static final class UnknownName extends ArgumentResolutionError {
         public final Expr.Argument argument;
         public final String name;
-        public final Set<String> declaredNames;
+        public final Set<String> allowedNames;
 
-        public UnknownName(Expr.Argument argument, String name, Set<String> declaredNames) {
+        public UnknownName(Expr.Argument argument, String name, Set<String> allowedNames) {
             this.argument = argument;
             this.name = name;
-            this.declaredNames = declaredNames;
+            this.allowedNames = allowedNames;
         }
     }
 

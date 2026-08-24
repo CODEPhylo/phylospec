@@ -853,7 +853,7 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
                                         expr,
                                         "Function `" + generator.getName() + "` takes no argument named `" + e.name
                                                 + "`.",
-                                        "Do you mean '" + findClosest(e.declaredNames, e.name) + "'?");
+                                        "Do you mean '" + findClosest(e.allowedNames, e.name) + "'?");
                             case ArgumentResolutionError.MissingRequired e ->
                                 new TypeError(
                                         expr,
