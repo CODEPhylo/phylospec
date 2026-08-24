@@ -9,6 +9,7 @@ module org.phylospec.core {
     requires org.eclipse.jgit;
     requires transitive org.eclipse.lsp4j;
     requires transitive org.eclipse.lsp4j.jsonrpc;
+    requires org.phylospec.core;
 
     exports org.phylospec;
     exports org.phylospec.ast;
