@@ -1,0 +1,11 @@
+PositiveReal base = 2.0
+Real r = log(base)
+
+// EXPECT AST
+// (AS PositiveReal base 2.0)
+// (AS Real r (CA log (AA null base)))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Function `log` takes the required argument `x`.
+// EXPECT TYPE_ERRORS

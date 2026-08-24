@@ -3,6 +3,7 @@ package org.phylospec.tiling.tiles;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.phylospec.ast.ArgumentResolutionError;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
@@ -55,24 +56,37 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
         Map<String, TileInput<?, S>> expectedInputsByArgument =
                 expectedInputs.stream().collect(Collectors.toMap(TileInput::getKey, x -> x));
 
+        List<Expr.Call.Parameter> expectedInputParameters = expectedInputs.stream()
+                .map(x -> new Expr.Call.Parameter(x.getKey(), x.isRequired()))
+                .toList();
+
+        // we resolve the given arguments by name using the expected inputs
+
+        Map<String, Expr.Argument> argumentsByName;
+        try {
+            argumentsByName = call.resolveArgumentNames(expectedInputParameters);
+        } catch (ArgumentResolutionError.UnknownName e) {
+            throw new FailedTilingAttempt.Rejected(
+                    "You cannot pass a value to the '" + e.name + "' argument to run this.");
+        } catch (ArgumentResolutionError.MissingRequired e) {
+            throw new FailedTilingAttempt.Rejected(
+                    "Your engine expects you to provide a value for the '" + e.name + "' argument.");
+        } catch (ArgumentResolutionError.MissingName e) {
+            throw new FailedTilingAttempt.Rejected(
+                    "Illegal unnamed argument in the application of '" + this.getPhyloSpecGeneratorName() + "'.");
+        }
+
+        // the argument names provided match with the expected inputs
+        // we now check if we have the appropriate input tiles
+
         List<Set<Tile<?, S>>> compatibleInputTiles = new ArrayList<>();
         List<TileInput<?, S>> usedInputs = new ArrayList<>();
-        Set<String> givenPhyloSpecArgumentNames = new HashSet<>();
-        for (Expr.Argument argument : call.arguments) {
-            String argumentName = this.getArgumentName(argument, call.arguments.length, expectedInputs);
-
-            givenPhyloSpecArgumentNames.add(argumentName);
+        for (String argumentName : argumentsByName.keySet()) {
+            Expr.Argument argument = argumentsByName.get(argumentName);
             TileInput<?, S> argumentInput = expectedInputsByArgument.get(argumentName);
 
-            if (argumentInput == null) {
-                // Generator has an argument for which no Input field is defined in the tile
-                // we cannot tile
-                throw new FailedTilingAttempt.Rejected(
-                        "You cannot pass a value to the '" + argumentName + "' argument to run this.");
-            }
-
             // for each argument tile, we check if its generated type is compatible with
-            // this input
+            // the expected input
 
             Set<Tile<?, S>> currentCompatibleInputTiles =
                     argumentInput.getCompatibleInputTiles(argument, inputTiles, stochasticityResolver);
@@ -90,20 +104,6 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
 
             compatibleInputTiles.add(currentCompatibleInputTiles);
             usedInputs.add(argumentInput);
-        }
-
-        // check that we have all required input arguments
-
-        for (String inputName : expectedInputsByArgument.keySet()) {
-            TileInput<?, S> input = expectedInputsByArgument.get(inputName);
-            if (!input.isRequired()) continue;
-
-            if (!givenPhyloSpecArgumentNames.contains(inputName)) {
-                // a required argument is missing
-                // we cannot tile this
-                throw new FailedTilingAttempt.Rejected(
-                        "Your engine expects you to provide a value for the '" + input.getKey() + "' argument.");
-            }
         }
 
         // we have all compatible input tiles
@@ -124,30 +124,6 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
             inputs.add((GeneratorTileInput<?, S>) input);
         }
         return inputs;
-    }
-
-    private String getArgumentName(
-            Expr.Argument argument, int numPassedArguments, List<TileInput<?, S>> expectedInputs) {
-        String argumentName = argument.name;
-
-        if (argumentName != null) {
-            return argumentName;
-        }
-
-        List<TileInput<?, S>> requiredInputs =
-                expectedInputs.stream().filter(TileInput::isRequired).toList();
-        if (requiredInputs.size() == 1 && numPassedArguments == 1) {
-            return requiredInputs.getFirst().getKey();
-        }
-
-        if (argument.expression instanceof Expr.Variable var) {
-            // we passed a variable, we use its name
-            return var.variableName;
-        }
-
-        // this is the first argument (all other cases are invalid PhyloSpec and would have been
-        // caught by the type resolver)
-        return requiredInputs.getFirst().getKey();
     }
 
     @Override

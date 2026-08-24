@@ -6,7 +6,7 @@ Tree tree[i] ~ Yule(
 
 QMatrix qMatrix[i] = hky(
     kappa~LogNormal(logMean=1.0, logSd=0.5),
-    baseFrequencies~Dirichlet(repeat(1.0, num=4))
+    baseFrequencies~Dirichlet(repeat(value=1.0, num=4))
 ) for i in 1:num(data)
 
 Vector<Rate> branchRates[i] ~ RelaxedClock(

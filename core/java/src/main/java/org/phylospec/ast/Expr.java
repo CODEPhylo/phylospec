@@ -326,12 +326,19 @@ public abstract class Expr extends AstNode {
                 if (argument.name != null) {
                     // the argument name is given explicitly
                     parameterName = argument.name;
+                } else if (argument.expression instanceof Variable variable) {
+                    // a variable names its own argument, unless it matches no parameter and
+                    // there is a single required one to take it
+                    if (!parameterNames.contains(variable.variableName)
+                            && arguments.length == 1
+                            && requiredParameters.size() == 1) {
+                        parameterName = requiredParameters.getFirst().name();
+                    } else {
+                        parameterName = variable.variableName;
+                    }
                 } else if (arguments.length == 1 && requiredParameters.size() == 1) {
                     // the single passed value goes to the single required parameter
                     parameterName = requiredParameters.getFirst().name();
-                } else if (argument.expression instanceof Variable variable) {
-                    // the argument name is the name of the passed variable
-                    parameterName = variable.variableName;
                 } else {
                     throw new ArgumentResolutionError.MissingName(argument);
                 }
