@@ -15,6 +15,7 @@ Real j ~ Normal(sd, sd) // 🚫
 Real k ~ Normal(mean=1.0, mean) // 🚫
 Real l ~ Normal(mean=1.0, mean, sd) // 🚫
 Real m ~ Normal(mean=1.0, mean, sd=1.0) // 🚫
+Real n ~ Normal(mean=1.0, mean=2.0, sd=1.0) // 🚫
 
 
 // EXPECT AST
@@ -33,6 +34,7 @@ Real m ~ Normal(mean=1.0, mean, sd=1.0) // 🚫
 // (DR Real k (CA Normal (AA mean 1.0) (AA null mean)))
 // (DR Real l (CA Normal (AA mean 1.0) (AA null mean) (AA null sd)))
 // (DR Real m (CA Normal (AA mean 1.0) (AA null mean) (AA sd 1.0)))
+// (DR Real n (CA Normal (AA mean 1.0) (AA mean 2.0) (AA sd 1.0)))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
@@ -44,4 +46,5 @@ Real m ~ Normal(mean=1.0, mean, sd=1.0) // 🚫
 // Argument 'mean' specified multiple times. You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than 'mean', set it explicitly with '<argument>=mean'.
 // Argument 'mean' specified multiple times. You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than 'mean', set it explicitly with '<argument>=mean'.
 // Argument 'mean' specified multiple times. You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than 'mean', set it explicitly with '<argument>=mean'.
+// Argument 'mean' specified multiple times. You have already assigned a value to 'mean'. Remove one of the two values.
 // EXPECT TYPE_ERRORS

@@ -6,12 +6,12 @@ drawnBase + offset
 // TEMPLATE
 
 // QUERY
-Real a ~ Normal(1.0, sd=2.0)
+Real a ~ Normal(mean=1.0, sd=2.0)
 Real offset = 100.20
 a + offset
 // QUERY
 
 // MATCH
-// $dist -> (CA Normal (AA null 1.0) (AA sd 2.0))
+// $dist -> (CA Normal (AA mean 1.0) (AA sd 2.0))
 // $offset -> 100.2
 // MATCH
