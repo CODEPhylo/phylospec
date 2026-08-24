@@ -72,8 +72,11 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
             throw new FailedTilingAttempt.Rejected(
                     "Your engine expects you to provide a value for the '" + e.name + "' argument.");
         } catch (ArgumentResolutionError.MissingName e) {
+            throw new FailedTilingAttempt.Rejected("You are passing an illegal unnamed argument in the application of '"
+                    + this.getPhyloSpecGeneratorName() + "'.");
+        } catch (ArgumentResolutionError.DuplicateName e) {
             throw new FailedTilingAttempt.Rejected(
-                    "Illegal unnamed argument in the application of '" + this.getPhyloSpecGeneratorName() + "'.");
+                    "You have a duplicate argument in the application of '" + this.getPhyloSpecGeneratorName() + "'.");
         }
 
         // the argument names provided match with the expected inputs
