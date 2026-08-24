@@ -1,7 +1,8 @@
 package org.phylospec.engines;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.phylospec.ast.ArgumentResolutionError;
 import org.phylospec.ast.AstVisitor;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
@@ -9,32 +10,12 @@ import org.phylospec.components.*;
 
 /**
  * Answers whether a set of engines can run something.
- * <p>
- * A component library says what a component <em>is</em>; an engine specification says which of them
- * an engine <em>implements</em>. An engine only implements a subset of a component library, so a
- * model can type-check against the library and still not be runnable. This class decides that
- * question for a {@link Generator}, for a single {@link Expr.Call}, and for a whole {@link Stmt}.
- * <p>
- * Several engines can be given at once and something is supported if <em>any</em> of them
- * implements it, because a model may legitimately need more than one engine (a BEAST 2 package is
- * an engine in its own right).
- * <p>
- * With no engine specification given, nothing is claimed and everything is supported. This matters
- * because a repository without an `engines` directory and an unreachable repository both yield no
- * engine specifications at all, and tooling must not start rejecting every component in that case.
- * <p>
- * The matching rules are documented in `repository/shape-matching.md`.
  */
 public final class EngineSupport {
 
-    private final List<EngineSpecificationSchema> engines;
-
-    // every generator any of the engines implements, indexed by its unqualified name
     private final Map<String, List<Generator__1>> implementedGenerators = new LinkedHashMap<>();
 
     private EngineSupport(List<EngineSpecificationSchema> engines) {
-        this.engines = List.copyOf(engines);
-
         for (EngineSpecificationSchema engine : engines) {
             for (Generator__1 generator : engine.getGenerators()) {
                 implementedGenerators
@@ -58,83 +39,104 @@ public final class EngineSupport {
         return new EngineSupport(List.of(engines));
     }
 
+    /* support */
+
     /**
-     * Returns whether any of the engines implements the given generator. This only returns true if the engine
-     * implements all possible fields, including the non-required ones.
+     * Returns how well the engines implement the generator called by the given call, with the
+     * arguments the call actually passes.
      */
-    public GeneratorSupport supports(Generator generator) {
-        for (Generator__1 implementedGenerator : getCandidates(generator.getName(), generator.getNamespace())) {
-            Set<String> declaredArguments = generator.getArguments().stream()
-                    .map(Argument::getName)
-                    .collect(Collectors.toCollection(HashSet::new));
+    public CallSupport supports(Expr.Call call) {
+        List<Generator__1> candidates = getCandidateImplementations(call.functionName);
 
-            if (covers(implementedGenerator, declaredArguments)) return true;
-        }
+        boolean isFullySupported = candidates.stream().anyMatch(candidate -> supports(candidate, call));
 
-        return false;
+        // where no engine takes the call we report which of the passed arguments an engine offers
+        // at all, so that tooling can point at the ones to blame
+        List<Boolean> argumentSupport = Arrays.stream(call.arguments)
+                .map(argument -> isFullySupported || isOffered(candidates, argument))
+                .toList();
+
+        return new CallSupport(call, isFullySupported, argumentSupport);
     }
 
-    public record GeneratorSupport(
-            // support: enum for FULL_SUPPORT, PARTIAL_SUPPORT, NO_SUPPORT,
-            // argumentSupport: Map<String, Boolean>
-            ) {}
-    ;
+    /**
+     * Returns how well the engines implement the given generator. Full support means an engine
+     * offers every declared argument, including the ones that are not required, as any model may
+     * use them.
+     */
+    public GeneratorSupport supports(Generator generator) {
+        List<String> declaredArguments =
+                generator.getArguments().stream().map(Argument::getName).toList();
+
+        // the call carries the namespace in its name, as that is where a call keeps it
+        String qualifiedName = generator.getNamespace() == null
+                ? generator.getName()
+                : generator.getNamespace() + "." + generator.getName();
+
+        // an engine implements a generator exactly if it can run a call that passes every declared
+        // argument, so we simulate a call to decide this
+        CallSupport callSupport = supports(new Expr.Call(
+                qualifiedName,
+                declaredArguments.stream()
+                        .map(name -> new Expr.AssignedArgument(name, new Expr.Variable(name)))
+                        .toArray(Expr.Argument[]::new)));
+
+        // derive the generator argument support
+        Map<String, Boolean> argumentSupport = new LinkedHashMap<>();
+        for (int i = 0; i < declaredArguments.size(); i++) {
+            argumentSupport.put(
+                    declaredArguments.get(i), callSupport.argumentSupport().get(i));
+        }
+
+        return new GeneratorSupport(callSupport.isFullySupported(), argumentSupport);
+    }
 
     /**
-     * Returns whether any of the engines implements every generator called in the given statement.
+     * Returns how well the engines implement every generator the given model calls.
      */
-    public ModelSupport supports(Stmt stmt) {
-        // collect all calls
-
+    public ModelSupport supports(List<Stmt> model) {
         List<Expr.Call> calls = new ArrayList<>();
 
-        stmt.accept(new AstVisitor<Void, Void, Void>() {
+        AstVisitor<Void, Void, Void> callCollector = new AstVisitor<>() {
             @Override
             public Void visitCall(Expr.Call expr) {
                 calls.add(expr);
                 return AstVisitor.super.visitCall(expr);
             }
-        });
+        };
+        model.forEach(stmt -> stmt.accept(callCollector));
 
-        // make sure all calls are supported
-
-        return calls.stream().allMatch(this::supports);
+        return new ModelSupport(calls.stream().map(this::supports).toList());
     }
 
-    public record ModelSupport(
-            // support: enum for FULL_SUPPORT, PARTIAL_SUPPORT, NO_SUPPORT,
-            // callSupport: Map<Call, Boolean>
-            ) {}
-    ;
-
     /**
-     * Returns whether any of the engines implements the generator called by the given call, with
-     * the arguments the call actually passes.
+     * Checks if the passed arguments bind to the arguments the implemented generator offers.
      */
-    public CallSupport supports(Expr.Call call) {
-        if (engines.isEmpty()) return true;
-
-        for (Generator__1 implementedGenerator : getCandidates(call.functionName, getNamespace(call.functionName))) {
-            for (Set<String> passedArguments : getPassedArgumentNames(implementedGenerator, call)) {
-                if (covers(implementedGenerator, passedArguments)) return true;
-            }
+    private static boolean supports(Generator__1 implementedGenerator, Expr.Call call) {
+        List<Expr.Call.Parameter> parameters = new ArrayList<>();
+        for (Argument__1 argument : implementedGenerator.getArguments()) {
+            parameters.add(new Expr.Call.Parameter(argument.getName(), Boolean.TRUE.equals(argument.getRequired())));
         }
 
-        return false;
+        try {
+            call.resolveArgumentNames(parameters);
+            return true;
+        } catch (ArgumentResolutionError error) {
+            // this engine cannot take the call in this shape
+            return false;
+        }
     }
 
-    public record CallSupport(
-            // support: enum for FULL_SUPPORT, PARTIAL_SUPPORT, NO_SUPPORT,
-            // argumentSupport: Map<Argument, Boolean>
-            ) {}
-    ;
+    /* shape matching helpers */
 
     /**
-     * Returns the implemented generators that could be the one named by the given name and
-     * namespace. The namespace is only taken into account if both sides specify one, as engine
-     * specifications generally leave it out.
+     * Returns the implemented generators for the given name and namespace. The namespace is only taken into account
+     * if both sides specify one, as engine specifications generally leave it out.
      */
-    private List<Generator__1> getCandidates(String name, String namespace) {
+    private List<Generator__1> getCandidateImplementations(String name) {
+        int lastPeriod = name.lastIndexOf('.');
+        String namespace = lastPeriod == -1 ? null : name.substring(0, lastPeriod);
+
         return implementedGenerators.getOrDefault(getUnqualifiedName(name), List.of()).stream()
                 .filter(generator -> generator.getNamespace() == null
                         || namespace == null
@@ -142,62 +144,21 @@ public final class EngineSupport {
                 .toList();
     }
 
-    /* shape matching */
+    /**
+     * Checks if any candidate offers the argument the given passed argument names.
+     */
+    private static boolean isOffered(List<Generator__1> candidates, Expr.Argument passedArgument) {
+        String argumentName = passedArgument.name != null
+                ? passedArgument.name
+                : passedArgument.expression instanceof Expr.Variable variable ? variable.variableName : null;
 
-    /** Checks if all used arguments are supported and if all required arguments are used. */
-    private static boolean covers(Generator__1 implementedGenerator, Set<String> usedArguments) {
-        Set<String> offeredArguments = new LinkedHashSet<>();
-        Set<String> insistedArguments = new LinkedHashSet<>();
+        // an argument that is passed positionally names no argument of its own, so there is nothing
+        // about it we could blame
+        if (argumentName == null) return true;
 
-        for (Argument__1 argument : implementedGenerator.getArguments()) {
-            offeredArguments.add(argument.getName());
-            if (argument.getRequired()) insistedArguments.add(argument.getName());
-        }
-
-        return offeredArguments.containsAll(usedArguments) && usedArguments.containsAll(insistedArguments);
-    }
-
-    private static List<Set<String>> getPassedArgumentNames(Generator__1 implementedGenerator, Expr.Call call) {
-        Set<String> passedArguments = new LinkedHashSet<>();
-
-        for (int i = 0; i < call.arguments.length; i++) {
-            Expr.Argument argument = call.arguments[i];
-
-            if (argument.name != null) {
-                passedArguments.add(argument.name);
-            } else if (argument.expression instanceof Expr.Variable variable) {
-                passedArguments.add(variable.variableName);
-            } else if (i == 0) {
-                // the first argument can be passed positionally. we can name it without consulting
-                // the component library because the engine specifications list the arguments in the
-                // order of the library, which EngineSpecGenerator enforces for the first argument
-                String firstArgumentName = getFirstArgumentName(implementedGenerator);
-                if (firstArgumentName == null) return List.of();
-                passedArguments.add(firstArgumentName);
-            } else {
-                // the argument name can only be dropped for the first argument or for a variable,
-                // so this call is invalid and no engine can run it
-                return List.of();
-            }
-        }
-
-        // a single unnamed variable argument is ambiguous. in `exp(mean)`, the variable `mean`
-        // either names the argument it is assigned to, or simply fills the first argument. we
-        // accept the generator if either reading works, as the type resolver does
-
-        if (call.arguments.length == 1
-                && call.arguments[0].name == null
-                && call.arguments[0].expression instanceof Expr.Variable) {
-            String firstArgumentName = getFirstArgumentName(implementedGenerator);
-            if (firstArgumentName != null) return List.of(passedArguments, Set.of(firstArgumentName));
-        }
-
-        return List.of(passedArguments);
-    }
-
-    private static String getFirstArgumentName(Generator__1 implementedGenerator) {
-        if (implementedGenerator.getArguments().isEmpty()) return null;
-        return implementedGenerator.getArguments().getFirst().getName();
+        return candidates.stream()
+                .flatMap(candidate -> candidate.getArguments().stream())
+                .anyMatch(argument -> argument.getName().equals(argumentName));
     }
 
     /* helper functions for names */
@@ -211,12 +172,62 @@ public final class EngineSupport {
         return name.substring(lastPeriod + 1);
     }
 
+    /* Support classes */
+
+    /** How much of something the engines implement. */
+    public enum Support {
+        FULL_SUPPORT,
+        PARTIAL_SUPPORT,
+        NO_SUPPORT;
+
+        /** Derives the support of a whole from whether it runs and from which of its parts are supported. */
+        private static Support of(boolean isFullySupported, Stream<Boolean> supportedParts) {
+            if (isFullySupported) return FULL_SUPPORT;
+            return supportedParts.anyMatch(part -> part) ? PARTIAL_SUPPORT : NO_SUPPORT;
+        }
+    }
+
     /**
-     * Returns the namespace the name is qualified with, or null if it is unqualified.
+     * How well the engines implement a model, along with the support of every call it makes. The
+     * calls are kept in a list rather than in a map because two calls of the same model can be
+     * equal to each other.
      */
-    private static String getNamespace(String name) {
-        int lastPeriod = name.lastIndexOf('.');
-        if (lastPeriod == -1) return null;
-        return name.substring(0, lastPeriod);
+    public record ModelSupport(List<CallSupport> callSupport) {
+
+        /** Returns whether the engines can run every call of the model. */
+        public boolean isFullySupported() {
+            return callSupport.stream().allMatch(CallSupport::isFullySupported);
+        }
+
+        /** Returns the support of the model as a whole, which is partial as soon as any call is supported at all. */
+        public Support support() {
+            return Support.of(
+                    isFullySupported(), callSupport.stream().map(call -> call.support() != Support.NO_SUPPORT));
+        }
+    }
+
+    /**
+     * How well the engines implement a call. The support of the passed arguments is given in the
+     * order of {@link Expr.Call#arguments}, as two arguments of the same call can be equal to each
+     * other and could not be told apart in a map.
+     */
+    public record CallSupport(Expr.Call call, boolean isFullySupported, List<Boolean> argumentSupport) {
+
+        /** Returns the support of the call as a whole, which is partial as soon as any passed argument is offered. */
+        public Support support() {
+            return Support.of(isFullySupported, argumentSupport.stream());
+        }
+    }
+
+    /**
+     * How well the engines implement a generator, along with the support of each of its declared
+     * arguments by name.
+     */
+    public record GeneratorSupport(boolean isFullySupported, Map<String, Boolean> argumentSupport) {
+
+        /** Returns the support of the generator as a whole, which is partial as soon as any argument is offered. */
+        public Support support() {
+            return Support.of(isFullySupported, argumentSupport.values().stream());
+        }
     }
 }
