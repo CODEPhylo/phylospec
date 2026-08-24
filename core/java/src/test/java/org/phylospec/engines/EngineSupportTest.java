@@ -473,6 +473,106 @@ public class EngineSupportTest {
         assertTrue(model.isFullySupported());
     }
 
+    /* stochasticity */
+
+    @Test
+    public void testStochasticArgumentIsTakenWhereDeclared() {
+        // the engine declares `birthRate` as stochastic, so it takes a random variable for it
+
+        EngineSupport.ModelSupport model = support.supports(parse("""
+                Real rate ~ exp(1.0)
+                Tree tree ~ Yule(birthRate=rate, taxa=taxa(data))
+                """));
+
+        assertTrue(model.isFullySupported());
+    }
+
+    @Test
+    public void testStochasticArgumentIsRejectedWhereNotDeclared() {
+        // the engine does not declare `taxa` as stochastic, so it cannot take a random variable
+        // for it, however familiar the argument looks
+
+        EngineSupport.ModelSupport model = support.supports(parse("""
+                Taxa sampled ~ exp(1.0)
+                Tree tree ~ Yule(birthRate=0.2, taxa=sampled)
+                """));
+
+        assertFalse(model.isFullySupported());
+
+        // the passed `taxa` is the argument to blame, while `birthRate` is offered
+
+        EngineSupport.CallSupport yule = model.callSupport().stream()
+                .filter(call -> call.call().functionName.equals("Yule"))
+                .findFirst()
+                .orElseThrow();
+
+        assertEquals(EngineSupport.Support.PARTIAL_SUPPORT, yule.support());
+        assertEquals(List.of(true, false), yule.argumentSupport());
+    }
+
+    @Test
+    public void testDrawnArgumentIsStochastic() {
+        // an argument that is drawn in place is a random variable just as a drawn variable is
+
+        assertTrue(support.supports(parse("Tree tree ~ Yule(birthRate~exp(1.0), taxa=taxa(data))"))
+                .isFullySupported());
+
+        assertFalse(support.supports(parse("Tree tree ~ Yule(birthRate=0.2, taxa~exp(1.0))"))
+                .isFullySupported());
+    }
+
+    @Test
+    public void testDeterministicArgumentIsAlwaysTaken() {
+        // the same call is taken where the argument is not a random variable
+
+        assertTrue(support.supports(parse("""
+                        Taxa sampled = taxa(data)
+                        Tree tree ~ Yule(birthRate=0.2, taxa=sampled)
+                        """)).isFullySupported());
+    }
+
+    @Test
+    public void testStochasticityIsNotCheckedWithoutAResolver() {
+        // a call on its own carries no stochasticity, as that follows from the statements before
+        // it, so the call is taken on the strength of its argument names alone
+
+        EngineSupport.CallSupport yule = support.supports(new Expr.Call(
+                "Yule",
+                new Expr.AssignedArgument("birthRate", new Expr.Literal(0.2)),
+                new Expr.AssignedArgument("taxa", new Expr.Variable("sampled"))));
+
+        assertTrue(yule.isFullySupported());
+    }
+
+    @Test
+    public void testUndeclaredStochasticityIsTakenAsDeterministic() {
+        // an engine that leaves `canBeStochastic` out declares nothing, and an argument that is
+        // not declared as stochastic does not take a random variable
+
+        Argument__1 undeclared = new Argument__1();
+        undeclared.setName("x");
+        undeclared.setRequired(true);
+
+        Generator__1 generator = new Generator__1();
+        generator.setName("exp");
+        generator.setArguments(List.of(undeclared));
+
+        EngineSupport undeclaring = new EngineSupport(engine("undeclaringEngine", generator));
+
+        List<Stmt> model = parse("""
+                Real rate ~ exp(1.0)
+                Real scaled = exp(rate)
+                """);
+
+        assertFalse(undeclaring.supports(model).isFullySupported());
+
+        // the very same model runs on an engine that declares the argument as stochastic
+
+        EngineSupport declaring = new EngineSupport(engine("declaringEngine", engineGenerator("exp", null, "x")));
+
+        assertTrue(declaring.supports(model).isFullySupported());
+    }
+
     /* helper functions */
 
     private static List<Stmt> parse(String source) {
@@ -495,7 +595,7 @@ public class EngineSupportTest {
         Argument__1 argument = new Argument__1();
         argument.setName(name);
         argument.setRequired(required);
-        argument.setCanBeStochastic(false);
+        argument.setCanBeStochastic(true);
         return argument;
     }
 
