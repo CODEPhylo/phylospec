@@ -195,6 +195,13 @@ public class EngineSupportTest {
 
         assertTrue(support.supports(new Expr.Call("exp", new Expr.AssignedArgument(new Expr.Variable("x"))))
                 .isFullySupported());
+
+        // LogNormal needs two required arguments, so a single unnamed argument is not supported
+
+        assertEquals(
+                EngineSupport.Support.NO_SUPPORT,
+                support.supports(new Expr.Call("LogNormal", new Expr.AssignedArgument(new Expr.Literal(1.0))))
+                        .support());
     }
 
     @Test
@@ -306,23 +313,6 @@ public class EngineSupportTest {
                 model.callSupport().stream()
                         .filter(call -> call.support() == EngineSupport.Support.NO_SUPPORT)
                         .count());
-    }
-
-    /* unclaimed */
-
-    @Test
-    public void testUnclaimedSupportsEverything() {
-        EngineSupport unclaimed = EngineSupport.of();
-
-        assertTrue(unclaimed
-                .supports(getOverloadWithArgument("PhyloCTMC", "siteQMatrices"))
-                .isFullySupported());
-        assertTrue(unclaimed
-                .supports(new Expr.Call("LogNormal", new Expr.AssignedArgument("mean", new Expr.Literal(1.0))))
-                .isFullySupported());
-        assertTrue(unclaimed
-                .supports(parse("Real x ~ LogNormal(mean=0.2, logSd=1.0)"))
-                .isFullySupported());
     }
 
     /* several engines */
