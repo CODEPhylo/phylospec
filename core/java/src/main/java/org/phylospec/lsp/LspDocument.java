@@ -16,6 +16,7 @@ import org.phylospec.lexer.Range;
 import org.phylospec.lexer.Token;
 import org.phylospec.lexer.TokenType;
 import org.phylospec.parser.Parser;
+import org.phylospec.repository.PhyloSpecRepository;
 import org.phylospec.typeresolver.ResolvedType;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
@@ -51,9 +52,11 @@ class LspDocument implements ErrorEventListener {
     }
 
     private static ComponentResolver loadComponentResolver() {
+
         List<ComponentLibrary> componentLibraries = null;
         try {
-            componentLibraries = ComponentResolver.loadCoreComponentLibraries();
+            PhyloSpecRepository repo = PhyloSpecRepository.loadCentral();
+            componentLibraries = repo.getLatestLibraries();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
