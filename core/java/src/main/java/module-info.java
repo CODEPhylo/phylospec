@@ -4,6 +4,7 @@ module org.phylospec.core {
     requires transitive com.fasterxml.jackson.databind;
     requires com.fasterxml.classmate;
     requires com.github.victools.jsonschema.generator;
+    requires com.github.zafarkhaja.semver;
     requires java.compiler;
     requires org.eclipse.jgit;
     requires transitive org.eclipse.lsp4j;

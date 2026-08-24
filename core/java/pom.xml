@@ -96,6 +96,13 @@
             <version>0.24.0</version>
         </dependency>
 
+        <!-- java-semver to compare component library and engine versions -->
+        <dependency>
+            <groupId>com.github.zafarkhaja</groupId>
+            <artifactId>java-semver</artifactId>
+            <version>0.10.2</version>
+        </dependency>
+
         <!-- JGit to clone and update component repositories -->
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
