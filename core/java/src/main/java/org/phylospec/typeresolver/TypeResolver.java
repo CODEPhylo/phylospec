@@ -822,6 +822,7 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
         }
 
         // fetch all compatible generators
+
         List<Generator> generators = componentResolver.resolveGenerator(expr.functionName);
         if (generators.isEmpty()) {
             throw new TypeError(
@@ -838,48 +839,38 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
         for (Generator generator : generators) {
             // resolve argument names and the corresponding type sets
 
-            Map<String, Expr.Argument> resolvedArguments = null;
+            Map<String, Expr.Argument> resolvedArguments;
             try {
                 resolvedArguments = expr.resolveArgumentNames(generator);
-            } catch (ArgumentResolutionError.UnknownName e) {
-                String closestMatch = generator.getArguments().stream()
-                        .map(Argument::getName)
-                        .min(Comparator.comparingInt(x -> Utils.editDistance(x, e.name)))
-                        .orElse("");
-
-                TypeError error = new TypeError(
-                        expr,
-                        "Function `" + generator.getName() + "` takes no argument named `" + e.name + "`.",
-                        "Do you mean '" + closestMatch + "'?");
-
-                lastError = error;
-                errorMessages.add(error.getMessage());
-                continue;
-            } catch (ArgumentResolutionError.MissingRequired e) {
-                TypeError error = new TypeError(
-                        expr, "Function `" + generator.getName() + "` takes the required argument `" + e.name + "`.");
-
-                lastError = error;
-                errorMessages.add(error.getMessage());
-                continue;
-            } catch (ArgumentResolutionError.MissingName e) {
-                TypeError error = new TypeError(
-                        e.argument,
-                        "Argument name not specified.",
-                        "You have to specify the name of the argument here using 'name=<value>'. You can only omit the argument name for the first argument or when your variable has the same name as the argument.");
-
-                lastError = error;
-                errorMessages.add(error.getMessage());
-                continue;
-            } catch (ArgumentResolutionError.DuplicateName e) {
-                TypeError error = new TypeError(
-                        e.argument,
-                        "Argument '" + e.name + "' specified multiple times.",
-                        "You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than '"
-                                + e.name
-                                + "', set it explicitly with '<argument>="
-                                + e.name
-                                + "'.");
+            } catch (ArgumentResolutionError er) {
+                TypeError error =
+                        switch (er) {
+                            case ArgumentResolutionError.UnknownName e ->
+                                new TypeError(
+                                        expr,
+                                        "Function `" + generator.getName() + "` takes no argument named `" + e.name
+                                                + "`.",
+                                        "Do you mean '" + findClosestArgument(generator, e.name) + "'?");
+                            case ArgumentResolutionError.MissingRequired e ->
+                                new TypeError(
+                                        expr,
+                                        "Function `" + generator.getName() + "` takes the required argument `" + e.name
+                                                + "`.");
+                            case ArgumentResolutionError.MissingName e ->
+                                new TypeError(
+                                        e.argument,
+                                        "Argument name not specified.",
+                                        "You have to specify the name of the argument here using 'name=<value>'. You can only omit the argument name when your variable has the same name as the argument, or when you pass a single value to a function with a single required argument.");
+                            case ArgumentResolutionError.DuplicateName e ->
+                                new TypeError(
+                                        e.argument,
+                                        "Argument '" + e.name + "' specified multiple times.",
+                                        "You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than '"
+                                                + e.name
+                                                + "', set it explicitly with '<argument>="
+                                                + e.name
+                                                + "'.");
+                        };
 
                 lastError = error;
                 errorMessages.add(error.getMessage());
@@ -914,6 +905,7 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
         }
 
         // throw errors if needed
+
         if (possibleReturnTypes.isEmpty() && errorMessages.isEmpty()) {
             throw new TypeError(expr, "Function `" + expr.functionName + "` with the given arguments does not exist.");
         } else if (possibleReturnTypes.isEmpty() && errorMessages.size() == 1) {
@@ -1250,6 +1242,13 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
     private String findClosestVariable(String queryVariable) {
         return getVariableNames().stream()
                 .min(Comparator.comparingInt(name -> Utils.editDistance(queryVariable, name)))
+                .orElse("");
+    }
+
+    private String findClosestArgument(Generator generator, String queryArgument) {
+        return generator.getArguments().stream()
+                .map(Argument::getName)
+                .min(Comparator.comparingInt(x -> Utils.editDistance(x, queryArgument)))
                 .orElse("");
     }
 

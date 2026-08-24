@@ -9,7 +9,7 @@ Alignment alignment ~ PhyloCTMC(
   branchRates=[1.0],
   qMatrix=hky(
     kappa~LogNormal(logMean=1.0, logSd=0.5),
-    baseFrequencies~Dirichlet(repeat(1.0, num=4))
+    baseFrequencies~Dirichlet(repeat(value=1.0, num=4))
   ),
 ) observed as data
 

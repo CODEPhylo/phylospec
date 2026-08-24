@@ -8,7 +8,7 @@ Alignment alignment ~ PhyloCTMC(
   tree,
   qMatrix=hky(
     kappa~LogNormal(logMean=1.0, logSd=0.5),
-    baseFrequencies~Dirichlet(repeat(1.0, num=4))
+    baseFrequencies~Dirichlet(repeat(value=1.0, num=4))
   ),
   siteRates=[1.0, 5]
 ) observed as data

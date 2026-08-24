@@ -7,7 +7,7 @@ Vector<PositiveReal> logMeans = [1.0, 0.5]
 
 QMatrix qMatrix = hky(
  kappa~LogNormal(logMean=logMeans[1], logSd=0.5),
- baseFrequencies~Dirichlet(repeat(1.0, num=4))
+ baseFrequencies~Dirichlet(repeat(value=1.0, num=4))
 )
 
 Alignment alignment[i] ~ PhyloCTMC(

@@ -3,7 +3,7 @@ Tree tree ~ Yule(birthRate=1.0, taxa=taxa(data))
 
 Integer numBranches = numBranches(tree)
 
-Vector<Integer> range = range(0, end=numBranches)
+Vector<Integer> range = range(start=0, end=numBranches)
 
 // EXPECTED_TILES
 // Unsupported operation. Your engine does not support a random variable for 'end'.
