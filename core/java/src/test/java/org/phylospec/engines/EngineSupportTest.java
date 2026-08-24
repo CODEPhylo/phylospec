@@ -40,6 +40,23 @@ public class EngineSupportTest {
         componentResolver = new ComponentResolver(ComponentResolver.loadCoreComponentLibraries());
     }
 
+    @Test
+    public void testNoEnginesLoaded() {
+        // when no engines are loaded, everything is fully supported
+
+        EngineSupport noneLoaded = new EngineSupport();
+
+        List<Generator> overloads = componentResolver.resolveGenerator("Yule");
+        for (Generator overload : overloads) {
+            assertTrue(noneLoaded.supports(overload).isFullySupported(), "Yule with " + getArgumentNames(overload));
+        }
+
+        overloads = componentResolver.resolveGenerator("num");
+        for (Generator overload : overloads) {
+            assertTrue(noneLoaded.supports(overload).isFullySupported(), "num with " + getArgumentNames(overload));
+        }
+    }
+
     /* generators */
 
     @Test
