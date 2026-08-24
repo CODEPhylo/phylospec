@@ -7,6 +7,8 @@ import org.phylospec.ast.AstVisitor;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.components.*;
+import org.phylospec.typeresolver.Stochasticity;
+import org.phylospec.typeresolver.StochasticityResolver;
 
 /**
  * Answers whether a set of engines supports a model, a call, or a generator.
@@ -39,6 +41,13 @@ public final class EngineSupport {
      * Returns how well the engines implement every generator the given model calls.
      */
     public ModelSupport supports(List<Stmt> model) {
+        // init StochasticityResolver
+
+        StochasticityResolver stochasticityResolver = new StochasticityResolver();
+        model.forEach(stmt -> stmt.accept(stochasticityResolver));
+
+        // collect calls
+
         List<Expr.Call> calls = new ArrayList<>();
 
         AstVisitor<Void, Void, Void> callCollector = new AstVisitor<>() {
@@ -50,7 +59,11 @@ public final class EngineSupport {
         };
         model.forEach(stmt -> stmt.accept(callCollector));
 
-        return new ModelSupport(calls.stream().map(this::supports).toList());
+        // check support for each call
+
+        return new ModelSupport(calls.stream()
+                .map(call -> supports(call, stochasticityResolver))
+                .toList());
     }
 
     /**
@@ -87,9 +100,19 @@ public final class EngineSupport {
 
     /**
      * Returns how well the engines implement the generator called by the given call, with the
-     * arguments the call actually passes.
+     * arguments the call actually passes. The stochasticity of the arguments is not taken into
+     * account, as it cannot be told from a call on its own.
      */
     public CallSupport supports(Expr.Call call) {
+        return supports(call, null);
+    }
+
+    /**
+     * Returns how well the engines implement the generator called by the given call, with the
+     * arguments the call actually passes and with the stochasticity the given resolver assigns to
+     * them. The resolver has to have walked the whole model the call belongs to.
+     */
+    public CallSupport supports(Expr.Call call, StochasticityResolver stochasticityResolver) {
         if (noEngineLoaded) {
             // no engines are loaded
             // we always return full support
@@ -98,12 +121,13 @@ public final class EngineSupport {
 
         List<Generator__1> candidates = getCandidateImplementations(call.functionName);
 
-        boolean isFullySupported = candidates.stream().anyMatch(candidate -> supports(candidate, call));
+        boolean isFullySupported =
+                candidates.stream().anyMatch(candidate -> supports(candidate, call, stochasticityResolver));
 
         // where no engine takes the call we report which of the passed arguments an engine offers
         // at all, so that tooling can point at the ones to blame
         List<Boolean> argumentSupport = Arrays.stream(call.arguments)
-                .map(argument -> isFullySupported || isOffered(candidates, argument))
+                .map(argument -> isFullySupported || isOffered(candidates, argument, stochasticityResolver))
                 .toList();
 
         return new CallSupport(call, isFullySupported, argumentSupport);
@@ -112,23 +136,47 @@ public final class EngineSupport {
     /**
      * Checks if the arguments in the call matches the arguments the implemented generator offers.
      */
-    private static boolean supports(Generator__1 implementedGenerator, Expr.Call call) {
+    private static boolean supports(
+            Generator__1 implementedGenerator, Expr.Call call, StochasticityResolver stochasticityResolver) {
         // collect the parameters for the genrator implementation
 
+        Map<String, Argument__1> declaredArguments = new LinkedHashMap<>();
         List<Expr.Call.Parameter> parameters = new ArrayList<>();
         for (Argument__1 argument : implementedGenerator.getArguments()) {
+            declaredArguments.put(argument.getName(), argument);
             parameters.add(new Expr.Call.Parameter(argument.getName(), Boolean.TRUE.equals(argument.getRequired())));
         }
 
         // try to resolve the arguments passed to the call
 
+        Map<String, Expr.Argument> boundArguments;
         try {
-            call.resolveArgumentNames(parameters);
-            return true;
+            boundArguments = call.resolveArgumentNames(parameters);
         } catch (ArgumentResolutionError error) {
             // this engine cannot take the call in this shape
             return false;
         }
+
+        // check the stochasticities of the bound arguments
+
+        return boundArguments.entrySet().stream()
+                .allMatch(bound -> acceptsStochasticity(
+                        declaredArguments.get(bound.getKey()), bound.getValue(), stochasticityResolver));
+    }
+
+    /**
+     * Checks whether the engine can take the given passed argument for the argument it declares.
+     * An engine only takes a random variable where it declares the argument as stochastic; an
+     * argument that is not declared as stochastic at all is taken to be deterministic.
+     */
+    private static boolean acceptsStochasticity(
+            Argument__1 declaredArgument, Expr.Argument passedArgument, StochasticityResolver stochasticityResolver) {
+        // without a resolver we know nothing about the stochasticity and do not hold it against the engine
+        if (stochasticityResolver == null) return true;
+
+        if (stochasticityResolver.getStochasticity(passedArgument) != Stochasticity.STOCHASTIC) return true;
+
+        return Boolean.TRUE.equals(declaredArgument.getCanBeStochastic());
     }
 
     /* shape matching helpers */
@@ -151,7 +199,8 @@ public final class EngineSupport {
     /**
      * Checks if any candidate offers the argument the given passed argument names.
      */
-    private static boolean isOffered(List<Generator__1> candidates, Expr.Argument passedArgument) {
+    private static boolean isOffered(
+            List<Generator__1> candidates, Expr.Argument passedArgument, StochasticityResolver stochasticityResolver) {
         String argumentName = passedArgument.name != null
                 ? passedArgument.name
                 : passedArgument.expression instanceof Expr.Variable variable ? variable.variableName : null;
@@ -161,9 +210,12 @@ public final class EngineSupport {
         // not call this function
         if (argumentName == null) return false;
 
+        // an argument an engine offers but cannot take as a random variable is not offered for
+        // this call, so that tooling blames the argument that actually keeps the engine out
         return candidates.stream()
                 .flatMap(candidate -> candidate.getArguments().stream())
-                .anyMatch(argument -> argument.getName().equals(argumentName));
+                .anyMatch(argument -> argument.getName().equals(argumentName)
+                        && acceptsStochasticity(argument, passedArgument, stochasticityResolver));
     }
 
     /* helper functions for names */
