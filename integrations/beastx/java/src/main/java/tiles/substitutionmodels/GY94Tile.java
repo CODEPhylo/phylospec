@@ -54,7 +54,7 @@ public class GY94Tile extends GeneratorTile<GY94CodonModel, BeastXState> {
                     this.getRootNode(),
                     "GY94 requires one stationary frequency for each non-stop codon.",
                     "Use a Simplex with " + expectedFrequencyCount + " codon frequencies.",
-                    List.of("gy94(kappa=2.0, omega=0.5, baseFrequencies=repeat(0.01639344262295082, num=61))")
+                    List.of("gy94(kappa=2.0, omega=0.5, baseFrequencies=repeat(value=0.01639344262295082, num=61))")
             );
         }
 
@@ -63,7 +63,7 @@ public class GY94Tile extends GeneratorTile<GY94CodonModel, BeastXState> {
                     this.getRootNode(),
                     "GY94 baseFrequencies must be a valid simplex.",
                     "All values must be in [0, 1] and sum to 1.",
-                    List.of("gy94(kappa=2.0, omega=0.5, baseFrequencies=repeat(0.01639344262295082, num=61))")
+                    List.of("gy94(kappa=2.0, omega=0.5, baseFrequencies=repeat(value=0.01639344262295082, num=61))")
             );
         }
 
