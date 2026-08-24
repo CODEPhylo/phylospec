@@ -1,23 +1,26 @@
 PositiveReal logSd = exp(10)
-Real x ~ LogNormal(3, logSd)
+Real x = 1.0
+Real xx ~ LogNormal(3, logSd)
 Real y ~ LogNormal(x, logSd)
 Real z ~ LogNormal(logSd, x)
 QMatrix b = hky(10)
 
 // EXPECT AST
 // (AS PositiveReal logSd (CA exp (AA null 10)))
-// (DR Real x (CA LogNormal (AA null 3) (AA null logSd)))
+// (AS Real x 1.0)
+// (DR Real xx (CA LogNormal (AA null 3) (AA null logSd)))
 // (DR Real y (CA LogNormal (AA null x) (AA null logSd)))
 // (DR Real z (CA LogNormal (AA null logSd) (AA null x)))
 // (AS QMatrix b (CA hky (AA null 10)))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
+// Argument name not specified. You have to specify the name of the argument here using 'name=<value>'. You can only omit the argument name for the first argument or when your variable has the same name as the argument.
 // Function `LogNormal` with the given arguments does not exist. There are 2 versions of 'LogNormal'. Neither of them can be used:
 // 1. Function `LogNormal` takes no argument named `x`. Do you mean 'logSd'?
 // 2. Function `LogNormal` takes no argument named `x`. Do you mean 'mean'?
 // Function `LogNormal` with the given arguments does not exist. There are 2 versions of 'LogNormal'. Neither of them can be used:
 // 1. Function `LogNormal` takes no argument named `x`. Do you mean 'logSd'?
 // 2. Function `LogNormal` takes no argument named `x`. Do you mean 'mean'?
-// Function `hky` takes the required argument `baseFrequencies`.
+// Argument name not specified. You have to specify the name of the argument here using 'name=<value>'. You can only omit the argument name for the first argument or when your variable has the same name as the argument.
 // EXPECT TYPE_ERRORS

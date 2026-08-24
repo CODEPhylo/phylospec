@@ -39,4 +39,13 @@ public abstract sealed class ArgumentResolutionError extends RuntimeException {
             this.name = name;
         }
     }
+
+    public static final class MissingRequired extends ArgumentResolutionError {
+        public final String name;
+
+        public MissingRequired(String name) {
+            super(null);
+            this.name = name;
+        }
+    }
 }

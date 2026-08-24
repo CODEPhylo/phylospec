@@ -4,6 +4,8 @@ import static java.util.stream.Collectors.toSet;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import java.util.*;
+import org.phylospec.components.Argument;
+import org.phylospec.components.Generator;
 import org.phylospec.lexer.TokenType;
 
 /**
@@ -296,6 +298,14 @@ public abstract class Expr extends AstNode {
         @JsonPropertyDescription("The passed arguments.")
         public final Argument[] arguments;
 
+        public Map<String, Argument> resolveArgumentNames(Generator generator) {
+            List<Parameter> parameters = new ArrayList<>();
+            for (org.phylospec.components.Argument argument : generator.getArguments()) {
+                parameters.add(new Parameter(argument.getName(), argument.getRequired()));
+            }
+            return resolveArgumentNames(parameters);
+        }
+
         /**
          * Maps the passed arguments onto the parameters declared by the callee.
          * An argument name can only be omitted in two cases: if the passed expression is a
@@ -316,12 +326,12 @@ public abstract class Expr extends AstNode {
                 if (argument.name != null) {
                     // the argument name is given explicitly
                     parameterName = argument.name;
-                } else if (argument.expression instanceof Variable variable) {
-                    // the argument name is the name of the passed variable
-                    parameterName = variable.variableName;
                 } else if (arguments.length == 1 && requiredParameters.size() == 1) {
                     // the single passed value goes to the single required parameter
                     parameterName = requiredParameters.getFirst().name();
+                } else if (argument.expression instanceof Variable variable) {
+                    // the argument name is the name of the passed variable
+                    parameterName = variable.variableName;
                 } else {
                     throw new ArgumentResolutionError.MissingName(argument);
                 }
@@ -335,6 +345,14 @@ public abstract class Expr extends AstNode {
                 }
 
                 boundArguments.put(parameterName, argument);
+            }
+
+            // make sure we have all required arguments
+
+            for (Parameter parameter : requiredParameters) {
+                if (!boundArguments.containsKey(parameter.name)) {
+                    throw new ArgumentResolutionError.MissingRequired(parameter.name);
+                }
             }
 
             return boundArguments;
