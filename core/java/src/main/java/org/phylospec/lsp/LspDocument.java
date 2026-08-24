@@ -617,7 +617,7 @@ class LspDocument implements ErrorEventListener {
     }
 
     private static String getReadableName(String typeName) {
-        return new ParsedType(typeName).getAtomicTypeName();
+        return new ParsedType(typeName).stripNamespace();
     }
 
     /**

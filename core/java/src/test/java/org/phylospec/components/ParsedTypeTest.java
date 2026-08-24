@@ -12,6 +12,7 @@ public class ParsedTypeTest {
         assertEquals(parsedType.getNamespace(), "");
         assertEquals(parsedType.getAtomicTypeName(), "Real");
         assertEquals(parsedType.stripGenerics(), "Real");
+        assertEquals(parsedType.stripNamespace(), "Real");
         assertEquals(parsedType.getTypeParameters(), List.of());
         assertEquals(parsedType.getTypeProperties(), List.of());
 
@@ -19,6 +20,7 @@ public class ParsedTypeTest {
         assertEquals(parsedType.getNamespace(), "phylospec.types");
         assertEquals(parsedType.getAtomicTypeName(), "Real");
         assertEquals(parsedType.stripGenerics(), "phylospec.types.Real");
+        assertEquals(parsedType.stripNamespace(), "Real");
         assertEquals(parsedType.getTypeParameters(), List.of());
         assertEquals(parsedType.getTypeProperties(), List.of());
 
@@ -26,6 +28,7 @@ public class ParsedTypeTest {
         assertEquals(parsedType.getNamespace(), "");
         assertEquals(parsedType.getAtomicTypeName(), "Vector");
         assertEquals(parsedType.stripGenerics(), "Vector");
+        assertEquals(parsedType.stripNamespace(), "Vector<Real>");
         assertEquals(parsedType.getTypeParameters(), List.of(new ParsedType("Real")));
         assertEquals(parsedType.getTypeProperties(), List.of());
 
@@ -33,11 +36,13 @@ public class ParsedTypeTest {
         assertEquals(parsedType.getNamespace(), "");
         assertEquals(parsedType.getAtomicTypeName(), "Vector");
         assertEquals(parsedType.stripGenerics(), "Vector");
+        assertEquals(parsedType.stripNamespace(), "Vector<Vector<Real>>");
         assertEquals(parsedType.getTypeParameters(), List.of(new ParsedType("Vector<Real>")));
         assertEquals(parsedType.getTypeProperties(), List.of());
         assertEquals(parsedType.getTypeParameters().getFirst().getNamespace(), "");
         assertEquals(parsedType.getTypeParameters().getFirst().getAtomicTypeName(), "Vector");
         assertEquals(parsedType.getTypeParameters().getFirst().stripGenerics(), "Vector");
+        assertEquals(parsedType.getTypeParameters().getFirst().stripNamespace(), "Vector<Real>");
         assertEquals(parsedType.getTypeParameters().getFirst().getTypeParameters(), List.of(new ParsedType("Real")));
         assertEquals(parsedType.getTypeParameters().getFirst().getTypeProperties(), List.of());
 
@@ -45,11 +50,13 @@ public class ParsedTypeTest {
         assertEquals(parsedType.getNamespace(), "phylospec.types");
         assertEquals(parsedType.getAtomicTypeName(), "Vector");
         assertEquals(parsedType.stripGenerics(), "phylospec.types.Vector");
+        assertEquals(parsedType.stripNamespace(), "Vector<Real>");
         assertEquals(parsedType.getTypeParameters(), List.of(new ParsedType("phylospec.types.Real")));
         assertEquals(parsedType.getTypeProperties(), List.of());
         assertEquals(parsedType.getTypeParameters().getFirst().getNamespace(), "phylospec.types");
         assertEquals(parsedType.getTypeParameters().getFirst().getAtomicTypeName(), "Real");
         assertEquals(parsedType.getTypeParameters().getFirst().stripGenerics(), "phylospec.types.Real");
+        assertEquals(parsedType.getTypeParameters().getFirst().stripNamespace(), "Real");
         assertEquals(parsedType.getTypeParameters().getFirst().getTypeParameters(), List.of());
         assertEquals(parsedType.getTypeParameters().getFirst().getTypeProperties(), List.of());
 
@@ -57,13 +64,15 @@ public class ParsedTypeTest {
         assertEquals(parsedType.getNamespace(), "");
         assertEquals(parsedType.getAtomicTypeName(), "Vector");
         assertEquals(parsedType.stripGenerics(), "Vector");
+        assertEquals(parsedType.stripNamespace(), "Vector<Real; num=10>");
         assertEquals(parsedType.getTypeParameters(), List.of(new ParsedType("Real")));
         assertEquals(parsedType.getTypeProperties(), List.of(new ParsedTypeProperty.Constant("num", "10")));
 
-        parsedType = new ParsedType("Vector<;num=tree.numBranches, otherNum=2>");
+        parsedType = new ParsedType("Vector<; num=tree.numBranches, otherNum=2>");
         assertEquals(parsedType.getNamespace(), "");
         assertEquals(parsedType.getAtomicTypeName(), "Vector");
         assertEquals(parsedType.stripGenerics(), "Vector");
+        assertEquals(parsedType.stripNamespace(), "Vector<; num=tree.numBranches, otherNum=2>");
         assertEquals(parsedType.getTypeParameters(), List.of());
         assertEquals(
                 parsedType.getTypeProperties(),
@@ -75,6 +84,7 @@ public class ParsedTypeTest {
         assertEquals(parsedType.getNamespace(), "phylospec.types");
         assertEquals(parsedType.getAtomicTypeName(), "Vector");
         assertEquals(parsedType.stripGenerics(), "phylospec.types.Vector");
+        assertEquals(parsedType.stripNamespace(), "Vector<; num=10, num=20>");
         assertEquals(parsedType.getTypeParameters(), List.of());
         assertEquals(
                 parsedType.getTypeProperties(),
@@ -84,11 +94,13 @@ public class ParsedTypeTest {
         assertEquals(parsedType.getNamespace(), "phylospec.types");
         assertEquals(parsedType.getAtomicTypeName(), "Vector");
         assertEquals(parsedType.stripGenerics(), "phylospec.types.Vector");
+        assertEquals(parsedType.stripNamespace(), "Vector<Vector<Real; num=tree.numBranches>; num=10>");
         assertEquals(parsedType.getTypeParameters(), List.of(new ParsedType("Vector<Real; num=tree.numBranches>")));
         assertEquals(parsedType.getTypeProperties(), List.of(new ParsedTypeProperty.Constant("num", "10")));
         assertEquals(parsedType.getTypeParameters().getFirst().getNamespace(), "");
         assertEquals(parsedType.getTypeParameters().getFirst().getAtomicTypeName(), "Vector");
         assertEquals(parsedType.getTypeParameters().getFirst().stripGenerics(), "Vector");
+        assertEquals(parsedType.getTypeParameters().getFirst().stripNamespace(), "Vector<Real; num=tree.numBranches>");
         assertEquals(parsedType.getTypeParameters().getFirst().getTypeParameters(), List.of(new ParsedType("Real")));
         assertEquals(
                 parsedType.getTypeParameters().getFirst().getTypeProperties(),

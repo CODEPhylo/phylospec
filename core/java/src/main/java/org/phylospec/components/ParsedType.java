@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Represents a parsed type name, including its namespace, generic parameters, and property assignments.
@@ -74,6 +75,26 @@ public class ParsedType {
      */
     public String stripGenerics() {
         return stripGenerics(this.typeName);
+    }
+
+    /**
+     * Returns the type name with all namespaces removed, but with potential generic type parameters and properties.
+     * Namespaces are stripped recursively from nested type parameters, while type properties are kept as they are.
+     *
+     * @return the unqualified type name including generic content
+     */
+    public String stripNamespace() {
+        if (this.typeParameters.isEmpty() && this.typeProperties.isEmpty()) {
+            return this.atomicTypeName;
+        }
+
+        String parameters =
+                this.typeParameters.stream().map(ParsedType::stripNamespace).collect(Collectors.joining(", "));
+        String properties = this.typeProperties.isEmpty()
+                ? ""
+                : "; " + this.typeProperties.stream().map(Object::toString).collect(Collectors.joining(", "));
+
+        return this.atomicTypeName + "<" + parameters + properties + ">";
     }
 
     /**

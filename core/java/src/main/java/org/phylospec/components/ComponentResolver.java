@@ -332,7 +332,7 @@ public class ComponentResolver {
             throw new IllegalArgumentException("Invalid number of type parameters of the generated type of '"
                     + generator.getName()
                     + "'. Type '"
-                    + type.getAtomicTypeName()
+                    + type.getTypeString()
                     + "' takes "
                     + generatedType.getTypeParameters().size()
                     + " type parameters.");

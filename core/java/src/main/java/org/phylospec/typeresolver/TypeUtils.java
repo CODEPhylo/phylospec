@@ -98,7 +98,7 @@ public class TypeUtils {
                                 + parameterName
                                 + "`.",
                         "You need to use a value of type '"
-                                + new ParsedType(parameter.getType()).getAtomicTypeName()
+                                + new ParsedType(parameter.getType()).stripNamespace()
                                 + "'.");
             }
         }
