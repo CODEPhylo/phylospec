@@ -461,6 +461,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             throw new MatchingError();
         }
 
+        // basic sanity checks
+
         this.check(expr.functionName.equals(queryCall.functionName));
         this.check(queryCall.arguments.length <= expr.arguments.length);
 
@@ -474,9 +476,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
         // collect the template arguments
 
+        List<Expr.Call.Parameter> templateParameters = new ArrayList<>();
         Map<String, Expr.Argument> templateArguments = new HashMap<>();
-        String firstArgumentName = expr.arguments[0].name;
-
         for (Expr.Argument templateArgument : expr.arguments) {
             if (templateArgument.name == null) {
                 throw new IllegalArgumentException("Generator argument for '"
@@ -484,43 +485,31 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
                         + "' with no explicit name in template found. Please specify the argument names in templates.");
             }
 
-            templateArguments.put(templateArgument.name, templateArgument);
+            String name = templateArgument.name;
+            boolean required = !(templateArgument.expression instanceof Expr.OptionalTemplateVariable);
+            templateParameters.add(new Expr.Call.Parameter(name, required));
+
+            templateArguments.put(name, templateArgument);
         }
 
-        // we go through the query arguments and try to match them
+        // match the template and the query arguments
 
-        Set<String> matchedTemplateArgumentNames = new HashSet<>();
-        for (Expr.Argument queryArgument : queryCall.arguments) {
-            String queryArgumentName = queryArgument.name;
+        Map<String, Expr.Argument> resolvedQueryArguments;
+        try {
+            resolvedQueryArguments = queryCall.resolveArgumentNames(templateParameters);
+        } catch (ArgumentResolutionError e) {
+            // we couldn't match the arguments
+            throw new MatchingError();
+        }
 
-            if (queryArgumentName == null && queryArgument.expression instanceof Expr.Variable queryVariable) {
-                queryArgumentName = queryVariable.variableName;
-            }
+        // match the argument expressions
 
-            if (queryArgumentName == null && queryArgument == queryCall.arguments[0]) {
-                queryArgumentName = firstArgumentName;
-            }
-
-            this.check(queryArgumentName != null);
-
+        for (String queryArgumentName : resolvedQueryArguments.keySet()) {
+            Expr.Argument queryArgument = resolvedQueryArguments.get(queryArgumentName);
             Expr.Argument templateArgument = templateArguments.get(queryArgumentName);
+
             this.check(templateArgument != null);
             this.match(templateArgument, queryArgument);
-
-            matchedTemplateArgumentNames.add(templateArgument.name);
-        }
-
-        // make sure that we have matched all non-optional template arguments
-
-        for (Expr.Argument templateArgument : templateArguments.values()) {
-            if (matchedTemplateArgumentNames.contains(templateArgument.name)) continue;
-
-            // we don't have this template argument
-            // this is only fine if it corresponds to an optional template variable
-            if (templateArgument.expression instanceof Expr.OptionalTemplateVariable) continue;
-
-            // this is not fine
-            this.check(false);
         }
 
         return null;

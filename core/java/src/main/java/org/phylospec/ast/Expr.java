@@ -319,50 +319,89 @@ public abstract class Expr extends AstNode {
             List<Parameter> requiredParameters =
                     parameters.stream().filter(Parameter::required).toList();
 
+            // we bind every argument we can and remember the first failure of each kind, because
+            // we report the failures in a fixed order of relevance rather than in argument order
+
             Map<String, Argument> boundArguments = new LinkedHashMap<>();
+            ArgumentResolutionError missingName = null;
+            ArgumentResolutionError duplicateName = null;
+            ArgumentResolutionError unknownName = null;
+            int unknownNameCount = 0;
+
             for (Argument argument : arguments) {
-                String parameterName;
+                String parameterName = resolveArgumentName(argument, parameterNames, requiredParameters);
 
-                if (argument.name != null) {
-                    // the argument name is given explicitly
-                    parameterName = argument.name;
-                } else if (argument.expression instanceof Variable variable) {
-                    // a variable names its own argument, unless it matches no parameter and
-                    // there is a single required one to take it
-                    if (!parameterNames.contains(variable.variableName)
-                            && arguments.length == 1
-                            && requiredParameters.size() == 1) {
-                        parameterName = requiredParameters.getFirst().name();
-                    } else {
-                        parameterName = variable.variableName;
+                if (parameterName == null) {
+                    // the argument name is omitted where it cannot be inferred
+                    if (missingName == null) missingName = new ArgumentResolutionError.MissingName(argument);
+                } else if (!parameterNames.contains(parameterName)) {
+                    unknownNameCount++;
+                    if (unknownName == null) {
+                        unknownName = new ArgumentResolutionError.UnknownName(argument, parameterName, parameterNames);
                     }
-                } else if (arguments.length == 1 && requiredParameters.size() == 1) {
-                    // the single passed value goes to the single required parameter
-                    parameterName = requiredParameters.getFirst().name();
+                } else if (boundArguments.containsKey(parameterName)) {
+                    if (duplicateName == null) {
+                        duplicateName = new ArgumentResolutionError.DuplicateName(argument, parameterName);
+                    }
                 } else {
-                    throw new ArgumentResolutionError.MissingName(argument);
+                    boundArguments.put(parameterName, argument);
                 }
-
-                if (!parameterNames.contains(parameterName)) {
-                    throw new ArgumentResolutionError.UnknownName(argument, parameterName, parameterNames);
-                }
-
-                if (boundArguments.containsKey(parameterName)) {
-                    throw new ArgumentResolutionError.DuplicateName(argument, parameterName);
-                }
-
-                boundArguments.put(parameterName, argument);
             }
 
-            // make sure we have all required arguments
+            List<String> missingRequiredNames = requiredParameters.stream()
+                    .map(Parameter::name)
+                    .filter(name -> !boundArguments.containsKey(name))
+                    .toList();
 
-            for (Parameter parameter : requiredParameters) {
-                if (!boundArguments.containsKey(parameter.name)) {
-                    throw new ArgumentResolutionError.MissingRequired(parameter.name);
-                }
+            // report the failures, most relevant first
+            // a missing required argument is usually just the consequence of an argument we could
+            // not place, so we only lead with it when more arguments are missing than we failed to
+            // place, which means at least one of them is missing on its own
+
+            if (missingName != null) throw missingName;
+            if (duplicateName != null) throw duplicateName;
+
+            if (unknownNameCount < missingRequiredNames.size()) {
+                throw new ArgumentResolutionError.MissingRequired(missingRequiredNames.getFirst());
+            }
+
+            if (unknownName != null) throw unknownName;
+
+            if (!missingRequiredNames.isEmpty()) {
+                throw new ArgumentResolutionError.MissingRequired(missingRequiredNames.getFirst());
             }
 
             return boundArguments;
+        }
+
+        /**
+         * Returns the name of the parameter the given argument binds to, or null if the argument
+         * name is omitted where it cannot be inferred.
+         */
+        private String resolveArgumentName(
+                Argument argument, Set<String> parameterNames, List<Parameter> requiredParameters) {
+            if (argument.name != null) {
+                // the argument name is given explicitly
+                return argument.name;
+            }
+
+            if (argument.expression instanceof Variable variable) {
+                // a variable names its own argument, unless it matches no parameter and there is
+                // a single required one to take it
+                if (!parameterNames.contains(variable.variableName)
+                        && arguments.length == 1
+                        && requiredParameters.size() == 1) {
+                    return requiredParameters.getFirst().name();
+                }
+                return variable.variableName;
+            }
+
+            if (arguments.length == 1 && requiredParameters.size() == 1) {
+                // the single passed value goes to the single required parameter
+                return requiredParameters.getFirst().name();
+            }
+
+            return null;
         }
 
         /**

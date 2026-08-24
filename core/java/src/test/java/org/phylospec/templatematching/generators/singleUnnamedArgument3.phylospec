@@ -1,13 +1,12 @@
 // TEMPLATE
-Normal(mean=$mean, sd=$sd)
+log(x=$x)
 // TEMPLATE
 
 // QUERY
 PositiveReal sd = 20
-Normal(100.5, sd)
+log(sd)
 // QUERY
 
 // MATCH
-// $mean -> 100.5
-// $sd -> sd
+// $x -> sd
 // MATCH
