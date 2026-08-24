@@ -464,9 +464,6 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         // basic sanity checks
 
         this.check(expr.functionName.equals(queryCall.functionName));
-        this.check(queryCall.arguments.length <= expr.arguments.length);
-
-        if (expr.arguments.length == 0 && queryCall.arguments.length == 0) return null;
 
         // collect the template arguments
 

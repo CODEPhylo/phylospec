@@ -4,8 +4,6 @@ import static java.util.stream.Collectors.toSet;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import java.util.*;
-import org.phylospec.components.Argument;
-import org.phylospec.components.Generator;
 import org.phylospec.lexer.TokenType;
 
 /**
@@ -298,14 +296,6 @@ public abstract class Expr extends AstNode {
         @JsonPropertyDescription("The passed arguments.")
         public final Argument[] arguments;
 
-        public Map<String, Argument> resolveArgumentNames(Generator generator) {
-            List<Parameter> parameters = new ArrayList<>();
-            for (org.phylospec.components.Argument argument : generator.getArguments()) {
-                parameters.add(new Parameter(argument.getName(), argument.getRequired()));
-            }
-            return resolveArgumentNames(parameters);
-        }
-
         /**
          * Maps the passed arguments onto the parameters declared by the callee.
          * An argument name can only be omitted in two cases: if the passed expression is a
@@ -326,7 +316,6 @@ public abstract class Expr extends AstNode {
             ArgumentResolutionError missingName = null;
             ArgumentResolutionError duplicateName = null;
             ArgumentResolutionError unknownName = null;
-            int unknownNameCount = 0;
 
             for (Argument argument : arguments) {
                 String parameterName = resolveArgumentName(argument, parameterNames, requiredParameters);
@@ -335,7 +324,6 @@ public abstract class Expr extends AstNode {
                     // the argument name is omitted where it cannot be inferred
                     if (missingName == null) missingName = new ArgumentResolutionError.MissingName(argument);
                 } else if (!parameterNames.contains(parameterName)) {
-                    unknownNameCount++;
                     if (unknownName == null) {
                         unknownName = new ArgumentResolutionError.UnknownName(argument, parameterName, parameterNames);
                     }
@@ -361,7 +349,11 @@ public abstract class Expr extends AstNode {
             if (missingName != null) throw missingName;
             if (duplicateName != null) throw duplicateName;
 
-            if (unknownNameCount < missingRequiredNames.size()) {
+            // every argument we did not bind failed with an unknown name, because the other two
+            // kinds of failure would have been reported above
+
+            int unplacedArguments = arguments.length - boundArguments.size();
+            if (unplacedArguments < missingRequiredNames.size()) {
                 throw new ArgumentResolutionError.MissingRequired(missingRequiredNames.getFirst());
             }
 
