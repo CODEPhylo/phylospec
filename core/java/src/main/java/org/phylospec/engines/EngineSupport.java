@@ -152,9 +152,10 @@ public final class EngineSupport {
                 ? passedArgument.name
                 : passedArgument.expression instanceof Expr.Variable variable ? variable.variableName : null;
 
-        // an argument that is passed positionally names no argument of its own, so there is nothing
-        // about it we could blame
-        if (argumentName == null) return true;
+        // an argument that is passed positionally names no argument of its own
+        // if there was a generator with exactly one required argument, we would
+        // not call this function
+        if (argumentName == null) return false;
 
         return candidates.stream()
                 .flatMap(candidate -> candidate.getArguments().stream())
