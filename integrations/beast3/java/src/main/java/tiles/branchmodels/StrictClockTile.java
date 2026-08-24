@@ -6,18 +6,22 @@ import beast.base.spec.evolution.branchratemodel.StrictClockModel;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
+import org.phylospec.annotations.PhyloParam;
+import org.phylospec.annotations.PhyloSpec;
 import org.phylospec.ast.Expr;
-import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.tiling.tiles.AnnotatedGeneratorTile;
 
-public class StrictClockTile extends GeneratorTile<StrictClockModel, BEASTState> {
+@PhyloSpec(
+        value = "StrictClock",
+        role = PhyloSpec.Role.CLOCK_MODEL
+)
+public class StrictClockTile extends AnnotatedGeneratorTile<StrictClockModel, BEASTState> {
 
-    @Override
-    public String getPhyloSpecGeneratorName() {
-        return "StrictClock";
-    }
+    @PhyloParam("clockRate")
+    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> rateInput = input();
 
-    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> rateInput = new GeneratorTileInput<>("clockRate");
-    GeneratorTileInput<Tree, BEASTState> treeInput = new GeneratorTileInput<>("tree");
+    @PhyloParam("tree")
+    GeneratorTileInput<Tree, BEASTState> treeInput = input();
 
     @Override
     public StrictClockModel applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

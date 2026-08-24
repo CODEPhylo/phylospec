@@ -18,7 +18,7 @@ import org.phylospec.typeresolver.StochasticityResolver;
  * @param <T> the type produced by the input tile.
  */
 public abstract class TileInput<T, S> {
-    private final boolean required;
+    private boolean required;
     private final Set<Stochasticity> acceptedStochasticities;
 
     private TypeToken<T> typeToken;
@@ -100,6 +100,11 @@ public abstract class TileInput<T, S> {
 
     public boolean isRequired() {
         return this.required;
+    }
+
+    /** Updates whether this input is required when metadata is supplied by a tile template. */
+    void setRequired(boolean required) {
+        this.required = required;
     }
 
     public Set<Stochasticity> getAcceptedStochasticities() {

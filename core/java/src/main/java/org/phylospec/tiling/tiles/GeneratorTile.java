@@ -156,7 +156,15 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
     }
 
     public static class GeneratorTileInput<T, S> extends TileInput<T, S> {
-        private final String phylospecArgumentName;
+        private String phylospecArgumentName;
+        private String defaultValue = "";
+
+        /**
+         * Creates an input whose PhyloSpec metadata will be supplied by a tile template.
+         */
+        public GeneratorTileInput() {
+            this(null, true);
+        }
 
         public GeneratorTileInput(String phylospecArgumentName) {
             this(phylospecArgumentName, true);
@@ -180,8 +188,32 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
             return phylospecArgumentName;
         }
 
+        /** Returns the declared textual default, if one was provided as metadata. */
+        public Optional<String> getDefaultValue() {
+            return defaultValue.isBlank() ? Optional.empty() : Optional.of(defaultValue);
+        }
+
+        void bindMetadata(String argumentName, boolean required, String defaultValue) {
+            if (argumentName == null || argumentName.isBlank()) {
+                throw new IllegalArgumentException("A generator tile input must have a non-blank argument name.");
+            }
+            if (this.phylospecArgumentName != null && !this.phylospecArgumentName.equals(argumentName)) {
+                throw new IllegalStateException("Generator tile input declares argument '"
+                        + this.phylospecArgumentName
+                        + "' but its annotation declares '"
+                        + argumentName
+                        + "'.");
+            }
+            this.phylospecArgumentName = argumentName;
+            this.setRequired(required);
+            this.defaultValue = defaultValue == null ? "" : defaultValue;
+        }
+
         @Override
         public String getKey() {
+            if (this.phylospecArgumentName == null || this.phylospecArgumentName.isBlank()) {
+                throw new IllegalStateException("Generator tile input metadata has not been configured.");
+            }
             return this.phylospecArgumentName;
         }
     }
