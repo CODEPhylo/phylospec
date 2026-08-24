@@ -15,11 +15,13 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 
 /**
  * This is an LSP for PhyloSpec. It can be started on a port by calling {@code LSP.startServer(...)}.
- * The LSP supports diagnosing parsing and type errors, hover information, and basic auto-completion.
+ * The LSP supports diagnosing parsing and type errors, warning about calls the engines the user
+ * picked cannot run, hover information, and basic auto-completion.
  */
 public class Lsp implements org.eclipse.lsp4j.services.LanguageServer {
 
     private final PhyloSpecTextDocumentService textService;
+    private final PhyloSpecWorkspaceService workspaceService;
 
     public static void startServer(InputStream in, OutputStream out, int port) throws IOException {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
@@ -36,7 +38,10 @@ public class Lsp implements org.eclipse.lsp4j.services.LanguageServer {
     }
 
     public Lsp() {
-        this.textService = new PhyloSpecTextDocumentService();
+        EngineRegistry engineRegistry = new EngineRegistry();
+
+        this.textService = new PhyloSpecTextDocumentService(engineRegistry);
+        this.workspaceService = new PhyloSpecWorkspaceService(engineRegistry, this.textService);
     }
 
     @Override
@@ -46,6 +51,7 @@ public class Lsp implements org.eclipse.lsp4j.services.LanguageServer {
         res.getCapabilities().setHoverProvider(Boolean.TRUE);
         res.getCapabilities().setTextDocumentSync(TextDocumentSyncKind.Full);
         res.getCapabilities().setDiagnosticProvider(new DiagnosticRegistrationOptions(false, false));
+        res.getCapabilities().setExecuteCommandProvider(new ExecuteCommandOptions(PhyloSpecWorkspaceService.COMMANDS));
 
         return CompletableFuture.supplyAsync(() -> res);
     }
@@ -65,7 +71,7 @@ public class Lsp implements org.eclipse.lsp4j.services.LanguageServer {
 
     @Override
     public WorkspaceService getWorkspaceService() {
-        return null;
+        return this.workspaceService;
     }
 
     public void setRemoteProxy(LanguageClient remoteProxy) {

@@ -326,7 +326,7 @@ public class EngineSupportTest {
     public void testPartiallySupportedModel() {
         // Yule is implemented and the nested LogNormal is not
 
-        EngineSupport.ModelSupport model =
+        ModelSupport model =
                 support.supports(parse("Tree tree ~ Yule(birthRate~LogNormal(mean=0.2, logSd=1.0), taxa=taxa(data))"));
 
         assertEquals(EngineSupport.Support.PARTIAL_SUPPORT, model.support());
@@ -451,7 +451,7 @@ public class EngineSupportTest {
 
     @Test
     public void testModelWithoutCalls() {
-        EngineSupport.ModelSupport empty = support.supports(List.of());
+        ModelSupport empty = support.supports(List.of());
 
         assertTrue(empty.isFullySupported());
         assertEquals(EngineSupport.Support.FULL_SUPPORT, empty.support());
@@ -475,7 +475,7 @@ public class EngineSupportTest {
     public void testEqualCallsAreReportedSeparately() {
         // two calls of a model can be equal to each other, so they are kept in a list
 
-        EngineSupport.ModelSupport model = support.supports(parse("""
+        ModelSupport model = support.supports(parse("""
                 QMatrix first = jc69()
                 QMatrix second = jc69()
                 """));
@@ -490,7 +490,7 @@ public class EngineSupportTest {
     public void testStochasticArgumentIsTakenWhereDeclared() {
         // the engine declares `birthRate` as stochastic, so it takes a random variable for it
 
-        EngineSupport.ModelSupport model = support.supports(parse("""
+        ModelSupport model = support.supports(parse("""
                 Real rate ~ exp(1.0)
                 Tree tree ~ Yule(birthRate=rate, taxa=taxa(data))
                 """));
@@ -503,7 +503,7 @@ public class EngineSupportTest {
         // the engine does not declare `taxa` as stochastic, so it cannot take a random variable
         // for it, however familiar the argument looks
 
-        EngineSupport.ModelSupport model = support.supports(parse("""
+        ModelSupport model = support.supports(parse("""
                 Taxa sampled ~ exp(1.0)
                 Tree tree ~ Yule(birthRate=0.2, taxa=sampled)
                 """));
@@ -531,7 +531,7 @@ public class EngineSupportTest {
         // both arguments keep the engine out, but for different reasons: it never heard of
         // `originTime`, while it knows `taxa` and only refuses a random variable for it
 
-        EngineSupport.ModelSupport model = support.supports(parse("""
+        ModelSupport model = support.supports(parse("""
                 Taxa sampled ~ exp(1.0)
                 Tree tree ~ Yule(birthRate=0.2, taxa=sampled, originTime=3.0)
                 """));
