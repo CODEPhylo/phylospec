@@ -1,9 +1,9 @@
 package org.phylospec.ast;
 
+import static java.util.stream.Collectors.toSet;
+
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import org.phylospec.lexer.TokenType;
 
 /**
@@ -295,6 +295,55 @@ public abstract class Expr extends AstNode {
 
         @JsonPropertyDescription("The passed arguments.")
         public final Argument[] arguments;
+
+        /**
+         * Maps the passed arguments onto the parameters declared by the callee.
+         * An argument name can only be omitted in two cases: if the passed expression is a
+         * variable with the same name as a parameter, or if this is the only passed argument
+         * and the callee declares exactly one required parameter.
+         * @throws ArgumentResolutionError if an argument cannot be bound to exactly one parameter
+         */
+        public Map<String, Argument> resolveArgumentNames(List<Parameter> parameters) {
+            Set<String> parameterNames =
+                    parameters.stream().map(Parameter::name).collect(toSet());
+            List<Parameter> requiredParameters =
+                    parameters.stream().filter(Parameter::required).toList();
+
+            Map<String, Argument> boundArguments = new LinkedHashMap<>();
+            for (Argument argument : arguments) {
+                String parameterName;
+
+                if (argument.name != null) {
+                    // the argument name is given explicitly
+                    parameterName = argument.name;
+                } else if (argument.expression instanceof Variable variable) {
+                    // the argument name is the name of the passed variable
+                    parameterName = variable.variableName;
+                } else if (arguments.length == 1 && requiredParameters.size() == 1) {
+                    // the single passed value goes to the single required parameter
+                    parameterName = requiredParameters.getFirst().name();
+                } else {
+                    throw new ArgumentResolutionError.MissingName(argument);
+                }
+
+                if (!parameterNames.contains(parameterName)) {
+                    throw new ArgumentResolutionError.UnknownName(argument, parameterName, parameterNames);
+                }
+
+                if (boundArguments.containsKey(parameterName)) {
+                    throw new ArgumentResolutionError.DuplicateName(argument, parameterName);
+                }
+
+                boundArguments.put(parameterName, argument);
+            }
+
+            return boundArguments;
+        }
+
+        /**
+         * One parameter declared by the callee, as far as argument resolution is concerned.
+         */
+        public record Parameter(String name, boolean required) {}
 
         @Override
         public boolean equals(Object o) {
