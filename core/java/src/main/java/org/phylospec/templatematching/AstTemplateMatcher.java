@@ -468,12 +468,6 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
         if (expr.arguments.length == 0 && queryCall.arguments.length == 0) return null;
 
-        if (expr.arguments.length == 1 && queryCall.arguments.length == 1) {
-            // we directly match the only required argument
-            this.match(expr.arguments[0], queryCall.arguments[0]);
-            return null;
-        }
-
         // collect the template arguments
 
         List<Expr.Call.Parameter> templateParameters = new ArrayList<>();
@@ -507,8 +501,6 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         for (String queryArgumentName : resolvedQueryArguments.keySet()) {
             Expr.Argument queryArgument = resolvedQueryArguments.get(queryArgumentName);
             Expr.Argument templateArgument = templateArguments.get(queryArgumentName);
-
-            this.check(templateArgument != null);
             this.match(templateArgument, queryArgument);
         }
 
