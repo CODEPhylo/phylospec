@@ -19,7 +19,6 @@ module org.phylospec.beast3 {
     opens tiles.mcmc to org.phylospec.core;
     opens tiles.misc to org.phylospec.core;
     opens tiles.observations to org.phylospec.core;
-    opens tiles.operators to org.phylospec.core;
     opens tiles.rpn to org.phylospec.core;
     opens tiles.sitemodels to org.phylospec.core;
     opens tiles.substitutionmodels to org.phylospec.core;
