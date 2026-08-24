@@ -44,7 +44,7 @@ public class WAGTile extends GeneratorTile<EmpiricalAminoAcidModel, BeastXState>
                         this.getRootNode(),
                         "WAG requires exactly 20 amino-acid base frequencies.",
                         "Provide a Simplex with 20 values.",
-                        List.of("wag(baseFrequencies=repeat(0.05, num=20))")
+                        List.of("wag(baseFrequencies=repeat(value=0.05, num=20))")
                 );
             }
 
@@ -53,7 +53,7 @@ public class WAGTile extends GeneratorTile<EmpiricalAminoAcidModel, BeastXState>
                         this.getRootNode(),
                         "WAG baseFrequencies must be a valid simplex.",
                         "All values must be in [0, 1] and sum to 1.",
-                        List.of("wag(baseFrequencies=repeat(0.05, num=20))")
+                        List.of("wag(baseFrequencies=repeat(value=0.05, num=20))")
                 );
             }
 

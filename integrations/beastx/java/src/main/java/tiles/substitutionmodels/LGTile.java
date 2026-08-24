@@ -44,7 +44,7 @@ public class LGTile extends GeneratorTile<EmpiricalAminoAcidModel, BeastXState> 
                         this.getRootNode(),
                         "LG requires exactly 20 amino-acid base frequencies.",
                         "Provide a Simplex with 20 values.",
-                        List.of("lg(baseFrequencies=repeat(0.05, num=20))")
+                        List.of("lg(baseFrequencies=repeat(value=0.05, num=20))")
                 );
             }
 
@@ -53,7 +53,7 @@ public class LGTile extends GeneratorTile<EmpiricalAminoAcidModel, BeastXState> 
                         this.getRootNode(),
                         "LG baseFrequencies must be a valid simplex.",
                         "All values must be in [0, 1] and sum to 1.",
-                        List.of("lg(baseFrequencies=repeat(0.05, num=20))")
+                        List.of("lg(baseFrequencies=repeat(value=0.05, num=20))")
                 );
             }
 

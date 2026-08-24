@@ -868,11 +868,14 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
                                 new TypeError(
                                         e.argument,
                                         "Argument '" + e.name + "' specified multiple times.",
-                                        "You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than '"
-                                                + e.name
-                                                + "', set it explicitly with '<argument>="
-                                                + e.name
-                                                + "'.");
+                                        e.argument.name != null
+                                                ? "You have already assigned a value to '" + e.name
+                                                        + "'. Remove one of the two values."
+                                                : "You have already specified the argument with the name of this variable. If you want to use the variable for a different argument than '"
+                                                        + e.name
+                                                        + "', set it explicitly with '<argument>="
+                                                        + e.name
+                                                        + "'.");
                         };
 
                 lastError = error;
