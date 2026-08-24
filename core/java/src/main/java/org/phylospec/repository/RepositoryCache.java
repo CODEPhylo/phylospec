@@ -8,9 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Map;
-import java.util.stream.Stream;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -93,14 +91,11 @@ class RepositoryCache {
                     .close();
         } catch (TransportException e) {
             // the transfer failed, so we do not have any version of the repository to work with
-            deletePartialClone(repositoryPath);
             throw new OfflineException(
                     "The component repository '" + repoUri + "' could not be downloaded and is not cached. "
                             + "Please check your internet connection.",
                     e);
         } catch (GitAPIException | RuntimeException e) {
-            // we might have a partially cloned repository, so we remove it to keep the cache clean
-            deletePartialClone(repositoryPath);
             throw new IOException("The component repository '" + repoUri + "' could not be cloned.", e);
         }
     }
@@ -149,20 +144,6 @@ class RepositoryCache {
 
         throw new IllegalArgumentException(
                 "The component repository '" + repoUri + "' does not have a main or master branch.");
-    }
-
-    /**
-     * Removes a clone which failed to be created, so that the cache does not end up in a
-     * corrupted state.
-     */
-    private static void deletePartialClone(Path repositoryPath) throws IOException {
-        if (!Files.exists(repositoryPath)) return;
-
-        try (Stream<Path> paths = Files.walk(repositoryPath)) {
-            for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
-                Files.deleteIfExists(path);
-            }
-        }
     }
 
     /* helper functions for the cache layout */
