@@ -9,13 +9,13 @@ import org.phylospec.ast.Stmt;
 import org.phylospec.components.*;
 
 /**
- * Answers whether a set of engines can run something.
+ * Answers whether a set of engines supports a model, a call, or a generator.
  */
 public final class EngineSupport {
 
     private final Map<String, List<Generator__1>> implementedGenerators = new LinkedHashMap<>();
 
-    private EngineSupport(List<EngineSpecificationSchema> engines) {
+    public EngineSupport(List<EngineSpecificationSchema> engines) {
         for (EngineSpecificationSchema engine : engines) {
             for (Generator__1 generator : engine.getGenerators()) {
                 implementedGenerators
@@ -25,38 +25,28 @@ public final class EngineSupport {
         }
     }
 
-    /**
-     * Returns the support offered by the given engines taken together.
-     */
-    public static EngineSupport of(List<EngineSpecificationSchema> engines) {
-        return new EngineSupport(engines);
+    public EngineSupport(EngineSpecificationSchema... engines) {
+        this(List.of(engines));
     }
 
-    /**
-     * Returns the support offered by the given engines taken together.
-     */
-    public static EngineSupport of(EngineSpecificationSchema... engines) {
-        return new EngineSupport(List.of(engines));
-    }
-
-    /* support */
+    /* support methods */
 
     /**
-     * Returns how well the engines implement the generator called by the given call, with the
-     * arguments the call actually passes.
+     * Returns how well the engines implement every generator the given model calls.
      */
-    public CallSupport supports(Expr.Call call) {
-        List<Generator__1> candidates = getCandidateImplementations(call.functionName);
+    public ModelSupport supports(List<Stmt> model) {
+        List<Expr.Call> calls = new ArrayList<>();
 
-        boolean isFullySupported = candidates.stream().anyMatch(candidate -> supports(candidate, call));
+        AstVisitor<Void, Void, Void> callCollector = new AstVisitor<>() {
+            @Override
+            public Void visitCall(Expr.Call expr) {
+                calls.add(expr);
+                return AstVisitor.super.visitCall(expr);
+            }
+        };
+        model.forEach(stmt -> stmt.accept(callCollector));
 
-        // where no engine takes the call we report which of the passed arguments an engine offers
-        // at all, so that tooling can point at the ones to blame
-        List<Boolean> argumentSupport = Arrays.stream(call.arguments)
-                .map(argument -> isFullySupported || isOffered(candidates, argument))
-                .toList();
-
-        return new CallSupport(call, isFullySupported, argumentSupport);
+        return new ModelSupport(calls.stream().map(this::supports).toList());
     }
 
     /**
@@ -92,31 +82,35 @@ public final class EngineSupport {
     }
 
     /**
-     * Returns how well the engines implement every generator the given model calls.
+     * Returns how well the engines implement the generator called by the given call, with the
+     * arguments the call actually passes.
      */
-    public ModelSupport supports(List<Stmt> model) {
-        List<Expr.Call> calls = new ArrayList<>();
+    public CallSupport supports(Expr.Call call) {
+        List<Generator__1> candidates = getCandidateImplementations(call.functionName);
 
-        AstVisitor<Void, Void, Void> callCollector = new AstVisitor<>() {
-            @Override
-            public Void visitCall(Expr.Call expr) {
-                calls.add(expr);
-                return AstVisitor.super.visitCall(expr);
-            }
-        };
-        model.forEach(stmt -> stmt.accept(callCollector));
+        boolean isFullySupported = candidates.stream().anyMatch(candidate -> supports(candidate, call));
 
-        return new ModelSupport(calls.stream().map(this::supports).toList());
+        // where no engine takes the call we report which of the passed arguments an engine offers
+        // at all, so that tooling can point at the ones to blame
+        List<Boolean> argumentSupport = Arrays.stream(call.arguments)
+                .map(argument -> isFullySupported || isOffered(candidates, argument))
+                .toList();
+
+        return new CallSupport(call, isFullySupported, argumentSupport);
     }
 
     /**
-     * Checks if the passed arguments bind to the arguments the implemented generator offers.
+     * Checks if the arguments in the call matches the arguments the implemented generator offers.
      */
     private static boolean supports(Generator__1 implementedGenerator, Expr.Call call) {
+        // collect the parameters for the genrator implementation
+
         List<Expr.Call.Parameter> parameters = new ArrayList<>();
         for (Argument__1 argument : implementedGenerator.getArguments()) {
             parameters.add(new Expr.Call.Parameter(argument.getName(), Boolean.TRUE.equals(argument.getRequired())));
         }
+
+        // try to resolve the arguments passed to the call
 
         try {
             call.resolveArgumentNames(parameters);
@@ -173,7 +167,7 @@ public final class EngineSupport {
         return name.substring(lastPeriod + 1);
     }
 
-    /* Support classes */
+    /* support classes */
 
     /** How much of something the engines implement. */
     public enum Support {
