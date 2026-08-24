@@ -21,10 +21,6 @@ import org.phylospec.components.EngineSpecificationSchema;
  * A PhyloSpec repository holding all component libraries and engine specifications of a
  * repository (see <a href="https://github.com/tochsner/phylospec-repository">the central
  * repository</a>).
- * <p>
- * All versions of all component libraries and engine specifications are loaded. Use
- * {@link #getLatestLibraries()} to get the newest version of every component library,
- * and {@link #getLatestEngines()} to get the newest version of every engine specification.
  */
 public class PhyloSpecRepository {
 
@@ -48,7 +44,6 @@ public class PhyloSpecRepository {
     /**
      * Loads all component libraries and engine specifications of the central PhyloSpec
      * repository, including all their versions.
-     * <p>
      * If the repository can neither be reached nor found in the cache, this falls back to the
      * core component library bundled with this package.
      */
@@ -73,7 +68,7 @@ public class PhyloSpecRepository {
         PhyloSpecRepository loadedRepository = loadedRepositories.get(repoUri);
         if (loadedRepository != null) return loadedRepository;
 
-        // obtain the path to the repo (which is cloned if necessary)
+        // obtain the path to the repo (the repo is cloned if necessary)
 
         Path repositoryPath = RepositoryCache.getRepositoryPath(repoUri);
 
@@ -90,8 +85,9 @@ public class PhyloSpecRepository {
                 loadJsonFiles(enginesPath, "engine specification", PhyloSpecRepository::loadEngineFromInputStream);
 
         if (libraries.isEmpty() && engines.isEmpty()) {
-            throw new IOException("The repository '" + repoUri
-                    + "' contains neither a component library nor an engine specification.");
+            throw new IOException("The repository '" + repoUri + "' contains neither a component library (in the '"
+                    + COMPONENTS_DIRECTORY_NAME + "' folder) nor an engine specification (in the "
+                    + ENGINES_DIRECTORY_NAME + " folder).");
         }
 
         // build the repo object
@@ -119,12 +115,15 @@ public class PhyloSpecRepository {
         List<T> parsedFiles = new ArrayList<>();
 
         try (Stream<Path> files = Files.list(directory)) {
-            for (Path file :
-                    files.filter(PhyloSpecRepository::isJsonFile).sorted().toList()) {
+            for (Path file : files.sorted().toList()) {
+                if (!Files.isRegularFile(file) || !file.getFileName().toString().endsWith(".json")) {
+                    // this is not a JSON file
+                    continue;
+                }
+
                 try (InputStream fileStream = Files.newInputStream(file)) {
                     parsedFiles.add(parser.parse(fileStream));
                 } catch (IOException | RuntimeException e) {
-                    // a single malformed file must not make the entire repository unusable
                     System.err.println(
                             "Skipping the " + description + " '" + file.getFileName() + "': " + e.getMessage());
                 }
@@ -132,10 +131,6 @@ public class PhyloSpecRepository {
         }
 
         return parsedFiles;
-    }
-
-    private static boolean isJsonFile(Path file) {
-        return Files.isRegularFile(file) && file.getFileName().toString().endsWith(".json");
     }
 
     /**

@@ -18,7 +18,6 @@ import org.eclipse.jgit.transport.URIish;
 
 /**
  * Keeps local clones of component repositories in a cache on disk.
- * <p>
  * The cache allows to work offline and makes sure that data is only transferred when the
  * remote repository has actually changed.
  */
@@ -29,7 +28,6 @@ class RepositoryCache {
 
     /**
      * Returns the path to the local clone of the given repository, cloning or updating it if needed.
-     * <p>
      * If the remote cannot be reached, an already existing local clone is used instead. If there is
      * no local clone either, an {@link IOException} is thrown.
      */
@@ -60,7 +58,7 @@ class RepositoryCache {
         try {
             remoteCommit = getRemoteCommit(repoUri);
         } catch (GitAPIException e) {
-            // we are most likely offline, so we fall back to the cached clone if we have one
+            // we are probably offline, so we fall back to the cached clone if we have one
             if (isCloned) return;
             throw new IOException(
                     "The component repository '" + repoUri + "' could not be reached and is not cached.", e);
