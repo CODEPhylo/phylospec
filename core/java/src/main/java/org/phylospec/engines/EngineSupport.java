@@ -10,12 +10,16 @@ import org.phylospec.components.*;
 
 /**
  * Answers whether a set of engines supports a model, a call, or a generator.
+ * When no engine is loaded, everything is always supported.
  */
 public final class EngineSupport {
 
     private final Map<String, List<Generator__1>> implementedGenerators = new LinkedHashMap<>();
+    boolean noEngineLoaded;
 
     public EngineSupport(List<EngineSpecificationSchema> engines) {
+        noEngineLoaded = engines.isEmpty();
+
         for (EngineSpecificationSchema engine : engines) {
             for (Generator__1 generator : engine.getGenerators()) {
                 implementedGenerators
@@ -86,6 +90,12 @@ public final class EngineSupport {
      * arguments the call actually passes.
      */
     public CallSupport supports(Expr.Call call) {
+        if (noEngineLoaded) {
+            // no engines are loaded
+            // we always return full support
+            return new CallSupport(call, true, Collections.nCopies(call.arguments.length, true));
+        }
+
         List<Generator__1> candidates = getCandidateImplementations(call.functionName);
 
         boolean isFullySupported = candidates.stream().anyMatch(candidate -> supports(candidate, call));
