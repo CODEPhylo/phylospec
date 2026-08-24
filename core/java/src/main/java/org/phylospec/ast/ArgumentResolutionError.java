@@ -7,35 +7,37 @@ import java.util.Set;
  * callee.
  */
 public abstract sealed class ArgumentResolutionError extends RuntimeException {
-    public final Expr.Argument argument;
 
-    protected ArgumentResolutionError(Expr.Argument argument) {
+    protected ArgumentResolutionError() {
         super("Argument resolution failed.");
-        this.argument = argument;
     }
 
     public static final class MissingName extends ArgumentResolutionError {
+        public final Expr.Argument argument;
+
         public MissingName(Expr.Argument argument) {
-            super(argument);
+            this.argument = argument;
         }
     }
 
     public static final class UnknownName extends ArgumentResolutionError {
+        public final Expr.Argument argument;
         public final String name;
         public final Set<String> declaredNames;
 
         public UnknownName(Expr.Argument argument, String name, Set<String> declaredNames) {
-            super(argument);
+            this.argument = argument;
             this.name = name;
             this.declaredNames = declaredNames;
         }
     }
 
     public static final class DuplicateName extends ArgumentResolutionError {
+        public final Expr.Argument argument;
         public final String name;
 
         public DuplicateName(Expr.Argument argument, String name) {
-            super(argument);
+            this.argument = argument;
             this.name = name;
         }
     }
@@ -44,7 +46,6 @@ public abstract sealed class ArgumentResolutionError extends RuntimeException {
         public final String name;
 
         public MissingRequired(String name) {
-            super(null);
             this.name = name;
         }
     }

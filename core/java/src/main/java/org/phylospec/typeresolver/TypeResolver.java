@@ -4,7 +4,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import org.phylospec.Utils;
 import org.phylospec.ast.*;
-import org.phylospec.components.Argument;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
 import org.phylospec.components.Type;
@@ -839,9 +838,13 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
         for (Generator generator : generators) {
             // resolve argument names and the corresponding type sets
 
+            List<Expr.Call.Parameter> parameters = generator.getArguments().stream()
+                    .map(x -> new Expr.Call.Parameter(x.getName(), Boolean.TRUE.equals(x.getRequired())))
+                    .toList();
+
             Map<String, Expr.Argument> resolvedArguments;
             try {
-                resolvedArguments = expr.resolveArgumentNames(generator);
+                resolvedArguments = expr.resolveArgumentNames(parameters);
             } catch (ArgumentResolutionError er) {
                 TypeError error =
                         switch (er) {
@@ -850,7 +853,7 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
                                         expr,
                                         "Function `" + generator.getName() + "` takes no argument named `" + e.name
                                                 + "`.",
-                                        "Do you mean '" + findClosestArgument(generator, e.name) + "'?");
+                                        "Do you mean '" + findClosest(e.declaredNames, e.name) + "'?");
                             case ArgumentResolutionError.MissingRequired e ->
                                 new TypeError(
                                         expr,
@@ -1240,15 +1243,12 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
      * helper functions for useful error messages
      */
     private String findClosestVariable(String queryVariable) {
-        return getVariableNames().stream()
-                .min(Comparator.comparingInt(name -> Utils.editDistance(queryVariable, name)))
-                .orElse("");
+        return findClosest(getVariableNames(), queryVariable);
     }
 
-    private String findClosestArgument(Generator generator, String queryArgument) {
-        return generator.getArguments().stream()
-                .map(Argument::getName)
-                .min(Comparator.comparingInt(x -> Utils.editDistance(x, queryArgument)))
+    private static String findClosest(Collection<String> candidates, String query) {
+        return candidates.stream()
+                .min(Comparator.comparingInt(candidate -> Utils.editDistance(query, candidate)))
                 .orElse("");
     }
 
