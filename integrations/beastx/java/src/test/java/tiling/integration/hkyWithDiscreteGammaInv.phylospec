@@ -7,7 +7,7 @@ Vector<Rate> siteRates ~ DiscreteGammaInv(
 
 QMatrix Q = hky(
     kappa=2.0,
-    baseFrequencies=repeat(0.25, num=4)
+    baseFrequencies=repeat(value=0.25, num=4)
 )
 
 // EXPECTED_TILES

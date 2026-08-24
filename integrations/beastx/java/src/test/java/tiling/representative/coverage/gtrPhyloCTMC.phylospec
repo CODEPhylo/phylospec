@@ -15,7 +15,7 @@ Alignment alignment ~ PhyloCTMC(
         rateCG~LogNormal(logMean=0.0, logSd=0.5),
         rateCT~LogNormal(logMean=0.0, logSd=0.5),
         rateGT~LogNormal(logMean=0.0, logSd=0.5),
-        baseFrequencies~Dirichlet(concentration=repeat(1.0, num=4))
+        baseFrequencies~Dirichlet(concentration=repeat(value=1.0, num=4))
     )
 ) observed as data
 

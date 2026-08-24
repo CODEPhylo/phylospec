@@ -6,7 +6,7 @@ QMatrix hkyArrayFreqs = hky(
 )
 
 Real kappaRepeat ~ LogNormal(logMean=1.0, logSd=0.5)
-Simplex freqsRepeat ~ Dirichlet(concentration=repeat(1.0, num=4))
+Simplex freqsRepeat ~ Dirichlet(concentration=repeat(value=1.0, num=4))
 QMatrix hkyRepeatFreqs = hky(
     kappa = kappaRepeat,
     baseFrequencies = freqsRepeat

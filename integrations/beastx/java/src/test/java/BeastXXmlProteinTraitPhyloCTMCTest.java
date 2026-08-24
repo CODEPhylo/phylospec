@@ -164,7 +164,7 @@ public class BeastXXmlProteinTraitPhyloCTMCTest {
                 )
 
                 Simplex codonFrequencies ~ Dirichlet(
-                    concentration=repeat(1.0, num=61)
+                    concentration=repeat(value=1.0, num=61)
                 )
 
                 Tree tree ~ Yule(

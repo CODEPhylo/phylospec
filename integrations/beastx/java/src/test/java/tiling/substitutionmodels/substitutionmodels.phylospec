@@ -5,12 +5,12 @@ QMatrix k80 = k80(
 )
 
 QMatrix f81 = f81(
-    baseFrequencies = repeat(0.25, num=4)
+    baseFrequencies = repeat(value=0.25, num=4)
 )
 
 QMatrix hky = hky(
     kappa = 2.0,
-    baseFrequencies = repeat(0.25, num=4)
+    baseFrequencies = repeat(value=0.25, num=4)
 )
 
 QMatrix gtr = gtr(
@@ -20,7 +20,7 @@ QMatrix gtr = gtr(
     rateCG = 1.0,
     rateCT = 2.0,
     rateGT = 5.0,
-    baseFrequencies = repeat(0.25, num=4)
+    baseFrequencies = repeat(value=0.25, num=4)
 )
 
 // EXPECTED_TILES

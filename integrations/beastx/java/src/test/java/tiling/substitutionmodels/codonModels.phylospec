@@ -1,7 +1,7 @@
 QMatrix gy94Model = gy94(
     kappa = 2.0,
     omega = 0.5,
-    baseFrequencies = repeat(0.01639344262295082, num=61)
+    baseFrequencies = repeat(value=0.01639344262295082, num=61)
 )
 
 // EXPECTED_TILES

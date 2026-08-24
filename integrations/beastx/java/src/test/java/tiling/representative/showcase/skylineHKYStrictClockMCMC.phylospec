@@ -20,7 +20,7 @@ PositiveReal kappa ~ LogNormal(
 )
 
 Simplex baseFrequencies ~ Dirichlet(
-    concentration=repeat(1.0, num=4)
+    concentration=repeat(value=1.0, num=4)
 )
 
 Tree tree ~ SkylineCoalescent(

@@ -476,7 +476,7 @@ public class BeastXXmlShowcasePhyloCTMCTest {
                 PositiveReal rateCT ~ LogNormal(logMean=0.0, logSd=0.4)
 
                 Simplex baseFrequencies ~ Dirichlet(
-                    concentration=repeat(1.0, num=4)
+                    concentration=repeat(value=1.0, num=4)
                 )
 
                 Tree tree ~ FossilizedBirthDeath(
