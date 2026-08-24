@@ -169,7 +169,7 @@ PositiveReal y ~ LogNormal(logMean=mean, logSd=2.0)
 PositiveReal z ~ LogNormal(mean, logSd=2.0)
 ```
 
-If there is only one argument, it can be passed directly (e.g., `Exponential(1.0)`). If there are multiple arguments, all but the first one must be named explicitly (e.g., `Normal(mean=1.0, sd=2.0)` or `Normal(1.0, sd=2.0)`).
+If there is only one argument, it can be passed directly (e.g., `Exponential(1.0)`). If there are multiple arguments, all must be named explicitly (e.g., `Normal(mean=1.0, sd=2.0)`).
 
 There might be optional arguments. One can have multiple functions with the same name but different argument types. Functions with the same name cannot only differ in their return type.
 
@@ -279,7 +279,7 @@ Vector<Real> weights = [0.3, 0.5, 0.2]
 Mixture mixture = Mixture(components=components, weights=weights)
 
 Distribution<Real> components[i] = Normal(mean=i*2.0, sd=1.0) for i in 1:10
-Vector<Real> weights = repeat(0.1, num=10)
+Vector<Real> weights = repeat(value=0.1, num=10)
 Mixture mixture = Mixture(components=components, weights=weights)
 
 // Sample from the mixture
