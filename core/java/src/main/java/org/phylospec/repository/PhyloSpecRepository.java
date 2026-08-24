@@ -59,6 +59,7 @@ public class PhyloSpecRepository {
 
     /**
      * Loads all component libraries and engine specifications of the given repository.
+     * The {@code repoUri} can be either a URL or a local path to a git repository.
      * The repository is cached on disk, so it is only downloaded if the remote has changed. If
      * the remote cannot be reached, the cached version is used.
      */
