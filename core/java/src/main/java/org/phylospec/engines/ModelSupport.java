@@ -55,6 +55,8 @@ public record ModelSupport(List<String> engineNames, List<CallSupport> callSuppo
             return;
         }
 
+        int warningCount = warnings.size();
+
         for (int i = 0; i < call.arguments.length; i++) {
             ArgumentSupport argumentSupport = callSupport.argumentSupport().get(i);
             if (argumentSupport.isSupported()) continue;
@@ -74,6 +76,16 @@ public record ModelSupport(List<String> engineNames, List<CallSupport> callSuppo
                             ? "Pass a fixed value for " + describedArgument + " instead of a random variable."
                             : "Have a look at the arguments one of your engines offers for '" + call.functionName
                                     + "'.");
+        }
+
+        // none of the passed arguments is to blame, so the call itself is what the engines turn
+        // down, most likely because it leaves out an argument one of them requires
+        if (warnings.size() == warningCount) {
+            addWarning(
+                    warnings,
+                    call.getRange(),
+                    describeEngines() + " not support this call of '" + call.functionName + "'.",
+                    "Have a look at the arguments one of your engines requires for '" + call.functionName + "'.");
         }
     }
 
