@@ -384,7 +384,7 @@ public class ComponentResolver {
 
         if (comparesToProperty && !argumentNames.contains(constraint.getOtherArgument())) {
             throw new IllegalArgumentException(
-                    "Unknown argument in constraint for " + generator.getName() + ": " + constraint.getArgument());
+                    "Unknown argument in constraint for " + generator.getName() + ": " + constraint.getOtherArgument());
         }
     }
 
