@@ -117,10 +117,11 @@ public class EngineSpecGenerator {
 
         for (CandidateTile<S> candidateTile : tileLibrary.getTiles()) {
             if (candidateTile instanceof GeneratorTile<?, ?> generatorTile) {
+                GeneratorTileMappingDescriptor descriptor = generatorTile.getMappingDescriptor();
                 if (componentResolver != null) {
-                    validateGeneratorTile(generatorTile, componentResolver);
+                    validateGeneratorTile(descriptor, componentResolver);
                 }
-                generators.add(generateGeneratorSpecification(generatorTile));
+                generators.add(generateGeneratorSpecification(descriptor));
             }
         }
         schema.setGenerators(new ArrayList<>(generators));
@@ -132,19 +133,17 @@ public class EngineSpecGenerator {
      * Builds the engine-specification entry for a single generator tile. The namespace is only set
      * if the tile specifies one.
      */
-    private static Generator__1 generateGeneratorSpecification(GeneratorTile<?, ?> generatorTile) {
-        String phyloSpecGeneratorName = generatorTile.getPhyloSpecGeneratorName();
-
+    private static Generator__1 generateGeneratorSpecification(GeneratorTileMappingDescriptor descriptor) {
         Generator__1 generator = new Generator__1();
-        generator.setName(phyloSpecGeneratorName);
-        generatorTile.getNamespace().ifPresent(generator::setNamespace);
+        generator.setName(descriptor.componentName());
+        descriptor.namespace().ifPresent(generator::setNamespace);
 
         List<Argument__1> arguments = new ArrayList<>();
-        for (GeneratorTile.GeneratorTileInput<?, ?> input : generatorTile.getGeneratorTileInputs()) {
+        for (GeneratorTileMappingDescriptor.Input input : descriptor.inputs()) {
             Argument__1 argument = new Argument__1();
-            argument.setName(input.getPhylospecArgumentName());
-            argument.setRequired(input.isRequired());
-            argument.setCanBeStochastic(input.getAcceptedStochasticities().contains(Stochasticity.STOCHASTIC));
+            argument.setName(input.name());
+            argument.setRequired(input.required());
+            argument.setCanBeStochastic(input.acceptedStochasticities().contains(Stochasticity.STOCHASTIC));
             arguments.add(argument);
         }
         generator.setArguments(arguments);
@@ -158,18 +157,19 @@ public class EngineSpecGenerator {
      * library expects in first position. The resolver is only used for these checks, the engine
      * specification itself is built from the tile alone.
      */
-    private static void validateGeneratorTile(GeneratorTile<?, ?> generatorTile, ComponentResolver componentResolver) {
+    private static void validateGeneratorTile(
+            GeneratorTileMappingDescriptor descriptor, ComponentResolver componentResolver) {
         // if the tile knows its namespace, we resolve the qualified name. otherwise a tile could be
         // validated against a same-named generator of another imported namespace
 
-        String phyloSpecGeneratorName = getResolvableGeneratorName(generatorTile);
+        String phyloSpecGeneratorName = getResolvableGeneratorName(descriptor);
 
         // validate that we know the generator
 
         List<Generator> knownGenerators = componentResolver.resolveGenerator(phyloSpecGeneratorName);
         if (knownGenerators.isEmpty()) {
             throw new IllegalStateException("The tile '"
-                    + generatorTile.getClass().getSimpleName()
+                    + descriptor.implementationClass().getSimpleName()
                     + "' implements the generator '"
                     + phyloSpecGeneratorName
                     + "', which is not known to the component library. Did you mean '"
@@ -179,8 +179,8 @@ public class EngineSpecGenerator {
 
         // validate that the arguments are known and declared in correct order
 
-        List<String> tileArgumentNames = generatorTile.getGeneratorTileInputs().stream()
-                .map(GeneratorTile.GeneratorTileInput::getPhylospecArgumentName)
+        List<String> tileArgumentNames = descriptor.inputs().stream()
+                .map(GeneratorTileMappingDescriptor.Input::name)
                 .toList();
 
         // a generator name can refer to multiple overloads, and a single tile may implement several
@@ -197,7 +197,7 @@ public class EngineSpecGenerator {
 
         if (!unknownArgumentNames.isEmpty()) {
             throw new IllegalStateException("The tile '"
-                    + generatorTile.getClass().getSimpleName()
+                    + descriptor.implementationClass().getSimpleName()
                     + "' declares the arguments "
                     + unknownArgumentNames
                     + " for the generator '"
@@ -223,7 +223,7 @@ public class EngineSpecGenerator {
 
         if (!expectedFirstArgumentNames.contains(tileFirstArgumentName)) {
             throw new IllegalStateException("The tile '"
-                    + generatorTile.getClass().getSimpleName()
+                    + descriptor.implementationClass().getSimpleName()
                     + "' declares '"
                     + tileFirstArgumentName
                     + "' as the first argument of the generator '"
@@ -239,11 +239,11 @@ public class EngineSpecGenerator {
      * library. This is the qualified name if the tile specifies its namespace, and the plain
      * generator name otherwise.
      */
-    private static String getResolvableGeneratorName(GeneratorTile<?, ?> generatorTile) {
-        String generatorName = generatorTile.getPhyloSpecGeneratorName();
+    private static String getResolvableGeneratorName(GeneratorTileMappingDescriptor descriptor) {
+        String generatorName = descriptor.componentName();
 
-        return generatorTile
-                .getNamespace()
+        return descriptor
+                .namespace()
                 .map(namespace ->
                         generatorName.startsWith(namespace + ".") ? generatorName : namespace + "." + generatorName)
                 .orElse(generatorName);

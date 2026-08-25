@@ -3,9 +3,11 @@ package org.phylospec.tiling.tiles;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.phylospec.annotations.PhyloSpec;
 import org.phylospec.ast.ArgumentResolutionError;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
+import org.phylospec.tiling.GeneratorTileMappingDescriptor;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
@@ -24,6 +26,39 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
      * don't override this leave the namespace unspecified.
      */
     public Optional<String> getNamespace() {
+        return Optional.empty();
+    }
+
+    /**
+     * Returns an immutable, engine-independent description of this tile's generator mapping.
+     * Conventional and annotation-driven tiles therefore expose the same metadata shape.
+     */
+    public final GeneratorTileMappingDescriptor getMappingDescriptor() {
+        List<GeneratorTileMappingDescriptor.Input> inputs = this.getGeneratorTileInputs().stream()
+                .map(input -> new GeneratorTileMappingDescriptor.Input(
+                        input.getPhylospecArgumentName(),
+                        input.isRequired(),
+                        input.getDefaultValue(),
+                        input.getTypeToken(),
+                        input.getAcceptedStochasticities()))
+                .toList();
+
+        return new GeneratorTileMappingDescriptor(
+                this.getClass(),
+                this.getPhyloSpecGeneratorName(),
+                this.getNamespace(),
+                this.getMappingCategory(),
+                this.getMappingRole(),
+                inputs);
+    }
+
+    /** Annotation-driven tiles override this to expose their component category. */
+    protected Optional<PhyloSpec.Category> getMappingCategory() {
+        return Optional.empty();
+    }
+
+    /** Annotation-driven tiles override this to expose their semantic role. */
+    protected Optional<PhyloSpec.Role> getMappingRole() {
         return Optional.empty();
     }
 
