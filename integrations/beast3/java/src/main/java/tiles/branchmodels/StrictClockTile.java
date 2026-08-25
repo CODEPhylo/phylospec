@@ -11,10 +11,7 @@ import org.phylospec.annotations.PhyloSpec;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.AnnotatedGeneratorTile;
 
-@PhyloSpec(
-        value = "StrictClock",
-        role = PhyloSpec.Role.CLOCK_MODEL
-)
+@PhyloSpec(value = "StrictClock", role = PhyloSpec.Role.CLOCK_MODEL)
 public class StrictClockTile extends AnnotatedGeneratorTile<StrictClockModel, BEASTState> {
 
     @PhyloParam("clockRate")
