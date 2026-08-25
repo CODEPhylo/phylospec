@@ -2,9 +2,9 @@ package org.phylospec.typeresolver.properties;
 
 import java.util.*;
 import org.phylospec.ast.Expr;
+import org.phylospec.components.Constraint;
 import org.phylospec.components.Generator;
 import org.phylospec.components.ParsedType;
-import org.phylospec.components.ParsedTypeConstraint;
 import org.phylospec.components.ParsedTypeProperty;
 import org.phylospec.errors.Error;
 import org.phylospec.errors.ErrorEventListener;
@@ -57,52 +57,36 @@ public class GeneratorPropertyResolver {
             Expr.Call call, Generator generator, TypeUtils.ResolvedGeneratorApplication resolvedGeneratorApplication) {
         Map<String, ResolvedTypeSet> resolvedArguments = resolvedGeneratorApplication.resolvedArguments();
 
-        for (String constraintString : generator.getConstraints()) {
-            checkConstraint(call, constraintString, resolvedArguments);
+        for (Constraint constraint : generator.getConstraints()) {
+            checkConstraint(call, constraint, resolvedArguments);
         }
     }
 
     private void checkConstraint(
-            Expr.Call call, String constraintString, Map<String, ResolvedTypeSet> resolvedArguments) {
-        ParsedTypeConstraint constraint = ParsedTypeConstraint.parse(constraintString);
+            Expr.Call call, Constraint constraint, Map<String, ResolvedTypeSet> resolvedArguments) {
+        List<Double> leftValues = possibleValues(resolvedArguments, constraint.getArgument(), constraint.getProperty());
+        List<Double> rightValues = constraint.getConstant() != null
+                ? List.of(constraint.getConstant())
+                : possibleValues(resolvedArguments, constraint.getOtherArgument(), constraint.getOtherProperty());
 
-        switch (constraint) {
-            case ParsedTypeConstraint.PropertyComparison propertyComparison ->
-                checkPropertyConstraint(call, propertyComparison, resolvedArguments);
-            case ParsedTypeConstraint.ConstantComparison constantComparison ->
-                checkConstantConstraint(call, constantComparison, resolvedArguments);
-        }
-    }
-
-    private void checkPropertyConstraint(
-            Expr.Call call,
-            ParsedTypeConstraint.PropertyComparison constraint,
-            Map<String, ResolvedTypeSet> resolvedArguments) {
-        ResolvedTypeSet leftInputTypeSet = resolvedArguments.get(constraint.getLeftInputName());
-        ResolvedTypeSet rightInputTypeSet = resolvedArguments.get(constraint.getRightInputName());
-
-        if (leftInputTypeSet == null || rightInputTypeSet == null) {
-            // we don't know about this input
-            // let's ignore this constraint
+        if (leftValues == null || rightValues == null) {
+            // we cannot evaluate this constraint, so we ignore it
             return;
         }
 
-        if (leftInputTypeSet.isEmpty() || rightInputTypeSet.isEmpty()) {
-            // there are no possible types. this is an issue but not related to this constraint
-            return;
-        }
+        for (double leftValue : leftValues) {
+            for (double rightValue : rightValues) {
+                boolean isFulfilled =
+                        switch (constraint.getOperator()) {
+                            case EQUALS -> leftValue == rightValue;
+                            case NOT_EQUALS -> leftValue != rightValue;
+                            case LESS_THAN -> leftValue < rightValue;
+                            case LESS_THAN_OR_EQUAL -> leftValue <= rightValue;
+                            case GREATER_THAN -> leftValue > rightValue;
+                            case GREATER_THAN_OR_EQUAL -> leftValue >= rightValue;
+                        };
 
-        for (ResolvedType leftInputType : leftInputTypeSet) {
-            for (ResolvedType rightInputType : rightInputTypeSet) {
-                Object leftProperty = leftInputType.properties().get(constraint.getLeftPropertyName());
-                Object rightProperty = rightInputType.properties().get(constraint.getRightPropertyName());
-
-                if (!(leftProperty instanceof Number leftNr) || !(rightProperty instanceof Number rightNr)) {
-                    // these are somehow not numbers, or we don't know these properties
-                    return;
-                }
-
-                if (isFulfilled(constraint, leftNr.doubleValue(), rightNr.doubleValue())) {
+                if (isFulfilled) {
                     // there are type inputs for which the constraint could be fulfilled :)
                     return;
                 }
@@ -114,58 +98,77 @@ public class GeneratorPropertyResolver {
         raiseConstraintWarning(call, constraint);
     }
 
-    private void checkConstantConstraint(
-            Expr.Call call,
-            ParsedTypeConstraint.ConstantComparison constraint,
-            Map<String, ResolvedTypeSet> resolvedArguments) {
-        ResolvedTypeSet leftInputTypeSet = resolvedArguments.get(constraint.getLeftInputName());
+    private static List<Double> possibleValues(
+            Map<String, ResolvedTypeSet> resolvedArguments, String inputName, String propertyName) {
+        ResolvedTypeSet inputTypeSet = resolvedArguments.get(inputName);
 
-        if (leftInputTypeSet == null) {
-            // we don't know about this input
-            // let's ignore this constraint
-            return;
+        if (inputTypeSet == null || inputTypeSet.isEmpty()) {
+            // we don't know about this input, or there are no possible types
+            return null;
         }
 
-        if (leftInputTypeSet.isEmpty()) {
-            // there are no possible types. this is an issue but not related to this constraint
-            return;
-        }
+        List<Double> values = new ArrayList<>();
 
-        for (ResolvedType leftInputType : leftInputTypeSet) {
-            Object leftProperty = leftInputType.properties().get(constraint.getLeftPropertyName());
+        for (ResolvedType inputType : inputTypeSet) {
+            Object property = inputType.properties().get(propertyName);
 
-            if (!(leftProperty instanceof Number leftNr)) {
+            if (!(property instanceof Number number)) {
                 // this is somehow not a number, or we don't know this property
-                return;
+                return null;
             }
 
-            if (isFulfilled(constraint, leftNr.doubleValue(), constraint.getConstant())) {
-                // there are type inputs for which the constraint could be fulfilled :)
-                return;
-            }
+            values.add(number.doubleValue());
         }
 
-        // all types could be evaluated and none of them were successful
-
-        raiseConstraintWarning(call, constraint);
+        return values;
     }
 
-    private static boolean isFulfilled(ParsedTypeConstraint constraint, double leftValue, double rightValue) {
-        return switch (constraint.getConstraintType()) {
-            case EQUALITY -> leftValue == rightValue;
-            case INEQUALITY -> leftValue != rightValue;
-            case LESS -> leftValue < rightValue;
-            case LESS_THAN -> leftValue <= rightValue;
-            case GREATER -> leftValue > rightValue;
-            case GREATER_THAN -> leftValue >= rightValue;
-        };
-    }
-
-    private void raiseConstraintWarning(Expr.Call call, ParsedTypeConstraint constraint) {
+    private void raiseConstraintWarning(Expr.Call call, Constraint constraint) {
         raiseWarning(new Error(
                 call.getRange(),
                 "The inputs for '" + call.functionName + "' might be invalid.",
-                constraint.errorMessage()));
+                describeConstraint(constraint)));
+    }
+
+    /**
+     * Describes a violated constraint in a human-readable way.
+     */
+    private static String describeConstraint(Constraint constraint) {
+        return TypePropertyNames.describeProperty(constraint.getArgument(), constraint.getProperty(), true)
+                + " must "
+                + describeOperator(constraint.getOperator())
+                + " "
+                + describeRightSide(constraint)
+                + ".";
+    }
+
+    private static String describeRightSide(Constraint constraint) {
+        if (constraint.getConstant() != null) {
+            return describeConstant(constraint.getConstant());
+        }
+
+        return TypePropertyNames.describeProperty(constraint.getOtherArgument(), constraint.getOtherProperty(), false);
+    }
+
+    private static String describeConstant(double constant) {
+        // print whole numbers without a trailing `.0`
+
+        if (constant == Math.rint(constant) && !Double.isInfinite(constant)) {
+            return Long.toString((long) constant);
+        }
+
+        return Double.toString(constant);
+    }
+
+    private static String describeOperator(Constraint.Operator operator) {
+        return switch (operator) {
+            case EQUALS -> "be equal to";
+            case NOT_EQUALS -> "be different from";
+            case LESS_THAN -> "be less than";
+            case LESS_THAN_OR_EQUAL -> "be less than or equal to";
+            case GREATER_THAN -> "be greater than";
+            case GREATER_THAN_OR_EQUAL -> "be greater than or equal to";
+        };
     }
 
     private void resolveProviders(
