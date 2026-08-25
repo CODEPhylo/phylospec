@@ -2114,6 +2114,20 @@
                     "type": "Simplex",
                     "required": true
                 }
+            ],
+            "constraints": [
+                {
+                    "argument": "relativeRates",
+                    "constant": 6,
+                    "property": "num",
+                    "operator": "equals"
+                },
+                {
+                    "argument": "baseFrequencies",
+                    "constant": 4,
+                    "property": "num",
+                    "operator": "equals"
+                }
             ]
         },
         {
