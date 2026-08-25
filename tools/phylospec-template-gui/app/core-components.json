@@ -732,6 +732,12 @@
             "operator": "lessThanOrEqual",
             "otherArgument": "end",
             "otherProperty": "value"
+          },
+          {
+            "argument": "codonPosition",
+            "property": "value",
+            "operator": "lessThanOrEqual",
+            "constant": 3
           }
         ]
       },
@@ -1027,6 +1033,15 @@
             "description": "Mixture weights for each component",
             "required": true
           }
+        ],
+        "constraints": [
+          {
+            "argument": "components",
+            "property": "num",
+            "operator": "equals",
+            "otherArgument": "weights",
+            "otherProperty": "num"
+          }
         ]
       },
       {
@@ -1057,6 +1072,15 @@
             "description": "Upper bound",
             "required": false,
             "default": "+Inf"
+          }
+        ],
+        "constraints": [
+          {
+            "argument": "lower",
+            "property": "value",
+            "operator": "lessThanOrEqual",
+            "otherArgument": "upper",
+            "otherProperty": "value"
           }
         ]
       },
@@ -1232,6 +1256,15 @@
             "description": "Upper bound",
             "required": true
           }
+        ],
+        "constraints": [
+          {
+            "argument": "lower",
+            "property": "value",
+            "operator": "lessThanOrEqual",
+            "otherArgument": "upper",
+            "otherProperty": "value"
+          }
         ]
       },
       {
@@ -1251,6 +1284,15 @@
             "type": "Integer",
             "description": "Upper bound",
             "required": true
+          }
+        ],
+        "constraints": [
+          {
+            "argument": "lower",
+            "property": "value",
+            "operator": "lessThanOrEqual",
+            "otherArgument": "upper",
+            "otherProperty": "value"
           }
         ]
       },
@@ -1395,6 +1437,15 @@
             "type": "Simplex",
             "description": "The probabilities of each event",
             "required": true
+          }
+        ],
+        "constraints": [
+          {
+            "argument": "numEvents",
+            "property": "value",
+            "operator": "equals",
+            "otherArgument": "probabilities",
+            "otherProperty": "num"
           }
         ]
       },
@@ -2162,6 +2213,20 @@
             "type": "Simplex",
             "description": "Nucleotide frequencies",
             "required": true
+          }
+        ],
+        "constraints": [
+          {
+            "argument": "relativeRates",
+            "property": "num",
+            "operator": "equals",
+            "constant": 6
+          },
+          {
+            "argument": "baseFrequencies",
+            "property": "num",
+            "operator": "equals",
+            "constant": 4
           }
         ]
       },
