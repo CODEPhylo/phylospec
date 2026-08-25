@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 import org.phylospec.Utils;
 import org.phylospec.typeresolver.TypeError;
 
@@ -140,6 +141,7 @@ public class ComponentResolver {
         // validate imported components
 
         this.checkTypeParameters();
+        this.checkConstraints();
     }
 
     /**
@@ -335,6 +337,54 @@ public class ComponentResolver {
         for (ParsedType parameterType : specifiedParameterTypes) {
             if (generator.getTypeParameters().contains(parameterType.getTypeString())) continue;
             checkTypeParameters(parameterType, generator);
+        }
+    }
+
+    /**
+     * Checks that all declared type property constraints are valid.
+     */
+    private void checkConstraints() {
+        for (List<Generator> generators : knownGenerators.values()) {
+            for (Generator generator : generators) {
+                for (Constraint constraint : generator.getConstraints()) {
+                    checkConstraint(constraint, generator);
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks that the given constraint of the given generator is valid.
+     */
+    private void checkConstraint(Constraint constraint, Generator generator) {
+        // the right-hand side is either a constant or the type property of another argument, but never both
+
+        boolean comparesToConstant = constraint.getConstant() != null;
+        boolean comparesToProperty = constraint.getOtherArgument() != null || constraint.getOtherProperty() != null;
+
+        if (comparesToConstant == comparesToProperty) {
+            throw new IllegalArgumentException(
+                    "Constraint for " + generator.getName() + " has both a constant and other argument. Only use one.");
+        }
+
+        if (comparesToProperty && (constraint.getOtherArgument() == null || constraint.getOtherProperty() == null)) {
+            throw new IllegalArgumentException("Constraint for " + generator.getName()
+                    + " has to specify both the other argument and its type property.");
+        }
+
+        // the compared arguments have to exist, otherwise the constraint would silently never be checked
+
+        Set<String> argumentNames =
+                generator.getArguments().stream().map(Argument::getName).collect(Collectors.toSet());
+
+        if (!argumentNames.contains(constraint.getArgument())) {
+            throw new IllegalArgumentException(
+                    "Unknown argument in constraint for " + generator.getName() + ": " + constraint.getArgument());
+        }
+
+        if (comparesToProperty && !argumentNames.contains(constraint.getOtherArgument())) {
+            throw new IllegalArgumentException(
+                    "Unknown argument in constraint for " + generator.getName() + ": " + constraint.getArgument());
         }
     }
 
