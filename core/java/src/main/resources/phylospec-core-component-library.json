@@ -708,6 +708,12 @@
                     "property": "value",
                     "otherArgument": "end",
                     "operator": "lessThanOrEqual"
+                },
+                {
+                    "argument": "codonPosition",
+                    "constant": 3,
+                    "property": "value",
+                    "operator": "lessThanOrEqual"
                 }
             ]
         },
@@ -963,7 +969,14 @@
                     "required": true
                 }
             ],
-            "typeParameters": ["T"]
+            "typeParameters": ["T"],
+            "constraints": [{
+                "argument": "components",
+                "otherProperty": "num",
+                "property": "num",
+                "otherArgument": "weights",
+                "operator": "equals"
+            }]
         },
         {
             "generatedType": "Distribution<T>",
@@ -992,7 +1005,14 @@
                     "required": false
                 }
             ],
-            "typeParameters": ["T"]
+            "typeParameters": ["T"],
+            "constraints": [{
+                "argument": "lower",
+                "otherProperty": "value",
+                "property": "value",
+                "otherArgument": "upper",
+                "operator": "lessThanOrEqual"
+            }]
         },
         {
             "generatedType": "Distribution<Real>",
@@ -1164,7 +1184,14 @@
                     "type": "Real",
                     "required": true
                 }
-            ]
+            ],
+            "constraints": [{
+                "argument": "lower",
+                "otherProperty": "value",
+                "property": "value",
+                "otherArgument": "upper",
+                "operator": "lessThanOrEqual"
+            }]
         },
         {
             "generatedType": "Distribution<Integer>",
@@ -1184,7 +1211,14 @@
                     "type": "Integer",
                     "required": true
                 }
-            ]
+            ],
+            "constraints": [{
+                "argument": "lower",
+                "otherProperty": "value",
+                "property": "value",
+                "otherArgument": "upper",
+                "operator": "lessThanOrEqual"
+            }]
         },
         {
             "generatedType": "Distribution<Real>",
@@ -1322,7 +1356,14 @@
                     "type": "Simplex",
                     "required": true
                 }
-            ]
+            ],
+            "constraints": [{
+                "argument": "numEvents",
+                "otherProperty": "num",
+                "property": "value",
+                "otherArgument": "probabilities",
+                "operator": "equals"
+            }]
         },
         {
             "generatedType": "Distribution<NonNegativeInteger>",
