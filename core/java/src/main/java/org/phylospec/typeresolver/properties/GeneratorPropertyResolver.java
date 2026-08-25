@@ -76,7 +76,17 @@ public class GeneratorPropertyResolver {
 
         for (double leftValue : leftValues) {
             for (double rightValue : rightValues) {
-                if (isFulfilled(constraint.getOperator(), leftValue, rightValue)) {
+                boolean isFulfilled =
+                        switch (constraint.getOperator()) {
+                            case EQUALS -> leftValue == rightValue;
+                            case NOT_EQUALS -> leftValue != rightValue;
+                            case LESS_THAN -> leftValue < rightValue;
+                            case LESS_THAN_OR_EQUAL -> leftValue <= rightValue;
+                            case GREATER_THAN -> leftValue > rightValue;
+                            case GREATER_THAN_OR_EQUAL -> leftValue >= rightValue;
+                        };
+
+                if (isFulfilled) {
                     // there are type inputs for which the constraint could be fulfilled :)
                     return;
                 }
@@ -88,14 +98,6 @@ public class GeneratorPropertyResolver {
         raiseConstraintWarning(call, constraint);
     }
 
-    /**
-     * Collects the possible values of a numeric type property of the given input.
-     *
-     * @param resolvedArguments the resolved types of all inputs
-     * @param inputName the name of the input carrying the property
-     * @param propertyName the property name
-     * @return the possible values, or null if they cannot be determined
-     */
     private static List<Double> possibleValues(
             Map<String, ResolvedTypeSet> resolvedArguments, String inputName, String propertyName) {
         ResolvedTypeSet inputTypeSet = resolvedArguments.get(inputName);
@@ -121,17 +123,6 @@ public class GeneratorPropertyResolver {
         return values;
     }
 
-    private static boolean isFulfilled(Constraint.Operator operator, double leftValue, double rightValue) {
-        return switch (operator) {
-            case EQUALS -> leftValue == rightValue;
-            case NOT_EQUALS -> leftValue != rightValue;
-            case LESS_THAN -> leftValue < rightValue;
-            case LESS_THAN_OR_EQUAL -> leftValue <= rightValue;
-            case GREATER_THAN -> leftValue > rightValue;
-            case GREATER_THAN_OR_EQUAL -> leftValue >= rightValue;
-        };
-    }
-
     private void raiseConstraintWarning(Expr.Call call, Constraint constraint) {
         raiseWarning(new Error(
                 call.getRange(),
@@ -141,9 +132,6 @@ public class GeneratorPropertyResolver {
 
     /**
      * Describes a violated constraint in a human-readable way.
-     *
-     * @param constraint the violated constraint
-     * @return the message
      */
     private static String describeConstraint(Constraint constraint) {
         return TypePropertyNames.describeProperty(constraint.getArgument(), constraint.getProperty(), true)
