@@ -68,7 +68,7 @@ public class Generator {
      */
     @JsonProperty("constraints")
     @JsonPropertyDescription("Type property constraints on the inputs.")
-    private List<String> constraints = new ArrayList<String>();
+    private List<Constraint> constraints = new ArrayList<Constraint>();
     /**
      * File I/O metadata for data-loading or exporting functions
      *
@@ -190,7 +190,7 @@ public class Generator {
      *
      */
     @JsonProperty("constraints")
-    public List<String> getConstraints() {
+    public List<Constraint> getConstraints() {
         return constraints;
     }
 
@@ -199,7 +199,7 @@ public class Generator {
      *
      */
     @JsonProperty("constraints")
-    public void setConstraints(List<String> constraints) {
+    public void setConstraints(List<Constraint> constraints) {
         this.constraints = constraints;
     }
 

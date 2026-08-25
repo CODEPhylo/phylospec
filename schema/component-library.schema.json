@@ -144,7 +144,7 @@
         "constraints": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/constraint"
           },
           "description": "Type property constraints on the inputs."
         },
@@ -241,6 +241,62 @@
           }
         }
       }
+    },
+    "constraint": {
+      "type": "object",
+      "description": "Compares a type property of an argument with either another argument's type property or a numeric constant.",
+      "required": [
+        "argument",
+        "property",
+        "operator"
+      ],
+      "properties": {
+        "argument": {
+          "type": "string",
+          "description": "Name of the argument on the left-hand side"
+        },
+        "property": {
+          "type": "string",
+          "description": "Type property of the left-hand argument"
+        },
+        "operator": {
+          "type": "string",
+          "enum": [
+            "equals",
+            "notEquals",
+            "lessThan",
+            "lessThanOrEqual",
+            "greaterThan",
+            "greaterThanOrEqual"
+          ],
+          "description": "The comparison to perform"
+        },
+        "otherArgument": {
+          "type": "string",
+          "description": "Name of the argument on the right-hand side"
+        },
+        "otherProperty": {
+          "type": "string",
+          "description": "Type property of the right-hand argument"
+        },
+        "constant": {
+          "type": "number",
+          "description": "Numeric constant on the right-hand side"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "otherArgument",
+            "otherProperty"
+          ]
+        },
+        {
+          "required": [
+            "constant"
+          ]
+        }
+      ]
     },
     "property": {
       "type": "object",

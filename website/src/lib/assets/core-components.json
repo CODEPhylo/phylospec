@@ -139,11 +139,13 @@
       {
         "name": "Nucleotide",
         "description": "DNA/RNA nucleotide alphabet",
+        "extends": "Character",
         "namespace": "phylospec.types"
       },
       {
         "name": "AminoAcid",
         "description": "Standard amino acid alphabet",
+        "extends": "Character",
         "namespace": "phylospec.types"
       },
       {
@@ -711,9 +713,27 @@
           }
         ],
         "constraints": [
-          "start.value <= alignment.numSites",
-          "end.value <= alignment.numSites",
-          "start.value <= end.value"
+          {
+            "argument": "start",
+            "property": "value",
+            "operator": "lessThanOrEqual",
+            "otherArgument": "alignment",
+            "otherProperty": "numSites"
+          },
+          {
+            "argument": "end",
+            "property": "value",
+            "operator": "lessThanOrEqual",
+            "otherArgument": "alignment",
+            "otherProperty": "numSites"
+          },
+          {
+            "argument": "start",
+            "property": "value",
+            "operator": "lessThanOrEqual",
+            "otherArgument": "end",
+            "otherProperty": "value"
+          }
         ]
       },
       {
@@ -1289,8 +1309,20 @@
           }
         ],
         "constraints": [
-          "mean.num == covariance.numCols",
-          "mean.num == covariance.numRows"
+          {
+            "argument": "mean",
+            "property": "num",
+            "operator": "equals",
+            "otherArgument": "covariance",
+            "otherProperty": "numCols"
+          },
+          {
+            "argument": "mean",
+            "property": "num",
+            "operator": "equals",
+            "otherArgument": "covariance",
+            "otherProperty": "numRows"
+          }
         ]
       },
       {
@@ -1613,7 +1645,13 @@
           }
         ],
         "constraints": [
-          "populationSizes.num == groupSizes.num"
+          {
+            "argument": "populationSizes",
+            "property": "num",
+            "operator": "equals",
+            "otherArgument": "groupSizes",
+            "otherProperty": "num"
+          }
         ]
       },
       {
@@ -1738,7 +1776,13 @@
           }
         ],
         "constraints": [
-          "tree.numBranches == branchRates.num"
+          {
+            "argument": "tree",
+            "property": "numBranches",
+            "operator": "equals",
+            "otherArgument": "branchRates",
+            "otherProperty": "num"
+          }
         ]
       },
       {
@@ -1773,8 +1817,20 @@
           }
         ],
         "constraints": [
-          "tree.numBranches == branchRates.num",
-          "siteQMatrices.num == siteRates.num"
+          {
+            "argument": "tree",
+            "property": "numBranches",
+            "operator": "equals",
+            "otherArgument": "branchRates",
+            "otherProperty": "num"
+          },
+          {
+            "argument": "siteQMatrices",
+            "property": "num",
+            "operator": "equals",
+            "otherArgument": "siteRates",
+            "otherProperty": "num"
+          }
         ]
       },
       {
@@ -1809,8 +1865,20 @@
           }
         ],
         "constraints": [
-          "tree.numBranches == branchRates.num",
-          "siteRates.num == rootValues.num"
+          {
+            "argument": "tree",
+            "property": "numBranches",
+            "operator": "equals",
+            "otherArgument": "branchRates",
+            "otherProperty": "num"
+          },
+          {
+            "argument": "siteRates",
+            "property": "num",
+            "operator": "equals",
+            "otherArgument": "rootValues",
+            "otherProperty": "num"
+          }
         ]
       },
       {
@@ -1853,8 +1921,20 @@
           }
         ],
         "constraints": [
-          "siteVariances.num == siteOptima.num",
-          "siteVariances.num == rootValues.num"
+          {
+            "argument": "siteVariances",
+            "property": "num",
+            "operator": "equals",
+            "otherArgument": "siteOptima",
+            "otherProperty": "num"
+          },
+          {
+            "argument": "siteVariances",
+            "property": "num",
+            "operator": "equals",
+            "otherArgument": "rootValues",
+            "otherProperty": "num"
+          }
         ]
       },
       {
@@ -1970,6 +2050,14 @@
             "description": "Nucleotide frequencies",
             "required": true
           }
+        ],
+        "constraints": [
+          {
+            "argument": "baseFrequencies",
+            "property": "num",
+            "operator": "equals",
+            "constant": 4
+          }
         ]
       },
       {
@@ -1989,6 +2077,14 @@
             "type": "Simplex",
             "description": "Nucleotide frequencies",
             "required": true
+          }
+        ],
+        "constraints": [
+          {
+            "argument": "baseFrequencies",
+            "property": "num",
+            "operator": "equals",
+            "constant": 4
           }
         ]
       },
@@ -2040,6 +2136,14 @@
             "description": "Nucleotide frequencies",
             "required": true
           }
+        ],
+        "constraints": [
+          {
+            "argument": "baseFrequencies",
+            "property": "num",
+            "operator": "equals",
+            "constant": 4
+          }
         ]
       },
       {
@@ -2074,6 +2178,14 @@
             "description": "Amino acid frequencies",
             "required": false
           }
+        ],
+        "constraints": [
+          {
+            "argument": "baseFrequencies",
+            "property": "num",
+            "operator": "equals",
+            "constant": 20
+          }
         ]
       },
       {
@@ -2088,6 +2200,14 @@
             "description": "Amino acid frequencies",
             "required": false
           }
+        ],
+        "constraints": [
+          {
+            "argument": "baseFrequencies",
+            "property": "num",
+            "operator": "equals",
+            "constant": 20
+          }
         ]
       },
       {
@@ -2101,6 +2221,14 @@
             "type": "Simplex",
             "description": "Amino acid frequencies",
             "required": false
+          }
+        ],
+        "constraints": [
+          {
+            "argument": "baseFrequencies",
+            "property": "num",
+            "operator": "equals",
+            "constant": 20
           }
         ]
       },
@@ -2127,6 +2255,14 @@
             "type": "Simplex",
             "description": "Stationary codon frequencies",
             "required": true
+          }
+        ],
+        "constraints": [
+          {
+            "argument": "baseFrequencies",
+            "property": "num",
+            "operator": "equals",
+            "constant": 61
           }
         ]
       },

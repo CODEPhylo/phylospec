@@ -690,9 +690,27 @@
             ],
             "typeParameters": ["T"],
             "constraints": [
-                "start.value <= alignment.numSites",
-                "end.value <= alignment.numSites",
-                "start.value <= end.value"
+                {
+                    "argument": "start",
+                    "otherProperty": "numSites",
+                    "property": "value",
+                    "otherArgument": "alignment",
+                    "operator": "lessThanOrEqual"
+                },
+                {
+                    "argument": "end",
+                    "otherProperty": "numSites",
+                    "property": "value",
+                    "otherArgument": "alignment",
+                    "operator": "lessThanOrEqual"
+                },
+                {
+                    "argument": "start",
+                    "otherProperty": "value",
+                    "property": "value",
+                    "otherArgument": "end",
+                    "operator": "lessThanOrEqual"
+                }
             ]
         },
         {
@@ -1222,8 +1240,20 @@
                 }
             ],
             "constraints": [
-                "mean.num == covariance.numCols",
-                "mean.num == covariance.numRows"
+                {
+                    "argument": "mean",
+                    "otherProperty": "numCols",
+                    "property": "num",
+                    "otherArgument": "covariance",
+                    "operator": "equals"
+                },
+                {
+                    "argument": "mean",
+                    "otherProperty": "numRows",
+                    "property": "num",
+                    "otherArgument": "covariance",
+                    "operator": "equals"
+                }
             ]
         },
         {
@@ -1537,7 +1567,13 @@
                     "required": true
                 }
             ],
-            "constraints": ["populationSizes.num == groupSizes.num"]
+            "constraints": [{
+                "argument": "populationSizes",
+                "otherProperty": "num",
+                "property": "num",
+                "otherArgument": "groupSizes",
+                "operator": "equals"
+            }]
         },
         {
             "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
@@ -1660,7 +1696,13 @@
                     "required": false
                 }
             ],
-            "constraints": ["tree.numBranches == branchRates.num"]
+            "constraints": [{
+                "argument": "tree",
+                "otherProperty": "num",
+                "property": "numBranches",
+                "otherArgument": "branchRates",
+                "operator": "equals"
+            }]
         },
         {
             "generatedType": "Distribution<Alignment<Character; numSites=siteRates.num, numTaxa=tree.numTaxa>>",
@@ -1694,8 +1736,20 @@
                 }
             ],
             "constraints": [
-                "tree.numBranches == branchRates.num",
-                "siteQMatrices.num == siteRates.num"
+                {
+                    "argument": "tree",
+                    "otherProperty": "num",
+                    "property": "numBranches",
+                    "otherArgument": "branchRates",
+                    "operator": "equals"
+                },
+                {
+                    "argument": "siteQMatrices",
+                    "otherProperty": "num",
+                    "property": "num",
+                    "otherArgument": "siteRates",
+                    "operator": "equals"
+                }
             ]
         },
         {
@@ -1730,8 +1784,20 @@
                 }
             ],
             "constraints": [
-                "tree.numBranches == branchRates.num",
-                "siteRates.num == rootValues.num"
+                {
+                    "argument": "tree",
+                    "otherProperty": "num",
+                    "property": "numBranches",
+                    "otherArgument": "branchRates",
+                    "operator": "equals"
+                },
+                {
+                    "argument": "siteRates",
+                    "otherProperty": "num",
+                    "property": "num",
+                    "otherArgument": "rootValues",
+                    "operator": "equals"
+                }
             ]
         },
         {
@@ -1774,8 +1840,20 @@
                 }
             ],
             "constraints": [
-                "siteVariances.num == siteOptima.num",
-                "siteVariances.num == rootValues.num"
+                {
+                    "argument": "siteVariances",
+                    "otherProperty": "num",
+                    "property": "num",
+                    "otherArgument": "siteOptima",
+                    "operator": "equals"
+                },
+                {
+                    "argument": "siteVariances",
+                    "otherProperty": "num",
+                    "property": "num",
+                    "otherArgument": "rootValues",
+                    "operator": "equals"
+                }
             ]
         },
         {
@@ -1888,7 +1966,12 @@
                 "type": "Simplex",
                 "required": true
             }],
-            "constraints": ["baseFrequencies.num == 4"]
+            "constraints": [{
+                "argument": "baseFrequencies",
+                "constant": 4,
+                "property": "num",
+                "operator": "equals"
+            }]
         },
         {
             "generatedType": "QMatrix",
@@ -1909,7 +1992,12 @@
                     "required": true
                 }
             ],
-            "constraints": ["baseFrequencies.num == 4"]
+            "constraints": [{
+                "argument": "baseFrequencies",
+                "constant": 4,
+                "property": "num",
+                "operator": "equals"
+            }]
         },
         {
             "generatedType": "QMatrix",
@@ -1960,7 +2048,12 @@
                     "required": true
                 }
             ],
-            "constraints": ["baseFrequencies.num == 4"]
+            "constraints": [{
+                "argument": "baseFrequencies",
+                "constant": 4,
+                "property": "num",
+                "operator": "equals"
+            }]
         },
         {
             "generatedType": "QMatrix",
@@ -1993,7 +2086,12 @@
                 "type": "Simplex",
                 "required": false
             }],
-            "constraints": ["baseFrequencies.num == 20"]
+            "constraints": [{
+                "argument": "baseFrequencies",
+                "constant": 20,
+                "property": "num",
+                "operator": "equals"
+            }]
         },
         {
             "generatedType": "QMatrix",
@@ -2006,7 +2104,12 @@
                 "type": "Simplex",
                 "required": false
             }],
-            "constraints": ["baseFrequencies.num == 20"]
+            "constraints": [{
+                "argument": "baseFrequencies",
+                "constant": 20,
+                "property": "num",
+                "operator": "equals"
+            }]
         },
         {
             "generatedType": "QMatrix",
@@ -2019,7 +2122,12 @@
                 "type": "Simplex",
                 "required": false
             }],
-            "constraints": ["baseFrequencies.num == 20"]
+            "constraints": [{
+                "argument": "baseFrequencies",
+                "constant": 20,
+                "property": "num",
+                "operator": "equals"
+            }]
         },
         {
             "generatedType": "QMatrix",
@@ -2046,7 +2154,12 @@
                     "required": true
                 }
             ],
-            "constraints": ["baseFrequencies.num == 61"]
+            "constraints": [{
+                "argument": "baseFrequencies",
+                "constant": 61,
+                "property": "num",
+                "operator": "equals"
+            }]
         },
         {
             "generatedType": "QMatrix",
