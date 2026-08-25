@@ -1,6 +1,7 @@
 package org.phylospec.tiling.tiles;
 
 import java.lang.reflect.Field;
+import java.util.Optional;
 import java.util.Set;
 import org.phylospec.annotations.PhyloParam;
 import org.phylospec.annotations.PhyloSpec;
@@ -32,6 +33,16 @@ public abstract class AnnotatedGeneratorTile<T, S> extends GeneratorTile<T, S> {
     @Override
     public final String getPhyloSpecGeneratorName() {
         return componentAnnotation().value();
+    }
+
+    @Override
+    protected final Optional<PhyloSpec.Category> getMappingCategory() {
+        return Optional.of(componentAnnotation().category());
+    }
+
+    @Override
+    protected final Optional<PhyloSpec.Role> getMappingRole() {
+        return Optional.of(componentAnnotation().role());
     }
 
     @Override
