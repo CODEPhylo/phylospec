@@ -12,6 +12,7 @@ public abstract sealed class ArgumentResolutionError extends RuntimeException {
         super("Argument resolution failed.");
     }
 
+    /** Raised when an argument is unnamed that cannot be unnamed. */
     public static final class MissingName extends ArgumentResolutionError {
         public final Expr.Argument argument;
 
@@ -20,6 +21,7 @@ public abstract sealed class ArgumentResolutionError extends RuntimeException {
         }
     }
 
+    /** Raised when an argument has an unknown name. */
     public static final class UnknownName extends ArgumentResolutionError {
         public final Expr.Argument argument;
         public final String name;
@@ -32,6 +34,7 @@ public abstract sealed class ArgumentResolutionError extends RuntimeException {
         }
     }
 
+    /** Raised when two arguments have the same name. */
     public static final class DuplicateName extends ArgumentResolutionError {
         public final Expr.Argument argument;
         public final String name;
@@ -42,6 +45,7 @@ public abstract sealed class ArgumentResolutionError extends RuntimeException {
         }
     }
 
+    /** Raised when a required argument is missing. */
     public static final class MissingRequired extends ArgumentResolutionError {
         public final String name;
 
