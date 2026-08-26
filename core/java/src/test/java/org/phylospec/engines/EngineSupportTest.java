@@ -280,15 +280,19 @@ public class EngineSupportTest {
         EngineSupport.GeneratorSupport siteQMatrices =
                 support.supports(getOverloadWithArgument("PhyloCTMC", "siteQMatrices"));
         assertEquals(EngineSupport.Support.PARTIAL_SUPPORT, siteQMatrices.support());
-        assertEquals(true, siteQMatrices.argumentSupport().get("tree"));
-        assertEquals(false, siteQMatrices.argumentSupport().get("siteQMatrices"));
+        assertEquals(
+                EngineSupport.ArgumentSupport.SUPPORTED,
+                siteQMatrices.argumentSupport().get("tree"));
+        assertEquals(
+                EngineSupport.ArgumentSupport.NOT_OFFERED,
+                siteQMatrices.argumentSupport().get("siteQMatrices"));
 
         // an unimplemented generator has no argument the engine could offer
 
         EngineSupport.GeneratorSupport logNormal =
                 support.supports(componentResolver.resolveGenerator("LogNormal").getFirst());
         assertEquals(EngineSupport.Support.NO_SUPPORT, logNormal.support());
-        assertTrue(logNormal.argumentSupport().values().stream().noneMatch(supported -> supported));
+        assertTrue(logNormal.argumentSupport().values().stream().noneMatch(EngineSupport.ArgumentSupport::isSupported));
     }
 
     @Test
@@ -303,7 +307,12 @@ public class EngineSupportTest {
                 originTime));
 
         assertEquals(EngineSupport.Support.PARTIAL_SUPPORT, yule.support());
-        assertEquals(List.of(true, true, false), yule.argumentSupport());
+        assertEquals(
+                List.of(
+                        EngineSupport.ArgumentSupport.SUPPORTED,
+                        EngineSupport.ArgumentSupport.SUPPORTED,
+                        EngineSupport.ArgumentSupport.NOT_OFFERED),
+                yule.argumentSupport());
 
         // a call of an unimplemented generator is not partially supported, however familiar the
         // names of its arguments look
@@ -364,7 +373,9 @@ public class EngineSupportTest {
         // both arguments are offered by some engine, so neither of them is to blame on its own
 
         assertEquals(EngineSupport.Support.PARTIAL_SUPPORT, yule.support());
-        assertEquals(List.of(true, true), yule.argumentSupport());
+        assertEquals(
+                List.of(EngineSupport.ArgumentSupport.SUPPORTED, EngineSupport.ArgumentSupport.SUPPORTED),
+                yule.argumentSupport());
     }
 
     @Test
@@ -499,7 +510,8 @@ public class EngineSupportTest {
 
         assertFalse(model.isFullySupported());
 
-        // the passed `taxa` is the argument to blame, while `birthRate` is offered
+        // the passed `taxa` is the argument to blame, and it is blamed for its stochasticity
+        // rather than for a name the engine does not know
 
         EngineSupport.CallSupport yule = model.callSupport().stream()
                 .filter(call -> call.call().functionName.equals("Yule"))
@@ -507,7 +519,34 @@ public class EngineSupportTest {
                 .orElseThrow();
 
         assertEquals(EngineSupport.Support.PARTIAL_SUPPORT, yule.support());
-        assertEquals(List.of(true, false), yule.argumentSupport());
+        assertEquals(
+                List.of(
+                        EngineSupport.ArgumentSupport.SUPPORTED,
+                        EngineSupport.ArgumentSupport.STOCHASTICITY_UNSUPPORTED),
+                yule.argumentSupport());
+    }
+
+    @Test
+    public void testStochasticityIsReportedApartFromAnUnknownName() {
+        // both arguments keep the engine out, but for different reasons: it never heard of
+        // `originTime`, while it knows `taxa` and only refuses a random variable for it
+
+        EngineSupport.ModelSupport model = support.supports(parse("""
+                Taxa sampled ~ exp(1.0)
+                Tree tree ~ Yule(birthRate=0.2, taxa=sampled, originTime=3.0)
+                """));
+
+        EngineSupport.CallSupport yule = model.callSupport().stream()
+                .filter(call -> call.call().functionName.equals("Yule"))
+                .findFirst()
+                .orElseThrow();
+
+        assertEquals(
+                List.of(
+                        EngineSupport.ArgumentSupport.SUPPORTED,
+                        EngineSupport.ArgumentSupport.STOCHASTICITY_UNSUPPORTED,
+                        EngineSupport.ArgumentSupport.NOT_OFFERED),
+                yule.argumentSupport());
     }
 
     @Test
