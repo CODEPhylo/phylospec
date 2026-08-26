@@ -478,8 +478,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
             String name = templateArgument.name;
             boolean required = !(templateArgument.expression instanceof Expr.OptionalTemplateVariable);
-            templateParameters.add(new Expr.Call.Parameter(name, required));
 
+            templateParameters.add(new Expr.Call.Parameter(name, required));
             templateArguments.put(name, templateArgument);
         }
 
