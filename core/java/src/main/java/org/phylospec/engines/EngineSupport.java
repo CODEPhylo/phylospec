@@ -92,7 +92,7 @@ public final class EngineSupport {
 
         // derive the generator argument support
 
-        Map<String, Boolean> argumentSupport = new LinkedHashMap<>();
+        Map<String, ArgumentSupport> argumentSupport = new LinkedHashMap<>();
         for (int i = 0; i < generatorArguments.size(); i++) {
             argumentSupport.put(
                     generatorArguments.get(i), callSupport.argumentSupport().get(i));
@@ -116,7 +116,7 @@ public final class EngineSupport {
         if (noEngineLoaded) {
             // no engines are loaded
             // we always return full support
-            return new CallSupport(call, true, Collections.nCopies(call.arguments.length, true));
+            return new CallSupport(call, true, Collections.nCopies(call.arguments.length, ArgumentSupport.SUPPORTED));
         }
 
         // check if there is an implementation that supports the call
@@ -125,10 +125,12 @@ public final class EngineSupport {
         boolean isFullySupported =
                 candidates.stream().anyMatch(candidate -> supports(candidate, call, stochasticityResolver));
 
-        // if no engine supports the call, we report which of the passed arguments an engine offers
-        // at all, so that tooling can point at the ones to blame
-        List<Boolean> argumentSupport = Arrays.stream(call.arguments)
-                .map(argument -> isFullySupported || isOffered(candidates, argument, stochasticityResolver))
+        // if no engine supports the call, we report for each of the passed arguments whether an
+        // engine offers it at all, so that tooling can point at the ones to blame
+        List<ArgumentSupport> argumentSupport = Arrays.stream(call.arguments)
+                .map(argument -> isFullySupported
+                        ? ArgumentSupport.SUPPORTED
+                        : getArgumentSupport(candidates, argument, stochasticityResolver))
                 .toList();
 
         return new CallSupport(call, isFullySupported, argumentSupport);
@@ -195,9 +197,9 @@ public final class EngineSupport {
     }
 
     /**
-     * Checks if any candidate offers the argument the given passed argument names.
+     * Reports whether any candidate offers the argument the given passed argument names, and if not, why.
      */
-    private static boolean isOffered(
+    private static ArgumentSupport getArgumentSupport(
             List<Generator__1> candidates, Expr.Argument passedArgument, StochasticityResolver stochasticityResolver) {
         String argumentName = passedArgument.name != null
                 ? passedArgument.name
@@ -206,14 +208,21 @@ public final class EngineSupport {
         // an argument that is passed positionally names no argument of its own
         // if there was a generator with exactly one required argument, we would
         // not call this function
-        if (argumentName == null) return false;
+        if (argumentName == null) return ArgumentSupport.NOT_OFFERED;
 
-        // an argument an engine offers but cannot take as a random variable is not offered for
-        // this call, so that tooling blames the argument that actually keeps the engine out
-        return candidates.stream()
+        List<Argument__1> offered = candidates.stream()
                 .flatMap(candidate -> candidate.getArguments().stream())
-                .anyMatch(argument -> argument.getName().equals(argumentName)
-                        && acceptsStochasticity(argument, passedArgument, stochasticityResolver));
+                .filter(argument -> argument.getName().equals(argumentName))
+                .toList();
+
+        if (offered.isEmpty()) return ArgumentSupport.NOT_OFFERED;
+
+        // an argument an engine offers but cannot take as a random variable is not supported for
+        // this call, so that tooling blames the argument that actually keeps the engine out
+        return offered.stream()
+                        .anyMatch(argument -> acceptsStochasticity(argument, passedArgument, stochasticityResolver))
+                ? ArgumentSupport.SUPPORTED
+                : ArgumentSupport.STOCHASTICITY_UNSUPPORTED;
     }
 
     /* helper functions for names */
@@ -253,17 +262,28 @@ public final class EngineSupport {
         }
     }
 
-    public record CallSupport(Expr.Call call, boolean isFullySupported, List<Boolean> argumentSupport) {
+    public enum ArgumentSupport {
+        SUPPORTED,
+        STOCHASTICITY_UNSUPPORTED,
+        NOT_OFFERED;
 
-        public Support support() {
-            return Support.of(isFullySupported, argumentSupport.stream());
+        public boolean isSupported() {
+            return this == SUPPORTED;
         }
     }
 
-    public record GeneratorSupport(boolean isFullySupported, Map<String, Boolean> argumentSupport) {
+    public record CallSupport(Expr.Call call, boolean isFullySupported, List<ArgumentSupport> argumentSupport) {
 
         public Support support() {
-            return Support.of(isFullySupported, argumentSupport.values().stream());
+            return Support.of(isFullySupported, argumentSupport.stream().map(ArgumentSupport::isSupported));
+        }
+    }
+
+    public record GeneratorSupport(boolean isFullySupported, Map<String, ArgumentSupport> argumentSupport) {
+
+        public Support support() {
+            return Support.of(
+                    isFullySupported, argumentSupport.values().stream().map(ArgumentSupport::isSupported));
         }
     }
 }
