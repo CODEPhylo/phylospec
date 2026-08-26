@@ -321,8 +321,9 @@ public abstract class Expr extends AstNode {
                 String parameterName = resolveArgumentName(argument, parameterNames, requiredParameters);
 
                 if (parameterName == null) {
-                    // the argument name is omitted where it cannot be inferred
-                    if (missingNameError == null) missingNameError = new ArgumentResolutionError.MissingName(argument);
+                    if (missingNameError == null) {
+                        missingNameError = new ArgumentResolutionError.MissingName(argument);
+                    }
                 } else if (!parameterNames.contains(parameterName)) {
                     if (unknownNameError == null) {
                         unknownNameError =
@@ -333,6 +334,7 @@ public abstract class Expr extends AstNode {
                         duplicateNameError = new ArgumentResolutionError.DuplicateName(argument, parameterName);
                     }
                 } else {
+                    // all good
                     boundArguments.put(parameterName, argument);
                 }
             }
@@ -342,6 +344,8 @@ public abstract class Expr extends AstNode {
             if (missingNameError != null) throw missingNameError;
             if (duplicateNameError != null) throw duplicateNameError;
             if (unknownNameError != null) throw unknownNameError;
+
+            // check that we have all required arguments
 
             List<String> missingRequiredNames = requiredParameters.stream()
                     .map(Parameter::name)
@@ -371,6 +375,7 @@ public abstract class Expr extends AstNode {
                 if (!parameterNames.contains(variable.variableName)
                         && arguments.length == 1
                         && requiredParameters.size() == 1) {
+                    // this is the only required argument
                     return requiredParameters.getFirst().name();
                 }
                 return variable.variableName;
@@ -380,6 +385,8 @@ public abstract class Expr extends AstNode {
                 // the single passed value goes to the single required parameter
                 return requiredParameters.getFirst().name();
             }
+
+            // the argument is neither named nor a variable
 
             return null;
         }
