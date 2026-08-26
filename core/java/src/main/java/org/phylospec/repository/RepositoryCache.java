@@ -30,9 +30,8 @@ class RepositoryCache {
     /**
      * Returns the path to the local clone of the given repository, cloning or updating it if needed.
      * If the remote cannot be reached, an already existing local clone is used instead. If there is
-     * no local clone either, an {@link OfflineException} is thrown. Any other problem (like a
-     * corrupted cache or a failed update) is reported as an {@link IOException} instead of being
-     * silently worked around.
+     * no local clone either, an {@link OfflineException} is thrown. In case of any other problem (like a
+     * corrupted cache or a failed update), an {@link IOException} is thrown.
      */
     static Path getRepositoryPath(String repoUri) throws IOException {
         Path repositoryPath = getCachePath(repoUri);
