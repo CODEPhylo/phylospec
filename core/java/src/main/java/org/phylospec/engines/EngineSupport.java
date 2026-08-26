@@ -38,7 +38,7 @@ public final class EngineSupport {
     /* support methods */
 
     /**
-     * Returns how well the engines implement every generator the given model calls. Stochasticities are ignored.
+     * Returns how well the engines implement every generator the given model calls.
      */
     public ModelSupport supports(List<Stmt> model) {
         // init StochasticityResolver
@@ -72,45 +72,45 @@ public final class EngineSupport {
      * use them. Stochasticities are ignored.
      */
     public GeneratorSupport supports(Generator generator) {
-        List<String> declaredArguments =
+        // our strategy is to simulate an Expr.Call object with all possible generator arguments used
+        // and then check if that call is supported
+
+        List<String> generatorArguments =
                 generator.getArguments().stream().map(Argument::getName).toList();
 
-        // the call carries the namespace in its name, as that is where a call keeps it
-        String qualifiedName = generator.getNamespace() == null
+        String qualifiedGeneratorName = generator.getNamespace() == null
                 ? generator.getName()
                 : generator.getNamespace() + "." + generator.getName();
 
-        // an engine implements a generator exactly if it can run a call that passes every declared
-        // argument, so we simulate a call to decide this
-        CallSupport callSupport = supports(new Expr.Call(
-                qualifiedName,
-                declaredArguments.stream()
+        Expr.Call call = new Expr.Call(
+                qualifiedGeneratorName,
+                generatorArguments.stream()
                         .map(name -> new Expr.AssignedArgument(name, new Expr.Variable(name)))
-                        .toArray(Expr.Argument[]::new)));
+                        .toArray(Expr.Argument[]::new));
+
+        CallSupport callSupport = supports(call);
 
         // derive the generator argument support
+
         Map<String, Boolean> argumentSupport = new LinkedHashMap<>();
-        for (int i = 0; i < declaredArguments.size(); i++) {
+        for (int i = 0; i < generatorArguments.size(); i++) {
             argumentSupport.put(
-                    declaredArguments.get(i), callSupport.argumentSupport().get(i));
+                    generatorArguments.get(i), callSupport.argumentSupport().get(i));
         }
 
         return new GeneratorSupport(callSupport.isFullySupported(), argumentSupport);
     }
 
     /**
-     * Returns how well the engines implement the generator called by the given call, with the
-     * arguments the call actually passes. The stochasticity of the arguments is not taken into
-     * account, as it cannot be told from a call on its own. Stochasticities are ignored.
+     * Returns how well the engines supports the given call statement.
+     * The stochasticity of the arguments is not taken into account, as we cannot always infer them based on the call alone.
      */
     public CallSupport supports(Expr.Call call) {
         return supports(call, null);
     }
 
     /**
-     * Returns how well the engines implement the generator called by the given call, with the
-     * arguments the call actually passes and with the stochasticity the given resolver assigns to
-     * them.
+     * Returns how well the engines supports the given call statement, including the stochasticity the given resolver assigns to them.
      */
     public CallSupport supports(Expr.Call call, StochasticityResolver stochasticityResolver) {
         if (noEngineLoaded) {
@@ -119,12 +119,13 @@ public final class EngineSupport {
             return new CallSupport(call, true, Collections.nCopies(call.arguments.length, true));
         }
 
-        List<Generator__1> candidates = getCandidateImplementations(call.functionName);
+        // check if there is an implementation that supports the call
 
+        List<Generator__1> candidates = getCandidateImplementations(call.functionName);
         boolean isFullySupported =
                 candidates.stream().anyMatch(candidate -> supports(candidate, call, stochasticityResolver));
 
-        // where no engine takes the call we report which of the passed arguments an engine offers
+        // if no engine supports the call, we report which of the passed arguments an engine offers
         // at all, so that tooling can point at the ones to blame
         List<Boolean> argumentSupport = Arrays.stream(call.arguments)
                 .map(argument -> isFullySupported || isOffered(candidates, argument, stochasticityResolver))
@@ -138,7 +139,7 @@ public final class EngineSupport {
      */
     private static boolean supports(
             Generator__1 implementedGenerator, Expr.Call call, StochasticityResolver stochasticityResolver) {
-        // collect the parameters for the genrator implementation
+        // collect the parameters for the generator implementation
 
         Map<String, Argument__1> declaredArguments = new LinkedHashMap<>();
         List<Expr.Call.Parameter> parameters = new ArrayList<>();
@@ -166,17 +167,14 @@ public final class EngineSupport {
 
     /**
      * Checks whether the engine can take the given passed argument for the argument it declares.
-     * An engine only takes a random variable where it declares the argument as stochastic; an
-     * argument that is not declared as stochastic at all is taken to be deterministic.
      */
     private static boolean acceptsStochasticity(
             Argument__1 declaredArgument, Expr.Argument passedArgument, StochasticityResolver stochasticityResolver) {
         // without a resolver we know nothing about the stochasticity and do not hold it against the engine
         if (stochasticityResolver == null) return true;
 
-        if (stochasticityResolver.getStochasticity(passedArgument) != Stochasticity.STOCHASTIC) return true;
-
-        return Boolean.TRUE.equals(declaredArgument.getCanBeStochastic());
+        return Boolean.TRUE.equals(declaredArgument.getCanBeStochastic())
+                || (stochasticityResolver.getStochasticity(passedArgument) != Stochasticity.STOCHASTIC);
     }
 
     /* shape matching helpers */
@@ -237,52 +235,33 @@ public final class EngineSupport {
         PARTIAL_SUPPORT,
         NO_SUPPORT;
 
-        /** Derives the support of a whole from whether it runs and from which of its parts are supported. */
         private static Support of(boolean isFullySupported, Stream<Boolean> supportedParts) {
             if (isFullySupported) return FULL_SUPPORT;
             return supportedParts.anyMatch(part -> part) ? PARTIAL_SUPPORT : NO_SUPPORT;
         }
     }
 
-    /**
-     * How well the engines implement a model, along with the support of every call it makes. The
-     * calls are kept in a list rather than in a map because two calls of the same model can be
-     * equal to each other.
-     */
     public record ModelSupport(List<CallSupport> callSupport) {
 
-        /** Returns whether the engines can run every call of the model. */
         public boolean isFullySupported() {
             return callSupport.stream().allMatch(CallSupport::isFullySupported);
         }
 
-        /** Returns the support of the model as a whole, which is partial as soon as any call is supported at all. */
         public Support support() {
             return Support.of(
                     isFullySupported(), callSupport.stream().map(call -> call.support() != Support.NO_SUPPORT));
         }
     }
 
-    /**
-     * How well the engines implement a call. The support of the passed arguments is given in the
-     * order of {@link Expr.Call#arguments}, as two arguments of the same call can be equal to each
-     * other and could not be told apart in a map.
-     */
     public record CallSupport(Expr.Call call, boolean isFullySupported, List<Boolean> argumentSupport) {
 
-        /** Returns the support of the call as a whole, which is partial as soon as any passed argument is offered. */
         public Support support() {
             return Support.of(isFullySupported, argumentSupport.stream());
         }
     }
 
-    /**
-     * How well the engines implement a generator, along with the support of each of its declared
-     * arguments by name.
-     */
     public record GeneratorSupport(boolean isFullySupported, Map<String, Boolean> argumentSupport) {
 
-        /** Returns the support of the generator as a whole, which is partial as soon as any argument is offered. */
         public Support support() {
             return Support.of(isFullySupported, argumentSupport.values().stream());
         }
