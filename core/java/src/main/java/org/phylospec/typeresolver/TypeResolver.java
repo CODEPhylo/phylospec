@@ -883,6 +883,9 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
                 continue;
             }
 
+            // the arguments match
+            // we know check if the types are compatible
+
             Map<String, ResolvedTypeSet> resolvedArgumentTypeSets = new HashMap<>();
             for (String argumentName : resolvedArguments.keySet()) {
                 resolvedArgumentTypeSets.put(
