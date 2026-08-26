@@ -30,8 +30,7 @@ public class PhyloSpecRepository {
     private static final String COMPONENTS_DIRECTORY_NAME = "components";
     private static final String ENGINES_DIRECTORY_NAME = "engines";
 
-    // repositories are cached per process so that repeatedly loading the same repository
-    // does not hit the network every time
+    // we cache repositories so that repeatedly loading the same repository does not hit the network every time
     private static final Map<String, PhyloSpecRepository> loadedRepositories = new HashMap<>();
 
     private final List<ComponentLibrary> libraries;
@@ -55,7 +54,7 @@ public class PhyloSpecRepository {
     /**
      * Loads the core component library bundled with this package.
      * This does not need any network access, but it only contains the single core component
-     * library this package was built with.
+     * library this package was built with. No engine specifications are loaded.
      */
     public static PhyloSpecRepository loadBundled() throws IOException {
         return new PhyloSpecRepository(ComponentResolver.loadCoreComponentLibraries(), List.of());
