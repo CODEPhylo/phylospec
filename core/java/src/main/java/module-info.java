@@ -15,6 +15,7 @@ module org.phylospec.core {
     exports org.phylospec.ast.transformers;
     exports org.phylospec.components;
     exports org.phylospec.domain;
+    exports org.phylospec.engines;
     exports org.phylospec.errors;
     exports org.phylospec.lexer;
     exports org.phylospec.parser;

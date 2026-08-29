@@ -1,0 +1,299 @@
+package org.phylospec.engines;
+
+import java.util.*;
+import org.phylospec.ast.ArgumentResolutionError;
+import org.phylospec.ast.AstVisitor;
+import org.phylospec.ast.Expr;
+import org.phylospec.ast.Stmt;
+import org.phylospec.components.*;
+import org.phylospec.typeresolver.Stochasticity;
+import org.phylospec.typeresolver.StochasticityResolver;
+
+/**
+ * Answers whether a set of engines supports a model, a call, or a generator.
+ * When no engine is loaded, everything is always supported.
+ */
+public final class EngineSupport {
+
+    private final Map<String, List<Generator__1>> implementedGenerators = new LinkedHashMap<>();
+    boolean noEngineLoaded;
+
+    public EngineSupport(List<EngineSpecificationSchema> engines) {
+        noEngineLoaded = engines.isEmpty();
+
+        for (EngineSpecificationSchema engine : engines) {
+            for (Generator__1 generator : engine.getGenerators()) {
+                implementedGenerators
+                        .computeIfAbsent(getUnqualifiedName(generator.getName()), name -> new ArrayList<>())
+                        .add(generator);
+            }
+        }
+    }
+
+    public EngineSupport(EngineSpecificationSchema... engines) {
+        this(List.of(engines));
+    }
+
+    /* support methods */
+
+    /**
+     * Returns how well the engines implement every generator the given model calls.
+     */
+    public ModelSupport supports(List<Stmt> model) {
+        // init StochasticityResolver
+
+        StochasticityResolver stochasticityResolver = new StochasticityResolver();
+        model.forEach(stmt -> stmt.accept(stochasticityResolver));
+
+        // collect calls
+
+        List<Expr.Call> calls = new ArrayList<>();
+
+        AstVisitor<Void, Void, Void> callCollector = new AstVisitor<>() {
+            @Override
+            public Void visitCall(Expr.Call expr) {
+                calls.add(expr);
+                return AstVisitor.super.visitCall(expr);
+            }
+        };
+        model.forEach(stmt -> stmt.accept(callCollector));
+
+        // check support for each call
+
+        return new ModelSupport(calls.stream()
+                .map(call -> supports(call, stochasticityResolver))
+                .toList());
+    }
+
+    /**
+     * Returns how well the engines implement the given generator. Full support means an engine
+     * offers every declared argument, including the ones that are not required, as any model may
+     * use them. Stochasticities are ignored.
+     */
+    public GeneratorSupport supports(Generator generator) {
+        // our strategy is to simulate an Expr.Call object with all possible generator arguments used
+        // and then check if that call is supported
+
+        List<Argument> generatorArguments = generator.getArguments();
+
+        String qualifiedGeneratorName = generator.getNamespace() == null
+                ? generator.getName()
+                : generator.getNamespace() + "." + generator.getName();
+
+        Expr.Call call = new Expr.Call(
+                qualifiedGeneratorName,
+                generatorArguments.stream()
+                        .map(Argument::getName)
+                        .map(name -> new Expr.AssignedArgument(name, new Expr.Variable(name)))
+                        .toArray(Expr.Argument[]::new));
+
+        CallSupport callSupport = supports(call);
+
+        // derive the generator argument support
+
+        Map<String, ArgumentSupport> argumentSupport = new LinkedHashMap<>();
+        for (int i = 0; i < generatorArguments.size(); i++) {
+            argumentSupport.put(
+                    generatorArguments.get(i).getName(),
+                    callSupport.argumentSupport().get(i));
+        }
+
+        return new GeneratorSupport(callSupport.isFullySupported(), argumentSupport);
+    }
+
+    /**
+     * Returns how well the engines supports the given call statement.
+     * The stochasticity of the arguments is not taken into account, as we cannot always infer them based on the call alone.
+     */
+    public CallSupport supports(Expr.Call call) {
+        return supports(call, null);
+    }
+
+    /**
+     * Returns how well the engines supports the given call statement, including the stochasticity the given resolver assigns to them.
+     */
+    public CallSupport supports(Expr.Call call, StochasticityResolver stochasticityResolver) {
+        if (noEngineLoaded) {
+            // no engines are loaded
+            // we always return full support
+            return new CallSupport(call, true, Collections.nCopies(call.arguments.length, ArgumentSupport.SUPPORTED));
+        }
+
+        // check if there is an implementation that supports the call
+
+        List<Generator__1> candidates = getCandidateImplementations(call.functionName);
+        boolean isFullySupported =
+                candidates.stream().anyMatch(candidate -> supports(candidate, call, stochasticityResolver));
+
+        if (isFullySupported) {
+            return new CallSupport(call, true, Collections.nCopies(call.arguments.length, ArgumentSupport.SUPPORTED));
+        }
+
+        // no engine supports the call, so we report for each of the passed arguments whether an
+        // engine offers it at all, so that tooling can point at the ones to blame
+
+        List<ArgumentSupport> argumentSupport = new ArrayList<>();
+        for (Expr.Argument argument : call.arguments) {
+            argumentSupport.add(getArgumentSupport(candidates, argument, stochasticityResolver));
+        }
+
+        return new CallSupport(call, false, argumentSupport);
+    }
+
+    /**
+     * Checks if the arguments in the call matches the arguments the implemented generator offers.
+     */
+    private static boolean supports(
+            Generator__1 implementedGenerator, Expr.Call call, StochasticityResolver stochasticityResolver) {
+        // collect the parameters for the generator implementation
+
+        Map<String, Argument__1> declaredArguments = new LinkedHashMap<>();
+        List<Expr.Call.Parameter> parameters = new ArrayList<>();
+        for (Argument__1 argument : implementedGenerator.getArguments()) {
+            declaredArguments.put(argument.getName(), argument);
+            parameters.add(new Expr.Call.Parameter(argument.getName(), Boolean.TRUE.equals(argument.getRequired())));
+        }
+
+        // try to resolve the arguments passed to the call
+
+        Map<String, Expr.Argument> boundArguments;
+        try {
+            boundArguments = call.resolveArgumentNames(parameters);
+        } catch (ArgumentResolutionError error) {
+            // this engine cannot take the call in this shape
+            return false;
+        }
+
+        // check the stochasticities of the bound arguments
+
+        for (Map.Entry<String, Expr.Argument> bound : boundArguments.entrySet()) {
+            Argument__1 declaredArgument = declaredArguments.get(bound.getKey());
+            if (!acceptsStochasticity(declaredArgument, bound.getValue(), stochasticityResolver)) return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks whether the engine can take the given passed argument for the argument it declares.
+     */
+    private static boolean acceptsStochasticity(
+            Argument__1 declaredArgument, Expr.Argument passedArgument, StochasticityResolver stochasticityResolver) {
+        // without a resolver we know nothing about the stochasticity and do not hold it against the engine
+        if (stochasticityResolver == null) return true;
+
+        return Boolean.TRUE.equals(declaredArgument.getCanBeStochastic())
+                || (stochasticityResolver.getStochasticity(passedArgument) != Stochasticity.STOCHASTIC);
+    }
+
+    /* shape matching helpers */
+
+    /**
+     * Returns the implemented generators for the given name and namespace. The namespace is only taken into account
+     * if both sides specify one, as engine specifications generally leave it out.
+     */
+    private List<Generator__1> getCandidateImplementations(String name) {
+        int lastPeriod = name.lastIndexOf('.');
+        String namespace = lastPeriod == -1 ? null : name.substring(0, lastPeriod);
+
+        return implementedGenerators.getOrDefault(getUnqualifiedName(name), List.of()).stream()
+                .filter(generator -> generator.getNamespace() == null
+                        || namespace == null
+                        || generator.getNamespace().equals(namespace))
+                .toList();
+    }
+
+    /**
+     * Reports whether any candidate offers the argument the given passed argument names, and if not, why.
+     */
+    private static ArgumentSupport getArgumentSupport(
+            List<Generator__1> candidates, Expr.Argument passedArgument, StochasticityResolver stochasticityResolver) {
+        String argumentName = passedArgument.name != null
+                ? passedArgument.name
+                : passedArgument.expression instanceof Expr.Variable variable ? variable.variableName : null;
+
+        // an argument that is passed positionally names no argument of its own
+        // if there was a generator with exactly one required argument, we would
+        // not call this function
+        if (argumentName == null) return ArgumentSupport.NOT_OFFERED;
+
+        // an argument an engine offers but cannot take as a random variable is not supported for
+        // this call, so that tooling blames the argument that actually keeps the engine out
+
+        boolean isOffered = false;
+        for (Generator__1 candidate : candidates) {
+            for (Argument__1 argument : candidate.getArguments()) {
+                if (!argument.getName().equals(argumentName)) continue;
+
+                if (acceptsStochasticity(argument, passedArgument, stochasticityResolver)) {
+                    return ArgumentSupport.SUPPORTED;
+                }
+                isOffered = true;
+            }
+        }
+
+        return isOffered ? ArgumentSupport.STOCHASTICITY_UNSUPPORTED : ArgumentSupport.NOT_OFFERED;
+    }
+
+    /* helper functions for names */
+
+    /**
+     * Returns the name without its namespace.
+     */
+    private static String getUnqualifiedName(String name) {
+        int lastPeriod = name.lastIndexOf('.');
+        if (lastPeriod == -1) return name;
+        return name.substring(lastPeriod + 1);
+    }
+
+    /* support classes */
+
+    /** How much of something the engines implement. */
+    public enum Support {
+        FULL_SUPPORT,
+        PARTIAL_SUPPORT,
+        NO_SUPPORT;
+
+        private static Support of(boolean isFullySupported, boolean isAnyPartSupported) {
+            if (isFullySupported) return FULL_SUPPORT;
+            return isAnyPartSupported ? PARTIAL_SUPPORT : NO_SUPPORT;
+        }
+    }
+
+    public record ModelSupport(List<CallSupport> callSupport) {
+
+        public boolean isFullySupported() {
+            return callSupport.stream().allMatch(CallSupport::isFullySupported);
+        }
+
+        public Support support() {
+            return Support.of(
+                    isFullySupported(), callSupport.stream().anyMatch(call -> call.support() != Support.NO_SUPPORT));
+        }
+    }
+
+    public enum ArgumentSupport {
+        SUPPORTED,
+        STOCHASTICITY_UNSUPPORTED,
+        NOT_OFFERED;
+
+        public boolean isSupported() {
+            return this == SUPPORTED;
+        }
+    }
+
+    public record CallSupport(Expr.Call call, boolean isFullySupported, List<ArgumentSupport> argumentSupport) {
+
+        public Support support() {
+            return Support.of(isFullySupported, argumentSupport.stream().anyMatch(ArgumentSupport::isSupported));
+        }
+    }
+
+    public record GeneratorSupport(boolean isFullySupported, Map<String, ArgumentSupport> argumentSupport) {
+
+        public Support support() {
+            return Support.of(
+                    isFullySupported, argumentSupport.values().stream().anyMatch(ArgumentSupport::isSupported));
+        }
+    }
+}
