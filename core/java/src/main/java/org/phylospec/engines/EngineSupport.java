@@ -284,7 +284,7 @@ public final class EngineSupport {
     public record CallSupport(Expr.Call call, boolean isFullySupported, List<ArgumentSupport> argumentSupport) {
 
         public Support support() {
-            return Support.of(isFullySupported, argumentSupport.stream().map(ArgumentSupport::isSupported));
+            return Support.of(isFullySupported, argumentSupport.stream().map(x -> !(x == ArgumentSupport.NOT_OFFERED)));
         }
     }
 
@@ -292,7 +292,7 @@ public final class EngineSupport {
 
         public Support support() {
             return Support.of(
-                    isFullySupported, argumentSupport.values().stream().map(ArgumentSupport::isSupported));
+                    isFullySupported, argumentSupport.values().stream().map(x -> !(x == ArgumentSupport.NOT_OFFERED)));
         }
     }
 }
