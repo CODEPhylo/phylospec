@@ -18,6 +18,7 @@ module org.phylospec.core {
     exports org.phylospec.engines;
     exports org.phylospec.errors;
     exports org.phylospec.lexer;
+    exports org.phylospec.lsp;
     exports org.phylospec.parser;
     exports org.phylospec.templatematching;
     exports org.phylospec.tiling;

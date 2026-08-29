@@ -58,24 +58,11 @@ public record ModelSupport(List<String> engineNames, List<CallSupport> callSuppo
         int warningCount = warnings.size();
 
         for (int i = 0; i < call.arguments.length; i++) {
-            ArgumentSupport argumentSupport = callSupport.argumentSupport().get(i);
-            if (argumentSupport.isSupported()) continue;
-
-            Expr.Argument argument = call.arguments[i];
-            String argumentName = EngineSupport.getArgumentName(argument);
-            String describedArgument = argumentName == null ? "this argument" : "'" + argumentName + "'";
-
             addWarning(
                     warnings,
-                    argument.getRange() != null ? argument.getRange() : call.getRange(),
-                    describeEngines() + " not support " + describedArgument + " for '" + call.functionName + "'"
-                            + (argumentSupport == ArgumentSupport.STOCHASTICITY_UNSUPPORTED
-                                    ? " as a random variable."
-                                    : "."),
-                    argumentSupport == ArgumentSupport.STOCHASTICITY_UNSUPPORTED
-                            ? "Pass a fixed value for " + describedArgument + " instead of a random variable."
-                            : "Have a look at the arguments one of your engines offers for '" + call.functionName
-                                    + "'.");
+                    call,
+                    call.arguments[i],
+                    callSupport.argumentSupport().get(i));
         }
 
         // none of the passed arguments is to blame, so the call itself is what the engines turn
@@ -86,6 +73,42 @@ public record ModelSupport(List<String> engineNames, List<CallSupport> callSuppo
                     call.getRange(),
                     describeEngines() + " not support this call of '" + call.functionName + "'.",
                     "Have a look at the arguments one of your engines requires for '" + call.functionName + "'.");
+        }
+    }
+
+    /**
+     * Adds the warning for a single passed argument, which blames the engines for the very reason
+     * they turn the argument down, so that the user knows whether to reach for another argument or
+     * only for another way of passing this one.
+     */
+    private void addWarning(
+            List<Error> warnings, Expr.Call call, Expr.Argument argument, ArgumentSupport argumentSupport) {
+        String argumentName = EngineSupport.getArgumentName(argument);
+        String describedArgument = argumentName == null ? "this argument" : "'" + argumentName + "'";
+        Range range = argument.getRange() != null ? argument.getRange() : call.getRange();
+
+        switch (argumentSupport) {
+            // the engines offer the argument and only refuse to draw it, so the model is one
+            // rewrite away from running
+            case STOCHASTICITY_UNSUPPORTED ->
+                addWarning(
+                        warnings,
+                        range,
+                        describeEngines() + " not take a random variable for " + describedArgument + " of '"
+                                + call.functionName + "'.",
+                        "Pass a fixed value for " + describedArgument + ", or add an engine which can draw it.");
+
+            // the engines never heard of the argument, so there is nothing to rewrite and the
+            // user has to look at what the engines offer instead
+            case NOT_OFFERED ->
+                addWarning(
+                        warnings,
+                        range,
+                        describeEngines() + " not offer " + describedArgument + " for '" + call.functionName + "'.",
+                        "Have a look at the arguments one of your engines offers for '" + call.functionName + "'.");
+
+            // nothing to warn about
+            case SUPPORTED -> {}
         }
     }
 
