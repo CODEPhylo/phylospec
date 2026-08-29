@@ -16,13 +16,18 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 public class PhyloSpecTextDocumentService implements TextDocumentService {
 
     private final Map<String, LspDocument> documents = new HashMap<>();
+    private final EngineRegistry engineRegistry;
     private LanguageClient client;
+
+    PhyloSpecTextDocumentService(EngineRegistry engineRegistry) {
+        this.engineRegistry = engineRegistry;
+    }
 
     @Override
     public void didOpen(DidOpenTextDocumentParams params) {
         TextDocumentItem document = params.getTextDocument();
 
-        LspDocument lspDocument = new LspDocument(document.getUri(), document.getText(), client);
+        LspDocument lspDocument = new LspDocument(document.getUri(), document.getText(), client, engineRegistry);
         documents.put(document.getUri(), lspDocument);
     }
 
@@ -59,6 +64,16 @@ public class PhyloSpecTextDocumentService implements TextDocumentService {
         List<CompletionItem> completionItems = lspDocument.getCompletionItems(position);
 
         return CompletableFuture.completedFuture(Either.forRight(new CompletionList(completionItems)));
+    }
+
+    /**
+     * Re-runs the analysis of every open document. This is needed whenever something outside of the
+     * documents changes what the diagnostics look like, such as the engines the user picked.
+     */
+    public void reanalyzeAll() {
+        for (LspDocument document : documents.values()) {
+            document.updateContent(document.getContent());
+        }
     }
 
     public void setRemoteProxy(LanguageClient remoteProxy) {

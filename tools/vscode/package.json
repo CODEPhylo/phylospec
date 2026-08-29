@@ -4,7 +4,7 @@
   "author": "CODEPhylo steering group",
   "repository": "https://github.com/CODEPhylo/phylospec",
   "license": "MIT",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "icon": "assets/icon.png",
   "publisher": "CodePhylo",
   "categories": [],
@@ -40,6 +40,20 @@
         "language": "phylospec",
         "scopeName": "source.phylospec",
         "path": "./syntaxes/phylospec.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "phylospec.addEngine",
+        "title": "PhyloSpec: Add Engine"
+      },
+      {
+        "command": "phylospec.removeEngine",
+        "title": "PhyloSpec: Remove Engine"
+      },
+      {
+        "command": "phylospec.listEngines",
+        "title": "PhyloSpec: List Engines"
       }
     ]
   },

@@ -5,6 +5,7 @@ import { promisify } from "util";
 import * as vscode from "vscode";
 
 import {
+  ExecuteCommandRequest,
   LanguageClient,
   LanguageClientOptions,
   StreamInfo,
@@ -17,6 +18,13 @@ const STARTUP_ATTEMPTS = 20;
 const STARTUP_RETRY_MS = 250;
 const REQUIRED_JAVA_VERSION = 25;
 const execFileAsync = promisify(execFile);
+
+// the server advertises these commands, and the language client registers a VS Code command for
+// each of them, so they must not collide with the user-facing commands the extension registers
+
+const LIST_ENGINES_COMMAND = "phylospec.server.listEngines";
+const ADD_ENGINE_COMMAND = "phylospec.server.addEngine";
+const REMOVE_ENGINE_COMMAND = "phylospec.server.removeEngine";
 
 let client: LanguageClient;
 let serverProcess: ChildProcessWithoutNullStreams | undefined;
@@ -91,7 +99,130 @@ export async function activate(context: vscode.ExtensionContext) {
       serverProcess.kill();
       serverProcess = undefined;
     }
+    return;
   }
+
+  registerEngineCommands(context);
+}
+
+// the engines a model is checked against are kept by the language server, so the commands are
+// thin wrappers that ask the user what to do and hand it over
+
+interface CommandResult {
+  succeeded: boolean;
+  description: string;
+  availableEngines: string[];
+  selectedEngines: string[];
+}
+
+async function runServerCommand(
+  command: string,
+  args: string[] = [],
+): Promise<CommandResult | undefined> {
+  try {
+    return await client.sendRequest(ExecuteCommandRequest.type, {
+      command,
+      arguments: args,
+    });
+  } catch (error) {
+    vscode.window.showErrorMessage(`PhyloSpec: ${error}`);
+    return undefined;
+  }
+}
+
+function reportResult(result: CommandResult) {
+  if (!result.succeeded) {
+    vscode.window.showWarningMessage(`PhyloSpec: ${result.description}`);
+    return;
+  }
+
+  const engines = result.selectedEngines.length
+    ? result.selectedEngines.join(", ")
+    : "none";
+  vscode.window.showInformationMessage(
+    `PhyloSpec: ${result.description} Your engines: ${engines}.`,
+  );
+}
+
+function registerEngineCommands(context: vscode.ExtensionContext) {
+  context.subscriptions.push(
+    vscode.commands.registerCommand("phylospec.addEngine", async () => {
+      const available = await runServerCommand(LIST_ENGINES_COMMAND);
+      if (!available) return;
+
+      if (!available.succeeded) {
+        vscode.window.showWarningMessage(
+          `PhyloSpec: ${available.description}`,
+        );
+        return;
+      }
+
+      const choices = available.availableEngines.filter(
+        (engine) => !available.selectedEngines.includes(engine),
+      );
+
+      if (choices.length === 0) {
+        vscode.window.showInformationMessage(
+          "PhyloSpec: You already use every engine the repository offers.",
+        );
+        return;
+      }
+
+      const engine = await vscode.window.showQuickPick(choices, {
+        title: "Add a PhyloSpec engine",
+        placeHolder: "Pick the engine your models should run on",
+      });
+      if (!engine) return;
+
+      const result = await runServerCommand(ADD_ENGINE_COMMAND, [engine]);
+      if (result) reportResult(result);
+    }),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("phylospec.removeEngine", async () => {
+      const selected = await runServerCommand(LIST_ENGINES_COMMAND);
+      if (!selected) return;
+
+      if (selected.selectedEngines.length === 0) {
+        vscode.window.showInformationMessage(
+          "PhyloSpec: You do not use any engine at the moment.",
+        );
+        return;
+      }
+
+      const engine = await vscode.window.showQuickPick(
+        selected.selectedEngines,
+        {
+          title: "Remove a PhyloSpec engine",
+          placeHolder: "Pick the engine you no longer want to check against",
+        },
+      );
+      if (!engine) return;
+
+      const result = await runServerCommand(REMOVE_ENGINE_COMMAND, [engine]);
+      if (result) reportResult(result);
+    }),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("phylospec.listEngines", async () => {
+      const result = await runServerCommand(LIST_ENGINES_COMMAND);
+      if (!result) return;
+
+      if (!result.succeeded) {
+        vscode.window.showWarningMessage(`PhyloSpec: ${result.description}`);
+        return;
+      }
+
+      const selected = result.selectedEngines.length
+        ? result.selectedEngines.join(", ")
+        : "none";
+      vscode.window.showInformationMessage(
+        `PhyloSpec: Your engines: ${selected}. Available: ${result.availableEngines.join(", ")}.`,
+      );
+    }),
+  );
 }
 
 async function getJavaVersion(): Promise<number | undefined> {
