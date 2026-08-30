@@ -1,7 +1,6 @@
 import dr.inference.model.Bounds;
 import dr.inference.model.Parameter;
 import dr.inference.operators.MCMCOperator;
-import dr.inference.operators.RandomWalkIntegerOperator;
 import dr.inference.operators.SwapOperator;
 import dr.inference.operators.UniformIntegerOperator;
 import dr.math.MathUtils;
@@ -50,15 +49,17 @@ public class BeastXRelaxedClockCategoryOperatorTest {
                         .filter(operator -> operator.getOperatorName().contains(categories.getId()))
                         .toList();
 
-        assertEquals(3, categoryOperators.size());
-        assertInstanceOf(RandomWalkIntegerOperator.class, categoryOperators.get(0));
-        assertInstanceOf(SwapOperator.class, categoryOperators.get(1));
+        assertEquals(2, categoryOperators.size());
+        SwapOperator swapOperator =
+                assertInstanceOf(SwapOperator.class, categoryOperators.get(0));
+        assertEquals(10.0, swapOperator.getWeight());
 
         UniformIntegerOperator actualOperator =
                 assertInstanceOf(
                         UniformIntegerOperator.class,
-                        categoryOperators.get(2)
+                        categoryOperators.get(1)
                 );
+        assertEquals(10.0, actualOperator.getWeight());
 
         Bounds<Double> bounds =
                 categories.getBounds();

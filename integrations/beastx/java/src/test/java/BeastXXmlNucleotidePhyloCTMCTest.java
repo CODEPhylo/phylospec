@@ -106,6 +106,30 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
         XmlTestSupport.assertXmlContains(xml, "<likelihood id=\"likelihood\"");
         XmlTestSupport.assertXmlContains(xml, "<log id=\"fileLogger");
         XmlTestSupport.assertXmlContains(xml, "<logTree");
+        XmlTestSupport.assertXmlContains(
+                xml,
+                "<operators id=\"operators\" optimizationSchedule=\"log\">"
+        );
+
+        int upDownStart = xml.indexOf("<upDownOperator");
+        int upDownEnd = xml.indexOf("</upDownOperator>", upDownStart);
+        assertTrue(upDownStart >= 0 && upDownEnd > upDownStart, xml);
+
+        String upDownXml =
+                xml.substring(upDownStart, upDownEnd);
+
+        int upStart = upDownXml.indexOf("<up>");
+        int treeHeights = upDownXml.indexOf("idref=\"tree.allInternalNodeHeights\"");
+        int downStart = upDownXml.indexOf("<down>");
+        int clockRate = upDownXml.indexOf("idref=\"clockRate\"");
+
+        assertTrue(
+                upStart >= 0
+                        && upStart < treeHeights
+                        && treeHeights < downStart
+                        && downStart < clockRate,
+                upDownXml
+        );
 
         try {
             XmlTestSupport.runXml(xmlPath);
@@ -712,11 +736,11 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
         assertTrue(xml.contains("<rateCategories>"), xml);
         assertTrue(xml.contains("<treeLikelihood"), xml);
         assertTrue(xml.contains("<multiplicativeBranchRates idref="), xml);
-        assertTrue(xml.contains("branchRateCategories_randomWalk"), xml);
-        assertTrue(xml.contains("<narrowExchange"), xml);
-        assertTrue(xml.contains("<wideExchange"), xml);
-        assertTrue(xml.contains("<subtreeSlide"), xml);
-        assertTrue(xml.contains("<wilsonBalding"), xml);
+        assertFalse(xml.contains("branchRateCategories_randomWalk"), xml);
+        assertTrue(xml.contains("branchRateCategories_swap"), xml);
+        assertTrue(xml.contains("branchRateCategories_uniform"), xml);
+        assertTrue(xml.contains("<subtreeLeap"), xml);
+        assertTrue(xml.contains("<fixedHeightSubtreePruneRegraft"), xml);
 
         new XmlRunner()
                 .run(xmlPath);

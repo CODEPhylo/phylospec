@@ -28,6 +28,10 @@ public final class OperatorXmlBuilder {
                     "randomWalkOperator", spec, "randomWalk",
                     "windowSize", format(spec.tuning()))
                     .withAttribute("boundaryCondition", "reflecting");
+            case RANDOM_WALK_LOGIT -> parameterOperator(
+                    "randomWalkOperator", spec, "randomWalkLogit",
+                    "windowSize", format(spec.tuning()))
+                    .withAttribute("boundaryCondition", "logit");
             case DELTA_EXCHANGE -> parameterOperator(
                     "deltaExchange", spec, "deltaExchange",
                     "delta", format(spec.tuning()));
@@ -45,26 +49,11 @@ public final class OperatorXmlBuilder {
                     .withId(parameterId(spec.parameter()) + "_bitFlip")
                     .withAttribute("weight", format(spec.weight()))
                     .withChild(parameterReference(spec.parameter()));
-            case TREE_NODE_HEIGHT_SCALE -> nodeHeightScaleOperator(spec);
-            case TREE_ROOT_SCALE -> rootScaleOperator(spec);
-            case TREE_UNIFORM_HEIGHT -> treeOperator(
-                    "nodeHeightOperator", spec, "uniformNodeHeight")
-                    .withAttribute("type", "uniform");
-            case TREE_RANDOM_WALK_HEIGHT -> treeOperator(
-                    "nodeHeightOperator", spec, "randomWalkNodeHeight")
-                    .withAttribute("type", "randomwalk")
-                    .withAttribute("size", format(spec.tuning()))
-                    .withAttribute("autoOptimize", "true");
-            case TREE_SUBTREE_SLIDE -> treeOperator(
-                    "subtreeSlide", spec, "subtreeSlide")
-                    .withAttribute("size", format(spec.tuning()))
-                    .withAttribute("gaussian", "true");
-            case TREE_NARROW_EXCHANGE -> treeOperator(
-                    "narrowExchange", spec, "narrowExchange");
-            case TREE_WIDE_EXCHANGE -> treeOperator(
-                    "wideExchange", spec, "wideExchange");
-            case TREE_WILSON_BALDING -> treeOperator(
-                    "wilsonBalding", spec, "wilsonBalding");
+            case TREE_SUBTREE_LEAP -> treeOperator(
+                    "subtreeLeap", spec, "subtreeLeap")
+                    .withAttribute("size", format(spec.tuning()));
+            case TREE_FIXED_HEIGHT_SPR -> treeOperator(
+                    "fixedHeightSubtreePruneRegraft", spec, "fixedHeightSPR");
             case TREE_CLOCK_UP_DOWN -> treeClockUpDownOperator(spec);
         };
     }
@@ -83,27 +72,6 @@ public final class OperatorXmlBuilder {
                 .withChild(parameterReference(spec.parameter()));
     }
 
-    private XmlElement nodeHeightScaleOperator(OperatorSpec spec) {
-        String treeId = treeId(spec.tree());
-        return XmlElement.element("scaleOperator")
-                .withId(treeId + "_scale")
-                .withAttribute("scaleFactor", format(spec.tuning()))
-                .withAttribute("weight", format(spec.weight()))
-                .withAttribute("scaleAll", "true")
-                .withAttribute("ignoreBounds", "true")
-                .withChild(XmlElement.ref(
-                        "parameter", treeId + ".allInternalNodeHeights"));
-    }
-
-    private XmlElement rootScaleOperator(OperatorSpec spec) {
-        String treeId = treeId(spec.tree());
-        return XmlElement.element("scaleOperator")
-                .withId(treeId + "_rootScale")
-                .withAttribute("scaleFactor", format(spec.tuning()))
-                .withAttribute("weight", format(spec.weight()))
-                .withChild(XmlElement.ref("parameter", treeId + ".rootHeight"));
-    }
-
     private XmlElement treeOperator(String element, OperatorSpec spec, String suffix) {
         return XmlElement.element(element)
                 .withId(treeId(spec.tree()) + "_" + suffix)
@@ -118,10 +86,10 @@ public final class OperatorXmlBuilder {
                 .withAttribute("scaleFactor", format(spec.tuning()))
                 .withAttribute("weight", format(spec.weight()))
                 .withChild(XmlElement.element("up")
-                        .withChild(parameterReference(spec.parameter())))
-                .withChild(XmlElement.element("down")
                         .withChild(XmlElement.ref(
-                                "parameter", treeId + ".allInternalNodeHeights")));
+                                "parameter", treeId + ".allInternalNodeHeights")))
+                .withChild(XmlElement.element("down")
+                        .withChild(parameterReference(spec.parameter())));
     }
 
     private XmlElement parameterReference(Parameter parameter) {

@@ -1,10 +1,7 @@
 package tiling.operators;
 
-import dr.evomodel.operators.ExchangeOperator;
-import dr.evomodel.operators.RandomWalkNodeHeightOperator;
-import dr.evomodel.operators.SubtreeSlideOperator;
-import dr.evomodel.operators.UniformNodeHeightOperator;
-import dr.evomodel.operators.WilsonBalding;
+import dr.evomodel.operators.FixedHeightSubtreePruneRegraftOperator;
+import dr.evomodel.operators.SubtreeLeapOperator;
 import dr.evomodel.tree.DefaultTreeModel;
 import dr.inference.model.Bounds;
 import dr.inference.model.Parameter;
@@ -21,6 +18,7 @@ import dr.inference.operators.UniformIntegerOperator;
 import dr.inference.operators.UpDownOperator;
 import tiling.BeastXState;
 
+import java.util.Arrays;
 import java.util.List;
 
 /** Materializes selected operator specifications for direct BEAST X execution. */
@@ -48,27 +46,22 @@ public final class OperatorBuilder {
                     spec.parameter(), spec.tuning(),
                     RandomWalkOperator.BoundaryCondition.reflecting,
                     spec.weight(), AdaptationMode.DEFAULT);
-            case DELTA_EXCHANGE -> new DeltaExchangeOperator(
-                    spec.parameter(), null, spec.tuning(), spec.weight(), false,
-                    AdaptationMode.DEFAULT);
+            case RANDOM_WALK_LOGIT -> new RandomWalkOperator(
+                    spec.parameter(), spec.tuning(),
+                    RandomWalkOperator.BoundaryCondition.logit,
+                    spec.weight(), AdaptationMode.DEFAULT);
+            case DELTA_EXCHANGE -> deltaExchangeOperator(spec);
             case INTEGER_RANDOM_WALK -> new RandomWalkIntegerOperator(
                     spec.parameter(), (int) spec.tuning(), spec.weight());
             case INTEGER_SWAP -> swapOperator(spec);
             case INTEGER_UNIFORM -> uniformIntegerOperator(spec);
             case BIT_FLIP -> new BitFlipOperator(spec.parameter(), spec.weight(), false);
-            case TREE_NODE_HEIGHT_SCALE -> nodeHeightScaleOperator(spec);
-            case TREE_ROOT_SCALE -> rootScaleOperator(spec);
-            case TREE_UNIFORM_HEIGHT ->
-                    new UniformNodeHeightOperator(spec.tree(), spec.weight());
-            case TREE_RANDOM_WALK_HEIGHT -> new RandomWalkNodeHeightOperator(
+            case TREE_SUBTREE_LEAP -> new SubtreeLeapOperator(
                     spec.tree(), spec.weight(), spec.tuning(),
+                    SubtreeLeapOperator.DistanceKernelType.NORMAL,
                     AdaptationMode.DEFAULT, 0.234);
-            case TREE_SUBTREE_SLIDE -> subtreeSlideOperator(spec);
-            case TREE_NARROW_EXCHANGE -> new ExchangeOperator(
-                    ExchangeOperator.NARROW, spec.tree(), spec.weight());
-            case TREE_WIDE_EXCHANGE -> new ExchangeOperator(
-                    ExchangeOperator.WIDE, spec.tree(), spec.weight());
-            case TREE_WILSON_BALDING -> new WilsonBalding(spec.tree(), spec.weight());
+            case TREE_FIXED_HEIGHT_SPR ->
+                    new FixedHeightSubtreePruneRegraftOperator(spec.tree(), spec.weight());
             case TREE_CLOCK_UP_DOWN -> treeClockUpDownOperator(spec);
         };
     }
@@ -79,6 +72,14 @@ public final class OperatorBuilder {
         return operator;
     }
 
+    private DeltaExchangeOperator deltaExchangeOperator(OperatorSpec spec) {
+        int[] parameterWeights = new int[spec.parameter().getDimension()];
+        Arrays.fill(parameterWeights, 1);
+        return new DeltaExchangeOperator(
+                spec.parameter(), parameterWeights, spec.tuning(), spec.weight(), false,
+                AdaptationMode.DEFAULT);
+    }
+
     private UniformIntegerOperator uniformIntegerOperator(OperatorSpec spec) {
         Bounds<Double> bounds = requiredBounds(spec.parameter());
         int lower = (int) Math.ceil(bounds.getLowerLimit(0));
@@ -87,43 +88,13 @@ public final class OperatorBuilder {
                 spec.parameter(), lower, upper, spec.weight(), (int) spec.tuning());
     }
 
-    private ScaleOperator nodeHeightScaleOperator(OperatorSpec spec) {
-        DefaultTreeModel tree = defaultTree(spec);
-        Parameter nodeHeights = tree.createNodeHeightsParameter(true, true, false);
-        nodeHeights.setId(tree.getId() + ".allInternalNodeHeights");
-        return new ScaleOperator(
-                nodeHeights,
-                true,
-                0,
-                spec.tuning(),
-                AdaptationMode.DEFAULT,
-                spec.weight(),
-                null,
-                1.0,
-                false);
-    }
-
-    private ScaleOperator rootScaleOperator(OperatorSpec spec) {
-        DefaultTreeModel tree = defaultTree(spec);
-        Parameter rootHeight = tree.createNodeHeightsParameter(false, true, false);
-        rootHeight.setId(tree.getId() + ".rootHeight");
-        return new ScaleOperator(
-                rootHeight, spec.tuning(), AdaptationMode.DEFAULT, spec.weight());
-    }
-
-    private SubtreeSlideOperator subtreeSlideOperator(OperatorSpec spec) {
-        return new SubtreeSlideOperator(
-                defaultTree(spec), spec.tuning(), spec.weight(),
-                true, false, false, false, AdaptationMode.DEFAULT, 0.234);
-    }
-
     private UpDownOperator treeClockUpDownOperator(OperatorSpec spec) {
         DefaultTreeModel tree = defaultTree(spec);
         Parameter nodeHeights = tree.createNodeHeightsParameter(true, true, false);
         nodeHeights.setId(tree.getId() + ".allInternalNodeHeights");
         return new UpDownOperator(
-                new Scalable[] {new Scalable.Default(spec.parameter())},
                 new Scalable[] {new Scalable.Default(nodeHeights)},
+                new Scalable[] {new Scalable.Default(spec.parameter())},
                 spec.tuning(), spec.weight(), AdaptationMode.DEFAULT);
     }
 
@@ -135,6 +106,8 @@ public final class OperatorBuilder {
                     .formatted(parameter, spec.weight(), spec.tuning());
             case RANDOM_WALK -> "RandomWalkOperator(parameter=%s, weight=%s, windowSize=%s, boundary=reflecting)"
                     .formatted(parameter, spec.weight(), spec.tuning());
+            case RANDOM_WALK_LOGIT -> "RandomWalkOperator(parameter=%s, weight=%s, windowSize=%s, boundary=logit)"
+                    .formatted(parameter, spec.weight(), spec.tuning());
             case DELTA_EXCHANGE -> "DeltaExchangeOperator(parameter=%s, weight=%s)"
                     .formatted(parameter, spec.weight());
             case INTEGER_RANDOM_WALK -> "RandomWalkIntegerOperator(parameter=%s, weight=%s, windowSize=%d)"
@@ -144,24 +117,12 @@ public final class OperatorBuilder {
             case INTEGER_UNIFORM -> integerUniformSummary(spec, parameter);
             case BIT_FLIP -> "BitFlipOperator(parameter=%s, weight=%s)"
                     .formatted(parameter, spec.weight());
-            case TREE_NODE_HEIGHT_SCALE -> "ScaleOperator(treeNodeHeights=%s.allInternalNodeHeights, weight=%s, scaleFactor=%s, scaleAll=true)"
+            case TREE_SUBTREE_LEAP -> "SubtreeLeapOperator(tree=%s, weight=%s, size=%s)"
                     .formatted(tree, spec.weight(), spec.tuning());
-            case TREE_ROOT_SCALE -> "ScaleOperator(treeRoot=%s.rootHeight, weight=%s, scaleFactor=%s)"
-                    .formatted(tree, spec.weight(), spec.tuning());
-            case TREE_UNIFORM_HEIGHT -> "UniformNodeHeightOperator(tree=%s, weight=%s)"
+            case TREE_FIXED_HEIGHT_SPR -> "FixedHeightSubtreePruneRegraftOperator(tree=%s, weight=%s)"
                     .formatted(tree, spec.weight());
-            case TREE_RANDOM_WALK_HEIGHT -> "RandomWalkNodeHeightOperator(tree=%s, weight=%s, size=%s)"
-                    .formatted(tree, spec.weight(), spec.tuning());
-            case TREE_SUBTREE_SLIDE -> "SubtreeSlideOperator(tree=%s, weight=%s, size=%s)"
-                    .formatted(tree, spec.weight(), spec.tuning());
-            case TREE_NARROW_EXCHANGE -> "ExchangeOperator(tree=%s, mode=narrow, weight=%s)"
-                    .formatted(tree, spec.weight());
-            case TREE_WIDE_EXCHANGE -> "ExchangeOperator(tree=%s, mode=wide, weight=%s)"
-                    .formatted(tree, spec.weight());
-            case TREE_WILSON_BALDING -> "WilsonBalding(tree=%s, weight=%s)"
-                    .formatted(tree, spec.weight());
-            case TREE_CLOCK_UP_DOWN -> "UpDownOperator(up=[%s], down=[%s.allInternalNodeHeights], weight=%s, scaleFactor=%s)"
-                    .formatted(parameter, tree, spec.weight(), spec.tuning());
+            case TREE_CLOCK_UP_DOWN -> "UpDownOperator(up=[%s.allInternalNodeHeights], down=[%s], weight=%s, scaleFactor=%s)"
+                    .formatted(tree, parameter, spec.weight(), spec.tuning());
         };
     }
 

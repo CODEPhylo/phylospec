@@ -59,18 +59,13 @@ public class BeastXRepresentativeModelsTest {
             if (!summary.treePriors.isEmpty()) {
                 assertTrue(
                         summary.operatorDetails.stream().anyMatch(detail ->
-                                detail.contains("ScaleOperator(treeNodeHeights=")),
-                        "Stochastic tree model should have a tree height operator: " + modelPath
+                                detail.contains("SubtreeLeapOperator(tree=")),
+                        "Stochastic tree model should have a subtree-leap operator: " + modelPath
                 );
 
                 assertTrue(
-                        summary.operators.contains("ExchangeOperator"),
-                        "Stochastic tree model should have an exchange operator: " + modelPath
-                );
-
-                assertTrue(
-                        summary.operators.contains("WilsonBalding"),
-                        "Stochastic tree model should have a Wilson-Balding operator: " + modelPath
+                        summary.operators.contains("FixedHeightSubtreePruneRegraftOperator"),
+                        "Stochastic tree model should have an FHSPR operator: " + modelPath
                 );
             }
         }
@@ -239,24 +234,22 @@ public class BeastXRepresentativeModelsTest {
         assertContainsAll(
                 summary.operators,
                 "DeltaExchangeOperator",
-                "ExchangeOperator",
-                "RandomWalkIntegerOperator",
+                "FixedHeightSubtreePruneRegraftOperator",
                 "ScaleOperator",
-                "SubtreeSlideOperator",
+                "SubtreeLeapOperator",
                 "SwapOperator",
-                "UniformIntegerOperator",
-                "WilsonBalding"
+                "UniformIntegerOperator"
         );
 
         assertAnyContains(summary.operatorDetails, "DeltaExchangeOperator(parameter=baseFrequencies");
-        assertAnyContains(summary.operatorDetails, "RandomWalkIntegerOperator(parameter=branchRateCategories");
         assertAnyContains(summary.operatorDetails, "SwapOperator(parameter=branchRateCategories");
         assertAnyContains(summary.operatorDetails, "UniformIntegerOperator(parameter=branchRateCategories");
-        assertAnyContains(summary.operatorDetails, "ScaleOperator(treeNodeHeights=tree.allInternalNodeHeights");
+        assertAnyContains(summary.operatorDetails, "SubtreeLeapOperator(tree=tree");
+        assertAnyContains(summary.operatorDetails, "FixedHeightSubtreePruneRegraftOperator(tree=tree");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=clockRate");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=diversificationRate");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=serialSamplingRate");
-        assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=turnover");
+        assertAnyContains(summary.operatorDetails, "RandomWalkOperator(parameter=turnover");
 
         assertEquals(
                 1,
@@ -311,11 +304,10 @@ public class BeastXRepresentativeModelsTest {
         assertContainsAll(
                 summary.operators,
                 "DeltaExchangeOperator",
-                "ExchangeOperator",
+                "FixedHeightSubtreePruneRegraftOperator",
                 "ScaleOperator",
-                "SubtreeSlideOperator",
-                "UpDownOperator",
-                "WilsonBalding"
+                "SubtreeLeapOperator",
+                "UpDownOperator"
         );
 
         assertTrue(
@@ -330,12 +322,13 @@ public class BeastXRepresentativeModelsTest {
 
         assertAnyContains(summary.operatorDetails, "DeltaExchangeOperator(parameter=firstBaseFrequencies");
         assertAnyContains(summary.operatorDetails, "DeltaExchangeOperator(parameter=secondBaseFrequencies");
-        assertAnyContains(summary.operatorDetails, "ScaleOperator(treeNodeHeights=tree.allInternalNodeHeights");
+        assertAnyContains(summary.operatorDetails, "SubtreeLeapOperator(tree=tree");
+        assertAnyContains(summary.operatorDetails, "FixedHeightSubtreePruneRegraftOperator(tree=tree");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=clockRate");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=firstShape");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=secondShape");
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=secondKappa");
-        assertAnyContains(summary.operatorDetails, "UpDownOperator(up=[clockRate], down=[tree.allInternalNodeHeights]");
+        assertAnyContains(summary.operatorDetails, "UpDownOperator(up=[tree.allInternalNodeHeights], down=[clockRate]");
 
         assertEquals(
                 50000,

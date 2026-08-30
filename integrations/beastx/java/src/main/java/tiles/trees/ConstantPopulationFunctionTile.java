@@ -2,11 +2,13 @@ package tiles.trees;
 
 import dr.evolution.util.Units;
 import dr.evomodel.coalescent.demographicmodel.ConstantPopulationModel;
+import dr.inference.model.Parameter;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import tiling.BeastXState;
+import tiling.operators.ParameterRole;
 import tiling.params.BeastXParameters;
 
 import java.util.IdentityHashMap;
@@ -29,9 +31,16 @@ public class ConstantPopulationFunctionTile extends GeneratorTile<ConstantPopula
         RealScalar<? extends PositiveReal> populationSize =
                 this.populationSizeInput.apply(beastState, indexVariables);
 
+        Parameter populationSizeParameter =
+                BeastXParameters.toParameter(populationSize);
+
+        beastState.addParameterRole(
+                populationSizeParameter,
+                ParameterRole.DEMOGRAPHIC_SCALE);
+
         return new ConstantPopulationModel(
                 "constantPopulation",
-                BeastXParameters.toParameter(populationSize),
+                populationSizeParameter,
                 Units.Type.YEARS
         );
     }
