@@ -16,16 +16,23 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class AutoOperatorConfigTile extends Tile<Void, BeastXState> implements CandidateTile<BeastXState> {
+/**
+ * Applies user-provided overrides to the automatically generated
+ * BEAUti-style default operator schedule.
+ *
+ * <p>This tile configures operator weights and tuning parameters.
+ * It does not allow users to define arbitrary operators.</p>
+ */
+public class DefaultOperatorConfigTile extends Tile<Void, BeastXState> implements CandidateTile<BeastXState> {
 
     private final String settingName;
 
-    public AutoOperatorConfigTile() {
+    public DefaultOperatorConfigTile() {
         this.settingName =
                 null;
     }
 
-    private AutoOperatorConfigTile(String settingName) {
+    private DefaultOperatorConfigTile(String settingName) {
         this.settingName =
                 settingName;
     }
@@ -49,8 +56,8 @@ public class AutoOperatorConfigTile extends Tile<Void, BeastXState> implements C
             throw new FailedTilingAttempt.Irrelevant();
         }
 
-        AutoOperatorConfigTile tile =
-                new AutoOperatorConfigTile(assignment.name);
+        DefaultOperatorConfigTile tile =
+                new DefaultOperatorConfigTile(assignment.name);
 
         tile.setRootNode(node);
         tile.setWeight(getPriority().getWeight());
