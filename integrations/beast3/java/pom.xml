@@ -26,6 +26,16 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Build-time annotation processor.
+     This dependency also establishes the Maven reactor build order. -->
+        <dependency>
+            <groupId>org.phylospec</groupId>
+            <artifactId>phylospec-beast3-tile-processor</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+
         <!-- BEAST 3 base library -->
         <dependency>
             <groupId>io.github.compevol</groupId>
@@ -46,6 +56,15 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.phylospec</groupId>
+                            <artifactId>phylospec-beast3-tile-processor</artifactId>
+                            <version>${project.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
