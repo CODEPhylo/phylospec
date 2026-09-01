@@ -2,6 +2,7 @@ package tiles.trees;
 
 import beast.base.evolution.tree.coalescent.PopulationFunction;
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.Real;
 import beast.base.spec.evolution.tree.coalescent.ExponentialGrowth;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
@@ -18,13 +19,12 @@ public class ExponentialPopulationTile extends GeneratorTile<PopulationFunction,
 
     GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> populationSizeInput =
             new GeneratorTileInput<>("populationSize");
-    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> growthRateInput =
-            new GeneratorTileInput<>("growthRate");
+    GeneratorTileInput<RealScalar<? extends Real>, BEASTState> growthRateInput = new GeneratorTileInput<>("growthRate");
 
     @Override
     public PopulationFunction applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<? extends PositiveReal> populationSize = this.populationSizeInput.apply(beastState, indexVariables);
-        RealScalar<? extends PositiveReal> growthRate = this.growthRateInput.apply(beastState, indexVariables);
+        RealScalar<? extends Real> growthRate = this.growthRateInput.apply(beastState, indexVariables);
 
         ExponentialGrowth population = new ExponentialGrowth();
         beastState.setInput(population, population.popSizeParameterInput, populationSize);
