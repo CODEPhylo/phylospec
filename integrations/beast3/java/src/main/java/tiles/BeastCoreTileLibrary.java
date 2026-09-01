@@ -9,6 +9,7 @@ import tiles.branchmodels.*;
 import tiles.distributions.*;
 import tiles.errors.*;
 import tiles.functions.*;
+import tiles.generated.GeneratedTileRegistry;
 import tiles.input.*;
 import tiles.mcmc.*;
 import tiles.misc.*;
@@ -116,7 +117,6 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new DrawnBranchRatesTile());
         tiles.add(new DrawnSiteRatesTile());
 
-        tiles.add(new JC69Tile());
         tiles.add(new K80Tile());
         tiles.add(new F81Tile());
         tiles.add(new HKYTile());
@@ -135,6 +135,8 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new FileLoggerTile());
         tiles.add(new TreeLoggerTile());
 
+        // Tiles generated from compile-time mapping declarations.
+        tiles.addAll(GeneratedTileRegistry.createTiles());
         return tiles;
     }
 }
