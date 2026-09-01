@@ -7,3 +7,4 @@ phylospec-core.iml
 out
 /integrations/beast3/java/target/
 /integrations/beastx/java/target/
+/integrations/beast3/processor/target/
