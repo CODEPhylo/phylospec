@@ -15,10 +15,15 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.ElementFilter;
+import java.io.IOException;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.Diagnostic;
 import org.phylospec.annotations.GeneratorMapping;
 
 public final class GeneratorMappingProcessor extends AbstractProcessor {
+
+    private GeneratorTileWriter tileWriter;
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
@@ -28,6 +33,17 @@ public final class GeneratorMappingProcessor extends AbstractProcessor {
     @Override
     public SourceVersion getSupportedSourceVersion() {
         return SourceVersion.latestSupported();
+    }
+
+    @Override
+    public synchronized void init(
+            ProcessingEnvironment processingEnvironment) {
+
+        super.init(processingEnvironment);
+
+        this.tileWriter =
+                new GeneratorTileWriter(
+                        processingEnvironment.getFiler());
     }
 
     @Override
@@ -52,23 +68,27 @@ public final class GeneratorMappingProcessor extends AbstractProcessor {
             TypeElement mappingDeclaration = (TypeElement) element;
 
             readMapping(mappingDeclaration)
-                    .ifPresent(
-                            mapping ->
-                                    processingEnv
-                                            .getMessager()
-                                            .printMessage(
-                                                    Diagnostic.Kind.NOTE,
-                                                    "Discovered generator mapping: "
-                                                            + mapping.qualifiedComponentName()
-                                                            + " -> "
-                                                            + mapping.implementationType(),
-                                                    mapping.declaration()));
+                    .ifPresent(this::generateTile);
         }
 
         return true;
     }
 
-    private Optional<GeneratorMappingModel> readMapping(TypeElement declaration) {
+    private Optional<GeneratorMappingModel> readMapping(
+            TypeElement declaration) {
+
+        if (!ElementFilter.methodsIn(
+                        declaration.getEnclosedElements())
+                .isEmpty()) {
+
+            printError(
+                    "Automatic Tile generation currently supports only "
+                            + "zero-input mappings. Input mappings are not supported yet.",
+                    declaration);
+
+            return Optional.empty();
+        }
+
         AnnotationMirror mappingAnnotation =
                 declaration.getAnnotationMirrors().stream()
                         .filter(this::isGeneratorMapping)
@@ -147,13 +167,105 @@ public final class GeneratorMappingProcessor extends AbstractProcessor {
             return Optional.empty();
         }
 
+        if (!implementationDeclaration
+                .getModifiers()
+                .contains(Modifier.PUBLIC)) {
+
+            printError(
+                    "@GeneratorMapping implementation must be public.",
+                    declaration);
+
+            return Optional.empty();
+        }
+
+        boolean hasPublicNoArgumentConstructor =
+                ElementFilter.constructorsIn(
+                                implementationDeclaration.getEnclosedElements())
+                        .stream()
+                        .anyMatch(
+                                constructor ->
+                                        constructor.getParameters().isEmpty()
+                                                && constructor
+                                                .getModifiers()
+                                                .contains(Modifier.PUBLIC));
+
+        if (!hasPublicNoArgumentConstructor) {
+            printError(
+                    "@GeneratorMapping implementation must declare "
+                            + "a public no-argument constructor.",
+                    declaration);
+
+            return Optional.empty();
+        }
+
+        String mappingPackageName =
+                processingEnv
+                        .getElementUtils()
+                        .getPackageOf(declaration)
+                        .getQualifiedName()
+                        .toString();
+
+        if (!mappingPackageName.equals("mappings")
+                && !mappingPackageName.startsWith("mappings.")) {
+
+            printError(
+                    "@GeneratorMapping declarations must be placed "
+                            + "in the 'mappings' package or one of its subpackages.",
+                    declaration);
+
+            return Optional.empty();
+        }
+
+        String generatedPackageName =
+                "tiles" + mappingPackageName.substring("mappings".length());
+
+        String mappingDeclarationName =
+                declaration.getSimpleName().toString();
+
+        String generatedTileBaseName =
+                mappingDeclarationName.endsWith("Mapping")
+                        ? mappingDeclarationName.substring(
+                        0,
+                        mappingDeclarationName.length()
+                        - "Mapping".length())
+                        : mappingDeclarationName;
+
+        String generatedTileName =
+                generatedTileBaseName + "GeneratedTile";
+
         return Optional.of(
                 new GeneratorMappingModel(
                         declaration,
                         qualifiedComponentName,
                         namespace,
                         componentName,
-                        implementationType));
+                        implementationType,
+                        generatedPackageName,
+                        generatedTileName));
+    }
+
+    private void generateTile(GeneratorMappingModel mapping) {
+        try {
+            tileWriter.write(mapping);
+
+            processingEnv
+                    .getMessager()
+                    .printMessage(
+                            Diagnostic.Kind.NOTE,
+                            "Generated Tile: "
+                                    + mapping.generatedPackageName()
+                                    + "."
+                                    + mapping.generatedTileName(),
+                            mapping.declaration());
+
+        } catch (IOException exception) {
+            printError(
+                    "Failed to generate Tile for '"
+                            + mapping.qualifiedComponentName()
+                            + "': "
+                            + exception.getMessage(),
+                    mapping.declaration());
+        }
     }
 
     private boolean isGeneratorMapping(AnnotationMirror annotation) {
