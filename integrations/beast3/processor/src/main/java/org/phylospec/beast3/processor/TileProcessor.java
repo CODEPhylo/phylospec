@@ -38,6 +38,10 @@ public final class TileProcessor extends AbstractProcessor {
     private TileWriter tileWriter;
     private RegistryWriter registryWriter;
     private ComponentResolver componentResolver;
+    private final List<MappingSpec> generatedMappings =
+            new ArrayList<>();
+
+    private boolean registryGenerated;
 
     @Override
     public synchronized void init(
@@ -89,8 +93,11 @@ public final class TileProcessor extends AbstractProcessor {
             return true;
         }
 
-        List<MappingSpec> generatedMappings =
-                new ArrayList<>();
+        if (roundEnvironment.processingOver()) {
+            return true;
+        }
+
+        boolean generatedTileThisRound = false;
 
         for (Element element :
                 roundEnvironment.getElementsAnnotatedWith(
@@ -107,17 +114,30 @@ public final class TileProcessor extends AbstractProcessor {
             TypeElement declaration =
                     (TypeElement) element;
 
-            readMapping(declaration)
-                    .ifPresent(
-                            mapping -> {
-                                if (generateTile(mapping)) {
-                                    generatedMappings.add(mapping);
-                                }
-                            });
+            Optional<MappingSpec> mappingResult =
+                    readMapping(declaration);
+
+            if (mappingResult.isEmpty()) {
+                continue;
+            }
+
+            MappingSpec mapping =
+                    mappingResult.orElseThrow();
+
+            if (generateTile(mapping)) {
+                generatedMappings.add(mapping);
+                generatedTileThisRound = true;
+            }
         }
 
-        if (!generatedMappings.isEmpty()) {
-            generateRegistry(generatedMappings);
+        if (!generatedTileThisRound
+                && !generatedMappings.isEmpty()
+                && !registryGenerated) {
+
+            generateRegistry(
+                    List.copyOf(generatedMappings));
+
+            registryGenerated = true;
         }
 
         return true;
