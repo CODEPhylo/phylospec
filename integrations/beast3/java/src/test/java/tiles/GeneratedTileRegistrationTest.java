@@ -10,33 +10,42 @@ import org.phylospec.tiling.TileLibrary;
 import org.phylospec.tiling.tiles.CandidateTile;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.substitutionmodels.JC69GeneratedTile;
+import tiles.trees.ConstantPopulationGeneratedTile;
 
 public class GeneratedTileRegistrationTest {
 
     @Test
-    public void registersGeneratedJC69ExactlyOnce() {
-        List<CandidateTile<BEASTState>> jc69Tiles = new BeastCoreTileLibrary()
-                .getTiles().stream().filter(this::isJC69Tile).toList();
+    public void registersGeneratedTilesExactlyOnce() {
+        List<CandidateTile<BEASTState>> tiles = new BeastCoreTileLibrary().getTiles();
 
-        assertEquals(1, jc69Tiles.size());
+        assertGeneratedTile(tiles, "jc69", JC69GeneratedTile.class);
 
-        assertInstanceOf(JC69GeneratedTile.class, jc69Tiles.getFirst());
+        assertGeneratedTile(tiles, "constantPopulationFunction", ConstantPopulationGeneratedTile.class);
     }
 
     @Test
-    public void discoversGeneratedJC69ThroughServiceLoader() {
-        List<CandidateTile<BEASTState>> jc69Tiles = TileLibrary.loadAll(BEASTState.class).stream()
-                .filter(this::isJC69Tile)
-                .toList();
+    public void discoversGeneratedTilesThroughServiceLoader() {
+        List<CandidateTile<BEASTState>> tiles = TileLibrary.loadAll(BEASTState.class);
 
-        assertEquals(1, jc69Tiles.size());
+        assertGeneratedTile(tiles, "jc69", JC69GeneratedTile.class);
 
-        assertInstanceOf(JC69GeneratedTile.class, jc69Tiles.getFirst());
+        assertGeneratedTile(tiles, "constantPopulationFunction", ConstantPopulationGeneratedTile.class);
     }
 
-    private boolean isJC69Tile(CandidateTile<BEASTState> candidateTile) {
+    private void assertGeneratedTile(
+            List<CandidateTile<BEASTState>> tiles, String componentName, Class<?> expectedClass) {
+
+        List<CandidateTile<BEASTState>> matchingTiles =
+                tiles.stream().filter(tile -> isGenerator(tile, componentName)).toList();
+
+        assertEquals(1, matchingTiles.size());
+
+        assertInstanceOf(expectedClass, matchingTiles.getFirst());
+    }
+
+    private boolean isGenerator(CandidateTile<BEASTState> candidateTile, String componentName) {
 
         return candidateTile instanceof GeneratorTile<?, ?> generatorTile
-                && "jc69".equals(generatorTile.getPhyloSpecGeneratorName());
+                && componentName.equals(generatorTile.getPhyloSpecGeneratorName());
     }
 }
