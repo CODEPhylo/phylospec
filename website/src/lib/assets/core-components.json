@@ -318,6 +318,7 @@
       },
       {
         "name": "fromNexus",
+        "overloadName": "tipAges",
         "generatedType": "Alignment<Character>",
         "namespace": "phylospec.functions.io",
         "description": "Load an alignment from Nexus file",
@@ -353,6 +354,7 @@
       },
       {
         "name": "fromNexus",
+        "overloadName": "tipDates",
         "generatedType": "Alignment<Character>",
         "namespace": "phylospec.functions.io",
         "description": "Load an alignment from Nexus file",
@@ -388,6 +390,7 @@
       },
       {
         "name": "fromFasta",
+        "overloadName": "tipAges",
         "generatedType": "Alignment<Character>",
         "namespace": "phylospec.functions.io",
         "description": "Load alignment from FASTA file",
@@ -423,6 +426,7 @@
       },
       {
         "name": "fromFasta",
+        "overloadName": "tipDates",
         "generatedType": "Alignment<Character>",
         "namespace": "phylospec.functions.io",
         "description": "Load alignment from FASTA file",
@@ -587,6 +591,7 @@
       },
       {
         "name": "parse",
+        "overloadName": "delimiter",
         "generatedType": "Parser",
         "namespace": "phylospec.functions.io",
         "description": "Creates a parser to extract information out of a delimited string",
@@ -607,6 +612,7 @@
       },
       {
         "name": "parse",
+        "overloadName": "regex",
         "generatedType": "Parser",
         "namespace": "phylospec.functions.io",
         "description": "Creates a parser to extract information out of a string using regex",
@@ -621,6 +627,7 @@
       },
       {
         "name": "taxa",
+        "overloadName": "alignment",
         "generatedType": "Taxa<;num=alignment.numTaxa>",
         "namespace": "phylospec.functions.accessor",
         "description": "Extract taxa from an alignment",
@@ -635,6 +642,7 @@
       },
       {
         "name": "taxa",
+        "overloadName": "tree",
         "generatedType": "Taxa<;num=tree.numTaxa>",
         "namespace": "phylospec.functions.accessor",
         "description": "Extract taxa from a tree",
@@ -730,6 +738,7 @@
       },
       {
         "name": "numTaxa",
+        "overloadName": "alignment",
         "generatedType": "PositiveInteger<;value=alignment.numTaxa>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of taxa in an alignment",
@@ -744,6 +753,7 @@
       },
       {
         "name": "numTaxa",
+        "overloadName": "tree",
         "generatedType": "PositiveInteger<;value=tree.numTaxa>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of taxa in a tree",
@@ -758,6 +768,7 @@
       },
       {
         "name": "numSites",
+        "overloadName": "alignment",
         "generatedType": "PositiveInteger<;value=alignment.numSites>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of sites in an alignment",
@@ -772,6 +783,7 @@
       },
       {
         "name": "numSites",
+        "overloadName": "sequence",
         "generatedType": "PositiveInteger<;value=sequence.num>",
         "namespace": "phylospec.functions.accessor",
         "description": "Count the number of sites in a sequence",
@@ -820,6 +832,7 @@
       },
       {
         "name": "age",
+        "overloadName": "treeNode",
         "generatedType": "Age",
         "namespace": "phylospec.functions.accessor",
         "description": "Get the age of a taxon in a tree",
@@ -840,6 +853,7 @@
       },
       {
         "name": "age",
+        "overloadName": "taxon",
         "generatedType": "Age",
         "namespace": "phylospec.functions.accessor",
         "description": "Get the age of a taxon",
@@ -908,6 +922,7 @@
       },
       {
         "name": "sum",
+        "overloadName": "realVector",
         "generatedType": "Real",
         "namespace": "phylospec.functions.math",
         "description": "Sum all elements in a vector of real numbers",
@@ -922,6 +937,7 @@
       },
       {
         "name": "sum",
+        "overloadName": "integerVector",
         "generatedType": "Integer",
         "namespace": "phylospec.functions.math",
         "description": "Sum all elements in a vector of integers",
@@ -1081,6 +1097,7 @@
       },
       {
         "name": "LogNormal",
+        "overloadName": "logMean",
         "generatedType": "Distribution<PositiveReal>",
         "namespace": "phylospec.distributions",
         "description": "Log-normal distribution for positive real values",
@@ -1101,6 +1118,7 @@
       },
       {
         "name": "LogNormal",
+        "overloadName": "arithmeticMean",
         "generatedType": "Distribution<PositiveReal>",
         "namespace": "phylospec.distributions",
         "description": "Log-normal distribution for positive real values",
@@ -1415,6 +1433,7 @@
       },
       {
         "name": "Yule",
+        "overloadName": "taxa",
         "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Yule pure-birth process for trees conditioned on the number of taxa",
@@ -1436,6 +1455,7 @@
       },
       {
         "name": "Yule",
+        "overloadName": "rootAge",
         "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Yule pure-birth process for trees conditioned on the root age",
@@ -1463,6 +1483,7 @@
       },
       {
         "name": "BirthDeath",
+        "overloadName": "birthDeathRates",
         "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Birth-death process for trees of extant taxa. Conditioned on the root age if given, otherwise conditioned on the number of extant taxa",
@@ -1502,6 +1523,7 @@
       },
       {
         "name": "BirthDeath",
+        "overloadName": "diversificationTurnover",
         "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Birth-death process for trees of extant taxa. Conditioned on the root age if given, otherwise conditioned on the number of extant taxa",
@@ -1541,6 +1563,7 @@
       },
       {
         "name": "Coalescent",
+        "overloadName": "constantPopulation",
         "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Coalescent process for population genetics",
@@ -1561,6 +1584,7 @@
       },
       {
         "name": "Coalescent",
+        "overloadName": "populationFunction",
         "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Coalescent process for population genetics",
@@ -1616,6 +1640,7 @@
       },
       {
         "name": "FossilizedBirthDeath",
+        "overloadName": "speciationExtinction",
         "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Fossilized birth-death process for trees with fossil taxa, conditioned on the number of taxa and root age",
@@ -1661,6 +1686,7 @@
       },
       {
         "name": "FossilizedBirthDeath",
+        "overloadName": "diversificationTurnover",
         "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
         "namespace": "phylospec.distributions.tree",
         "description": "Fossilized birth-death process for trees with fossil taxa, conditioned on the number of taxa and root age",
@@ -1706,6 +1732,7 @@
       },
       {
         "name": "PhyloCTMC",
+        "overloadName": "singleQMatrix",
         "generatedType": "Distribution<Alignment<Character; numSites=siteRates.num, numTaxa=tree.numTaxa>>",
         "namespace": "phylospec.distributions.sequence",
         "description": "Phylogenetic continuous-time Markov chain",
@@ -1741,6 +1768,7 @@
       },
       {
         "name": "PhyloCTMC",
+        "overloadName": "siteQMatrices",
         "generatedType": "Distribution<Alignment<Character; numSites=siteRates.num, numTaxa=tree.numTaxa>>",
         "namespace": "phylospec.distributions.sequence",
         "description": "Phylogenetic continuous-time Markov chain",

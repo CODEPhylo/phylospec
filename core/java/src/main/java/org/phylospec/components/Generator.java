@@ -16,6 +16,7 @@ import javax.annotation.processing.Generated;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "name",
+    "overloadName",
     "description",
     "namespace",
     "generatedType",
@@ -35,6 +36,14 @@ public class Generator {
      */
     @JsonProperty("name")
     private String name;
+    /**
+     * Stable name disambiguating overloads that share a namespace and name. Unique among the generators sharing a (namespace, name) pair; an overload which omits it uses the name 'default', so at most one overload of a generator may omit it.
+     *
+     */
+    @JsonProperty("overloadName")
+    @JsonPropertyDescription(
+            "Stable name disambiguating overloads that share a namespace and name. Unique among the generators sharing a (namespace, name) pair; an overload which omits it uses the name 'default', so at most one overload of a generator may omit it.")
+    private String overloadName;
 
     @JsonProperty("description")
     private String description;
@@ -105,6 +114,24 @@ public class Generator {
     @JsonProperty("name")
     public void setName(String name) {
         this.name = name;
+    }
+
+    /**
+     * Stable name disambiguating overloads that share a namespace and name. Unique among the generators sharing a (namespace, name) pair; an overload which omits it uses the name 'default', so at most one overload of a generator may omit it.
+     *
+     */
+    @JsonProperty("overloadName")
+    public String getOverloadName() {
+        return overloadName;
+    }
+
+    /**
+     * Stable name disambiguating overloads that share a namespace and name. Unique among the generators sharing a (namespace, name) pair; an overload which omits it uses the name 'default', so at most one overload of a generator may omit it.
+     *
+     */
+    @JsonProperty("overloadName")
+    public void setOverloadName(String overloadName) {
+        this.overloadName = overloadName;
     }
 
     @JsonProperty("description")
@@ -260,6 +287,10 @@ public class Generator {
         sb.append('=');
         sb.append(((this.name == null) ? "<null>" : this.name));
         sb.append(',');
+        sb.append("overloadName");
+        sb.append('=');
+        sb.append(((this.overloadName == null) ? "<null>" : this.overloadName));
+        sb.append(',');
         sb.append("description");
         sb.append('=');
         sb.append(((this.description == null) ? "<null>" : this.description));
@@ -310,6 +341,7 @@ public class Generator {
         result = ((result * 31) + ((this.generatedType == null) ? 0 : this.generatedType.hashCode()));
         result = ((result * 31) + ((this.examples == null) ? 0 : this.examples.hashCode()));
         result = ((result * 31) + ((this.ioHints == null) ? 0 : this.ioHints.hashCode()));
+        result = ((result * 31) + ((this.overloadName == null) ? 0 : this.overloadName.hashCode()));
         result = ((result * 31) + ((this.name == null) ? 0 : this.name.hashCode()));
         result = ((result * 31) + ((this.namespace == null) ? 0 : this.namespace.hashCode()));
         result = ((result * 31) + ((this.description == null) ? 0 : this.description.hashCode()));
@@ -329,19 +361,28 @@ public class Generator {
             return false;
         }
         Generator rhs = ((Generator) other);
-        return (((((((((((this.generatedType == rhs.generatedType)
-                                                                                        || ((this.generatedType != null)
-                                                                                                && this.generatedType
-                                                                                                        .equals(
-                                                                                                                rhs.generatedType)))
-                                                                                && ((this.examples == rhs.examples)
-                                                                                        || ((this.examples != null)
-                                                                                                && this.examples.equals(
-                                                                                                        rhs.examples))))
-                                                                        && ((this.ioHints == rhs.ioHints)
-                                                                                || ((this.ioHints != null)
-                                                                                        && this.ioHints.equals(
-                                                                                                rhs.ioHints))))
+        return ((((((((((((this.generatedType == rhs.generatedType)
+                                                                                                || ((this.generatedType
+                                                                                                                != null)
+                                                                                                        && this
+                                                                                                                .generatedType
+                                                                                                                .equals(
+                                                                                                                        rhs.generatedType)))
+                                                                                        && ((this.examples
+                                                                                                        == rhs.examples)
+                                                                                                || ((this.examples
+                                                                                                                != null)
+                                                                                                        && this.examples
+                                                                                                                .equals(
+                                                                                                                        rhs.examples))))
+                                                                                && ((this.ioHints == rhs.ioHints)
+                                                                                        || ((this.ioHints != null)
+                                                                                                && this.ioHints.equals(
+                                                                                                        rhs.ioHints))))
+                                                                        && ((this.overloadName == rhs.overloadName)
+                                                                                || ((this.overloadName != null)
+                                                                                        && this.overloadName.equals(
+                                                                                                rhs.overloadName))))
                                                                 && ((this.name == rhs.name)
                                                                         || ((this.name != null)
                                                                                 && this.name.equals(rhs.name))))

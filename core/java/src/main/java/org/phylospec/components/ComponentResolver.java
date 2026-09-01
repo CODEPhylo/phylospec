@@ -15,6 +15,11 @@ import org.phylospec.typeresolver.TypeError;
  */
 public class ComponentResolver {
 
+    /**
+     * The overload name used by an overload which does not declare one itself.
+     */
+    public static final String DEFAULT_OVERLOAD_NAME = "default";
+
     final List<ComponentLibrary> componentLibraries;
     final Set<String> knownNamespaces;
 
@@ -148,6 +153,7 @@ public class ComponentResolver {
         // validate imported components
 
         this.checkTypeParameters();
+        this.checkOverloadNames();
     }
 
     /**
@@ -343,6 +349,52 @@ public class ComponentResolver {
         for (ParsedType parameterType : specifiedParameterTypes) {
             if (generator.getTypeParameters().contains(parameterType.getTypeString())) continue;
             checkTypeParameters(parameterType, generator);
+        }
+    }
+
+    /**
+     * Checks that the overloads of a generator can be addressed individually.
+     * Overloads are generators registered under the same fully qualified name, possibly
+     * coming from different component libraries. Each of them needs a unique overload name.
+     * An overload which does not declare one uses {@link #DEFAULT_OVERLOAD_NAME}, so a generator
+     * without overloads never needs an overload name, and a second library may add an overload to
+     * a generator declared without one elsewhere.
+     */
+    private void checkOverloadNames() {
+        Map<String, List<Generator>> overloadsByName = new LinkedHashMap<>();
+        for (ComponentLibrary library : componentLibraries) {
+            for (Generator generator : library.getGenerators()) {
+                overloadsByName
+                        .computeIfAbsent(getFullyQualifiedName(generator), x -> new ArrayList<>())
+                        .add(generator);
+            }
+        }
+
+        for (Map.Entry<String, List<Generator>> entry : overloadsByName.entrySet()) {
+            String qualifiedName = entry.getKey();
+            List<Generator> overloads = entry.getValue();
+            Set<String> seenOverloadNames = new HashSet<>();
+
+            for (Generator generator : overloads) {
+                String overloadName = generator.getOverloadName();
+
+                if (overloadName == null) {
+                    // an overload without an explicit name falls back to the default name
+                    overloadName = DEFAULT_OVERLOAD_NAME;
+                    // we also set the overload name to the default
+                    generator.setOverloadName(DEFAULT_OVERLOAD_NAME);
+                }
+
+                if (!seenOverloadNames.add(overloadName)) {
+                    throw new IllegalArgumentException("The overload name '"
+                            + overloadName
+                            + "' is used by multiple overloads of the generator '"
+                            + qualifiedName
+                            + "'. Overload names have to be unique among the overloads of a generator. Overloads which do not declare an overload name use '"
+                            + DEFAULT_OVERLOAD_NAME
+                            + "'.");
+                }
+            }
         }
     }
 
