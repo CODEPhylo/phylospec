@@ -23,5 +23,5 @@ public @interface InputMapping {
     /**
      * Java field name of the corresponding engine input.
      */
-    String implementationInput();
+    String input();
 }
