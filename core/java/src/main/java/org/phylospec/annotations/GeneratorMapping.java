@@ -31,4 +31,6 @@ public @interface GeneratorMapping {
      * Engine implementation class constructed by the generated Tile.
      */
     Class<?> implementation();
+
+    Class<?> output() default Void.class;
 }

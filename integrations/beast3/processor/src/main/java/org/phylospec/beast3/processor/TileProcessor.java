@@ -3,6 +3,7 @@ package org.phylospec.beast3.processor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -18,16 +19,25 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import org.phylospec.annotations.GeneratorMapping;
+import org.phylospec.annotations.InputMapping;
+import org.phylospec.components.Argument;
+import org.phylospec.components.ComponentResolver;
+import org.phylospec.components.Generator;
 
 public final class TileProcessor extends AbstractProcessor {
 
     private TileWriter tileWriter;
-
     private RegistryWriter registryWriter;
+    private ComponentResolver componentResolver;
 
     @Override
     public synchronized void init(
@@ -42,6 +52,21 @@ public final class TileProcessor extends AbstractProcessor {
         this.registryWriter =
                 new RegistryWriter(
                         processingEnvironment.getFiler());
+
+        try {
+            this.componentResolver =
+                    new ComponentResolver(
+                            ComponentResolver
+                                    .loadCoreComponentLibraries());
+
+        } catch (IOException exception) {
+            processingEnvironment
+                    .getMessager()
+                    .printMessage(
+                            Diagnostic.Kind.ERROR,
+                            "Could not load the PhyloSpec component library: "
+                                    + exception.getMessage());
+        }
     }
 
     @Override
@@ -59,6 +84,10 @@ public final class TileProcessor extends AbstractProcessor {
     public boolean process(
             Set<? extends TypeElement> annotations,
             RoundEnvironment roundEnvironment) {
+
+        if (componentResolver == null) {
+            return true;
+        }
 
         List<MappingSpec> generatedMappings =
                 new ArrayList<>();
@@ -97,23 +126,11 @@ public final class TileProcessor extends AbstractProcessor {
     private Optional<MappingSpec> readMapping(
             TypeElement declaration) {
 
-        if (!ElementFilter.methodsIn(
-                        declaration.getEnclosedElements())
-                .isEmpty()) {
-
-            printError(
-                    "Automatic Tile generation currently supports "
-                            + "only zero-input mappings. "
-                            + "Input mappings are not supported yet.",
-                    declaration);
-
-            return Optional.empty();
-        }
-
         AnnotationMirror annotation =
-                declaration.getAnnotationMirrors().stream()
-                        .filter(this::isGeneratorMapping)
-                        .findFirst()
+                findAnnotation(
+                        declaration,
+                        GeneratorMapping.class
+                                .getCanonicalName())
                         .orElseThrow(
                                 () ->
                                         new IllegalStateException(
@@ -125,20 +142,24 @@ public final class TileProcessor extends AbstractProcessor {
                 readAnnotationValues(annotation);
 
         String qualifiedComponentName =
-                (String) values
-                        .get("component")
-                        .getValue();
+                (String)
+                        values.get("component")
+                                .getValue();
 
         TypeMirror implementationType =
-                (TypeMirror) values
-                        .get("implementation")
-                        .getValue();
+                (TypeMirror)
+                        values.get("implementation")
+                                .getValue();
+
+        TypeMirror declaredOutputType =
+                (TypeMirror)
+                        values.get("output")
+                                .getValue();
 
         if (qualifiedComponentName.isBlank()) {
             printError(
                     "@GeneratorMapping component must not be blank.",
                     declaration);
-
             return Optional.empty();
         }
 
@@ -154,7 +175,6 @@ public final class TileProcessor extends AbstractProcessor {
                             + "qualified, for example "
                             + "'phylospec.functions.substitution.jc69'.",
                     declaration);
-
             return Optional.empty();
         }
 
@@ -167,55 +187,62 @@ public final class TileProcessor extends AbstractProcessor {
                 qualifiedComponentName.substring(
                         finalSeparator + 1);
 
-        Element implementationElement =
-                processingEnv
-                        .getTypeUtils()
-                        .asElement(implementationType);
+        Optional<TypeElement> implementationResult =
+                validateImplementation(
+                        implementationType,
+                        declaration);
 
-        if (!(implementationElement
-                instanceof TypeElement implementationDeclaration)
-                || implementationDeclaration.getKind()
-                != ElementKind.CLASS) {
+        if (implementationResult.isEmpty()) {
+            return Optional.empty();
+        }
+
+        TypeElement implementationDeclaration =
+                implementationResult.orElseThrow();
+
+        TypeMirror outputType =
+                resolveOutputType(
+                        implementationType,
+                        declaredOutputType);
+
+        if (!processingEnv
+                .getTypeUtils()
+                .isAssignable(
+                        implementationType,
+                        outputType)) {
 
             printError(
-                    "@GeneratorMapping implementation must "
-                            + "refer to a class.",
+                    "BEAST implementation type '"
+                            + implementationType
+                            + "' cannot be returned as output type '"
+                            + outputType
+                            + "'.",
                     declaration);
 
             return Optional.empty();
         }
 
-        if (implementationDeclaration
-                .getModifiers()
-                .contains(Modifier.ABSTRACT)) {
+        List<Generator> componentGenerators =
+                componentResolver.resolveGenerator(
+                        qualifiedComponentName);
 
+        if (componentGenerators.isEmpty()) {
             printError(
-                    "@GeneratorMapping implementation must "
-                            + "not be abstract.",
+                    "Unknown PhyloSpec component '"
+                            + qualifiedComponentName
+                            + "'.",
                     declaration);
 
             return Optional.empty();
         }
 
-        if (!implementationDeclaration
-                .getModifiers()
-                .contains(Modifier.PUBLIC)) {
+        Optional<List<InputSpec>> inputResult =
+                readInputs(
+                        declaration,
+                        implementationDeclaration,
+                        implementationType,
+                        componentGenerators);
 
-            printError(
-                    "@GeneratorMapping implementation must be public.",
-                    declaration);
-
-            return Optional.empty();
-        }
-
-        if (!hasPublicNoArgumentConstructor(
-                implementationDeclaration)) {
-
-            printError(
-                    "@GeneratorMapping implementation must declare "
-                            + "a public no-argument constructor.",
-                    declaration);
-
+        if (inputResult.isEmpty()) {
             return Optional.empty();
         }
 
@@ -264,8 +291,444 @@ public final class TileProcessor extends AbstractProcessor {
                         namespace,
                         componentName,
                         implementationType,
+                        outputType,
+                        inputResult.orElseThrow(),
                         generatedPackageName,
                         generatedTileName));
+    }
+
+    private Optional<TypeElement> validateImplementation(
+            TypeMirror implementationType,
+            TypeElement mappingDeclaration) {
+
+        Element implementationElement =
+                processingEnv
+                        .getTypeUtils()
+                        .asElement(implementationType);
+
+        if (!(implementationElement
+                instanceof TypeElement implementationDeclaration)
+                || implementationDeclaration.getKind()
+                != ElementKind.CLASS) {
+
+            printError(
+                    "@GeneratorMapping implementation must "
+                            + "refer to a class.",
+                    mappingDeclaration);
+
+            return Optional.empty();
+        }
+
+        if (implementationDeclaration
+                .getModifiers()
+                .contains(Modifier.ABSTRACT)) {
+
+            printError(
+                    "@GeneratorMapping implementation must "
+                            + "not be abstract.",
+                    mappingDeclaration);
+
+            return Optional.empty();
+        }
+
+        if (!implementationDeclaration
+                .getModifiers()
+                .contains(Modifier.PUBLIC)) {
+
+            printError(
+                    "@GeneratorMapping implementation must be public.",
+                    mappingDeclaration);
+
+            return Optional.empty();
+        }
+
+        if (!hasPublicNoArgumentConstructor(
+                implementationDeclaration)) {
+
+            printError(
+                    "@GeneratorMapping implementation must declare "
+                            + "a public no-argument constructor.",
+                    mappingDeclaration);
+
+            return Optional.empty();
+        }
+
+        return Optional.of(implementationDeclaration);
+    }
+
+    private TypeMirror resolveOutputType(
+            TypeMirror implementationType,
+            TypeMirror declaredOutputType) {
+
+        Elements elements =
+                processingEnv.getElementUtils();
+
+        Types types =
+                processingEnv.getTypeUtils();
+
+        TypeElement voidClass =
+                elements.getTypeElement(
+                        Void.class.getCanonicalName());
+
+        boolean usesDefaultOutput =
+                types.isSameType(
+                        types.erasure(declaredOutputType),
+                        types.erasure(voidClass.asType()));
+
+        return usesDefaultOutput
+                ? implementationType
+                : declaredOutputType;
+    }
+
+    private Optional<List<InputSpec>> readInputs(
+            TypeElement mappingDeclaration,
+            TypeElement implementationDeclaration,
+            TypeMirror implementationType,
+            List<Generator> componentGenerators) {
+
+        List<InputSpec> inputs =
+                new ArrayList<>();
+
+        Set<String> usedArguments =
+                new HashSet<>();
+
+        Set<String> usedBeastInputs =
+                new HashSet<>();
+
+        for (ExecutableElement method :
+                ElementFilter.methodsIn(
+                        mappingDeclaration
+                                .getEnclosedElements())) {
+
+            Optional<? extends AnnotationMirror> annotationResult =
+                    findAnnotation(
+                            method,
+                            InputMapping.class.getCanonicalName());
+
+            if (annotationResult.isEmpty()) {
+                printError(
+                        "Every method in a @GeneratorMapping "
+                                + "interface must declare @InputMapping.",
+                        method);
+                return Optional.empty();
+            }
+
+            if (!method.getParameters().isEmpty()) {
+                printError(
+                        "@InputMapping methods must not declare parameters.",
+                        method);
+                return Optional.empty();
+            }
+
+            if (method.getReturnType().getKind()
+                    == TypeKind.VOID) {
+
+                printError(
+                        "@InputMapping methods must return "
+                                + "the Java value type passed to BEAST.",
+                        method);
+                return Optional.empty();
+            }
+
+            if (method.getModifiers()
+                    .contains(Modifier.DEFAULT)
+                    || method.getModifiers()
+                    .contains(Modifier.STATIC)) {
+
+                printError(
+                        "@InputMapping methods must be abstract "
+                                + "interface methods.",
+                        method);
+                return Optional.empty();
+            }
+
+            Map<String, AnnotationValue> values =
+                    readAnnotationValues(
+                            annotationResult.orElseThrow());
+
+            String argumentName =
+                    (String)
+                            values.get("argument")
+                                    .getValue();
+
+            String beastInputName =
+                    (String)
+                            values.get("input")
+                                    .getValue();
+
+            if (argumentName.isBlank()) {
+                printError(
+                        "@InputMapping argument must not be blank.",
+                        method);
+                return Optional.empty();
+            }
+
+            if (beastInputName.isBlank()) {
+                printError(
+                        "@InputMapping input must not be blank.",
+                        method);
+                return Optional.empty();
+            }
+
+            if (!usedArguments.add(argumentName)) {
+                printError(
+                        "PhyloSpec argument '"
+                                + argumentName
+                                + "' is mapped more than once.",
+                        method);
+                return Optional.empty();
+            }
+
+            if (!usedBeastInputs.add(beastInputName)) {
+                printError(
+                        "BEAST input '"
+                                + beastInputName
+                                + "' is mapped more than once.",
+                        method);
+                return Optional.empty();
+            }
+
+            Optional<Boolean> requiredResult =
+                    resolveRequired(
+                            argumentName,
+                            componentGenerators,
+                            method);
+
+            if (requiredResult.isEmpty()) {
+                return Optional.empty();
+            }
+
+            TypeMirror valueType =
+                    method.getReturnType();
+
+            if (!validateBeastInput(
+                    implementationDeclaration,
+                    implementationType,
+                    beastInputName,
+                    valueType,
+                    method)) {
+
+                return Optional.empty();
+            }
+
+            inputs.add(
+                    new InputSpec(
+                            method,
+                            argumentName,
+                            beastInputName,
+                            valueType,
+                            requiredResult.orElseThrow()));
+        }
+
+        return Optional.of(inputs);
+    }
+
+    private Optional<Boolean> resolveRequired(
+            String argumentName,
+            List<Generator> componentGenerators,
+            Element declaration) {
+
+        List<Argument> matchingArguments =
+                componentGenerators.stream()
+                        .flatMap(
+                                generator ->
+                                        generator.getArguments()
+                                                .stream())
+                        .filter(
+                                argument ->
+                                        argumentName.equals(
+                                                argument.getName()))
+                        .toList();
+
+        if (matchingArguments.isEmpty()) {
+            printError(
+                    "Unknown PhyloSpec argument '"
+                            + argumentName
+                            + "'.",
+                    declaration);
+
+            return Optional.empty();
+        }
+
+        Set<Boolean> requiredValues =
+                new HashSet<>();
+
+        for (Argument argument : matchingArguments) {
+            requiredValues.add(
+                    Boolean.TRUE.equals(
+                            argument.getRequired()));
+        }
+
+        if (requiredValues.size() > 1) {
+            printError(
+                    "PhyloSpec argument '"
+                            + argumentName
+                            + "' has conflicting required status "
+                            + "across component overloads.",
+                    declaration);
+
+            return Optional.empty();
+        }
+
+        return Optional.of(
+                requiredValues.iterator().next());
+    }
+
+    private boolean validateBeastInput(
+            TypeElement implementationDeclaration,
+            TypeMirror implementationType,
+            String beastInputName,
+            TypeMirror valueType,
+            Element mappingDeclaration) {
+
+        Elements elements =
+                processingEnv.getElementUtils();
+
+        Types types =
+                processingEnv.getTypeUtils();
+
+        Optional<VariableElement> fieldResult =
+                ElementFilter.fieldsIn(
+                                elements.getAllMembers(
+                                        implementationDeclaration))
+                        .stream()
+                        .filter(
+                                field ->
+                                        field.getSimpleName()
+                                                .contentEquals(
+                                                        beastInputName))
+                        .findFirst();
+
+        if (fieldResult.isEmpty()) {
+            printError(
+                    "BEAST implementation '"
+                            + implementationType
+                            + "' has no input field named '"
+                            + beastInputName
+                            + "'.",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        VariableElement field =
+                fieldResult.orElseThrow();
+
+        if (!field.getModifiers()
+                .contains(Modifier.PUBLIC)) {
+
+            printError(
+                    "BEAST input field '"
+                            + beastInputName
+                            + "' must be public.",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        if (field.getModifiers()
+                .contains(Modifier.STATIC)) {
+
+            printError(
+                    "BEAST input field '"
+                            + beastInputName
+                            + "' must not be static.",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        TypeMirror fieldType =
+                types.asMemberOf(
+                        (DeclaredType) implementationType,
+                        field);
+
+        TypeElement beastInputClass =
+                elements.getTypeElement(
+                        "beast.base.core.Input");
+
+        if (beastInputClass == null) {
+            printError(
+                    "Could not resolve beast.base.core.Input.",
+                    mappingDeclaration);
+            return false;
+        }
+
+        if (!(fieldType instanceof DeclaredType declaredFieldType)
+                || !types.isAssignable(
+                types.erasure(fieldType),
+                types.erasure(
+                        beastInputClass.asType()))) {
+
+            printError(
+                    "Field '"
+                            + beastInputName
+                            + "' is not a beast.base.core.Input.",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        if (declaredFieldType
+                .getTypeArguments()
+                .size()
+                != 1) {
+
+            printError(
+                    "BEAST input field '"
+                            + beastInputName
+                            + "' must declare one value type.",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        TypeMirror expectedValueType =
+                declaredFieldType
+                        .getTypeArguments()
+                        .getFirst();
+
+        if (!types.isAssignable(
+                valueType,
+                expectedValueType)) {
+
+            printError(
+                    "PhyloSpec argument produces Java type '"
+                            + valueType
+                            + "', but BEAST input '"
+                            + beastInputName
+                            + "' expects '"
+                            + expectedValueType
+                            + "'.",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private Optional<? extends AnnotationMirror> findAnnotation(
+            Element element,
+            String annotationName) {
+
+        return element.getAnnotationMirrors()
+                .stream()
+                .filter(
+                        annotation -> {
+                            Element annotationElement =
+                                    annotation
+                                            .getAnnotationType()
+                                            .asElement();
+
+                            return annotationElement
+                                    instanceof TypeElement annotationType
+                                    && annotationType
+                                    .getQualifiedName()
+                                    .contentEquals(
+                                            annotationName);
+                        })
+                .findFirst();
     }
 
     private Map<String, AnnotationValue> readAnnotationValues(
@@ -283,12 +746,11 @@ public final class TileProcessor extends AbstractProcessor {
                         .getElementValuesWithDefaults(annotation)
                         .entrySet()) {
 
-            String name =
+            values.put(
                     entry.getKey()
                             .getSimpleName()
-                            .toString();
-
-            values.put(name, entry.getValue());
+                            .toString(),
+                    entry.getValue());
         }
 
         return values;
@@ -298,12 +760,12 @@ public final class TileProcessor extends AbstractProcessor {
             TypeElement implementation) {
 
         return ElementFilter.constructorsIn(
-                        implementation.getEnclosedElements())
+                        implementation
+                                .getEnclosedElements())
                 .stream()
                 .anyMatch(
                         constructor ->
-                                constructor
-                                        .getParameters()
+                                constructor.getParameters()
                                         .isEmpty()
                                         && constructor
                                         .getModifiers()
@@ -346,36 +808,19 @@ public final class TileProcessor extends AbstractProcessor {
 
             printNote(
                     "Generated Tile registry: "
-                            + RegistryWriter
-                            .GENERATED_PACKAGE
+                            + RegistryWriter.GENERATED_PACKAGE
                             + "."
-                            + RegistryWriter
-                            .GENERATED_CLASS,
-                    mappings.get(0).declaration());
+                            + RegistryWriter.GENERATED_CLASS,
+                    mappings.getFirst()
+                            .declaration());
 
         } catch (IOException exception) {
             printError(
                     "Failed to generate Tile registry: "
                             + exception.getMessage(),
-                    mappings.get(0).declaration());
+                    mappings.getFirst()
+                            .declaration());
         }
-    }
-
-    private boolean isGeneratorMapping(
-            AnnotationMirror annotation) {
-
-        Element annotationElement =
-                annotation
-                        .getAnnotationType()
-                        .asElement();
-
-        return annotationElement
-                instanceof TypeElement annotationType
-                && annotationType
-                .getQualifiedName()
-                .contentEquals(
-                        GeneratorMapping.class
-                                .getCanonicalName());
     }
 
     private void printNote(
