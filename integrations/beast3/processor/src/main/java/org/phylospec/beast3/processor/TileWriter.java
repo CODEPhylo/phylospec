@@ -5,15 +5,15 @@ import java.io.Writer;
 import javax.annotation.processing.Filer;
 import javax.tools.JavaFileObject;
 
-final class GeneratorTileWriter {
+final class TileWriter {
 
     private final Filer filer;
 
-    GeneratorTileWriter(Filer filer) {
+    TileWriter(Filer filer) {
         this.filer = filer;
     }
 
-    void write(GeneratorMappingModel mapping) throws IOException {
+    void write(MappingSpec mapping) throws IOException {
         String generatedQualifiedName =
                 mapping.generatedPackageName()
                         + "."
@@ -29,7 +29,7 @@ final class GeneratorTileWriter {
         }
     }
 
-    private String generateSource(GeneratorMappingModel mapping) {
+    private String generateSource(MappingSpec mapping) {
         String implementationType =
                 mapping.implementationType().toString();
 
