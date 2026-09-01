@@ -8,4 +8,6 @@ record GeneratorMappingModel(
         String qualifiedComponentName,
         String namespace,
         String componentName,
-        TypeMirror implementationType) {}
+        TypeMirror implementationType,
+        String generatedPackageName,
+        String generatedTileName) {}
