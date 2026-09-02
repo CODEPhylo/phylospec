@@ -167,20 +167,54 @@ final class TileWriter {
             InputSpec input,
             boolean optional) {
 
+        String indentation =
+                optional
+                        ? "            "
+                        : "        ";
+
         if (optional) {
             source.append("        if (")
                     .append(valueName(input))
-                    .append(" != null) {\n")
-                    .append("    ");
+                    .append(" != null) {\n\n");
         }
 
-        source.append("        beastState.setInput(\n")
-                .append("                object,\n")
-                .append("                object.")
+        String assignedValueName =
+                valueName(input);
+
+        if (input.usesAdapter()) {
+            assignedValueName =
+                    adaptedValueName(input);
+
+            source.append(indentation)
+                    .append(input.inputType())
+                    .append(" ")
+                    .append(assignedValueName)
+                    .append(" =\n")
+                    .append(indentation)
+                    .append("        new ")
+                    .append(input.adapterType())
+                    .append("()\n")
+                    .append(indentation)
+                    .append("                .adapt(\n")
+                    .append(indentation)
+                    .append("                        ")
+                    .append(valueName(input))
+                    .append(",\n")
+                    .append(indentation)
+                    .append("                        beastState);\n\n");
+        }
+
+        source.append(indentation)
+                .append("beastState.setInput(\n")
+                .append(indentation)
+                .append("        object,\n")
+                .append(indentation)
+                .append("        object.")
                 .append(input.input())
                 .append(",\n")
-                .append("                ")
-                .append(valueName(input))
+                .append(indentation)
+                .append("        ")
+                .append(assignedValueName)
                 .append(");\n\n");
 
         if (optional) {
@@ -204,6 +238,15 @@ final class TileWriter {
                 .getSimpleName()
                 .toString()
                 + "Value";
+    }
+
+    private String adaptedValueName(
+            InputSpec input) {
+
+        return input.declaration()
+                .getSimpleName()
+                .toString()
+                + "AdaptedValue";
     }
 
     private String javaString(

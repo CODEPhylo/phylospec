@@ -24,4 +24,10 @@ public @interface InputMapping {
      * Java field name of the corresponding engine input.
      */
     String input();
+
+    /**
+     * Adapter used when the argument value cannot be assigned
+     * directly to the engine input.
+     */
+    Class<?> adapter() default Void.class;
 }
