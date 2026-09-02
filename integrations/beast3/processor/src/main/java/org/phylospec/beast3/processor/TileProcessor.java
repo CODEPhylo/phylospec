@@ -27,6 +27,7 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import org.phylospec.tiling.TypeAdapter;
 import org.phylospec.annotations.GeneratorMapping;
 import org.phylospec.annotations.InputMapping;
 import org.phylospec.components.Argument;
@@ -417,8 +418,7 @@ public final class TileProcessor extends AbstractProcessor {
 
         for (ExecutableElement method :
                 ElementFilter.methodsIn(
-                        mappingDeclaration
-                                .getEnclosedElements())) {
+                        mappingDeclaration.getEnclosedElements())) {
 
             Optional<? extends AnnotationMirror> annotationResult =
                     findAnnotation(
@@ -450,10 +450,8 @@ public final class TileProcessor extends AbstractProcessor {
                 return Optional.empty();
             }
 
-            if (method.getModifiers()
-                    .contains(Modifier.DEFAULT)
-                    || method.getModifiers()
-                    .contains(Modifier.STATIC)) {
+            if (method.getModifiers().contains(Modifier.DEFAULT)
+                    || method.getModifiers().contains(Modifier.STATIC)) {
 
                 printError(
                         "@InputMapping methods must be abstract "
@@ -474,6 +472,11 @@ public final class TileProcessor extends AbstractProcessor {
             String beastInputName =
                     (String)
                             values.get("input")
+                                    .getValue();
+
+            TypeMirror adapterType =
+                    (TypeMirror)
+                            values.get("adapter")
                                     .getValue();
 
             if (argumentName.isBlank()) {
@@ -521,12 +524,47 @@ public final class TileProcessor extends AbstractProcessor {
             TypeMirror valueType =
                     method.getReturnType();
 
-            if (!validateBeastInput(
-                    implementationDeclaration,
-                    implementationType,
-                    beastInputName,
-                    valueType,
-                    method)) {
+            Optional<TypeMirror> inputTypeResult =
+                    resolveBeastInputType(
+                            implementationDeclaration,
+                            implementationType,
+                            beastInputName,
+                            method);
+
+            if (inputTypeResult.isEmpty()) {
+                return Optional.empty();
+            }
+
+            TypeMirror inputType =
+                    inputTypeResult.orElseThrow();
+
+            boolean usesAdapter =
+                    !isVoidType(adapterType);
+
+            if (usesAdapter) {
+                if (!validateAdapter(
+                        adapterType,
+                        valueType,
+                        inputType,
+                        method)) {
+
+                    return Optional.empty();
+                }
+            } else if (!processingEnv
+                    .getTypeUtils()
+                    .isAssignable(
+                            valueType,
+                            inputType)) {
+
+                printError(
+                        "PhyloSpec argument produces Java type '"
+                                + valueType
+                                + "', but BEAST input '"
+                                + beastInputName
+                                + "' expects '"
+                                + inputType
+                                + "'.",
+                        method);
 
                 return Optional.empty();
             }
@@ -537,6 +575,9 @@ public final class TileProcessor extends AbstractProcessor {
                             argumentName,
                             beastInputName,
                             valueType,
+                            inputType,
+                            adapterType,
+                            usesAdapter,
                             requiredResult.orElseThrow()));
         }
 
@@ -594,11 +635,10 @@ public final class TileProcessor extends AbstractProcessor {
                 requiredValues.iterator().next());
     }
 
-    private boolean validateBeastInput(
+    private Optional<TypeMirror> resolveBeastInputType(
             TypeElement implementationDeclaration,
             TypeMirror implementationType,
             String beastInputName,
-            TypeMirror valueType,
             Element mappingDeclaration) {
 
         Elements elements =
@@ -628,34 +668,30 @@ public final class TileProcessor extends AbstractProcessor {
                             + "'.",
                     mappingDeclaration);
 
-            return false;
+            return Optional.empty();
         }
 
         VariableElement field =
                 fieldResult.orElseThrow();
 
-        if (!field.getModifiers()
-                .contains(Modifier.PUBLIC)) {
-
+        if (!field.getModifiers().contains(Modifier.PUBLIC)) {
             printError(
                     "BEAST input field '"
                             + beastInputName
                             + "' must be public.",
                     mappingDeclaration);
 
-            return false;
+            return Optional.empty();
         }
 
-        if (field.getModifiers()
-                .contains(Modifier.STATIC)) {
-
+        if (field.getModifiers().contains(Modifier.STATIC)) {
             printError(
                     "BEAST input field '"
                             + beastInputName
                             + "' must not be static.",
                     mappingDeclaration);
 
-            return false;
+            return Optional.empty();
         }
 
         TypeMirror fieldType =
@@ -671,7 +707,8 @@ public final class TileProcessor extends AbstractProcessor {
             printError(
                     "Could not resolve beast.base.core.Input.",
                     mappingDeclaration);
-            return false;
+
+            return Optional.empty();
         }
 
         if (!(fieldType instanceof DeclaredType declaredFieldType)
@@ -686,46 +723,23 @@ public final class TileProcessor extends AbstractProcessor {
                             + "' is not a beast.base.core.Input.",
                     mappingDeclaration);
 
-            return false;
+            return Optional.empty();
         }
 
-        if (declaredFieldType
-                .getTypeArguments()
-                .size()
-                != 1) {
-
+        if (declaredFieldType.getTypeArguments().size() != 1) {
             printError(
                     "BEAST input field '"
                             + beastInputName
                             + "' must declare one value type.",
                     mappingDeclaration);
 
-            return false;
+            return Optional.empty();
         }
 
-        TypeMirror expectedValueType =
+        return Optional.of(
                 declaredFieldType
                         .getTypeArguments()
-                        .getFirst();
-
-        if (!types.isAssignable(
-                valueType,
-                expectedValueType)) {
-
-            printError(
-                    "PhyloSpec argument produces Java type '"
-                            + valueType
-                            + "', but BEAST input '"
-                            + beastInputName
-                            + "' expects '"
-                            + expectedValueType
-                            + "'.",
-                    mappingDeclaration);
-
-            return false;
-        }
-
-        return true;
+                        .getFirst());
     }
 
     private Optional<? extends AnnotationMirror> findAnnotation(
@@ -774,6 +788,238 @@ public final class TileProcessor extends AbstractProcessor {
         }
 
         return values;
+    }
+
+    private boolean validateAdapter(
+            TypeMirror adapterType,
+            TypeMirror valueType,
+            TypeMirror inputType,
+            Element mappingDeclaration) {
+
+        Types types =
+                processingEnv.getTypeUtils();
+
+        Elements elements =
+                processingEnv.getElementUtils();
+
+        Element adapterElement =
+                types.asElement(adapterType);
+
+        if (!(adapterElement
+                instanceof TypeElement adapterDeclaration)
+                || adapterDeclaration.getKind()
+                != ElementKind.CLASS) {
+
+            printError(
+                    "@InputMapping adapter must refer to a class.",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        if (!adapterDeclaration
+                .getModifiers()
+                .contains(Modifier.PUBLIC)) {
+
+            printError(
+                    "@InputMapping adapter must be public.",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        if (adapterDeclaration
+                .getModifiers()
+                .contains(Modifier.ABSTRACT)) {
+
+            printError(
+                    "@InputMapping adapter must not be abstract.",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        if (!hasPublicNoArgumentConstructor(
+                adapterDeclaration)) {
+
+            printError(
+                    "@InputMapping adapter must declare "
+                            + "a public no-argument constructor.",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        TypeElement adapterInterface =
+                elements.getTypeElement(
+                        TypeAdapter.class.getCanonicalName());
+
+        if (adapterInterface == null) {
+            printError(
+                    "Could not resolve "
+                            + TypeAdapter.class.getCanonicalName()
+                            + ".",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        Optional<DeclaredType> adapterSupertypeResult =
+                findDeclaredSupertype(
+                        adapterType,
+                        adapterInterface.asType());
+
+        if (adapterSupertypeResult.isEmpty()) {
+            printError(
+                    "Adapter '"
+                            + adapterType
+                            + "' must implement "
+                            + TypeAdapter.class.getCanonicalName()
+                            + ".",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        List<? extends TypeMirror> typeArguments =
+                adapterSupertypeResult
+                        .orElseThrow()
+                        .getTypeArguments();
+
+        if (typeArguments.size() != 3) {
+            printError(
+                    "Adapter '"
+                            + adapterType
+                            + "' must declare source, target, "
+                            + "and state types.",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        TypeMirror adapterSourceType =
+                typeArguments.get(0);
+
+        TypeMirror adapterTargetType =
+                typeArguments.get(1);
+
+        TypeMirror adapterStateType =
+                typeArguments.get(2);
+
+        if (!types.isAssignable(
+                valueType,
+                adapterSourceType)) {
+
+            printError(
+                    "Adapter '"
+                            + adapterType
+                            + "' accepts source type '"
+                            + adapterSourceType
+                            + "', but the PhyloSpec argument "
+                            + "produces '"
+                            + valueType
+                            + "'.",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        if (!types.isAssignable(
+                adapterTargetType,
+                inputType)) {
+
+            printError(
+                    "Adapter '"
+                            + adapterType
+                            + "' produces target type '"
+                            + adapterTargetType
+                            + "', but the BEAST input expects '"
+                            + inputType
+                            + "'.",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        TypeElement beastState =
+                elements.getTypeElement(
+                        "beastconfig.BEASTState");
+
+        if (beastState == null) {
+            printError(
+                    "Could not resolve beastconfig.BEASTState.",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        if (!types.isAssignable(
+                beastState.asType(),
+                adapterStateType)) {
+
+            printError(
+                    "Adapter '"
+                            + adapterType
+                            + "' cannot accept BEASTState as "
+                            + "its engine state.",
+                    mappingDeclaration);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private Optional<DeclaredType> findDeclaredSupertype(
+            TypeMirror candidateType,
+            TypeMirror expectedType) {
+
+        Types types =
+                processingEnv.getTypeUtils();
+
+        if (candidateType
+                instanceof DeclaredType declaredCandidate
+                && types.isSameType(
+                types.erasure(candidateType),
+                types.erasure(expectedType))) {
+
+            return Optional.of(
+                    declaredCandidate);
+        }
+
+        for (TypeMirror supertype :
+                types.directSupertypes(candidateType)) {
+
+            Optional<DeclaredType> result =
+                    findDeclaredSupertype(
+                            supertype,
+                            expectedType);
+
+            if (result.isPresent()) {
+                return result;
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    private boolean isVoidType(
+            TypeMirror type) {
+
+        Types types =
+                processingEnv.getTypeUtils();
+
+        TypeElement voidClass =
+                processingEnv
+                        .getElementUtils()
+                        .getTypeElement(
+                                Void.class.getCanonicalName());
+
+        return voidClass != null
+                && types.isSameType(
+                types.erasure(type),
+                types.erasure(
+                        voidClass.asType()));
     }
 
     private boolean hasPublicNoArgumentConstructor(
