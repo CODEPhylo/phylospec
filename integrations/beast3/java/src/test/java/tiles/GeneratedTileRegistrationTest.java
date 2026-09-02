@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.phylospec.tiling.TileLibrary;
 import org.phylospec.tiling.tiles.CandidateTile;
 import org.phylospec.tiling.tiles.GeneratorTile;
+import tiles.substitutionmodels.HKYGeneratedTile;
 import tiles.substitutionmodels.JC69GeneratedTile;
 import tiles.trees.ConstantPopulationGeneratedTile;
 import tiles.trees.ExponentialPopulationGeneratedTile;
@@ -24,6 +25,8 @@ public class GeneratedTileRegistrationTest {
         assertGeneratedTile(tiles, "constantPopulationFunction", ConstantPopulationGeneratedTile.class);
 
         assertGeneratedTile(tiles, "exponentialPopulationFunction", ExponentialPopulationGeneratedTile.class);
+
+        assertGeneratedTile(tiles, "hky", HKYGeneratedTile.class);
     }
 
     @Test
@@ -35,6 +38,8 @@ public class GeneratedTileRegistrationTest {
         assertGeneratedTile(tiles, "constantPopulationFunction", ConstantPopulationGeneratedTile.class);
 
         assertGeneratedTile(tiles, "exponentialPopulationFunction", ExponentialPopulationGeneratedTile.class);
+
+        assertGeneratedTile(tiles, "hky", HKYGeneratedTile.class);
     }
 
     private void assertGeneratedTile(

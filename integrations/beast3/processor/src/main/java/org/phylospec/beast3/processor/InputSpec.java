@@ -8,4 +8,7 @@ record InputSpec(
         String argument,
         String input,
         TypeMirror valueType,
+        TypeMirror inputType,
+        TypeMirror adapterType,
+        boolean usesAdapter,
         boolean required) {}
