@@ -11,6 +11,7 @@ import org.phylospec.tiling.tiles.CandidateTile;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.substitutionmodels.HKYGeneratedTile;
 import tiles.substitutionmodels.JC69GeneratedTile;
+import tiles.substitutionmodels.WAGGeneratedTile;
 import tiles.trees.ConstantPopulationGeneratedTile;
 import tiles.trees.ExponentialPopulationGeneratedTile;
 
@@ -27,6 +28,8 @@ public class GeneratedTileRegistrationTest {
         assertGeneratedTile(tiles, "exponentialPopulationFunction", ExponentialPopulationGeneratedTile.class);
 
         assertGeneratedTile(tiles, "hky", HKYGeneratedTile.class);
+
+        assertGeneratedTile(tiles, "wag", WAGGeneratedTile.class);
     }
 
     @Test
@@ -40,6 +43,8 @@ public class GeneratedTileRegistrationTest {
         assertGeneratedTile(tiles, "exponentialPopulationFunction", ExponentialPopulationGeneratedTile.class);
 
         assertGeneratedTile(tiles, "hky", HKYGeneratedTile.class);
+
+        assertGeneratedTile(tiles, "wag", WAGGeneratedTile.class);
     }
 
     private void assertGeneratedTile(
