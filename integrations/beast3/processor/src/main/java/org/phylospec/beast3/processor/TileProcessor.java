@@ -581,6 +581,38 @@ public final class TileProcessor extends AbstractProcessor {
                             requiredResult.orElseThrow()));
         }
 
+        List<String> missingRequiredArguments =
+                componentGenerators.stream()
+                        .flatMap(
+                                generator ->
+                                        generator.getArguments()
+                                                .stream())
+                        .filter(
+                                argument ->
+                                        Boolean.TRUE.equals(
+                                                argument.getRequired()))
+                        .map(Argument::getName)
+                        .distinct()
+                        .filter(
+                                argumentName ->
+                                        !usedArguments.contains(
+                                                argumentName))
+                        .sorted()
+                        .toList();
+
+        if (!missingRequiredArguments.isEmpty()) {
+            printError(
+                    "Missing mappings for required PhyloSpec "
+                            + "arguments: '"
+                            + String.join(
+                            "', '",
+                            missingRequiredArguments)
+                            + "'.",
+                    mappingDeclaration);
+
+            return Optional.empty();
+        }
+
         return Optional.of(inputs);
     }
 
