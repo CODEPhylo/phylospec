@@ -210,6 +210,60 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void rejectsMissingRequiredArgument()
+            throws IOException {
+
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+    
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.substitutionmodel.HKY;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+    
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.hky",
+                                implementation = HKY.class)
+                        public interface InvalidMapping {
+    
+                            @InputMapping(
+                                    argument = "kappa",
+                                    input = "kappaInput")
+                            RealScalar<PositiveReal> kappa();
+                        }
+                        """);
+
+        assertCompilationError(
+                result,
+                "Missing mappings for required PhyloSpec "
+                        + "arguments: 'baseFrequencies'.");
+    }
+
+    @Test
+    public void acceptsOmittedOptionalArgument()
+            throws IOException {
+
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+    
+                        import beast.base.spec.evolution.substitutionmodel.WAG;
+                        import org.phylospec.annotations.GeneratorMapping;
+    
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.wag",
+                                implementation = WAG.class)
+                        public interface InvalidMapping {}
+                        """);
+
+        assertCompilationSuccess(result);
+    }
+
+    @Test
     public void rejectsAdapterWithWrongSourceType()
             throws IOException {
 
@@ -494,6 +548,19 @@ public class TileProcessorTest {
                     success,
                     errors);
         }
+    }
+
+    private void assertCompilationSuccess(
+            CompilationResult result) {
+
+        assertTrue(
+                result.success(),
+                () ->
+                        "Expected compilation to succeed."
+                                + "\n\nActual errors:\n"
+                                + String.join(
+                                "\n",
+                                result.errors()));
     }
 
     private void assertCompilationError(
