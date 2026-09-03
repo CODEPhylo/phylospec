@@ -177,6 +177,10 @@ public final class TileProcessor extends AbstractProcessor {
                         values.get("output")
                                 .getValue();
 
+        List<String> declaredArguments =
+                readStringArray(
+                        values.get("arguments"));
+
         if (qualifiedComponentName.isBlank()) {
             printError(
                     "@GeneratorMapping component must not be blank.",
@@ -256,12 +260,26 @@ public final class TileProcessor extends AbstractProcessor {
             return Optional.empty();
         }
 
+        Optional<List<Generator>> selectedGeneratorsResult =
+                selectComponentGenerators(
+                        qualifiedComponentName,
+                        componentGenerators,
+                        declaredArguments,
+                        declaration);
+
+        if (selectedGeneratorsResult.isEmpty()) {
+            return Optional.empty();
+        }
+
+        List<Generator> selectedGenerators =
+                selectedGeneratorsResult.orElseThrow();
+
         Optional<List<InputSpec>> inputResult =
                 readInputs(
                         declaration,
                         implementationDeclaration,
                         implementationType,
-                        componentGenerators);
+                        selectedGenerators);
 
         if (inputResult.isEmpty()) {
             return Optional.empty();
@@ -820,6 +838,121 @@ public final class TileProcessor extends AbstractProcessor {
         }
 
         return values;
+    }
+
+    private List<String> readStringArray(
+            AnnotationValue annotationValue) {
+
+        Object value = annotationValue.getValue();
+
+        if (!(value instanceof List<?> entries)) {
+            return List.of();
+        }
+
+        List<String> result = new ArrayList<>();
+
+        for (Object entry : entries) {
+            AnnotationValue argumentValue =
+                    (AnnotationValue) entry;
+
+            result.add(
+                    (String) argumentValue.getValue());
+        }
+
+        return List.copyOf(result);
+    }
+
+    private Optional<List<Generator>> selectComponentGenerators(
+            String qualifiedComponentName,
+            List<Generator> componentGenerators,
+            List<String> declaredArguments,
+            Element declaration) {
+
+        if (componentGenerators.size() == 1
+                && declaredArguments.isEmpty()) {
+
+            return Optional.of(componentGenerators);
+        }
+
+        if (declaredArguments.isEmpty()) {
+            printError(
+                    "PhyloSpec component '"
+                            + qualifiedComponentName
+                            + "' has multiple overloads. "
+                            + "Select one using "
+                            + "@GeneratorMapping arguments.",
+                    declaration);
+
+            return Optional.empty();
+        }
+
+        if (new HashSet<>(declaredArguments).size()
+                != declaredArguments.size()) {
+
+            printError(
+                    "@GeneratorMapping arguments must not "
+                            + "contain duplicate names.",
+                    declaration);
+
+            return Optional.empty();
+        }
+
+        List<Generator> matchingGenerators =
+                componentGenerators.stream()
+                        .filter(
+                                generator ->
+                                        generator.getArguments()
+                                                .stream()
+                                                .map(Argument::getName)
+                                                .toList()
+                                                .equals(
+                                                        declaredArguments))
+                        .toList();
+
+        if (matchingGenerators.isEmpty()) {
+            String availableSignatures =
+                    componentGenerators.stream()
+                            .map(
+                                    generator ->
+                                            generator.getArguments()
+                                                    .stream()
+                                                    .map(Argument::getName)
+                                                    .toList()
+                                                    .toString())
+                            .distinct()
+                            .sorted()
+                            .reduce(
+                                    (left, right) ->
+                                            left + ", " + right)
+                            .orElse("[]");
+
+            printError(
+                    "No overload of PhyloSpec component '"
+                            + qualifiedComponentName
+                            + "' has argument signature "
+                            + declaredArguments
+                            + ". Available signatures: "
+                            + availableSignatures
+                            + ".",
+                    declaration);
+
+            return Optional.empty();
+        }
+
+        if (matchingGenerators.size() > 1) {
+            printError(
+                    "Argument signature "
+                            + declaredArguments
+                            + " does not uniquely identify an overload "
+                            + "of PhyloSpec component '"
+                            + qualifiedComponentName
+                            + "'.",
+                    declaration);
+
+            return Optional.empty();
+        }
+
+        return Optional.of(matchingGenerators);
     }
 
     private boolean validateAdapter(

@@ -32,5 +32,19 @@ public @interface GeneratorMapping {
      */
     Class<?> implementation();
 
+    /**
+     * Argument names selecting one component overload.
+     *
+     * <p>This can be omitted when the component has only one definition.
+     * When several generators share the same qualified name, the names
+     * must match one definition in component-library order.</p>
+     */
+    String[] arguments() default {};
+
+    /**
+     * Public type returned by the generated Tile.
+     *
+     * <p>By default, the implementation type is returned directly.</p>
+     */
     Class<?> output() default Void.class;
 }
