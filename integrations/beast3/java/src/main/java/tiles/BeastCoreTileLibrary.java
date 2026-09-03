@@ -123,7 +123,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new GTRTile());
         tiles.add(new GTRRelativeRatesTile());
         // tiles.add(new WAGTile());
-        tiles.add(new JTTTile());
+        // tiles.add(new JTTTile());
 
         tiles.add(new SiteModelTile());
         tiles.add(new PhyloCTMCTile());
