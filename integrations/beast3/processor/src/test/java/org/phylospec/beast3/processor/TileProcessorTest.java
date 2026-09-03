@@ -46,6 +46,100 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void rejectsAmbiguousComponentOverload()
+            throws IOException {
+
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+    
+                        import beast.base.spec.evolution.substitutionmodel.GTR;
+                        import org.phylospec.annotations.GeneratorMapping;
+    
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.gtr",
+                                implementation = GTR.class)
+                        public interface InvalidMapping {}
+                        """);
+
+        assertCompilationError(
+                result,
+                "has multiple overloads");
+
+        assertCompilationError(
+                result,
+                "Select one using @GeneratorMapping arguments.");
+    }
+
+    @Test
+    public void rejectsUnknownComponentOverloadSignature()
+            throws IOException {
+
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+    
+                        import beast.base.spec.evolution.substitutionmodel.GTR;
+                        import org.phylospec.annotations.GeneratorMapping;
+    
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.gtr",
+                                implementation = GTR.class,
+                                arguments = {
+                                    "unknownArgument",
+                                    "baseFrequencies"
+                                })
+                        public interface InvalidMapping {}
+                        """);
+
+        assertCompilationError(
+                result,
+                "No overload of PhyloSpec component "
+                        + "'phylospec.functions.substitution.gtr' "
+                        + "has argument signature "
+                        + "[unknownArgument, baseFrequencies].");
+    }
+
+    @Test
+    public void selectsComponentOverloadBeforeValidatingRequiredArguments()
+            throws IOException {
+
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+    
+                        import beast.base.spec.evolution.substitutionmodel.GTR;
+                        import org.phylospec.annotations.GeneratorMapping;
+    
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.gtr",
+                                implementation = GTR.class,
+                                arguments = {
+                                    "relativeRates",
+                                    "baseFrequencies"
+                                })
+                        public interface InvalidMapping {}
+                        """);
+
+        assertCompilationError(
+                result,
+                "Missing mappings for required PhyloSpec "
+                        + "arguments: 'baseFrequencies', "
+                        + "'relativeRates'.");
+
+        assertNoCompilationError(
+                result,
+                "'rateAC'");
+
+        assertNoCompilationError(
+                result,
+                "'rateAG'");
+    }
+
+    @Test
     public void rejectsUnknownArgument() throws IOException {
         CompilationResult result =
                 compile(
@@ -580,6 +674,25 @@ public class TileProcessorTest {
                 () ->
                         "Expected an error containing:\n"
                                 + expectedMessage
+                                + "\n\nActual errors:\n"
+                                + String.join(
+                                "\n",
+                                result.errors()));
+    }
+
+    private void assertNoCompilationError(
+            CompilationResult result,
+            String unexpectedMessage) {
+
+        assertTrue(
+                result.errors().stream()
+                        .noneMatch(
+                                error ->
+                                        error.contains(
+                                                unexpectedMessage)),
+                () ->
+                        "Did not expect an error containing:\n"
+                                + unexpectedMessage
                                 + "\n\nActual errors:\n"
                                 + String.join(
                                 "\n",
