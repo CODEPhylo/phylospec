@@ -39,6 +39,7 @@ public final class TileProcessor extends AbstractProcessor {
     private TileWriter tileWriter;
     private RegistryWriter registryWriter;
     private ComponentResolver componentResolver;
+    private TypeBindings typeBindings;
     private final List<MappingSpec> generatedMappings =
             new ArrayList<>();
 
@@ -63,6 +64,11 @@ public final class TileProcessor extends AbstractProcessor {
                     new ComponentResolver(
                             ComponentResolver
                                     .loadCoreComponentLibraries());
+
+            this.typeBindings =
+                    new TypeBindings(
+                            processingEnvironment,
+                            componentResolver);
 
         } catch (IOException exception) {
             processingEnvironment
@@ -529,15 +535,18 @@ public final class TileProcessor extends AbstractProcessor {
                 return Optional.empty();
             }
 
-            Optional<Boolean> requiredResult =
-                    resolveRequired(
+            Optional<Argument> argumentResult =
+                    resolveArgument(
                             argumentName,
                             componentGenerators,
                             method);
 
-            if (requiredResult.isEmpty()) {
+            if (argumentResult.isEmpty()) {
                 return Optional.empty();
             }
+
+            Argument componentArgument =
+                    argumentResult.orElseThrow();
 
             TypeMirror valueType =
                     method.getReturnType();
@@ -587,16 +596,27 @@ public final class TileProcessor extends AbstractProcessor {
                 return Optional.empty();
             }
 
+            if (!validateSemanticType(
+                    argumentName,
+                    componentArgument.getType(),
+                    valueType,
+                    method)) {
+
+                return Optional.empty();
+            }
+
             inputs.add(
                     new InputSpec(
                             method,
                             argumentName,
+                            componentArgument.getType(),
                             beastInputName,
                             valueType,
                             inputType,
                             adapterType,
                             usesAdapter,
-                            requiredResult.orElseThrow()));
+                            Boolean.TRUE.equals(
+                                    componentArgument.getRequired())));
         }
 
         List<String> missingRequiredArguments =
@@ -634,7 +654,7 @@ public final class TileProcessor extends AbstractProcessor {
         return Optional.of(inputs);
     }
 
-    private Optional<Boolean> resolveRequired(
+    private Optional<Argument> resolveArgument(
             String argumentName,
             List<Generator> componentGenerators,
             Element declaration) {
@@ -661,28 +681,68 @@ public final class TileProcessor extends AbstractProcessor {
             return Optional.empty();
         }
 
-        Set<Boolean> requiredValues =
-                new HashSet<>();
-
-        for (Argument argument : matchingArguments) {
-            requiredValues.add(
-                    Boolean.TRUE.equals(
-                            argument.getRequired()));
-        }
-
-        if (requiredValues.size() > 1) {
+        if (matchingArguments.size() > 1) {
             printError(
                     "PhyloSpec argument '"
                             + argumentName
-                            + "' has conflicting required status "
-                            + "across component overloads.",
+                            + "' is ambiguous across component overloads.",
                     declaration);
 
             return Optional.empty();
         }
 
-        return Optional.of(
-                requiredValues.iterator().next());
+        return Optional.of(matchingArguments.getFirst());
+    }
+
+    private boolean validateSemanticType(
+            String argumentName,
+            String semanticType,
+            TypeMirror valueType,
+            Element declaration) {
+
+        Optional<TypeMirror> expectedTypeResult =
+                typeBindings.resolve(semanticType);
+
+        if (expectedTypeResult.isEmpty()) {
+            printError(
+                    "Automatic Tile generation has no BEAST Java "
+                            + "type binding for PhyloSpec type '"
+                            + semanticType
+                            + "' used by argument '"
+                            + argumentName
+                            + "'. Add a type binding or use a "
+                            + "handwritten Tile.",
+                    declaration);
+
+            return false;
+        }
+
+        TypeMirror expectedType =
+                expectedTypeResult.orElseThrow();
+
+        if (!processingEnv
+                .getTypeUtils()
+                .isAssignable(
+                        valueType,
+                        expectedType)) {
+
+            printError(
+                    "PhyloSpec argument '"
+                            + argumentName
+                            + "' has semantic type '"
+                            + semanticType
+                            + "', which requires a BEAST Java value "
+                            + "compatible with '"
+                            + expectedType
+                            + "', but the mapping method returns '"
+                            + valueType
+                            + "'.",
+                    declaration);
+
+            return false;
+        }
+
+        return true;
     }
 
     private Optional<TypeMirror> resolveBeastInputType(
