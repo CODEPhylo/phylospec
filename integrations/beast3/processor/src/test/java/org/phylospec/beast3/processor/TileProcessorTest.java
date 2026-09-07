@@ -317,6 +317,40 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void rejectsOutputThatConflictsWithGeneratedSemanticType()
+            throws IOException {
+
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.evolution.substitutionmodel.JukesCantor;
+                        import org.phylospec.annotations.GeneratorMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.jc69",
+                                implementation = JukesCantor.class,
+                                output = Object.class)
+                        public interface InvalidMapping {}
+                        """);
+
+        assertCompilationError(
+                result,
+                "PhyloSpec component generates semantic type "
+                        + "'phylospec.types.QMatrix'");
+
+        assertCompilationError(
+                result,
+                "requires a BEAST Java output compatible with "
+                        + "'beast.base.evolution.substitutionmodel.SubstitutionModel'");
+
+        assertCompilationError(
+                result,
+                "mapping declares output type 'java.lang.Object'.");
+    }
+
+    @Test
     public void rejectsImplementationWithoutPublicNoArgumentConstructor()
             throws IOException {
 
