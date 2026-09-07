@@ -286,6 +286,14 @@ public final class TileProcessor extends AbstractProcessor {
         List<Generator> selectedGenerators =
                 selectedGeneratorsResult.orElseThrow();
 
+        if (!validateOutputType(
+                selectedGenerators.getFirst().getGeneratedType(),
+                outputType,
+                declaration)) {
+
+            return Optional.empty();
+        }
+
         List<String> componentArguments =
                 selectedGenerators.getFirst()
                         .getArguments()
@@ -780,6 +788,50 @@ public final class TileProcessor extends AbstractProcessor {
                             + expectedType
                             + "', but the mapping method returns '"
                             + valueType
+                            + "'.",
+                    declaration);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean validateOutputType(
+            String semanticType,
+            TypeMirror outputType,
+            Element declaration) {
+
+        Optional<TypeMirror> expectedTypeResult =
+                typeBindings.resolve(semanticType);
+
+        if (expectedTypeResult.isEmpty()) {
+            printError(
+                    "Automatic Tile generation has no BEAST Java "
+                            + "type binding for generated PhyloSpec type '"
+                            + semanticType
+                            + "'. Add a type binding or use a handwritten Tile.",
+                    declaration);
+
+            return false;
+        }
+
+        TypeMirror expectedType =
+                expectedTypeResult.orElseThrow();
+
+        if (!processingEnv
+                .getTypeUtils()
+                .isAssignable(
+                        outputType,
+                        expectedType)) {
+
+            printError(
+                    "PhyloSpec component generates semantic type '"
+                            + semanticType
+                            + "', which requires a BEAST Java output compatible with '"
+                            + expectedType
+                            + "', but the mapping declares output type '"
+                            + outputType
                             + "'.",
                     declaration);
 
