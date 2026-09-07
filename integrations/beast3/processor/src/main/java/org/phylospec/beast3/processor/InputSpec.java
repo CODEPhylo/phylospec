@@ -6,6 +6,7 @@ import javax.lang.model.type.TypeMirror;
 record InputSpec(
         ExecutableElement declaration,
         String argument,
+        String semanticType,
         String input,
         TypeMirror valueType,
         TypeMirror inputType,

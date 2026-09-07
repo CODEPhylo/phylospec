@@ -358,6 +358,97 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void acceptsCompatibleSemanticTypeWithAdapter()
+            throws IOException {
+
+        CompilationResult result =
+                compile(
+                        adapterMapping(
+                                "ValidAdapter",
+                                """
+                                public final class ValidAdapter
+                                        implements TypeAdapter<
+                                                Simplex,
+                                                Frequencies,
+                                                BEASTState> {
+
+                                    public ValidAdapter() {}
+
+                                    @Override
+                                    public Frequencies adapt(
+                                            Simplex value,
+                                            BEASTState state) {
+
+                                        return null;
+                                    }
+                                }
+                                """));
+
+        assertCompilationSuccess(result);
+    }
+
+    @Test
+    public void rejectsJavaTypeThatConflictsWithComponentSemanticType()
+            throws IOException {
+
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.evolution.substitutionmodel.Frequencies;
+                        import beast.base.spec.evolution.substitutionmodel.WAG;
+                        import beastconfig.BEASTState;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import org.phylospec.tiling.TypeAdapter;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.wag",
+                                implementation = WAG.class)
+                        public interface InvalidMapping {
+
+                            @InputMapping(
+                                    argument = "baseFrequencies",
+                                    input = "frequenciesInput",
+                                    adapter = InvalidMapping.StringFrequenciesAdapter.class)
+                            String baseFrequencies();
+
+                            final class StringFrequenciesAdapter
+                                    implements TypeAdapter<
+                                            String,
+                                            Frequencies,
+                                            BEASTState> {
+
+                                public StringFrequenciesAdapter() {}
+
+                                @Override
+                                public Frequencies adapt(
+                                        String value,
+                                        BEASTState state) {
+
+                                    return null;
+                                }
+                            }
+                        }
+                        """);
+
+        assertCompilationError(
+                result,
+                "PhyloSpec argument 'baseFrequencies' has semantic type "
+                        + "'phylospec.types.Simplex'");
+
+        assertCompilationError(
+                result,
+                "requires a BEAST Java value compatible with "
+                        + "'beast.base.spec.type.Simplex'");
+
+        assertCompilationError(
+                result,
+                "mapping method returns 'java.lang.String'.");
+    }
+
+    @Test
     public void rejectsAdapterWithWrongSourceType()
             throws IOException {
 
