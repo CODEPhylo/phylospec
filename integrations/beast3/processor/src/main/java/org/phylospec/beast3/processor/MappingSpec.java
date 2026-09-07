@@ -9,6 +9,7 @@ record MappingSpec(
         String qualifiedComponentName,
         String namespace,
         String componentName,
+        List<String> componentArguments,
         TypeMirror implementationType,
         TypeMirror outputType,
         List<InputSpec> inputs,
@@ -16,6 +17,7 @@ record MappingSpec(
         String generatedTileName) {
 
     MappingSpec {
+        componentArguments = List.copyOf(componentArguments);
         inputs = List.copyOf(inputs);
     }
 }
