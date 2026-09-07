@@ -41,6 +41,10 @@ final class TypeBindings {
             case TYPES + "NonNegativeInteger" -> intScalar("beast.base.spec.domain.NonNegativeInt");
             case TYPES + "PositiveInteger" -> intScalar("beast.base.spec.domain.PositiveInt");
             case TYPES + "Simplex" -> declaredType("beast.base.spec.type.Simplex");
+            case TYPES + "QMatrix" ->
+                    declaredType("beast.base.evolution.substitutionmodel.SubstitutionModel");
+            case TYPES + "PopulationFunction" ->
+                    declaredType("beast.base.evolution.tree.coalescent.PopulationFunction");
             default -> Optional.empty();
         };
     }
