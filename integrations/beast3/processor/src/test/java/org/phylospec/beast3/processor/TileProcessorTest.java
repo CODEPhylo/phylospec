@@ -46,6 +46,67 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void rejectsDuplicateComponentSignature()
+            throws IOException {
+
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.evolution.substitutionmodel.JukesCantor;
+                        import org.phylospec.annotations.GeneratorMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.jc69",
+                                implementation = JukesCantor.class)
+                        interface FirstMapping {}
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.jc69",
+                                implementation = JukesCantor.class)
+                        interface SecondMapping {}
+                        """);
+
+        assertCompilationError(
+                result,
+                "Duplicate @GeneratorMapping for PhyloSpec component "
+                        + "'phylospec.functions.substitution.jc69' "
+                        + "with argument signature [].");
+
+        assertCompilationError(
+                result,
+                "It is already declared by 'mappings.");
+    }
+
+    @Test
+    public void acceptsDifferentComponentSignatures()
+            throws IOException {
+
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.evolution.substitutionmodel.JTT;
+                        import beast.base.spec.evolution.substitutionmodel.JukesCantor;
+                        import org.phylospec.annotations.GeneratorMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.jc69",
+                                implementation = JukesCantor.class)
+                        interface FirstMapping {}
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.jtt",
+                                implementation = JTT.class)
+                        interface SecondMapping {}
+                        """);
+
+        assertCompilationSuccess(result);
+    }
+
+    @Test
     public void rejectsAmbiguousComponentOverload()
             throws IOException {
 

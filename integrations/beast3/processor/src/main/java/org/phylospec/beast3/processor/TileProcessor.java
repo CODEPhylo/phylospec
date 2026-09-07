@@ -42,6 +42,8 @@ public final class TileProcessor extends AbstractProcessor {
     private TypeBindings typeBindings;
     private final List<MappingSpec> generatedMappings =
             new ArrayList<>();
+    private final Map<MappingIdentity, TypeElement> mappingDeclarations =
+            new HashMap<>();
 
     private boolean registryGenerated;
 
@@ -130,6 +132,10 @@ public final class TileProcessor extends AbstractProcessor {
 
             MappingSpec mapping =
                     mappingResult.orElseThrow();
+
+            if (!registerMappingIdentity(mapping)) {
+                continue;
+            }
 
             if (generateTile(mapping)) {
                 generatedMappings.add(mapping);
@@ -280,6 +286,13 @@ public final class TileProcessor extends AbstractProcessor {
         List<Generator> selectedGenerators =
                 selectedGeneratorsResult.orElseThrow();
 
+        List<String> componentArguments =
+                selectedGenerators.getFirst()
+                        .getArguments()
+                        .stream()
+                        .map(Argument::getName)
+                        .toList();
+
         Optional<List<InputSpec>> inputResult =
                 readInputs(
                         declaration,
@@ -335,11 +348,42 @@ public final class TileProcessor extends AbstractProcessor {
                         qualifiedComponentName,
                         namespace,
                         componentName,
+                        componentArguments,
                         implementationType,
                         outputType,
                         inputResult.orElseThrow(),
                         generatedPackageName,
                         generatedTileName));
+    }
+
+    private boolean registerMappingIdentity(
+            MappingSpec mapping) {
+
+        MappingIdentity identity =
+                new MappingIdentity(
+                        mapping.qualifiedComponentName(),
+                        mapping.componentArguments());
+
+        TypeElement existingDeclaration =
+                mappingDeclarations.putIfAbsent(
+                        identity,
+                        mapping.declaration());
+
+        if (existingDeclaration == null) {
+            return true;
+        }
+
+        printError(
+                "Duplicate @GeneratorMapping for PhyloSpec component '"
+                        + mapping.qualifiedComponentName()
+                        + "' with argument signature "
+                        + mapping.componentArguments()
+                        + ". It is already declared by '"
+                        + existingDeclaration.getQualifiedName()
+                        + "'.",
+                mapping.declaration());
+
+        return false;
     }
 
     private Optional<TypeElement> validateImplementation(
@@ -1336,5 +1380,14 @@ public final class TileProcessor extends AbstractProcessor {
                         Diagnostic.Kind.ERROR,
                         message,
                         element);
+    }
+
+    private record MappingIdentity(
+            String qualifiedComponentName,
+            List<String> componentArguments) {
+
+        private MappingIdentity {
+            componentArguments = List.copyOf(componentArguments);
+        }
     }
 }
