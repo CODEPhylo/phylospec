@@ -2,6 +2,7 @@ package tiling.popfunc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import beastconfig.BEASTState;
 import java.io.IOException;
@@ -19,6 +20,7 @@ import org.phylospec.tiling.TileLibrary;
 import org.phylospec.tiling.tiles.CandidateTile;
 import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.typeresolver.StochasticityResolver;
+import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import popfunc.beast.evolution.populationmodel.LogisticGrowth;
@@ -35,9 +37,7 @@ public class LogisticGrowthEndToEndTest {
                 )
                 """;
 
-        List<Stmt> statements = new Parser(new Lexer(source).scanTokens()).parse();
-        statements = new RemoveGroupings().transform(statements);
-        statements = new EvaluateLiterals().transform(statements);
+        List<Stmt> statements = parse(source);
 
         TypeResolver typeResolver =
                 new TypeResolver(new ComponentResolver(ComponentResolver.loadCoreComponentLibraries()));
@@ -62,5 +62,28 @@ public class LogisticGrowthEndToEndTest {
         assertEquals(5.0, logistic.getT50());
         assertEquals(1000.0, logistic.getNCarryingCapacity());
         assertEquals(0.25, logistic.getGrowthRateB());
+    }
+
+    @Test
+    public void rejectsNegativeGrowthRateBeforeTiling() throws IOException {
+        String source = """
+                PopulationFunction population = logisticPopulationFunction(
+                    inflectionAge=5.0,
+                    carryingCapacity=1000.0,
+                    growthRate=-0.25
+                )
+                """;
+
+        List<Stmt> statements = parse(source);
+        TypeResolver typeResolver =
+                new TypeResolver(new ComponentResolver(ComponentResolver.loadCoreComponentLibraries()));
+
+        assertThrows(TypeError.class, () -> typeResolver.visitStatements(statements));
+    }
+
+    private static List<Stmt> parse(String source) {
+        List<Stmt> statements = new Parser(new Lexer(source).scanTokens()).parse();
+        statements = new RemoveGroupings().transform(statements);
+        return new EvaluateLiterals().transform(statements);
     }
 }
