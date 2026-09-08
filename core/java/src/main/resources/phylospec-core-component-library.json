@@ -2112,7 +2112,7 @@
                 {
                     "name": "growthRate",
                     "description": "The logistic growth rate",
-                    "type": "Real",
+                    "type": "NonNegativeReal",
                     "required": true
                 }
             ]
