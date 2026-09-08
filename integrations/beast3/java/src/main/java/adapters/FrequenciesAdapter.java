@@ -3,11 +3,13 @@ package adapters;
 import beast.base.spec.evolution.substitutionmodel.Frequencies;
 import beast.base.spec.type.Simplex;
 import beastconfig.BEASTState;
+import org.phylospec.annotations.AdapterMapping;
 import org.phylospec.tiling.TypeAdapter;
 
 /**
  * Wraps a BEAST Simplex in a Frequencies object.
  */
+@AdapterMapping
 public final class FrequenciesAdapter implements TypeAdapter<Simplex, Frequencies, BEASTState> {
 
     @Override

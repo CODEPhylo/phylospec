@@ -1,6 +1,5 @@
 package mappings.substitutionmodels;
 
-import adapters.FrequenciesAdapter;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.evolution.substitutionmodel.GTR;
 import beast.base.spec.type.RealScalar;
@@ -32,6 +31,6 @@ public interface GTRMapping {
     @InputMapping(argument = "rateGT", input = "rateGTInput")
     RealScalar<PositiveReal> rateGT();
 
-    @InputMapping(argument = "baseFrequencies", input = "frequenciesInput", adapter = FrequenciesAdapter.class)
+    @InputMapping(argument = "baseFrequencies", input = "frequenciesInput")
     Simplex baseFrequencies();
 }

@@ -1,6 +1,5 @@
 package mappings.substitutionmodels;
 
-import adapters.FrequenciesAdapter;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.evolution.substitutionmodel.HKY;
 import beast.base.spec.type.RealScalar;
@@ -14,6 +13,6 @@ public interface HKYMapping {
     @InputMapping(argument = "kappa", input = "kappaInput")
     RealScalar<PositiveReal> kappa();
 
-    @InputMapping(argument = "baseFrequencies", input = "frequenciesInput", adapter = FrequenciesAdapter.class)
+    @InputMapping(argument = "baseFrequencies", input = "frequenciesInput")
     Simplex baseFrequencies();
 }
