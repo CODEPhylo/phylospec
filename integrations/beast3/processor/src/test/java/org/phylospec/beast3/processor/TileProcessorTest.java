@@ -483,6 +483,115 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void discoversRegisteredAdapter() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.evolution.substitutionmodel.Frequencies;
+                        import beast.base.spec.evolution.substitutionmodel.WAG;
+                        import beast.base.spec.type.Simplex;
+                        import beastconfig.BEASTState;
+                        import org.phylospec.annotations.AdapterMapping;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import org.phylospec.tiling.TypeAdapter;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.wag",
+                                implementation = WAG.class)
+                        public interface InvalidMapping {
+
+                            @InputMapping(
+                                    argument = "baseFrequencies",
+                                    input = "frequenciesInput")
+                            Simplex baseFrequencies();
+
+                            @AdapterMapping
+                            final class RegisteredAdapter
+                                    implements TypeAdapter<
+                                            Simplex,
+                                            Frequencies,
+                                            BEASTState> {
+
+                                public RegisteredAdapter() {}
+
+                                @Override
+                                public Frequencies adapt(
+                                        Simplex value,
+                                        BEASTState state) {
+
+                                    return null;
+                                }
+                            }
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+    }
+
+    @Test
+    public void rejectsDuplicateRegisteredAdapter() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.evolution.substitutionmodel.Frequencies;
+                        import beast.base.spec.type.Simplex;
+                        import beastconfig.BEASTState;
+                        import org.phylospec.annotations.AdapterMapping;
+                        import org.phylospec.tiling.TypeAdapter;
+
+                        public interface InvalidMapping {
+
+                            @AdapterMapping
+                            final class FirstAdapter
+                                    implements TypeAdapter<
+                                            Simplex,
+                                            Frequencies,
+                                            BEASTState> {
+
+                                public FirstAdapter() {}
+
+                                @Override
+                                public Frequencies adapt(
+                                        Simplex value,
+                                        BEASTState state) {
+
+                                    return null;
+                                }
+                            }
+
+                            @AdapterMapping
+                            final class SecondAdapter
+                                    implements TypeAdapter<
+                                            Simplex,
+                                            Frequencies,
+                                            BEASTState> {
+
+                                public SecondAdapter() {}
+
+                                @Override
+                                public Frequencies adapt(
+                                        Simplex value,
+                                        BEASTState state) {
+
+                                    return null;
+                                }
+                            }
+                        }
+                        """);
+
+        assertCompilationError(
+                result,
+                "Duplicate @AdapterMapping for Java conversion "
+                        + "'beast.base.spec.type.Simplex' to "
+                        + "'beast.base.spec.evolution.substitutionmodel.Frequencies'.");
+    }
+
+    @Test
     public void rejectsJavaTypeThatConflictsWithComponentSemanticType()
             throws IOException {
 
