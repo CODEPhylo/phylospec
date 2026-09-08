@@ -20,6 +20,8 @@ module org.phylospec.beast3 {
             org.phylospec.core;
     opens tiles.functions to
             org.phylospec.core;
+    opens tiles.generated to
+            org.phylospec.core;
     opens tiles.input to
             org.phylospec.core;
     opens tiles.mcmc to

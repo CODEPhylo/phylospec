@@ -24,6 +24,44 @@ public class TileProcessorTest {
     Path temporaryDirectory;
 
     @Test
+    public void acceptsMappingOnImplementationClass() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package models;
+
+                        import beast.base.spec.evolution.substitutionmodel.JukesCantor;
+                        import org.phylospec.annotations.GeneratorMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.jc69")
+                        public class InvalidMapping extends JukesCantor {}
+                        """);
+
+        assertCompilationSuccess(result);
+    }
+
+    @Test
+    public void requiresImplementationOnExternalMapping() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import org.phylospec.annotations.GeneratorMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.jc69")
+                        public interface InvalidMapping {}
+                        """);
+
+        assertCompilationError(
+                result,
+                "External @GeneratorMapping interfaces must declare "
+                        + "an implementation class.");
+    }
+
+    @Test
     public void rejectsUnknownComponent() throws IOException {
         CompilationResult result =
                 compile(
