@@ -95,5 +95,11 @@ public class EngineSpecificationTest {
                 List.of("clockRate", "tree"),
                 strictClock.getArguments().stream().map(Argument__1::getName).toList());
         assertTrue(strictClock.getArguments().stream().allMatch(Argument__1::getRequired));
+
+        assertFalse(
+                generators.stream()
+                        .anyMatch(generator -> "logisticPopulationFunction".equals(generator.getName())
+                                && "phylospec.functions.coalescent".equals(generator.getNamespace())),
+                "BEAST core must not advertise the package-provided Logistic model.");
     }
 }
