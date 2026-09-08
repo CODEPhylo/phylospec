@@ -29,8 +29,11 @@ public @interface GeneratorMapping {
 
     /**
      * Engine implementation class constructed by the generated Tile.
+     *
+     * <p>This may be omitted when the annotation is placed directly on
+     * the implementation class.</p>
      */
-    Class<?> implementation();
+    Class<?> implementation() default Void.class;
 
     /**
      * Argument names selecting one component overload.

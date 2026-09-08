@@ -121,10 +121,11 @@ public final class TileProcessor extends AbstractProcessor {
                 roundEnvironment.getElementsAnnotatedWith(
                         GeneratorMapping.class)) {
 
-            if (element.getKind() != ElementKind.INTERFACE) {
+            if (element.getKind() != ElementKind.INTERFACE
+                    && element.getKind() != ElementKind.CLASS) {
                 printError(
                         "@GeneratorMapping can only be applied "
-                                + "to an interface.",
+                                + "to an interface or implementation class.",
                         element);
                 continue;
             }
@@ -188,10 +189,22 @@ public final class TileProcessor extends AbstractProcessor {
                         values.get("component")
                                 .getValue();
 
-        TypeMirror implementationType =
+        TypeMirror declaredImplementationType =
                 (TypeMirror)
                         values.get("implementation")
                                 .getValue();
+
+        Optional<TypeMirror> implementationTypeResult =
+                resolveImplementationType(
+                        declaration,
+                        declaredImplementationType);
+
+        if (implementationTypeResult.isEmpty()) {
+            return Optional.empty();
+        }
+
+        TypeMirror implementationType =
+                implementationTypeResult.orElseThrow();
 
         TypeMirror declaredOutputType =
                 (TypeMirror)
@@ -328,7 +341,11 @@ public final class TileProcessor extends AbstractProcessor {
                         .getQualifiedName()
                         .toString();
 
-        if (!mappingPackageName.equals("mappings")
+        boolean externalMapping =
+                declaration.getKind() == ElementKind.INTERFACE;
+
+        if (externalMapping
+                && !mappingPackageName.equals("mappings")
                 && !mappingPackageName.startsWith("mappings.")) {
 
             printError(
@@ -341,9 +358,11 @@ public final class TileProcessor extends AbstractProcessor {
         }
 
         String generatedPackageName =
-                "tiles"
+                externalMapping
+                        ? "tiles"
                         + mappingPackageName.substring(
-                        "mappings".length());
+                        "mappings".length())
+                        : "tiles.generated";
 
         String declarationName =
                 declaration.getSimpleName().toString();
@@ -401,6 +420,46 @@ public final class TileProcessor extends AbstractProcessor {
                 mapping.declaration());
 
         return false;
+    }
+
+    private Optional<TypeMirror> resolveImplementationType(
+            TypeElement declaration,
+            TypeMirror declaredImplementationType) {
+
+        boolean usesDefaultImplementation =
+                isVoidType(declaredImplementationType);
+
+        if (declaration.getKind() == ElementKind.INTERFACE) {
+            if (usesDefaultImplementation) {
+                printError(
+                        "External @GeneratorMapping interfaces must declare "
+                                + "an implementation class.",
+                        declaration);
+                return Optional.empty();
+            }
+
+            return Optional.of(declaredImplementationType);
+        }
+
+        if (!usesDefaultImplementation
+                && !processingEnv
+                .getTypeUtils()
+                .isSameType(
+                        processingEnv
+                                .getTypeUtils()
+                                .erasure(declaration.asType()),
+                        processingEnv
+                                .getTypeUtils()
+                                .erasure(declaredImplementationType))) {
+
+            printError(
+                    "An internal @GeneratorMapping implementation must be "
+                            + "omitted or refer to the annotated class itself.",
+                    declaration);
+            return Optional.empty();
+        }
+
+        return Optional.of(declaration.asType());
     }
 
     private Optional<TypeElement> validateImplementation(
@@ -511,11 +570,16 @@ public final class TileProcessor extends AbstractProcessor {
                             InputMapping.class.getCanonicalName());
 
             if (annotationResult.isEmpty()) {
-                printError(
-                        "Every method in a @GeneratorMapping "
-                                + "interface must declare @InputMapping.",
-                        method);
-                return Optional.empty();
+                if (mappingDeclaration.getKind()
+                        == ElementKind.INTERFACE) {
+                    printError(
+                            "Every method in a @GeneratorMapping "
+                                    + "interface must declare @InputMapping.",
+                            method);
+                    return Optional.empty();
+                }
+
+                continue;
             }
 
             if (!method.getParameters().isEmpty()) {
