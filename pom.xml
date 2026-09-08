@@ -120,6 +120,12 @@
 
     <profiles>
         <profile>
+            <id>popfunc</id>
+            <modules>
+                <module>integrations/beast3/popfunc</module>
+            </modules>
+        </profile>
+        <profile>
             <id>release</id>
             <build>
                 <plugins>
