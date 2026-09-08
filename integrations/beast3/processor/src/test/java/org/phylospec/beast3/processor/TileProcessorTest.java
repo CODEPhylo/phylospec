@@ -42,6 +42,67 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void readsInputMappingFromImplementationField() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package models;
+
+                        import beast.base.core.Input;
+                        import beast.base.spec.evolution.substitutionmodel.Frequencies;
+                        import beast.base.spec.evolution.substitutionmodel.WAG;
+                        import beast.base.spec.type.Simplex;
+                        import beastconfig.BEASTState;
+                        import org.phylospec.annotations.AdapterMapping;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import org.phylospec.tiling.TypeAdapter;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.wag")
+                        public class PackageWag extends WAG {
+
+                            @InputMapping(argument = "baseFrequencies")
+                            public Input<Frequencies> mappedFrequenciesInput;
+
+                            @AdapterMapping
+                            public static final class RegisteredAdapter
+                                    implements TypeAdapter<
+                                            Simplex,
+                                            Frequencies,
+                                            BEASTState> {
+
+                                public RegisteredAdapter() {}
+
+                                @Override
+                                public Frequencies adapt(
+                                        Simplex value,
+                                        BEASTState state) {
+
+                                    return null;
+                                }
+                            }
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String generatedSource =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/generated/PackageWagGeneratedTile.java"));
+
+        assertTrue(
+                generatedSource.contains(
+                        "new models.PackageWag.RegisteredAdapter()"));
+
+        assertTrue(
+                generatedSource.contains(
+                        "object.mappedFrequenciesInput"));
+    }
+
+    @Test
     public void requiresImplementationOnExternalMapping() throws IOException {
         CompilationResult result =
                 compile(

@@ -225,28 +225,19 @@ final class TileWriter {
     private String fieldName(
             InputSpec input) {
 
-        return input.declaration()
-                .getSimpleName()
-                .toString()
-                + "Input";
+        return input.argument() + "Input";
     }
 
     private String valueName(
             InputSpec input) {
 
-        return input.declaration()
-                .getSimpleName()
-                .toString()
-                + "Value";
+        return input.argument() + "Value";
     }
 
     private String adaptedValueName(
             InputSpec input) {
 
-        return input.declaration()
-                .getSimpleName()
-                .toString()
-                + "AdaptedValue";
+        return input.argument() + "AdaptedValue";
     }
 
     private String javaString(

@@ -628,124 +628,83 @@ public final class TileProcessor extends AbstractProcessor {
                             values.get("adapter")
                                     .getValue();
 
-            if (argumentName.isBlank()) {
-                printError(
-                        "@InputMapping argument must not be blank.",
-                        method);
-                return Optional.empty();
-            }
-
-            if (beastInputName.isBlank()) {
-                printError(
-                        "@InputMapping input must not be blank.",
-                        method);
-                return Optional.empty();
-            }
-
-            if (!usedArguments.add(argumentName)) {
-                printError(
-                        "PhyloSpec argument '"
-                                + argumentName
-                                + "' is mapped more than once.",
-                        method);
-                return Optional.empty();
-            }
-
-            if (!usedBeastInputs.add(beastInputName)) {
-                printError(
-                        "BEAST input '"
-                                + beastInputName
-                                + "' is mapped more than once.",
-                        method);
-                return Optional.empty();
-            }
-
-            Optional<Argument> argumentResult =
-                    resolveArgument(
-                            argumentName,
-                            componentGenerators,
-                            method);
-
-            if (argumentResult.isEmpty()) {
-                return Optional.empty();
-            }
-
-            Argument componentArgument =
-                    argumentResult.orElseThrow();
-
-            TypeMirror valueType =
-                    method.getReturnType();
-
-            Optional<TypeMirror> inputTypeResult =
-                    resolveBeastInputType(
-                            implementationDeclaration,
-                            implementationType,
-                            beastInputName,
-                            method);
-
-            if (inputTypeResult.isEmpty()) {
-                return Optional.empty();
-            }
-
-            TypeMirror inputType =
-                    inputTypeResult.orElseThrow();
-
-            boolean usesAdapter =
-                    !isVoidType(adapterType);
-
-            if (usesAdapter) {
-                if (!validateAdapter(
-                        adapterType,
-                        valueType,
-                        inputType,
-                        method)) {
-
-                    return Optional.empty();
-                }
-            } else if (!processingEnv
-                    .getTypeUtils()
-                    .isAssignable(
-                            valueType,
-                            inputType)) {
-
-                Optional<TypeMirror> registeredAdapterResult =
-                        adapterRegistry.resolve(
-                                valueType,
-                                inputType,
-                                beastInputName,
-                                method);
-
-                if (registeredAdapterResult.isEmpty()) {
-                    return Optional.empty();
-                }
-
-                adapterType =
-                        registeredAdapterResult.orElseThrow();
-
-                usesAdapter = true;
-            }
-
-            if (!validateSemanticType(
-                    argumentName,
-                    componentArgument.getType(),
-                    valueType,
-                    method)) {
-
-                return Optional.empty();
-            }
-
-            inputs.add(
-                    new InputSpec(
+            Optional<InputSpec> inputResult =
+                    readInput(
                             method,
                             argumentName,
-                            componentArgument.getType(),
                             beastInputName,
-                            valueType,
-                            inputType,
+                            method.getReturnType(),
                             adapterType,
-                            usesAdapter,
-                            Boolean.TRUE.equals(
-                                    componentArgument.getRequired())));
+                            implementationDeclaration,
+                            implementationType,
+                            componentGenerators,
+                            usedArguments,
+                            usedBeastInputs);
+
+            if (inputResult.isEmpty()) {
+                return Optional.empty();
+            }
+
+            inputs.add(inputResult.orElseThrow());
+        }
+
+        if (mappingDeclaration.getKind() == ElementKind.CLASS) {
+            for (VariableElement field :
+                    ElementFilter.fieldsIn(
+                            mappingDeclaration.getEnclosedElements())) {
+
+                Optional<? extends AnnotationMirror> annotationResult =
+                        findAnnotation(
+                                field,
+                                InputMapping.class.getCanonicalName());
+
+                if (annotationResult.isEmpty()) {
+                    continue;
+                }
+
+                Map<String, AnnotationValue> values =
+                        readAnnotationValues(
+                                annotationResult.orElseThrow());
+
+                String argumentName =
+                        (String)
+                                values.get("argument")
+                                        .getValue();
+
+                String declaredInputName =
+                        (String)
+                                values.get("input")
+                                        .getValue();
+
+                String beastInputName =
+                        declaredInputName.isBlank()
+                                ? field.getSimpleName().toString()
+                                : declaredInputName;
+
+                TypeMirror adapterType =
+                        (TypeMirror)
+                                values.get("adapter")
+                                        .getValue();
+
+                Optional<InputSpec> inputResult =
+                        readInput(
+                                field,
+                                argumentName,
+                                beastInputName,
+                                null,
+                                adapterType,
+                                implementationDeclaration,
+                                implementationType,
+                                componentGenerators,
+                                usedArguments,
+                                usedBeastInputs);
+
+                if (inputResult.isEmpty()) {
+                    return Optional.empty();
+                }
+
+                inputs.add(inputResult.orElseThrow());
+            }
         }
 
         List<String> missingRequiredArguments =
@@ -781,6 +740,170 @@ public final class TileProcessor extends AbstractProcessor {
         }
 
         return Optional.of(inputs);
+    }
+
+    private Optional<InputSpec> readInput(
+            Element declaration,
+            String argumentName,
+            String beastInputName,
+            TypeMirror declaredValueType,
+            TypeMirror declaredAdapterType,
+            TypeElement implementationDeclaration,
+            TypeMirror implementationType,
+            List<Generator> componentGenerators,
+            Set<String> usedArguments,
+            Set<String> usedBeastInputs) {
+
+        if (argumentName.isBlank()) {
+            printError(
+                    "@InputMapping argument must not be blank.",
+                    declaration);
+            return Optional.empty();
+        }
+
+        if (beastInputName.isBlank()) {
+            printError(
+                    "@InputMapping input must not be blank.",
+                    declaration);
+            return Optional.empty();
+        }
+
+        if (!usedArguments.add(argumentName)) {
+            printError(
+                    "PhyloSpec argument '"
+                            + argumentName
+                            + "' is mapped more than once.",
+                    declaration);
+            return Optional.empty();
+        }
+
+        if (!usedBeastInputs.add(beastInputName)) {
+            printError(
+                    "BEAST input '"
+                            + beastInputName
+                            + "' is mapped more than once.",
+                    declaration);
+            return Optional.empty();
+        }
+
+        Optional<Argument> argumentResult =
+                resolveArgument(
+                        argumentName,
+                        componentGenerators,
+                        declaration);
+
+        if (argumentResult.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Argument componentArgument =
+                argumentResult.orElseThrow();
+
+        Optional<TypeMirror> inputTypeResult =
+                resolveBeastInputType(
+                        implementationDeclaration,
+                        implementationType,
+                        beastInputName,
+                        declaration);
+
+        if (inputTypeResult.isEmpty()) {
+            return Optional.empty();
+        }
+
+        TypeMirror inputType =
+                inputTypeResult.orElseThrow();
+
+        TypeMirror valueType =
+                declaredValueType;
+
+        if (valueType == null) {
+            Optional<TypeMirror> semanticTypeResult =
+                    typeBindings.resolve(
+                            componentArgument.getType());
+
+            if (semanticTypeResult.isEmpty()) {
+                printError(
+                        "Automatic Tile generation has no BEAST Java "
+                                + "type binding for PhyloSpec type '"
+                                + componentArgument.getType()
+                                + "' used by argument '"
+                                + argumentName
+                                + "'. Add a type binding or use a handwritten Tile.",
+                        declaration);
+                return Optional.empty();
+            }
+
+            TypeMirror semanticType =
+                    semanticTypeResult.orElseThrow();
+
+            valueType =
+                    processingEnv
+                            .getTypeUtils()
+                            .isAssignable(
+                                    inputType,
+                                    semanticType)
+                            ? inputType
+                            : semanticType;
+        }
+
+        TypeMirror adapterType =
+                declaredAdapterType;
+
+        boolean usesAdapter =
+                !isVoidType(adapterType);
+
+        if (usesAdapter) {
+            if (!validateAdapter(
+                    adapterType,
+                    valueType,
+                    inputType,
+                    declaration)) {
+
+                return Optional.empty();
+            }
+        } else if (!processingEnv
+                .getTypeUtils()
+                .isAssignable(
+                        valueType,
+                        inputType)) {
+
+            Optional<TypeMirror> registeredAdapterResult =
+                    adapterRegistry.resolve(
+                            valueType,
+                            inputType,
+                            beastInputName,
+                            declaration);
+
+            if (registeredAdapterResult.isEmpty()) {
+                return Optional.empty();
+            }
+
+            adapterType =
+                    registeredAdapterResult.orElseThrow();
+
+            usesAdapter = true;
+        }
+
+        if (!validateSemanticType(
+                argumentName,
+                componentArgument.getType(),
+                valueType,
+                declaration)) {
+
+            return Optional.empty();
+        }
+
+        return Optional.of(
+                new InputSpec(
+                        argumentName,
+                        componentArgument.getType(),
+                        beastInputName,
+                        valueType,
+                        inputType,
+                        adapterType,
+                        usesAdapter,
+                        Boolean.TRUE.equals(
+                                componentArgument.getRequired())));
     }
 
     private Optional<Argument> resolveArgument(

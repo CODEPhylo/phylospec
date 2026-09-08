@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  */
 @Documented
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.FIELD})
 public @interface InputMapping {
 
     /**
@@ -22,8 +22,11 @@ public @interface InputMapping {
 
     /**
      * Java field name of the corresponding engine input.
+     *
+     * <p>This may be omitted when the annotation is placed directly on
+     * the engine input field.</p>
      */
-    String input();
+    String input() default "";
 
     /**
      * Adapter used when the argument value cannot be assigned
