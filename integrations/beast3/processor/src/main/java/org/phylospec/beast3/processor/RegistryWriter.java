@@ -11,23 +11,25 @@ import javax.tools.JavaFileObject;
 
 final class RegistryWriter {
 
-    static final String GENERATED_PACKAGE =
-            "tiles.generated";
-
     static final String GENERATED_CLASS =
             "GeneratedTileRegistry";
 
     private final Filer filer;
+    private final String generatedPackage;
 
-    RegistryWriter(Filer filer) {
+    RegistryWriter(
+            Filer filer,
+            String generatedPackage) {
+
         this.filer = filer;
+        this.generatedPackage = generatedPackage;
     }
 
     void write(List<MappingSpec> mappings)
             throws IOException {
 
         String generatedQualifiedName =
-                GENERATED_PACKAGE
+                generatedPackage
                         + "."
                         + GENERATED_CLASS;
 
@@ -60,7 +62,7 @@ final class RegistryWriter {
                                 Collectors.joining(",\n"));
 
         return """
-                package tiles.generated;
+                package %s;
 
                 public final class GeneratedTileRegistry {
 
@@ -80,7 +82,9 @@ final class RegistryWriter {
                     }
                 }
                 """
-                .formatted(tileInstances);
+                .formatted(
+                        generatedPackage,
+                        tileInstances);
     }
 
     private String createTileExpression(
