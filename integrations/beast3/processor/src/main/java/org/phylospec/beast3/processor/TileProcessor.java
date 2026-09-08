@@ -27,12 +27,13 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
-import org.phylospec.tiling.TypeAdapter;
+import org.phylospec.annotations.AdapterMapping;
 import org.phylospec.annotations.GeneratorMapping;
 import org.phylospec.annotations.InputMapping;
 import org.phylospec.components.Argument;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
+import org.phylospec.tiling.TypeAdapter;
 
 public final class TileProcessor extends AbstractProcessor {
 
@@ -40,6 +41,7 @@ public final class TileProcessor extends AbstractProcessor {
     private RegistryWriter registryWriter;
     private ComponentResolver componentResolver;
     private TypeBindings typeBindings;
+    private AdapterRegistry adapterRegistry;
     private final List<MappingSpec> generatedMappings =
             new ArrayList<>();
     private final Map<MappingIdentity, TypeElement> mappingDeclarations =
@@ -72,6 +74,10 @@ public final class TileProcessor extends AbstractProcessor {
                             processingEnvironment,
                             componentResolver);
 
+            this.adapterRegistry =
+                    new AdapterRegistry(
+                            processingEnvironment);
+
         } catch (IOException exception) {
             processingEnvironment
                     .getMessager()
@@ -85,7 +91,8 @@ public final class TileProcessor extends AbstractProcessor {
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         return Set.of(
-                GeneratorMapping.class.getCanonicalName());
+                GeneratorMapping.class.getCanonicalName(),
+                AdapterMapping.class.getCanonicalName());
     }
 
     @Override
@@ -107,6 +114,8 @@ public final class TileProcessor extends AbstractProcessor {
         }
 
         boolean generatedTileThisRound = false;
+
+        adapterRegistry.register(roundEnvironment);
 
         for (Element element :
                 roundEnvironment.getElementsAnnotatedWith(
@@ -635,17 +644,21 @@ public final class TileProcessor extends AbstractProcessor {
                             valueType,
                             inputType)) {
 
-                printError(
-                        "PhyloSpec argument produces Java type '"
-                                + valueType
-                                + "', but BEAST input '"
-                                + beastInputName
-                                + "' expects '"
-                                + inputType
-                                + "'.",
-                        method);
+                Optional<TypeMirror> registeredAdapterResult =
+                        adapterRegistry.resolve(
+                                valueType,
+                                inputType,
+                                beastInputName,
+                                method);
 
-                return Optional.empty();
+                if (registeredAdapterResult.isEmpty()) {
+                    return Optional.empty();
+                }
+
+                adapterType =
+                        registeredAdapterResult.orElseThrow();
+
+                usesAdapter = true;
             }
 
             if (!validateSemanticType(
