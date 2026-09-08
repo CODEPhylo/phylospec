@@ -37,11 +37,18 @@ import org.phylospec.tiling.TypeAdapter;
 
 public final class TileProcessor extends AbstractProcessor {
 
+    static final String GENERATED_PACKAGE_OPTION =
+            "phylospec.generatedPackage";
+
+    static final String DEFAULT_GENERATED_PACKAGE =
+            "tiles.generated";
+
     private TileWriter tileWriter;
     private RegistryWriter registryWriter;
     private ComponentResolver componentResolver;
     private TypeBindings typeBindings;
     private AdapterRegistry adapterRegistry;
+    private String generatedPackage;
     private final List<MappingSpec> generatedMappings =
             new ArrayList<>();
     private final Map<MappingIdentity, TypeElement> mappingDeclarations =
@@ -59,9 +66,31 @@ public final class TileProcessor extends AbstractProcessor {
                 new TileWriter(
                         processingEnvironment.getFiler());
 
+        this.generatedPackage =
+                processingEnvironment
+                        .getOptions()
+                        .getOrDefault(
+                                GENERATED_PACKAGE_OPTION,
+                                DEFAULT_GENERATED_PACKAGE);
+
+        if (!SourceVersion.isName(generatedPackage)) {
+            processingEnvironment
+                    .getMessager()
+                    .printMessage(
+                            Diagnostic.Kind.ERROR,
+                            "Annotation processor option '-A"
+                                    + GENERATED_PACKAGE_OPTION
+                                    + "' must be a valid Java package name, but was '"
+                                    + generatedPackage
+                                    + "'.");
+            generatedPackage = null;
+            return;
+        }
+
         this.registryWriter =
                 new RegistryWriter(
-                        processingEnvironment.getFiler());
+                        processingEnvironment.getFiler(),
+                        generatedPackage);
 
         try {
             this.componentResolver =
@@ -96,6 +125,11 @@ public final class TileProcessor extends AbstractProcessor {
     }
 
     @Override
+    public Set<String> getSupportedOptions() {
+        return Set.of(GENERATED_PACKAGE_OPTION);
+    }
+
+    @Override
     public SourceVersion getSupportedSourceVersion() {
         return SourceVersion.latestSupported();
     }
@@ -105,7 +139,8 @@ public final class TileProcessor extends AbstractProcessor {
             Set<? extends TypeElement> annotations,
             RoundEnvironment roundEnvironment) {
 
-        if (componentResolver == null) {
+        if (componentResolver == null
+                || generatedPackage == null) {
             return true;
         }
 
@@ -362,7 +397,7 @@ public final class TileProcessor extends AbstractProcessor {
                         ? "tiles"
                         + mappingPackageName.substring(
                         "mappings".length())
-                        : "tiles.generated";
+                        : generatedPackage;
 
         String declarationName =
                 declaration.getSimpleName().toString();
@@ -1595,7 +1630,7 @@ public final class TileProcessor extends AbstractProcessor {
 
             printNote(
                     "Generated Tile registry: "
-                            + RegistryWriter.GENERATED_PACKAGE
+                            + generatedPackage
                             + "."
                             + RegistryWriter.GENERATED_CLASS,
                     mappings.getFirst()
