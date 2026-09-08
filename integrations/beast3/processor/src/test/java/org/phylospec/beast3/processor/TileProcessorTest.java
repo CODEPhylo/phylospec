@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import javax.tools.Diagnostic;
@@ -42,6 +43,62 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void usesConfiguredGeneratedPackage() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package models;
+
+                        import beast.base.spec.evolution.substitutionmodel.JukesCantor;
+                        import org.phylospec.annotations.GeneratorMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.jc69")
+                        public class InvalidMapping extends JukesCantor {}
+                        """,
+                        List.of(
+                                "-Aphylospec.generatedPackage="
+                                        + "packageadapter.generated"));
+
+        assertCompilationSuccess(result);
+
+        assertTrue(
+                Files.exists(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("packageadapter/generated/InvalidGeneratedTile.java")));
+
+        assertTrue(
+                Files.exists(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("packageadapter/generated/GeneratedTileRegistry.java")));
+    }
+
+    @Test
+    public void rejectsInvalidGeneratedPackage() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package models;
+
+                        import beast.base.spec.evolution.substitutionmodel.JukesCantor;
+                        import org.phylospec.annotations.GeneratorMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.jc69")
+                        public class InvalidMapping extends JukesCantor {}
+                        """,
+                        List.of(
+                                "-Aphylospec.generatedPackage="
+                                        + "not-a-package"));
+
+        assertCompilationError(
+                result,
+                "must be a valid Java package name");
+    }
+
+    @Test
     public void readsInputMappingFromImplementationField() throws IOException {
         CompilationResult result =
                 compile(
@@ -60,7 +117,7 @@ public class TileProcessorTest {
 
                         @GeneratorMapping(
                                 component = "phylospec.functions.substitution.wag")
-                        public class PackageWag extends WAG {
+                        public class InvalidMapping extends WAG {
 
                             @InputMapping(argument = "baseFrequencies")
                             public Input<Frequencies> mappedFrequenciesInput;
@@ -91,15 +148,115 @@ public class TileProcessorTest {
                 Files.readString(
                         temporaryDirectory
                                 .resolve("generated")
-                                .resolve("tiles/generated/PackageWagGeneratedTile.java"));
+                                .resolve("tiles/generated/InvalidGeneratedTile.java"));
 
         assertTrue(
                 generatedSource.contains(
-                        "new models.PackageWag.RegisteredAdapter()"));
+                        "new models.InvalidMapping.RegisteredAdapter()"));
 
         assertTrue(
                 generatedSource.contains(
                         "object.mappedFrequenciesInput"));
+    }
+
+    @Test
+    public void rejectsNonPublicImplementationInputField() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package models;
+
+                        import beast.base.core.Input;
+                        import beast.base.spec.evolution.substitutionmodel.Frequencies;
+                        import beast.base.spec.evolution.substitutionmodel.WAG;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.wag")
+                        public class InvalidMapping extends WAG {
+
+                            @InputMapping(argument = "baseFrequencies")
+                            private Input<Frequencies> mappedFrequenciesInput;
+                        }
+                        """);
+
+        assertCompilationError(
+                result,
+                "BEAST input field 'mappedFrequenciesInput' must be public.");
+    }
+
+    @Test
+    public void rejectsImplementationFieldThatIsNotBeastInput() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package models;
+
+                        import beast.base.spec.evolution.substitutionmodel.WAG;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.wag")
+                        public class InvalidMapping extends WAG {
+
+                            @InputMapping(argument = "baseFrequencies")
+                            public String mappedFrequenciesInput;
+                        }
+                        """);
+
+        assertCompilationError(
+                result,
+                "Field 'mappedFrequenciesInput' is not a beast.base.core.Input.");
+    }
+
+    @Test
+    public void rejectsMissingRequiredImplementationInputs() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package models;
+
+                        import beast.base.spec.evolution.substitutionmodel.HKY;
+                        import org.phylospec.annotations.GeneratorMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.hky")
+                        public class InvalidMapping extends HKY {}
+                        """);
+
+        assertCompilationError(
+                result,
+                "Missing mappings for required PhyloSpec arguments: "
+                        + "'baseFrequencies', 'kappa'.");
+    }
+
+    @Test
+    public void rejectsImplementationInputWithoutAdapter() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package models;
+
+                        import beast.base.core.Input;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.coalescent.constantPopulationFunction")
+                        public class InvalidMapping extends ConstantPopulation {
+
+                            @InputMapping(argument = "populationSize")
+                            public Input<String> incompatiblePopulationSize;
+                        }
+                        """);
+
+        assertCompilationError(
+                result,
+                "BEAST input 'incompatiblePopulationSize' expects "
+                        + "'java.lang.String', and no registered adapter");
     }
 
     @Test
@@ -928,6 +1085,16 @@ public class TileProcessorTest {
     private CompilationResult compile(String source)
             throws IOException {
 
+        return compile(
+                source,
+                List.of());
+    }
+
+    private CompilationResult compile(
+            String source,
+            List<String> processorOptions)
+            throws IOException {
+
         JavaCompiler compiler =
                 ToolProvider.getSystemJavaCompiler();
 
@@ -993,15 +1160,18 @@ public class TileProcessorTest {
                             stateFile.toFile());
 
             List<String> options =
-                    List.of(
-                            "-classpath",
-                            System.getProperty(
-                                    "java.class.path"),
-                            "-d",
-                            classDirectory.toString(),
-                            "-s",
-                            generatedDirectory.toString(),
-                            "-proc:only");
+                    new ArrayList<>(
+                            List.of(
+                                    "-classpath",
+                                    System.getProperty(
+                                            "java.class.path"),
+                                    "-d",
+                                    classDirectory.toString(),
+                                    "-s",
+                                    generatedDirectory.toString(),
+                                    "-proc:only"));
+
+            options.addAll(processorOptions);
 
             JavaCompiler.CompilationTask task =
                     compiler.getTask(
