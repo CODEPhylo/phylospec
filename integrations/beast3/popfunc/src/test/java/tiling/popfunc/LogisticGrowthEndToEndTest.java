@@ -78,7 +78,30 @@ public class LogisticGrowthEndToEndTest {
         TypeResolver typeResolver =
                 new TypeResolver(new ComponentResolver(ComponentResolver.loadCoreComponentLibraries()));
 
-        assertThrows(TypeError.class, () -> typeResolver.visitStatements(statements));
+        TypeError error = assertThrows(TypeError.class, () -> typeResolver.visitStatements(statements));
+        assertEquals(
+                "Wrong argument type for function `logisticPopulationFunction` and argument `growthRate`. "
+                        + "You need to use a value of type 'NonNegativeReal'.",
+                error.getMessage());
+    }
+
+    @Test
+    public void reportsMissingCarryingCapacityBeforeTiling() throws IOException {
+        String source = """
+                PopulationFunction population = logisticPopulationFunction(
+                    inflectionAge=5.0,
+                    growthRate=0.25
+                )
+                """;
+
+        List<Stmt> statements = parse(source);
+        TypeResolver typeResolver =
+                new TypeResolver(new ComponentResolver(ComponentResolver.loadCoreComponentLibraries()));
+
+        TypeError error = assertThrows(TypeError.class, () -> typeResolver.visitStatements(statements));
+        assertEquals(
+                "Function `logisticPopulationFunction` takes the required argument `carryingCapacity`.",
+                error.getMessage());
     }
 
     private static List<Stmt> parse(String source) {
