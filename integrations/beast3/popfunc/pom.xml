@@ -70,6 +70,7 @@
                         <configuration>
                             <compilerArgs>
                                 <arg>-Aphylospec.generatedPackage=tiles.popfunc.generated</arg>
+                                <arg>-Aphylospec.componentLibraries=${project.basedir}/src/main/resources/popfunc-components.json</arg>
                             </compilerArgs>
                         </configuration>
                     </execution>

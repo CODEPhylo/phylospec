@@ -1,0 +1,33 @@
+{
+  "componentLibrary": {
+    "name": "PopFunc",
+    "version": "0.1.0",
+    "description": "PhyloSpec components provided by the PopFunc package.",
+    "types": [],
+    "generators": [
+      {
+        "name": "stochasticPopulationSelection",
+        "namespace": "popfunc.functions.coalescent",
+        "description": "Selects one population function using an integer indicator.",
+        "generatedType": "PopulationFunction",
+        "arguments": [
+          {
+            "name": "indicator",
+            "description": "Zero-based index of the selected population function.",
+            "type": "NonNegativeInteger",
+            "required": true
+          },
+          {
+            "name": "models",
+            "description": "Population functions from which to select.",
+            "type": "Vector<PopulationFunction>",
+            "required": true
+          }
+        ],
+        "constraints": [
+          "indicator.value < models.num"
+        ]
+      }
+    ]
+  }
+}

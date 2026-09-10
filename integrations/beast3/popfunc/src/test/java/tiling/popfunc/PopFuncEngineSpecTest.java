@@ -5,10 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.phylospec.components.Argument;
 import org.phylospec.components.Argument__1;
+import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.EngineSpecificationSchema;
 import org.phylospec.components.Generator;
@@ -20,8 +23,7 @@ public class PopFuncEngineSpecTest {
 
     @Test
     public void exposesPopFuncCapabilities() throws IOException {
-        ComponentResolver resolver =
-                new ComponentResolver(ComponentResolver.loadCoreComponentLibraries());
+        ComponentResolver resolver = new ComponentResolver(loadComponentLibraries());
 
         EngineSpecificationSchema specification = EngineSpecGenerator.generateEngineSpecification(
                 new PopFuncTileLibrary(),
@@ -35,7 +37,26 @@ public class PopFuncEngineSpecTest {
         assertEquals("popfunc", specification.getName());
         assertEquals("0.1.0-SNAPSHOT", specification.getEngineVersion());
         assertEquals(List.of("beast2"), specification.getDependsOn());
-        assertEquals(4, specification.getGenerators().size());
+        assertEquals(5, specification.getGenerators().size());
+
+        Generator__1 selection = findGenerator(specification, "stochasticPopulationSelection");
+        assertEquals("popfunc.functions.coalescent", selection.getNamespace());
+        assertEquals(
+                List.of("indicator", "models"),
+                selection.getArguments().stream().map(Argument__1::getName).toList());
+        assertTrue(selection.getArguments().stream().allMatch(Argument__1::getRequired));
+
+        Generator selectionComponent = resolver.resolveGenerator(
+                        "popfunc.functions.coalescent.stochasticPopulationSelection")
+                .getFirst();
+        assertEquals(
+                List.of(
+                        "phylospec.types.NonNegativeInteger",
+                        "phylospec.types.Vector<phylospec.types.PopulationFunction>"),
+                selectionComponent.getArguments().stream().map(Argument::getType).toList());
+        assertEquals(
+                List.of("indicator.value < models.num"),
+                selectionComponent.getConstraints());
 
         Generator__1 logistic = findGenerator(specification, "logisticPopulationFunction");
         assertEquals("logisticPopulationFunction", logistic.getName());
@@ -97,6 +118,21 @@ public class PopFuncEngineSpecTest {
         assertEquals(
                 List.of("ancestralPopulationSize.value < populationSize.value"),
                 expansionComponent.getConstraints());
+    }
+
+    private static List<ComponentLibrary> loadComponentLibraries() throws IOException {
+        List<ComponentLibrary> libraries =
+                new ArrayList<>(ComponentResolver.loadCoreComponentLibraries());
+
+        try (InputStream input = PopFuncEngineSpecTest.class.getResourceAsStream(
+                "/popfunc-components.json")) {
+            if (input == null) {
+                throw new IOException("Could not find /popfunc-components.json");
+            }
+            libraries.add(ComponentResolver.loadLibraryFromInputStream(input));
+        }
+
+        return libraries;
     }
 
     private static Generator__1 findGenerator(
