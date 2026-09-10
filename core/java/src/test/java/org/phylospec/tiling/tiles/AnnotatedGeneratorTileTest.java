@@ -39,6 +39,7 @@ public class AnnotatedGeneratorTileTest {
         assertEquals("Example", descriptor.componentName());
         assertEquals(PhyloSpec.Category.FUNCTION, descriptor.category().orElseThrow());
         assertEquals(PhyloSpec.Role.OTHER, descriptor.role().orElseThrow());
+        assertEquals("String", descriptor.outputType().toString());
         assertEquals(2, descriptor.inputs().size());
 
         GeneratorTileMappingDescriptor.Input requiredInput = descriptor.inputs().get(0);

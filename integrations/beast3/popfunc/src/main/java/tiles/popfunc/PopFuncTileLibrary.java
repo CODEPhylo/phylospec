@@ -9,6 +9,11 @@ import tiles.popfunc.generated.GeneratedTileRegistry;
 public final class PopFuncTileLibrary extends TileLibrary<BEASTState> {
 
     @Override
+    public String getId() {
+        return "popfunc";
+    }
+
+    @Override
     public Class<BEASTState> getStateType() {
         return BEASTState.class;
     }

@@ -21,6 +21,7 @@ public record GeneratorTileMappingDescriptor(
         Optional<String> namespace,
         Optional<PhyloSpec.Category> category,
         Optional<PhyloSpec.Role> role,
+        TypeToken<?> outputType,
         List<Input> inputs) {
 
     public GeneratorTileMappingDescriptor {
@@ -29,6 +30,7 @@ public record GeneratorTileMappingDescriptor(
         namespace = Objects.requireNonNull(namespace, "namespace");
         category = Objects.requireNonNull(category, "category");
         role = Objects.requireNonNull(role, "role");
+        Objects.requireNonNull(outputType, "outputType");
         inputs = List.copyOf(Objects.requireNonNull(inputs, "inputs"));
 
         namespace.ifPresent(value -> requireNonBlank(value, "namespace"));
@@ -42,6 +44,35 @@ public record GeneratorTileMappingDescriptor(
                         + input.name()
                         + "' more than once.");
             }
+        }
+    }
+
+    /**
+     * Returns the engine-independent contract implemented by this mapping. The concrete Tile class
+     * is deliberately excluded, allowing equivalent mappings supplied by different packages to be
+     * recognised.
+     */
+    public Signature signature() {
+        return new Signature(componentName, namespace, outputType, inputs);
+    }
+
+    /** Identifies one semantic generator mapping independently of its Tile implementation class. */
+    public record Signature(
+            String componentName, Optional<String> namespace, TypeToken<?> outputType, List<Input> inputs) {
+
+        public Signature {
+            requireNonBlank(componentName, "componentName");
+            namespace = Objects.requireNonNull(namespace, "namespace");
+            Objects.requireNonNull(outputType, "outputType");
+            inputs = List.copyOf(Objects.requireNonNull(inputs, "inputs"));
+        }
+
+        /** Returns the qualified generator name used in diagnostics. */
+        public String qualifiedComponentName() {
+            return namespace
+                    .filter(value -> !componentName.startsWith(value + "."))
+                    .map(value -> value + "." + componentName)
+                    .orElse(componentName);
         }
     }
 

@@ -47,7 +47,8 @@ public class LogisticGrowthEndToEndTest {
         StochasticityResolver stochasticityResolver = new StochasticityResolver();
         stochasticityResolver.visitStatements(statements);
 
-        List<CandidateTile<BEASTState>> availableTiles = TileLibrary.loadAll(BEASTState.class);
+        List<CandidateTile<BEASTState>> availableTiles =
+                TileLibrary.loadSelected(BEASTState.class, List.of("popfunc", "beast2"));
         EvaluateTiles<BEASTState> evaluator =
                 new EvaluateTiles<>(availableTiles, variableResolver, stochasticityResolver);
 
