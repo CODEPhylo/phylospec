@@ -30,6 +30,7 @@ import javax.tools.Diagnostic;
 import org.phylospec.annotations.AdapterMapping;
 import org.phylospec.annotations.GeneratorMapping;
 import org.phylospec.annotations.InputMapping;
+import org.phylospec.annotations.InputMappings;
 import org.phylospec.components.Argument;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
@@ -589,8 +590,11 @@ public final class TileProcessor extends AbstractProcessor {
         List<InputSpec> inputs =
                 new ArrayList<>();
 
-        Set<String> usedArguments =
-                new HashSet<>();
+        Map<String, Element> argumentDeclarations =
+                new HashMap<>();
+
+        Map<Element, String> declarationArguments =
+                new HashMap<>();
 
         Set<String> usedBeastInputs =
                 new HashSet<>();
@@ -599,12 +603,10 @@ public final class TileProcessor extends AbstractProcessor {
                 ElementFilter.methodsIn(
                         mappingDeclaration.getEnclosedElements())) {
 
-            Optional<? extends AnnotationMirror> annotationResult =
-                    findAnnotation(
-                            method,
-                            InputMapping.class.getCanonicalName());
+            List<AnnotationMirror> annotations =
+                    findInputMappings(method);
 
-            if (annotationResult.isEmpty()) {
+            if (annotations.isEmpty()) {
                 if (mappingDeclaration.getKind()
                         == ElementKind.INTERFACE) {
                     printError(
@@ -644,43 +646,53 @@ public final class TileProcessor extends AbstractProcessor {
                 return Optional.empty();
             }
 
-            Map<String, AnnotationValue> values =
-                    readAnnotationValues(
-                            annotationResult.orElseThrow());
+            for (AnnotationMirror annotation : annotations) {
+                Map<String, AnnotationValue> values =
+                        readAnnotationValues(annotation);
 
-            String argumentName =
-                    (String)
-                            values.get("argument")
-                                    .getValue();
+                String argumentName =
+                        (String)
+                                values.get("argument")
+                                        .getValue();
 
-            String beastInputName =
-                    (String)
-                            values.get("input")
-                                    .getValue();
+                String beastInputName =
+                        (String)
+                                values.get("input")
+                                        .getValue();
 
-            TypeMirror adapterType =
-                    (TypeMirror)
-                            values.get("adapter")
-                                    .getValue();
+                TypeMirror adapterType =
+                        (TypeMirror)
+                                values.get("adapter")
+                                        .getValue();
 
-            Optional<InputSpec> inputResult =
-                    readInput(
-                            method,
-                            argumentName,
-                            beastInputName,
-                            method.getReturnType(),
-                            adapterType,
-                            implementationDeclaration,
-                            implementationType,
-                            componentGenerators,
-                            usedArguments,
-                            usedBeastInputs);
+                if (!registerArgumentDeclaration(
+                        argumentName,
+                        method,
+                        argumentDeclarations,
+                        declarationArguments)) {
+                    return Optional.empty();
+                }
 
-            if (inputResult.isEmpty()) {
-                return Optional.empty();
+                Optional<InputSpec> inputResult =
+                        readInput(
+                                method,
+                                argumentName,
+                                beastInputName,
+                                method.getReturnType(),
+                                adapterType,
+                                implementationDeclaration,
+                                implementationType,
+                                componentGenerators,
+                                usedBeastInputs);
+
+                if (inputResult.isEmpty()) {
+                    return Optional.empty();
+                }
+
+                if (!mergeInput(inputs, inputResult.orElseThrow(), method)) {
+                    return Optional.empty();
+                }
             }
-
-            inputs.add(inputResult.orElseThrow());
         }
 
         if (mappingDeclaration.getKind() == ElementKind.CLASS) {
@@ -688,57 +700,65 @@ public final class TileProcessor extends AbstractProcessor {
                     ElementFilter.fieldsIn(
                             mappingDeclaration.getEnclosedElements())) {
 
-                Optional<? extends AnnotationMirror> annotationResult =
-                        findAnnotation(
-                                field,
-                                InputMapping.class.getCanonicalName());
+                List<AnnotationMirror> annotations =
+                        findInputMappings(field);
 
-                if (annotationResult.isEmpty()) {
+                if (annotations.isEmpty()) {
                     continue;
                 }
 
-                Map<String, AnnotationValue> values =
-                        readAnnotationValues(
-                                annotationResult.orElseThrow());
+                for (AnnotationMirror annotation : annotations) {
+                    Map<String, AnnotationValue> values =
+                            readAnnotationValues(annotation);
 
-                String argumentName =
-                        (String)
-                                values.get("argument")
-                                        .getValue();
+                    String argumentName =
+                            (String)
+                                    values.get("argument")
+                                            .getValue();
 
-                String declaredInputName =
-                        (String)
-                                values.get("input")
-                                        .getValue();
+                    String declaredInputName =
+                            (String)
+                                    values.get("input")
+                                            .getValue();
 
-                String beastInputName =
-                        declaredInputName.isBlank()
-                                ? field.getSimpleName().toString()
-                                : declaredInputName;
+                    String beastInputName =
+                            declaredInputName.isBlank()
+                                    ? field.getSimpleName().toString()
+                                    : declaredInputName;
 
-                TypeMirror adapterType =
-                        (TypeMirror)
-                                values.get("adapter")
-                                        .getValue();
+                    TypeMirror adapterType =
+                            (TypeMirror)
+                                    values.get("adapter")
+                                            .getValue();
 
-                Optional<InputSpec> inputResult =
-                        readInput(
-                                field,
-                                argumentName,
-                                beastInputName,
-                                null,
-                                adapterType,
-                                implementationDeclaration,
-                                implementationType,
-                                componentGenerators,
-                                usedArguments,
-                                usedBeastInputs);
+                    if (!registerArgumentDeclaration(
+                            argumentName,
+                            field,
+                            argumentDeclarations,
+                            declarationArguments)) {
+                        return Optional.empty();
+                    }
 
-                if (inputResult.isEmpty()) {
-                    return Optional.empty();
+                    Optional<InputSpec> inputResult =
+                            readInput(
+                                    field,
+                                    argumentName,
+                                    beastInputName,
+                                    null,
+                                    adapterType,
+                                    implementationDeclaration,
+                                    implementationType,
+                                    componentGenerators,
+                                    usedBeastInputs);
+
+                    if (inputResult.isEmpty()) {
+                        return Optional.empty();
+                    }
+
+                    if (!mergeInput(inputs, inputResult.orElseThrow(), field)) {
+                        return Optional.empty();
+                    }
                 }
-
-                inputs.add(inputResult.orElseThrow());
             }
         }
 
@@ -756,7 +776,7 @@ public final class TileProcessor extends AbstractProcessor {
                         .distinct()
                         .filter(
                                 argumentName ->
-                                        !usedArguments.contains(
+                                        !argumentDeclarations.containsKey(
                                                 argumentName))
                         .sorted()
                         .toList();
@@ -786,7 +806,6 @@ public final class TileProcessor extends AbstractProcessor {
             TypeElement implementationDeclaration,
             TypeMirror implementationType,
             List<Generator> componentGenerators,
-            Set<String> usedArguments,
             Set<String> usedBeastInputs) {
 
         if (argumentName.isBlank()) {
@@ -799,15 +818,6 @@ public final class TileProcessor extends AbstractProcessor {
         if (beastInputName.isBlank()) {
             printError(
                     "@InputMapping input must not be blank.",
-                    declaration);
-            return Optional.empty();
-        }
-
-        if (!usedArguments.add(argumentName)) {
-            printError(
-                    "PhyloSpec argument '"
-                            + argumentName
-                            + "' is mapped more than once.",
                     declaration);
             return Optional.empty();
         }
@@ -932,13 +942,97 @@ public final class TileProcessor extends AbstractProcessor {
                 new InputSpec(
                         argumentName,
                         componentArgument.getType(),
-                        beastInputName,
                         valueType,
-                        inputType,
-                        adapterType,
-                        usesAdapter,
                         Boolean.TRUE.equals(
-                                componentArgument.getRequired())));
+                                componentArgument.getRequired()),
+                        List.of(
+                                new InputBindingSpec(
+                                        beastInputName,
+                                        inputType,
+                                        adapterType,
+                                        usesAdapter))));
+    }
+
+    private boolean registerArgumentDeclaration(
+            String argumentName,
+            Element declaration,
+            Map<String, Element> argumentDeclarations,
+            Map<Element, String> declarationArguments) {
+
+        String previousArgument =
+                declarationArguments.putIfAbsent(
+                        declaration,
+                        argumentName);
+
+        if (previousArgument != null
+                && !previousArgument.equals(argumentName)) {
+            printError(
+                    "Repeated @InputMapping annotations on one declaration "
+                            + "must use the same PhyloSpec argument, but found '"
+                            + previousArgument
+                            + "' and '"
+                            + argumentName
+                            + "'.",
+                    declaration);
+            return false;
+        }
+
+        Element previous =
+                argumentDeclarations.putIfAbsent(
+                        argumentName,
+                        declaration);
+
+        if (previous == null || previous.equals(declaration)) {
+            return true;
+        }
+
+        printError(
+                "PhyloSpec argument '"
+                        + argumentName
+                        + "' is mapped by more than one declaration.",
+                declaration);
+        return false;
+    }
+
+    private boolean mergeInput(
+            List<InputSpec> inputs,
+            InputSpec candidate,
+            Element declaration) {
+
+        for (int index = 0; index < inputs.size(); index++) {
+            InputSpec existing = inputs.get(index);
+            if (!existing.argument().equals(candidate.argument())) {
+                continue;
+            }
+
+            if (!processingEnv.getTypeUtils().isSameType(
+                    existing.valueType(),
+                    candidate.valueType())) {
+                printError(
+                        "Repeated mappings for PhyloSpec argument '"
+                                + candidate.argument()
+                                + "' must use the same Java value type.",
+                        declaration);
+                return false;
+            }
+
+            List<InputBindingSpec> bindings =
+                    new ArrayList<>(existing.bindings());
+            bindings.addAll(candidate.bindings());
+
+            inputs.set(
+                    index,
+                    new InputSpec(
+                            existing.argument(),
+                            existing.semanticType(),
+                            existing.valueType(),
+                            existing.required(),
+                            bindings));
+            return true;
+        }
+
+        inputs.add(candidate);
+        return true;
     }
 
     private Optional<Argument> resolveArgument(
@@ -1204,6 +1298,54 @@ public final class TileProcessor extends AbstractProcessor {
                                             annotationName);
                         })
                 .findFirst();
+    }
+
+    private List<AnnotationMirror> findInputMappings(
+            Element element) {
+
+        List<AnnotationMirror> mappings =
+                new ArrayList<>();
+
+        for (AnnotationMirror annotation : element.getAnnotationMirrors()) {
+            Element annotationElement =
+                    annotation.getAnnotationType().asElement();
+
+            if (!(annotationElement instanceof TypeElement annotationType)) {
+                continue;
+            }
+
+            String annotationName =
+                    annotationType.getQualifiedName().toString();
+
+            if (annotationName.equals(InputMapping.class.getCanonicalName())) {
+                mappings.add(annotation);
+                continue;
+            }
+
+            if (!annotationName.equals(InputMappings.class.getCanonicalName())) {
+                continue;
+            }
+
+            Object value =
+                    readAnnotationValues(annotation)
+                            .get("value")
+                            .getValue();
+
+            if (!(value instanceof List<?> entries)) {
+                continue;
+            }
+
+            for (Object entry : entries) {
+                Object nestedValue =
+                        ((AnnotationValue) entry).getValue();
+
+                if (nestedValue instanceof AnnotationMirror nestedMapping) {
+                    mappings.add(nestedMapping);
+                }
+            }
+        }
+
+        return List.copyOf(mappings);
     }
 
     private Map<String, AnnotationValue> readAnnotationValues(

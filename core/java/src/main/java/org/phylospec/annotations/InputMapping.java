@@ -2,17 +2,19 @@ package org.phylospec.annotations;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Maps one PhyloSpec generator argument to one input on the
- * engine implementation class.
+ * Maps one PhyloSpec generator argument to an input on the engine implementation class.
+ * Repeat this annotation on the same member when one argument must bind several engine inputs.
  */
 @Documented
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.METHOD, ElementType.FIELD})
+@Repeatable(InputMappings.class)
 public @interface InputMapping {
 
     /**

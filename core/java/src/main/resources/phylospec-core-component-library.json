@@ -2088,6 +2088,12 @@
                     "description": "The exponent of the exponential growth",
                     "type": "Real",
                     "required": true
+                },
+                {
+                    "name": "ancestralPopulationSize",
+                    "description": "Optional ancestral population size",
+                    "type": "PositiveReal",
+                    "required": false
                 }
             ]
         },

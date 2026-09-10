@@ -1,13 +1,16 @@
 package org.phylospec.beast3.processor;
 
+import java.util.List;
 import javax.lang.model.type.TypeMirror;
 
 record InputSpec(
         String argument,
         String semanticType,
-        String input,
         TypeMirror valueType,
-        TypeMirror inputType,
-        TypeMirror adapterType,
-        boolean usesAdapter,
-        boolean required) {}
+        boolean required,
+        List<InputBindingSpec> bindings) {
+
+    InputSpec {
+        bindings = List.copyOf(bindings);
+    }
+}
