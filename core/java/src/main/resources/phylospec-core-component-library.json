@@ -2131,6 +2131,39 @@
         },
         {
             "generatedType": "PopulationFunction",
+            "name": "expansionPopulationFunction",
+            "namespace": "phylospec.functions.coalescent",
+            "description": "A population function with constant recent size followed by exponential expansion",
+            "arguments": [
+                {
+                    "name": "populationSize",
+                    "description": "Present-day population size",
+                    "type": "PositiveReal",
+                    "required": true
+                },
+                {
+                    "name": "growthRate",
+                    "description": "Exponential growth rate",
+                    "type": "PositiveReal",
+                    "required": true
+                },
+                {
+                    "name": "transitionAge",
+                    "description": "Age at which exponential growth begins",
+                    "type": "Age",
+                    "required": true
+                },
+                {
+                    "name": "ancestralPopulationSize",
+                    "description": "Optional ancestral population size",
+                    "type": "PositiveReal",
+                    "required": false
+                }
+            ],
+            "constraints": ["ancestralPopulationSize.value < populationSize.value"]
+        },
+        {
+            "generatedType": "PopulationFunction",
             "name": "compoundPopulationFunction",
             "namespace": "phylospec.functions.coalescent",
             "description": "Combines several population functions in a piece-wise manner",

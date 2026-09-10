@@ -35,7 +35,7 @@ public class PopFuncEngineSpecTest {
         assertEquals("popfunc", specification.getName());
         assertEquals("0.1.0-SNAPSHOT", specification.getEngineVersion());
         assertEquals(List.of("beast2"), specification.getDependsOn());
-        assertEquals(3, specification.getGenerators().size());
+        assertEquals(4, specification.getGenerators().size());
 
         Generator__1 logistic = findGenerator(specification, "logisticPopulationFunction");
         assertEquals("logisticPopulationFunction", logistic.getName());
@@ -74,6 +74,29 @@ public class PopFuncEngineSpecTest {
         assertTrue(exponential.getArguments().subList(0, 2).stream()
                 .allMatch(Argument__1::getRequired));
         assertFalse(exponential.getArguments().get(2).getRequired());
+
+        Generator__1 expansion =
+                findGenerator(specification, "expansionPopulationFunction");
+        assertEquals(
+                List.of("populationSize", "growthRate", "transitionAge", "ancestralPopulationSize"),
+                expansion.getArguments().stream().map(Argument__1::getName).toList());
+        assertTrue(expansion.getArguments().subList(0, 3).stream()
+                .allMatch(Argument__1::getRequired));
+        assertFalse(expansion.getArguments().get(3).getRequired());
+
+        Generator expansionComponent = resolver.resolveGenerator(
+                        "phylospec.functions.coalescent.expansionPopulationFunction")
+                .getFirst();
+        assertEquals(
+                List.of(
+                        "phylospec.types.PositiveReal",
+                        "phylospec.types.PositiveReal",
+                        "phylospec.types.Age",
+                        "phylospec.types.PositiveReal"),
+                expansionComponent.getArguments().stream().map(Argument::getType).toList());
+        assertEquals(
+                List.of("ancestralPopulationSize.value < populationSize.value"),
+                expansionComponent.getConstraints());
     }
 
     private static Generator__1 findGenerator(
