@@ -19,6 +19,11 @@ public final class PopFuncTileLibrary extends TileLibrary<BEASTState> {
     }
 
     @Override
+    public List<String> getComponentLibraryResources() {
+        return List.of("/popfunc-components.json");
+    }
+
+    @Override
     public List<CandidateTile<BEASTState>> getTiles() {
         return GeneratedTileRegistry.createTiles();
     }

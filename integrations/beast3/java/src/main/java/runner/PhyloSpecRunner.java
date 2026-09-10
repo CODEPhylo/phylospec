@@ -11,7 +11,6 @@ import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
 import org.phylospec.ast.transformers.RemoveGroupings;
-import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.errors.Error;
 import org.phylospec.errors.ErrorEventListener;
@@ -61,7 +60,10 @@ public class PhyloSpecRunner implements ErrorEventListener {
      * via {@link #errorDetected} and terminates the process immediately.
      */
     public void runPhyloSpec(String runName) throws IOException, ParserConfigurationException, SAXException {
-        ComponentResolver componentResolver = loadComponentResolver();
+        List<TileLibrary<BEASTState>> tileLibraries = tileLibraryIds
+                .map(ids -> TileLibrary.select(BEASTState.class, ids))
+                .orElseGet(() -> TileLibrary.discover(BEASTState.class));
+        ComponentResolver componentResolver = loadComponentResolver(tileLibraries);
 
         // run lexer
 
@@ -102,9 +104,9 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // perform tiling
 
-        var candidateTiles = tileLibraryIds
-                .map(ids -> TileLibrary.loadSelected(BEASTState.class, ids))
-                .orElseGet(() -> TileLibrary.loadAll(BEASTState.class));
+        var candidateTiles = tileLibraryIds.isPresent()
+                ? TileLibrary.combine(tileLibraries)
+                : TileLibrary.collectTiles(tileLibraries);
         EvaluateTiles<BEASTState> applyTiles =
                 new EvaluateTiles<>(candidateTiles, variableResolver, stochasticityResolver);
         BEASTState beastState = new BEASTState(runName);
@@ -157,16 +159,11 @@ public class PhyloSpecRunner implements ErrorEventListener {
     }
 
     /**
-     * Loads the core component libraries (built-in types and generators) and returns a
-     * resolver backed by them.
+     * Loads core and adapter-provided component libraries and returns a resolver backed by them.
      */
-    private static ComponentResolver loadComponentResolver() {
-        try {
-            List<ComponentLibrary> componentLibraries = ComponentResolver.loadCoreComponentLibraries();
-            return new ComponentResolver(componentLibraries);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    private static ComponentResolver loadComponentResolver(List<? extends TileLibrary<?>> tileLibraries)
+            throws IOException {
+        return new ComponentResolver(TileLibrary.loadComponentLibraries(tileLibraries));
     }
 
     /**
