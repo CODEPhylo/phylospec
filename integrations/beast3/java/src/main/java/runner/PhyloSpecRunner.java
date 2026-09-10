@@ -5,6 +5,7 @@ import beastconfig.BEASTState;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import javax.xml.parsers.ParserConfigurationException;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
@@ -35,12 +36,23 @@ import org.xml.sax.SAXException;
 public class PhyloSpecRunner implements ErrorEventListener {
 
     private final String source;
+    private final Optional<List<String>> tileLibraryIds;
 
     /**
      * Constructs a runner for the given PhyloSpec source code.
      */
     public PhyloSpecRunner(String source) {
         this.source = source;
+        this.tileLibraryIds = Optional.empty();
+    }
+
+    /**
+     * Constructs a runner using only the named Tile libraries. Library identifiers are ordered
+     * from most to least preferred, so a selected package can override an equivalent base mapping.
+     */
+    public PhyloSpecRunner(String source, List<String> tileLibraryIds) {
+        this.source = source;
+        this.tileLibraryIds = Optional.of(List.copyOf(tileLibraryIds));
     }
 
     /**
@@ -90,8 +102,11 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // perform tiling
 
+        var candidateTiles = tileLibraryIds
+                .map(ids -> TileLibrary.loadSelected(BEASTState.class, ids))
+                .orElseGet(() -> TileLibrary.loadAll(BEASTState.class));
         EvaluateTiles<BEASTState> applyTiles =
-                new EvaluateTiles<>(TileLibrary.loadAll(BEASTState.class), variableResolver, stochasticityResolver);
+                new EvaluateTiles<>(candidateTiles, variableResolver, stochasticityResolver);
         BEASTState beastState = new BEASTState(runName);
         try {
             applyTiles.getBestTiling(statements);

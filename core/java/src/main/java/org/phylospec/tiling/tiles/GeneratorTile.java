@@ -49,6 +49,7 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
                 this.getNamespace(),
                 this.getMappingCategory(),
                 this.getMappingRole(),
+                this.getTypeToken(),
                 inputs);
     }
 
