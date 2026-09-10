@@ -28,6 +28,7 @@ final class TypeBindings {
     }
 
     Optional<TypeMirror> resolve(String semanticType) {
+        ParsedType parsedType = new ParsedType(semanticType);
         String canonicalType = resolveAlias(semanticType);
 
         return switch (canonicalType) {
@@ -41,10 +42,33 @@ final class TypeBindings {
             case TYPES + "NonNegativeInteger" -> intScalar("beast.base.spec.domain.NonNegativeInt");
             case TYPES + "PositiveInteger" -> intScalar("beast.base.spec.domain.PositiveInt");
             case TYPES + "Simplex" -> declaredType("beast.base.spec.type.Simplex");
+            case TYPES + "Vector" -> resolveVector(parsedType);
+            case TYPES + "Tree" -> declaredType("beast.base.evolution.tree.Tree");
+            case TYPES + "Alignment" -> declaredType("tiles.input.DecoratedAlignment");
             case TYPES + "QMatrix" ->
                     declaredType("beast.base.evolution.substitutionmodel.SubstitutionModel");
             case TYPES + "PopulationFunction" ->
                     declaredType("beast.base.evolution.tree.coalescent.PopulationFunction");
+            default -> Optional.empty();
+        };
+    }
+
+    private Optional<TypeMirror> resolveVector(ParsedType parsedType) {
+        if (parsedType.getTypeParameters().size() != 1) {
+            return Optional.empty();
+        }
+
+        String elementType =
+                resolveAlias(parsedType.getTypeParameters().getFirst().getTypeString());
+
+        return switch (elementType) {
+            case TYPES + "Real" -> realVector("beast.base.spec.domain.Real");
+            case TYPES + "NonNegativeReal" ->
+                    realVector("beast.base.spec.domain.NonNegativeReal");
+            case TYPES + "PositiveReal" ->
+                    realVector("beast.base.spec.domain.PositiveReal");
+            case TYPES + "Probability" ->
+                    realVector("beast.base.spec.domain.UnitInterval");
             default -> Optional.empty();
         };
     }
@@ -72,6 +96,10 @@ final class TypeBindings {
 
     private Optional<TypeMirror> intScalar(String domainClass) {
         return parameterizedType("beast.base.spec.type.IntScalar", domainClass);
+    }
+
+    private Optional<TypeMirror> realVector(String domainClass) {
+        return parameterizedType("beast.base.spec.type.RealVector", domainClass);
     }
 
     private Optional<TypeMirror> parameterizedType(String wrapperClass, String domainClass) {
