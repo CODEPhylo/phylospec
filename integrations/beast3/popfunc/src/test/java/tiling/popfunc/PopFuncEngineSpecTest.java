@@ -18,7 +18,7 @@ import tiles.popfunc.PopFuncTileLibrary;
 public class PopFuncEngineSpecTest {
 
     @Test
-    public void exposesLogisticGrowthCapability() throws IOException {
+    public void exposesPopFuncCapabilities() throws IOException {
         ComponentResolver resolver =
                 new ComponentResolver(ComponentResolver.loadCoreComponentLibraries());
 
@@ -34,9 +34,9 @@ public class PopFuncEngineSpecTest {
         assertEquals("popfunc", specification.getName());
         assertEquals("0.1.0-SNAPSHOT", specification.getEngineVersion());
         assertEquals(List.of("beast2"), specification.getDependsOn());
-        assertEquals(1, specification.getGenerators().size());
+        assertEquals(2, specification.getGenerators().size());
 
-        Generator__1 logistic = specification.getGenerators().getFirst();
+        Generator__1 logistic = findGenerator(specification, "logisticPopulationFunction");
         assertEquals("logisticPopulationFunction", logistic.getName());
         assertEquals("phylospec.functions.coalescent", logistic.getNamespace());
         assertEquals(
@@ -54,5 +54,21 @@ public class PopFuncEngineSpecTest {
                         "phylospec.types.PositiveReal",
                         "phylospec.types.NonNegativeReal"),
                 components.getFirst().getArguments().stream().map(Argument::getType).toList());
+
+        Generator__1 constant = findGenerator(specification, "constantPopulationFunction");
+        assertEquals("phylospec.functions.coalescent", constant.getNamespace());
+        assertEquals(
+                List.of("populationSize"),
+                constant.getArguments().stream().map(Argument__1::getName).toList());
+        assertTrue(constant.getArguments().getFirst().getRequired());
+        assertTrue(constant.getArguments().getFirst().getCanBeStochastic());
+    }
+
+    private static Generator__1 findGenerator(
+            EngineSpecificationSchema specification, String name) {
+        return specification.getGenerators().stream()
+                .filter(generator -> name.equals(generator.getName()))
+                .findFirst()
+                .orElseThrow();
     }
 }
