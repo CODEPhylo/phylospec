@@ -48,6 +48,31 @@ public class ExponentialGrowthGeneratedTileTest {
         assertEquals(100.0, exponential.getNA());
     }
 
+    @Test
+    public void disablesAncestralSizeWhenItIsMissing() {
+        RealScalarParam<PositiveReal> populationSize =
+                new RealScalarParam<>(1_000.0, PositiveReal.INSTANCE);
+        RealScalarParam<Real> growthRate =
+                new RealScalarParam<>(0.25, Real.INSTANCE);
+
+        ExponentialGrowthGeneratedTile tile =
+                new ExponentialGrowthGeneratedTile();
+        tile.populationSizeInput.setTile(valueTile(populationSize));
+        tile.growthRateInput.setTile(valueTile(growthRate));
+
+        PopulationFunction result =
+                tile.applyTile(
+                        new BEASTState("popfunc-exponential-default"),
+                        new IdentityHashMap<>());
+
+        ExponentialGrowth exponential =
+                assertInstanceOf(ExponentialGrowth.class, result);
+        assertSame(populationSize, exponential.popSizeParameterInput.get());
+        assertSame(growthRate, exponential.growthRateParameterInput.get());
+        assertEquals(0, exponential.indicatorParameterInput.get().get());
+        assertEquals(0.0, exponential.getNA());
+    }
+
     private static <T> Tile<T, BEASTState> valueTile(T value) {
         Tile<T, BEASTState> tile = new Tile<>() {
             @Override

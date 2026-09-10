@@ -1,6 +1,7 @@
 package mappings.popfunc;
 
 import adapters.popfunc.AncestralIndicatorAdapter;
+import adapters.popfunc.IndicatorFallback;
 import beast.base.evolution.tree.coalescent.PopulationFunction;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
@@ -27,6 +28,7 @@ public interface ExponentialGrowthMapping {
     @InputMapping(
             argument = "ancestralPopulationSize",
             input = "indicatorParameterInput",
-            adapter = AncestralIndicatorAdapter.class)
+            adapter = AncestralIndicatorAdapter.class,
+            fallback = IndicatorFallback.class)
     RealScalar<? extends PositiveReal> ancestralPopulationSize();
 }

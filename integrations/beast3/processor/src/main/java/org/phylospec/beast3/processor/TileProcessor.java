@@ -34,6 +34,7 @@ import org.phylospec.annotations.InputMappings;
 import org.phylospec.components.Argument;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
+import org.phylospec.tiling.InputFallback;
 import org.phylospec.tiling.TypeAdapter;
 
 public final class TileProcessor extends AbstractProcessor {
@@ -665,6 +666,11 @@ public final class TileProcessor extends AbstractProcessor {
                                 values.get("adapter")
                                         .getValue();
 
+                TypeMirror fallbackType =
+                        (TypeMirror)
+                                values.get("fallback")
+                                        .getValue();
+
                 if (!registerArgumentDeclaration(
                         argumentName,
                         method,
@@ -680,6 +686,7 @@ public final class TileProcessor extends AbstractProcessor {
                                 beastInputName,
                                 method.getReturnType(),
                                 adapterType,
+                                fallbackType,
                                 implementationDeclaration,
                                 implementationType,
                                 componentGenerators,
@@ -731,6 +738,11 @@ public final class TileProcessor extends AbstractProcessor {
                                     values.get("adapter")
                                             .getValue();
 
+                    TypeMirror fallbackType =
+                            (TypeMirror)
+                                    values.get("fallback")
+                                            .getValue();
+
                     if (!registerArgumentDeclaration(
                             argumentName,
                             field,
@@ -746,6 +758,7 @@ public final class TileProcessor extends AbstractProcessor {
                                     beastInputName,
                                     null,
                                     adapterType,
+                                    fallbackType,
                                     implementationDeclaration,
                                     implementationType,
                                     componentGenerators,
@@ -803,6 +816,7 @@ public final class TileProcessor extends AbstractProcessor {
             String beastInputName,
             TypeMirror declaredValueType,
             TypeMirror declaredAdapterType,
+            TypeMirror declaredFallbackType,
             TypeElement implementationDeclaration,
             TypeMirror implementationType,
             List<Generator> componentGenerators,
@@ -929,6 +943,25 @@ public final class TileProcessor extends AbstractProcessor {
             usesAdapter = true;
         }
 
+        TypeMirror fallbackType = declaredFallbackType;
+        boolean usesFallback = !isVoidType(fallbackType);
+
+        if (usesFallback) {
+            if (Boolean.TRUE.equals(componentArgument.getRequired())) {
+                printError(
+                        "@InputMapping fallback can only be used for an optional "
+                                + "PhyloSpec argument, but '"
+                                + argumentName
+                                + "' is required.",
+                        declaration);
+                return Optional.empty();
+            }
+
+            if (!validateFallback(fallbackType, inputType, declaration)) {
+                return Optional.empty();
+            }
+        }
+
         if (!validateSemanticType(
                 argumentName,
                 componentArgument.getType(),
@@ -950,7 +983,9 @@ public final class TileProcessor extends AbstractProcessor {
                                         beastInputName,
                                         inputType,
                                         adapterType,
-                                        usesAdapter))));
+                                        usesAdapter,
+                                        fallbackType,
+                                        usesFallback))));
     }
 
     private boolean registerArgumentDeclaration(
@@ -1662,6 +1697,117 @@ public final class TileProcessor extends AbstractProcessor {
                             + "its engine state.",
                     mappingDeclaration);
 
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean validateFallback(
+            TypeMirror fallbackType,
+            TypeMirror inputType,
+            Element mappingDeclaration) {
+
+        Types types = processingEnv.getTypeUtils();
+        Elements elements = processingEnv.getElementUtils();
+        Element fallbackElement = types.asElement(fallbackType);
+
+        if (!(fallbackElement instanceof TypeElement fallbackDeclaration)
+                || fallbackDeclaration.getKind() != ElementKind.CLASS) {
+            printError(
+                    "@InputMapping fallback must refer to a class.",
+                    mappingDeclaration);
+            return false;
+        }
+
+        if (!fallbackDeclaration.getModifiers().contains(Modifier.PUBLIC)) {
+            printError(
+                    "@InputMapping fallback must be public.",
+                    mappingDeclaration);
+            return false;
+        }
+
+        if (fallbackDeclaration.getModifiers().contains(Modifier.ABSTRACT)) {
+            printError(
+                    "@InputMapping fallback must not be abstract.",
+                    mappingDeclaration);
+            return false;
+        }
+
+        if (!hasPublicNoArgumentConstructor(fallbackDeclaration)) {
+            printError(
+                    "@InputMapping fallback must declare a public no-argument constructor.",
+                    mappingDeclaration);
+            return false;
+        }
+
+        TypeElement fallbackInterface =
+                elements.getTypeElement(InputFallback.class.getCanonicalName());
+
+        if (fallbackInterface == null) {
+            printError(
+                    "Could not resolve " + InputFallback.class.getCanonicalName() + ".",
+                    mappingDeclaration);
+            return false;
+        }
+
+        Optional<DeclaredType> fallbackSupertypeResult =
+                findDeclaredSupertype(fallbackType, fallbackInterface.asType());
+
+        if (fallbackSupertypeResult.isEmpty()) {
+            printError(
+                    "Fallback '"
+                            + fallbackType
+                            + "' must implement "
+                            + InputFallback.class.getCanonicalName()
+                            + ".",
+                    mappingDeclaration);
+            return false;
+        }
+
+        List<? extends TypeMirror> typeArguments =
+                fallbackSupertypeResult.orElseThrow().getTypeArguments();
+
+        if (typeArguments.size() != 2) {
+            printError(
+                    "Fallback '"
+                            + fallbackType
+                            + "' must declare target and state types.",
+                    mappingDeclaration);
+            return false;
+        }
+
+        TypeMirror fallbackTargetType = typeArguments.get(0);
+        TypeMirror fallbackStateType = typeArguments.get(1);
+
+        if (!types.isAssignable(fallbackTargetType, inputType)) {
+            printError(
+                    "Fallback '"
+                            + fallbackType
+                            + "' produces target type '"
+                            + fallbackTargetType
+                            + "', but the BEAST input expects '"
+                            + inputType
+                            + "'.",
+                    mappingDeclaration);
+            return false;
+        }
+
+        TypeElement beastState = elements.getTypeElement("beastconfig.BEASTState");
+
+        if (beastState == null) {
+            printError(
+                    "Could not resolve beastconfig.BEASTState.",
+                    mappingDeclaration);
+            return false;
+        }
+
+        if (!types.isAssignable(beastState.asType(), fallbackStateType)) {
+            printError(
+                    "Fallback '"
+                            + fallbackType
+                            + "' cannot accept BEASTState as its engine state.",
+                    mappingDeclaration);
             return false;
         }
 
