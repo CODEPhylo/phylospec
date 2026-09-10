@@ -145,16 +145,25 @@ final class TileWriter {
                 .append("();\n\n");
 
         for (InputSpec input : mapping.inputs()) {
-            if (input.required()) {
+            String indentation = "        ";
+
+            if (!input.required()) {
+                source.append("        if (")
+                        .append(valueName(input))
+                        .append(" != null) {\n\n");
+                indentation = "            ";
+            }
+
+            for (InputBindingSpec binding : input.bindings()) {
                 appendSetInput(
                         source,
                         input,
-                        false);
-            } else {
-                appendSetInput(
-                        source,
-                        input,
-                        true);
+                        binding,
+                        indentation);
+            }
+
+            if (!input.required()) {
+                source.append("        }\n\n");
             }
         }
 
@@ -165,34 +174,24 @@ final class TileWriter {
     private void appendSetInput(
             StringBuilder source,
             InputSpec input,
-            boolean optional) {
-
-        String indentation =
-                optional
-                        ? "            "
-                        : "        ";
-
-        if (optional) {
-            source.append("        if (")
-                    .append(valueName(input))
-                    .append(" != null) {\n\n");
-        }
+            InputBindingSpec binding,
+            String indentation) {
 
         String assignedValueName =
                 valueName(input);
 
-        if (input.usesAdapter()) {
+        if (binding.usesAdapter()) {
             assignedValueName =
-                    adaptedValueName(input);
+                    adaptedValueName(input, binding);
 
             source.append(indentation)
-                    .append(input.inputType())
+                    .append(binding.inputType())
                     .append(" ")
                     .append(assignedValueName)
                     .append(" =\n")
                     .append(indentation)
                     .append("        new ")
-                    .append(input.adapterType())
+                    .append(binding.adapterType())
                     .append("()\n")
                     .append(indentation)
                     .append("                .adapt(\n")
@@ -210,16 +209,12 @@ final class TileWriter {
                 .append("        object,\n")
                 .append(indentation)
                 .append("        object.")
-                .append(input.input())
+                .append(binding.input())
                 .append(",\n")
                 .append(indentation)
                 .append("        ")
                 .append(assignedValueName)
                 .append(");\n\n");
-
-        if (optional) {
-            source.append("        }\n\n");
-        }
     }
 
     private String fieldName(
@@ -235,9 +230,13 @@ final class TileWriter {
     }
 
     private String adaptedValueName(
-            InputSpec input) {
+            InputSpec input,
+            InputBindingSpec binding) {
 
-        return input.argument() + "AdaptedValue";
+        return input.argument()
+                + Character.toUpperCase(binding.input().charAt(0))
+                + binding.input().substring(1)
+                + "AdaptedValue";
     }
 
     private String javaString(

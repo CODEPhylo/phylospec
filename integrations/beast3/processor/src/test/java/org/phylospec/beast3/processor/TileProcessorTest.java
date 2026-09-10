@@ -213,6 +213,117 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void bindsOneArgumentToMultipleInputs() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.evolution.tree.coalescent.PopulationFunction;
+                        import beast.base.spec.domain.NonNegativeInt;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.domain.Real;
+                        import beast.base.spec.evolution.tree.coalescent.ExponentialGrowth;
+                        import beast.base.spec.inference.parameter.IntScalarParam;
+                        import beast.base.spec.type.IntScalar;
+                        import beast.base.spec.type.RealScalar;
+                        import beastconfig.BEASTState;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import org.phylospec.tiling.TypeAdapter;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.coalescent.exponentialPopulationFunction",
+                                implementation = InvalidMapping.Model.class,
+                                output = PopulationFunction.class)
+                        public interface InvalidMapping {
+
+                            @InputMapping(argument = "populationSize", input = "popSizeParameterInput")
+                            RealScalar<? extends PositiveReal> populationSize();
+
+                            @InputMapping(argument = "growthRate", input = "growthRateParameterInput")
+                            RealScalar<? extends Real> growthRate();
+
+                            @InputMapping(argument = "ancestralPopulationSize", input = "ancestralInput")
+                            @InputMapping(
+                                    argument = "ancestralPopulationSize",
+                                    input = "indicatorInput",
+                                    adapter = IndicatorAdapter.class)
+                            RealScalar<? extends PositiveReal> ancestralPopulationSize();
+
+                            final class Model extends ExponentialGrowth {
+                                public final Input<RealScalar<? extends PositiveReal>> ancestralInput =
+                                        new Input<>("ancestral", "ancestral");
+                                public final Input<IntScalar<? extends NonNegativeInt>> indicatorInput =
+                                        new Input<>("indicator", "indicator");
+                            }
+
+                            final class IndicatorAdapter
+                                    implements TypeAdapter<
+                                            RealScalar<? extends PositiveReal>,
+                                            IntScalar<? extends NonNegativeInt>,
+                                            BEASTState> {
+
+                                @Override
+                                public IntScalar<? extends NonNegativeInt> adapt(
+                                        RealScalar<? extends PositiveReal> value,
+                                        BEASTState state) {
+
+                                    return new IntScalarParam<>(1, NonNegativeInt.INSTANCE);
+                                }
+                            }
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String generatedSource =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/InvalidGeneratedTile.java"));
+
+        String inputField = "ancestralPopulationSizeInput =";
+        assertTrue(generatedSource.indexOf(inputField) == generatedSource.lastIndexOf(inputField));
+        assertTrue(generatedSource.contains("object.ancestralInput"));
+        assertTrue(generatedSource.contains("object.indicatorInput"));
+        assertTrue(generatedSource.contains("new mappings.InvalidMapping.IndicatorAdapter()"));
+    }
+
+    @Test
+    public void rejectsDifferentArgumentsOnOneMappingMember() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.evolution.tree.coalescent.PopulationFunction;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ExponentialGrowth;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.coalescent.exponentialPopulationFunction",
+                                implementation = ExponentialGrowth.class,
+                                output = PopulationFunction.class)
+                        public interface InvalidMapping {
+
+                            @InputMapping(argument = "populationSize", input = "popSizeParameterInput")
+                            @InputMapping(argument = "growthRate", input = "growthRateParameterInput")
+                            RealScalar<? extends PositiveReal> value();
+                        }
+                        """);
+
+        assertCompilationError(
+                result,
+                "Repeated @InputMapping annotations on one declaration "
+                        + "must use the same PhyloSpec argument");
+    }
+
+    @Test
     public void rejectsNonPublicImplementationInputField() throws IOException {
         CompilationResult result =
                 compile(
