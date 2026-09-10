@@ -1,8 +1,11 @@
 package org.phylospec.beast3.processor;
 
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
@@ -28,8 +31,14 @@ final class TypeBindings {
     }
 
     Optional<TypeMirror> resolve(String semanticType) {
-        ParsedType parsedType = new ParsedType(semanticType);
-        String canonicalType = resolveAlias(semanticType);
+        Optional<String> resolvedType = resolveAlias(semanticType);
+
+        if (resolvedType.isEmpty()) {
+            return Optional.empty();
+        }
+
+        ParsedType parsedType = new ParsedType(resolvedType.orElseThrow());
+        String canonicalType = parsedType.stripGenerics();
 
         return switch (canonicalType) {
             case TYPES + "Boolean" -> declaredType("beast.base.spec.type.BoolScalar");
@@ -60,7 +69,14 @@ final class TypeBindings {
 
         String semanticElementType =
                 parsedType.getTypeParameters().getFirst().getTypeString();
-        String elementType = resolveAlias(semanticElementType);
+        Optional<String> resolvedElementType = resolveAlias(semanticElementType);
+
+        if (resolvedElementType.isEmpty()) {
+            return Optional.empty();
+        }
+
+        String elementType =
+                new ParsedType(resolvedElementType.orElseThrow()).stripGenerics();
 
         return switch (elementType) {
             case TYPES + "Real" -> realVector("beast.base.spec.domain.Real");
@@ -85,21 +101,75 @@ final class TypeBindings {
         return Optional.of(types.getDeclaredType(list, elementType.orElseThrow()));
     }
 
-    private String resolveAlias(String semanticType) {
-        String currentType = new ParsedType(semanticType).stripGenerics();
+    private Optional<String> resolveAlias(String semanticType) {
+        return resolveAlias(semanticType, componentResolver);
+    }
+
+    static Optional<String> resolveAlias(
+            String semanticType, ComponentResolver componentResolver) {
+        String currentType = semanticType;
         Set<String> visitedTypes = new HashSet<>();
 
-        while (visitedTypes.add(currentType)) {
-            Type type = componentResolver.resolveType(currentType);
+        while (true) {
+            ParsedType parsedType = new ParsedType(currentType);
+            String baseType = parsedType.stripGenerics();
 
-            if (type == null || type.getAlias() == null || type.getAlias().isBlank()) {
-                return currentType;
+            if (!visitedTypes.add(baseType)) {
+                return Optional.empty();
             }
 
-            currentType = new ParsedType(type.getAlias()).stripGenerics();
+            Type type = componentResolver.resolveType(baseType);
+
+            if (type == null || type.getAlias() == null || type.getAlias().isBlank()) {
+                return Optional.of(currentType);
+            }
+
+            if (type.getTypeParameters().size()
+                    != parsedType.getTypeParameters().size()) {
+                return Optional.empty();
+            }
+
+            Map<String, String> substitutions = new LinkedHashMap<>();
+            for (int index = 0; index < type.getTypeParameters().size(); index++) {
+                substitutions.put(
+                        type.getTypeParameters().get(index),
+                        parsedType.getTypeParameters().get(index).getTypeString());
+            }
+
+            currentType = substitute(type.getAlias(), substitutions);
+        }
+    }
+
+    private static String substitute(
+            String semanticType, Map<String, String> substitutions) {
+        ParsedType parsedType = new ParsedType(semanticType);
+
+        if (parsedType.getNamespace().isEmpty()
+                && parsedType.getTypeParameters().isEmpty()
+                && substitutions.containsKey(parsedType.getAtomicTypeName())) {
+            return substitutions.get(parsedType.getAtomicTypeName());
         }
 
-        return currentType;
+        if (parsedType.getTypeParameters().isEmpty()
+                && parsedType.getTypeProperties().isEmpty()) {
+            return parsedType.stripGenerics();
+        }
+
+        String parameters = parsedType.getTypeParameters().stream()
+                .map(parameter -> substitute(parameter.getTypeString(), substitutions))
+                .collect(Collectors.joining(","));
+        String properties = parsedType.getTypeProperties().stream()
+                .map(Object::toString)
+                .collect(Collectors.joining(","));
+
+        StringBuilder resolvedType =
+                new StringBuilder(parsedType.stripGenerics()).append("<").append(parameters);
+
+        if (!properties.isEmpty()) {
+            resolvedType.append(";").append(properties);
+        }
+
+        return resolvedType.append(">").toString();
     }
 
     private Optional<TypeMirror> realScalar(String domainClass) {

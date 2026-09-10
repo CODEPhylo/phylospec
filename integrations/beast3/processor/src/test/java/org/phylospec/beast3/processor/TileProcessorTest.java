@@ -1,5 +1,6 @@
 package org.phylospec.beast3.processor;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,6 +11,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -18,11 +20,29 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.phylospec.components.ComponentResolver;
 
 public class TileProcessorTest {
 
     @TempDir
     Path temporaryDirectory;
+
+    @Test
+    public void expandsSimpleAndGenericTypeAliases() throws IOException {
+        ComponentResolver resolver =
+                new ComponentResolver(ComponentResolver.loadCoreComponentLibraries());
+
+        assertEquals(
+                Optional.of("phylospec.types.PositiveReal"),
+                TypeBindings.resolveAlias("phylospec.types.Rate", resolver));
+        assertEquals(
+                Optional.of(
+                        "phylospec.types.Vector<"
+                                + "phylospec.types.Vector<phylospec.types.PositiveReal>>"),
+                TypeBindings.resolveAlias(
+                        "phylospec.types.Matrix<phylospec.types.PositiveReal>",
+                        resolver));
+    }
 
     @Test
     public void acceptsMappingOnImplementationClass() throws IOException {
