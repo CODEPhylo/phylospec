@@ -22,4 +22,7 @@ public interface LogisticGrowthMapping {
 
     @InputMapping(argument = "growthRate", input = "bInput")
     RealScalar<? extends NonNegativeReal> growthRate();
+
+    @InputMapping(argument = "ancestralPopulationSize", input = "NAInput")
+    RealScalar<? extends NonNegativeReal> ancestralPopulationSize();
 }
