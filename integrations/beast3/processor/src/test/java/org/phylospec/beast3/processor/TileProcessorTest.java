@@ -160,6 +160,59 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void generatesNullGuardForOptionalInput() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.spec.domain.NonNegativeReal;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.coalescent.logisticPopulationFunction")
+                        public class InvalidMapping extends ConstantPopulation {
+
+                            @InputMapping(argument = "inflectionAge")
+                            public Input<RealScalar<? extends NonNegativeReal>> inflectionAgeInput;
+
+                            @InputMapping(argument = "carryingCapacity")
+                            public Input<RealScalar<? extends PositiveReal>> carryingCapacityInput;
+
+                            @InputMapping(argument = "growthRate")
+                            public Input<RealScalar<? extends NonNegativeReal>> growthRateInput;
+
+                            @InputMapping(argument = "ancestralPopulationSize")
+                            public Input<RealScalar<? extends NonNegativeReal>> ancestralPopulationSizeInput;
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String generatedSource =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/generated/InvalidGeneratedTile.java"));
+
+        assertTrue(
+                generatedSource.contains(
+                        "\"ancestralPopulationSize\",\n"
+                                + "                            false"));
+        assertTrue(
+                generatedSource.contains(
+                        "if (ancestralPopulationSizeValue != null)"));
+        assertTrue(
+                generatedSource.contains(
+                        "object.ancestralPopulationSizeInput"));
+    }
+
+    @Test
     public void rejectsNonPublicImplementationInputField() throws IOException {
         CompilationResult result =
                 compile(
