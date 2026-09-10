@@ -1106,6 +1106,50 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void resolvesNumericAndObjectVectors() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.evolution.tree.coalescent.PopulationFunction;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.type.RealVector;
+                        import java.util.List;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.coalescent.compoundPopulationFunction")
+                        public class InvalidMapping extends ConstantPopulation {
+
+                            @InputMapping(argument = "functions")
+                            public Input<List<PopulationFunction>> functionsInput;
+
+                            @InputMapping(argument = "changeTimes")
+                            public Input<RealVector<? extends PositiveReal>> changeTimesInput;
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String generatedSource =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/generated/InvalidGeneratedTile.java"));
+
+        assertTrue(
+                generatedSource.contains(
+                        "java.util.List<beast.base.evolution.tree.coalescent.PopulationFunction>"));
+        assertTrue(
+                generatedSource.contains(
+                        "beast.base.spec.type.RealVector<? extends beast.base.spec.domain.PositiveReal>"));
+    }
+
+    @Test
     public void acceptsCompatibleSemanticTypeWithAdapter()
             throws IOException {
 
