@@ -209,7 +209,168 @@ public class TileProcessorTest {
                         "if (ancestralPopulationSizeValue != null)"));
         assertTrue(
                 generatedSource.contains(
-                        "object.ancestralPopulationSizeInput"));
+                                "object.ancestralPopulationSizeInput"));
+    }
+
+    @Test
+    public void generatesFallbackForMissingOptionalInput() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.spec.domain.NonNegativeReal;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.spec.type.RealScalar;
+                        import beastconfig.BEASTState;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import org.phylospec.tiling.InputFallback;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.coalescent.logisticPopulationFunction")
+                        public class InvalidMapping extends ConstantPopulation {
+
+                            @InputMapping(argument = "inflectionAge")
+                            public Input<RealScalar<? extends NonNegativeReal>> inflectionAgeInput;
+
+                            @InputMapping(argument = "carryingCapacity")
+                            public Input<RealScalar<? extends PositiveReal>> carryingCapacityInput;
+
+                            @InputMapping(argument = "growthRate")
+                            public Input<RealScalar<? extends NonNegativeReal>> growthRateInput;
+
+                            @InputMapping(
+                                    argument = "ancestralPopulationSize",
+                                    fallback = MissingAncestralSize.class)
+                            public Input<RealScalar<? extends NonNegativeReal>> ancestralPopulationSizeInput;
+
+                            public static final class MissingAncestralSize
+                                    implements InputFallback<
+                                            RealScalar<? extends NonNegativeReal>,
+                                            BEASTState> {
+
+                                @Override
+                                public RealScalar<? extends NonNegativeReal> get(BEASTState state) {
+                                    return null;
+                                }
+                            }
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String generatedSource =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/generated/InvalidGeneratedTile.java"));
+
+        assertTrue(generatedSource.contains("if (ancestralPopulationSizeValue != null)"));
+        assertTrue(generatedSource.contains("} else {"));
+        assertTrue(generatedSource.contains("new mappings.InvalidMapping.MissingAncestralSize()"));
+        assertTrue(generatedSource.contains("object.ancestralPopulationSizeInput"));
+    }
+
+    @Test
+    public void rejectsFallbackWithWrongTargetType() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.spec.domain.NonNegativeInt;
+                        import beast.base.spec.domain.NonNegativeReal;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.spec.type.IntScalar;
+                        import beast.base.spec.type.RealScalar;
+                        import beastconfig.BEASTState;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import org.phylospec.tiling.InputFallback;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.coalescent.logisticPopulationFunction")
+                        public class InvalidMapping extends ConstantPopulation {
+
+                            @InputMapping(argument = "inflectionAge")
+                            public Input<RealScalar<? extends NonNegativeReal>> inflectionAgeInput;
+
+                            @InputMapping(argument = "carryingCapacity")
+                            public Input<RealScalar<? extends PositiveReal>> carryingCapacityInput;
+
+                            @InputMapping(argument = "growthRate")
+                            public Input<RealScalar<? extends NonNegativeReal>> growthRateInput;
+
+                            @InputMapping(
+                                    argument = "ancestralPopulationSize",
+                                    fallback = WrongFallback.class)
+                            public Input<RealScalar<? extends NonNegativeReal>> ancestralPopulationSizeInput;
+
+                            public static final class WrongFallback
+                                    implements InputFallback<
+                                            IntScalar<? extends NonNegativeInt>,
+                                            BEASTState> {
+
+                                @Override
+                                public IntScalar<? extends NonNegativeInt> get(BEASTState state) {
+                                    return null;
+                                }
+                            }
+                        }
+                        """);
+
+        assertCompilationError(
+                result,
+                "but the BEAST input expects");
+    }
+
+    @Test
+    public void rejectsFallbackForRequiredArgument() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.spec.type.RealScalar;
+                        import beastconfig.BEASTState;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import org.phylospec.tiling.InputFallback;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.coalescent.constantPopulationFunction",
+                                implementation = ConstantPopulation.class)
+                        public interface InvalidMapping {
+
+                            @InputMapping(
+                                    argument = "populationSize",
+                                    input = "popSizeParameter",
+                                    fallback = PopulationFallback.class)
+                            RealScalar<? extends PositiveReal> populationSize();
+
+                            final class PopulationFallback
+                                    implements InputFallback<
+                                            RealScalar<? extends PositiveReal>,
+                                            BEASTState> {
+
+                                @Override
+                                public RealScalar<? extends PositiveReal> get(BEASTState state) {
+                                    return null;
+                                }
+                            }
+                        }
+                        """);
+
+        assertCompilationError(
+                result,
+                "fallback can only be used for an optional PhyloSpec argument");
     }
 
     @Test
