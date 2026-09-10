@@ -4,26 +4,30 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import beastconfig.BEASTState;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.phylospec.components.Argument;
 import org.phylospec.components.Argument__1;
-import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.EngineSpecificationSchema;
 import org.phylospec.components.Generator;
 import org.phylospec.components.Generator__1;
 import org.phylospec.tiling.EngineSpecGenerator;
+import org.phylospec.tiling.TileLibrary;
 import tiles.popfunc.PopFuncTileLibrary;
 
 public class PopFuncEngineSpecTest {
 
     @Test
     public void exposesPopFuncCapabilities() throws IOException {
-        ComponentResolver resolver = new ComponentResolver(loadComponentLibraries());
+        List<TileLibrary<BEASTState>> installedLibraries =
+                TileLibrary.discover(BEASTState.class);
+        assertTrue(installedLibraries.stream().anyMatch(library -> library.getId().equals("popfunc")));
+
+        ComponentResolver resolver =
+                new ComponentResolver(TileLibrary.loadComponentLibraries(installedLibraries));
 
         EngineSpecificationSchema specification = EngineSpecGenerator.generateEngineSpecification(
                 new PopFuncTileLibrary(),
@@ -118,21 +122,6 @@ public class PopFuncEngineSpecTest {
         assertEquals(
                 List.of("ancestralPopulationSize.value < populationSize.value"),
                 expansionComponent.getConstraints());
-    }
-
-    private static List<ComponentLibrary> loadComponentLibraries() throws IOException {
-        List<ComponentLibrary> libraries =
-                new ArrayList<>(ComponentResolver.loadCoreComponentLibraries());
-
-        try (InputStream input = PopFuncEngineSpecTest.class.getResourceAsStream(
-                "/popfunc-components.json")) {
-            if (input == null) {
-                throw new IOException("Could not find /popfunc-components.json");
-            }
-            libraries.add(ComponentResolver.loadLibraryFromInputStream(input));
-        }
-
-        return libraries;
     }
 
     private static Generator__1 findGenerator(

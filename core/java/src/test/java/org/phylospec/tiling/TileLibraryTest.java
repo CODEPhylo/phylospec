@@ -1,7 +1,9 @@
 package org.phylospec.tiling;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -29,6 +31,23 @@ public class TileLibraryTest {
         assertEquals(List.of(PackageTile.class, BaseTile.class), classesOf(tiles));
     }
 
+    @Test
+    public void reportsMissingComponentLibraryResource() {
+        TestLibrary library = new TestLibrary("package", List.of()) {
+            @Override
+            public List<String> getComponentLibraryResources() {
+                return List.of("/missing-components.json");
+            }
+        };
+
+        IOException error = assertThrows(IOException.class, () -> TileLibrary.loadComponentLibraries(List.of(library)));
+
+        assertEquals(
+                "Tile library 'package' declares component library resource "
+                        + "'/missing-components.json', but it was not found on the classpath.",
+                error.getMessage());
+    }
+
     private static List<Class<?>> classesOf(List<CandidateTile<Object>> tiles) {
         List<Class<?>> classes = new ArrayList<>();
         for (CandidateTile<Object> tile : tiles) {
@@ -37,7 +56,7 @@ public class TileLibraryTest {
         return classes;
     }
 
-    private static final class TestLibrary extends TileLibrary<Object> {
+    private static class TestLibrary extends TileLibrary<Object> {
         private final String id;
         private final List<CandidateTile<Object>> tiles;
 
