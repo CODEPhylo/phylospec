@@ -35,7 +35,7 @@ public class PopFuncEngineSpecTest {
         assertEquals("popfunc", specification.getName());
         assertEquals("0.1.0-SNAPSHOT", specification.getEngineVersion());
         assertEquals(List.of("beast2"), specification.getDependsOn());
-        assertEquals(2, specification.getGenerators().size());
+        assertEquals(3, specification.getGenerators().size());
 
         Generator__1 logistic = findGenerator(specification, "logisticPopulationFunction");
         assertEquals("logisticPopulationFunction", logistic.getName());
@@ -65,6 +65,15 @@ public class PopFuncEngineSpecTest {
                 constant.getArguments().stream().map(Argument__1::getName).toList());
         assertTrue(constant.getArguments().getFirst().getRequired());
         assertTrue(constant.getArguments().getFirst().getCanBeStochastic());
+
+        Generator__1 exponential =
+                findGenerator(specification, "exponentialPopulationFunction");
+        assertEquals(
+                List.of("populationSize", "growthRate", "ancestralPopulationSize"),
+                exponential.getArguments().stream().map(Argument__1::getName).toList());
+        assertTrue(exponential.getArguments().subList(0, 2).stream()
+                .allMatch(Argument__1::getRequired));
+        assertFalse(exponential.getArguments().get(2).getRequired());
     }
 
     private static Generator__1 findGenerator(
