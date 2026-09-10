@@ -324,6 +324,78 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void rejectsOneArgumentOnDifferentMappingMembers() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.evolution.tree.coalescent.PopulationFunction;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ExponentialGrowth;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.coalescent.exponentialPopulationFunction",
+                                implementation = ExponentialGrowth.class,
+                                output = PopulationFunction.class)
+                        public interface InvalidMapping {
+
+                            @InputMapping(argument = "populationSize", input = "popSizeParameterInput")
+                            RealScalar<? extends PositiveReal> firstPopulationSize();
+
+                            @InputMapping(argument = "populationSize", input = "growthRateParameterInput")
+                            RealScalar<? extends PositiveReal> secondPopulationSize();
+                        }
+                        """);
+
+        assertCompilationError(
+                result,
+                "PhyloSpec argument 'populationSize' is mapped by more than one declaration.");
+    }
+
+    @Test
+    public void rejectsRepeatedBeastInput() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.evolution.tree.coalescent.PopulationFunction;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.domain.Real;
+                        import beast.base.spec.evolution.tree.coalescent.ExponentialGrowth;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.coalescent.exponentialPopulationFunction",
+                                implementation = ExponentialGrowth.class,
+                                output = PopulationFunction.class)
+                        public interface InvalidMapping {
+
+                            @InputMapping(argument = "populationSize", input = "popSizeParameterInput")
+                            RealScalar<? extends PositiveReal> populationSize();
+
+                            @InputMapping(argument = "growthRate", input = "growthRateParameterInput")
+                            RealScalar<? extends Real> growthRate();
+
+                            @InputMapping(
+                                    argument = "ancestralPopulationSize",
+                                    input = "popSizeParameterInput")
+                            RealScalar<? extends PositiveReal> ancestralPopulationSize();
+                        }
+                        """);
+
+        assertCompilationError(
+                result,
+                "BEAST input 'popSizeParameterInput' is mapped more than once.");
+    }
+
+    @Test
     public void rejectsNonPublicImplementationInputField() throws IOException {
         CompilationResult result =
                 compile(
