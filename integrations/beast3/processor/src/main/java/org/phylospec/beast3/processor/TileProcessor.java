@@ -32,6 +32,7 @@ import org.phylospec.annotations.GeneratorMapping;
 import org.phylospec.annotations.InputMapping;
 import org.phylospec.annotations.InputMappings;
 import org.phylospec.components.Argument;
+import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
 import org.phylospec.tiling.InputFallback;
@@ -41,6 +42,9 @@ public final class TileProcessor extends AbstractProcessor {
 
     static final String GENERATED_PACKAGE_OPTION =
             "phylospec.generatedPackage";
+
+    static final String COMPONENT_LIBRARIES_OPTION =
+            "phylospec.componentLibraries";
 
     static final String DEFAULT_GENERATED_PACKAGE =
             "tiles.generated";
@@ -94,11 +98,15 @@ public final class TileProcessor extends AbstractProcessor {
                         processingEnvironment.getFiler(),
                         generatedPackage);
 
+        Optional<List<ComponentLibrary>> componentLibraries =
+                loadComponentLibraries(processingEnvironment);
+
+        if (componentLibraries.isEmpty()) {
+            return;
+        }
+
         try {
-            this.componentResolver =
-                    new ComponentResolver(
-                            ComponentResolver
-                                    .loadCoreComponentLibraries());
+            this.componentResolver = new ComponentResolver(componentLibraries.orElseThrow());
 
             this.typeBindings =
                     new TypeBindings(
@@ -109,14 +117,71 @@ public final class TileProcessor extends AbstractProcessor {
                     new AdapterRegistry(
                             processingEnvironment);
 
-        } catch (IOException exception) {
+        } catch (IllegalArgumentException exception) {
             processingEnvironment
                     .getMessager()
                     .printMessage(
                             Diagnostic.Kind.ERROR,
-                            "Could not load the PhyloSpec component library: "
+                            "Could not register the PhyloSpec component libraries: "
                                     + exception.getMessage());
         }
+    }
+
+    private Optional<List<ComponentLibrary>> loadComponentLibraries(
+            ProcessingEnvironment processingEnvironment) {
+        List<ComponentLibrary> libraries;
+
+        try {
+            libraries = new ArrayList<>(ComponentResolver.loadCoreComponentLibraries());
+        } catch (IOException exception) {
+            printLibraryError(processingEnvironment, "the core component library", exception);
+            return Optional.empty();
+        }
+
+        String configuredLibraries =
+                processingEnvironment.getOptions().get(COMPONENT_LIBRARIES_OPTION);
+
+        if (configuredLibraries == null || configuredLibraries.isBlank()) {
+            return Optional.of(libraries);
+        }
+
+        for (String configuredPath : configuredLibraries.split(",")) {
+            String path = configuredPath.trim();
+
+            if (path.isEmpty()) {
+                processingEnvironment
+                        .getMessager()
+                        .printMessage(
+                                Diagnostic.Kind.ERROR,
+                                "Annotation processor option '-A"
+                                        + COMPONENT_LIBRARIES_OPTION
+                                        + "' contains an empty component library path.");
+                return Optional.empty();
+            }
+
+            try {
+                libraries.add(ComponentResolver.loadLibraryFromFile(path));
+            } catch (IOException | IllegalArgumentException exception) {
+                printLibraryError(processingEnvironment, "'" + path + "'", exception);
+                return Optional.empty();
+            }
+        }
+
+        return Optional.of(libraries);
+    }
+
+    private void printLibraryError(
+            ProcessingEnvironment processingEnvironment,
+            String library,
+            Exception exception) {
+        processingEnvironment
+                .getMessager()
+                .printMessage(
+                        Diagnostic.Kind.ERROR,
+                        "Could not load PhyloSpec component library "
+                                + library
+                                + ": "
+                                + exception.getMessage());
     }
 
     @Override
@@ -128,7 +193,9 @@ public final class TileProcessor extends AbstractProcessor {
 
     @Override
     public Set<String> getSupportedOptions() {
-        return Set.of(GENERATED_PACKAGE_OPTION);
+        return Set.of(
+                GENERATED_PACKAGE_OPTION,
+                COMPONENT_LIBRARIES_OPTION);
     }
 
     @Override
