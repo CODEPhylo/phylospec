@@ -68,6 +68,11 @@ public abstract class AstTransformer implements AstVisitor<Stmt, Expr, AstType> 
 
     @Override
     public Stmt visitImport(Stmt.Import stmt) {
+        boolean isOldStatement = oldStatements.contains(stmt);
+        if (isOldStatement) {
+            transformedStatements.add(stmt);
+        }
+
         return stmt;
     }
 
