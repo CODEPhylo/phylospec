@@ -2,6 +2,7 @@ package tiles.popfunc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -48,11 +49,14 @@ public class LogisticGrowthGeneratedTileTest {
                 new RealScalarParam<>(1_000.0, PositiveReal.INSTANCE);
         RealScalarParam<NonNegativeReal> growthRate =
                 new RealScalarParam<>(0.25, NonNegativeReal.INSTANCE);
+        RealScalarParam<NonNegativeReal> ancestralPopulationSize =
+                new RealScalarParam<>(100.0, NonNegativeReal.INSTANCE);
 
         LogisticGrowthGeneratedTile tile = new LogisticGrowthGeneratedTile();
         tile.inflectionAgeInput.setTile(valueTile(inflectionAge));
         tile.carryingCapacityInput.setTile(valueTile(carryingCapacity));
         tile.growthRateInput.setTile(valueTile(growthRate));
+        tile.ancestralPopulationSizeInput.setTile(valueTile(ancestralPopulationSize));
 
         PopulationFunction result =
                 tile.applyTile(new BEASTState("popfunc-logistic"), new IdentityHashMap<>());
@@ -61,9 +65,34 @@ public class LogisticGrowthGeneratedTileTest {
         assertSame(inflectionAge, logistic.t50Input.get());
         assertSame(carryingCapacity, logistic.nCarryingCapacityInput.get());
         assertSame(growthRate, logistic.bInput.get());
+        assertSame(ancestralPopulationSize, logistic.NAInput.get());
         assertEquals(5.0, logistic.getT50());
         assertEquals(1_000.0, logistic.getNCarryingCapacity());
         assertEquals(0.25, logistic.getGrowthRateB());
+        assertEquals(100.0, logistic.getRawNA());
+        assertEquals(100.0, logistic.getEffectiveNA());
+    }
+
+    @Test
+    public void leavesOptionalAncestralSizeUnset() {
+        RealScalarParam<NonNegativeReal> inflectionAge =
+                new RealScalarParam<>(5.0, NonNegativeReal.INSTANCE);
+        RealScalarParam<PositiveReal> carryingCapacity =
+                new RealScalarParam<>(1_000.0, PositiveReal.INSTANCE);
+        RealScalarParam<NonNegativeReal> growthRate =
+                new RealScalarParam<>(0.25, NonNegativeReal.INSTANCE);
+
+        LogisticGrowthGeneratedTile tile = new LogisticGrowthGeneratedTile();
+        tile.inflectionAgeInput.setTile(valueTile(inflectionAge));
+        tile.carryingCapacityInput.setTile(valueTile(carryingCapacity));
+        tile.growthRateInput.setTile(valueTile(growthRate));
+
+        PopulationFunction result =
+                tile.applyTile(new BEASTState("popfunc-logistic-no-ancestral"), new IdentityHashMap<>());
+
+        LogisticGrowth logistic = assertInstanceOf(LogisticGrowth.class, result);
+        assertNull(logistic.NAInput.get());
+        assertEquals(0.0, logistic.getRawNA());
     }
 
     private static <T> Tile<T, BEASTState> valueTile(T value) {

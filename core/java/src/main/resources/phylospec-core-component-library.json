@@ -2114,6 +2114,12 @@
                     "description": "The logistic growth rate",
                     "type": "NonNegativeReal",
                     "required": true
+                },
+                {
+                    "name": "ancestralPopulationSize",
+                    "description": "Optional ancestral population size",
+                    "type": "NonNegativeReal",
+                    "required": false
                 }
             ]
         },

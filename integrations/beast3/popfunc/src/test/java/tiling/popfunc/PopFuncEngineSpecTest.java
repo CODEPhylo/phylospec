@@ -1,6 +1,7 @@
 package tiling.popfunc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -40,9 +41,10 @@ public class PopFuncEngineSpecTest {
         assertEquals("logisticPopulationFunction", logistic.getName());
         assertEquals("phylospec.functions.coalescent", logistic.getNamespace());
         assertEquals(
-                List.of("inflectionAge", "carryingCapacity", "growthRate"),
+                List.of("inflectionAge", "carryingCapacity", "growthRate", "ancestralPopulationSize"),
                 logistic.getArguments().stream().map(Argument__1::getName).toList());
-        assertTrue(logistic.getArguments().stream().allMatch(Argument__1::getRequired));
+        assertTrue(logistic.getArguments().subList(0, 3).stream().allMatch(Argument__1::getRequired));
+        assertFalse(logistic.getArguments().get(3).getRequired());
         assertTrue(logistic.getArguments().stream().allMatch(Argument__1::getCanBeStochastic));
 
         List<Generator> components = resolver.resolveGenerator(
@@ -52,6 +54,7 @@ public class PopFuncEngineSpecTest {
                 List.of(
                         "phylospec.types.Age",
                         "phylospec.types.PositiveReal",
+                        "phylospec.types.NonNegativeReal",
                         "phylospec.types.NonNegativeReal"),
                 components.getFirst().getArguments().stream().map(Argument::getType).toList());
 
