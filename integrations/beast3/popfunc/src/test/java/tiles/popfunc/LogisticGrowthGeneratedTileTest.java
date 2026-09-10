@@ -24,11 +24,12 @@ import popfunc.beast.evolution.populationmodel.LogisticGrowth;
 public class LogisticGrowthGeneratedTileTest {
 
     @Test
-    public void registersOnlyThePopFuncTile() {
+    public void registersTheGeneratedPopFuncTiles() {
         List<CandidateTile<BEASTState>> tiles = new PopFuncTileLibrary().getTiles();
 
-        assertEquals(1, tiles.size());
-        assertInstanceOf(LogisticGrowthGeneratedTile.class, tiles.getFirst());
+        assertEquals(2, tiles.size());
+        assertEquals(1, tiles.stream().filter(LogisticGrowthGeneratedTile.class::isInstance).count());
+        assertEquals(1, tiles.stream().filter(ConstantGrowthGeneratedTile.class::isInstance).count());
     }
 
     @Test
