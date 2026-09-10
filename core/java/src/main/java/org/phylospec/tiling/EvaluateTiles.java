@@ -6,6 +6,7 @@ import org.phylospec.ast.*;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.CandidateTile;
+import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeUtils;
@@ -228,6 +229,8 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
             this.evaluatedTiles.get(node).addAll(evaluatedTiles);
         }
 
+        this.throwIfAmbiguousBestGeneratorMapping(node, this.evaluatedTiles.get(node));
+
         if (this.evaluatedTiles.get(node).isEmpty()) {
             // none of the tiles fits
             // we store the failures for error recovery later
@@ -235,6 +238,41 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
         }
 
         return null;
+    }
+
+    /**
+     * Rejects equivalent generator mappings supplied by different Tile classes when neither has a
+     * lower weight. Without this check the winner would depend on HashSet or ServiceLoader order.
+     */
+    private void throwIfAmbiguousBestGeneratorMapping(AstNode node, Set<Tile<?, S>> tiles) {
+        if (tiles.size() < 2) return;
+
+        int bestWeight = tiles.stream().mapToInt(Tile::getWeight).min().orElseThrow();
+        Map<GeneratorTileMappingDescriptor.Signature, SortedSet<String>> implementations = new LinkedHashMap<>();
+
+        for (Tile<?, S> tile : tiles) {
+            if (tile.getWeight() != bestWeight || !(tile instanceof GeneratorTile<?, ?> generatorTile)) {
+                continue;
+            }
+
+            implementations
+                    .computeIfAbsent(generatorTile.getMappingDescriptor().signature(), ignored -> new TreeSet<>())
+                    .add(tile.getClass().getName());
+        }
+
+        for (Map.Entry<GeneratorTileMappingDescriptor.Signature, SortedSet<String>> entry :
+                implementations.entrySet()) {
+            if (entry.getValue().size() < 2) continue;
+
+            throw new TileApplicationError(
+                    node,
+                    "Ambiguous engine mapping.",
+                    "Multiple equally preferred Tiles implement '"
+                            + entry.getKey().qualifiedComponentName()
+                            + "': "
+                            + entry.getValue()
+                            + ". Select the intended Tile libraries explicitly or give one mapping a distinct priority.");
+        }
     }
 
     /* error handling */

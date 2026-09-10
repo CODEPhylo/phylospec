@@ -29,6 +29,11 @@ import tiles.trees.*;
 public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
 
     @Override
+    public String getId() {
+        return "beast2";
+    }
+
+    @Override
     public Class<BEASTState> getStateType() {
         return BEASTState.class;
     }
