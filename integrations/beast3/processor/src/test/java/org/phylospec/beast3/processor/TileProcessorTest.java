@@ -119,6 +119,105 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void loadsPackageComponentLibrary() throws IOException {
+        Path componentLibrary = temporaryDirectory.resolve("package-components.json");
+        Files.writeString(
+                componentLibrary,
+                """
+                {
+                  "componentLibrary": {
+                    "name": "Test package",
+                    "version": "1.0.0",
+                    "description": "Components used by the processor test",
+                    "types": [],
+                    "generators": [{
+                      "name": "customPopulation",
+                      "namespace": "testpackage.functions",
+                      "description": "A package-defined population function",
+                      "generatedType": "PopulationFunction",
+                      "arguments": [{
+                        "name": "populationSize",
+                        "description": "Population size",
+                        "type": "PositiveReal",
+                        "required": true
+                      }]
+                    }]
+                  }
+                }
+                """);
+
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.evolution.tree.coalescent.PopulationFunction;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+
+                        @GeneratorMapping(
+                                component = "testpackage.functions.customPopulation",
+                                implementation = ConstantPopulation.class,
+                                output = PopulationFunction.class)
+                        public interface InvalidMapping {
+
+                            @InputMapping(
+                                    argument = "populationSize",
+                                    input = "popSizeParameter")
+                            RealScalar<? extends PositiveReal> populationSize();
+                        }
+                        """,
+                        List.of(
+                                "-A"
+                                        + TileProcessor.COMPONENT_LIBRARIES_OPTION
+                                        + "="
+                                        + componentLibrary));
+
+        assertCompilationSuccess(result);
+
+        String generatedSource =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/InvalidGeneratedTile.java"));
+
+        assertTrue(generatedSource.contains("return \"customPopulation\";"));
+        assertTrue(generatedSource.contains("return java.util.Optional.of(\"testpackage.functions\");"));
+    }
+
+    @Test
+    public void rejectsMissingPackageComponentLibrary() throws IOException {
+        Path missingLibrary = temporaryDirectory.resolve("missing-components.json");
+
+        CompilationResult result =
+                compile(
+                        """
+                        package models;
+
+                        import beast.base.spec.evolution.substitutionmodel.JukesCantor;
+                        import org.phylospec.annotations.GeneratorMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.jc69")
+                        public class InvalidMapping extends JukesCantor {}
+                        """,
+                        List.of(
+                                "-A"
+                                        + TileProcessor.COMPONENT_LIBRARIES_OPTION
+                                        + "="
+                                        + missingLibrary));
+
+        assertCompilationError(
+                result,
+                "Could not load PhyloSpec component library '"
+                        + missingLibrary
+                        + "'");
+    }
+
+    @Test
     public void readsInputMappingFromImplementationField() throws IOException {
         CompilationResult result =
                 compile(
