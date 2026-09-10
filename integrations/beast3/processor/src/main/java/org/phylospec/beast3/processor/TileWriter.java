@@ -145,25 +145,34 @@ final class TileWriter {
                 .append("();\n\n");
 
         for (InputSpec input : mapping.inputs()) {
-            String indentation = "        ";
-
-            if (!input.required()) {
+            if (input.required()) {
+                for (InputBindingSpec binding : input.bindings()) {
+                    appendSetInput(source, input, binding, "        ");
+                }
+            } else {
                 source.append("        if (")
                         .append(valueName(input))
                         .append(" != null) {\n\n");
-                indentation = "            ";
-            }
 
-            for (InputBindingSpec binding : input.bindings()) {
-                appendSetInput(
-                        source,
-                        input,
-                        binding,
-                        indentation);
-            }
+                for (InputBindingSpec binding : input.bindings()) {
+                    appendSetInput(source, input, binding, "            ");
+                }
 
-            if (!input.required()) {
-                source.append("        }\n\n");
+                source.append("        }");
+
+                if (input.bindings().stream().anyMatch(InputBindingSpec::usesFallback)) {
+                    source.append(" else {\n\n");
+
+                    for (InputBindingSpec binding : input.bindings()) {
+                        if (binding.usesFallback()) {
+                            appendFallbackInput(source, input, binding, "            ");
+                        }
+                    }
+
+                    source.append("        }");
+                }
+
+                source.append("\n\n");
             }
         }
 
@@ -217,6 +226,39 @@ final class TileWriter {
                 .append(");\n\n");
     }
 
+    private void appendFallbackInput(
+            StringBuilder source,
+            InputSpec input,
+            InputBindingSpec binding,
+            String indentation) {
+
+        String fallbackValueName = fallbackValueName(input, binding);
+
+        source.append(indentation)
+                .append(binding.inputType())
+                .append(" ")
+                .append(fallbackValueName)
+                .append(" =\n")
+                .append(indentation)
+                .append("        new ")
+                .append(binding.fallbackType())
+                .append("()\n")
+                .append(indentation)
+                .append("                .get(beastState);\n\n")
+                .append(indentation)
+                .append("beastState.setInput(\n")
+                .append(indentation)
+                .append("        object,\n")
+                .append(indentation)
+                .append("        object.")
+                .append(binding.input())
+                .append(",\n")
+                .append(indentation)
+                .append("        ")
+                .append(fallbackValueName)
+                .append(");\n\n");
+    }
+
     private String fieldName(
             InputSpec input) {
 
@@ -237,6 +279,16 @@ final class TileWriter {
                 + Character.toUpperCase(binding.input().charAt(0))
                 + binding.input().substring(1)
                 + "AdaptedValue";
+    }
+
+    private String fallbackValueName(
+            InputSpec input,
+            InputBindingSpec binding) {
+
+        return input.argument()
+                + Character.toUpperCase(binding.input().charAt(0))
+                + binding.input().substring(1)
+                + "FallbackValue";
     }
 
     private String javaString(

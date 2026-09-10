@@ -6,4 +6,6 @@ record InputBindingSpec(
         String input,
         TypeMirror inputType,
         TypeMirror adapterType,
-        boolean usesAdapter) {}
+        boolean usesAdapter,
+        TypeMirror fallbackType,
+        boolean usesFallback) {}

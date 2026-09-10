@@ -39,4 +39,11 @@ public @interface InputMapping {
      * conversion is unambiguous.
      */
     Class<?> adapter() default Void.class;
+
+    /**
+     * Provider used to populate this engine input when the PhyloSpec argument is optional and
+     * absent. The provider must implement {@code InputFallback<T, BEASTState>}, where {@code T}
+     * is compatible with the engine input type.
+     */
+    Class<?> fallback() default Void.class;
 }
