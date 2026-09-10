@@ -58,8 +58,9 @@ final class TypeBindings {
             return Optional.empty();
         }
 
-        String elementType =
-                resolveAlias(parsedType.getTypeParameters().getFirst().getTypeString());
+        String semanticElementType =
+                parsedType.getTypeParameters().getFirst().getTypeString();
+        String elementType = resolveAlias(semanticElementType);
 
         return switch (elementType) {
             case TYPES + "Real" -> realVector("beast.base.spec.domain.Real");
@@ -69,8 +70,19 @@ final class TypeBindings {
                     realVector("beast.base.spec.domain.PositiveReal");
             case TYPES + "Probability" ->
                     realVector("beast.base.spec.domain.UnitInterval");
-            default -> Optional.empty();
+            default -> objectVector(semanticElementType);
         };
+    }
+
+    private Optional<TypeMirror> objectVector(String semanticElementType) {
+        TypeElement list = elements.getTypeElement("java.util.List");
+        Optional<TypeMirror> elementType = resolve(semanticElementType);
+
+        if (list == null || elementType.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(types.getDeclaredType(list, elementType.orElseThrow()));
     }
 
     private String resolveAlias(String semanticType) {
