@@ -788,6 +788,43 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void acceptsExplicitAdapterFromDependency() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.evolution.substitutionmodel.WAG;
+                        import beast.base.spec.type.Simplex;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import shared.ClasspathFrequenciesAdapter;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.wag",
+                                implementation = WAG.class)
+                        public interface InvalidMapping {
+
+                            @InputMapping(
+                                    argument = "baseFrequencies",
+                                    input = "frequenciesInput",
+                                    adapter = ClasspathFrequenciesAdapter.class)
+                            Simplex baseFrequencies();
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String generatedSource =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/InvalidGeneratedTile.java"));
+
+        assertTrue(generatedSource.contains("new shared.ClasspathFrequenciesAdapter()"));
+    }
+
+    @Test
     public void rejectsDuplicateRegisteredAdapter() throws IOException {
         CompilationResult result =
                 compile(

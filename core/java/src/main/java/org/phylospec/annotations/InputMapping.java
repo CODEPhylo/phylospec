@@ -31,6 +31,10 @@ public @interface InputMapping {
     /**
      * Adapter used when the argument value cannot be assigned
      * directly to the engine input.
+     *
+     * <p>Specify this explicitly for an adapter supplied by another module. An adapter annotated
+     * with {@link AdapterMapping} in the current compilation can be selected automatically when the
+     * conversion is unambiguous.
      */
     Class<?> adapter() default Void.class;
 }
