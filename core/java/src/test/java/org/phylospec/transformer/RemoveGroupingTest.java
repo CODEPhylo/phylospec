@@ -54,6 +54,12 @@ public class RemoveGroupingTest {
                                         new Expr.Literal(100), TokenType.PLUS, new Expr.Literal(50))))));
     }
 
+    @Test
+    public void preservesImports() {
+        testStatements(
+                "use popfunc.functions.coalescent", new Stmt.Import(List.of("popfunc", "functions", "coalescent")));
+    }
+
     void testStatements(String source, Stmt... expectedStatements) {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();

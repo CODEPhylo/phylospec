@@ -87,6 +87,10 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
         for (int i = statements.size() - 1; i >= 0; i--) {
             Stmt stmt = statements.get(i);
 
+            // Imports only affect component-name resolution. They do not produce an engine object
+            // and therefore must not require a Tile.
+            if (stmt instanceof Stmt.Import) continue;
+
             if (this.consumedStatements.contains(stmt)) {
                 // this statement has already been consumed by a subsequent statement
                 // this happens if a subsequent statement refers to the variable declared here
