@@ -71,8 +71,7 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
             StochasticityResolver stochasticityResolver)
             throws FailedTilingAttempt {
         if (!(node instanceof Expr.Call call)) throw new FailedTilingAttempt.Irrelevant();
-        if (!Objects.equals(call.functionName, this.getPhyloSpecGeneratorName()))
-            throw new FailedTilingAttempt.Irrelevant();
+        if (!matchesComponent(call)) throw new FailedTilingAttempt.Irrelevant();
 
         // check the stochasticity
 
@@ -150,6 +149,22 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
         // wired up
 
         return this.getWiredUpTiles(usedInputs, compatibleInputTiles, node);
+    }
+
+    private boolean matchesComponent(Expr.Call call) {
+        String componentName = this.getPhyloSpecGeneratorName();
+        Optional<String> tileNamespace = this.getNamespace();
+        Optional<String> qualifiedName = tileNamespace.map(namespace -> namespace + "." + componentName);
+
+        if (!Objects.equals(call.functionName, componentName)
+                && qualifiedName.stream().noneMatch(call.functionName::equals)) {
+            return false;
+        }
+
+        Optional<String> resolvedNamespace = call.getResolvedNamespace();
+        return resolvedNamespace.isEmpty()
+                || tileNamespace.isEmpty()
+                || Objects.equals(resolvedNamespace, tileNamespace);
     }
 
     /**

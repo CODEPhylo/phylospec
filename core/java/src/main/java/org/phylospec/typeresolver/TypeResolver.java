@@ -813,6 +813,8 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
 
     @Override
     public ResolvedTypeSet visitCall(Expr.Call expr) {
+        expr.clearResolvedNamespace();
+
         // resolve argument type sets
 
         Map<Expr.Argument, ResolvedTypeSet> resolvedPositionalArguments = new IdentityHashMap<>();
@@ -833,6 +835,7 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
         // check if generators are compatible with arguments
 
         ResolvedTypeSet possibleReturnTypes = new ResolvedTypeSet();
+        Set<String> possibleNamespaces = new HashSet<>();
         TypeError lastError = null;
         Set<String> errorMessages = new HashSet<>();
         for (Generator generator : generators) {
@@ -906,6 +909,10 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
                 // we remember the generated type set
 
                 possibleReturnTypes.addAll(resolvedGeneratorApplication.generatedTypeSet());
+                if (generator.getNamespace() != null
+                        && !generator.getNamespace().isBlank()) {
+                    possibleNamespaces.add(generator.getNamespace());
+                }
             } catch (TypeError e) {
                 e.attachAstNode(expr);
                 lastError = e;
@@ -934,6 +941,10 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
             }
 
             throw new TypeError(expr, description, hint.toString());
+        }
+
+        if (possibleNamespaces.size() == 1) {
+            expr.setResolvedNamespace(possibleNamespaces.iterator().next());
         }
 
         return remember(expr, possibleReturnTypes);
