@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.IdentityHashMap;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.RemoveGroupings;
@@ -23,7 +24,7 @@ import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import popfunc.beast.evolution.populationmodel.ConstantGrowth;
-import popfunc.beast.evolution.populationmodel.ExponentialGrowth;
+import popfunc.beast.evolution.populationmodel.LogisticGrowth;
 import popfunc.beast.evolution.populationmodel.StochasticVariableSelection;
 
 public class StochasticPopulationSelectionEndToEndTest {
@@ -36,8 +37,9 @@ public class StochasticPopulationSelectionEndToEndTest {
                 PopulationFunction first = constantPopulationFunction(
                     populationSize=1000.0
                 )
-                PopulationFunction second = exponentialPopulationFunction(
-                    populationSize=500.0,
+                PopulationFunction second = logisticPopulationFunction(
+                    inflectionAge=5.0,
+                    carryingCapacity=500.0,
                     growthRate=0.25
                 )
                 PopulationFunction selected = stochasticPopulationSelection(
@@ -53,6 +55,14 @@ public class StochasticPopulationSelectionEndToEndTest {
         ComponentResolver componentResolver =
                 new ComponentResolver(TileLibrary.loadComponentLibraries(libraries));
         new TypeResolver(componentResolver).visitStatements(statements);
+
+        Stmt.Assignment selectionStatement =
+                assertInstanceOf(Stmt.Assignment.class, statements.getLast());
+        Expr.Call selectionCall =
+                assertInstanceOf(Expr.Call.class, selectionStatement.expression);
+        assertEquals(
+                "popfunc.functions.coalescent",
+                selectionCall.getResolvedNamespace().orElseThrow());
 
         VariableResolver variableResolver = new VariableResolver(statements);
         StochasticityResolver stochasticityResolver = new StochasticityResolver();
@@ -75,7 +85,7 @@ public class StochasticPopulationSelectionEndToEndTest {
         List<PopulationFunction> models = selection.modelsInput.get();
         assertEquals(2, models.size());
         assertInstanceOf(ConstantGrowth.class, models.get(0));
-        assertInstanceOf(ExponentialGrowth.class, models.get(1));
+        assertInstanceOf(LogisticGrowth.class, models.get(1));
     }
 
     private static List<Stmt> parse(String source) {

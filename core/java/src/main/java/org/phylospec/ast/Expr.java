@@ -2,6 +2,7 @@ package org.phylospec.ast;
 
 import static java.util.stream.Collectors.toSet;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import java.util.*;
 import org.phylospec.lexer.TokenType;
@@ -295,6 +296,27 @@ public abstract class Expr extends AstNode {
 
         @JsonPropertyDescription("The passed arguments.")
         public final Argument[] arguments;
+
+        private String resolvedNamespace;
+
+        /**
+         * Returns the component namespace selected during type resolution. This derived value is
+         * used by engine mappings and is not part of the serialized PhyloSpec AST.
+         */
+        @JsonIgnore
+        public Optional<String> getResolvedNamespace() {
+            return Optional.ofNullable(resolvedNamespace);
+        }
+
+        /** Records the unique component namespace selected by the type resolver. */
+        public void setResolvedNamespace(String resolvedNamespace) {
+            this.resolvedNamespace = Objects.requireNonNull(resolvedNamespace, "resolvedNamespace");
+        }
+
+        /** Clears namespace metadata before resolving this call again. */
+        public void clearResolvedNamespace() {
+            this.resolvedNamespace = null;
+        }
 
         /**
          * Maps the passed arguments onto the parameters declared by the callee.
