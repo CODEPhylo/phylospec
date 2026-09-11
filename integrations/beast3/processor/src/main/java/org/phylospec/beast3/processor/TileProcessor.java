@@ -31,6 +31,7 @@ import org.phylospec.annotations.AdapterMapping;
 import org.phylospec.annotations.GeneratorMapping;
 import org.phylospec.annotations.InputMapping;
 import org.phylospec.annotations.InputMappings;
+import org.phylospec.annotations.TypeBinding;
 import org.phylospec.components.Argument;
 import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
@@ -188,7 +189,8 @@ public final class TileProcessor extends AbstractProcessor {
     public Set<String> getSupportedAnnotationTypes() {
         return Set.of(
                 GeneratorMapping.class.getCanonicalName(),
-                AdapterMapping.class.getCanonicalName());
+                AdapterMapping.class.getCanonicalName(),
+                TypeBinding.class.getCanonicalName());
     }
 
     @Override
@@ -219,6 +221,7 @@ public final class TileProcessor extends AbstractProcessor {
 
         boolean generatedTileThisRound = false;
 
+        typeBindings.register(roundEnvironment);
         adapterRegistry.register(roundEnvironment);
 
         for (Element element :
