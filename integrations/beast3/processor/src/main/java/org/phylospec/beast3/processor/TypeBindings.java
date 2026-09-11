@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -23,14 +24,25 @@ final class TypeBindings {
     private final ComponentResolver componentResolver;
     private final Elements elements;
     private final Types types;
+    private final TypeBindingRegistry packageBindings;
 
     TypeBindings(ProcessingEnvironment processingEnvironment, ComponentResolver componentResolver) {
         this.componentResolver = componentResolver;
         this.elements = processingEnvironment.getElementUtils();
         this.types = processingEnvironment.getTypeUtils();
+        this.packageBindings =
+                new TypeBindingRegistry(processingEnvironment, componentResolver);
     }
 
     Optional<TypeMirror> resolve(String semanticType) {
+        ParsedType requestedType = new ParsedType(semanticType);
+        Optional<TypeMirror> requestedBinding =
+                packageBindings.resolve(requestedType.stripGenerics());
+
+        if (requestedBinding.isPresent() && requestedType.getTypeParameters().isEmpty()) {
+            return requestedBinding;
+        }
+
         Optional<String> resolvedType = resolveAlias(semanticType);
 
         if (resolvedType.isEmpty()) {
@@ -39,6 +51,11 @@ final class TypeBindings {
 
         ParsedType parsedType = new ParsedType(resolvedType.orElseThrow());
         String canonicalType = parsedType.stripGenerics();
+        Optional<TypeMirror> packageBinding = packageBindings.resolve(canonicalType);
+
+        if (packageBinding.isPresent() && parsedType.getTypeParameters().isEmpty()) {
+            return packageBinding;
+        }
 
         return switch (canonicalType) {
             case TYPES + "Boolean" -> declaredType("beast.base.spec.type.BoolScalar");
@@ -59,6 +76,39 @@ final class TypeBindings {
             case TYPES + "PopulationFunction" ->
                     declaredType("beast.base.evolution.tree.coalescent.PopulationFunction");
             default -> Optional.empty();
+        };
+    }
+
+    void register(RoundEnvironment roundEnvironment) {
+        packageBindings.register(roundEnvironment, this::resolve, this::isBuiltIn);
+    }
+
+    private boolean isBuiltIn(String semanticType) {
+        Optional<String> resolvedType = resolveAlias(semanticType);
+
+        if (resolvedType.isEmpty()) {
+            return false;
+        }
+
+        String canonicalType = new ParsedType(resolvedType.orElseThrow()).stripGenerics();
+
+        return switch (canonicalType) {
+            case TYPES + "Boolean",
+                    TYPES + "String",
+                    TYPES + "Real",
+                    TYPES + "NonNegativeReal",
+                    TYPES + "PositiveReal",
+                    TYPES + "Probability",
+                    TYPES + "Integer",
+                    TYPES + "NonNegativeInteger",
+                    TYPES + "PositiveInteger",
+                    TYPES + "Simplex",
+                    TYPES + "Vector",
+                    TYPES + "Tree",
+                    TYPES + "Alignment",
+                    TYPES + "QMatrix",
+                    TYPES + "PopulationFunction" -> true;
+            default -> false;
         };
     }
 
