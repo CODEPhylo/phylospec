@@ -6,9 +6,11 @@ import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.IntScalar;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
+import org.phylospec.annotations.AdapterMapping;
 import org.phylospec.tiling.TypeAdapter;
 
 /** Enables a PopFunc ancestral-size input when that optional value is present. */
+@AdapterMapping
 public final class AncestralIndicatorAdapter
         implements TypeAdapter<
                 RealScalar<? extends PositiveReal>,
