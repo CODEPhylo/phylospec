@@ -189,6 +189,224 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void resolvesPackageSemanticTypeBinding() throws IOException {
+        Path componentLibrary = writeTypeBindingComponentLibrary();
+
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.evolution.tree.coalescent.PopulationFunction;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import org.phylospec.annotations.TypeBinding;
+
+                        @TypeBinding(
+                                semantic = "testpackage.types.CustomPopulation",
+                                implementation = ConstantPopulation.class)
+                        interface CustomPopulationBinding {}
+
+                        @GeneratorMapping(
+                                component = "testpackage.functions.wrapPopulation",
+                                implementation = InvalidMapping.Wrapper.class,
+                                output = PopulationFunction.class)
+                        public interface InvalidMapping {
+
+                            @InputMapping(argument = "model", input = "modelInput")
+                            ConstantPopulation model();
+
+                            final class Wrapper extends ConstantPopulation {
+                                public final Input<ConstantPopulation> modelInput =
+                                        new Input<>("model", "Wrapped model");
+                            }
+                        }
+                        """,
+                        componentLibraryOption(componentLibrary));
+
+        assertCompilationSuccess(result);
+
+        String generatedSource =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/InvalidGeneratedTile.java"));
+
+        assertTrue(
+                generatedSource.contains(
+                        "GeneratorTileInput<\n"
+                                + "            beast.base.spec.evolution.tree.coalescent.ConstantPopulation,\n"
+                                + "            beastconfig.BEASTState>"));
+    }
+
+    @Test
+    public void infersPackageSemanticTypeBindingFromClass() throws IOException {
+        Path componentLibrary = writeTypeBindingComponentLibrary();
+
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.evolution.tree.coalescent.PopulationFunction;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import org.phylospec.annotations.TypeBinding;
+
+                        @GeneratorMapping(
+                                component = "testpackage.functions.wrapPopulation",
+                                implementation = InvalidMapping.Wrapper.class,
+                                output = PopulationFunction.class)
+                        public interface InvalidMapping {
+
+                            @InputMapping(argument = "model", input = "modelInput")
+                            CustomPopulation model();
+
+                            @TypeBinding(
+                                    semantic = "testpackage.types.CustomPopulation")
+                            final class CustomPopulation extends ConstantPopulation {}
+
+                            final class Wrapper extends ConstantPopulation {
+                                public final Input<CustomPopulation> modelInput =
+                                        new Input<>("model", "Wrapped model");
+                            }
+                        }
+                        """,
+                        componentLibraryOption(componentLibrary));
+
+        assertCompilationSuccess(result);
+    }
+
+    @Test
+    public void rejectsUnknownPackageSemanticTypeBinding() throws IOException {
+        Path componentLibrary = writeTypeBindingComponentLibrary();
+
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import org.phylospec.annotations.TypeBinding;
+
+                        @TypeBinding(
+                                semantic = "testpackage.types.MissingPopulation",
+                                implementation = ConstantPopulation.class)
+                        public interface InvalidMapping {}
+                        """,
+                        componentLibraryOption(componentLibrary));
+
+        assertCompilationError(
+                result,
+                "@TypeBinding refers to unknown PhyloSpec type "
+                        + "'testpackage.types.MissingPopulation'.");
+    }
+
+    @Test
+    public void rejectsDuplicatePackageSemanticTypeBinding() throws IOException {
+        Path componentLibrary = writeTypeBindingComponentLibrary();
+
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import org.phylospec.annotations.TypeBinding;
+
+                        public interface InvalidMapping {
+
+                            @TypeBinding(
+                                    semantic = "testpackage.types.CustomPopulation",
+                                    implementation = ConstantPopulation.class)
+                            interface FirstBinding {}
+
+                            @TypeBinding(
+                                    semantic = "testpackage.types.CustomPopulation",
+                                    implementation = ConstantPopulation.class)
+                            interface SecondBinding {}
+                        }
+                        """,
+                        componentLibraryOption(componentLibrary));
+
+        assertCompilationError(
+                result,
+                "Duplicate @TypeBinding for PhyloSpec type "
+                        + "'testpackage.types.CustomPopulation'.");
+    }
+
+    @Test
+    public void rejectsTypeBindingThatConflictsWithSemanticParent() throws IOException {
+        Path componentLibrary = writeTypeBindingComponentLibrary();
+
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import org.phylospec.annotations.TypeBinding;
+
+                        @TypeBinding(
+                                semantic = "testpackage.types.CustomPopulation",
+                                implementation = String.class)
+                        public interface InvalidMapping {}
+                        """,
+                        componentLibraryOption(componentLibrary));
+
+        assertCompilationError(
+                result,
+                "is not assignable to Java type "
+                        + "'beast.base.evolution.tree.coalescent.PopulationFunction'");
+    }
+
+    @Test
+    public void rejectsTypeBindingInterfaceWithoutImplementation() throws IOException {
+        Path componentLibrary = writeTypeBindingComponentLibrary();
+
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import org.phylospec.annotations.TypeBinding;
+
+                        @TypeBinding(
+                                semantic = "testpackage.types.CustomPopulation")
+                        public interface InvalidMapping {}
+                        """,
+                        componentLibraryOption(componentLibrary));
+
+        assertCompilationError(
+                result,
+                "@TypeBinding on a mapping interface must specify implementation.");
+    }
+
+    @Test
+    public void rejectsBindingForBuiltInTypeAlias() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import org.phylospec.annotations.TypeBinding;
+
+                        @TypeBinding(
+                                semantic = "phylospec.types.Rate",
+                                implementation = String.class)
+                        public interface InvalidMapping {}
+                        """);
+
+        assertCompilationError(
+                result,
+                "PhyloSpec type 'phylospec.types.Rate' already has a built-in "
+                        + "BEAST Java binding.");
+    }
+
+    @Test
     public void rejectsMissingPackageComponentLibrary() throws IOException {
         Path missingLibrary = temporaryDirectory.resolve("missing-components.json");
 
@@ -1677,6 +1895,48 @@ public class TileProcessorTest {
                 .formatted(
                         adapterName,
                         adapterDeclaration);
+    }
+
+    private Path writeTypeBindingComponentLibrary() throws IOException {
+        Path componentLibrary = temporaryDirectory.resolve("type-binding-components.json");
+        Files.writeString(
+                componentLibrary,
+                """
+                {
+                  "componentLibrary": {
+                    "name": "Type binding test package",
+                    "version": "1.0.0",
+                    "description": "Package-defined semantic type test",
+                    "types": [{
+                      "name": "CustomPopulation",
+                      "namespace": "testpackage.types",
+                      "description": "A package-defined population model",
+                      "extends": "PopulationFunction"
+                    }],
+                    "generators": [{
+                      "name": "wrapPopulation",
+                      "namespace": "testpackage.functions",
+                      "description": "Wraps a package-defined population model",
+                      "generatedType": "PopulationFunction",
+                      "arguments": [{
+                        "name": "model",
+                        "description": "Package-defined model",
+                        "type": "testpackage.types.CustomPopulation",
+                        "required": true
+                      }]
+                    }]
+                  }
+                }
+                """);
+        return componentLibrary;
+    }
+
+    private List<String> componentLibraryOption(Path componentLibrary) {
+        return List.of(
+                "-A"
+                        + TileProcessor.COMPONENT_LIBRARIES_OPTION
+                        + "="
+                        + componentLibrary);
     }
 
     private CompilationResult compile(String source)
