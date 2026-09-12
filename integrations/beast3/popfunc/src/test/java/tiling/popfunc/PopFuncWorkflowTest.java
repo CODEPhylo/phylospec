@@ -44,6 +44,7 @@ import org.phylospec.typeresolver.VariableResolver;
 import popfunc.beast.evolution.populationmodel.GompertzGrowth_f0;
 import popfunc.beast.evolution.populationmodel.GompertzGrowth_t50;
 import popfunc.beast.evolution.populationmodel.StochasticVariableSelection;
+import runner.PhyloSpecRunner;
 import operators.popfunc.ModelIndicatorOperator;
 
 public class PopFuncWorkflowTest {
@@ -227,6 +228,30 @@ public class PopFuncWorkflowTest {
         assertTrue(Files.size(traceFile) > 0);
         assertTrue(Files.isRegularFile(treeFile));
         assertTrue(Files.size(treeFile) > 0);
+    }
+
+    @Test
+    public void runsModelSelectionThroughPhyloSpecRunner(@TempDir Path outputDirectory)
+            throws Exception {
+        Path alignment = Path.of("../java/src/test/java/resources/primate-mtDNA.nex")
+                .toAbsolutePath()
+                .normalize();
+        Path sourceFile = outputDirectory.resolve("analysis.phylospec");
+        Files.writeString(sourceFile, modelSelectionSource(alignment, 10));
+
+        String runName = outputDirectory.resolve("popfunc-runner").toString();
+        PhyloSpecRunner runner =
+                new PhyloSpecRunner(Files.readString(sourceFile), List.of("popfunc", "beast2"));
+        runner.runPhyloSpec(runName);
+
+        Path traceFile = Path.of(runName + ".log");
+        Path treeFile = Path.of(runName + ".trees");
+        Path stateFile = Path.of(runName + ".state.xml");
+
+        assertTrue(Files.readString(traceFile).contains("posterior"));
+        assertTrue(Files.readString(treeFile).contains("#NEXUS"));
+        assertTrue(Files.isRegularFile(stateFile));
+        assertTrue(Files.size(stateFile) > 0);
     }
 
     private static BEASTState tile(String source) throws IOException {
