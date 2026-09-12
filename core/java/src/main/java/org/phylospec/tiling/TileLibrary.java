@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.Set;
+import org.phylospec.annotations.ComponentSource;
 import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.tiling.tiles.CandidateTile;
@@ -34,9 +35,11 @@ public abstract class TileLibrary<S> {
     /**
      * Returns classpath resources containing component libraries supplied by this adapter.
      * Resource names should be absolute, for example {@code /popfunc-components.json}.
+     * By default these are read from {@link ComponentSource} on the implementation class.
      */
     public List<String> getComponentLibraryResources() {
-        return List.of();
+        ComponentSource source = getClass().getAnnotation(ComponentSource.class);
+        return source == null ? List.of() : List.of(source.value());
     }
 
     /** Discovers the Tile libraries whose state type is compatible with {@code stateType}. */

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.phylospec.annotations.ComponentSource;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.CandidateTile;
 import org.phylospec.tiling.tiles.GeneratorTile;
@@ -48,6 +49,14 @@ public class TileLibraryTest {
                 error.getMessage());
     }
 
+    @Test
+    public void readsComponentResourcesFromAnnotation() {
+        TileLibrary<Object> library = new AnnotatedLibrary();
+
+        assertEquals(
+                List.of("/first-components.json", "/second-components.json"), library.getComponentLibraryResources());
+    }
+
     private static List<Class<?>> classesOf(List<CandidateTile<Object>> tiles) {
         List<Class<?>> classes = new ArrayList<>();
         for (CandidateTile<Object> tile : tiles) {
@@ -78,6 +87,13 @@ public class TileLibraryTest {
         @Override
         public List<CandidateTile<Object>> getTiles() {
             return tiles;
+        }
+    }
+
+    @ComponentSource({"/first-components.json", "/second-components.json"})
+    private static final class AnnotatedLibrary extends TestLibrary {
+        private AnnotatedLibrary() {
+            super("annotated", List.of());
         }
     }
 

@@ -2,10 +2,12 @@ package tiles.popfunc;
 
 import beastconfig.BEASTState;
 import java.util.List;
+import org.phylospec.annotations.ComponentSource;
 import org.phylospec.tiling.TileLibrary;
 import org.phylospec.tiling.tiles.CandidateTile;
 import tiles.popfunc.generated.GeneratedTileRegistry;
 
+@ComponentSource("/popfunc-components.json")
 public final class PopFuncTileLibrary extends TileLibrary<BEASTState> {
 
     @Override
@@ -16,11 +18,6 @@ public final class PopFuncTileLibrary extends TileLibrary<BEASTState> {
     @Override
     public Class<BEASTState> getStateType() {
         return BEASTState.class;
-    }
-
-    @Override
-    public List<String> getComponentLibraryResources() {
-        return List.of("/popfunc-components.json");
     }
 
     @Override

@@ -27,7 +27,10 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
 import org.phylospec.annotations.AdapterMapping;
+import org.phylospec.annotations.ComponentSource;
 import org.phylospec.annotations.GeneratorMapping;
 import org.phylospec.annotations.InputMapping;
 import org.phylospec.annotations.InputMappings;
@@ -53,6 +56,7 @@ public final class TileProcessor extends AbstractProcessor {
     private TileWriter tileWriter;
     private RegistryWriter registryWriter;
     private ComponentResolver componentResolver;
+    private List<ComponentLibrary> componentLibraries;
     private TypeBindings typeBindings;
     private AdapterRegistry adapterRegistry;
     private String generatedPackage;
@@ -99,33 +103,15 @@ public final class TileProcessor extends AbstractProcessor {
                         processingEnvironment.getFiler(),
                         generatedPackage);
 
-        Optional<List<ComponentLibrary>> componentLibraries =
+        Optional<List<ComponentLibrary>> loadedComponentLibraries =
                 loadComponentLibraries(processingEnvironment);
 
-        if (componentLibraries.isEmpty()) {
+        if (loadedComponentLibraries.isEmpty()) {
             return;
         }
 
-        try {
-            this.componentResolver = new ComponentResolver(componentLibraries.orElseThrow());
-
-            this.typeBindings =
-                    new TypeBindings(
-                            processingEnvironment,
-                            componentResolver);
-
-            this.adapterRegistry =
-                    new AdapterRegistry(
-                            processingEnvironment);
-
-        } catch (IllegalArgumentException exception) {
-            processingEnvironment
-                    .getMessager()
-                    .printMessage(
-                            Diagnostic.Kind.ERROR,
-                            "Could not register the PhyloSpec component libraries: "
-                                    + exception.getMessage());
-        }
+        this.componentLibraries = loadedComponentLibraries.orElseThrow();
+        this.adapterRegistry = new AdapterRegistry(processingEnvironment);
     }
 
     private Optional<List<ComponentLibrary>> loadComponentLibraries(
@@ -190,7 +176,8 @@ public final class TileProcessor extends AbstractProcessor {
         return Set.of(
                 GeneratorMapping.class.getCanonicalName(),
                 AdapterMapping.class.getCanonicalName(),
-                TypeBinding.class.getCanonicalName());
+                TypeBinding.class.getCanonicalName(),
+                ComponentSource.class.getCanonicalName());
     }
 
     @Override
@@ -210,12 +197,16 @@ public final class TileProcessor extends AbstractProcessor {
             Set<? extends TypeElement> annotations,
             RoundEnvironment roundEnvironment) {
 
-        if (componentResolver == null
-                || generatedPackage == null) {
+        if (componentLibraries == null || generatedPackage == null) {
             return true;
         }
 
         if (roundEnvironment.processingOver()) {
+            return true;
+        }
+
+        if (componentResolver == null
+                && !initializeComponentResolver(roundEnvironment)) {
             return true;
         }
 
@@ -271,6 +262,95 @@ public final class TileProcessor extends AbstractProcessor {
         }
 
         return true;
+    }
+
+    private boolean initializeComponentResolver(RoundEnvironment roundEnvironment) {
+        if (!loadComponentSources(roundEnvironment)) {
+            return false;
+        }
+
+        try {
+            this.componentResolver = new ComponentResolver(componentLibraries);
+            this.typeBindings = new TypeBindings(processingEnv, componentResolver);
+            return true;
+        } catch (IllegalArgumentException exception) {
+            processingEnv
+                    .getMessager()
+                    .printMessage(
+                            Diagnostic.Kind.ERROR,
+                            "Could not register the PhyloSpec component libraries: "
+                                    + exception.getMessage());
+            return false;
+        }
+    }
+
+    private boolean loadComponentSources(RoundEnvironment roundEnvironment) {
+        Set<String> loadedResources = new HashSet<>();
+        boolean valid = true;
+
+        for (Element element :
+                roundEnvironment.getElementsAnnotatedWith(ComponentSource.class)) {
+            if (element.getKind() != ElementKind.CLASS) {
+                printError("@ComponentSource can only be applied to a TileLibrary class.", element);
+                valid = false;
+                continue;
+            }
+
+            TypeElement declaration = (TypeElement) element;
+            if (!isTileLibrary(declaration)) {
+                printError("@ComponentSource class must extend TileLibrary.", declaration);
+                valid = false;
+                continue;
+            }
+
+            for (String declaredResource : declaration.getAnnotation(ComponentSource.class).value()) {
+                String resource = declaredResource.trim();
+
+                if (resource.isEmpty()) {
+                    printError("@ComponentSource resource must not be blank.", declaration);
+                    valid = false;
+                    continue;
+                }
+
+                String normalizedResource =
+                        resource.startsWith("/") ? resource.substring(1) : resource;
+
+                if (!loadedResources.add(normalizedResource)) {
+                    continue;
+                }
+
+                try {
+                    FileObject componentFile = processingEnv
+                            .getFiler()
+                            .getResource(StandardLocation.CLASS_OUTPUT, "", normalizedResource);
+                    try (var input = componentFile.openInputStream()) {
+                        componentLibraries.add(
+                                ComponentResolver.loadLibraryFromInputStream(input));
+                    }
+                } catch (IOException | IllegalArgumentException exception) {
+                    printError(
+                            "Could not load @ComponentSource resource '"
+                                    + resource
+                                    + "': "
+                                    + exception.getMessage(),
+                            declaration);
+                    valid = false;
+                }
+            }
+        }
+
+        return valid;
+    }
+
+    private boolean isTileLibrary(TypeElement declaration) {
+        TypeElement tileLibrary =
+                processingEnv.getElementUtils().getTypeElement("org.phylospec.tiling.TileLibrary");
+        return tileLibrary != null
+                && processingEnv
+                        .getTypeUtils()
+                        .isAssignable(
+                                processingEnv.getTypeUtils().erasure(declaration.asType()),
+                                processingEnv.getTypeUtils().erasure(tileLibrary.asType()));
     }
 
     private Optional<MappingSpec> readMapping(
