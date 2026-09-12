@@ -57,6 +57,30 @@ public class TileLibraryTest {
                 List.of("/first-components.json", "/second-components.json"), library.getComponentLibraryResources());
     }
 
+    @Test
+    public void configuresStateInLibraryOrder() {
+        List<String> configuredBy = new ArrayList<>();
+        Object state = new Object();
+        TileLibrary<Object> first = new TestLibrary("first", List.of()) {
+            @Override
+            public void configureState(Object configuredState) {
+                assertEquals(state, configuredState);
+                configuredBy.add(getId());
+            }
+        };
+        TileLibrary<Object> second = new TestLibrary("second", List.of()) {
+            @Override
+            public void configureState(Object configuredState) {
+                assertEquals(state, configuredState);
+                configuredBy.add(getId());
+            }
+        };
+
+        TileLibrary.configureState(List.of(first, second), state);
+
+        assertEquals(List.of("first", "second"), configuredBy);
+    }
+
     private static List<Class<?>> classesOf(List<CandidateTile<Object>> tiles) {
         List<Class<?>> classes = new ArrayList<>();
         for (CandidateTile<Object> tile : tiles) {
