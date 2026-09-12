@@ -41,7 +41,13 @@ public class PopFuncEngineSpecTest {
         assertEquals("popfunc", specification.getName());
         assertEquals("0.1.0-SNAPSHOT", specification.getEngineVersion());
         assertEquals(List.of("beast2"), specification.getDependsOn());
-        assertEquals(8, specification.getGenerators().size());
+        assertEquals(9, specification.getGenerators().size());
+
+        Generator__1 modelIndicator = findGenerator(specification, "modelIndicator");
+        assertEquals("popfunc.distributions", modelIndicator.getNamespace());
+        assertEquals(
+                List.of("models"),
+                modelIndicator.getArguments().stream().map(Argument__1::getName).toList());
 
         Generator__1 gompertzF0 = findGenerator(specification, "gompertzF0PopulationFunction");
         assertEquals("popfunc.functions.coalescent", gompertzF0.getNamespace());
