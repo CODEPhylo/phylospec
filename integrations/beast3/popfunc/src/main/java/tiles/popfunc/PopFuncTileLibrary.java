@@ -6,6 +6,7 @@ import beast.base.evolution.tree.coalescent.PopulationFunction;
 import beast.base.inference.Distribution;
 import beastconfig.BEASTState;
 import java.util.Collections;
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
@@ -33,7 +34,10 @@ public final class PopFuncTileLibrary extends TileLibrary<BEASTState> {
 
     @Override
     public List<CandidateTile<BEASTState>> getTiles() {
-        return GeneratedTileRegistry.createTiles();
+        List<CandidateTile<BEASTState>> tiles =
+                new ArrayList<>(GeneratedTileRegistry.createTiles());
+        tiles.add(new ModelIndicatorTile());
+        return List.copyOf(tiles);
     }
 
     @Override

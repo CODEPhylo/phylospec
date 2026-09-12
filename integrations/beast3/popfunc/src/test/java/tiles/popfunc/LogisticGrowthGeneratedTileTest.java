@@ -28,7 +28,7 @@ public class LogisticGrowthGeneratedTileTest {
     public void registersTheGeneratedPopFuncTiles() {
         List<CandidateTile<BEASTState>> tiles = new PopFuncTileLibrary().getTiles();
 
-        assertEquals(8, tiles.size());
+        assertEquals(9, tiles.size());
         assertEquals(1, tiles.stream().filter(LogisticGrowthGeneratedTile.class::isInstance).count());
         assertEquals(1, tiles.stream().filter(ConstantGrowthGeneratedTile.class::isInstance).count());
         assertEquals(1, tiles.stream().filter(ExponentialGrowthGeneratedTile.class::isInstance).count());

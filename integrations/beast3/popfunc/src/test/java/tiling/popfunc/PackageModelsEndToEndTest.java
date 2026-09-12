@@ -36,7 +36,7 @@ public class PackageModelsEndToEndTest {
     public void registersAllPopFuncGenerators() {
         List<CandidateTile<BEASTState>> tiles = new PopFuncTileLibrary().getTiles();
 
-        assertEquals(8, tiles.size());
+        assertEquals(9, tiles.size());
         assertTrue(tiles.stream().anyMatch(ConsExpConsGeneratedTile.class::isInstance));
         assertTrue(tiles.stream().anyMatch(GompertzF0GeneratedTile.class::isInstance));
         assertTrue(tiles.stream().anyMatch(GompertzT50GeneratedTile.class::isInstance));
