@@ -6,6 +6,111 @@
     "types": [],
     "generators": [
       {
+        "name": "constantExponentialConstantPopulationFunction",
+        "namespace": "popfunc.functions.coalescent",
+        "description": "A population function with recent constant size, exponential change, and ancestral constant size.",
+        "generatedType": "PopulationFunction",
+        "arguments": [
+          {
+            "name": "recentPopulationSize",
+            "description": "Population size during the recent constant phase.",
+            "type": "PositiveReal",
+            "required": true
+          },
+          {
+            "name": "growthRate",
+            "description": "Exponential growth rate.",
+            "type": "PositiveReal",
+            "required": true
+          },
+          {
+            "name": "growthStartAge",
+            "description": "Age at which exponential change starts.",
+            "type": "Age",
+            "required": true
+          },
+          {
+            "name": "growthEndAge",
+            "description": "Age at which exponential change ends.",
+            "type": "Age",
+            "required": true
+          }
+        ],
+        "constraints": [
+          "growthStartAge.value <= growthEndAge.value"
+        ]
+      },
+      {
+        "name": "gompertzF0PopulationFunction",
+        "namespace": "popfunc.functions.coalescent",
+        "description": "A Gompertz population function parameterized by its initial proportion of carrying capacity.",
+        "generatedType": "PopulationFunction",
+        "arguments": [
+          {
+            "name": "initialProportion",
+            "description": "Initial population size as a proportion of carrying capacity.",
+            "type": "PositiveReal",
+            "required": true
+          },
+          {
+            "name": "growthRate",
+            "description": "Gompertz growth rate.",
+            "type": "PositiveReal",
+            "required": true
+          },
+          {
+            "name": "initialPopulationSize",
+            "description": "Population size at time zero.",
+            "type": "PositiveReal",
+            "required": true
+          },
+          {
+            "name": "ancestralPopulationSize",
+            "description": "Optional ancestral population size.",
+            "type": "PositiveReal",
+            "required": false
+          }
+        ],
+        "constraints": [
+          "initialProportion.value <= 1"
+        ]
+      },
+      {
+        "name": "gompertzT50PopulationFunction",
+        "namespace": "popfunc.functions.coalescent",
+        "description": "A Gompertz population function parameterized by the age at half carrying capacity.",
+        "generatedType": "PopulationFunction",
+        "arguments": [
+          {
+            "name": "halfCapacityAge",
+            "description": "Age at which population size is half of carrying capacity.",
+            "type": "Age",
+            "required": true
+          },
+          {
+            "name": "growthRate",
+            "description": "Gompertz growth rate.",
+            "type": "PositiveReal",
+            "required": true
+          },
+          {
+            "name": "carryingCapacity",
+            "description": "Population carrying capacity.",
+            "type": "PositiveReal",
+            "required": true
+          },
+          {
+            "name": "ancestralPopulationSize",
+            "description": "Optional ancestral population size.",
+            "type": "PositiveReal",
+            "required": false
+          }
+        ],
+        "constraints": [
+          "ancestralPopulationSize.value < carryingCapacity.value"
+        ]
+      },
+      {
         "name": "stochasticPopulationSelection",
         "namespace": "popfunc.functions.coalescent",
         "description": "Selects one population function using an integer indicator.",
