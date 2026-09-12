@@ -33,6 +33,13 @@ public abstract class TileLibrary<S> {
     public abstract List<CandidateTile<S>> getTiles();
 
     /**
+     * Applies package-specific configuration after tiling has built the engine state.
+     * Implementations may use this hook for behavior that cannot be inferred from a generator
+     * mapping, such as model-specific MCMC operators.
+     */
+    public void configureState(S state) {}
+
+    /**
      * Returns classpath resources containing component libraries supplied by this adapter.
      * Resource names should be absolute, for example {@code /popfunc-components.json}.
      * By default these are read from {@link ComponentSource} on the implementation class.
@@ -76,6 +83,16 @@ public abstract class TileLibrary<S> {
                     .getTiles());
         }
         return all;
+    }
+
+    /** Applies the post-tiling configuration supplied by each selected library, in order. */
+    public static <S> void configureState(List<? extends TileLibrary<S>> libraries, S state) {
+        Objects.requireNonNull(libraries, "libraries");
+        Objects.requireNonNull(state, "state");
+
+        for (TileLibrary<S> library : libraries) {
+            Objects.requireNonNull(library, "libraries must not contain null").configureState(state);
+        }
     }
 
     /**

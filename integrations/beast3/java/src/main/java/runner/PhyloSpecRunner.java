@@ -118,6 +118,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
             this.errorDetected(error.toError(range));
         }
 
+        TileLibrary.configureState(tileLibraries, beastState);
+
         // add state
 
         State state = new State();
