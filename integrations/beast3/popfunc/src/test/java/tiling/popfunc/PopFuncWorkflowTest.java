@@ -9,8 +9,11 @@ import beast.base.evolution.tree.coalescent.Coalescent;
 import beast.base.inference.CompoundDistribution;
 import beast.base.inference.MCMC;
 import beast.base.inference.State;
+import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.evolution.operator.AdaptableVarianceMultivariateNormalOperator;
+import beast.base.spec.inference.distribution.IntUniform;
+import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.evolution.operator.UpDownOperator;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
@@ -36,6 +39,9 @@ import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import popfunc.beast.evolution.populationmodel.GompertzGrowth_f0;
+import popfunc.beast.evolution.populationmodel.GompertzGrowth_t50;
+import popfunc.beast.evolution.populationmodel.StochasticVariableSelection;
+import operators.popfunc.ModelIndicatorOperator;
 
 public class PopFuncWorkflowTest {
 
@@ -126,6 +132,108 @@ public class PopFuncWorkflowTest {
                 .pDistributions
                 .get()
                 .size());
+    }
+
+    @Test
+    public void buildsCompleteModelSelectionAnalysis() throws Exception {
+        Path alignment = Path.of("../java/src/test/java/resources/primate-mtDNA.nex")
+                .toAbsolutePath()
+                .normalize();
+        assertTrue(Files.isRegularFile(alignment));
+
+        String source = """
+                use popfunc.functions.coalescent
+                use popfunc.distributions
+
+                Alignment data = fromNexus("%s")
+
+                PositiveReal f0PopulationSize ~ LogNormal(logMean=5.0, logSd=0.5)
+                PositiveReal f0GrowthRate ~ LogNormal(logMean=-0.95, logSd=0.2)
+                Probability initialProportion ~ Beta(alpha=20.0, beta=7.0)
+                PopulationFunction f0Model = gompertzF0PopulationFunction(
+                    initialProportion=initialProportion,
+                    growthRate=f0GrowthRate,
+                    initialPopulationSize=f0PopulationSize
+                )
+
+                Age halfCapacityAge ~ Exponential(rate=0.2)
+                PositiveReal t50GrowthRate ~ LogNormal(logMean=-0.95, logSd=0.2)
+                PositiveReal carryingCapacity ~ LogNormal(logMean=5.0, logSd=0.5)
+                PopulationFunction t50Model = gompertzT50PopulationFunction(
+                    halfCapacityAge=halfCapacityAge,
+                    growthRate=t50GrowthRate,
+                    carryingCapacity=carryingCapacity
+                )
+
+                Vector<PopulationFunction> models = [f0Model, t50Model]
+                NonNegativeInteger modelIndex ~ modelIndicator(models=models)
+                PopulationFunction population = stochasticPopulationSelection(
+                    indicator=modelIndex,
+                    models=models
+                )
+
+                Tree tree ~ Coalescent(
+                    populationSize=population,
+                    taxa=taxa(data)
+                )
+
+                QMatrix qMatrix = jc69()
+                Alignment alignment ~ PhyloCTMC(
+                    tree=tree,
+                    qMatrix=qMatrix
+                ) observed as data
+
+                mcmc {
+                    Integer chainLength = 10
+                }
+                """.formatted(alignment.toString());
+
+        BEASTState state = tile(source);
+        TileLibrary.configureState(selectedLibraries(), state);
+
+        assertEquals(8, state.stateNodes.size());
+        assertEquals(8, state.priorDistributions.size());
+        assertEquals(1, state.likelihoodDistributions.size());
+
+        Coalescent coalescent = state.priorDistributions.values().stream()
+                .filter(Coalescent.class::isInstance)
+                .map(Coalescent.class::cast)
+                .findFirst()
+                .orElseThrow();
+        StochasticVariableSelection selection =
+                assertInstanceOf(StochasticVariableSelection.class, coalescent.popSizeInput.get());
+        assertEquals(2, selection.modelsInput.get().size());
+        assertInstanceOf(GompertzGrowth_f0.class, selection.modelsInput.get().get(0));
+        assertInstanceOf(GompertzGrowth_t50.class, selection.modelsInput.get().get(1));
+
+        IntScalarParam<NonNegativeInt> modelIndex = state.stateNodes.keySet().stream()
+                .filter(node -> "modelIndex".equals(node.getID()))
+                .map(node -> assertInstanceOf(IntScalarParam.class, node))
+                .map(node -> (IntScalarParam<NonNegativeInt>) node)
+                .findFirst()
+                .orElseThrow();
+        assertSame(modelIndex, selection.indicatorInput.get());
+        IntUniform modelPrior =
+                assertInstanceOf(IntUniform.class, state.priorDistributions.get(modelIndex));
+        assertEquals(0, modelPrior.getLowerBoundOfParameter());
+        assertEquals(1, modelPrior.getUpperBoundOfParameter());
+
+        ModelIndicatorOperator indicatorOperator = state.operators.stream()
+                .filter(ModelIndicatorOperator.class::isInstance)
+                .map(ModelIndicatorOperator.class::cast)
+                .findFirst()
+                .orElseThrow();
+        assertSame(modelIndex, indicatorOperator.indicatorInput.get());
+        assertEquals(3, state.operators.stream().filter(UpDownOperator.class::isInstance).count());
+        assertEquals(
+                2,
+                state.operators.stream()
+                        .filter(AdaptableVarianceMultivariateNormalOperator.class::isInstance)
+                        .count());
+
+        MCMC mcmc = assembleMcmc(state);
+        state.initializeBEASTObjects();
+        assertEquals(state.operators, mcmc.operatorsInput.get());
     }
 
     private static BEASTState tile(String source) throws IOException {
