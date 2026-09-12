@@ -41,7 +41,25 @@ public class PopFuncEngineSpecTest {
         assertEquals("popfunc", specification.getName());
         assertEquals("0.1.0-SNAPSHOT", specification.getEngineVersion());
         assertEquals(List.of("beast2"), specification.getDependsOn());
-        assertEquals(5, specification.getGenerators().size());
+        assertEquals(8, specification.getGenerators().size());
+
+        Generator__1 gompertzF0 = findGenerator(specification, "gompertzF0PopulationFunction");
+        assertEquals("popfunc.functions.coalescent", gompertzF0.getNamespace());
+        assertEquals(
+                List.of(
+                        "initialProportion",
+                        "growthRate",
+                        "initialPopulationSize",
+                        "ancestralPopulationSize"),
+                gompertzF0.getArguments().stream().map(Argument__1::getName).toList());
+        assertFalse(gompertzF0.getArguments().getLast().getRequired());
+
+        Generator__1 gompertzT50 = findGenerator(specification, "gompertzT50PopulationFunction");
+        assertEquals("popfunc.functions.coalescent", gompertzT50.getNamespace());
+
+        Generator__1 consExpCons = findGenerator(
+                specification, "constantExponentialConstantPopulationFunction");
+        assertEquals("popfunc.functions.coalescent", consExpCons.getNamespace());
 
         Generator__1 selection = findGenerator(specification, "stochasticPopulationSelection");
         assertEquals("popfunc.functions.coalescent", selection.getNamespace());
