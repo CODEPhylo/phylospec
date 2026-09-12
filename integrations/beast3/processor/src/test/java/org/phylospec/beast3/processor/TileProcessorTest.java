@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
@@ -186,6 +187,99 @@ public class TileProcessorTest {
 
         assertTrue(generatedSource.contains("return \"customPopulation\";"));
         assertTrue(generatedSource.contains("return java.util.Optional.of(\"testpackage.functions\");"));
+    }
+
+    @Test
+    public void loadsComponentLibraryFromAnnotatedTileLibrary() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.evolution.substitutionmodel.SubstitutionModel;
+                        import beast.base.spec.evolution.substitutionmodel.JukesCantor;
+                        import beastconfig.BEASTState;
+                        import java.util.List;
+                        import org.phylospec.annotations.ComponentSource;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.tiling.TileLibrary;
+                        import org.phylospec.tiling.tiles.CandidateTile;
+
+                        @GeneratorMapping(
+                                component = "testpackage.functions.customJc",
+                                implementation = JukesCantor.class,
+                                output = SubstitutionModel.class)
+                        public interface InvalidMapping {
+
+                            @ComponentSource("/package-components.json")
+                            final class PackageLibrary extends TileLibrary<BEASTState> {
+                                @Override
+                                public Class<BEASTState> getStateType() {
+                                    return BEASTState.class;
+                                }
+
+                                @Override
+                                public List<CandidateTile<BEASTState>> getTiles() {
+                                    return List.of();
+                                }
+                            }
+                        }
+                        """,
+                        List.of(),
+                        Map.of(
+                                "package-components.json",
+                                """
+                                {
+                                  "componentLibrary": {
+                                    "name": "Annotated package",
+                                    "version": "1.0.0",
+                                    "description": "Annotation-discovered components",
+                                    "types": [],
+                                    "generators": [{
+                                      "name": "customJc",
+                                      "namespace": "testpackage.functions",
+                                      "description": "A package-defined substitution model",
+                                      "generatedType": "QMatrix",
+                                      "arguments": []
+                                    }]
+                                  }
+                                }
+                                """));
+
+        assertCompilationSuccess(result);
+    }
+
+    @Test
+    public void rejectsMissingComponentSourceResource() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beastconfig.BEASTState;
+                        import java.util.List;
+                        import org.phylospec.annotations.ComponentSource;
+                        import org.phylospec.tiling.TileLibrary;
+                        import org.phylospec.tiling.tiles.CandidateTile;
+
+                        @ComponentSource("/missing-components.json")
+                        public final class InvalidMapping extends TileLibrary<BEASTState> {
+                            @Override
+                            public Class<BEASTState> getStateType() {
+                                return BEASTState.class;
+                            }
+
+                            @Override
+                            public List<CandidateTile<BEASTState>> getTiles() {
+                                return List.of();
+                            }
+                        }
+                        """);
+
+        assertCompilationError(
+                result,
+                "Could not load @ComponentSource resource "
+                        + "'/missing-components.json'");
     }
 
     @Test
@@ -1952,6 +2046,15 @@ public class TileProcessorTest {
             List<String> processorOptions)
             throws IOException {
 
+        return compile(source, processorOptions, Map.of());
+    }
+
+    private CompilationResult compile(
+            String source,
+            List<String> processorOptions,
+            Map<String, String> classOutputResources)
+            throws IOException {
+
         JavaCompiler compiler =
                 ToolProvider.getSystemJavaCompiler();
 
@@ -1989,6 +2092,14 @@ public class TileProcessorTest {
 
         Files.createDirectories(
                 generatedDirectory);
+
+        for (Map.Entry<String, String> resource : classOutputResources.entrySet()) {
+            Path resourceFile = classDirectory.resolve(resource.getKey());
+            if (resourceFile.getParent() != null) {
+                Files.createDirectories(resourceFile.getParent());
+            }
+            Files.writeString(resourceFile, resource.getValue());
+        }
 
         Files.writeString(
                 sourceFile,
