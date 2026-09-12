@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
@@ -35,6 +36,8 @@ import org.phylospec.lexer.Lexer;
 import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.TileLibrary;
+import org.phylospec.tiling.mcmc.FileLoggerSpec;
+import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
@@ -141,52 +144,7 @@ public class PopFuncWorkflowTest {
                 .normalize();
         assertTrue(Files.isRegularFile(alignment));
 
-        String source = """
-                use popfunc.functions.coalescent
-                use popfunc.distributions
-
-                Alignment data = fromNexus("%s")
-
-                PositiveReal f0PopulationSize ~ LogNormal(logMean=5.0, logSd=0.5)
-                PositiveReal f0GrowthRate ~ LogNormal(logMean=-0.95, logSd=0.2)
-                Probability initialProportion ~ Beta(alpha=20.0, beta=7.0)
-                PopulationFunction f0Model = gompertzF0PopulationFunction(
-                    initialProportion=initialProportion,
-                    growthRate=f0GrowthRate,
-                    initialPopulationSize=f0PopulationSize
-                )
-
-                Age halfCapacityAge ~ Exponential(rate=0.2)
-                PositiveReal t50GrowthRate ~ LogNormal(logMean=-0.95, logSd=0.2)
-                PositiveReal carryingCapacity ~ LogNormal(logMean=5.0, logSd=0.5)
-                PopulationFunction t50Model = gompertzT50PopulationFunction(
-                    halfCapacityAge=halfCapacityAge,
-                    growthRate=t50GrowthRate,
-                    carryingCapacity=carryingCapacity
-                )
-
-                Vector<PopulationFunction> models = [f0Model, t50Model]
-                NonNegativeInteger modelIndex ~ modelIndicator(models=models)
-                PopulationFunction population = stochasticPopulationSelection(
-                    indicator=modelIndex,
-                    models=models
-                )
-
-                Tree tree ~ Coalescent(
-                    populationSize=population,
-                    taxa=taxa(data)
-                )
-
-                QMatrix qMatrix = jc69()
-                Alignment alignment ~ PhyloCTMC(
-                    tree=tree,
-                    qMatrix=qMatrix
-                ) observed as data
-
-                mcmc {
-                    Integer chainLength = 10
-                }
-                """.formatted(alignment.toString());
+        String source = modelSelectionSource(alignment, 10);
 
         BEASTState state = tile(source);
         TileLibrary.configureState(selectedLibraries(), state);
@@ -236,7 +194,46 @@ public class PopFuncWorkflowTest {
         assertEquals(state.operators, mcmc.operatorsInput.get());
     }
 
+    @Test
+    public void runsCompleteModelSelectionMcmc(@TempDir Path outputDirectory) throws Exception {
+        Path alignment = Path.of("../java/src/test/java/resources/primate-mtDNA.nex")
+                .toAbsolutePath()
+                .normalize();
+        Path traceFile = outputDirectory.resolve("popfunc.log");
+        Path treeFile = outputDirectory.resolve("popfunc.trees");
+
+        BEASTState state = tile(modelSelectionSource(alignment, 25), "popfunc-mcmc");
+        TileLibrary.configureState(selectedLibraries(), state);
+        state.addFileLoggerSpec(new FileLoggerSpec<>(1, traceFile.toString(), null));
+        state.addTreeLoggerSpec(new TreeLoggerSpec<>(1, treeFile.toString(), null));
+
+        ModelIndicatorOperator indicatorOperator = state.operators.stream()
+                .filter(ModelIndicatorOperator.class::isInstance)
+                .map(ModelIndicatorOperator.class::cast)
+                .findFirst()
+                .orElseThrow();
+        state.setInput(indicatorOperator, indicatorOperator.m_pWeight, 1000.0);
+
+        MCMC mcmc = assembleMcmc(state);
+        mcmc.setStateFile(outputDirectory.resolve("popfunc.state.xml").toString(), false);
+        state.initializeBEASTObjects();
+        mcmc.run();
+
+        int indicatorProposals = indicatorOperator.get_m_nNrAccepted()
+                + indicatorOperator.get_m_nNrRejected();
+        assertTrue(indicatorProposals > 0);
+        assertTrue(Double.isFinite(mcmc.posteriorInput.get().getCurrentLogP()));
+        assertTrue(Files.isRegularFile(traceFile));
+        assertTrue(Files.size(traceFile) > 0);
+        assertTrue(Files.isRegularFile(treeFile));
+        assertTrue(Files.size(treeFile) > 0);
+    }
+
     private static BEASTState tile(String source) throws IOException {
+        return tile(source, "popfunc-workflow");
+    }
+
+    private static BEASTState tile(String source, String runName) throws IOException {
         List<Stmt> statements = new Parser(new Lexer(source).scanTokens()).parse();
         statements = new RemoveGroupings().transform(statements);
         statements = new EvaluateLiterals().transform(statements);
@@ -253,7 +250,7 @@ public class PopFuncWorkflowTest {
 
         EvaluateTiles<BEASTState> evaluator = new EvaluateTiles<>(
                 TileLibrary.combine(libraries), variableResolver, stochasticityResolver);
-        BEASTState state = new BEASTState("popfunc-workflow");
+        BEASTState state = new BEASTState(runName);
 
         PrintStream originalOut = System.out;
         System.setOut(new PrintStream(OutputStream.nullOutputStream()));
@@ -263,6 +260,55 @@ public class PopFuncWorkflowTest {
         } finally {
             System.setOut(originalOut);
         }
+    }
+
+    private static String modelSelectionSource(Path alignment, int chainLength) {
+        return """
+                use popfunc.functions.coalescent
+                use popfunc.distributions
+
+                Alignment data = fromNexus("%s")
+
+                PositiveReal f0PopulationSize ~ LogNormal(logMean=5.0, logSd=0.5)
+                PositiveReal f0GrowthRate ~ LogNormal(logMean=-0.95, logSd=0.2)
+                Probability initialProportion ~ Beta(alpha=20.0, beta=7.0)
+                PopulationFunction f0Model = gompertzF0PopulationFunction(
+                    initialProportion=initialProportion,
+                    growthRate=f0GrowthRate,
+                    initialPopulationSize=f0PopulationSize
+                )
+
+                Age halfCapacityAge ~ Exponential(rate=0.2)
+                PositiveReal t50GrowthRate ~ LogNormal(logMean=-0.95, logSd=0.2)
+                PositiveReal carryingCapacity ~ LogNormal(logMean=5.0, logSd=0.5)
+                PopulationFunction t50Model = gompertzT50PopulationFunction(
+                    halfCapacityAge=halfCapacityAge,
+                    growthRate=t50GrowthRate,
+                    carryingCapacity=carryingCapacity
+                )
+
+                Vector<PopulationFunction> models = [f0Model, t50Model]
+                NonNegativeInteger modelIndex ~ modelIndicator(models=models)
+                PopulationFunction population = stochasticPopulationSelection(
+                    indicator=modelIndex,
+                    models=models
+                )
+
+                Tree tree ~ Coalescent(
+                    populationSize=population,
+                    taxa=taxa(data)
+                )
+
+                QMatrix qMatrix = jc69()
+                Alignment alignment ~ PhyloCTMC(
+                    tree=tree,
+                    qMatrix=qMatrix
+                ) observed as data
+
+                mcmc {
+                    Integer chainLength = %d
+                }
+                """.formatted(alignment.toString(), chainLength);
     }
 
     private static MCMC assembleMcmc(BEASTState state) {
