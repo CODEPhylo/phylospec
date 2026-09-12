@@ -54,6 +54,13 @@ public class PopFuncEngineSpecTest {
                 gompertzF0.getArguments().stream().map(Argument__1::getName).toList());
         assertFalse(gompertzF0.getArguments().getLast().getRequired());
 
+        Generator gompertzF0Component = resolver.resolveGenerator(
+                        "popfunc.functions.coalescent.gompertzF0PopulationFunction")
+                .getFirst();
+        assertEquals(
+                "phylospec.types.Probability",
+                gompertzF0Component.getArguments().getFirst().getType());
+
         Generator__1 gompertzT50 = findGenerator(specification, "gompertzT50PopulationFunction");
         assertEquals("popfunc.functions.coalescent", gompertzT50.getNamespace());
 

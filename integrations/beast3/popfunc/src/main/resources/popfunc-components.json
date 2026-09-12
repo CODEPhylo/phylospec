@@ -49,7 +49,7 @@
           {
             "name": "initialProportion",
             "description": "Initial population size as a proportion of carrying capacity.",
-            "type": "PositiveReal",
+            "type": "Probability",
             "required": true
           },
           {
@@ -72,7 +72,7 @@
           }
         ],
         "constraints": [
-          "initialProportion.value <= 1"
+          "initialProportion.value > 0"
         ]
       },
       {
