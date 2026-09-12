@@ -111,6 +111,23 @@
         ]
       },
       {
+        "name": "modelIndicator",
+        "namespace": "popfunc.distributions",
+        "description": "A uniformly distributed index over a non-empty list of population functions.",
+        "generatedType": "Distribution<NonNegativeInteger>",
+        "arguments": [
+          {
+            "name": "models",
+            "description": "Population functions that the indicator can select.",
+            "type": "Vector<PopulationFunction>",
+            "required": true
+          }
+        ],
+        "constraints": [
+          "models.num > 0"
+        ]
+      },
+      {
         "name": "stochasticPopulationSelection",
         "namespace": "popfunc.functions.coalescent",
         "description": "Selects one population function using an integer indicator.",
