@@ -4,42 +4,38 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import beastconfig.BEASTState;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.phylospec.components.Argument;
 import org.phylospec.components.Argument__1;
 import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.EngineSpecificationSchema;
 import org.phylospec.components.Generator;
 import org.phylospec.components.Generator__1;
-import org.phylospec.tiling.EngineSpecGenerator;
 import org.phylospec.tiling.TileLibrary;
 import tiles.popfunc.PopFuncTileLibrary;
+import utils.popfunc.PopFuncEngineSpec;
 
 public class PopFuncEngineSpecTest {
 
+    private static final String VERSION = "0.1.0-SNAPSHOT";
+
+    @TempDir
+    Path temporaryDirectory;
+
     @Test
     public void exposesPopFuncCapabilities() throws IOException {
-        List<TileLibrary<BEASTState>> installedLibraries =
-                TileLibrary.discover(BEASTState.class);
-        assertTrue(installedLibraries.stream().anyMatch(library -> library.getId().equals("popfunc")));
-
-        ComponentResolver resolver =
-                new ComponentResolver(TileLibrary.loadComponentLibraries(installedLibraries));
-
-        EngineSpecificationSchema specification = EngineSpecGenerator.generateEngineSpecification(
-                new PopFuncTileLibrary(),
-                resolver,
-                "popfunc",
-                "0.1.0-SNAPSHOT",
-                List.of("beast2"),
-                "Install the PopFunc BEAST package.",
-                "https://github.com/LinguaPhylo/PopFunc");
+        ComponentResolver resolver = new ComponentResolver(
+                TileLibrary.loadComponentLibraries(List.of(new PopFuncTileLibrary())));
+        EngineSpecificationSchema specification = PopFuncEngineSpec.create(VERSION);
 
         assertEquals("popfunc", specification.getName());
-        assertEquals("0.1.0-SNAPSHOT", specification.getEngineVersion());
+        assertEquals(VERSION, specification.getEngineVersion());
         assertEquals(List.of("beast2"), specification.getDependsOn());
         assertEquals(9, specification.getGenerators().size());
 
@@ -153,6 +149,24 @@ public class PopFuncEngineSpecTest {
         assertEquals(
                 List.of("ancestralPopulationSize.value < populationSize.value"),
                 expansionComponent.getConstraints());
+    }
+
+    @Test
+    public void writesRepositoryCompatibleJson() throws IOException {
+        Path enginesDirectory = temporaryDirectory.resolve("engines");
+        PopFuncEngineSpec.write(enginesDirectory, VERSION);
+
+        Path specificationFile =
+                enginesDirectory.resolve("popfunc-" + VERSION + ".json");
+        assertTrue(Files.isRegularFile(specificationFile));
+
+        EngineSpecificationSchema specification = new ObjectMapper()
+                .readValue(specificationFile.toFile(), EngineSpecificationSchema.class);
+
+        assertEquals("popfunc", specification.getName());
+        assertEquals(VERSION, specification.getEngineVersion());
+        assertEquals(List.of("beast2"), specification.getDependsOn());
+        assertEquals(9, specification.getGenerators().size());
     }
 
     private static Generator__1 findGenerator(
