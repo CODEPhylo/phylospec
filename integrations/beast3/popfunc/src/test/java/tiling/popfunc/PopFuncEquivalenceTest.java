@@ -30,6 +30,7 @@ import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import popfunc.beast.evolution.populationmodel.GompertzGrowth_f0;
 import popfunc.beast.evolution.populationmodel.GompertzGrowth_t50;
+import popfunc.beast.evolution.populationmodel.LogisticGrowth;
 
 public class PopFuncEquivalenceTest {
 
@@ -72,6 +73,27 @@ public class PopFuncEquivalenceTest {
 
         assertEquals(100.0, generated.NAInput.get().get());
         assertEquals(1, generated.indicatorParameterInput.get().get());
+        assertNumericallyEquivalent(reference, generated);
+    }
+
+    @Test
+    public void preferredPopFuncLogisticMatchesDirectModelWithoutAncestralPopulation()
+            throws IOException {
+        LogisticGrowth generated = buildLogistic(null);
+        LogisticGrowth reference = directLogistic(null);
+
+        assertEquals(0.0, generated.getRawNA());
+        assertNumericallyEquivalent(reference, generated);
+    }
+
+    @Test
+    public void preferredPopFuncLogisticMatchesDirectModelWithAncestralPopulation()
+            throws IOException {
+        LogisticGrowth generated = buildLogistic(100.0);
+        LogisticGrowth reference = directLogistic(100.0);
+
+        assertEquals(100.0, generated.getRawNA());
+        assertEquals(100.0, generated.getEffectiveNA());
         assertNumericallyEquivalent(reference, generated);
     }
 
@@ -145,6 +167,37 @@ public class PopFuncEquivalenceTest {
         }
         model.indicatorParameterInput.setValue(
                 new IntScalarParam<>(indicator, NonNegativeInt.INSTANCE), model);
+        model.initAndValidate();
+        return model;
+    }
+
+    private static LogisticGrowth buildLogistic(Double ancestralSize) throws IOException {
+        String optionalArgument = ancestralSize == null
+                ? ""
+                : ", ancestralPopulationSize=" + ancestralSize;
+        String source = """
+                PopulationFunction population = logisticPopulationFunction(
+                    inflectionAge=5.0,
+                    carryingCapacity=1000.0,
+                    growthRate=0.25%s
+                )
+                """.formatted(optionalArgument);
+
+        return assertInstanceOf(LogisticGrowth.class, build(source));
+    }
+
+    private static LogisticGrowth directLogistic(Double ancestralSize) {
+        LogisticGrowth model = new LogisticGrowth();
+        model.t50Input.setValue(
+                new RealScalarParam<>(5.0, NonNegativeReal.INSTANCE), model);
+        model.nCarryingCapacityInput.setValue(
+                new RealScalarParam<>(1000.0, PositiveReal.INSTANCE), model);
+        model.bInput.setValue(
+                new RealScalarParam<>(0.25, NonNegativeReal.INSTANCE), model);
+        if (ancestralSize != null) {
+            model.NAInput.setValue(
+                    new RealScalarParam<>(ancestralSize, NonNegativeReal.INSTANCE), model);
+        }
         model.initAndValidate();
         return model;
     }
