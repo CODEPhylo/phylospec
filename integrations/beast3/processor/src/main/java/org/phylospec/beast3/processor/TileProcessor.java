@@ -132,7 +132,7 @@ public final class TileProcessor extends AbstractProcessor {
             return Optional.of(libraries);
         }
 
-        for (String configuredPath : configuredLibraries.split(",")) {
+        for (String configuredPath : configuredLibraries.split(",", -1)) {
             String path = configuredPath.trim();
 
             if (path.isEmpty()) {

@@ -1957,6 +1957,258 @@ public class TileProcessorTest {
                         + "a public no-argument constructor.");
     }
 
+    @Test
+    public void rejectsMalformedComponentNames() throws IOException {
+        CompilationResult result = compile(
+                """
+                package mappings;
+
+                import beast.base.spec.evolution.substitutionmodel.JukesCantor;
+                import org.phylospec.annotations.GeneratorMapping;
+
+                public interface InvalidMapping {
+
+                    @GeneratorMapping(component = "", implementation = JukesCantor.class)
+                    interface BlankComponent {}
+
+                    @GeneratorMapping(component = "jc69", implementation = JukesCantor.class)
+                    interface UnqualifiedComponent {}
+                }
+                """);
+
+        assertCompilationError(result, "@GeneratorMapping component must not be blank.");
+        assertCompilationError(result, "@GeneratorMapping component must be fully qualified");
+    }
+
+    @Test
+    public void rejectsExternalMappingOutsideMappingsPackage() throws IOException {
+        CompilationResult result = compile(
+                """
+                package adapters;
+
+                import beast.base.spec.evolution.substitutionmodel.JukesCantor;
+                import org.phylospec.annotations.GeneratorMapping;
+
+                @GeneratorMapping(
+                        component = "phylospec.functions.substitution.jc69",
+                        implementation = JukesCantor.class)
+                public interface InvalidMapping {}
+                """);
+
+        assertCompilationError(
+                result,
+                "@GeneratorMapping declarations must be placed in the 'mappings' package");
+    }
+
+    @Test
+    public void rejectsDifferentImplementationOnInternalMapping() throws IOException {
+        CompilationResult result = compile(
+                """
+                package mappings;
+
+                import beast.base.spec.evolution.substitutionmodel.JTT;
+                import beast.base.spec.evolution.substitutionmodel.JukesCantor;
+                import org.phylospec.annotations.GeneratorMapping;
+
+                @GeneratorMapping(
+                        component = "phylospec.functions.substitution.jc69",
+                        implementation = JTT.class)
+                public class InvalidMapping extends JukesCantor {}
+                """);
+
+        assertCompilationError(
+                result,
+                "An internal @GeneratorMapping implementation must be omitted "
+                        + "or refer to the annotated class itself.");
+    }
+
+    @Test
+    public void rejectsInvalidImplementationClasses() throws IOException {
+        CompilationResult result = compile(
+                """
+                package mappings;
+
+                import beast.base.spec.evolution.substitutionmodel.JukesCantor;
+                import org.phylospec.annotations.GeneratorMapping;
+
+                public interface InvalidMapping {
+
+                    @GeneratorMapping(
+                            component = "phylospec.functions.substitution.jc69",
+                            implementation = Runnable.class)
+                    interface InterfaceImplementation {}
+
+                    @GeneratorMapping(
+                            component = "phylospec.functions.substitution.jc69",
+                            implementation = AbstractModel.class)
+                    interface AbstractImplementation {}
+
+                    public abstract class AbstractModel extends JukesCantor {}
+                }
+
+                @GeneratorMapping(
+                        component = "phylospec.functions.substitution.jc69",
+                        implementation = HiddenModel.class)
+                interface HiddenImplementation {}
+
+                class HiddenModel extends JukesCantor {}
+                """);
+
+        assertCompilationError(result, "@GeneratorMapping implementation must refer to a class.");
+        assertCompilationError(result, "@GeneratorMapping implementation must not be abstract.");
+        assertCompilationError(result, "@GeneratorMapping implementation must be public.");
+    }
+
+    @Test
+    public void rejectsInvalidMappingMethods() throws IOException {
+        CompilationResult result = compile(
+                """
+                package mappings;
+
+                import beast.base.spec.domain.PositiveReal;
+                import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                import beast.base.spec.type.RealScalar;
+                import org.phylospec.annotations.GeneratorMapping;
+                import org.phylospec.annotations.InputMapping;
+
+                public interface InvalidMapping {
+
+                    @GeneratorMapping(
+                            component = "phylospec.functions.coalescent.constantPopulationFunction",
+                            implementation = ConstantPopulation.class)
+                    interface MissingAnnotation {
+                        RealScalar<? extends PositiveReal> populationSize();
+                    }
+
+                    @GeneratorMapping(
+                            component = "phylospec.functions.coalescent.constantPopulationFunction",
+                            implementation = ConstantPopulation.class)
+                    interface ParameterMethod {
+                        @InputMapping(argument = "populationSize", input = "popSizeParameter")
+                        RealScalar<? extends PositiveReal> populationSize(String value);
+                    }
+
+                    @GeneratorMapping(
+                            component = "phylospec.functions.coalescent.constantPopulationFunction",
+                            implementation = ConstantPopulation.class)
+                    interface VoidMethod {
+                        @InputMapping(argument = "populationSize", input = "popSizeParameter")
+                        void populationSize();
+                    }
+
+                    @GeneratorMapping(
+                            component = "phylospec.functions.coalescent.constantPopulationFunction",
+                            implementation = ConstantPopulation.class)
+                    interface DefaultMethod {
+                        @InputMapping(argument = "populationSize", input = "popSizeParameter")
+                        default RealScalar<? extends PositiveReal> populationSize() {
+                            return null;
+                        }
+                    }
+                }
+                """);
+
+        assertCompilationError(
+                result,
+                "Every method in a @GeneratorMapping interface must declare @InputMapping.");
+        assertCompilationError(result, "@InputMapping methods must not declare parameters.");
+        assertCompilationError(result, "@InputMapping methods must return the Java value type");
+        assertCompilationError(result, "@InputMapping methods must be abstract interface methods.");
+    }
+
+    @Test
+    public void rejectsBlankInputMappingNames() throws IOException {
+        CompilationResult result = compile(
+                """
+                package mappings;
+
+                import beast.base.spec.domain.PositiveReal;
+                import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                import beast.base.spec.type.RealScalar;
+                import org.phylospec.annotations.GeneratorMapping;
+                import org.phylospec.annotations.InputMapping;
+
+                public interface InvalidMapping {
+
+                    @GeneratorMapping(
+                            component = "phylospec.functions.coalescent.constantPopulationFunction",
+                            implementation = ConstantPopulation.class)
+                    interface BlankArgument {
+                        @InputMapping(argument = "", input = "popSizeParameter")
+                        RealScalar<? extends PositiveReal> populationSize();
+                    }
+
+                    @GeneratorMapping(
+                            component = "phylospec.functions.coalescent.constantPopulationFunction",
+                            implementation = ConstantPopulation.class)
+                    interface BlankInput {
+                        @InputMapping(argument = "populationSize", input = "")
+                        RealScalar<? extends PositiveReal> populationSize();
+                    }
+                }
+                """);
+
+        assertCompilationError(result, "@InputMapping argument must not be blank.");
+        assertCompilationError(result, "@InputMapping input must not be blank.");
+    }
+
+    @Test
+    public void rejectsInvalidComponentSourceDeclarations() throws IOException {
+        CompilationResult result = compile(
+                """
+                package mappings;
+
+                import beastconfig.BEASTState;
+                import java.util.List;
+                import org.phylospec.annotations.ComponentSource;
+                import org.phylospec.tiling.TileLibrary;
+                import org.phylospec.tiling.tiles.CandidateTile;
+
+                public interface InvalidMapping {
+
+                    @ComponentSource("/components.json")
+                    interface InterfaceSource {}
+
+                    @ComponentSource("/components.json")
+                    final class NotLibrary {}
+
+                    @ComponentSource(" ")
+                    final class BlankSource extends TileLibrary<BEASTState> {
+                        @Override
+                        public Class<BEASTState> getStateType() {
+                            return BEASTState.class;
+                        }
+
+                        @Override
+                        public List<CandidateTile<BEASTState>> getTiles() {
+                            return List.of();
+                        }
+                    }
+                }
+                """);
+
+        assertCompilationError(
+                result,
+                "@ComponentSource can only be applied to a TileLibrary class.");
+        assertCompilationError(result, "@ComponentSource class must extend TileLibrary.");
+        assertCompilationError(result, "@ComponentSource resource must not be blank.");
+    }
+
+    @Test
+    public void rejectsEmptyConfiguredComponentLibraryPath() throws IOException {
+        CompilationResult result = compile(
+                """
+                package mappings;
+
+                public interface InvalidMapping {}
+                """,
+                List.of("-A" + TileProcessor.COMPONENT_LIBRARIES_OPTION + "=,"));
+
+        assertCompilationError(
+                result,
+                "contains an empty component library path.");
+    }
+
     private String adapterMapping(
             String adapterName,
             String adapterDeclaration) {
