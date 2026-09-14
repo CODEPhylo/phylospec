@@ -29,9 +29,10 @@ public class FromTreeTile extends GeneratorTile<Tree, BEASTState> {
     @Override
     public Tree applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         String path = this.fileInput.apply(beastState, indexVariables);
+        Path resolvedPath = beastState.resolvePath(path);
         if (path.endsWith(".nex") || path.endsWith(".nexus") || path.endsWith(".trees")) {
             NexusParser nexusParser = new NexusParser();
-            File file = new File(path);
+            File file = resolvedPath.toFile();
 
             try {
                 nexusParser.parseFile(file);
@@ -60,7 +61,7 @@ public class FromTreeTile extends GeneratorTile<Tree, BEASTState> {
 
         String newick = null;
         try {
-            newick = Files.readString(Path.of(path), StandardCharsets.UTF_8);
+            newick = Files.readString(resolvedPath, StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new TileApplicationError(
                     "File not found.", "'" + path + "' could not be found. Does it exist? Select a valid file path.");
