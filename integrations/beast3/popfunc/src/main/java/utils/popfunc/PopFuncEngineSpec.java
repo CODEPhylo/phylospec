@@ -50,13 +50,17 @@ public final class PopFuncEngineSpec {
                 INSTALLATION_WEBSITE);
     }
 
+    public static void writeResource(Path outputFile, String version) throws IOException {
+        EngineSpecGenerator.writeEngineSpecification(outputFile, create(version));
+    }
+
     public static void main(String[] arguments) throws IOException {
         if (arguments.length != 2) {
             throw new IllegalArgumentException(
-                    "Usage: PopFuncEngineSpec <output-directory> <popfunc-version>");
+                    "Usage: PopFuncEngineSpec <output-file> <popfunc-version>");
         }
 
-        write(Path.of(arguments[0]), arguments[1]);
+        writeResource(Path.of(arguments[0]), arguments[1]);
     }
 
     private static ComponentResolver componentResolver(

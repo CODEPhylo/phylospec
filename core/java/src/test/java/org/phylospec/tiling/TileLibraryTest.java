@@ -58,6 +58,39 @@ public class TileLibraryTest {
     }
 
     @Test
+    public void reportsMissingEngineSpecificationResource() {
+        TestLibrary library = new TestLibrary("package", List.of()) {
+            @Override
+            public List<String> getEngineSpecificationResources() {
+                return List.of("/missing-engine.json");
+            }
+        };
+
+        IOException error =
+                assertThrows(IOException.class, () -> TileLibrary.loadEngineSpecifications(List.of(library)));
+
+        assertEquals(
+                "Tile library 'package' declares engine specification resource "
+                        + "'/missing-engine.json', but it was not found on the classpath.",
+                error.getMessage());
+    }
+
+    @Test
+    public void rejectsBlankEngineSpecificationResource() {
+        TestLibrary library = new TestLibrary("package", List.of()) {
+            @Override
+            public List<String> getEngineSpecificationResources() {
+                return List.of(" ");
+            }
+        };
+
+        IllegalStateException error =
+                assertThrows(IllegalStateException.class, () -> TileLibrary.loadEngineSpecifications(List.of(library)));
+
+        assertEquals("Tile library 'package' declares a blank engine specification resource.", error.getMessage());
+    }
+
+    @Test
     public void configuresStateInLibraryOrder() {
         List<String> configuredBy = new ArrayList<>();
         Object state = new Object();
