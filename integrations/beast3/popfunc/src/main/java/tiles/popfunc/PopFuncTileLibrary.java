@@ -4,6 +4,8 @@ import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.coalescent.Coalescent;
 import beast.base.evolution.tree.coalescent.PopulationFunction;
 import beast.base.inference.Distribution;
+import beast.base.inference.Operator;
+import beast.base.inference.StateNode;
 import beastconfig.BEASTState;
 import java.util.Collections;
 import java.util.ArrayList;
@@ -79,14 +81,29 @@ public final class PopFuncTileLibrary extends TileLibrary<BEASTState> {
         }
 
         if (population instanceof PopFuncWithUpOp provider) {
-            state.addOperator(provider.getUpOperator(tree), tree);
+            addIfApplicable(state, provider.getUpOperator(tree));
         }
         if (population instanceof PopFuncWithUpDownOp provider) {
-            state.addOperator(provider.getUpDownOperator1(tree), tree);
-            state.addOperator(provider.getUpDownOperator2(tree), tree);
+            addIfApplicable(state, provider.getUpDownOperator1(tree));
+            addIfApplicable(state, provider.getUpDownOperator2(tree));
         }
         if (population instanceof PopFuncWithAVMNOp provider) {
-            state.addOperator(provider.getAVMNOperator(tree), tree);
+            addIfApplicable(state, provider.getAVMNOperator(tree));
         }
+    }
+
+    /**
+     * Registers a package operator only when every state node it changes belongs to this MCMC
+     * state. PopFunc also accepts fixed literal parameters; an operator over one of those literals
+     * would otherwise fail BEAST's MCMC sanity check because that parameter is deliberately absent
+     * from the state.
+     */
+    private static void addIfApplicable(BEASTState state, Operator operator) {
+        List<StateNode> operatedNodes = operator.listStateNodes();
+        if (operatedNodes.isEmpty()
+                || !operatedNodes.stream().allMatch(state.stateNodes::containsKey)) {
+            return;
+        }
+        state.addOperator(operator, operatedNodes);
     }
 }

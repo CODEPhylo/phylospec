@@ -58,7 +58,7 @@ public class ProviderSelectionTest {
                 List.of("popfunc", "beast2"),
                 catalog.getLibraries().stream().map(TileLibrary::getId).toList());
         assertEquals(
-                List.of("popfunc"),
+                List.of("popfunc", "beast2"),
                 catalog.getEngineSpecifications().stream()
                         .map(specification -> specification.getName())
                         .toList());

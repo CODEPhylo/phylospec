@@ -254,6 +254,47 @@ public class PopFuncWorkflowTest {
         assertTrue(Files.size(stateFile) > 0);
     }
 
+    @Test
+    public void runsFixedGompertzThroughPhyloSpecRunner(@TempDir Path outputDirectory)
+            throws Exception {
+        Path alignment = Path.of("../java/src/test/java/resources/primate-mtDNA.nex")
+                .toAbsolutePath()
+                .normalize();
+        String source = """
+                use popfunc.functions.coalescent
+
+                Alignment data = fromNexus(file="%s")
+
+                PopulationFunction population = gompertzF0PopulationFunction(
+                    initialProportion=0.2,
+                    growthRate=0.3,
+                    initialPopulationSize=1000.0,
+                    ancestralPopulationSize=100.0
+                )
+                Tree tree ~ Coalescent(populationSize=population, taxa=taxa(data))
+                QMatrix qMatrix = jc69()
+                Vector<Rate> branchRates ~ StrictClock(clockRate=1.0, tree=tree)
+                Alignment alignment ~ PhyloCTMC(
+                    tree=tree,
+                    qMatrix=qMatrix,
+                    branchRates=branchRates
+                ) observed as data
+
+                mcmc {
+                    Integer chainLength = 10
+                }
+                """.formatted(alignment);
+
+        String runName = outputDirectory.resolve("fixed-gompertz").toString();
+        PhyloSpecRunner runner =
+                new PhyloSpecRunner(source, List.of("popfunc", "beast2"));
+        runner.runPhyloSpec(runName);
+
+        assertTrue(Files.isRegularFile(Path.of(runName + ".log")));
+        assertTrue(Files.isRegularFile(Path.of(runName + ".trees")));
+        assertTrue(Files.isRegularFile(Path.of(runName + ".state.xml")));
+    }
+
     private static BEASTState tile(String source) throws IOException {
         return tile(source, "popfunc-workflow");
     }
