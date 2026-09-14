@@ -3,6 +3,9 @@ package runner;
 import beast.base.inference.*;
 import beastconfig.BEASTState;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +38,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
     private final String source;
     private final Optional<List<String>> tileLibraryIds;
+    private final Path sourceDirectory;
 
     /**
      * Constructs a runner for the given PhyloSpec source code.
@@ -42,6 +46,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
     public PhyloSpecRunner(String source) {
         this.source = source;
         this.tileLibraryIds = Optional.empty();
+        this.sourceDirectory = Path.of("").toAbsolutePath().normalize();
     }
 
     /**
@@ -51,6 +56,15 @@ public class PhyloSpecRunner implements ErrorEventListener {
     public PhyloSpecRunner(String source, List<String> tileLibraryIds) {
         this.source = source;
         this.tileLibraryIds = Optional.of(List.copyOf(tileLibraryIds));
+        this.sourceDirectory = Path.of("").toAbsolutePath().normalize();
+    }
+
+    /** Constructs a runner from a source file, resolving relative model inputs beside that file. */
+    public PhyloSpecRunner(Path sourceFile, List<String> tileLibraryIds) throws IOException {
+        Path absoluteSource = sourceFile.toAbsolutePath().normalize();
+        this.source = Files.readString(absoluteSource, StandardCharsets.UTF_8);
+        this.tileLibraryIds = Optional.of(List.copyOf(tileLibraryIds));
+        this.sourceDirectory = absoluteSource.getParent();
     }
 
     /**
@@ -104,7 +118,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         EvaluateTiles<BEASTState> applyTiles =
                 new EvaluateTiles<>(catalog.getTiles(), variableResolver, stochasticityResolver);
-        BEASTState beastState = new BEASTState(runName);
+        BEASTState beastState = new BEASTState(runName, sourceDirectory);
         try {
             applyTiles.getBestTiling(statements);
             beastState = applyTiles.applyBestTiling(beastState);

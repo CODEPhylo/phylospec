@@ -3,6 +3,7 @@ package beastconfig;
 import beast.base.core.*;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.*;
+import java.nio.file.Path;
 import java.util.*;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
@@ -17,6 +18,7 @@ import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 public class BEASTState {
 
     public final String runName;
+    private final Path sourceDirectory;
     public long chainLength = 10_00_000;
 
     private final List<BEASTObject> beastObjects;
@@ -42,7 +44,18 @@ public class BEASTState {
      * Creates a new BEAST state with the given run name.
      */
     public BEASTState(String runName) {
+        this(runName, Path.of("").toAbsolutePath().normalize());
+    }
+
+    /**
+     * Creates a state whose relative input paths are resolved from the directory containing the
+     * PhyloSpec source file.
+     */
+    public BEASTState(String runName, Path sourceDirectory) {
         this.runName = runName;
+        this.sourceDirectory = Objects.requireNonNull(sourceDirectory, "sourceDirectory")
+                .toAbsolutePath()
+                .normalize();
         this.stateNodes = new HashMap<>();
         this.calculationNodes = new HashMap<>();
         this.priorDistributions = new HashMap<>();
@@ -54,6 +67,14 @@ public class BEASTState {
         this.screenLoggerSpecs = new ArrayList<>();
         this.fileLoggerSpecs = new ArrayList<>();
         this.treeLoggerSpecs = new ArrayList<>();
+    }
+
+    /** Resolves a file named by the model, preserving absolute paths. */
+    public Path resolvePath(String path) {
+        Path requested = Path.of(path);
+        return requested.isAbsolute()
+                ? requested.normalize()
+                : sourceDirectory.resolve(requested).normalize();
     }
 
     /**
