@@ -44,6 +44,7 @@ import org.phylospec.typeresolver.VariableResolver;
 import popfunc.beast.evolution.populationmodel.GompertzGrowth_f0;
 import popfunc.beast.evolution.populationmodel.GompertzGrowth_t50;
 import popfunc.beast.evolution.populationmodel.StochasticVariableSelection;
+import runner.PhyloSpecCli;
 import runner.PhyloSpecRunner;
 import operators.popfunc.ModelIndicatorOperator;
 
@@ -255,15 +256,16 @@ public class PopFuncWorkflowTest {
     }
 
     @Test
-    public void runsFixedGompertzThroughPhyloSpecRunner(@TempDir Path outputDirectory)
+    public void runsFixedGompertzThroughCommandLine(@TempDir Path outputDirectory)
             throws Exception {
         Path alignment = Path.of("../java/src/test/java/resources/primate-mtDNA.nex")
                 .toAbsolutePath()
                 .normalize();
+        Files.copy(alignment, outputDirectory.resolve("data.nex"));
         String source = """
                 use popfunc.functions.coalescent
 
-                Alignment data = fromNexus(file="%s")
+                Alignment data = fromNexus(file="data.nex")
 
                 PopulationFunction population = gompertzF0PopulationFunction(
                     initialProportion=0.2,
@@ -283,12 +285,14 @@ public class PopFuncWorkflowTest {
                 mcmc {
                     Integer chainLength = 10
                 }
-                """.formatted(alignment);
+                """;
 
+        Path sourceFile = outputDirectory.resolve("fixed-gompertz.phylospec");
+        Files.writeString(sourceFile, source);
         String runName = outputDirectory.resolve("fixed-gompertz").toString();
-        PhyloSpecRunner runner =
-                new PhyloSpecRunner(source, List.of("popfunc", "beast2"));
-        runner.runPhyloSpec(runName);
+        PhyloSpecCli.execute(new String[] {
+            "--library", "popfunc,beast2", "--run-name", runName, sourceFile.toString()
+        });
 
         assertTrue(Files.isRegularFile(Path.of(runName + ".log")));
         assertTrue(Files.isRegularFile(Path.of(runName + ".trees")));
