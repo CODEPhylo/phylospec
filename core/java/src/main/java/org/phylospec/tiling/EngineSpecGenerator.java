@@ -2,7 +2,6 @@ package org.phylospec.tiling;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -75,15 +74,23 @@ public class EngineSpecGenerator {
                 installationInstructions,
                 installationWebsite);
 
-        Files.createDirectories(generatedDirectory);
-
-        File outputFile = generatedDirectory
+        Path outputFile = generatedDirectory
                 .resolve(engineName + "-" + engineVersion + ".json")
-                .toFile();
+                .toAbsolutePath();
+
+        writeEngineSpecification(outputFile, schema);
+    }
+
+    /** Writes an already generated engine specification to the given JSON file. */
+    public static void writeEngineSpecification(Path outputFile, EngineSpecificationSchema schema) throws IOException {
+        Path parent = outputFile.toAbsolutePath().getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        mapper.writeValue(outputFile, schema);
+        mapper.writeValue(outputFile.toFile(), schema);
     }
 
     /**

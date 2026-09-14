@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import beastconfig.BEASTState;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -164,6 +165,22 @@ public class PopFuncEngineSpecTest {
                 .readValue(specificationFile.toFile(), EngineSpecificationSchema.class);
 
         assertEquals("popfunc", specification.getName());
+        assertEquals(VERSION, specification.getEngineVersion());
+        assertEquals(List.of("beast2"), specification.getDependsOn());
+        assertEquals(9, specification.getGenerators().size());
+    }
+
+    @Test
+    public void discoversPackagedSpecification() throws IOException {
+        List<EngineSpecificationSchema> specifications =
+                TileLibrary.loadEngineSpecifications(BEASTState.class);
+
+        List<EngineSpecificationSchema> popFuncSpecifications = specifications.stream()
+                .filter(specification -> "popfunc".equals(specification.getName()))
+                .toList();
+
+        assertEquals(1, popFuncSpecifications.size());
+        EngineSpecificationSchema specification = popFuncSpecifications.getFirst();
         assertEquals(VERSION, specification.getEngineVersion());
         assertEquals(List.of("beast2"), specification.getDependsOn());
         assertEquals(9, specification.getGenerators().size());

@@ -1,5 +1,6 @@
 package org.phylospec.tiling;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.Set;
 import org.phylospec.annotations.ComponentSource;
 import org.phylospec.components.ComponentLibrary;
 import org.phylospec.components.ComponentResolver;
+import org.phylospec.components.EngineSpecificationSchema;
 import org.phylospec.tiling.tiles.CandidateTile;
 import org.phylospec.tiling.tiles.GeneratorTile;
 
@@ -47,6 +49,11 @@ public abstract class TileLibrary<S> {
     public List<String> getComponentLibraryResources() {
         ComponentSource source = getClass().getAnnotation(ComponentSource.class);
         return source == null ? List.of() : List.of(source.value());
+    }
+
+    /** Returns classpath resources containing engine specifications supplied by this adapter. */
+    public List<String> getEngineSpecificationResources() {
+        return List.of();
     }
 
     /** Discovers the Tile libraries whose state type is compatible with {@code stateType}. */
@@ -177,6 +184,54 @@ public abstract class TileLibrary<S> {
             }
         }
         return components;
+    }
+
+    /** Discovers compatible tile libraries and loads their packaged engine specifications. */
+    public static <S> List<EngineSpecificationSchema> loadEngineSpecifications(Class<S> stateType) throws IOException {
+        return loadEngineSpecifications(discover(stateType));
+    }
+
+    /** Loads engine specifications declared by the given tile libraries. */
+    public static List<EngineSpecificationSchema> loadEngineSpecifications(List<? extends TileLibrary<?>> libraries)
+            throws IOException {
+        Objects.requireNonNull(libraries, "libraries");
+
+        ObjectMapper mapper = new ObjectMapper();
+        List<EngineSpecificationSchema> specifications = new ArrayList<>();
+        for (TileLibrary<?> library : libraries) {
+            Objects.requireNonNull(library, "libraries must not contain null");
+            String libraryId = requireId(library);
+
+            for (String resource : library.getEngineSpecificationResources()) {
+                if (resource == null || resource.isBlank()) {
+                    throw new IllegalStateException(
+                            "Tile library '" + libraryId + "' declares a blank engine specification resource.");
+                }
+
+                try (InputStream input = library.getClass().getResourceAsStream(resource)) {
+                    if (input == null) {
+                        throw new IOException("Tile library '"
+                                + libraryId
+                                + "' declares engine specification resource '"
+                                + resource
+                                + "', but it was not found on the classpath.");
+                    }
+
+                    EngineSpecificationSchema specification = mapper.readValue(input, EngineSpecificationSchema.class);
+                    if (!libraryId.equals(specification.getName())) {
+                        throw new IOException("Tile library '"
+                                + libraryId
+                                + "' declares engine specification resource '"
+                                + resource
+                                + "' for engine '"
+                                + specification.getName()
+                                + "'.");
+                    }
+                    specifications.add(specification);
+                }
+            }
+        }
+        return List.copyOf(specifications);
     }
 
     /**

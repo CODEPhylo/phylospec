@@ -41,6 +41,11 @@ public final class PopFuncTileLibrary extends TileLibrary<BEASTState> {
     }
 
     @Override
+    public List<String> getEngineSpecificationResources() {
+        return List.of("/META-INF/phylospec/engines/popfunc.json");
+    }
+
+    @Override
     public void configureState(BEASTState state) {
         for (Distribution prior : state.priorDistributions.values()) {
             if (!(prior instanceof Coalescent coalescent)) {
