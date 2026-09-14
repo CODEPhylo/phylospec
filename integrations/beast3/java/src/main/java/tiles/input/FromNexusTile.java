@@ -29,7 +29,7 @@ public class FromNexusTile extends GeneratorTile<DecoratedAlignment, BEASTState>
     @Override
     public DecoratedAlignment applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         String path = this.fileInput.apply(beastState, indexVariables);
-        File file = new File(path);
+        File file = beastState.resolvePath(path).toFile();
 
         NexusParser nexusParser = new NexusParser();
         try {
