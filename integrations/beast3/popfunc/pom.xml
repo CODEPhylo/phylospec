@@ -86,14 +86,14 @@
                 <executions>
                     <execution>
                         <id>generate-engine-specification</id>
-                        <phase>prepare-package</phase>
+                        <phase>process-classes</phase>
                         <goals>
                             <goal>java</goal>
                         </goals>
                         <configuration>
                             <mainClass>utils.popfunc.PopFuncEngineSpec</mainClass>
                             <arguments>
-                                <argument>${project.build.outputDirectory}/META-INF/phylospec/engines</argument>
+                                <argument>${project.build.outputDirectory}/META-INF/phylospec/engines/popfunc.json</argument>
                                 <argument>${popfunc.version}</argument>
                             </arguments>
                             <classpathScope>runtime</classpathScope>
