@@ -144,4 +144,9 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.addAll(GeneratedTileRegistry.createTiles());
         return tiles;
     }
+
+    @Override
+    public List<String> getEngineSpecificationResources() {
+        return List.of("/META-INF/phylospec/engines/beast2.json");
+    }
 }

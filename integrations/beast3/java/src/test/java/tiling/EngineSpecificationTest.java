@@ -102,4 +102,14 @@ public class EngineSpecificationTest {
                                 && "phylospec.functions.coalescent".equals(generator.getNamespace())),
                 "BEAST core must not advertise the package-provided Logistic model.");
     }
+
+    @Test
+    public void loadsPackagedEngineSpecification() throws IOException {
+        List<EngineSpecificationSchema> specifications =
+                org.phylospec.tiling.TileLibrary.loadEngineSpecifications(List.of(new BeastCoreTileLibrary()));
+
+        assertEquals(1, specifications.size());
+        assertEquals("beast2", specifications.getFirst().getName());
+        assertFalse(specifications.getFirst().getGenerators().isEmpty());
+    }
 }
