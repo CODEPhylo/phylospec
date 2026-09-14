@@ -1,5 +1,6 @@
 package tiling.popfunc;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -17,6 +18,7 @@ import org.phylospec.components.ComponentResolver;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
+import org.phylospec.tiling.TileCatalog;
 import org.phylospec.tiling.TileLibrary;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.CandidateTile;
@@ -45,6 +47,27 @@ public class ProviderSelectionTest {
                 BEASTState.class, List.of("beast2", "popfunc")));
 
         assertInstanceOf(ConstantPopulation.class, result);
+    }
+
+    @Test
+    public void selectedCatalogUsesOneConsistentPackageSet() throws IOException {
+        TileCatalog<BEASTState> catalog =
+                TileCatalog.select(BEASTState.class, List.of("popfunc", "beast2"));
+
+        assertEquals(
+                List.of("popfunc", "beast2"),
+                catalog.getLibraries().stream().map(TileLibrary::getId).toList());
+        assertEquals(
+                List.of("popfunc"),
+                catalog.getEngineSpecifications().stream()
+                        .map(specification -> specification.getName())
+                        .toList());
+        assertEquals(2, catalog.getComponentLibraries().size());
+        assertEquals(1, catalog.getComponentResolver()
+                .resolveGenerator("popfunc.functions.coalescent.gompertzF0PopulationFunction")
+                .size());
+        assertTrue(catalog.getTiles().stream()
+                .anyMatch(tile -> tile.getClass().getSimpleName().equals("GompertzF0GeneratedTile")));
     }
 
     @Test

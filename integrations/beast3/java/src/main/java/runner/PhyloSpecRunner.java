@@ -11,7 +11,6 @@ import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
 import org.phylospec.ast.transformers.RemoveGroupings;
-import org.phylospec.components.ComponentResolver;
 import org.phylospec.errors.Error;
 import org.phylospec.errors.ErrorEventListener;
 import org.phylospec.lexer.Lexer;
@@ -19,7 +18,7 @@ import org.phylospec.lexer.Range;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
-import org.phylospec.tiling.TileLibrary;
+import org.phylospec.tiling.TileCatalog;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeError;
@@ -60,10 +59,9 @@ public class PhyloSpecRunner implements ErrorEventListener {
      * via {@link #errorDetected} and terminates the process immediately.
      */
     public void runPhyloSpec(String runName) throws IOException, ParserConfigurationException, SAXException {
-        List<TileLibrary<BEASTState>> tileLibraries = tileLibraryIds
-                .map(ids -> TileLibrary.select(BEASTState.class, ids))
-                .orElseGet(() -> TileLibrary.discover(BEASTState.class));
-        ComponentResolver componentResolver = loadComponentResolver(tileLibraries);
+        TileCatalog<BEASTState> catalog = tileLibraryIds.isPresent()
+                ? TileCatalog.select(BEASTState.class, tileLibraryIds.get())
+                : TileCatalog.discover(BEASTState.class);
 
         // run lexer
 
@@ -89,7 +87,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // run type resolver
 
-        TypeResolver typeResolver = new TypeResolver(componentResolver);
+        TypeResolver typeResolver = new TypeResolver(catalog.getComponentResolver());
         typeResolver.registerEventListener(this);
 
         try {
@@ -104,11 +102,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // perform tiling
 
-        var candidateTiles = tileLibraryIds.isPresent()
-                ? TileLibrary.combine(tileLibraries)
-                : TileLibrary.collectTiles(tileLibraries);
         EvaluateTiles<BEASTState> applyTiles =
-                new EvaluateTiles<>(candidateTiles, variableResolver, stochasticityResolver);
+                new EvaluateTiles<>(catalog.getTiles(), variableResolver, stochasticityResolver);
         BEASTState beastState = new BEASTState(runName);
         try {
             applyTiles.getBestTiling(statements);
@@ -118,7 +113,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
             this.errorDetected(error.toError(range));
         }
 
-        TileLibrary.configureState(tileLibraries, beastState);
+        catalog.configureState(beastState);
 
         // add state
 
@@ -159,14 +154,6 @@ public class PhyloSpecRunner implements ErrorEventListener {
         beastState.initializeBEASTObjects();
 
         mcmc.run();
-    }
-
-    /**
-     * Loads core and adapter-provided component libraries and returns a resolver backed by them.
-     */
-    private static ComponentResolver loadComponentResolver(List<? extends TileLibrary<?>> tileLibraries)
-            throws IOException {
-        return new ComponentResolver(TileLibrary.loadComponentLibraries(tileLibraries));
     }
 
     /**
