@@ -67,6 +67,7 @@
         <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
         <maven-dependency-plugin.version>3.7.0</maven-dependency-plugin.version>
         <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
+        <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
 
         <!-- Adapter modules opt in to producing a self-contained runtime directory. -->
         <phylospec.adapter.bundle.skip>true</phylospec.adapter.bundle.skip>
@@ -161,6 +162,26 @@
                                         </includes>
                                     </resource>
                                 </resources>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>${maven-assembly-plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>package-adapter-zip</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                            <configuration>
+                                <skipAssembly>${phylospec.adapter.bundle.skip}</skipAssembly>
+                                <descriptors>
+                                    <descriptor>${maven.multiModuleProjectDirectory}/build/phylospec-adapter.xml</descriptor>
+                                </descriptors>
                             </configuration>
                         </execution>
                     </executions>
