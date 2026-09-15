@@ -20,6 +20,8 @@ public class BEASTState {
     public final String runName;
     private final Path sourceDirectory;
     public long chainLength = 10_00_000;
+    public int defaultLogEvery = 1000;
+    public String outputPrefix;
 
     private final List<BEASTObject> beastObjects;
     private final Set<BEASTObject> initializedBeastObjects;
@@ -53,6 +55,7 @@ public class BEASTState {
      */
     public BEASTState(String runName, Path sourceDirectory) {
         this.runName = runName;
+        this.outputPrefix = runName;
         this.sourceDirectory = Objects.requireNonNull(sourceDirectory, "sourceDirectory")
                 .toAbsolutePath()
                 .normalize();

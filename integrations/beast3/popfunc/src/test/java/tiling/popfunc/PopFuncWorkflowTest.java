@@ -262,6 +262,7 @@ public class PopFuncWorkflowTest {
                 .toAbsolutePath()
                 .normalize();
         Files.copy(alignment, outputDirectory.resolve("data.nex"));
+        String outputPrefix = outputDirectory.resolve("script-output").toString();
         String source = """
                 use popfunc.functions.coalescent
 
@@ -284,8 +285,10 @@ public class PopFuncWorkflowTest {
 
                 mcmc {
                     Integer chainLength = 10
+                    Integer defaultLogEvery = 1
+                    String outputPrefix = "%s"
                 }
-                """;
+                """.formatted(outputPrefix);
 
         Path sourceFile = outputDirectory.resolve("fixed-gompertz.phylospec");
         Files.writeString(sourceFile, source);
@@ -294,9 +297,15 @@ public class PopFuncWorkflowTest {
             "--library", "popfunc,beast2", "--run-name", runName, sourceFile.toString()
         });
 
-        assertTrue(Files.isRegularFile(Path.of(runName + ".log")));
-        assertTrue(Files.isRegularFile(Path.of(runName + ".trees")));
-        assertTrue(Files.isRegularFile(Path.of(runName + ".state.xml")));
+        Path traceFile = Path.of(outputPrefix + ".log");
+        assertTrue(Files.isRegularFile(traceFile));
+        assertEquals(
+                11,
+                Files.readAllLines(traceFile).stream()
+                        .filter(line -> line.strip().matches("\\d+\\s+.*"))
+                        .count());
+        assertTrue(Files.isRegularFile(Path.of(outputPrefix + ".trees")));
+        assertTrue(Files.isRegularFile(Path.of(outputPrefix + ".state.xml")));
     }
 
     private static BEASTState tile(String source) throws IOException {
