@@ -22,6 +22,7 @@ public class BEASTState {
     public long chainLength = 10_00_000;
     public int defaultLogEvery = 1000;
     public String outputPrefix;
+    public Long randomSeed;
 
     private final List<BEASTObject> beastObjects;
     private final Set<BEASTObject> initializedBeastObjects;

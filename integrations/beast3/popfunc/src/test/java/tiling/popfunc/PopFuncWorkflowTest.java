@@ -287,6 +287,7 @@ public class PopFuncWorkflowTest {
                     Integer chainLength = 10
                     Integer defaultLogEvery = 1
                     String outputPrefix = "%s"
+                    Integer randomSeed = 12345
                 }
                 """.formatted(outputPrefix);
 
