@@ -180,7 +180,7 @@
                             <configuration>
                                 <skipAssembly>${phylospec.adapter.bundle.skip}</skipAssembly>
                                 <descriptors>
-                                    <descriptor>${maven.multiModuleProjectDirectory}/build/phylospec-adapter.xml</descriptor>
+                                    <descriptor>${project.parent.basedir}/build/phylospec-adapter.xml</descriptor>
                                 </descriptors>
                             </configuration>
                         </execution>
