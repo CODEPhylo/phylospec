@@ -1,6 +1,7 @@
 package runner;
 
 import beast.base.inference.*;
+import beast.base.util.Randomizer;
 import beastconfig.BEASTState;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -165,6 +166,9 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // run
 
+        if (beastState.randomSeed != null) {
+            Randomizer.setSeed(beastState.randomSeed);
+        }
         beastState.initializeBEASTObjects();
 
         mcmc.run();
