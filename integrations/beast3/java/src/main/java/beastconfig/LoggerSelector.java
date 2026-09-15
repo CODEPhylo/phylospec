@@ -27,10 +27,11 @@ public class LoggerSelector {
         List<BEASTObject> loggableObjects = getLoggableObjects(beastState);
 
         if (beastState.screenLoggerSpecs.isEmpty()) {
-            beastState.addScreenLoggerSpec(new ScreenLoggerSpec<>(1000, loggableObjects));
+            beastState.addScreenLoggerSpec(new ScreenLoggerSpec<>(beastState.defaultLogEvery, loggableObjects));
         }
         if (beastState.fileLoggerSpecs.isEmpty()) {
-            beastState.addFileLoggerSpec(new FileLoggerSpec<>(1000, beastState.runName + ".log", loggableObjects));
+            beastState.addFileLoggerSpec(new FileLoggerSpec<>(
+                    beastState.defaultLogEvery, beastState.outputPrefix + ".log", loggableObjects));
         }
 
         List<Tree> loggableTrees = getLoggableTrees(beastState);
@@ -38,7 +39,8 @@ public class LoggerSelector {
         if (!loggableTrees.isEmpty() && beastState.treeLoggerSpecs.isEmpty()) {
             for (Tree tree : loggableTrees) {
                 String name = loggableTrees.size() == 1 ? "" : "-" + tree.getID();
-                beastState.addTreeLoggerSpec(new TreeLoggerSpec<>(1000, beastState.runName + name + ".trees", tree));
+                beastState.addTreeLoggerSpec(new TreeLoggerSpec<>(
+                        beastState.defaultLogEvery, beastState.outputPrefix + name + ".trees", tree));
             }
         }
     }
