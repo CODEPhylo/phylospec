@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javax.xml.parsers.ParserConfigurationException;
+import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
@@ -95,6 +96,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         statements = new RemoveGroupings().transform(statements);
         statements = new EvaluateLiterals().transform(statements);
         statements = new EvaluateScalarFunctions().transform(statements);
+        seedRandomizer(statements);
 
         // run variable resolver
 
@@ -172,6 +174,20 @@ public class PhyloSpecRunner implements ErrorEventListener {
         beastState.initializeBEASTObjects();
 
         mcmc.run();
+    }
+
+    /** Seeds model construction as well as the MCMC itself when a constant seed is supplied. */
+    private static void seedRandomizer(List<Stmt> statements) {
+        for (Stmt statement : statements) {
+            if (statement instanceof Stmt.Assignment assignment
+                    && Stmt.Block.MCMC.equals(assignment.block)
+                    && assignment.name.equals("randomSeed")
+                    && assignment.expression instanceof Expr.Literal literal
+                    && literal.value instanceof Number number
+                    && number.longValue() >= 0) {
+                Randomizer.setSeed(number.longValue());
+            }
+        }
     }
 
     /**
