@@ -161,7 +161,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         beastState.setInput(mcmc, mcmc.operatorsInput, beastState.operators);
         beastState.setInput(mcmc, mcmc.loggersInput, loggers);
-        mcmc.setStateFile(runName + ".state.xml", false);
+        mcmc.setStateFile(beastState.outputPrefix + ".state.xml", false);
 
         // run
 

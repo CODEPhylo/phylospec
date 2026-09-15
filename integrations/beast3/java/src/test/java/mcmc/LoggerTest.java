@@ -56,6 +56,24 @@ public class LoggerTest {
     }
 
     @Test
+    public void testDefaultLoggerSettingsCanBeConfigured() {
+        Built built = tile(MODEL + """
+                                mcmc {
+                                    Integer defaultLogEvery = 17
+                                    String outputPrefix = "configured/run"
+                                }
+                                """);
+
+        List<Logger> loggers = buildLoggers(built);
+
+        assertEquals(17, built.state().defaultLogEvery);
+        assertEquals("configured/run", built.state().outputPrefix);
+        assertTrue(loggers.stream().allMatch(logger -> logger.everyInput.get() == 17));
+        assertEquals("configured/run.log", fileName(loggers.get(1)));
+        assertEquals("configured/run.trees", fileName(loggers.get(2)));
+    }
+
+    @Test
     public void testTreeLoggerWithoutTreeLogsAllLoggableTrees() {
         Built built = tile(MODEL + """
                                 mcmc {
