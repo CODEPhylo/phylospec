@@ -307,6 +307,28 @@ public class PopFuncWorkflowTest {
                         .count());
         assertTrue(Files.isRegularFile(Path.of(outputPrefix + ".trees")));
         assertTrue(Files.isRegularFile(Path.of(outputPrefix + ".state.xml")));
+
+        String secondPrefix = outputDirectory.resolve("second-output").toString();
+        Path secondSourceFile = outputDirectory.resolve("second-gompertz.phylospec");
+        Files.writeString(secondSourceFile, source.replace(outputPrefix, secondPrefix));
+        PhyloSpecCli.execute(new String[] {
+            "--library", "popfunc,beast2", secondSourceFile.toString()
+        });
+
+        List<List<String>> firstSamples = Files.readAllLines(traceFile).stream()
+                .filter(line -> line.strip().matches("\\d+\\s+.*"))
+                .map(PopFuncWorkflowTest::stochasticTraceColumns)
+                .toList();
+        List<List<String>> secondSamples = Files.readAllLines(Path.of(secondPrefix + ".log")).stream()
+                .filter(line -> line.strip().matches("\\d+\\s+.*"))
+                .map(PopFuncWorkflowTest::stochasticTraceColumns)
+                .toList();
+        assertEquals(firstSamples, secondSamples);
+    }
+
+    private static List<String> stochasticTraceColumns(String line) {
+        String[] columns = line.strip().split("\\s+");
+        return List.of(columns[0], columns[3], columns[4], columns[5]);
     }
 
     private static BEASTState tile(String source) throws IOException {
