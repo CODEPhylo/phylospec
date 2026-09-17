@@ -6,6 +6,7 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.phylospec.typeresolver.Stochasticity;
 
 /**
  * Maps one PhyloSpec generator argument to an input on the engine implementation class.
@@ -46,4 +47,15 @@ public @interface InputMapping {
      * is compatible with the engine input type.
      */
     Class<?> fallback() default Void.class;
+
+    /**
+     * Kinds of PhyloSpec values that this engine input can consume safely.
+     *
+     * <p>The default preserves the existing behaviour. Restrict this set when an adapter copies a
+     * value into an engine object and therefore cannot preserve deterministic or stochastic state
+     * updates.</p>
+     */
+    Stochasticity[] accepts() default {
+        Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC, Stochasticity.STOCHASTIC, Stochasticity.UNDEFINED
+    };
 }
