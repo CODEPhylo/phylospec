@@ -884,6 +884,163 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void preservesAllStochasticitiesByDefault() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.coalescent.constantPopulationFunction",
+                                implementation = ConstantPopulation.class)
+                        public interface InvalidMapping {
+
+                            @InputMapping(argument = "populationSize", input = "popSizeParameter")
+                            RealScalar<? extends PositiveReal> populationSize();
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String generatedSource =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/InvalidGeneratedTile.java"));
+
+        assertTrue(generatedSource.contains("Stochasticity.CONSTANT"));
+        assertTrue(generatedSource.contains("Stochasticity.DETERMINISTIC"));
+        assertTrue(generatedSource.contains("Stochasticity.STOCHASTIC"));
+        assertTrue(generatedSource.contains("Stochasticity.UNDEFINED"));
+    }
+
+    @Test
+    public void generatesRestrictedInputStochasticities() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import org.phylospec.typeresolver.Stochasticity;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.coalescent.constantPopulationFunction",
+                                implementation = ConstantPopulation.class)
+                        public interface InvalidMapping {
+
+                            @InputMapping(
+                                    argument = "populationSize",
+                                    input = "popSizeParameter",
+                                    accepts = Stochasticity.CONSTANT)
+                            RealScalar<? extends PositiveReal> populationSize();
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String generatedSource =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/InvalidGeneratedTile.java"));
+
+        assertTrue(
+                generatedSource.contains(
+                        "java.util.Set.of("
+                                + "org.phylospec.typeresolver.Stochasticity.CONSTANT)"));
+        assertFalse(generatedSource.contains("Stochasticity.STOCHASTIC"));
+    }
+
+    @Test
+    public void rejectsEmptyAcceptedStochasticities() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.coalescent.constantPopulationFunction",
+                                implementation = ConstantPopulation.class)
+                        public interface InvalidMapping {
+
+                            @InputMapping(
+                                    argument = "populationSize",
+                                    input = "popSizeParameter",
+                                    accepts = {})
+                            RealScalar<? extends PositiveReal> populationSize();
+                        }
+                        """);
+
+        assertCompilationError(
+                result,
+                "@InputMapping accepts must contain at least one Stochasticity value.");
+    }
+
+    @Test
+    public void rejectsConflictingStochasticitiesForRepeatedMappings() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.evolution.tree.coalescent.PopulationFunction;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import org.phylospec.typeresolver.Stochasticity;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.coalescent.constantPopulationFunction",
+                                implementation = InvalidMapping.Model.class,
+                                output = PopulationFunction.class)
+                        public interface InvalidMapping {
+
+                            @InputMapping(
+                                    argument = "populationSize",
+                                    input = "firstInput",
+                                    accepts = Stochasticity.CONSTANT)
+                            @InputMapping(
+                                    argument = "populationSize",
+                                    input = "secondInput",
+                                    accepts = Stochasticity.STOCHASTIC)
+                            RealScalar<? extends PositiveReal> populationSize();
+
+                            final class Model extends ConstantPopulation {
+                                public final Input<RealScalar<? extends PositiveReal>> firstInput =
+                                        new Input<>("first", "first");
+                                public final Input<RealScalar<? extends PositiveReal>> secondInput =
+                                        new Input<>("second", "second");
+                            }
+                        }
+                        """);
+
+        assertCompilationError(
+                result,
+                "Repeated mappings for PhyloSpec argument 'populationSize' "
+                        + "must declare the same accepted stochasticities.");
+    }
+
+    @Test
     public void rejectsDifferentArgumentsOnOneMappingMember() throws IOException {
         CompilationResult result =
                 compile(

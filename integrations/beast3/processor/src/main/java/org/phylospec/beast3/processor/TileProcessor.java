@@ -2,6 +2,7 @@ package org.phylospec.beast3.processor;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +42,7 @@ import org.phylospec.components.ComponentResolver;
 import org.phylospec.components.Generator;
 import org.phylospec.tiling.InputFallback;
 import org.phylospec.tiling.TypeAdapter;
+import org.phylospec.typeresolver.Stochasticity;
 
 public final class TileProcessor extends AbstractProcessor {
 
@@ -821,6 +823,15 @@ public final class TileProcessor extends AbstractProcessor {
                                 values.get("fallback")
                                         .getValue();
 
+                Optional<Set<Stochasticity>> acceptedStochasticitiesResult =
+                        readAcceptedStochasticities(
+                                values.get("accepts"),
+                                method);
+
+                if (acceptedStochasticitiesResult.isEmpty()) {
+                    return Optional.empty();
+                }
+
                 if (!registerArgumentDeclaration(
                         argumentName,
                         method,
@@ -837,6 +848,7 @@ public final class TileProcessor extends AbstractProcessor {
                                 method.getReturnType(),
                                 adapterType,
                                 fallbackType,
+                                acceptedStochasticitiesResult.orElseThrow(),
                                 implementationDeclaration,
                                 implementationType,
                                 componentGenerators,
@@ -893,6 +905,15 @@ public final class TileProcessor extends AbstractProcessor {
                                     values.get("fallback")
                                             .getValue();
 
+                    Optional<Set<Stochasticity>> acceptedStochasticitiesResult =
+                            readAcceptedStochasticities(
+                                    values.get("accepts"),
+                                    field);
+
+                    if (acceptedStochasticitiesResult.isEmpty()) {
+                        return Optional.empty();
+                    }
+
                     if (!registerArgumentDeclaration(
                             argumentName,
                             field,
@@ -909,6 +930,7 @@ public final class TileProcessor extends AbstractProcessor {
                                     null,
                                     adapterType,
                                     fallbackType,
+                                    acceptedStochasticitiesResult.orElseThrow(),
                                     implementationDeclaration,
                                     implementationType,
                                     componentGenerators,
@@ -967,6 +989,7 @@ public final class TileProcessor extends AbstractProcessor {
             TypeMirror declaredValueType,
             TypeMirror declaredAdapterType,
             TypeMirror declaredFallbackType,
+            Set<Stochasticity> acceptedStochasticities,
             TypeElement implementationDeclaration,
             TypeMirror implementationType,
             List<Generator> componentGenerators,
@@ -1128,6 +1151,7 @@ public final class TileProcessor extends AbstractProcessor {
                         valueType,
                         Boolean.TRUE.equals(
                                 componentArgument.getRequired()),
+                        acceptedStochasticities,
                         List.of(
                                 new InputBindingSpec(
                                         beastInputName,
@@ -1201,6 +1225,16 @@ public final class TileProcessor extends AbstractProcessor {
                 return false;
             }
 
+            if (!existing.acceptedStochasticities().equals(
+                    candidate.acceptedStochasticities())) {
+                printError(
+                        "Repeated mappings for PhyloSpec argument '"
+                                + candidate.argument()
+                                + "' must declare the same accepted stochasticities.",
+                        declaration);
+                return false;
+            }
+
             List<InputBindingSpec> bindings =
                     new ArrayList<>(existing.bindings());
             bindings.addAll(candidate.bindings());
@@ -1212,6 +1246,7 @@ public final class TileProcessor extends AbstractProcessor {
                             existing.semanticType(),
                             existing.valueType(),
                             existing.required(),
+                            existing.acceptedStochasticities(),
                             bindings));
             return true;
         }
@@ -1578,6 +1613,48 @@ public final class TileProcessor extends AbstractProcessor {
         }
 
         return List.copyOf(result);
+    }
+
+    private Optional<Set<Stochasticity>> readAcceptedStochasticities(
+            AnnotationValue annotationValue,
+            Element declaration) {
+
+        Object value = annotationValue.getValue();
+
+        if (!(value instanceof List<?> entries)) {
+            printError(
+                    "@InputMapping accepts must be an array of Stochasticity values.",
+                    declaration);
+            return Optional.empty();
+        }
+
+        EnumSet<Stochasticity> accepted =
+                EnumSet.noneOf(Stochasticity.class);
+
+        for (Object entry : entries) {
+            Object enumValue =
+                    ((AnnotationValue) entry).getValue();
+
+            if (!(enumValue instanceof VariableElement enumConstant)) {
+                printError(
+                        "@InputMapping accepts must contain Stochasticity values.",
+                        declaration);
+                return Optional.empty();
+            }
+
+            accepted.add(
+                    Stochasticity.valueOf(
+                            enumConstant.getSimpleName().toString()));
+        }
+
+        if (accepted.isEmpty()) {
+            printError(
+                    "@InputMapping accepts must contain at least one Stochasticity value.",
+                    declaration);
+            return Optional.empty();
+        }
+
+        return Optional.of(accepted);
     }
 
     private Optional<List<Generator>> selectComponentGenerators(
