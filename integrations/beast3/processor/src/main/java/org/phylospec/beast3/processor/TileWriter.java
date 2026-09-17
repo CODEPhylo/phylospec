@@ -107,8 +107,25 @@ final class TileWriter {
                     .append(",\n")
                     .append("                            ")
                     .append(input.required())
+                    .append(",\n")
+                    .append("                            ")
+                    .append(stochasticities(input))
                     .append(");\n\n");
         }
+    }
+
+    private String stochasticities(InputSpec input) {
+        return input.acceptedStochasticities().stream()
+                .sorted()
+                .map(
+                        stochasticity ->
+                                "org.phylospec.typeresolver.Stochasticity."
+                                        + stochasticity.name())
+                .collect(
+                        java.util.stream.Collectors.joining(
+                                ", ",
+                                "java.util.Set.of(",
+                                ")"));
     }
 
     private void appendApplyMethod(
