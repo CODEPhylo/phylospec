@@ -114,6 +114,27 @@ public class TileLibraryTest {
         assertEquals(List.of("first", "second"), configuredBy);
     }
 
+    @Test
+    public void initializesRuntimeInLibraryOrder() {
+        List<String> initializedBy = new ArrayList<>();
+        TileLibrary<Object> first = new TestLibrary("first", List.of()) {
+            @Override
+            public void initializeRuntime() {
+                initializedBy.add(getId());
+            }
+        };
+        TileLibrary<Object> second = new TestLibrary("second", List.of()) {
+            @Override
+            public void initializeRuntime() {
+                initializedBy.add(getId());
+            }
+        };
+
+        TileLibrary.initializeRuntime(List.of(first, second));
+
+        assertEquals(List.of("first", "second"), initializedBy);
+    }
+
     private static List<Class<?>> classesOf(List<CandidateTile<Object>> tiles) {
         List<Class<?>> classes = new ArrayList<>();
         for (CandidateTile<Object> tile : tiles) {
