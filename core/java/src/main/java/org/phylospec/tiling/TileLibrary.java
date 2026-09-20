@@ -35,6 +35,13 @@ public abstract class TileLibrary<S> {
     public abstract List<CandidateTile<S>> getTiles();
 
     /**
+     * Performs package-specific setup required before parsing or tiling begins.
+     * Implementations may use this hook to register runtime services such as engine-specific
+     * data types. The default implementation does nothing.
+     */
+    public void initializeRuntime() {}
+
+    /**
      * Applies package-specific configuration after tiling has built the engine state.
      * Implementations may use this hook for behavior that cannot be inferred from a generator
      * mapping, such as model-specific MCMC operators.
@@ -90,6 +97,15 @@ public abstract class TileLibrary<S> {
                     .getTiles());
         }
         return all;
+    }
+
+    /** Initializes each selected library before its tiles or metadata are used. */
+    public static void initializeRuntime(List<? extends TileLibrary<?>> libraries) {
+        Objects.requireNonNull(libraries, "libraries");
+
+        for (TileLibrary<?> library : libraries) {
+            Objects.requireNonNull(library, "libraries must not contain null").initializeRuntime();
+        }
     }
 
     /** Applies the post-tiling configuration supplied by each selected library, in order. */
