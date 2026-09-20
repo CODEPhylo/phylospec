@@ -21,6 +21,7 @@ public final class TileCatalog<S> {
 
     private TileCatalog(List<TileLibrary<S>> libraries, boolean applyProviderPrecedence) throws IOException {
         this.libraries = List.copyOf(libraries);
+        TileLibrary.initializeRuntime(this.libraries);
         this.tiles = applyProviderPrecedence
                 ? TileLibrary.combine(this.libraries)
                 : TileLibrary.collectTiles(this.libraries);
