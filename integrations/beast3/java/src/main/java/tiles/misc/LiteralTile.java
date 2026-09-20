@@ -1,6 +1,7 @@
 package tiles.misc;
 
 import beast.base.spec.domain.*;
+import beast.base.spec.inference.parameter.BoolScalarParam;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beastconfig.BEASTState;
@@ -50,6 +51,12 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BEASTState> {
 
         if (literal.value instanceof String string) {
             return Set.of(new LiteralTile<String>(new TypeToken<String>() {}, string, literal));
+        }
+
+        if (literal.value instanceof Boolean bool) {
+            return Set.of(
+                    new LiteralTile<Boolean>(new TypeToken<Boolean>() {}, bool, literal),
+                    new LiteralTile<>(new TypeToken<>() {}, new BoolScalarParam(bool), literal));
         }
 
         if (literal.value instanceof Integer number) {
