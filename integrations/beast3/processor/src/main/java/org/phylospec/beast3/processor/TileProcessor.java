@@ -31,6 +31,7 @@ import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import org.phylospec.annotations.AdapterMapping;
+import org.phylospec.annotations.AdapterSource;
 import org.phylospec.annotations.ComponentSource;
 import org.phylospec.annotations.GeneratorMapping;
 import org.phylospec.annotations.InputMapping;
@@ -57,6 +58,7 @@ public final class TileProcessor extends AbstractProcessor {
 
     private TileWriter tileWriter;
     private RegistryWriter registryWriter;
+    private AdapterIndexWriter adapterIndexWriter;
     private ComponentResolver componentResolver;
     private List<ComponentLibrary> componentLibraries;
     private TypeBindings typeBindings;
@@ -68,6 +70,7 @@ public final class TileProcessor extends AbstractProcessor {
             new HashMap<>();
 
     private boolean registryGenerated;
+    private boolean adapterIndexGenerated;
 
     @Override
     public synchronized void init(
@@ -102,6 +105,10 @@ public final class TileProcessor extends AbstractProcessor {
 
         this.registryWriter =
                 new RegistryWriter(
+                        processingEnvironment.getFiler(),
+                        generatedPackage);
+        this.adapterIndexWriter =
+                new AdapterIndexWriter(
                         processingEnvironment.getFiler(),
                         generatedPackage);
 
@@ -178,6 +185,7 @@ public final class TileProcessor extends AbstractProcessor {
         return Set.of(
                 GeneratorMapping.class.getCanonicalName(),
                 AdapterMapping.class.getCanonicalName(),
+                AdapterSource.class.getCanonicalName(),
                 TypeBinding.class.getCanonicalName(),
                 ComponentSource.class.getCanonicalName());
     }
@@ -216,6 +224,12 @@ public final class TileProcessor extends AbstractProcessor {
 
         typeBindings.register(roundEnvironment);
         adapterRegistry.register(roundEnvironment);
+
+        if (!adapterIndexGenerated
+                && !adapterRegistry.localAdapters().isEmpty()) {
+            generateAdapterIndex(adapterRegistry.localAdapters());
+            adapterIndexGenerated = true;
+        }
 
         for (Element element :
                 roundEnvironment.getElementsAnnotatedWith(
@@ -264,6 +278,19 @@ public final class TileProcessor extends AbstractProcessor {
         }
 
         return true;
+    }
+
+    private void generateAdapterIndex(List<AdapterSpec> adapters) {
+        try {
+            adapterIndexWriter.write(adapters);
+        } catch (IOException exception) {
+            processingEnv
+                    .getMessager()
+                    .printMessage(
+                            Diagnostic.Kind.ERROR,
+                            "Could not generate the adapter index: "
+                                    + exception.getMessage());
+        }
     }
 
     private boolean initializeComponentResolver(RoundEnvironment roundEnvironment) {
