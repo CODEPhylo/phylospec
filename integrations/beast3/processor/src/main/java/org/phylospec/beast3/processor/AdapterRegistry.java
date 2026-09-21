@@ -1,10 +1,14 @@
 package org.phylospec.beast3.processor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -16,13 +20,17 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import org.phylospec.annotations.AdapterLibrary;
 import org.phylospec.annotations.AdapterMapping;
+import org.phylospec.annotations.AdapterSource;
 import org.phylospec.tiling.TypeAdapter;
 
 final class AdapterRegistry {
 
     private final ProcessingEnvironment processingEnvironment;
     private final List<AdapterSpec> adapters = new ArrayList<>();
+    private final List<AdapterSpec> localAdapters = new ArrayList<>();
+    private final Set<String> registeredDeclarations = new HashSet<>();
 
     AdapterRegistry(ProcessingEnvironment processingEnvironment) {
         this.processingEnvironment = processingEnvironment;
@@ -42,26 +50,111 @@ final class AdapterRegistry {
             }
 
             AdapterSpec adapter = adapterResult.orElseThrow();
-            Optional<AdapterSpec> duplicate =
-                    adapters.stream()
-                            .filter(existing -> sameConversion(existing, adapter))
-                            .findFirst();
+            if (add(adapter, declaration)) {
+                localAdapters.add(adapter);
+            }
+        }
 
-            if (duplicate.isPresent()) {
-                printError(
-                        "Duplicate @AdapterMapping for Java conversion '"
-                                + adapter.sourceType()
-                                + "' to '"
-                                + adapter.targetType()
-                                + "'. It is already declared by '"
-                                + duplicate.orElseThrow().declaration().getQualifiedName()
-                                + "'.",
-                        declaration);
+        for (Element element : roundEnvironment.getElementsAnnotatedWith(AdapterSource.class)) {
+            registerSources(element);
+        }
+    }
+
+    List<AdapterSpec> localAdapters() {
+        return List.copyOf(localAdapters);
+    }
+
+    private void registerSources(Element sourceDeclaration) {
+        Optional<AnnotationMirror> source =
+                findAnnotation(sourceDeclaration, AdapterSource.class.getCanonicalName());
+        if (source.isEmpty()) {
+            return;
+        }
+
+        for (TypeMirror indexType : classValues(source.orElseThrow(), "value")) {
+            Element indexElement = processingEnvironment.getTypeUtils().asElement(indexType);
+            if (!(indexElement instanceof TypeElement indexDeclaration)) {
+                printError("@AdapterSource value must name an adapter index class.", sourceDeclaration);
                 continue;
             }
 
-            adapters.add(adapter);
+            Optional<AnnotationMirror> library =
+                    findAnnotation(indexDeclaration, AdapterLibrary.class.getCanonicalName());
+            if (library.isEmpty()) {
+                printError(
+                        "@AdapterSource class '"
+                                + indexDeclaration.getQualifiedName()
+                                + "' is not annotated with @AdapterLibrary.",
+                        sourceDeclaration);
+                continue;
+            }
+
+            for (TypeMirror adapterType : classValues(library.orElseThrow(), "value")) {
+                Element adapterElement = processingEnvironment.getTypeUtils().asElement(adapterType);
+                if (!(adapterElement instanceof TypeElement adapterDeclaration)) {
+                    printError("@AdapterLibrary value must name an adapter class.", sourceDeclaration);
+                    continue;
+                }
+
+                read(adapterDeclaration).ifPresent(adapter -> add(adapter, sourceDeclaration));
+            }
         }
+    }
+
+    private boolean add(AdapterSpec adapter, Element errorElement) {
+        String declarationName = adapter.declaration().getQualifiedName().toString();
+        if (!registeredDeclarations.add(declarationName)) {
+            return false;
+        }
+
+        Optional<AdapterSpec> duplicate =
+                adapters.stream()
+                        .filter(existing -> sameConversion(existing, adapter))
+                        .findFirst();
+
+        if (duplicate.isPresent()) {
+            printError(
+                    "Duplicate @AdapterMapping for Java conversion '"
+                            + adapter.sourceType()
+                            + "' to '"
+                            + adapter.targetType()
+                            + "'. It is already declared by '"
+                            + duplicate.orElseThrow().declaration().getQualifiedName()
+                            + "'.",
+                    errorElement);
+            return false;
+        }
+
+        adapters.add(adapter);
+        return true;
+    }
+
+    private Optional<AnnotationMirror> findAnnotation(Element element, String annotationName) {
+        return element.getAnnotationMirrors().stream()
+                .filter(annotation -> annotation.getAnnotationType().toString().equals(annotationName))
+                .map(annotation -> (AnnotationMirror) annotation)
+                .findFirst();
+    }
+
+    private List<TypeMirror> classValues(AnnotationMirror annotation, String memberName) {
+        for (var entry :
+                processingEnvironment
+                        .getElementUtils()
+                        .getElementValuesWithDefaults(annotation)
+                        .entrySet()) {
+            if (!entry.getKey().getSimpleName().contentEquals(memberName)) {
+                continue;
+            }
+
+            @SuppressWarnings("unchecked")
+            List<? extends AnnotationValue> values =
+                    (List<? extends AnnotationValue>) entry.getValue().getValue();
+            return values.stream()
+                    .map(value -> (TypeMirror) value.getValue())
+                    .toList();
+        }
+
+        return List.of();
     }
 
     Optional<TypeMirror> resolve(

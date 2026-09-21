@@ -1854,6 +1854,82 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void discoversAdapterFromDependencyIndex() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.evolution.substitutionmodel.WAG;
+                        import beast.base.spec.type.Simplex;
+                        import org.phylospec.annotations.AdapterSource;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import shared.ClasspathAdapterIndex;
+
+                        @AdapterSource(ClasspathAdapterIndex.class)
+                        @GeneratorMapping(
+                                component = "phylospec.functions.substitution.wag",
+                                implementation = WAG.class)
+                        public interface InvalidMapping {
+
+                            @InputMapping(
+                                    argument = "baseFrequencies",
+                                    input = "frequenciesInput")
+                            Simplex baseFrequencies();
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String generatedSource =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/InvalidGeneratedTile.java"));
+
+        assertTrue(generatedSource.contains("new shared.ClasspathFrequenciesAdapter()"));
+    }
+
+    @Test
+    public void generatesAdapterIndex() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.evolution.substitutionmodel.Frequencies;
+                        import beast.base.spec.type.Simplex;
+                        import beastconfig.BEASTState;
+                        import org.phylospec.annotations.AdapterMapping;
+                        import org.phylospec.tiling.TypeAdapter;
+
+                        @AdapterMapping
+                        public final class InvalidMapping
+                                implements TypeAdapter<Simplex, Frequencies, BEASTState> {
+
+                            public InvalidMapping() {}
+
+                            @Override
+                            public Frequencies adapt(Simplex value, BEASTState state) {
+                                return null;
+                            }
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String generatedSource =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/generated/GeneratedAdapterIndex.java"));
+
+        assertTrue(generatedSource.contains("@org.phylospec.annotations.AdapterLibrary"));
+        assertTrue(generatedSource.contains("mappings.InvalidMapping.class"));
+    }
+
+    @Test
     public void rejectsDuplicateRegisteredAdapter() throws IOException {
         CompilationResult result =
                 compile(
