@@ -7,11 +7,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Makes a {@code TypeAdapter} available for automatic selection while compiling the module that
- * declares it.
+ * Makes a {@code TypeAdapter} available for automatic selection and exports it through the
+ * module's generated adapter index.
  *
- * <p>Adapters supplied by another module are selected explicitly with {@link
- * InputMapping#adapter()} so that generated mappings never depend on ambiguous classpath scanning.
+ * <p>A consuming module can import that index with {@link AdapterSource}. Explicit selection with
+ * {@link InputMapping#adapter()} remains available when more than one adapter matches.
  */
 @Documented
 @Retention(RetentionPolicy.SOURCE)

@@ -35,9 +35,9 @@ public @interface InputMapping {
      * Adapter used when the argument value cannot be assigned
      * directly to the engine input.
      *
-     * <p>Specify this explicitly for an adapter supplied by another module. An adapter annotated
-     * with {@link AdapterMapping} in the current compilation can be selected automatically when the
-     * conversion is unambiguous.
+     * <p>An adapter annotated with {@link AdapterMapping} can be selected automatically when the
+     * conversion is unambiguous. Use {@link AdapterSource} on a declaration in the consuming module
+     * to make dependency adapters available. Specify this member explicitly to resolve ambiguity.
      */
     Class<?> adapter() default Void.class;
 
