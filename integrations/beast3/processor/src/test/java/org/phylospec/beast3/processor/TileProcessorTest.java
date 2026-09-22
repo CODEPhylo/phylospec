@@ -64,6 +64,280 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void generatesConventionMappingsFromDescriptorContainer() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.substitutionmodel.JukesCantor;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+
+                        public final class InvalidMapping {
+
+                            public static class ConstantModel extends ConstantPopulation {
+                                public Input<RealScalar<PositiveReal>> populationSizeInput;
+                            }
+
+                            @GeneratorMapping(
+                                    component = "phylospec.functions.substitution.jc69",
+                                    implementation = JukesCantor.class)
+                            public static final class Jc69 {}
+
+                            @GeneratorMapping(
+                                    component = "phylospec.functions.coalescent.constantPopulationFunction",
+                                    implementation = ConstantModel.class)
+                            public static final class Constant {}
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String tile =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/ConstantGeneratedTile.java"));
+        String registry =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/generated/GeneratedTileRegistry.java"));
+
+        assertTrue(tile.contains("object.populationSizeInput"));
+        assertTrue(registry.contains("new tiles.ConstantGeneratedTile()"));
+        assertTrue(registry.contains("new tiles.Jc69GeneratedTile()"));
+    }
+
+    @Test
+    public void discoversInheritedInputByConvention() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+
+                        public final class InvalidMapping {
+
+                            public static class BaseModel extends ConstantPopulation {
+                                public Input<RealScalar<PositiveReal>> populationSizeInput;
+                            }
+
+                            public static final class Model extends BaseModel {}
+
+                            @GeneratorMapping(
+                                    component = "phylospec.functions.coalescent.constantPopulationFunction",
+                                    implementation = Model.class)
+                            public static final class Descriptor {}
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String tile =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/DescriptorGeneratedTile.java"));
+        assertTrue(tile.contains("object.populationSizeInput"));
+    }
+
+    @Test
+    public void ignoresOrdinaryFieldsDuringConventionMatching() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+
+                        public final class InvalidMapping {
+
+                            public static class Model extends ConstantPopulation {
+                                public RealScalar<PositiveReal> populationSize;
+                                public Input<RealScalar<PositiveReal>> populationSizeInput;
+                            }
+
+                            @GeneratorMapping(
+                                    component = "phylospec.functions.coalescent.constantPopulationFunction",
+                                    implementation = Model.class)
+                            public static final class Descriptor {}
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String tile =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/DescriptorGeneratedTile.java"));
+        assertTrue(tile.contains("object.populationSizeInput"));
+        assertFalse(tile.contains("object.populationSize.setValue"));
+    }
+
+    @Test
+    public void explicitTypeMappingOverridesConvention() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+
+                        public final class InvalidMapping {
+
+                            public static class Model extends ConstantPopulation {
+                                public Input<RealScalar<PositiveReal>> populationSizeInput;
+                                public Input<RealScalar<PositiveReal>> customInput;
+                            }
+
+                            @GeneratorMapping(
+                                    component = "phylospec.functions.coalescent.constantPopulationFunction",
+                                    implementation = Model.class)
+                            @InputMapping(argument = "populationSize", input = "customInput")
+                            public static final class Descriptor {}
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String tile =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/DescriptorGeneratedTile.java"));
+        assertTrue(tile.contains("object.customInput"));
+        assertFalse(tile.contains("object.populationSizeInput"));
+    }
+
+    @Test
+    public void rejectsMissingConventionInput() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import org.phylospec.annotations.GeneratorMapping;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.coalescent.constantPopulationFunction",
+                                implementation = ConstantPopulation.class)
+                        public final class InvalidMapping {}
+                        """);
+
+        assertCompilationError(
+                result,
+                "Cannot automatically map required PhyloSpec argument 'populationSize'");
+        assertCompilationError(result, "'populationSizeInput'");
+        assertCompilationError(result, "Add an explicit @InputMapping");
+    }
+
+    @Test
+    public void rejectsAmbiguousConventionInputs() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+
+                        public final class InvalidMapping {
+
+                            public static class Model extends ConstantPopulation {
+                                public Input<RealScalar<PositiveReal>> populationSize;
+                                public Input<RealScalar<PositiveReal>> populationSizeInput;
+                            }
+
+                            @GeneratorMapping(
+                                    component = "phylospec.functions.coalescent.constantPopulationFunction",
+                                    implementation = Model.class)
+                            public static final class Descriptor {}
+                        }
+                        """);
+
+        assertCompilationError(
+                result,
+                "Multiple convention-based BEAST Input fields match PhyloSpec argument "
+                        + "'populationSize'");
+        assertCompilationError(result, "Add an explicit @InputMapping");
+    }
+
+    @Test
+    public void selectsAdapterForConventionInput() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.spec.evolution.substitutionmodel.Frequencies;
+                        import beast.base.spec.evolution.substitutionmodel.WAG;
+                        import beast.base.spec.type.Simplex;
+                        import beastconfig.BEASTState;
+                        import org.phylospec.annotations.AdapterMapping;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.tiling.TypeAdapter;
+
+                        public final class InvalidMapping {
+
+                            public static class Model extends WAG {
+                                public Input<Frequencies> baseFrequenciesInput;
+                            }
+
+                            @AdapterMapping
+                            public static final class FrequenciesAdapter
+                                    implements TypeAdapter<Simplex, Frequencies, BEASTState> {
+
+                                public FrequenciesAdapter() {}
+
+                                @Override
+                                public Frequencies adapt(Simplex value, BEASTState state) {
+                                    return null;
+                                }
+                            }
+
+                            @GeneratorMapping(
+                                    component = "phylospec.functions.substitution.wag",
+                                    implementation = Model.class)
+                            public static final class Descriptor {}
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String tile =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/DescriptorGeneratedTile.java"));
+        assertTrue(tile.contains("new mappings.InvalidMapping.FrequenciesAdapter()"));
+    }
+
+    @Test
     public void usesConfiguredGeneratedPackage() throws IOException {
         CompilationResult result =
                 compile(
@@ -1197,7 +1471,7 @@ public class TileProcessorTest {
     }
 
     @Test
-    public void rejectsMissingRequiredImplementationInputs() throws IOException {
+    public void reportsRequiredInputThatConventionCannotMatch() throws IOException {
         CompilationResult result =
                 compile(
                         """
@@ -1213,8 +1487,8 @@ public class TileProcessorTest {
 
         assertCompilationError(
                 result,
-                "Missing mappings for required PhyloSpec arguments: "
-                        + "'baseFrequencies', 'kappa'.");
+                "Cannot automatically map required PhyloSpec argument "
+                        + "'baseFrequencies'");
     }
 
     @Test
@@ -1428,9 +1702,7 @@ public class TileProcessorTest {
 
         assertCompilationError(
                 result,
-                "Missing mappings for required PhyloSpec "
-                        + "arguments: 'baseFrequencies', "
-                        + "'relativeRates'.");
+                "Cannot automatically map required PhyloSpec argument 'relativeRates'");
 
         assertNoCompilationError(
                 result,
@@ -1668,8 +1940,8 @@ public class TileProcessorTest {
 
         assertCompilationError(
                 result,
-                "Missing mappings for required PhyloSpec "
-                        + "arguments: 'baseFrequencies'.");
+                "Cannot automatically map required PhyloSpec argument "
+                        + "'baseFrequencies'");
     }
 
     @Test
@@ -2234,25 +2506,21 @@ public class TileProcessorTest {
     }
 
     @Test
-    public void rejectsDifferentImplementationOnInternalMapping() throws IOException {
+    public void acceptsExternalDescriptorClass() throws IOException {
         CompilationResult result = compile(
                 """
                 package mappings;
 
-                import beast.base.spec.evolution.substitutionmodel.JTT;
                 import beast.base.spec.evolution.substitutionmodel.JukesCantor;
                 import org.phylospec.annotations.GeneratorMapping;
 
                 @GeneratorMapping(
                         component = "phylospec.functions.substitution.jc69",
-                        implementation = JTT.class)
-                public class InvalidMapping extends JukesCantor {}
+                        implementation = JukesCantor.class)
+                public final class InvalidMapping {}
                 """);
 
-        assertCompilationError(
-                result,
-                "An internal @GeneratorMapping implementation must be omitted "
-                        + "or refer to the annotated class itself.");
+        assertCompilationSuccess(result);
     }
 
     @Test

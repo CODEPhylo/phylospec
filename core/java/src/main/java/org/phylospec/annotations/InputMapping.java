@@ -9,12 +9,13 @@ import java.lang.annotation.Target;
 import org.phylospec.typeresolver.Stochasticity;
 
 /**
- * Maps one PhyloSpec generator argument to an input on the engine implementation class.
- * Repeat this annotation on the same member when one argument must bind several engine inputs.
+ * Overrides the conventional mapping of one PhyloSpec generator argument to an input on the
+ * engine implementation class. Repeat this annotation on the same declaration when one argument
+ * must bind several engine inputs.
  */
 @Documented
 @Retention(RetentionPolicy.SOURCE)
-@Target({ElementType.METHOD, ElementType.FIELD})
+@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 @Repeatable(InputMappings.class)
 public @interface InputMapping {
 
