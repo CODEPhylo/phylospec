@@ -474,6 +474,11 @@ public final class TileProcessor extends AbstractProcessor {
         TypeElement implementationDeclaration =
                 implementationResult.orElseThrow();
 
+        boolean externalMapping =
+                isExternalMapping(
+                        declaration,
+                        implementationType);
+
         TypeMirror outputType =
                 resolveOutputType(
                         implementationType,
@@ -544,7 +549,8 @@ public final class TileProcessor extends AbstractProcessor {
                         declaration,
                         implementationDeclaration,
                         implementationType,
-                        selectedGenerators);
+                        selectedGenerators,
+                        externalMapping);
 
         if (inputResult.isEmpty()) {
             return Optional.empty();
@@ -556,9 +562,6 @@ public final class TileProcessor extends AbstractProcessor {
                         .getPackageOf(declaration)
                         .getQualifiedName()
                         .toString();
-
-        boolean externalMapping =
-                declaration.getKind() == ElementKind.INTERFACE;
 
         if (externalMapping
                 && !mappingPackageName.equals("mappings")
@@ -657,25 +660,25 @@ public final class TileProcessor extends AbstractProcessor {
             return Optional.of(declaredImplementationType);
         }
 
-        if (!usesDefaultImplementation
-                && !processingEnv
-                .getTypeUtils()
-                .isSameType(
-                        processingEnv
-                                .getTypeUtils()
-                                .erasure(declaration.asType()),
-                        processingEnv
-                                .getTypeUtils()
-                                .erasure(declaredImplementationType))) {
-
-            printError(
-                    "An internal @GeneratorMapping implementation must be "
-                            + "omitted or refer to the annotated class itself.",
-                    declaration);
-            return Optional.empty();
+        if (!usesDefaultImplementation) {
+            return Optional.of(declaredImplementationType);
         }
 
         return Optional.of(declaration.asType());
+    }
+
+    private boolean isExternalMapping(
+            TypeElement declaration,
+            TypeMirror implementationType) {
+
+        if (declaration.getKind() == ElementKind.INTERFACE) {
+            return true;
+        }
+
+        Types types = processingEnv.getTypeUtils();
+        return !types.isSameType(
+                types.erasure(declaration.asType()),
+                types.erasure(implementationType));
     }
 
     private Optional<TypeElement> validateImplementation(
@@ -765,7 +768,8 @@ public final class TileProcessor extends AbstractProcessor {
             TypeElement mappingDeclaration,
             TypeElement implementationDeclaration,
             TypeMirror implementationType,
-            List<Generator> componentGenerators) {
+            List<Generator> componentGenerators,
+            boolean externalMapping) {
 
         List<InputSpec> inputs =
                 new ArrayList<>();
@@ -778,6 +782,68 @@ public final class TileProcessor extends AbstractProcessor {
 
         Set<String> usedBeastInputs =
                 new HashSet<>();
+
+        for (AnnotationMirror annotation : findInputMappings(mappingDeclaration)) {
+            Map<String, AnnotationValue> values =
+                    readAnnotationValues(annotation);
+
+            String argumentName =
+                    (String) values.get("argument").getValue();
+
+            String beastInputName =
+                    (String) values.get("input").getValue();
+
+            TypeMirror adapterType =
+                    (TypeMirror) values.get("adapter").getValue();
+
+            TypeMirror fallbackType =
+                    (TypeMirror) values.get("fallback").getValue();
+
+            Optional<Set<Stochasticity>> acceptedStochasticitiesResult =
+                    readAcceptedStochasticities(
+                            values.get("accepts"),
+                            mappingDeclaration);
+
+            if (acceptedStochasticitiesResult.isEmpty()) {
+                return Optional.empty();
+            }
+
+            Element previous =
+                    argumentDeclarations.putIfAbsent(
+                            argumentName,
+                            mappingDeclaration);
+
+            if (previous != null && !previous.equals(mappingDeclaration)) {
+                printError(
+                        "PhyloSpec argument '"
+                                + argumentName
+                                + "' is mapped by more than one declaration.",
+                        mappingDeclaration);
+                return Optional.empty();
+            }
+
+            Optional<InputSpec> inputResult =
+                    readInput(
+                            mappingDeclaration,
+                            argumentName,
+                            beastInputName,
+                            null,
+                            adapterType,
+                            fallbackType,
+                            acceptedStochasticitiesResult.orElseThrow(),
+                            implementationDeclaration,
+                            implementationType,
+                            componentGenerators,
+                            usedBeastInputs);
+
+            if (inputResult.isEmpty()
+                    || !mergeInput(
+                            inputs,
+                            inputResult.orElseThrow(),
+                            mappingDeclaration)) {
+                return Optional.empty();
+            }
+        }
 
         for (ExecutableElement method :
                 ElementFilter.methodsIn(
@@ -891,7 +957,8 @@ public final class TileProcessor extends AbstractProcessor {
             }
         }
 
-        if (mappingDeclaration.getKind() == ElementKind.CLASS) {
+        if (!externalMapping
+                && mappingDeclaration.getKind() == ElementKind.CLASS) {
             for (VariableElement field :
                     ElementFilter.fieldsIn(
                             mappingDeclaration.getEnclosedElements())) {
@@ -974,6 +1041,17 @@ public final class TileProcessor extends AbstractProcessor {
             }
         }
 
+        if (!bindConventionalInputs(
+                inputs,
+                argumentDeclarations,
+                implementationDeclaration,
+                implementationType,
+                componentGenerators,
+                usedBeastInputs,
+                mappingDeclaration)) {
+            return Optional.empty();
+        }
+
         List<String> missingRequiredArguments =
                 componentGenerators.stream()
                         .flatMap(
@@ -1007,6 +1085,136 @@ public final class TileProcessor extends AbstractProcessor {
         }
 
         return Optional.of(inputs);
+    }
+
+    private boolean bindConventionalInputs(
+            List<InputSpec> inputs,
+            Map<String, Element> argumentDeclarations,
+            TypeElement implementationDeclaration,
+            TypeMirror implementationType,
+            List<Generator> componentGenerators,
+            Set<String> usedBeastInputs,
+            TypeElement mappingDeclaration) {
+
+        Elements elements = processingEnv.getElementUtils();
+        Types types = processingEnv.getTypeUtils();
+        TypeElement voidType = elements.getTypeElement(Void.class.getCanonicalName());
+        TypeElement beastInputType = elements.getTypeElement("beast.base.core.Input");
+
+        if (voidType == null || beastInputType == null) {
+            printError("Could not resolve java.lang.Void or beast.base.core.Input.", mappingDeclaration);
+            return false;
+        }
+
+        for (Argument argument : componentGenerators.getFirst().getArguments()) {
+            String argumentName = argument.getName();
+            if (argumentDeclarations.containsKey(argumentName)) {
+                continue;
+            }
+
+            String inputSuffixName = argumentName + "Input";
+            List<VariableElement> candidates =
+                    ElementFilter.fieldsIn(
+                                    elements.getAllMembers(implementationDeclaration))
+                            .stream()
+                            .filter(
+                                    field ->
+                                            field.getSimpleName().contentEquals(argumentName)
+                                                    || field.getSimpleName()
+                                                    .contentEquals(inputSuffixName))
+                            .filter(
+                                    field ->
+                                            isBeastInputField(
+                                                    field,
+                                                    implementationType,
+                                                    beastInputType,
+                                                    types))
+                            .toList();
+
+            if (candidates.isEmpty()) {
+                if (Boolean.TRUE.equals(argument.getRequired())) {
+                    printError(
+                            "Cannot automatically map required PhyloSpec argument '"
+                                    + argumentName
+                                    + "' on BEAST implementation '"
+                                    + implementationType
+                                    + "'. Expected a public Input field named '"
+                                    + argumentName
+                                    + "' or '"
+                                    + inputSuffixName
+                                    + "'. Add an explicit @InputMapping or use a handwritten Tile.",
+                            mappingDeclaration);
+                    return false;
+                }
+
+                continue;
+            }
+
+            if (candidates.size() > 1) {
+                String candidateNames =
+                        candidates.stream()
+                                .map(field -> "'" + field.getSimpleName() + "'")
+                                .sorted()
+                                .reduce((left, right) -> left + ", " + right)
+                                .orElseThrow();
+                printError(
+                        "Multiple convention-based BEAST Input fields match PhyloSpec argument '"
+                                + argumentName
+                                + "' on implementation '"
+                                + implementationType
+                                + "': "
+                                + candidateNames
+                                + ". Add an explicit @InputMapping.",
+                        mappingDeclaration);
+                return false;
+            }
+
+            String beastInputName =
+                    candidates.getFirst().getSimpleName().toString();
+
+            argumentDeclarations.put(argumentName, mappingDeclaration);
+
+            Optional<InputSpec> inputResult =
+                    readInput(
+                            mappingDeclaration,
+                            argumentName,
+                            beastInputName,
+                            null,
+                            voidType.asType(),
+                            voidType.asType(),
+                            EnumSet.allOf(Stochasticity.class),
+                            implementationDeclaration,
+                            implementationType,
+                            componentGenerators,
+                            usedBeastInputs);
+
+            if (inputResult.isEmpty()
+                    || !mergeInput(
+                            inputs,
+                            inputResult.orElseThrow(),
+                            mappingDeclaration)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean isBeastInputField(
+            VariableElement field,
+            TypeMirror implementationType,
+            TypeElement beastInputType,
+            Types types) {
+
+        if (!(implementationType instanceof DeclaredType declaredImplementationType)) {
+            return false;
+        }
+
+        TypeMirror memberType =
+                types.asMemberOf(declaredImplementationType, field);
+        return types.isAssignable(
+                types.erasure(memberType),
+                types.erasure(beastInputType.asType()));
     }
 
     private Optional<InputSpec> readInput(
