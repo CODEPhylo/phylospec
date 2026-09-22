@@ -7,8 +7,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Declares that a mapping definition can be used to generate a Tile
- * for one fully-qualified PhyloSpec generator.
+ * Declares that a mapping descriptor or implementation class can be used to generate a Tile for
+ * one fully-qualified PhyloSpec generator.
  *
  * <p>This annotation describes an engine mapping. Semantic information
  * such as arguments, required status, defaults, and constraints remains
@@ -30,8 +30,8 @@ public @interface GeneratorMapping {
     /**
      * Engine implementation class constructed by the generated Tile.
      *
-     * <p>This may be omitted when the annotation is placed directly on
-     * the implementation class.</p>
+     * <p>This may be omitted when the annotation is placed directly on the implementation class.
+     * External mappings may use an interface or a descriptor class.
      */
     Class<?> implementation() default Void.class;
 
