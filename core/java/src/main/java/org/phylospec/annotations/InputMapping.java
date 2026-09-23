@@ -27,8 +27,9 @@ public @interface InputMapping {
     /**
      * Java field name of the corresponding engine input.
      *
-     * <p>This may be omitted when the annotation is placed directly on
-     * the engine input field.</p>
+     * <p>This may be omitted on an engine input field or on a mapping descriptor. Descriptor
+     * mappings then search for {@code argumentName} and {@code argumentName + "Input"} by
+     * convention.</p>
      */
     String input() default "";
 
