@@ -793,6 +793,33 @@ public final class TileProcessor extends AbstractProcessor {
             String beastInputName =
                     (String) values.get("input").getValue();
 
+            if (beastInputName.isBlank()) {
+                Optional<Argument> argumentResult =
+                        resolveArgument(
+                                argumentName,
+                                componentGenerators,
+                                mappingDeclaration);
+
+                if (argumentResult.isEmpty()) {
+                    return Optional.empty();
+                }
+
+                ConventionalInputResolution resolution =
+                        resolveConventionalInput(
+                                argumentName,
+                                implementationDeclaration,
+                                implementationType,
+                                false,
+                                Boolean.TRUE.equals(argumentResult.orElseThrow().getRequired()),
+                                mappingDeclaration);
+
+                if (!resolution.valid() || resolution.field() == null) {
+                    return Optional.empty();
+                }
+
+                beastInputName = resolution.field().getSimpleName().toString();
+            }
+
             TypeMirror adapterType =
                     (TypeMirror) values.get("adapter").getValue();
 
@@ -1084,6 +1111,17 @@ public final class TileProcessor extends AbstractProcessor {
             return Optional.empty();
         }
 
+        Map<String, Integer> argumentOrder = new HashMap<>();
+        List<Argument> componentArguments = componentGenerators.getFirst().getArguments();
+        for (int index = 0; index < componentArguments.size(); index++) {
+            argumentOrder.put(componentArguments.get(index).getName(), index);
+        }
+        inputs.sort(
+                (left, right) ->
+                        Integer.compare(
+                                argumentOrder.get(left.argument()),
+                                argumentOrder.get(right.argument())));
+
         return Optional.of(inputs);
     }
 
@@ -1097,12 +1135,10 @@ public final class TileProcessor extends AbstractProcessor {
             TypeElement mappingDeclaration) {
 
         Elements elements = processingEnv.getElementUtils();
-        Types types = processingEnv.getTypeUtils();
         TypeElement voidType = elements.getTypeElement(Void.class.getCanonicalName());
-        TypeElement beastInputType = elements.getTypeElement("beast.base.core.Input");
 
-        if (voidType == null || beastInputType == null) {
-            printError("Could not resolve java.lang.Void or beast.base.core.Input.", mappingDeclaration);
+        if (voidType == null) {
+            printError("Could not resolve java.lang.Void.", mappingDeclaration);
             return false;
         }
 
@@ -1112,65 +1148,26 @@ public final class TileProcessor extends AbstractProcessor {
                 continue;
             }
 
-            String inputSuffixName = argumentName + "Input";
-            List<VariableElement> candidates =
-                    ElementFilter.fieldsIn(
-                                    elements.getAllMembers(implementationDeclaration))
-                            .stream()
-                            .filter(
-                                    field ->
-                                            field.getSimpleName().contentEquals(argumentName)
-                                                    || field.getSimpleName()
-                                                    .contentEquals(inputSuffixName))
-                            .filter(
-                                    field ->
-                                            isBeastInputField(
-                                                    field,
-                                                    implementationType,
-                                                    beastInputType,
-                                                    types))
-                            .toList();
-
-            if (candidates.isEmpty()) {
-                if (Boolean.TRUE.equals(argument.getRequired())) {
-                    printError(
-                            "Cannot automatically map required PhyloSpec argument '"
-                                    + argumentName
-                                    + "' on BEAST implementation '"
-                                    + implementationType
-                                    + "'. Expected a public Input field named '"
-                                    + argumentName
-                                    + "' or '"
-                                    + inputSuffixName
-                                    + "'. Add an explicit @InputMapping or use a handwritten Tile.",
+            boolean required = Boolean.TRUE.equals(argument.getRequired());
+            ConventionalInputResolution resolution =
+                    resolveConventionalInput(
+                            argumentName,
+                            implementationDeclaration,
+                            implementationType,
+                            !required,
+                            required,
                             mappingDeclaration);
-                    return false;
-                }
 
-                continue;
-            }
-
-            if (candidates.size() > 1) {
-                String candidateNames =
-                        candidates.stream()
-                                .map(field -> "'" + field.getSimpleName() + "'")
-                                .sorted()
-                                .reduce((left, right) -> left + ", " + right)
-                                .orElseThrow();
-                printError(
-                        "Multiple convention-based BEAST Input fields match PhyloSpec argument '"
-                                + argumentName
-                                + "' on implementation '"
-                                + implementationType
-                                + "': "
-                                + candidateNames
-                                + ". Add an explicit @InputMapping.",
-                        mappingDeclaration);
+            if (!resolution.valid()) {
                 return false;
             }
 
+            if (resolution.field() == null) {
+                continue;
+            }
+
             String beastInputName =
-                    candidates.getFirst().getSimpleName().toString();
+                    resolution.field().getSimpleName().toString();
 
             argumentDeclarations.put(argumentName, mappingDeclaration);
 
@@ -1198,6 +1195,83 @@ public final class TileProcessor extends AbstractProcessor {
         }
 
         return true;
+    }
+
+    private ConventionalInputResolution resolveConventionalInput(
+            String argumentName,
+            TypeElement implementationDeclaration,
+            TypeMirror implementationType,
+            boolean allowMissing,
+            boolean requiredArgument,
+            Element errorElement) {
+
+        Elements elements = processingEnv.getElementUtils();
+        Types types = processingEnv.getTypeUtils();
+        TypeElement beastInputType = elements.getTypeElement("beast.base.core.Input");
+
+        if (beastInputType == null) {
+            printError("Could not resolve beast.base.core.Input.", errorElement);
+            return new ConventionalInputResolution(false, null);
+        }
+
+        String inputSuffixName = argumentName + "Input";
+        List<VariableElement> candidates =
+                ElementFilter.fieldsIn(elements.getAllMembers(implementationDeclaration)).stream()
+                        .filter(
+                                field ->
+                                        field.getSimpleName().contentEquals(argumentName)
+                                                || field.getSimpleName().contentEquals(inputSuffixName))
+                        .filter(
+                                field ->
+                                        isBeastInputField(
+                                                field,
+                                                implementationType,
+                                                beastInputType,
+                                                types))
+                        .toList();
+
+        if (candidates.isEmpty()) {
+            if (allowMissing) {
+                return new ConventionalInputResolution(true, null);
+            }
+
+            printError(
+                    "Cannot automatically map "
+                            + (requiredArgument ? "required " : "")
+                            + "PhyloSpec argument '"
+                            + argumentName
+                            + "' on BEAST implementation '"
+                            + implementationType
+                            + "'. Expected a public Input field named '"
+                            + argumentName
+                            + "' or '"
+                            + inputSuffixName
+                            + "'. Add an explicit @InputMapping or specify @InputMapping input "
+                            + "explicitly, or use a handwritten Tile.",
+                    errorElement);
+            return new ConventionalInputResolution(false, null);
+        }
+
+        if (candidates.size() > 1) {
+            String candidateNames =
+                    candidates.stream()
+                            .map(field -> "'" + field.getSimpleName() + "'")
+                            .sorted()
+                            .reduce((left, right) -> left + ", " + right)
+                            .orElseThrow();
+            printError(
+                    "Multiple convention-based BEAST Input fields match PhyloSpec argument '"
+                            + argumentName
+                            + "' on implementation '"
+                            + implementationType
+                            + "': "
+                            + candidateNames
+                            + ". Add an explicit @InputMapping or specify its input explicitly.",
+                    errorElement);
+            return new ConventionalInputResolution(false, null);
+        }
+
+        return new ConventionalInputResolution(true, candidates.getFirst());
     }
 
     private boolean isBeastInputField(
@@ -2427,4 +2501,8 @@ public final class TileProcessor extends AbstractProcessor {
             componentArguments = List.copyOf(componentArguments);
         }
     }
+
+    private record ConventionalInputResolution(
+            boolean valid,
+            VariableElement field) {}
 }
