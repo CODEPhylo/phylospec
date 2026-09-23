@@ -230,6 +230,161 @@ public class TileProcessorTest {
     }
 
     @Test
+    public void typeMappingCanOverrideStochasticityWithoutRepeatingInputName()
+            throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import org.phylospec.typeresolver.Stochasticity;
+
+                        public final class InvalidMapping {
+
+                            public static class Model extends ConstantPopulation {
+                                public Input<RealScalar<PositiveReal>> populationSizeInput;
+                            }
+
+                            @GeneratorMapping(
+                                    component = "phylospec.functions.coalescent.constantPopulationFunction",
+                                    implementation = Model.class)
+                            @InputMapping(
+                                    argument = "populationSize",
+                                    accepts = Stochasticity.CONSTANT)
+                            public static final class Descriptor {}
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String tile =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/DescriptorGeneratedTile.java"));
+        assertTrue(tile.contains("object.populationSizeInput"));
+        assertTrue(
+                tile.contains(
+                        "java.util.Set.of(org.phylospec.typeresolver.Stochasticity.CONSTANT)"));
+        assertFalse(tile.contains("Stochasticity.STOCHASTIC"));
+    }
+
+    @Test
+    public void mixedExplicitAndConventionInputsFollowComponentOrder() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.domain.Real;
+                        import beast.base.spec.evolution.tree.coalescent.ExponentialGrowth;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import org.phylospec.typeresolver.Stochasticity;
+
+                        public final class InvalidMapping {
+
+                            public static class Model extends ExponentialGrowth {
+                                public Input<RealScalar<PositiveReal>> populationSizeInput;
+                                public Input<RealScalar<Real>> growthRateInput;
+                            }
+
+                            @GeneratorMapping(
+                                    component = "phylospec.functions.coalescent.exponentialPopulationFunction",
+                                    implementation = Model.class)
+                            @InputMapping(
+                                    argument = "growthRate",
+                                    accepts = Stochasticity.CONSTANT)
+                            public static final class Descriptor {}
+                        }
+                        """);
+
+        assertCompilationSuccess(result);
+
+        String tile =
+                Files.readString(
+                        temporaryDirectory
+                                .resolve("generated")
+                                .resolve("tiles/DescriptorGeneratedTile.java"));
+        assertTrue(tile.indexOf("populationSizeInput =") < tile.indexOf("growthRateInput ="));
+    }
+
+    @Test
+    public void rejectsPartialOverrideWithoutConventionInput() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import org.phylospec.typeresolver.Stochasticity;
+
+                        @GeneratorMapping(
+                                component = "phylospec.functions.coalescent.constantPopulationFunction",
+                                implementation = ConstantPopulation.class)
+                        @InputMapping(
+                                argument = "populationSize",
+                                accepts = Stochasticity.CONSTANT)
+                        public final class InvalidMapping {}
+                        """);
+
+        assertCompilationError(
+                result,
+                "Cannot automatically map required PhyloSpec argument 'populationSize'");
+        assertCompilationError(result, "specify @InputMapping input");
+    }
+
+    @Test
+    public void rejectsAmbiguousPartialOverride() throws IOException {
+        CompilationResult result =
+                compile(
+                        """
+                        package mappings;
+
+                        import beast.base.core.Input;
+                        import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
+                        import beast.base.spec.type.RealScalar;
+                        import org.phylospec.annotations.GeneratorMapping;
+                        import org.phylospec.annotations.InputMapping;
+                        import org.phylospec.typeresolver.Stochasticity;
+
+                        public final class InvalidMapping {
+
+                            public static class Model extends ConstantPopulation {
+                                public Input<RealScalar<PositiveReal>> populationSize;
+                                public Input<RealScalar<PositiveReal>> populationSizeInput;
+                            }
+
+                            @GeneratorMapping(
+                                    component = "phylospec.functions.coalescent.constantPopulationFunction",
+                                    implementation = Model.class)
+                            @InputMapping(
+                                    argument = "populationSize",
+                                    accepts = Stochasticity.CONSTANT)
+                            public static final class Descriptor {}
+                        }
+                        """);
+
+        assertCompilationError(
+                result,
+                "Multiple convention-based BEAST Input fields match PhyloSpec argument "
+                        + "'populationSize'");
+        assertCompilationError(result, "specify its input explicitly");
+    }
+
+    @Test
     public void rejectsMissingConventionInput() throws IOException {
         CompilationResult result =
                 compile(
