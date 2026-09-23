@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.stream.Collectors;
 import org.phylospec.Utils;
 import org.phylospec.repository.PhyloSpecRepository;
 import org.phylospec.typeresolver.TypeError;
@@ -380,20 +379,62 @@ public class ComponentResolver {
                     + " has to specify both the other argument and its type property.");
         }
 
-        // the compared arguments have to exist, otherwise the constraint would silently never be checked
+        // the compared arguments and their type properties
 
-        Set<String> argumentNames =
-                generator.getArguments().stream().map(Argument::getName).collect(Collectors.toSet());
+        checkConstraintProperty(constraint.getArgument(), constraint.getProperty(), generator);
 
-        if (!argumentNames.contains(constraint.getArgument())) {
-            throw new IllegalArgumentException(
-                    "Unknown argument in constraint for " + generator.getName() + ": " + constraint.getArgument());
+        if (comparesToProperty) {
+            checkConstraintProperty(constraint.getOtherArgument(), constraint.getOtherProperty(), generator);
+        }
+    }
+
+    /**
+     * Checks that the given argument of the given generator exists and that its type declares the
+     * given type property.
+     */
+    private void checkConstraintProperty(String argumentName, String propertyName, Generator generator) {
+        Argument argument = generator.getArguments().stream()
+                .filter(x -> x.getName().equals(argumentName))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Unknown argument in constraint for " + generator.getName() + ": " + argumentName));
+
+        if (resolveType(argument.getType()) == null) {
+            // the argument type is a generic type parameter, so we cannot know its type properties
+            return;
         }
 
-        if (comparesToProperty && !argumentNames.contains(constraint.getOtherArgument())) {
-            throw new IllegalArgumentException(
-                    "Unknown argument in constraint for " + generator.getName() + ": " + constraint.getOtherArgument());
+        Set<String> declaredProperties = new HashSet<>();
+        collectDeclaredTypeProperties(argument.getType(), declaredProperties, new HashSet<>());
+
+        if (!declaredProperties.contains(propertyName)) {
+            throw new IllegalArgumentException("Unknown type property in constraint for "
+                    + generator.getName()
+                    + ": "
+                    + argumentName
+                    + "."
+                    + propertyName
+                    + ". The type '"
+                    + argument.getType()
+                    + "' declares the type properties "
+                    + new TreeSet<>(declaredProperties)
+                    + ".");
         }
+    }
+
+    private void collectDeclaredTypeProperties(
+            String typeName, Set<String> declaredProperties, Set<String> visitedTypeNames) {
+        if (typeName == null) return;
+
+        Type type = resolveType(typeName);
+
+        // the type is unknown (e.g. a generic type parameter), or we have already visited it
+        if (type == null || !visitedTypeNames.add(type.getName())) return;
+
+        declaredProperties.addAll(type.getTypeProperties());
+
+        collectDeclaredTypeProperties(type.getExtends(), declaredProperties, visitedTypeNames);
+        collectDeclaredTypeProperties(type.getAlias(), declaredProperties, visitedTypeNames);
     }
 
     /**
