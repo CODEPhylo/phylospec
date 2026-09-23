@@ -14,19 +14,14 @@ public record OperatorSpec(
     public enum Family {
         SCALE,
         RANDOM_WALK,
+        RANDOM_WALK_LOGIT,
         DELTA_EXCHANGE,
         INTEGER_RANDOM_WALK,
         INTEGER_SWAP,
         INTEGER_UNIFORM,
         BIT_FLIP,
-        TREE_NODE_HEIGHT_SCALE,
-        TREE_ROOT_SCALE,
-        TREE_UNIFORM_HEIGHT,
-        TREE_RANDOM_WALK_HEIGHT,
-        TREE_SUBTREE_SLIDE,
-        TREE_NARROW_EXCHANGE,
-        TREE_WIDE_EXCHANGE,
-        TREE_WILSON_BALDING,
+        TREE_SUBTREE_LEAP,
+        TREE_FIXED_HEIGHT_SPR,
         TREE_CLOCK_UP_DOWN
     }
 

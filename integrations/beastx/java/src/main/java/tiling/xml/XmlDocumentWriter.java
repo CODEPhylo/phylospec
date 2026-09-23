@@ -99,7 +99,10 @@ public class XmlDocumentWriter {
         writer.writeComment("Define operators");
         writer.writeOpenTag(
                 SimpleOperatorScheduleParser.OPERATOR_SCHEDULE,
-                new Attribute.Default<>(XMLParser.ID, "operators")
+                List.of(
+                        new Attribute.Default<>(XMLParser.ID, "operators"),
+                        new Attribute.Default<>("optimizationSchedule", "log")
+                )
         );
 
         writeSection(writer, plan, XmlPlan.Section.OPERATORS);

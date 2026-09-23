@@ -1,8 +1,5 @@
-import dr.evomodel.operators.ExchangeOperator;
-import dr.evomodel.operators.RandomWalkNodeHeightOperator;
-import dr.evomodel.operators.SubtreeSlideOperator;
-import dr.evomodel.operators.UniformNodeHeightOperator;
-import dr.evomodel.operators.WilsonBalding;
+import dr.evomodel.operators.FixedHeightSubtreePruneRegraftOperator;
+import dr.evomodel.operators.SubtreeLeapOperator;
 import dr.inference.loggers.Logger;
 import dr.inference.loggers.MCLogger;
 import dr.inference.operators.*;
@@ -42,16 +39,14 @@ public class BeastXMCMCBuilderTest {
                     Real parameterScaleFactor = 0.5
                     Real randomWalkWindowSize = 0.25
 
-                    Real treeScaleWeight = 9.0
-                    Real treeRootScaleWeight = 6.0
-                    Real treeRootScaleFactor = 0.4
-                    Real treeSubtreeSlideSize = 7.0
-                    Real treeSubtreeSlideWeight = 11.0
-                    Real treeNarrowExchangeWeight = 13.0
-                    Real treeWideExchangeWeight = 3.0
-                    Real treeWilsonBaldingWeight = 4.0
+                    Real substitutionOperatorWeight = 4.0
+                    Real siteModelOperatorWeight = 5.0
+                    Real clockRateOperatorWeight = 6.0
+                    Real demographicOperatorWeight = 7.0
+                    Real serialTreePriorOperatorWeight = 8.0
+                    Real relaxedClockCategoryWeight = 9.0
 
-                    Real treeClockUpDownWeight = 8.0
+                    Real treeClockUpDownWeight = 10.0
                     Real treeClockUpDownScaleFactor = 0.6
                 }
                 """;
@@ -63,16 +58,14 @@ public class BeastXMCMCBuilderTest {
         assertEquals(0.5, state.operatorConfig.parameterScaleFactor);
         assertEquals(0.25, state.operatorConfig.randomWalkWindowSize);
 
-        assertEquals(9.0, state.operatorConfig.treeScaleWeight);
-        assertEquals(6.0, state.operatorConfig.treeRootScaleWeight);
-        assertEquals(0.4, state.operatorConfig.treeRootScaleFactor);
-        assertEquals(7.0, state.operatorConfig.treeSubtreeSlideSize);
-        assertEquals(11.0, state.operatorConfig.treeSubtreeSlideWeight);
-        assertEquals(13.0, state.operatorConfig.treeNarrowExchangeWeight);
-        assertEquals(3.0, state.operatorConfig.treeWideExchangeWeight);
-        assertEquals(4.0, state.operatorConfig.treeWilsonBaldingWeight);
+        assertEquals(4.0, state.operatorConfig.substitutionOperatorWeight);
+        assertEquals(5.0, state.operatorConfig.siteModelOperatorWeight);
+        assertEquals(6.0, state.operatorConfig.clockRateOperatorWeight);
+        assertEquals(7.0, state.operatorConfig.demographicOperatorWeight);
+        assertEquals(8.0, state.operatorConfig.serialTreePriorOperatorWeight);
+        assertEquals(9.0, state.operatorConfig.relaxedClockCategoryWeight);
 
-        assertEquals(8.0, state.operatorConfig.treeClockUpDownWeight);
+        assertEquals(10.0, state.operatorConfig.treeClockUpDownWeight);
         assertEquals(0.6, state.operatorConfig.treeClockUpDownScaleFactor);
     }
 
@@ -157,7 +150,7 @@ public class BeastXMCMCBuilderTest {
                 Real clockRate ~ LogNormal(logMean=0.0, logSd=1.0)
 
                 mcmc {
-                    Real treeScaleWeight = -1.0
+                    Real demographicOperatorWeight = -1.0
                 }
                 """;
 
@@ -865,13 +858,25 @@ public class BeastXMCMCBuilderTest {
         List<MCMCOperator> operators =
                 buildOperators(source);
 
-        assertEquals(8, operators.size());
-        assertTrue(containsScaleOperatorForVariable(operators, "tree.allInternalNodeHeights"));
-        assertTrue(containsOperator(operators, UniformNodeHeightOperator.class));
-        assertTrue(containsOperator(operators, RandomWalkNodeHeightOperator.class));
-        assertTrue(containsOperator(operators, SubtreeSlideOperator.class));
-        assertTrue(containsOperator(operators, ExchangeOperator.class));
-        assertTrue(containsOperator(operators, WilsonBalding.class));
+        assertEquals(2, operators.size());
+        assertTrue(containsOperator(operators, SubtreeLeapOperator.class));
+        assertTrue(containsOperator(operators, FixedHeightSubtreePruneRegraftOperator.class));
+        assertEquals(
+                30.0,
+                operators.stream()
+                        .filter(SubtreeLeapOperator.class::isInstance)
+                        .findFirst()
+                        .orElseThrow()
+                        .getWeight()
+        );
+        assertEquals(
+                3.0,
+                operators.stream()
+                        .filter(FixedHeightSubtreePruneRegraftOperator.class::isInstance)
+                        .findFirst()
+                        .orElseThrow()
+                        .getWeight()
+        );
     }
 
     @Test
@@ -900,17 +905,13 @@ public class BeastXMCMCBuilderTest {
         List<MCMCOperator> operators =
                 buildOperators(source);
 
-        assertEquals(10, operators.size());
+        assertEquals(4, operators.size());
 
         assertTrue(containsOperator(operators, ScaleOperator.class));
         assertTrue(containsOperator(operators, DeltaExchangeOperator.class));
 
-        assertTrue(containsScaleOperatorForVariable(operators, "tree.allInternalNodeHeights"));
-        assertTrue(containsOperator(operators, UniformNodeHeightOperator.class));
-        assertTrue(containsOperator(operators, RandomWalkNodeHeightOperator.class));
-        assertTrue(containsOperator(operators, SubtreeSlideOperator.class));
-        assertTrue(containsOperator(operators, ExchangeOperator.class));
-        assertTrue(containsOperator(operators, WilsonBalding.class));
+        assertTrue(containsOperator(operators, SubtreeLeapOperator.class));
+        assertTrue(containsOperator(operators, FixedHeightSubtreePruneRegraftOperator.class));
     }
 
     private List<MCMCOperator> buildOperators(String source) throws Exception {
@@ -932,17 +933,6 @@ public class BeastXMCMCBuilderTest {
     ) {
         return operators.stream()
                 .anyMatch(operatorClass::isInstance);
-    }
-
-    private boolean containsScaleOperatorForVariable(
-            List<MCMCOperator> operators,
-            String variableId
-    ) {
-        return operators.stream()
-                .filter(ScaleOperator.class::isInstance)
-                .map(ScaleOperator.class::cast)
-                .map(ScaleOperator::getVariable)
-                .anyMatch(variable -> variableId.equals(variable.getId()));
     }
 
     @Test
@@ -970,10 +960,23 @@ public class BeastXMCMCBuilderTest {
                 buildOperators(source);
 
         assertTrue(containsOperator(operators, ScaleOperator.class));
-        assertTrue(containsScaleOperatorForVariable(operators, "tree.allInternalNodeHeights"));
-        assertTrue(containsOperator(operators, ExchangeOperator.class));
-        assertTrue(containsOperator(operators, WilsonBalding.class));
-        assertTrue(containsOperator(operators, UpDownOperator.class));
+        assertTrue(containsOperator(operators, SubtreeLeapOperator.class));
+        assertTrue(containsOperator(operators, FixedHeightSubtreePruneRegraftOperator.class));
+        UpDownOperator upDownOperator =
+                operators.stream()
+                        .filter(UpDownOperator.class::isInstance)
+                        .map(UpDownOperator.class::cast)
+                        .findFirst()
+                        .orElseThrow();
+
+        assertEquals(3.0, upDownOperator.getWeight());
+        assertEquals(0.75, upDownOperator.getScaleFactor());
+        assertTrue(
+                upDownOperator.getOperatorName().contains(
+                        "up:nodeHeights(tree) down:clockRate"
+                ),
+                upDownOperator.getOperatorName()
+        );
     }
 
     @Test
@@ -1001,10 +1004,72 @@ public class BeastXMCMCBuilderTest {
                 buildOperators(source);
 
         assertTrue(containsOperator(operators, ScaleOperator.class));
-        assertTrue(containsScaleOperatorForVariable(operators, "tree.allInternalNodeHeights"));
-        assertTrue(containsOperator(operators, ExchangeOperator.class));
-        assertTrue(containsOperator(operators, WilsonBalding.class));
-        assertTrue(containsOperator(operators, UpDownOperator.class));
+        assertTrue(containsOperator(operators, SubtreeLeapOperator.class));
+        assertTrue(containsOperator(operators, FixedHeightSubtreePruneRegraftOperator.class));
+        UpDownOperator upDownOperator =
+                operators.stream()
+                        .filter(UpDownOperator.class::isInstance)
+                        .map(UpDownOperator.class::cast)
+                        .findFirst()
+                        .orElseThrow();
+
+        assertTrue(
+                upDownOperator.getOperatorName().contains(
+                        "up:nodeHeights(tree) down:molecularRate"
+                ),
+                upDownOperator.getOperatorName()
+        );
+    }
+
+    @Test
+    public void buildsBeautiClockAndCategoryOperatorsForRelaxedClockModel() throws Exception {
+        String source =
+                """
+                Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+                Taxa taxa = taxa(data)
+
+                Tree tree ~ Yule(
+                    birthRate=1.0,
+                    taxa=taxa
+                )
+
+                Rate clockRate ~ LogNormal(logMean=0.0, logSd=1.0)
+
+                Alignment alignment ~ PhyloCTMC(
+                    tree=tree,
+                    qMatrix=jc69(),
+                    branchRates~RelaxedClock(
+                        clockRate=clockRate,
+                        base=LogNormal(mean=1.0, logSd=0.1),
+                        tree=tree
+                    )
+                ) observed as data
+                """;
+
+        List<MCMCOperator> operators =
+                buildOperators(source);
+
+        UpDownOperator upDownOperator =
+                operators.stream()
+                        .filter(UpDownOperator.class::isInstance)
+                        .map(UpDownOperator.class::cast)
+                        .findFirst()
+                        .orElseThrow();
+
+        assertTrue(
+                upDownOperator.getOperatorName().contains(
+                        "up:nodeHeights(tree) down:clockRate"
+                ),
+                upDownOperator.getOperatorName()
+        );
+        assertEquals(
+                1,
+                operators.stream().filter(SwapOperator.class::isInstance).count()
+        );
+        assertEquals(
+                1,
+                operators.stream().filter(UniformIntegerOperator.class::isInstance).count()
+        );
     }
 
 }

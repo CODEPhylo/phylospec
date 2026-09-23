@@ -11,6 +11,7 @@ import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import org.phylospec.types.Simplex;
 import tiling.BeastXState;
+import tiling.operators.ParameterRole;
 import tiling.params.BeastXRealScalarParam;
 import tiling.params.BeastXSimplexParam;
 
@@ -56,6 +57,18 @@ public class GTRTile extends GeneratorTile<GTR, BeastXState> {
         FrequencyModel frequencies =
                 frequencyModel(baseFrequencies);
 
+        registerScaleRole(beastState, rateAC);
+        registerScaleRole(beastState, rateAG);
+        registerScaleRole(beastState, rateAT);
+        registerScaleRole(beastState, rateCG);
+        registerScaleRole(beastState, rateCT);
+        registerScaleRole(beastState, rateGT);
+        if (baseFrequencies instanceof BeastXSimplexParam beastXBaseFrequencies) {
+            beastState.addParameterRole(
+                    beastXBaseFrequencies.getParameter(),
+                    ParameterRole.SUBSTITUTION_SIMPLEX);
+        }
+
         return new GTR(
                 toBeastXVariable(rateAC),
                 toBeastXVariable(rateAG),
@@ -73,6 +86,17 @@ public class GTRTile extends GeneratorTile<GTR, BeastXState> {
         }
 
         return new Parameter.Default(scalar.get());
+    }
+
+    private static void registerScaleRole(
+            BeastXState state,
+            RealScalar<PositiveReal> scalar
+    ) {
+        if (scalar instanceof BeastXRealScalarParam<?> beastXScalar) {
+            state.addParameterRole(
+                    beastXScalar.getParameter(),
+                    ParameterRole.SUBSTITUTION_SCALE);
+        }
     }
 
     private static FrequencyModel frequencyModel(Simplex baseFrequencies) {

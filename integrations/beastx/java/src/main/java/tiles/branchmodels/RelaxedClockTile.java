@@ -20,6 +20,7 @@ import org.phylospec.types.RealScalar;
 
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
+import tiling.operators.ParameterRole;
 import tiling.params.BeastXIntVectorParam;
 import tiling.params.BeastXParameters;
 import tiling.params.BeastXRealScalarParam;
@@ -107,6 +108,10 @@ public class RelaxedClockTile extends GeneratorTile<BranchRateModel, BeastXState
         Parameter clockRateParameter =
                 BeastXParameters.toParameter(clockRate);
 
+        beastState.addParameterRole(
+                clockRateParameter,
+                ParameterRole.CLOCK_RATE);
+
         beastState.addTreeClockRateParameter(tree, clockRateParameter);
 
         BeastXIntVectorParam<NonNegativeInt> rateCategories =
@@ -123,6 +128,9 @@ public class RelaxedClockTile extends GeneratorTile<BranchRateModel, BeastXState
                 new TypeToken<BeastXIntVectorParam<NonNegativeInt>>() {},
                 categoryId
         );
+        beastState.addParameterRole(
+                rateCategories.getParameter(),
+                ParameterRole.RELAXED_CLOCK_CATEGORIES);
 
         DiscretizedBranchRates relativeRelaxedClock =
                 new DiscretizedBranchRates(
@@ -134,7 +142,7 @@ public class RelaxedClockTile extends GeneratorTile<BranchRateModel, BeastXState
                         1.0,
                         false,
                         false,
-                        false
+                        true
                 );
 
         relativeRelaxedClock.setId(

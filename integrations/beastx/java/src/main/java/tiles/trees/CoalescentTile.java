@@ -16,6 +16,7 @@ import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
 import tiling.model.StartingTreeSpec;
+import tiling.operators.ParameterRole;
 
 import java.util.IdentityHashMap;
 
@@ -46,10 +47,17 @@ public class CoalescentTile extends GeneratorTile<
         Taxa taxa =
                 this.taxaInput.apply(beastState, indexVariables);
 
+        Parameter populationSizeParameter =
+                toParameter(populationSize);
+
+        beastState.addParameterRole(
+                populationSizeParameter,
+                ParameterRole.DEMOGRAPHIC_SCALE);
+
         ConstantPopulationModel populationModel =
                 new ConstantPopulationModel(
                         "constantPopulation",
-                        toParameter(populationSize),
+                        populationSizeParameter,
                         Units.Type.YEARS
                 );
 

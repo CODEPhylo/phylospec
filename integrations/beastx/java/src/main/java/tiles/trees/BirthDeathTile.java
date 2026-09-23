@@ -15,6 +15,7 @@ import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
+import tiling.operators.ParameterRole;
 import tiling.params.BeastXParameters;
 
 import java.util.IdentityHashMap;
@@ -75,10 +76,29 @@ public class BirthDeathTile extends GeneratorTile<
                         ? new Parameter.Default(1.0)
                         : BeastXParameters.toParameter(samplingProbability);
 
+        Parameter diversificationRateParameter =
+                BeastXParameters.toParameter(diversificationRate);
+        Parameter turnoverParameter =
+                BeastXParameters.toParameter(turnover);
+
+        constrainTurnover(turnoverParameter);
+
+        beastState.addParameterRole(
+                diversificationRateParameter,
+                ParameterRole.TREE_PRIOR_SCALE);
+        beastState.addParameterRole(
+                turnoverParameter,
+                ParameterRole.TREE_PRIOR_PROPORTION);
+        if (samplingProbability != null) {
+            beastState.addParameterRole(
+                    samplingProbabilityParameter,
+                    ParameterRole.TREE_PRIOR_SCALE);
+        }
+
         BirthDeathGernhard08Model birthDeathModel =
                 new BirthDeathGernhard08Model(
-                        BeastXParameters.toParameter(diversificationRate),
-                        BeastXParameters.toParameter(turnover),
+                        diversificationRateParameter,
+                        turnoverParameter,
                         samplingProbabilityParameter,
                         BirthDeathGernhard08Model.TreeType.LABELED,
                         Units.Type.YEARS
@@ -94,5 +114,19 @@ public class BirthDeathTile extends GeneratorTile<
                     );
                 }
         );
+    }
+
+    private static void constrainTurnover(Parameter parameter) {
+        double value = parameter.getParameterValue(0);
+        if (value < 0.0 || value >= 1.0) {
+            throw new IllegalArgumentException(
+                    "BirthDeath turnover must be in [0, 1)."
+            );
+        }
+        parameter.addBounds(new Parameter.DefaultBounds(
+                1.0,
+                0.0,
+                parameter.getDimension()
+        ));
     }
 }

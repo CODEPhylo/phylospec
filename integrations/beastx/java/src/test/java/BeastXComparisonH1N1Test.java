@@ -110,6 +110,7 @@ public class BeastXComparisonH1N1Test {
                                     RunnerOptions.builder(RUN_NAME)
                                             .mode(RunMode.EXECUTE_MCMC)
                                             .materializePhyloCTMC(true)
+                                            .chainLengthOverride(10)
                                             .build()
                             );
         } catch (RuntimeException exception) {

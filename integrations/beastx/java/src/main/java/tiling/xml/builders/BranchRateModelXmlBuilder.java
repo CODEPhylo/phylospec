@@ -80,6 +80,7 @@ public class BranchRateModelXmlBuilder {
                 .withAttribute("normalizeBranchRateTo", "1.0")
                 .withAttribute("randomizeRates", "false")
                 .withAttribute("keepRates", "true")
+                .withAttribute("cachedRates", "true")
                 .withChild(treeReference(treeModel))
                 .withChild(
                         XmlElement.element("distribution")

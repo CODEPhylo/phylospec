@@ -94,7 +94,7 @@ import tiles.rpn.RPNAssignmentTile;
 import tiles.rpn.SqrtRPNTile;
 import tiles.rpn.UnaryRPNTile;
 
-import tiles.mcmc.AutoOperatorConfigTile;
+import tiles.mcmc.DefaultOperatorConfigTile;
 import tiles.mcmc.ChainLengthTile;
 import tiles.mcmc.DefaultLogEveryTile;
 import tiles.mcmc.OutputPrefixTile;
@@ -222,7 +222,7 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new RandomSeedTile());
         tiles.add(new DefaultLogEveryTile());
         tiles.add(new OutputPrefixTile());
-        tiles.add(new AutoOperatorConfigTile());
+        tiles.add(new DefaultOperatorConfigTile());
         tiles.add(new ScreenLoggerTile());
         tiles.add(new FileLoggerTile());
         tiles.add(new TreeLoggerTile());

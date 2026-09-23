@@ -11,6 +11,7 @@ import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
+import tiling.operators.ParameterRole;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -37,6 +38,12 @@ public class MkTile extends GeneratorTile<GeneralSubstitutionModel, BeastXState>
                 rate == null
                         ? new Parameter.Default(1.0)
                         : toParameter(rate);
+
+        if (rate instanceof BeastXRealScalarParam<?>) {
+            beastState.addParameterRole(
+                    rateParameter,
+                    ParameterRole.SUBSTITUTION_SCALE);
+        }
 
         FrequencyModel frequencies =
                 new FrequencyModel(

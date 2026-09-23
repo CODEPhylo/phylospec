@@ -14,6 +14,7 @@ import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
+import tiling.operators.ParameterRole;
 import tiling.params.BeastXParameters;
 
 import java.util.IdentityHashMap;
@@ -57,9 +58,16 @@ public class YuleTile extends GeneratorTile<
                         InitialTreeBuilder.balancedTree(taxa, "Yule", rootAge)
                 );
 
+        Parameter birthRateParameter =
+                BeastXParameters.toParameter(birthRate);
+
+        beastState.addParameterRole(
+                birthRateParameter,
+                ParameterRole.TREE_PRIOR_SCALE);
+
         BirthDeathGernhard08Model yuleModel =
                 new BirthDeathGernhard08Model(
-                        BeastXParameters.toParameter(birthRate),
+                        birthRateParameter,
                         new Parameter.Default(0.0),
                         new Parameter.Default(1.0),
                         BirthDeathGernhard08Model.TreeType.UNSCALED,

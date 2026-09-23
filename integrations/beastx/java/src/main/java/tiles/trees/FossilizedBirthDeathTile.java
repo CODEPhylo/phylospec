@@ -17,6 +17,7 @@ import tiling.params.BeastXDerivedScalarParameter;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
+import tiling.operators.ParameterRole;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -120,6 +121,13 @@ public class FossilizedBirthDeathTile extends GeneratorTile<
 
             deathRateParameter =
                     toParameter(extinctionRate);
+
+            beastState.addParameterRole(
+                    birthRateParameter,
+                    ParameterRole.SERIAL_TREE_PRIOR_SCALE);
+            beastState.addParameterRole(
+                    deathRateParameter,
+                    ParameterRole.SERIAL_TREE_PRIOR_SCALE);
         } else if (usesDiversificationTurnover) {
             if (diversificationRate == null || turnover == null) {
                 throw new TileApplicationError(
@@ -136,7 +144,19 @@ public class FossilizedBirthDeathTile extends GeneratorTile<
             Parameter turnoverParameter =
                     toParameter(turnover);
 
+            beastState.addParameterRole(
+                    diversificationRateParameter,
+                    ParameterRole.SERIAL_TREE_PRIOR_SCALE);
+            beastState.addParameterRole(
+                    turnoverParameter,
+                    ParameterRole.SERIAL_TREE_PRIOR_PROPORTION);
+
             validateTurnover(turnoverParameter.getParameterValue(0));
+            turnoverParameter.addBounds(new Parameter.DefaultBounds(
+                    1.0,
+                    0.0,
+                    turnoverParameter.getDimension()
+            ));
 
             birthRateParameter =
                     new BeastXDerivedScalarParameter(
@@ -195,12 +215,24 @@ public class FossilizedBirthDeathTile extends GeneratorTile<
                         ? new Parameter.Default(1.0)
                         : toParameter(samplingProbability);
 
+        Parameter serialSamplingRateParameter =
+                toParameter(serialSamplingRate);
+
+        beastState.addParameterRole(
+                serialSamplingRateParameter,
+                ParameterRole.SERIAL_TREE_PRIOR_SCALE);
+        if (samplingProbability != null) {
+            beastState.addParameterRole(
+                    samplingProbabilityParameter,
+                    ParameterRole.SERIAL_TREE_PRIOR_PROPORTION);
+        }
+
         BirthDeathSerialSamplingModel fbdModel =
                 new BirthDeathSerialSamplingModel(
                         "fossilizedBirthDeath",
                         birthRateParameter,
                         deathRateParameter,
-                        toParameter(serialSamplingRate),
+                        serialSamplingRateParameter,
                         samplingProbabilityParameter,
                         false,
                         new Parameter.Default(0.0),
