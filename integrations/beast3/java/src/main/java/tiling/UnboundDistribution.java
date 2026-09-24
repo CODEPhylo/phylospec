@@ -46,6 +46,20 @@ public class UnboundDistribution<T, O extends beast.base.inference.Distribution>
     }
 
     /**
+     * Consumes this distribution as an intermediate part of a larger model without registering it
+     * as a prior or likelihood in its own right.
+     *
+     * <p>The caller may inspect the returned distribution to reuse its configured inputs while
+     * constructing the replacement object. The intermediate distribution is removed from the
+     * pending BEAST object store so that an intentionally unbound object is not initialized later.
+     */
+    public O consumeForComposition(BEASTState beastState) {
+        this.markAsConsumed();
+        beastState.discardIntermediateObject(this.distribution);
+        return this.distribution;
+    }
+
+    /**
      * Marks this distribution as resolved, so that it is wired into the BEAST state exactly once.
      * Resolving it twice would register the same distribution as both a prior and a likelihood, or
      * register it under two ids, which always indicates a bug in the calling tile.
