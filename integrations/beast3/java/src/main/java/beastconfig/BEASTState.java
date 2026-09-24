@@ -110,6 +110,33 @@ public class BEASTState {
     }
 
     /**
+     * Discards an intermediate object that was wired while constructing a larger BEAST object but
+     * must not itself be initialized or included in the final analysis graph.
+     *
+     * <p>This is intentionally limited to objects that have not been registered as state nodes,
+     * distributions, calculation nodes, or operators. It is primarily used when one unbound
+     * distribution is consumed as the structural input of another distribution.
+     */
+    public void discardIntermediateObject(Object object) {
+        BEASTObject beastObject = BEASTObjectStore.INSTANCE.getBEASTObject(object);
+        if (this.stateNodes.containsKey(beastObject)
+                || this.calculationNodes.containsKey(beastObject)
+                || this.priorDistributions.containsKey(beastObject)
+                || this.priorDistributions.containsValue(beastObject)
+                || this.likelihoodDistributions.contains(beastObject)
+                || this.operators.contains(beastObject)) {
+            throw new IllegalArgumentException(
+                    "Cannot discard a BEAST object after it has been registered in the analysis graph.");
+        }
+
+        for (BEASTInterface inputObject : beastObject.listActiveBEASTObjects()) {
+            inputObject.getOutputs().remove(beastObject);
+        }
+        this.beastObjects.removeIf(candidate -> candidate == beastObject);
+        this.initializedBeastObjects.remove(beastObject);
+    }
+
+    /**
      * Initializes a BEAST object.
      */
     public void initBEASTObject(Object object) {

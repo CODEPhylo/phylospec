@@ -1,11 +1,17 @@
 package tiling;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import beast.base.core.Input;
 import beast.base.inference.CompoundDistribution;
+import beast.base.inference.Distribution;
+import beast.base.inference.State;
 import beastconfig.BEASTState;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
@@ -40,5 +46,39 @@ public class UnboundDistributionTest {
                 () -> distribution.observeAs(state, new CustomObservation("second"), "other-likelihood"));
     }
 
+    @Test
+    public void consumesAnUnboundDistributionForComposition() {
+        BEASTState state = new BEASTState("composed-model");
+        RequiredDistribution intermediate = new RequiredDistribution();
+        intermediate.determindClassOfInputs();
+        state.setInput(intermediate, intermediate.configuredInput, "configured");
+        UnboundDistribution<Object, RequiredDistribution> distribution =
+                new UnboundDistribution<>(intermediate, ignored -> {});
+
+        assertSame(intermediate, distribution.consumeForComposition(state));
+        assertDoesNotThrow(state::initializeBEASTObjects);
+        assertThrows(RuntimeException.class, () -> distribution.observeAs(state, new Object(), "likelihood"));
+    }
+
     private record CustomObservation(String id) {}
+
+    public static final class RequiredDistribution extends Distribution {
+        public final Input<String> requiredInput =
+                new Input<>("required", "value supplied only when directly used", Input.Validate.REQUIRED);
+        public final Input<String> configuredInput =
+                new Input<>("configured", "already configured value", Input.Validate.OPTIONAL);
+
+        @Override
+        public List<String> getArguments() {
+            return List.of();
+        }
+
+        @Override
+        public List<String> getConditions() {
+            return List.of();
+        }
+
+        @Override
+        public void sample(State state, Random random) {}
+    }
 }
