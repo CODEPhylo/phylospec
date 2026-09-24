@@ -1,6 +1,5 @@
 package tiling;
 
-import beast.base.inference.StateNode;
 import beastconfig.BEASTState;
 import java.util.function.Consumer;
 
@@ -15,19 +14,19 @@ import java.util.function.Consumer;
 /// therefore also be resolved without an external value.
 ///
 /// A distribution may only be resolved once — see {@link #markAsConsumed}.
-public class UnboundDistribution<T extends StateNode, O extends beast.base.inference.Distribution> {
+public class UnboundDistribution<T, O extends beast.base.inference.Distribution> {
 
     protected final O distribution;
-    protected Consumer<T> setStateNodeFunc;
+    protected Consumer<T> bindValueFunc;
     protected boolean hasBeenConsumed = false;
 
     /**
      * Constructs an unbound distribution wrapping the given BEAST distribution, together with the
      * setter that writes a value into whichever input of that distribution the value belongs to.
      */
-    public UnboundDistribution(O distribution, Consumer<T> setStateNodeFunc) {
+    public UnboundDistribution(O distribution, Consumer<T> bindValueFunc) {
         this.distribution = distribution;
-        this.setStateNodeFunc = setStateNodeFunc;
+        this.bindValueFunc = bindValueFunc;
     }
 
     /**
@@ -42,7 +41,7 @@ public class UnboundDistribution<T extends StateNode, O extends beast.base.infer
      */
     public void observeAs(BEASTState beastState, Object observedValue, String likelihoodId) {
         this.markAsConsumed();
-        this.setStateNodeFunc.accept((T) observedValue);
+        this.bindValueFunc.accept((T) observedValue);
         beastState.addLikelihoodDistribution(this.distribution, likelihoodId);
     }
 
