@@ -24,9 +24,9 @@ public class BoundDistribution<T extends StateNode, O extends beast.base.inferen
     public BoundDistribution(
             O distribution,
             T defaultState,
-            Consumer<T> setStateNodeFunc,
+            Consumer<T> bindValueFunc,
             BiFunction<T, BEASTState, List<Operator>> operatorFactory) {
-        super(distribution, setStateNodeFunc);
+        super(distribution, bindValueFunc);
         this.stateNode = defaultState;
         this.operatorFactory = operatorFactory;
     }
@@ -41,7 +41,7 @@ public class BoundDistribution<T extends StateNode, O extends beast.base.inferen
      */
     public T draw(BEASTState beastState, TypeToken<?> typeToken, String stateId) {
         this.markAsConsumed();
-        this.setStateNodeFunc.accept(this.stateNode);
+        this.bindValueFunc.accept(this.stateNode);
         beastState.addStateNodeWithoutOperators(this.stateNode, typeToken, stateId);
         beastState.addPriorDistribution(this.stateNode, this.distribution, stateId + "_prior");
         beastState.addOperators(this.stateNode, this.operatorFactory.apply(this.stateNode, beastState));
