@@ -54,7 +54,7 @@ public class FromTreeTile extends GeneratorTile<Tree, BEASTState> {
                                 + "' contains more than one tree. Choose a file with exactly one tree to load.");
             }
 
-            return nexusParser.trees.getFirst();
+            return fixedTree(nexusParser.trees.getFirst());
         }
 
         // we assume that we are working with a Newick file
@@ -66,6 +66,11 @@ public class FromTreeTile extends GeneratorTile<Tree, BEASTState> {
             throw new TileApplicationError(
                     "File not found.", "'" + path + "' could not be found. Does it exist? Select a valid file path.");
         }
-        return new TreeParser(newick);
+        return fixedTree(new TreeParser(newick));
+    }
+
+    private static Tree fixedTree(Tree tree) {
+        tree.isEstimatedInput.setValue(false, tree);
+        return tree;
     }
 }
