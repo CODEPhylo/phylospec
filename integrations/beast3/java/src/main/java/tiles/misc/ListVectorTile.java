@@ -45,25 +45,56 @@ public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array, BEASTS
             allPossibleInputTiles.add(elementTiles);
         }
 
-        // we now look at every combination of element tiles. we create a tile for every combination where
-        // everything has the same type
+        // Only tiles with the same element type can form a vector. Group by TypeToken before
+        // visiting combinations so that incompatible combinations are never constructed. This is
+        // especially important for long numeric vectors, where each literal has several possible
+        // Java representations and the unfiltered Cartesian product grows exponentially.
+
+        Map<TypeToken<?>, List<Set<Tile<?, BEASTState>>>> compatibleTilesByType =
+                commonElementTypes(allPossibleInputTiles);
 
         Set<Tile<?, BEASTState>> wiredUpTiles = new HashSet<>();
-        Utils.visitCombinations(allPossibleInputTiles, inputTiles -> {
-            // make sure that all input tiles have the same type token
-            TypeToken<?> firstToken = inputTiles.getFirst().getTypeToken();
-            if (inputTiles.stream().anyMatch(t -> !Objects.equals(t.getTypeToken(), firstToken))) return;
+        for (List<Set<Tile<?, BEASTState>>> compatibleInputTiles : compatibleTilesByType.values()) {
+            Utils.visitCombinations(compatibleInputTiles, inputTiles -> {
+                Tile<?, BEASTState> tile = new ListVectorTile(inputTiles);
+                tile.setRootNode(node);
 
-            Tile<?, BEASTState> tile = new ListVectorTile(inputTiles);
-            tile.setRootNode(node);
+                int totalWeight = inputTiles.stream().mapToInt(Tile::getWeight).sum();
+                tile.setWeight(totalWeight + this.getPriority().getWeight());
 
-            int totalWeight = inputTiles.stream().mapToInt(Tile::getWeight).sum();
-            tile.setWeight(totalWeight + this.getPriority().getWeight());
-
-            wiredUpTiles.add(tile);
-        });
+                wiredUpTiles.add(tile);
+            });
+        }
 
         return wiredUpTiles;
+    }
+
+    private static Map<TypeToken<?>, List<Set<Tile<?, BEASTState>>>> commonElementTypes(
+            List<Set<Tile<?, BEASTState>>> allPossibleInputTiles) {
+        Map<TypeToken<?>, List<Set<Tile<?, BEASTState>>>> compatibleTilesByType = new HashMap<>();
+
+        for (int index = 0; index < allPossibleInputTiles.size(); index++) {
+            Map<TypeToken<?>, Set<Tile<?, BEASTState>>> tilesByType = new HashMap<>();
+            for (Tile<?, BEASTState> tile : allPossibleInputTiles.get(index)) {
+                tilesByType
+                        .computeIfAbsent(tile.getTypeToken(), ignored -> new HashSet<>())
+                        .add(tile);
+            }
+
+            if (index == 0) {
+                for (Map.Entry<TypeToken<?>, Set<Tile<?, BEASTState>>> entry : tilesByType.entrySet()) {
+                    compatibleTilesByType.put(entry.getKey(), new ArrayList<>(List.of(entry.getValue())));
+                }
+                continue;
+            }
+
+            compatibleTilesByType.keySet().retainAll(tilesByType.keySet());
+            for (Map.Entry<TypeToken<?>, List<Set<Tile<?, BEASTState>>>> entry : compatibleTilesByType.entrySet()) {
+                entry.getValue().add(tilesByType.get(entry.getKey()));
+            }
+        }
+
+        return compatibleTilesByType;
     }
 
     @Override
