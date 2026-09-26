@@ -247,6 +247,17 @@ public final class TileProcessor extends AbstractProcessor {
             TypeElement declaration =
                     (TypeElement) element;
 
+            if (declaration.getKind() == ElementKind.INTERFACE) {
+                printWarning(
+                        "Interface-based @GeneratorMapping declarations are deprecated "
+                                + "and will be removed. Declare the mapping on a nested "
+                                + "'public static final class' inside a per-package holder "
+                                + "in 'mappings.<package>', with class-level @InputMapping "
+                                + "annotations only for inputs that do not follow the "
+                                + "'argument -> argumentInput' convention.",
+                        declaration);
+            }
+
             Optional<MappingSpec> mappingResult =
                     readMapping(declaration);
 
@@ -2477,6 +2488,18 @@ public final class TileProcessor extends AbstractProcessor {
                 .getMessager()
                 .printMessage(
                         Diagnostic.Kind.NOTE,
+                        message,
+                        element);
+    }
+
+    private void printWarning(
+            String message,
+            Element element) {
+
+        processingEnv
+                .getMessager()
+                .printMessage(
+                        Diagnostic.Kind.WARNING,
                         message,
                         element);
     }
