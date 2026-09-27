@@ -2286,14 +2286,8 @@
                 {
                     "name": "growthRate",
                     "description": "The logistic growth rate",
-                    "type": "NonNegativeReal",
+                    "type": "Real",
                     "required": true
-                },
-                {
-                    "name": "ancestralPopulationSize",
-                    "description": "Optional ancestral population size",
-                    "type": "NonNegativeReal",
-                    "required": false
                 }
             ]
         },
@@ -2328,7 +2322,13 @@
                     "required": false
                 }
             ],
-            "constraints": ["ancestralPopulationSize.value < populationSize.value"]
+            "constraints": [{
+                "argument": "ancestralPopulationSize",
+                "otherProperty": "value",
+                "property": "value",
+                "otherArgument": "populationSize",
+                "operator": "lessThan"
+            }]
         },
         {
             "generatedType": "PopulationFunction",

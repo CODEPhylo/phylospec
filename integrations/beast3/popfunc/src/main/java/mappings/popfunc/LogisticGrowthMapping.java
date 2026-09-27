@@ -9,7 +9,7 @@ import org.phylospec.annotations.InputMapping;
 import popfunc.beast.evolution.populationmodel.LogisticGrowth;
 
 @GeneratorMapping(
-        component = "phylospec.functions.coalescent.logisticPopulationFunction",
+        component = "popfunc.functions.coalescent.logisticPopulationFunction",
         implementation = LogisticGrowth.class,
         output = PopulationFunction.class)
 public interface LogisticGrowthMapping {

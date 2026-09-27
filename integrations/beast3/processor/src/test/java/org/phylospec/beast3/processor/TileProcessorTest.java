@@ -598,28 +598,25 @@ public class TileProcessorTest {
                         package mappings;
 
                         import beast.base.core.Input;
-                        import beast.base.spec.domain.NonNegativeReal;
                         import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.domain.Real;
                         import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
                         import beast.base.spec.type.RealScalar;
                         import org.phylospec.annotations.GeneratorMapping;
                         import org.phylospec.annotations.InputMapping;
 
                         @GeneratorMapping(
-                                component = "phylospec.functions.coalescent.logisticPopulationFunction")
+                                component = "phylospec.functions.coalescent.exponentialPopulationFunction")
                         public class InvalidMapping extends ConstantPopulation {
 
-                            @InputMapping(argument = "inflectionAge")
-                            public Input<RealScalar<? extends NonNegativeReal>> inflectionAgeInput;
-
-                            @InputMapping(argument = "carryingCapacity")
-                            public Input<RealScalar<? extends PositiveReal>> carryingCapacityInput;
+                            @InputMapping(argument = "populationSize")
+                            public Input<RealScalar<? extends PositiveReal>> populationSizeInput;
 
                             @InputMapping(argument = "growthRate")
-                            public Input<RealScalar<? extends NonNegativeReal>> growthRateInput;
+                            public Input<RealScalar<? extends Real>> growthRateInput;
 
                             @InputMapping(argument = "ancestralPopulationSize")
-                            public Input<RealScalar<? extends NonNegativeReal>> ancestralPopulationSizeInput;
+                            public Input<RealScalar<? extends PositiveReal>> ancestralPopulationSizeInput;
                         }
                         """);
 
@@ -651,8 +648,8 @@ public class TileProcessorTest {
                         package mappings;
 
                         import beast.base.core.Input;
-                        import beast.base.spec.domain.NonNegativeReal;
                         import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.domain.Real;
                         import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
                         import beast.base.spec.type.RealScalar;
                         import beastconfig.BEASTState;
@@ -661,30 +658,27 @@ public class TileProcessorTest {
                         import org.phylospec.tiling.InputFallback;
 
                         @GeneratorMapping(
-                                component = "phylospec.functions.coalescent.logisticPopulationFunction")
+                                component = "phylospec.functions.coalescent.exponentialPopulationFunction")
                         public class InvalidMapping extends ConstantPopulation {
 
-                            @InputMapping(argument = "inflectionAge")
-                            public Input<RealScalar<? extends NonNegativeReal>> inflectionAgeInput;
-
-                            @InputMapping(argument = "carryingCapacity")
-                            public Input<RealScalar<? extends PositiveReal>> carryingCapacityInput;
+                            @InputMapping(argument = "populationSize")
+                            public Input<RealScalar<? extends PositiveReal>> populationSizeInput;
 
                             @InputMapping(argument = "growthRate")
-                            public Input<RealScalar<? extends NonNegativeReal>> growthRateInput;
+                            public Input<RealScalar<? extends Real>> growthRateInput;
 
                             @InputMapping(
                                     argument = "ancestralPopulationSize",
                                     fallback = MissingAncestralSize.class)
-                            public Input<RealScalar<? extends NonNegativeReal>> ancestralPopulationSizeInput;
+                            public Input<RealScalar<? extends PositiveReal>> ancestralPopulationSizeInput;
 
                             public static final class MissingAncestralSize
                                     implements InputFallback<
-                                            RealScalar<? extends NonNegativeReal>,
+                                            RealScalar<? extends PositiveReal>,
                                             BEASTState> {
 
                                 @Override
-                                public RealScalar<? extends NonNegativeReal> get(BEASTState state) {
+                                public RealScalar<? extends PositiveReal> get(BEASTState state) {
                                     return null;
                                 }
                             }
@@ -714,8 +708,8 @@ public class TileProcessorTest {
 
                         import beast.base.core.Input;
                         import beast.base.spec.domain.NonNegativeInt;
-                        import beast.base.spec.domain.NonNegativeReal;
                         import beast.base.spec.domain.PositiveReal;
+                        import beast.base.spec.domain.Real;
                         import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
                         import beast.base.spec.type.IntScalar;
                         import beast.base.spec.type.RealScalar;
@@ -725,22 +719,19 @@ public class TileProcessorTest {
                         import org.phylospec.tiling.InputFallback;
 
                         @GeneratorMapping(
-                                component = "phylospec.functions.coalescent.logisticPopulationFunction")
+                                component = "phylospec.functions.coalescent.exponentialPopulationFunction")
                         public class InvalidMapping extends ConstantPopulation {
 
-                            @InputMapping(argument = "inflectionAge")
-                            public Input<RealScalar<? extends NonNegativeReal>> inflectionAgeInput;
-
-                            @InputMapping(argument = "carryingCapacity")
-                            public Input<RealScalar<? extends PositiveReal>> carryingCapacityInput;
+                            @InputMapping(argument = "populationSize")
+                            public Input<RealScalar<? extends PositiveReal>> populationSizeInput;
 
                             @InputMapping(argument = "growthRate")
-                            public Input<RealScalar<? extends NonNegativeReal>> growthRateInput;
+                            public Input<RealScalar<? extends Real>> growthRateInput;
 
                             @InputMapping(
                                     argument = "ancestralPopulationSize",
                                     fallback = WrongFallback.class)
-                            public Input<RealScalar<? extends NonNegativeReal>> ancestralPopulationSizeInput;
+                            public Input<RealScalar<? extends PositiveReal>> ancestralPopulationSizeInput;
 
                             public static final class WrongFallback
                                     implements InputFallback<

@@ -37,7 +37,13 @@
           }
         ],
         "constraints": [
-          "growthStartAge.value <= growthEndAge.value"
+          {
+            "argument": "growthStartAge",
+            "property": "value",
+            "operator": "lessThanOrEqual",
+            "otherArgument": "growthEndAge",
+            "otherProperty": "value"
+          }
         ]
       },
       {
@@ -72,7 +78,12 @@
           }
         ],
         "constraints": [
-          "initialProportion.value > 0"
+          {
+            "argument": "initialProportion",
+            "property": "value",
+            "operator": "greaterThan",
+            "constant": 0
+          }
         ]
       },
       {
@@ -107,7 +118,54 @@
           }
         ],
         "constraints": [
-          "ancestralPopulationSize.value < carryingCapacity.value"
+          {
+            "argument": "ancestralPopulationSize",
+            "property": "value",
+            "operator": "lessThan",
+            "otherArgument": "carryingCapacity",
+            "otherProperty": "value"
+          }
+        ]
+      },
+      {
+        "name": "logisticPopulationFunction",
+        "namespace": "popfunc.functions.coalescent",
+        "description": "The PopFunc logistic population function with a non-negative growth rate and optional ancestral population size.",
+        "generatedType": "PopulationFunction",
+        "arguments": [
+          {
+            "name": "inflectionAge",
+            "description": "The age of the inflection point.",
+            "type": "Age",
+            "required": true
+          },
+          {
+            "name": "carryingCapacity",
+            "description": "The population carrying capacity.",
+            "type": "PositiveReal",
+            "required": true
+          },
+          {
+            "name": "growthRate",
+            "description": "The non-negative logistic growth rate.",
+            "type": "NonNegativeReal",
+            "required": true
+          },
+          {
+            "name": "ancestralPopulationSize",
+            "description": "Optional ancestral population size.",
+            "type": "NonNegativeReal",
+            "required": false
+          }
+        ],
+        "constraints": [
+          {
+            "argument": "ancestralPopulationSize",
+            "property": "value",
+            "operator": "lessThan",
+            "otherArgument": "carryingCapacity",
+            "otherProperty": "value"
+          }
         ]
       },
       {
@@ -124,7 +182,12 @@
           }
         ],
         "constraints": [
-          "models.num > 0"
+          {
+            "argument": "models",
+            "property": "num",
+            "operator": "greaterThan",
+            "constant": 0
+          }
         ]
       },
       {
@@ -147,7 +210,13 @@
           }
         ],
         "constraints": [
-          "indicator.value < models.num"
+          {
+            "argument": "indicator",
+            "property": "value",
+            "operator": "lessThan",
+            "otherArgument": "models",
+            "otherProperty": "num"
+          }
         ]
       }
     ]
