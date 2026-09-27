@@ -30,6 +30,8 @@ public class LogisticGrowthEndToEndTest {
     @Test
     public void buildsPopFuncModelFromPhyloSpec() throws IOException {
         String source = """
+                use popfunc.functions.coalescent
+
                 PopulationFunction population = logisticPopulationFunction(
                     inflectionAge=5.0,
                     carryingCapacity=1000.0,
@@ -39,8 +41,7 @@ public class LogisticGrowthEndToEndTest {
 
         List<Stmt> statements = parse(source);
 
-        TypeResolver typeResolver =
-                new TypeResolver(new ComponentResolver(ComponentResolver.loadCoreComponentLibraries()));
+        TypeResolver typeResolver = new TypeResolver(popFuncComponents());
         typeResolver.visitStatements(statements);
 
         VariableResolver variableResolver = new VariableResolver(statements);
@@ -69,6 +70,8 @@ public class LogisticGrowthEndToEndTest {
     @Test
     public void buildsOptionalAncestralPopulationFromPhyloSpec() throws IOException {
         String source = """
+                use popfunc.functions.coalescent
+
                 PopulationFunction population = logisticPopulationFunction(
                     inflectionAge=5.0,
                     carryingCapacity=1000.0,
@@ -79,8 +82,7 @@ public class LogisticGrowthEndToEndTest {
 
         List<Stmt> statements = parse(source);
 
-        TypeResolver typeResolver =
-                new TypeResolver(new ComponentResolver(ComponentResolver.loadCoreComponentLibraries()));
+        TypeResolver typeResolver = new TypeResolver(popFuncComponents());
         typeResolver.visitStatements(statements);
 
         VariableResolver variableResolver = new VariableResolver(statements);
@@ -104,6 +106,8 @@ public class LogisticGrowthEndToEndTest {
     @Test
     public void rejectsNegativeGrowthRateBeforeTiling() throws IOException {
         String source = """
+                use popfunc.functions.coalescent
+
                 PopulationFunction population = logisticPopulationFunction(
                     inflectionAge=5.0,
                     carryingCapacity=1000.0,
@@ -112,8 +116,7 @@ public class LogisticGrowthEndToEndTest {
                 """;
 
         List<Stmt> statements = parse(source);
-        TypeResolver typeResolver =
-                new TypeResolver(new ComponentResolver(ComponentResolver.loadCoreComponentLibraries()));
+        TypeResolver typeResolver = new TypeResolver(popFuncComponents());
 
         TypeError error = assertThrows(TypeError.class, () -> typeResolver.visitStatements(statements));
         assertEquals(
@@ -125,6 +128,8 @@ public class LogisticGrowthEndToEndTest {
     @Test
     public void rejectsNegativeAncestralPopulationBeforeTiling() throws IOException {
         String source = """
+                use popfunc.functions.coalescent
+
                 PopulationFunction population = logisticPopulationFunction(
                     inflectionAge=5.0,
                     carryingCapacity=1000.0,
@@ -134,8 +139,7 @@ public class LogisticGrowthEndToEndTest {
                 """;
 
         List<Stmt> statements = parse(source);
-        TypeResolver typeResolver =
-                new TypeResolver(new ComponentResolver(ComponentResolver.loadCoreComponentLibraries()));
+        TypeResolver typeResolver = new TypeResolver(popFuncComponents());
 
         TypeError error = assertThrows(TypeError.class, () -> typeResolver.visitStatements(statements));
         assertEquals(
@@ -147,6 +151,8 @@ public class LogisticGrowthEndToEndTest {
     @Test
     public void reportsMissingCarryingCapacityBeforeTiling() throws IOException {
         String source = """
+                use popfunc.functions.coalescent
+
                 PopulationFunction population = logisticPopulationFunction(
                     inflectionAge=5.0,
                     growthRate=0.25
@@ -154,8 +160,7 @@ public class LogisticGrowthEndToEndTest {
                 """;
 
         List<Stmt> statements = parse(source);
-        TypeResolver typeResolver =
-                new TypeResolver(new ComponentResolver(ComponentResolver.loadCoreComponentLibraries()));
+        TypeResolver typeResolver = new TypeResolver(popFuncComponents());
 
         TypeError error = assertThrows(TypeError.class, () -> typeResolver.visitStatements(statements));
         assertEquals(
@@ -167,5 +172,11 @@ public class LogisticGrowthEndToEndTest {
         List<Stmt> statements = new Parser(new Lexer(source).scanTokens()).parse();
         statements = new RemoveGroupings().transform(statements);
         return new EvaluateLiterals().transform(statements);
+    }
+
+    private static ComponentResolver popFuncComponents() throws IOException {
+        List<TileLibrary<BEASTState>> libraries =
+                TileLibrary.select(BEASTState.class, List.of("popfunc", "beast2"));
+        return new ComponentResolver(TileLibrary.loadComponentLibraries(libraries));
     }
 }

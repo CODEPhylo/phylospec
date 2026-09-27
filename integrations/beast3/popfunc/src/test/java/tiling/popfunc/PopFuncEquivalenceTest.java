@@ -176,6 +176,8 @@ public class PopFuncEquivalenceTest {
                 ? ""
                 : ", ancestralPopulationSize=" + ancestralSize;
         String source = """
+                use popfunc.functions.coalescent
+
                 PopulationFunction population = logisticPopulationFunction(
                     inflectionAge=5.0,
                     carryingCapacity=1000.0,
