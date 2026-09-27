@@ -11,8 +11,8 @@ import java.lang.annotation.Target;
  *
  * <p>The semantic type must be declared in a component library loaded by the
  * annotation processor. This annotation may be placed directly on a public
- * implementation class, or on a separate mapping interface when the package
- * implementation cannot be annotated.</p>
+ * implementation class, or on a separate declaration class that names the
+ * {@link #implementation()} when the package implementation cannot be annotated.</p>
  */
 @Documented
 @Retention(RetentionPolicy.SOURCE)

@@ -592,13 +592,10 @@ public class TileProcessorTest {
                                 component = "testpackage.functions.customPopulation",
                                 implementation = ConstantPopulation.class,
                                 output = PopulationFunction.class)
-                        public interface InvalidMapping {
-
-                            @InputMapping(
-                                    argument = "populationSize",
-                                    input = "popSizeParameter")
-                            RealScalar<? extends PositiveReal> populationSize();
-                        }
+                        @InputMapping(
+                                argument = "populationSize",
+                                input = "popSizeParameter")
+                        public final class InvalidMapping {}
                         """,
                         List.of(
                                 "-A"
@@ -638,10 +635,10 @@ public class TileProcessorTest {
                                 component = "testpackage.functions.customJc",
                                 implementation = JukesCantor.class,
                                 output = SubstitutionModel.class)
-                        public interface InvalidMapping {
+                        public final class InvalidMapping {
 
                             @ComponentSource("/package-components.json")
-                            final class PackageLibrary extends TileLibrary<BEASTState> {
+                            public static final class PackageLibrary extends TileLibrary<BEASTState> {
                                 @Override
                                 public Class<BEASTState> getStateType() {
                                     return BEASTState.class;
@@ -730,18 +727,16 @@ public class TileProcessorTest {
                         @TypeBinding(
                                 semantic = "testpackage.types.CustomPopulation",
                                 implementation = ConstantPopulation.class)
-                        interface CustomPopulationBinding {}
+                        final class CustomPopulationBinding {}
 
                         @GeneratorMapping(
                                 component = "testpackage.functions.wrapPopulation",
                                 implementation = InvalidMapping.Wrapper.class,
                                 output = PopulationFunction.class)
-                        public interface InvalidMapping {
+                        @InputMapping(argument = "model", input = "modelInput")
+                        public final class InvalidMapping {
 
-                            @InputMapping(argument = "model", input = "modelInput")
-                            ConstantPopulation model();
-
-                            final class Wrapper extends ConstantPopulation {
+                            public static final class Wrapper extends ConstantPopulation {
                                 public final Input<ConstantPopulation> modelInput =
                                         new Input<>("model", "Wrapped model");
                             }
@@ -784,16 +779,14 @@ public class TileProcessorTest {
                                 component = "testpackage.functions.wrapPopulation",
                                 implementation = InvalidMapping.Wrapper.class,
                                 output = PopulationFunction.class)
-                        public interface InvalidMapping {
-
-                            @InputMapping(argument = "model", input = "modelInput")
-                            CustomPopulation model();
+                        @InputMapping(argument = "model", input = "modelInput")
+                        public final class InvalidMapping {
 
                             @TypeBinding(
                                     semantic = "testpackage.types.CustomPopulation")
-                            final class CustomPopulation extends ConstantPopulation {}
+                            public static final class CustomPopulation extends ConstantPopulation {}
 
-                            final class Wrapper extends ConstantPopulation {
+                            public static final class Wrapper extends ConstantPopulation {
                                 public final Input<CustomPopulation> modelInput =
                                         new Input<>("model", "Wrapped model");
                             }
@@ -819,7 +812,7 @@ public class TileProcessorTest {
                         @TypeBinding(
                                 semantic = "testpackage.types.MissingPopulation",
                                 implementation = ConstantPopulation.class)
-                        public interface InvalidMapping {}
+                        public final class InvalidMapping {}
                         """,
                         componentLibraryOption(componentLibrary));
 
@@ -841,17 +834,17 @@ public class TileProcessorTest {
                         import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
                         import org.phylospec.annotations.TypeBinding;
 
-                        public interface InvalidMapping {
+                        public final class InvalidMapping {
 
                             @TypeBinding(
                                     semantic = "testpackage.types.CustomPopulation",
                                     implementation = ConstantPopulation.class)
-                            interface FirstBinding {}
+                            public static final class FirstBinding {}
 
                             @TypeBinding(
                                     semantic = "testpackage.types.CustomPopulation",
                                     implementation = ConstantPopulation.class)
-                            interface SecondBinding {}
+                            public static final class SecondBinding {}
                         }
                         """,
                         componentLibraryOption(componentLibrary));
@@ -876,7 +869,7 @@ public class TileProcessorTest {
                         @TypeBinding(
                                 semantic = "testpackage.types.CustomPopulation",
                                 implementation = String.class)
-                        public interface InvalidMapping {}
+                        public final class InvalidMapping {}
                         """,
                         componentLibraryOption(componentLibrary));
 
@@ -887,7 +880,7 @@ public class TileProcessorTest {
     }
 
     @Test
-    public void rejectsTypeBindingInterfaceWithoutImplementation() throws IOException {
+    public void rejectsTypeBindingOnInterface() throws IOException {
         Path componentLibrary = writeTypeBindingComponentLibrary();
 
         CompilationResult result =
@@ -905,7 +898,7 @@ public class TileProcessorTest {
 
         assertCompilationError(
                 result,
-                "@TypeBinding on a mapping interface must specify implementation.");
+                "@TypeBinding can only be applied to a class.");
     }
 
     @Test
@@ -920,7 +913,7 @@ public class TileProcessorTest {
                         @TypeBinding(
                                 semantic = "phylospec.types.Rate",
                                 implementation = String.class)
-                        public interface InvalidMapping {}
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationError(
@@ -1198,15 +1191,13 @@ public class TileProcessorTest {
                         @GeneratorMapping(
                                 component = "phylospec.functions.coalescent.constantPopulationFunction",
                                 implementation = ConstantPopulation.class)
-                        public interface InvalidMapping {
+                        @InputMapping(
+                                argument = "populationSize",
+                                input = "popSizeParameter",
+                                fallback = InvalidMapping.PopulationFallback.class)
+                        public final class InvalidMapping {
 
-                            @InputMapping(
-                                    argument = "populationSize",
-                                    input = "popSizeParameter",
-                                    fallback = PopulationFallback.class)
-                            RealScalar<? extends PositiveReal> populationSize();
-
-                            final class PopulationFallback
+                            public static final class PopulationFallback
                                     implements InputFallback<
                                             RealScalar<? extends PositiveReal>,
                                             BEASTState> {
@@ -1249,29 +1240,23 @@ public class TileProcessorTest {
                                 component = "phylospec.functions.coalescent.exponentialPopulationFunction",
                                 implementation = InvalidMapping.Model.class,
                                 output = PopulationFunction.class)
-                        public interface InvalidMapping {
+                        @InputMapping(argument = "populationSize", input = "popSizeParameterInput")
+                        @InputMapping(argument = "growthRate", input = "growthRateParameterInput")
+                        @InputMapping(argument = "ancestralPopulationSize", input = "ancestralInput")
+                        @InputMapping(
+                                argument = "ancestralPopulationSize",
+                                input = "indicatorInput",
+                                adapter = InvalidMapping.IndicatorAdapter.class)
+                        public final class InvalidMapping {
 
-                            @InputMapping(argument = "populationSize", input = "popSizeParameterInput")
-                            RealScalar<? extends PositiveReal> populationSize();
-
-                            @InputMapping(argument = "growthRate", input = "growthRateParameterInput")
-                            RealScalar<? extends Real> growthRate();
-
-                            @InputMapping(argument = "ancestralPopulationSize", input = "ancestralInput")
-                            @InputMapping(
-                                    argument = "ancestralPopulationSize",
-                                    input = "indicatorInput",
-                                    adapter = IndicatorAdapter.class)
-                            RealScalar<? extends PositiveReal> ancestralPopulationSize();
-
-                            final class Model extends ExponentialGrowth {
+                            public static final class Model extends ExponentialGrowth {
                                 public final Input<RealScalar<? extends PositiveReal>> ancestralInput =
                                         new Input<>("ancestral", "ancestral");
                                 public final Input<IntScalar<? extends NonNegativeInt>> indicatorInput =
                                         new Input<>("indicator", "indicator");
                             }
 
-                            final class IndicatorAdapter
+                            public static final class IndicatorAdapter
                                     implements TypeAdapter<
                                             RealScalar<? extends PositiveReal>,
                                             IntScalar<? extends NonNegativeInt>,
@@ -1319,11 +1304,8 @@ public class TileProcessorTest {
                         @GeneratorMapping(
                                 component = "phylospec.functions.coalescent.constantPopulationFunction",
                                 implementation = ConstantPopulation.class)
-                        public interface InvalidMapping {
-
-                            @InputMapping(argument = "populationSize", input = "popSizeParameter")
-                            RealScalar<? extends PositiveReal> populationSize();
-                        }
+                        @InputMapping(argument = "populationSize", input = "popSizeParameter")
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationSuccess(result);
@@ -1357,14 +1339,11 @@ public class TileProcessorTest {
                         @GeneratorMapping(
                                 component = "phylospec.functions.coalescent.constantPopulationFunction",
                                 implementation = ConstantPopulation.class)
-                        public interface InvalidMapping {
-
-                            @InputMapping(
-                                    argument = "populationSize",
-                                    input = "popSizeParameter",
-                                    accepts = Stochasticity.CONSTANT)
-                            RealScalar<? extends PositiveReal> populationSize();
-                        }
+                        @InputMapping(
+                                argument = "populationSize",
+                                input = "popSizeParameter",
+                                accepts = Stochasticity.CONSTANT)
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationSuccess(result);
@@ -1398,14 +1377,11 @@ public class TileProcessorTest {
                         @GeneratorMapping(
                                 component = "phylospec.functions.coalescent.constantPopulationFunction",
                                 implementation = ConstantPopulation.class)
-                        public interface InvalidMapping {
-
-                            @InputMapping(
-                                    argument = "populationSize",
-                                    input = "popSizeParameter",
-                                    accepts = {})
-                            RealScalar<? extends PositiveReal> populationSize();
-                        }
+                        @InputMapping(
+                                argument = "populationSize",
+                                input = "popSizeParameter",
+                                accepts = {})
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationError(
@@ -1433,19 +1409,17 @@ public class TileProcessorTest {
                                 component = "phylospec.functions.coalescent.constantPopulationFunction",
                                 implementation = InvalidMapping.Model.class,
                                 output = PopulationFunction.class)
-                        public interface InvalidMapping {
+                        @InputMapping(
+                                argument = "populationSize",
+                                input = "firstInput",
+                                accepts = Stochasticity.CONSTANT)
+                        @InputMapping(
+                                argument = "populationSize",
+                                input = "secondInput",
+                                accepts = Stochasticity.STOCHASTIC)
+                        public final class InvalidMapping {
 
-                            @InputMapping(
-                                    argument = "populationSize",
-                                    input = "firstInput",
-                                    accepts = Stochasticity.CONSTANT)
-                            @InputMapping(
-                                    argument = "populationSize",
-                                    input = "secondInput",
-                                    accepts = Stochasticity.STOCHASTIC)
-                            RealScalar<? extends PositiveReal> populationSize();
-
-                            final class Model extends ConstantPopulation {
+                            public static final class Model extends ConstantPopulation {
                                 public final Input<RealScalar<? extends PositiveReal>> firstInput =
                                         new Input<>("first", "first");
                                 public final Input<RealScalar<? extends PositiveReal>> secondInput =
@@ -1465,9 +1439,9 @@ public class TileProcessorTest {
         CompilationResult result =
                 compile(
                         """
-                        package mappings;
+                        package models;
 
-                        import beast.base.evolution.tree.coalescent.PopulationFunction;
+                        import beast.base.core.Input;
                         import beast.base.spec.domain.PositiveReal;
                         import beast.base.spec.evolution.tree.coalescent.ExponentialGrowth;
                         import beast.base.spec.type.RealScalar;
@@ -1475,14 +1449,12 @@ public class TileProcessorTest {
                         import org.phylospec.annotations.InputMapping;
 
                         @GeneratorMapping(
-                                component = "phylospec.functions.coalescent.exponentialPopulationFunction",
-                                implementation = ExponentialGrowth.class,
-                                output = PopulationFunction.class)
-                        public interface InvalidMapping {
+                                component = "phylospec.functions.coalescent.exponentialPopulationFunction")
+                        public class InvalidMapping extends ExponentialGrowth {
 
-                            @InputMapping(argument = "populationSize", input = "popSizeParameterInput")
-                            @InputMapping(argument = "growthRate", input = "growthRateParameterInput")
-                            RealScalar<? extends PositiveReal> value();
+                            @InputMapping(argument = "populationSize")
+                            @InputMapping(argument = "growthRate")
+                            public Input<RealScalar<? extends PositiveReal>> valueInput;
                         }
                         """);
 
@@ -1497,9 +1469,9 @@ public class TileProcessorTest {
         CompilationResult result =
                 compile(
                         """
-                        package mappings;
+                        package models;
 
-                        import beast.base.evolution.tree.coalescent.PopulationFunction;
+                        import beast.base.core.Input;
                         import beast.base.spec.domain.PositiveReal;
                         import beast.base.spec.evolution.tree.coalescent.ExponentialGrowth;
                         import beast.base.spec.type.RealScalar;
@@ -1507,16 +1479,14 @@ public class TileProcessorTest {
                         import org.phylospec.annotations.InputMapping;
 
                         @GeneratorMapping(
-                                component = "phylospec.functions.coalescent.exponentialPopulationFunction",
-                                implementation = ExponentialGrowth.class,
-                                output = PopulationFunction.class)
-                        public interface InvalidMapping {
+                                component = "phylospec.functions.coalescent.exponentialPopulationFunction")
+                        public class InvalidMapping extends ExponentialGrowth {
 
-                            @InputMapping(argument = "populationSize", input = "popSizeParameterInput")
-                            RealScalar<? extends PositiveReal> firstPopulationSize();
+                            @InputMapping(argument = "populationSize")
+                            public Input<RealScalar<? extends PositiveReal>> firstPopulationSizeInput;
 
-                            @InputMapping(argument = "populationSize", input = "growthRateParameterInput")
-                            RealScalar<? extends PositiveReal> secondPopulationSize();
+                            @InputMapping(argument = "populationSize")
+                            public Input<RealScalar<? extends PositiveReal>> secondPopulationSizeInput;
                         }
                         """);
 
@@ -1544,19 +1514,12 @@ public class TileProcessorTest {
                                 component = "phylospec.functions.coalescent.exponentialPopulationFunction",
                                 implementation = ExponentialGrowth.class,
                                 output = PopulationFunction.class)
-                        public interface InvalidMapping {
-
-                            @InputMapping(argument = "populationSize", input = "popSizeParameterInput")
-                            RealScalar<? extends PositiveReal> populationSize();
-
-                            @InputMapping(argument = "growthRate", input = "growthRateParameterInput")
-                            RealScalar<? extends Real> growthRate();
-
-                            @InputMapping(
-                                    argument = "ancestralPopulationSize",
-                                    input = "popSizeParameterInput")
-                            RealScalar<? extends PositiveReal> ancestralPopulationSize();
-                        }
+                        @InputMapping(argument = "populationSize", input = "popSizeParameterInput")
+                        @InputMapping(argument = "growthRate", input = "growthRateParameterInput")
+                        @InputMapping(
+                                argument = "ancestralPopulationSize",
+                                input = "popSizeParameterInput")
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationError(
@@ -1665,7 +1628,7 @@ public class TileProcessorTest {
     }
 
     @Test
-    public void requiresImplementationOnExternalMapping() throws IOException {
+    public void rejectsGeneratorMappingOnInterface() throws IOException {
         CompilationResult result =
                 compile(
                         """
@@ -1680,8 +1643,7 @@ public class TileProcessorTest {
 
         assertCompilationError(
                 result,
-                "External @GeneratorMapping interfaces must declare "
-                        + "an implementation class.");
+                "@GeneratorMapping can only be applied to a class");
     }
 
     @Test
@@ -1697,7 +1659,7 @@ public class TileProcessorTest {
                         @GeneratorMapping(
                                 component = "phylospec.functions.coalescent.unknown",
                                 implementation = ConstantPopulation.class)
-                        public interface InvalidMapping {}
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationError(
@@ -1721,12 +1683,12 @@ public class TileProcessorTest {
                         @GeneratorMapping(
                                 component = "phylospec.functions.substitution.jc69",
                                 implementation = JukesCantor.class)
-                        interface FirstMapping {}
+                        final class FirstMapping {}
 
                         @GeneratorMapping(
                                 component = "phylospec.functions.substitution.jc69",
                                 implementation = JukesCantor.class)
-                        interface SecondMapping {}
+                        final class SecondMapping {}
                         """);
 
         assertCompilationError(
@@ -1756,12 +1718,12 @@ public class TileProcessorTest {
                         @GeneratorMapping(
                                 component = "phylospec.functions.substitution.jc69",
                                 implementation = JukesCantor.class)
-                        interface FirstMapping {}
+                        final class FirstMapping {}
 
                         @GeneratorMapping(
                                 component = "phylospec.functions.substitution.jtt",
                                 implementation = JTT.class)
-                        interface SecondMapping {}
+                        final class SecondMapping {}
                         """);
 
         assertCompilationSuccess(result);
@@ -1782,7 +1744,7 @@ public class TileProcessorTest {
                         @GeneratorMapping(
                                 component = "phylospec.functions.substitution.gtr",
                                 implementation = GTR.class)
-                        public interface InvalidMapping {}
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationError(
@@ -1813,7 +1775,7 @@ public class TileProcessorTest {
                                     "unknownArgument",
                                     "baseFrequencies"
                                 })
-                        public interface InvalidMapping {}
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationError(
@@ -1843,7 +1805,7 @@ public class TileProcessorTest {
                                     "relativeRates",
                                     "baseFrequencies"
                                 })
-                        public interface InvalidMapping {}
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationError(
@@ -1875,13 +1837,10 @@ public class TileProcessorTest {
                         @GeneratorMapping(
                                 component = "phylospec.functions.coalescent.constantPopulationFunction",
                                 implementation = ConstantPopulation.class)
-                        public interface InvalidMapping {
-
-                            @InputMapping(
-                                    argument = "unknownArgument",
-                                    input = "popSizeParameter")
-                            RealScalar<? extends PositiveReal> populationSize();
-                        }
+                        @InputMapping(
+                                argument = "unknownArgument",
+                                input = "popSizeParameter")
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationError(
@@ -1905,13 +1864,10 @@ public class TileProcessorTest {
                         @GeneratorMapping(
                                 component = "phylospec.functions.coalescent.constantPopulationFunction",
                                 implementation = ConstantPopulation.class)
-                        public interface InvalidMapping {
-
-                            @InputMapping(
-                                    argument = "populationSize",
-                                    input = "missingInput")
-                            RealScalar<? extends PositiveReal> populationSize();
-                        }
+                        @InputMapping(
+                                argument = "populationSize",
+                                input = "missingInput")
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationError(
@@ -1926,30 +1882,31 @@ public class TileProcessorTest {
                         """
                         package mappings;
 
+                        import beast.base.core.Input;
+                        import beast.base.evolution.tree.coalescent.PopulationFunction;
                         import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
                         import org.phylospec.annotations.GeneratorMapping;
                         import org.phylospec.annotations.InputMapping;
 
                         @GeneratorMapping(
                                 component = "phylospec.functions.coalescent.constantPopulationFunction",
-                                implementation = ConstantPopulation.class)
-                        public interface InvalidMapping {
+                                implementation = InvalidMapping.Model.class,
+                                output = PopulationFunction.class)
+                        @InputMapping(
+                                argument = "populationSize",
+                                input = "textInput")
+                        public final class InvalidMapping {
 
-                            @InputMapping(
-                                    argument = "populationSize",
-                                    input = "popSizeParameter")
-                            String populationSize();
+                            public static final class Model extends ConstantPopulation {
+                                public final Input<String> textInput = new Input<>("text", "text");
+                            }
                         }
                         """);
 
         assertCompilationError(
                 result,
-                "PhyloSpec argument produces Java type "
-                        + "'java.lang.String'");
-
-        assertCompilationError(
-                result,
-                "BEAST input 'popSizeParameter' expects");
+                "BEAST input 'textInput' expects 'java.lang.String', "
+                        + "and no registered adapter");
     }
 
     @Test
@@ -1966,7 +1923,7 @@ public class TileProcessorTest {
                                 component = "phylospec.functions.coalescent.constantPopulationFunction",
                                 implementation = ConstantPopulation.class,
                                 output = String.class)
-                        public interface InvalidMapping {}
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationError(
@@ -1991,7 +1948,7 @@ public class TileProcessorTest {
                                 component = "phylospec.functions.substitution.jc69",
                                 implementation = JukesCantor.class,
                                 output = Object.class)
-                        public interface InvalidMapping {}
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationError(
@@ -2023,9 +1980,9 @@ public class TileProcessorTest {
                         @GeneratorMapping(
                                 component = "phylospec.functions.substitution.jc69",
                                 implementation = InvalidMapping.Model.class)
-                        public interface InvalidMapping {
+                        public final class InvalidMapping {
 
-                            final class Model {
+                            public static final class Model {
 
                                 public Model(String value) {}
                             }
@@ -2046,7 +2003,7 @@ public class TileProcessorTest {
                         adapterMapping(
                                 "NotAdapter",
                                 """
-                                public final class NotAdapter {
+                                public static final class NotAdapter {
 
                                     public NotAdapter() {}
                                 }
@@ -2075,13 +2032,10 @@ public class TileProcessorTest {
                         @GeneratorMapping(
                                 component = "phylospec.functions.substitution.hky",
                                 implementation = HKY.class)
-                        public interface InvalidMapping {
-    
-                            @InputMapping(
-                                    argument = "kappa",
-                                    input = "kappaInput")
-                            RealScalar<PositiveReal> kappa();
-                        }
+                        @InputMapping(
+                                argument = "kappa",
+                                input = "kappaInput")
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationError(
@@ -2105,7 +2059,7 @@ public class TileProcessorTest {
                         @GeneratorMapping(
                                 component = "phylospec.functions.substitution.wag",
                                 implementation = WAG.class)
-                        public interface InvalidMapping {}
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationSuccess(result);
@@ -2164,7 +2118,7 @@ public class TileProcessorTest {
                         adapterMapping(
                                 "ValidAdapter",
                                 """
-                                public final class ValidAdapter
+                                public static final class ValidAdapter
                                         implements TypeAdapter<
                                                 Simplex,
                                                 Frequencies,
@@ -2204,15 +2158,13 @@ public class TileProcessorTest {
                         @GeneratorMapping(
                                 component = "phylospec.functions.substitution.wag",
                                 implementation = WAG.class)
-                        public interface InvalidMapping {
-
-                            @InputMapping(
-                                    argument = "baseFrequencies",
-                                    input = "frequenciesInput")
-                            Simplex baseFrequencies();
+                        @InputMapping(
+                                argument = "baseFrequencies",
+                                input = "frequenciesInput")
+                        public final class InvalidMapping {
 
                             @AdapterMapping
-                            final class RegisteredAdapter
+                            public static final class RegisteredAdapter
                                     implements TypeAdapter<
                                             Simplex,
                                             Frequencies,
@@ -2250,14 +2202,11 @@ public class TileProcessorTest {
                         @GeneratorMapping(
                                 component = "phylospec.functions.substitution.wag",
                                 implementation = WAG.class)
-                        public interface InvalidMapping {
-
-                            @InputMapping(
-                                    argument = "baseFrequencies",
-                                    input = "frequenciesInput",
-                                    adapter = ClasspathFrequenciesAdapter.class)
-                            Simplex baseFrequencies();
-                        }
+                        @InputMapping(
+                                argument = "baseFrequencies",
+                                input = "frequenciesInput",
+                                adapter = ClasspathFrequenciesAdapter.class)
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationSuccess(result);
@@ -2289,13 +2238,10 @@ public class TileProcessorTest {
                         @GeneratorMapping(
                                 component = "phylospec.functions.substitution.wag",
                                 implementation = WAG.class)
-                        public interface InvalidMapping {
-
-                            @InputMapping(
-                                    argument = "baseFrequencies",
-                                    input = "frequenciesInput")
-                            Simplex baseFrequencies();
-                        }
+                        @InputMapping(
+                                argument = "baseFrequencies",
+                                input = "frequenciesInput")
+                        public final class InvalidMapping {}
                         """);
 
         assertCompilationSuccess(result);
@@ -2408,67 +2354,6 @@ public class TileProcessorTest {
     }
 
     @Test
-    public void rejectsJavaTypeThatConflictsWithComponentSemanticType()
-            throws IOException {
-
-        CompilationResult result =
-                compile(
-                        """
-                        package mappings;
-
-                        import beast.base.spec.evolution.substitutionmodel.Frequencies;
-                        import beast.base.spec.evolution.substitutionmodel.WAG;
-                        import beastconfig.BEASTState;
-                        import org.phylospec.annotations.GeneratorMapping;
-                        import org.phylospec.annotations.InputMapping;
-                        import org.phylospec.tiling.TypeAdapter;
-
-                        @GeneratorMapping(
-                                component = "phylospec.functions.substitution.wag",
-                                implementation = WAG.class)
-                        public interface InvalidMapping {
-
-                            @InputMapping(
-                                    argument = "baseFrequencies",
-                                    input = "frequenciesInput",
-                                    adapter = InvalidMapping.StringFrequenciesAdapter.class)
-                            String baseFrequencies();
-
-                            final class StringFrequenciesAdapter
-                                    implements TypeAdapter<
-                                            String,
-                                            Frequencies,
-                                            BEASTState> {
-
-                                public StringFrequenciesAdapter() {}
-
-                                @Override
-                                public Frequencies adapt(
-                                        String value,
-                                        BEASTState state) {
-
-                                    return null;
-                                }
-                            }
-                        }
-                        """);
-
-        assertCompilationError(
-                result,
-                "PhyloSpec argument 'baseFrequencies' has semantic type "
-                        + "'phylospec.types.Simplex'");
-
-        assertCompilationError(
-                result,
-                "requires a BEAST Java value compatible with "
-                        + "'beast.base.spec.type.Simplex'");
-
-        assertCompilationError(
-                result,
-                "mapping method returns 'java.lang.String'.");
-    }
-
-    @Test
     public void rejectsAdapterWithWrongSourceType()
             throws IOException {
 
@@ -2477,7 +2362,7 @@ public class TileProcessorTest {
                         adapterMapping(
                                 "WrongSourceAdapter",
                                 """
-                                public final class WrongSourceAdapter
+                                public static final class WrongSourceAdapter
                                         implements TypeAdapter<
                                                 String,
                                                 Frequencies,
@@ -2513,7 +2398,7 @@ public class TileProcessorTest {
                         adapterMapping(
                                 "WrongTargetAdapter",
                                 """
-                                public final class WrongTargetAdapter
+                                public static final class WrongTargetAdapter
                                         implements TypeAdapter<
                                                 Simplex,
                                                 String,
@@ -2551,7 +2436,7 @@ public class TileProcessorTest {
                         adapterMapping(
                                 "WrongStateAdapter",
                                 """
-                                public final class WrongStateAdapter
+                                public static final class WrongStateAdapter
                                         implements TypeAdapter<
                                                 Simplex,
                                                 Frequencies,
@@ -2583,7 +2468,7 @@ public class TileProcessorTest {
                         adapterMapping(
                                 "ConstructorAdapter",
                                 """
-                                public final class ConstructorAdapter
+                                public static final class ConstructorAdapter
                                         implements TypeAdapter<
                                                 Simplex,
                                                 Frequencies,
@@ -2617,13 +2502,13 @@ public class TileProcessorTest {
                 import beast.base.spec.evolution.substitutionmodel.JukesCantor;
                 import org.phylospec.annotations.GeneratorMapping;
 
-                public interface InvalidMapping {
+                public final class InvalidMapping {
 
                     @GeneratorMapping(component = "", implementation = JukesCantor.class)
-                    interface BlankComponent {}
+                    public static final class BlankComponent {}
 
                     @GeneratorMapping(component = "jc69", implementation = JukesCantor.class)
-                    interface UnqualifiedComponent {}
+                    public static final class UnqualifiedComponent {}
                 }
                 """);
 
@@ -2643,7 +2528,7 @@ public class TileProcessorTest {
                 @GeneratorMapping(
                         component = "phylospec.functions.substitution.jc69",
                         implementation = JukesCantor.class)
-                public interface InvalidMapping {}
+                public final class InvalidMapping {}
                 """);
 
         assertCompilationError(
@@ -2678,25 +2563,25 @@ public class TileProcessorTest {
                 import beast.base.spec.evolution.substitutionmodel.JukesCantor;
                 import org.phylospec.annotations.GeneratorMapping;
 
-                public interface InvalidMapping {
+                public final class InvalidMapping {
 
                     @GeneratorMapping(
                             component = "phylospec.functions.substitution.jc69",
                             implementation = Runnable.class)
-                    interface InterfaceImplementation {}
+                    public static final class InterfaceImplementation {}
 
                     @GeneratorMapping(
                             component = "phylospec.functions.substitution.jc69",
                             implementation = AbstractModel.class)
-                    interface AbstractImplementation {}
+                    public static final class AbstractImplementation {}
 
-                    public abstract class AbstractModel extends JukesCantor {}
+                    public abstract static class AbstractModel extends JukesCantor {}
                 }
 
                 @GeneratorMapping(
                         component = "phylospec.functions.substitution.jc69",
                         implementation = HiddenModel.class)
-                interface HiddenImplementation {}
+                final class HiddenImplementation {}
 
                 class HiddenModel extends JukesCantor {}
                 """);
@@ -2707,96 +2592,23 @@ public class TileProcessorTest {
     }
 
     @Test
-    public void rejectsInvalidMappingMethods() throws IOException {
+    public void rejectsBlankInputMappingArgument() throws IOException {
         CompilationResult result = compile(
                 """
                 package mappings;
 
-                import beast.base.spec.domain.PositiveReal;
                 import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
-                import beast.base.spec.type.RealScalar;
                 import org.phylospec.annotations.GeneratorMapping;
                 import org.phylospec.annotations.InputMapping;
 
-                public interface InvalidMapping {
-
-                    @GeneratorMapping(
-                            component = "phylospec.functions.coalescent.constantPopulationFunction",
-                            implementation = ConstantPopulation.class)
-                    interface MissingAnnotation {
-                        RealScalar<? extends PositiveReal> populationSize();
-                    }
-
-                    @GeneratorMapping(
-                            component = "phylospec.functions.coalescent.constantPopulationFunction",
-                            implementation = ConstantPopulation.class)
-                    interface ParameterMethod {
-                        @InputMapping(argument = "populationSize", input = "popSizeParameter")
-                        RealScalar<? extends PositiveReal> populationSize(String value);
-                    }
-
-                    @GeneratorMapping(
-                            component = "phylospec.functions.coalescent.constantPopulationFunction",
-                            implementation = ConstantPopulation.class)
-                    interface VoidMethod {
-                        @InputMapping(argument = "populationSize", input = "popSizeParameter")
-                        void populationSize();
-                    }
-
-                    @GeneratorMapping(
-                            component = "phylospec.functions.coalescent.constantPopulationFunction",
-                            implementation = ConstantPopulation.class)
-                    interface DefaultMethod {
-                        @InputMapping(argument = "populationSize", input = "popSizeParameter")
-                        default RealScalar<? extends PositiveReal> populationSize() {
-                            return null;
-                        }
-                    }
-                }
-                """);
-
-        assertCompilationError(
-                result,
-                "Every method in a @GeneratorMapping interface must declare @InputMapping.");
-        assertCompilationError(result, "@InputMapping methods must not declare parameters.");
-        assertCompilationError(result, "@InputMapping methods must return the Java value type");
-        assertCompilationError(result, "@InputMapping methods must be abstract interface methods.");
-    }
-
-    @Test
-    public void rejectsBlankInputMappingNames() throws IOException {
-        CompilationResult result = compile(
-                """
-                package mappings;
-
-                import beast.base.spec.domain.PositiveReal;
-                import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
-                import beast.base.spec.type.RealScalar;
-                import org.phylospec.annotations.GeneratorMapping;
-                import org.phylospec.annotations.InputMapping;
-
-                public interface InvalidMapping {
-
-                    @GeneratorMapping(
-                            component = "phylospec.functions.coalescent.constantPopulationFunction",
-                            implementation = ConstantPopulation.class)
-                    interface BlankArgument {
-                        @InputMapping(argument = "", input = "popSizeParameter")
-                        RealScalar<? extends PositiveReal> populationSize();
-                    }
-
-                    @GeneratorMapping(
-                            component = "phylospec.functions.coalescent.constantPopulationFunction",
-                            implementation = ConstantPopulation.class)
-                    interface BlankInput {
-                        @InputMapping(argument = "populationSize", input = "")
-                        RealScalar<? extends PositiveReal> populationSize();
-                    }
-                }
+                @GeneratorMapping(
+                        component = "phylospec.functions.coalescent.constantPopulationFunction",
+                        implementation = ConstantPopulation.class)
+                @InputMapping(argument = "", input = "popSizeParameter")
+                public final class InvalidMapping {}
                 """);
 
         assertCompilationError(result, "@InputMapping argument must not be blank.");
-        assertCompilationError(result, "@InputMapping input must not be blank.");
     }
 
     @Test
@@ -2874,13 +2686,11 @@ public class TileProcessorTest {
                 @GeneratorMapping(
                         component = "phylospec.functions.substitution.wag",
                         implementation = WAG.class)
-                public interface InvalidMapping {
-
-                    @InputMapping(
-                            argument = "baseFrequencies",
-                            input = "frequenciesInput",
-                            adapter = InvalidMapping.%s.class)
-                    Simplex baseFrequencies();
+                @InputMapping(
+                        argument = "baseFrequencies",
+                        input = "frequenciesInput",
+                        adapter = InvalidMapping.%s.class)
+                public final class InvalidMapping {
 
                 %s
                 }

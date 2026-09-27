@@ -51,10 +51,9 @@ final class TypeBindingRegistry {
         Map<String, TypeElement> newDeclarations = new LinkedHashMap<>();
 
         for (Element element : roundEnvironment.getElementsAnnotatedWith(TypeBinding.class)) {
-            if (element.getKind() != ElementKind.CLASS
-                    && element.getKind() != ElementKind.INTERFACE) {
+            if (element.getKind() != ElementKind.CLASS) {
                 printError(
-                        "@TypeBinding can only be applied to a class or mapping interface.",
+                        "@TypeBinding can only be applied to a class.",
                         element);
                 continue;
             }
@@ -181,12 +180,6 @@ final class TypeBindingRegistry {
 
         TypeMirror implementation;
         if (usesDefault) {
-            if (declaration.getKind() != ElementKind.CLASS) {
-                printError(
-                        "@TypeBinding on a mapping interface must specify implementation.",
-                        declaration);
-                return Optional.empty();
-            }
             implementation = declaration.asType();
         } else {
             implementation = configuredType;
