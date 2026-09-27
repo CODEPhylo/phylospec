@@ -8,6 +8,7 @@ import beastconfig.BEASTState;
 import java.io.IOException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.phylospec.components.Constraint;
 import org.phylospec.components.Argument;
 import org.phylospec.components.Argument__1;
 import org.phylospec.components.ComponentResolver;
@@ -89,13 +90,18 @@ public class PopFuncEngineSpecTest {
                         "phylospec.types.NonNegativeInteger",
                         "phylospec.types.Vector<phylospec.types.PopulationFunction>"),
                 selectionComponent.getArguments().stream().map(Argument::getType).toList());
-        assertEquals(
-                List.of("indicator.value < models.num"),
-                selectionComponent.getConstraints());
+        assertEquals(1, selectionComponent.getConstraints().size());
+        assertConstraint(
+                selectionComponent.getConstraints().getFirst(),
+                "indicator",
+                "value",
+                Constraint.Operator.LESS_THAN,
+                "models",
+                "num");
 
         Generator__1 logistic = findGenerator(specification, "logisticPopulationFunction");
         assertEquals("logisticPopulationFunction", logistic.getName());
-        assertEquals("phylospec.functions.coalescent", logistic.getNamespace());
+        assertEquals("popfunc.functions.coalescent", logistic.getNamespace());
         assertEquals(
                 List.of("inflectionAge", "carryingCapacity", "growthRate", "ancestralPopulationSize"),
                 logistic.getArguments().stream().map(Argument__1::getName).toList());
@@ -104,7 +110,7 @@ public class PopFuncEngineSpecTest {
         assertTrue(logistic.getArguments().stream().allMatch(Argument__1::getCanBeStochastic));
 
         List<Generator> components = resolver.resolveGenerator(
-                "phylospec.functions.coalescent.logisticPopulationFunction");
+                "popfunc.functions.coalescent.logisticPopulationFunction");
         assertEquals(1, components.size());
         assertEquals(
                 List.of(
@@ -113,6 +119,14 @@ public class PopFuncEngineSpecTest {
                         "phylospec.types.NonNegativeReal",
                         "phylospec.types.NonNegativeReal"),
                 components.getFirst().getArguments().stream().map(Argument::getType).toList());
+        assertEquals(1, components.getFirst().getConstraints().size());
+        assertConstraint(
+                components.getFirst().getConstraints().getFirst(),
+                "ancestralPopulationSize",
+                "value",
+                Constraint.Operator.LESS_THAN,
+                "carryingCapacity",
+                "value");
 
         Generator__1 constant = findGenerator(specification, "constantPopulationFunction");
         assertEquals("phylospec.functions.coalescent", constant.getNamespace());
@@ -150,9 +164,29 @@ public class PopFuncEngineSpecTest {
                         "phylospec.types.Age",
                         "phylospec.types.PositiveReal"),
                 expansionComponent.getArguments().stream().map(Argument::getType).toList());
-        assertEquals(
-                List.of("ancestralPopulationSize.value < populationSize.value"),
-                expansionComponent.getConstraints());
+        assertEquals(1, expansionComponent.getConstraints().size());
+        assertConstraint(
+                expansionComponent.getConstraints().getFirst(),
+                "ancestralPopulationSize",
+                "value",
+                Constraint.Operator.LESS_THAN,
+                "populationSize",
+                "value");
+    }
+
+    private static void assertConstraint(
+            Constraint constraint,
+            String argument,
+            String property,
+            Constraint.Operator operator,
+            String otherArgument,
+            String otherProperty) {
+
+        assertEquals(argument, constraint.getArgument());
+        assertEquals(property, constraint.getProperty());
+        assertEquals(operator, constraint.getOperator());
+        assertEquals(otherArgument, constraint.getOtherArgument());
+        assertEquals(otherProperty, constraint.getOtherProperty());
     }
 
     private static Generator__1 findGenerator(
