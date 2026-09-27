@@ -12,10 +12,13 @@ import org.phylospec.typeresolver.Stochasticity;
  * Overrides the conventional mapping of one PhyloSpec generator argument to an input on the
  * engine implementation class. Repeat this annotation on the same declaration when one argument
  * must bind several engine inputs.
+ *
+ * <p>Place it on the class that carries {@link GeneratorMapping}, or directly on an engine
+ * {@code Input} field when the mapping is declared on the implementation class itself.</p>
  */
 @Documented
 @Retention(RetentionPolicy.SOURCE)
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
+@Target({ElementType.TYPE, ElementType.FIELD})
 @Repeatable(InputMappings.class)
 public @interface InputMapping {
 

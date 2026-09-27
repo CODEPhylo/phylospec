@@ -22,7 +22,6 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
@@ -235,28 +234,17 @@ public final class TileProcessor extends AbstractProcessor {
                 roundEnvironment.getElementsAnnotatedWith(
                         GeneratorMapping.class)) {
 
-            if (element.getKind() != ElementKind.INTERFACE
-                    && element.getKind() != ElementKind.CLASS) {
+            if (element.getKind() != ElementKind.CLASS) {
                 printError(
-                        "@GeneratorMapping can only be applied "
-                                + "to an interface or implementation class.",
+                        "@GeneratorMapping can only be applied to a class: either a mapping "
+                                + "declaration in a 'mappings' package or the BEAST "
+                                + "implementation class itself.",
                         element);
                 continue;
             }
 
             TypeElement declaration =
                     (TypeElement) element;
-
-            if (declaration.getKind() == ElementKind.INTERFACE) {
-                printWarning(
-                        "Interface-based @GeneratorMapping declarations are deprecated "
-                                + "and will be removed. Declare the mapping on a nested "
-                                + "'public static final class' inside a per-package holder "
-                                + "in 'mappings.<package>', with class-level @InputMapping "
-                                + "annotations only for inputs that do not follow the "
-                                + "'argument -> argumentInput' convention.",
-                        declaration);
-            }
 
             Optional<MappingSpec> mappingResult =
                     readMapping(declaration);
@@ -659,18 +647,6 @@ public final class TileProcessor extends AbstractProcessor {
         boolean usesDefaultImplementation =
                 isVoidType(declaredImplementationType);
 
-        if (declaration.getKind() == ElementKind.INTERFACE) {
-            if (usesDefaultImplementation) {
-                printError(
-                        "External @GeneratorMapping interfaces must declare "
-                                + "an implementation class.",
-                        declaration);
-                return Optional.empty();
-            }
-
-            return Optional.of(declaredImplementationType);
-        }
-
         if (!usesDefaultImplementation) {
             return Optional.of(declaredImplementationType);
         }
@@ -681,10 +657,6 @@ public final class TileProcessor extends AbstractProcessor {
     private boolean isExternalMapping(
             TypeElement declaration,
             TypeMirror implementationType) {
-
-        if (declaration.getKind() == ElementKind.INTERFACE) {
-            return true;
-        }
 
         Types types = processingEnv.getTypeUtils();
         return !types.isSameType(
@@ -865,7 +837,6 @@ public final class TileProcessor extends AbstractProcessor {
                             mappingDeclaration,
                             argumentName,
                             beastInputName,
-                            null,
                             adapterType,
                             fallbackType,
                             acceptedStochasticitiesResult.orElseThrow(),
@@ -883,120 +854,7 @@ public final class TileProcessor extends AbstractProcessor {
             }
         }
 
-        for (ExecutableElement method :
-                ElementFilter.methodsIn(
-                        mappingDeclaration.getEnclosedElements())) {
-
-            List<AnnotationMirror> annotations =
-                    findInputMappings(method);
-
-            if (annotations.isEmpty()) {
-                if (mappingDeclaration.getKind()
-                        == ElementKind.INTERFACE) {
-                    printError(
-                            "Every method in a @GeneratorMapping "
-                                    + "interface must declare @InputMapping.",
-                            method);
-                    return Optional.empty();
-                }
-
-                continue;
-            }
-
-            if (!method.getParameters().isEmpty()) {
-                printError(
-                        "@InputMapping methods must not declare parameters.",
-                        method);
-                return Optional.empty();
-            }
-
-            if (method.getReturnType().getKind()
-                    == TypeKind.VOID) {
-
-                printError(
-                        "@InputMapping methods must return "
-                                + "the Java value type passed to BEAST.",
-                        method);
-                return Optional.empty();
-            }
-
-            if (method.getModifiers().contains(Modifier.DEFAULT)
-                    || method.getModifiers().contains(Modifier.STATIC)) {
-
-                printError(
-                        "@InputMapping methods must be abstract "
-                                + "interface methods.",
-                        method);
-                return Optional.empty();
-            }
-
-            for (AnnotationMirror annotation : annotations) {
-                Map<String, AnnotationValue> values =
-                        readAnnotationValues(annotation);
-
-                String argumentName =
-                        (String)
-                                values.get("argument")
-                                        .getValue();
-
-                String beastInputName =
-                        (String)
-                                values.get("input")
-                                        .getValue();
-
-                TypeMirror adapterType =
-                        (TypeMirror)
-                                values.get("adapter")
-                                        .getValue();
-
-                TypeMirror fallbackType =
-                        (TypeMirror)
-                                values.get("fallback")
-                                        .getValue();
-
-                Optional<Set<Stochasticity>> acceptedStochasticitiesResult =
-                        readAcceptedStochasticities(
-                                values.get("accepts"),
-                                method);
-
-                if (acceptedStochasticitiesResult.isEmpty()) {
-                    return Optional.empty();
-                }
-
-                if (!registerArgumentDeclaration(
-                        argumentName,
-                        method,
-                        argumentDeclarations,
-                        declarationArguments)) {
-                    return Optional.empty();
-                }
-
-                Optional<InputSpec> inputResult =
-                        readInput(
-                                method,
-                                argumentName,
-                                beastInputName,
-                                method.getReturnType(),
-                                adapterType,
-                                fallbackType,
-                                acceptedStochasticitiesResult.orElseThrow(),
-                                implementationDeclaration,
-                                implementationType,
-                                componentGenerators,
-                                usedBeastInputs);
-
-                if (inputResult.isEmpty()) {
-                    return Optional.empty();
-                }
-
-                if (!mergeInput(inputs, inputResult.orElseThrow(), method)) {
-                    return Optional.empty();
-                }
-            }
-        }
-
-        if (!externalMapping
-                && mappingDeclaration.getKind() == ElementKind.CLASS) {
+        if (!externalMapping) {
             for (VariableElement field :
                     ElementFilter.fieldsIn(
                             mappingDeclaration.getEnclosedElements())) {
@@ -1059,7 +917,6 @@ public final class TileProcessor extends AbstractProcessor {
                                     field,
                                     argumentName,
                                     beastInputName,
-                                    null,
                                     adapterType,
                                     fallbackType,
                                     acceptedStochasticitiesResult.orElseThrow(),
@@ -1187,7 +1044,6 @@ public final class TileProcessor extends AbstractProcessor {
                             mappingDeclaration,
                             argumentName,
                             beastInputName,
-                            null,
                             voidType.asType(),
                             voidType.asType(),
                             EnumSet.allOf(Stochasticity.class),
@@ -1306,7 +1162,6 @@ public final class TileProcessor extends AbstractProcessor {
             Element declaration,
             String argumentName,
             String beastInputName,
-            TypeMirror declaredValueType,
             TypeMirror declaredAdapterType,
             TypeMirror declaredFallbackType,
             Set<Stochasticity> acceptedStochasticities,
@@ -1365,38 +1220,35 @@ public final class TileProcessor extends AbstractProcessor {
         TypeMirror inputType =
                 inputTypeResult.orElseThrow();
 
-        TypeMirror valueType =
-                declaredValueType;
+        Optional<TypeMirror> semanticTypeResult =
+                typeBindings.resolve(
+                        componentArgument.getType());
 
-        if (valueType == null) {
-            Optional<TypeMirror> semanticTypeResult =
-                    typeBindings.resolve(
-                            componentArgument.getType());
-
-            if (semanticTypeResult.isEmpty()) {
-                printError(
-                        "Automatic Tile generation has no BEAST Java "
-                                + "type binding for PhyloSpec type '"
-                                + componentArgument.getType()
-                                + "' used by argument '"
-                                + argumentName
-                                + "'. Add a type binding or use a handwritten Tile.",
-                        declaration);
-                return Optional.empty();
-            }
-
-            TypeMirror semanticType =
-                    semanticTypeResult.orElseThrow();
-
-            valueType =
-                    processingEnv
-                            .getTypeUtils()
-                            .isAssignable(
-                                    inputType,
-                                    semanticType)
-                            ? inputType
-                            : semanticType;
+        if (semanticTypeResult.isEmpty()) {
+            printError(
+                    "Automatic Tile generation has no BEAST Java "
+                            + "type binding for PhyloSpec type '"
+                            + componentArgument.getType()
+                            + "' used by argument '"
+                            + argumentName
+                            + "'. Add a type binding or use a handwritten Tile.",
+                    declaration);
+            return Optional.empty();
         }
+
+        TypeMirror semanticType =
+                semanticTypeResult.orElseThrow();
+
+        // The Java value type always comes from the component library. The Input's own type is
+        // used when it is a subtype of that binding, so that no adapter is needed.
+        TypeMirror valueType =
+                processingEnv
+                        .getTypeUtils()
+                        .isAssignable(
+                                inputType,
+                                semanticType)
+                        ? inputType
+                        : semanticType;
 
         TypeMirror adapterType =
                 declaredAdapterType;
@@ -1453,15 +1305,6 @@ public final class TileProcessor extends AbstractProcessor {
             if (!validateFallback(fallbackType, inputType, declaration)) {
                 return Optional.empty();
             }
-        }
-
-        if (!validateSemanticType(
-                argumentName,
-                componentArgument.getType(),
-                valueType,
-                declaration)) {
-
-            return Optional.empty();
         }
 
         return Optional.of(
@@ -1613,57 +1456,6 @@ public final class TileProcessor extends AbstractProcessor {
         }
 
         return Optional.of(matchingArguments.getFirst());
-    }
-
-    private boolean validateSemanticType(
-            String argumentName,
-            String semanticType,
-            TypeMirror valueType,
-            Element declaration) {
-
-        Optional<TypeMirror> expectedTypeResult =
-                typeBindings.resolve(semanticType);
-
-        if (expectedTypeResult.isEmpty()) {
-            printError(
-                    "Automatic Tile generation has no BEAST Java "
-                            + "type binding for PhyloSpec type '"
-                            + semanticType
-                            + "' used by argument '"
-                            + argumentName
-                            + "'. Add a type binding or use a "
-                            + "handwritten Tile.",
-                    declaration);
-
-            return false;
-        }
-
-        TypeMirror expectedType =
-                expectedTypeResult.orElseThrow();
-
-        if (!processingEnv
-                .getTypeUtils()
-                .isAssignable(
-                        valueType,
-                        expectedType)) {
-
-            printError(
-                    "PhyloSpec argument '"
-                            + argumentName
-                            + "' has semantic type '"
-                            + semanticType
-                            + "', which requires a BEAST Java value "
-                            + "compatible with '"
-                            + expectedType
-                            + "', but the mapping method returns '"
-                            + valueType
-                            + "'.",
-                    declaration);
-
-            return false;
-        }
-
-        return true;
     }
 
     private boolean validateOutputType(
@@ -2488,18 +2280,6 @@ public final class TileProcessor extends AbstractProcessor {
                 .getMessager()
                 .printMessage(
                         Diagnostic.Kind.NOTE,
-                        message,
-                        element);
-    }
-
-    private void printWarning(
-            String message,
-            Element element) {
-
-        processingEnv
-                .getMessager()
-                .printMessage(
-                        Diagnostic.Kind.WARNING,
                         message,
                         element);
     }
