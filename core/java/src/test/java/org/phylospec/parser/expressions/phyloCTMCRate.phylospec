@@ -1,0 +1,20 @@
+Alignment data = fromNexus("data.nex")
+Tree tree ~ Yule(birthRate=1.0, taxa=taxa(data))
+
+// a partition's relative rate from one element of a simplex of weights
+Simplex w ~ Dirichlet(concentration=[1.0, 1.0])
+Alignment first ~ PhyloCTMC(tree, qMatrix=jc69(), rate=2.0 * w[1]) observed as data
+
+// a constant rate
+Alignment second ~ PhyloCTMC(tree, qMatrix=jc69(), rate=0.5) observed as data
+
+// EXPECT AST
+// (AS Alignment data (CA fromNexus (AA null "data.nex")))
+// (DR Tree tree (CA Yule (AA birthRate 1.0) (AA taxa (CA taxa (AA null data)))))
+// (DR Simplex w (CA Dirichlet (AA concentration (AR 1.0 1.0))))
+// (OA (DR Alignment first (CA PhyloCTMC (AA null tree) (AA qMatrix (CA jc69 )) (AA rate (* 2.0 (IX w 1))))) data)
+// (OA (DR Alignment second (CA PhyloCTMC (AA null tree) (AA qMatrix (CA jc69 )) (AA rate 0.5))) data)
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS
