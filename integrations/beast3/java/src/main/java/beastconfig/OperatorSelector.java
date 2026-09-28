@@ -113,4 +113,24 @@ public class OperatorSelector {
 
         return operators;
     }
+
+    /**
+     * Retunes the operator of a simplex whose elements set partition rates.
+     *
+     * <p>A simplex gets a {@link DeltaExchangeOperator} with delta 0.01 and weight 5, which suits
+     * base frequencies. Used as partition weights ({@code rate=(N / n_i) * w[i]}) it mixed so slowly
+     * that a 131-taxon COI run spent 3.5M steps with the rate on the wrong codon position; the same
+     * model under BEAUti's {@code FixMeanMutationRatesOperator} (delta 0.75 on the rates, weight
+     * 2) settled within 25k. BEAUti's delta is on rates of about 1, and a weight is a rate divided
+     * by the number of partitions, so the equivalent delta on the weights is 0.75 / size.
+     */
+    public static void tuneForPartitionRates(BEASTState beastState, SimplexParam simplex) {
+        for (Operator operator : beastState.operators) {
+            if (operator instanceof DeltaExchangeOperator deltaExchange
+                    && deltaExchange.rvparameterInput.get() == simplex) {
+                beastState.setInput(deltaExchange, deltaExchange.deltaInput, 0.75 / simplex.size());
+                beastState.setInput(deltaExchange, deltaExchange.m_pWeight, 2.0);
+            }
+        }
+    }
 }

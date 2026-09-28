@@ -10,8 +10,12 @@ import beast.base.spec.evolution.branchratemodel.StrictClockModel;
 import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.SimplexParam;
+import beast.base.spec.inference.parameter.VectorElement;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
+import beastconfig.OperatorSelector;
+import beastobjects.ScaledScalar;
 import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.Partial;
@@ -82,5 +86,12 @@ public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static void setMutationRate(BEASTState beastState, SiteModel siteModel, RealScalar<?> rate) {
         beastState.setInput(siteModel, (Input) siteModel.muParameterInput, rate);
+
+        // a rate built from one element of a simplex makes that simplex partition weights
+        if (rate instanceof ScaledScalar scaled
+                && scaled.scalarInput.get() instanceof VectorElement<?> element
+                && element.vectorInput.get() instanceof SimplexParam simplex) {
+            OperatorSelector.tuneForPartitionRates(beastState, simplex);
+        }
     }
 }
