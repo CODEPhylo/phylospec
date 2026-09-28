@@ -6,6 +6,7 @@ module org.phylospec.beast3 {
     requires transitive org.phylospec.core;
 
     exports beastconfig;
+    exports beastobjects;
     exports tiling;
     exports runner;
 

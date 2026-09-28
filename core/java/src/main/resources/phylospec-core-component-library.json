@@ -1733,6 +1733,13 @@
                     "description": "Rate heterogeneity across branches",
                     "type": "Vector<Real>",
                     "required": false
+                },
+                {
+                    "default": 1,
+                    "name": "rate",
+                    "description": "Relative substitution rate of this partition, multiplying every branch rate. For several partitions, rates of (N / n_i) * w_i for a simplex w keep the site-weighted mean rate at 1.",
+                    "type": "PositiveReal",
+                    "required": false
                 }
             ],
             "constraints": [{
@@ -1771,6 +1778,13 @@
                     "name": "branchRates",
                     "description": "Rate heterogeneity across branches",
                     "type": "Vector<Real>",
+                    "required": false
+                },
+                {
+                    "default": 1,
+                    "name": "rate",
+                    "description": "Relative substitution rate of this partition, multiplying every branch rate. For several partitions, rates of (N / n_i) * w_i for a simplex w keep the site-weighted mean rate at 1.",
+                    "type": "PositiveReal",
                     "required": false
                 }
             ],

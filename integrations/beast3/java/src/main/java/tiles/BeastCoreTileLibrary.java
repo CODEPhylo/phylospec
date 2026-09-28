@@ -9,10 +9,12 @@ import tiles.branchmodels.*;
 import tiles.distributions.*;
 import tiles.errors.*;
 import tiles.functions.*;
+import tiles.functions.ScaleTile;
 import tiles.input.*;
 import tiles.mcmc.*;
 import tiles.misc.*;
 import tiles.misc.RangeTile;
+import tiles.misc.SimplexElementTile;
 import tiles.observations.*;
 import tiles.rpn.BinaryTile;
 import tiles.rpn.ExpRPNTile;
@@ -47,12 +49,14 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new RangeTile());
         tiles.add(new IndexVariableTile());
         tiles.add(new IndexedTile());
+        tiles.add(new SimplexElementTile());
         tiles.add(new IndexedStatementTile());
 
         tiles.add(new ObservedAsTile());
         tiles.add(new ObservedAsAlignmentTile());
         tiles.add(new RootObservedBetweenTile());
 
+        tiles.add(new ScaleTile());
         tiles.add(new BinaryTile.RpnRpn());
         tiles.add(new BinaryTile.RpnReal());
         tiles.add(new BinaryTile.RealRpn());
