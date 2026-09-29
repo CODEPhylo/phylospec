@@ -30,35 +30,66 @@ public class SubsetTile extends GeneratorTile<DecoratedAlignment, BEASTState> {
         Integer start = this.startInput.apply(beastState, indexVariables);
         Integer end = this.endInput.apply(beastState, indexVariables);
         Integer codonPosition = this.codonPositionInput.apply(beastState, indexVariables);
+        int siteCount = alignment.alignment().getSiteCount();
 
         if (start != null && end != null && end < start) {
             throw new TileApplicationError(
                     "Your start index is bigger than your end index.",
                     "Choose a start index which is smaller than the end index.");
         }
-        if (start != null && alignment.alignment().getSiteCount() < start) {
+        if (start != null && start < 1) {
+            throw new TileApplicationError("Your start index is smaller than one.", "Choose a one-based start index.");
+        }
+        if (end != null && end < 1) {
+            throw new TileApplicationError("Your end index is smaller than one.", "Choose a one-based end index.");
+        }
+        if (start != null && siteCount < start) {
             throw new TileApplicationError(
                     "Your start index is bigger than the total number of sites.",
-                    "Choose a start index which is smaller than the total number of sites "
-                            + alignment.alignment().getSiteCount() + ".");
+                    "Choose a start index which is smaller than the total number of sites " + siteCount + ".");
         }
-        if (end != null && alignment.alignment().getSiteCount() < end) {
+        if (end != null && siteCount < end) {
             throw new TileApplicationError(
                     "Your end index is bigger than the total number of sites.",
-                    "Choose a end index which is smaller than the total number of sites ("
-                            + alignment.alignment().getSiteCount() + ").");
+                    "Choose a end index which is smaller than the total number of sites (" + siteCount + ").");
         }
 
-        String filterString = "";
-        filterString += start == null ? "1" : start;
-        filterString += "-";
-        filterString += end == null ? "" : end;
-        filterString += codonPosition == null ? "" : ("/" + codonPosition);
+        String filterString = buildFilterString(start, end, codonPosition);
 
         FilteredAlignment filteredAlignment = new FilteredAlignment();
         beastState.setInput(filteredAlignment, filteredAlignment.alignmentInput, alignment.alignment());
         beastState.setInput(filteredAlignment, filteredAlignment.filterInput, filterString);
 
         return new DecoratedAlignment(filteredAlignment, alignment.taxonSet(), alignment.ages());
+    }
+
+    /**
+     * Builds a BEAST {@code FilteredAlignment} filter. Codon positions are counted from the first
+     * site of the full alignment, so a range keeps each site's global codon position.
+     */
+    static String buildFilterString(Integer start, Integer end, Integer codonPosition) {
+        if (codonPosition != null && (codonPosition < 1 || codonPosition > 3)) {
+            throw new TileApplicationError(
+                    "Your codon position is outside the range from one to three.",
+                    "Choose codonPosition=1, codonPosition=2, or codonPosition=3.");
+        }
+
+        int firstSite = start == null ? 1 : start;
+
+        if (codonPosition == null) {
+            return firstSite + "-" + (end == null ? "" : end);
+        }
+
+        int firstSiteCodonPosition = Math.floorMod(firstSite - 1, 3) + 1;
+        int offset = Math.floorMod(codonPosition - firstSiteCodonPosition, 3);
+        int firstSelectedSite = firstSite + offset;
+
+        if (end != null && firstSelectedSite > end) {
+            throw new TileApplicationError(
+                    "The selected range contains no sites at codon position " + codonPosition + ".",
+                    "Choose a wider range or a different codon position.");
+        }
+
+        return firstSelectedSite + ":" + (end == null ? "" : end) + ":3";
     }
 }
