@@ -47,6 +47,24 @@ public class UnboundDistributionTest {
     }
 
     @Test
+    public void bindsAChildWithoutRegisteringItAsAnIndependentLikelihood() {
+        BEASTState state = new BEASTState("mixture");
+        CompoundDistribution child = new CompoundDistribution();
+        AtomicReference<CustomObservation> boundValue = new AtomicReference<>();
+        UnboundDistribution<CustomObservation, CompoundDistribution> distribution =
+                new UnboundDistribution<>(child, boundValue::set);
+        CustomObservation observation = new CustomObservation("shared-data");
+
+        distribution.bindAsComponent(observation);
+
+        assertSame(observation, boundValue.get());
+        assertEquals(0, state.likelihoodDistributions.size());
+        assertThrows(RuntimeException.class, () -> distribution.bindAsComponent(observation));
+        assertThrows(RuntimeException.class, () -> distribution.observeAs(state, observation, "duplicate-likelihood"));
+        assertEquals(0, state.likelihoodDistributions.size());
+    }
+
+    @Test
     public void consumesAnUnboundDistributionForComposition() {
         BEASTState state = new BEASTState("composed-model");
         RequiredDistribution intermediate = new RequiredDistribution();

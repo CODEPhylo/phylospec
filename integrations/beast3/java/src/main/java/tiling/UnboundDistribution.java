@@ -40,9 +40,17 @@ public class UnboundDistribution<T, O extends beast.base.inference.Distribution>
      * @throws RuntimeException if this distribution has already been resolved
      */
     public void observeAs(BEASTState beastState, Object observedValue, String likelihoodId) {
-        this.markAsConsumed();
-        this.bindValueFunc.accept((T) observedValue);
+        this.bindAsComponent((T) observedValue);
         beastState.addLikelihoodDistribution(this.distribution, likelihoodId);
+    }
+
+    /**
+     * Binds an observed value to a child distribution without registering it separately.
+     * The child remains part of the BEAST object graph owned by a composite likelihood.
+     */
+    public void bindAsComponent(T observedValue) {
+        this.markAsConsumed();
+        this.bindValueFunc.accept(observedValue);
     }
 
     /**
