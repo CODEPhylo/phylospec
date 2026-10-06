@@ -254,6 +254,21 @@ public class BEASTState {
     }
 
     /**
+     * Unregisters an operator and detaches its input references from the analysis graph.
+     * This lets package adapters replace a generic proposal with a model-specific one.
+     * The operator's ID remains reserved for this state.
+     *
+     * @return whether the operator was registered
+     */
+    public boolean removeOperator(Operator operator) {
+        boolean removed = this.operators.removeIf(candidate -> candidate == operator);
+        if (removed) {
+            this.discardIntermediateObject(operator);
+        }
+        return removed;
+    }
+
+    /**
      * Adds a given screen logger to the BEAST state.
      */
     public void addScreenLoggerSpec(ScreenLoggerSpec<BEASTObject> logger) {
