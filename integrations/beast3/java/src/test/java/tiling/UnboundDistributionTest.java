@@ -2,6 +2,7 @@ package tiling;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -79,6 +80,17 @@ public class UnboundDistributionTest {
     }
 
     private record CustomObservation(String id) {}
+
+    @Test
+    public void consumesBaseWithoutBindingOrAllowingASecondUse() {
+        CompoundDistribution law = new CompoundDistribution();
+        AtomicReference<CustomObservation> bound = new AtomicReference<>();
+        var distribution = new UnboundDistribution<>(law, bound::set);
+        assertSame(law, distribution.consumeAsBase());
+        assertNull(bound.get());
+        assertThrows(RuntimeException.class, distribution::consumeAsBase);
+        assertThrows(RuntimeException.class, () -> distribution.bindAsComponent(new CustomObservation("duplicate")));
+    }
 
     public static final class RequiredDistribution extends Distribution {
         public final Input<String> requiredInput =
