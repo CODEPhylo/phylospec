@@ -47,6 +47,11 @@
                     "canBeStochastic": true,
                     "name": "siteRates",
                     "required": false
+                },
+                {
+                    "canBeStochastic": false,
+                    "name": "useAmbiguities",
+                    "required": false
                 }
             ]
         },

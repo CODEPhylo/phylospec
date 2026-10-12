@@ -11,9 +11,11 @@ import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
+import java.util.Set;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.Partial;
 import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.typeresolver.Stochasticity;
 import tiling.UnboundDistribution;
 
 public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, TreeLikelihood>, BEASTState> {
@@ -29,6 +31,8 @@ public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, 
     GeneratorTileInput<Base, BEASTState> branchRateModelInput = new GeneratorTileInput<>("branchRates", false);
     GeneratorTileInput<Partial<SiteModel, SubstitutionModel>, BEASTState> partialSiteRateModel =
             new GeneratorTileInput<>("siteRates", false);
+    GeneratorTileInput<Boolean, BEASTState> useAmbiguitiesInput =
+            new GeneratorTileInput<>("useAmbiguities", false, Set.of(Stochasticity.CONSTANT));
 
     @Override
     public UnboundDistribution<Alignment, TreeLikelihood> applyTile(
@@ -38,6 +42,7 @@ public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, 
         Base branchRateModel = this.branchRateModelInput.apply(beastState, indexVariables);
         Partial<SiteModel, SubstitutionModel> partialSiteModel =
                 this.partialSiteRateModel.apply(beastState, indexVariables);
+        Boolean useAmbiguities = this.useAmbiguitiesInput.apply(beastState, indexVariables);
 
         // initialize clock model
 
@@ -63,6 +68,9 @@ public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, 
         beastState.setInput(treeLikelihood, treeLikelihood.treeInput, tree);
         beastState.setInput(treeLikelihood, treeLikelihood.siteModelInput, siteModel);
         beastState.setInput(treeLikelihood, treeLikelihood.branchRateModelInput, branchRateModel);
+        if (useAmbiguities != null) {
+            beastState.setInput(treeLikelihood, treeLikelihood.m_useAmbiguities, useAmbiguities);
+        }
 
         return new UnboundDistribution<>(
                 treeLikelihood, data -> beastState.setInput(treeLikelihood, treeLikelihood.dataInput, data));

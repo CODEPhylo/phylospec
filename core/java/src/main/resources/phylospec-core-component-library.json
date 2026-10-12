@@ -1733,6 +1733,13 @@
                     "description": "Rate heterogeneity across branches",
                     "type": "Vector<Real>",
                     "required": false
+                },
+                {
+                    "default": false,
+                    "name": "useAmbiguities",
+                    "description": "Use the possible character states encoded by ambiguous observations when computing the likelihood; otherwise treat ambiguous observations as unknown states.",
+                    "type": "Boolean",
+                    "required": false
                 }
             ],
             "constraints": [{
@@ -1771,6 +1778,13 @@
                     "name": "branchRates",
                     "description": "Rate heterogeneity across branches",
                     "type": "Vector<Real>",
+                    "required": false
+                },
+                {
+                    "default": false,
+                    "name": "useAmbiguities",
+                    "description": "Use the possible character states encoded by ambiguous observations when computing the likelihood; otherwise treat ambiguous observations as unknown states.",
+                    "type": "Boolean",
                     "required": false
                 }
             ],
