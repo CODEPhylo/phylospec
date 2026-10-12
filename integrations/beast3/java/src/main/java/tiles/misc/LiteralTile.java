@@ -87,6 +87,13 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BEASTState> {
                         literal));
             }
 
+            if (0 <= number && number <= 1) {
+                tiles.add(new LiteralTile<>(
+                        new TypeToken<>() {},
+                        new RealScalarParam<>(number.doubleValue(), UnitInterval.INSTANCE),
+                        literal));
+            }
+
             return tiles;
         }
 
@@ -107,7 +114,7 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BEASTState> {
                         new TypeToken<>() {}, new RealScalarParam<>(number, PositiveReal.INSTANCE), literal));
             }
 
-            if (0 < number && number < 1) {
+            if (0 <= number && number <= 1) {
                 tiles.add(new LiteralTile<>(
                         new TypeToken<>() {}, new RealScalarParam<>(number, UnitInterval.INSTANCE), literal));
             }
