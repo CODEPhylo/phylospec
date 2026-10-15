@@ -46,6 +46,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new DrawTile());
         tiles.add(new LiteralTile<>());
         tiles.add(new VectorTile<>());
+        tiles.add(new LiveVectorTile());
         tiles.add(new ListVectorTile());
         tiles.add(new DrawnArgumentTile());
         tiles.add(new AssignedArgumentTile());
@@ -53,6 +54,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new RangeTile());
         tiles.add(new IndexVariableTile());
         tiles.add(new IndexedTile());
+        tiles.add(new VectorIndexTile());
         tiles.add(new IndexedStatementTile());
 
         tiles.add(new ObservedAsTile());
@@ -105,6 +107,8 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new CauchyTile());
         tiles.add(new DiscreteUniformTile());
         tiles.add(new ExponentialTile());
+        tiles.add(new ExponentialMeanTile());
+        tiles.add(new UniformCompositionTile());
         tiles.add(new GammaTile());
         tiles.add(new PoissonTile());
         tiles.add(new UniformTile());
@@ -115,6 +119,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new BirthDeathTile());
         tiles.add(new ConstantCoalescentTile());
         tiles.add(new CoalescentTile());
+        tiles.add(new BayesianSkylineTile());
         // tiles.add(new ConstantPopulationTile());
         // tiles.add(new ExponentialPopulationTile());
 

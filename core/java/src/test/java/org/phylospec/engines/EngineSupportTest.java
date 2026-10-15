@@ -384,13 +384,38 @@ public class EngineSupportTest {
 
         EngineSupport engine = new EngineSupport(engine(
                 "overloadingEngine",
-                engineGenerator("PhyloCTMC", null, "tree", "qMatrix", "siteRates", "branchRates", "useAmbiguities"),
+                engineGenerator(
+                        "PhyloCTMC",
+                        null,
+                        "tree",
+                        "qMatrix",
+                        "siteRates",
+                        "branchRates",
+                        "useAmbiguities",
+                        "mutationRate"),
                 engineGenerator(
                         "PhyloCTMC", null, "tree", "siteQMatrices", "siteRates", "branchRates", "useAmbiguities")));
 
         assertTrue(
                 engine.supports(getOverloadWithArgument("PhyloCTMC", "qMatrix")).isFullySupported());
         assertTrue(engine.supports(getOverloadWithArgument("PhyloCTMC", "siteQMatrices"))
+                .isFullySupported());
+    }
+
+    @Test
+    public void testOlderEngineAcceptsOmittedButNotExplicitPartitionRate() {
+        EngineSupport older =
+                new EngineSupport(engine("olderEngine", engineGenerator("PhyloCTMC", null, "tree", "qMatrix")));
+        assertTrue(older.supports(new Expr.Call(
+                        "PhyloCTMC",
+                        new Expr.AssignedArgument("tree", new Expr.Variable("tree")),
+                        new Expr.AssignedArgument("qMatrix", new Expr.Variable("q"))))
+                .isFullySupported());
+        assertFalse(older.supports(new Expr.Call(
+                        "PhyloCTMC",
+                        new Expr.AssignedArgument("tree", new Expr.Variable("tree")),
+                        new Expr.AssignedArgument("qMatrix", new Expr.Variable("q")),
+                        new Expr.AssignedArgument("mutationRate", new Expr.Literal(1.0))))
                 .isFullySupported());
     }
 

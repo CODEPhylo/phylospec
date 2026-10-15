@@ -96,6 +96,34 @@ public class EngineSpecificationTest {
                 strictClock.getArguments().stream().map(Argument__1::getName).toList());
         assertTrue(strictClock.getArguments().stream().allMatch(Argument__1::getRequired));
 
+        Argument__1 mutationRate = generators.stream()
+                .filter(g -> "PhyloCTMC".equals(g.getName()))
+                .flatMap(g -> g.getArguments().stream())
+                .filter(a -> "mutationRate".equals(a.getName()))
+                .findFirst()
+                .orElseThrow();
+        assertFalse(mutationRate.getRequired());
+        assertTrue(mutationRate.getCanBeStochastic());
+
+        Generator__1 composition = generators.stream()
+                .filter(generator -> "UniformComposition".equals(generator.getName()))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(composition.getArguments().stream().noneMatch(Argument__1::getCanBeStochastic));
+        Generator__1 skyline = generators.stream()
+                .filter(generator -> "BayesianSkyline".equals(generator.getName()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(
+                List.of("populationSizes", "groupSizes", "taxa"),
+                skyline.getArguments().stream().map(Argument__1::getName).toList());
+        Generator__1 conditionalExponential = generators.stream()
+                .filter(generator -> "Exponential".equals(generator.getName())
+                        && generator.getArguments().getFirst().getName().equals("mean"))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(conditionalExponential.getArguments().getFirst().getCanBeStochastic());
+
         assertFalse(
                 generators.stream()
                         .anyMatch(generator -> "logisticPopulationFunction".equals(generator.getName())

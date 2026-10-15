@@ -9,6 +9,7 @@ import beast.base.spec.evolution.branchratemodel.StrictClockModel;
 import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
 import java.util.Set;
@@ -29,6 +30,8 @@ public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, 
     GeneratorTileInput<SubstitutionModel, BEASTState> substitutionModelInput =
             new GeneratorTileInput<>("qMatrix", true);
     GeneratorTileInput<Base, BEASTState> branchRateModelInput = new GeneratorTileInput<>("branchRates", false);
+    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> mutationRateInput =
+            new GeneratorTileInput<>("mutationRate", false);
     GeneratorTileInput<Partial<SiteModel, SubstitutionModel>, BEASTState> partialSiteRateModel =
             new GeneratorTileInput<>("siteRates", false);
     GeneratorTileInput<Boolean, BEASTState> useAmbiguitiesInput =
@@ -43,6 +46,7 @@ public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, 
         Partial<SiteModel, SubstitutionModel> partialSiteModel =
                 this.partialSiteRateModel.apply(beastState, indexVariables);
         Boolean useAmbiguities = this.useAmbiguitiesInput.apply(beastState, indexVariables);
+        RealScalar<PositiveReal> mutationRate = this.mutationRateInput.apply(beastState, indexVariables);
 
         // initialize clock model
 
@@ -63,6 +67,10 @@ public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, 
         }
 
         // initialize tree likelihood
+
+        if (mutationRate != null) {
+            beastState.setInput(siteModel, siteModel.muParameterInput, mutationRate);
+        }
 
         TreeLikelihood treeLikelihood = new TreeLikelihood();
         beastState.setInput(treeLikelihood, treeLikelihood.treeInput, tree);

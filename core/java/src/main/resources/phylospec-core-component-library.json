@@ -1167,6 +1167,18 @@
             }]
         },
         {
+            "generatedType": "Distribution<PositiveReal>",
+            "name": "Exponential",
+            "namespace": "phylospec.distributions",
+            "description": "Exponential distribution parameterized by its mean",
+            "arguments": [{
+                "name": "mean",
+                "description": "Mean, the reciprocal of the rate",
+                "type": "PositiveReal",
+                "required": true
+            }]
+        },
+        {
             "generatedType": "Distribution<Real>",
             "name": "Uniform",
             "namespace": "phylospec.distributions",
@@ -1251,6 +1263,48 @@
                 "type": "Vector<Real>",
                 "required": true
             }]
+        },
+        {
+            "generatedType": "Distribution<Vector<PositiveReal; num=concentration.num>>",
+            "name": "WeightedDirichlet",
+            "namespace": "phylospec.distributions",
+            "description": "Weighted Dirichlet: draw p from Dirichlet(concentration) and set x[i] = mean * sum(weights) * p[i] / weights[i], so sum(weights[i] * x[i]) / sum(weights) = mean. The output is a positive vector, not a probability simplex.",
+            "arguments": [
+                {
+                    "name": "concentration",
+                    "description": "Positive Dirichlet concentration parameters",
+                    "type": "Vector<PositiveReal>",
+                    "required": true
+                },
+                {
+                    "name": "weights",
+                    "description": "Positive weights, such as partition site counts",
+                    "type": "Vector<PositiveReal>",
+                    "required": true
+                },
+                {
+                    "default": 1,
+                    "name": "mean",
+                    "description": "Weighted mean of the generated values",
+                    "type": "PositiveReal",
+                    "required": false
+                }
+            ],
+            "constraints": [
+                {
+                    "argument": "concentration",
+                    "otherProperty": "num",
+                    "property": "num",
+                    "otherArgument": "weights",
+                    "operator": "equals"
+                },
+                {
+                    "argument": "concentration",
+                    "constant": 0,
+                    "property": "num",
+                    "operator": "greaterThan"
+                }
+            ]
         },
         {
             "generatedType": "Distribution<Vector<Real; num=mean.num>>",
@@ -1363,6 +1417,33 @@
                 "property": "value",
                 "otherArgument": "probabilities",
                 "operator": "equals"
+            }]
+        },
+        {
+            "generatedType": "Distribution<Vector<PositiveInteger; num=num.value>>",
+            "name": "UniformComposition",
+            "namespace": "phylospec.distributions",
+            "description": "Uniform distribution over ordered vectors of positive integers with a fixed sum",
+            "arguments": [
+                {
+                    "name": "total",
+                    "description": "Fixed sum of all entries",
+                    "type": "PositiveInteger",
+                    "required": true
+                },
+                {
+                    "name": "num",
+                    "description": "Fixed number of entries",
+                    "type": "PositiveInteger",
+                    "required": true
+                }
+            ],
+            "constraints": [{
+                "argument": "num",
+                "otherProperty": "value",
+                "property": "value",
+                "otherArgument": "total",
+                "operator": "lessThanOrEqual"
             }]
         },
         {
@@ -1616,6 +1697,39 @@
         },
         {
             "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
+            "name": "BayesianSkyline",
+            "namespace": "phylospec.distributions.tree",
+            "description": "Coalescent with population sizes indexed by groups of successive coalescent events, from the tips toward the root. Group sizes must sum to the number of taxa minus one. This is not a model with fixed change times.",
+            "arguments": [
+                {
+                    "name": "populationSizes",
+                    "description": "Positive effective population size for each event group",
+                    "type": "Vector<PositiveReal>",
+                    "required": true
+                },
+                {
+                    "name": "groupSizes",
+                    "description": "Positive event counts for each group, with fixed sum taxa.num - 1",
+                    "type": "Vector<PositiveInteger>",
+                    "required": true
+                },
+                {
+                    "name": "taxa",
+                    "description": "Taxa for the tree",
+                    "type": "Taxa",
+                    "required": true
+                }
+            ],
+            "constraints": [{
+                "argument": "populationSizes",
+                "otherProperty": "num",
+                "property": "num",
+                "otherArgument": "groupSizes",
+                "operator": "equals"
+            }]
+        },
+        {
+            "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
             "name": "FossilizedBirthDeath",
             "namespace": "phylospec.distributions.tree",
             "description": "Fossilized birth-death process for trees with fossil taxa, conditioned on the number of taxa and root age",
@@ -1721,6 +1835,13 @@
                     "description": "Q Matrix",
                     "type": "QMatrix",
                     "required": true
+                },
+                {
+                    "default": 1,
+                    "name": "mutationRate",
+                    "description": "Positive multiplier for this alignment, applied in addition to branchRates and siteRates; use for relative partition rates sharing one clock.",
+                    "type": "PositiveReal",
+                    "required": false
                 },
                 {
                     "name": "siteRates",

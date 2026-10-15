@@ -49,6 +49,11 @@
                     "required": false
                 },
                 {
+                    "canBeStochastic": true,
+                    "name": "mutationRate",
+                    "required": false
+                },
+                {
                     "canBeStochastic": false,
                     "name": "useAmbiguities",
                     "required": false

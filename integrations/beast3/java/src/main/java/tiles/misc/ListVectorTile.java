@@ -7,6 +7,7 @@ import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.tiling.errors.InconsistentTilingException;
 import org.phylospec.tiling.tiles.AstNodeTile;
 import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.typeresolver.StochasticityResolver;
@@ -95,6 +96,20 @@ public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array, BEASTS
         }
 
         return compatibleTilesByType;
+    }
+
+    @Override
+    public Map<AstNode, Tile<?, ?>> getWiredUpInputs() throws InconsistentTilingException {
+        // These children are stored in a list, not reflective TileInput fields. The global
+        // consistency check must still see them to keep shared draws as one state variable.
+        Map<AstNode, Tile<?, ?>> inputs = new IdentityHashMap<>();
+        for (Tile<?, BEASTState> tile : inputTiles) {
+            Tile<?, ?> previous = inputs.putIfAbsent(tile.getRootNode(), tile);
+            if (previous != null && previous != tile) {
+                throw new InconsistentTilingException(tile.getRootNode(), previous, tile);
+            }
+        }
+        return inputs;
     }
 
     @Override

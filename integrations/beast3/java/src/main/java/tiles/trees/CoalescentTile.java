@@ -1,6 +1,7 @@
 package tiles.trees;
 
 import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeIntervals;
 import beast.base.evolution.tree.coalescent.Coalescent;
 import beast.base.evolution.tree.coalescent.PopulationFunction;
 import beast.base.spec.domain.PositiveReal;
@@ -58,7 +59,13 @@ public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coales
         return new BoundDistribution<>(
                 model,
                 defaultState,
-                tree -> beastState.setInput(model, model.treeInput, tree),
+                tree -> {
+                    // Keep intervals in the explicit calculation graph so BEAST can invalidate,
+                    // store and restore them when the sampled tree changes.
+                    TreeIntervals intervals = new TreeIntervals();
+                    beastState.setInput(intervals, intervals.treeInput, tree);
+                    beastState.setInput(model, model.treeIntervalsInput, intervals);
+                },
                 OperatorSelector::getDefaultOperators);
     }
 }
