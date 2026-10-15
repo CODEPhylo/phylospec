@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.util.IdentityHashMap;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.RemoveGroupings;
@@ -31,10 +33,55 @@ import org.phylospec.typeresolver.VariableResolver;
 import popfunc.beast.evolution.populationmodel.GompertzGrowth_f0;
 import popfunc.beast.evolution.populationmodel.GompertzGrowth_t50;
 import popfunc.beast.evolution.populationmodel.LogisticGrowth;
+import popfunc.beast.evolution.populationmodel.Cons_Exp_ConsGrowth;
 
 public class PopFuncEquivalenceTest {
 
     private static final double[] TIMES = {0.0, 0.5, 2.0, 5.0};
+
+    @ParameterizedTest
+    @ValueSource(doubles = {0.2, 1e-12})
+    public void generatedConsExpConsMatchesAnalyticalBoundaries(double rate) throws IOException {
+        // Retained upstream diagnostic: the adapter delegates these calculations unchanged.
+        // The native inverse is unimplemented, so its first failure can mask later forward checks.
+        Cons_Exp_ConsGrowth model = buildConsExpCons(rate);
+        for (double time : new double[]{0, 2 - 1e-8, 2, 2 + 1e-8, 6, 10 - 1e-8, 10, 10 + 1e-8, 20}) {
+            double duration = Math.max(0, Math.min(time, 10) - 2);
+            double intensity = Math.min(time, 2) / 1000
+                    + Math.expm1(rate * duration) / (rate * 1000)
+                    + Math.max(0, time - 10) / (1000 * Math.exp(-rate * 8));
+            assertClose(1000 * Math.exp(-rate * duration), model.getPopSize(time));
+            assertEquals(intensity, model.getIntensity(time), 1e-14);
+            assertEquals(time, model.getInverseIntensity(intensity), 1e-10);
+        }
+    }
+
+    @Test
+    public void generatedConsExpConsReadsLivePopulationSize() throws IOException {
+        // Retained upstream cache diagnostic, not a supported adapter workflow: PhyloSpec now
+        // accepts only CONSTANT inputs here. This direct Java mutation deliberately bypasses that guard.
+        Cons_Exp_ConsGrowth model = buildConsExpCons(0.2);
+        RealScalarParam<?> size = assertInstanceOf(RealScalarParam.class, model.NCInput.get());
+        size.set(1500);
+        assertClose(1500 * Math.exp(-1.6), model.getPopSize(20));
+        double intensity = 2.0 / 1500 + Math.expm1(1.6) / (0.2 * 1500)
+                + 10 / (1500 * Math.exp(-1.6));
+        assertClose(intensity, model.getIntensity(20));
+        assertEquals(20, model.getInverseIntensity(intensity), 1e-10);
+    }
+
+    private static Cons_Exp_ConsGrowth buildConsExpCons(double rate) throws IOException {
+        Cons_Exp_ConsGrowth model = assertInstanceOf(Cons_Exp_ConsGrowth.class, build("""
+                use popfunc.functions.coalescent
+                PopulationFunction population = constantExponentialConstantPopulationFunction(
+                    recentPopulationSize=1000.0,
+                    growthRate=%s,
+                    growthStartAge=2.0,
+                    growthEndAge=10.0)
+                """.formatted(java.math.BigDecimal.valueOf(rate).toPlainString())));
+        model.initAndValidate();
+        return model;
+    }
 
     @Test
     public void matchesDirectGompertzF0WithoutAncestralPopulation() throws IOException {

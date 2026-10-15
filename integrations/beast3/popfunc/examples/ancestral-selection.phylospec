@@ -1,0 +1,39 @@
+// Inference counterpart of PopFunc/examples/jcCoalGompertz_f0.lphy.
+// The priors and clock rate are retained; the small alignment is synthetic.
+// This is a functional example, not a paper reproduction or convergence run.
+use popfunc.functions.coalescent
+use popfunc.distributions
+
+data {
+    Alignment data = fromNexus(file="four-taxa.nex")
+}
+
+model {
+    PositiveReal N0 ~ LogNormal(logMean=5.0, logSd=0.5)
+    PositiveReal b ~ LogNormal(logMean=-0.95, logSd=0.2)
+    Probability f0 ~ Beta(alpha=20.0, beta=7.0)
+    PositiveReal NA ~ LogNormal(logMean=3.0, logSd=0.3)
+
+    // Both objects share the same parameters. NA keeps its prior even when inactive.
+    PopulationFunction withoutAncestor = gompertzF0PopulationFunction(
+        initialProportion=f0, growthRate=b, initialPopulationSize=N0)
+    PopulationFunction withAncestor = gompertzF0PopulationFunction(
+        initialProportion=f0, growthRate=b, initialPopulationSize=N0,
+        ancestralPopulationSize=NA)
+    Vector<PopulationFunction> models = [withoutAncestor, withAncestor]
+    // For these two models this is exactly UniformDiscrete(0, 1).
+    NonNegativeInteger I_na ~ modelIndicator(models=models)
+    PopulationFunction population = stochasticPopulationSelection(indicator=I_na, models=models)
+
+    Tree tree ~ Coalescent(populationSize=population, taxa=taxa(data))
+    QMatrix qMatrix = jc69()
+    Vector<Rate> branchRates ~ StrictClock(clockRate=0.01, tree=tree)
+    Alignment<Character> sequences ~ PhyloCTMC(
+        tree=tree, qMatrix=qMatrix, branchRates=branchRates) observed as data
+}
+
+mcmc {
+    Integer chainLength = 30
+    Integer defaultLogEvery = 1
+    Integer randomSeed = 12345
+}

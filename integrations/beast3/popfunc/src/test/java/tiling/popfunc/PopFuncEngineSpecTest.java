@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.phylospec.components.Argument;
@@ -20,6 +21,8 @@ import org.phylospec.components.EngineSpecificationSchema;
 import org.phylospec.components.Generator;
 import org.phylospec.components.Generator__1;
 import org.phylospec.tiling.TileLibrary;
+import org.phylospec.typeresolver.Stochasticity;
+import tiles.popfunc.ConsExpConsGeneratedTile;
 import tiles.popfunc.PopFuncTileLibrary;
 import utils.popfunc.PopFuncEngineSpec;
 
@@ -71,6 +74,13 @@ public class PopFuncEngineSpecTest {
         Generator__1 consExpCons = findGenerator(
                 specification, "constantExponentialConstantPopulationFunction");
         assertEquals("popfunc.functions.coalescent", consExpCons.getNamespace());
+        assertEquals(4, consExpCons.getArguments().size());
+        assertTrue(consExpCons.getArguments().stream().allMatch(Argument__1::getRequired));
+        assertTrue(consExpCons.getArguments().stream()
+                .allMatch(argument -> Boolean.FALSE.equals(argument.getCanBeStochastic())));
+        new ConsExpConsGeneratedTile().getGeneratorTileInputs().forEach(input ->
+                assertEquals(Set.of(Stochasticity.CONSTANT), input.getAcceptedStochasticities()));
+        assertTrue(gompertzF0.getArguments().stream().allMatch(Argument__1::getCanBeStochastic));
 
         Generator__1 selection = findGenerator(specification, "stochasticPopulationSelection");
         assertEquals("popfunc.functions.coalescent", selection.getNamespace());

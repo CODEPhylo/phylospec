@@ -2,13 +2,18 @@ package tiling.popfunc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import beastconfig.BEASTState;
+import adapters.popfunc.ValidatedConsExpCons;
 import java.io.IOException;
 import java.util.IdentityHashMap;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.RemoveGroupings;
@@ -60,6 +65,50 @@ public class PackageModelsEndToEndTest {
         assertEquals(0.2, model.rInput.get().get());
         assertEquals(2.0, model.xInput.get().get());
         assertEquals(10.0, model.tauInput.get().get());
+    }
+
+    @Test
+    public void rejectsReversedAgesBeforeCallingTheNativeInitializer() throws IOException {
+        var model = assertInstanceOf(ValidatedConsExpCons.class, build("""
+                use popfunc.functions.coalescent
+                PopulationFunction population = constantExponentialConstantPopulationFunction(
+                    recentPopulationSize=1000.0, growthRate=0.2, growthStartAge=2.0, growthEndAge=1.0)
+                """));
+        var error = assertThrows(IllegalArgumentException.class, model::initAndValidate);
+        assertTrue(error.getMessage().contains("growthStartAge <= growthEndAge"), error.getMessage());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"recentPopulationSize", "growthRate"})
+    public void rejectsOverflowedPositiveInputsBeforeCallingTheNativeInitializer(String argument) throws IOException {
+        // A floating-point literal can overflow to +Infinity while still resolving as PositiveReal.
+        String source = """
+                use popfunc.functions.coalescent
+                PopulationFunction population = constantExponentialConstantPopulationFunction(
+                    recentPopulationSize=1000.0, growthRate=0.2, growthStartAge=2.0, growthEndAge=10.0)
+                """.replaceAll(argument + "=[0-9.]+", argument + "=" + "9".repeat(400) + ".0");
+        var model = assertInstanceOf(ValidatedConsExpCons.class, build(source));
+        var error = assertThrows(IllegalArgumentException.class, model::initAndValidate);
+        assertTrue(error.getMessage().contains("finite, positive " + argument), error.getMessage());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"0.0, 0.0", "2.0, 2.0", "2.0, 10.0"})
+    public void fixedPopulationCalculationsStillComeFromTheNativeModel(double start, double end)
+            throws IOException {
+        var model = assertInstanceOf(ValidatedConsExpCons.class, build("""
+                use popfunc.functions.coalescent
+                PopulationFunction population = constantExponentialConstantPopulationFunction(
+                    recentPopulationSize=1000.0, growthRate=0.2, growthStartAge=%s, growthEndAge=%s)
+                """.formatted(start, end)));
+        model.initAndValidate();
+        var reference = new Cons_Exp_ConsGrowth();
+        reference.initByName("NC", model.NCInput.get(), "r", model.rInput.get(),
+                "x", model.xInput.get(), "tau", model.tauInput.get());
+        for (double time : new double[]{0.0, start, end, 20.0}) {
+            assertEquals(reference.getPopSize(time), model.getPopSize(time));
+            assertEquals(reference.getIntensity(time), model.getIntensity(time));
+        }
     }
 
     @Test

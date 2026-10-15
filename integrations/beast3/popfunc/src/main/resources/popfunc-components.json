@@ -200,6 +200,7 @@
             "name": "indicator",
             "description": "Zero-based index of the selected population function.",
             "type": "NonNegativeInteger",
+            "uiHints": { "widget": "indicator" },
             "required": true
           },
           {

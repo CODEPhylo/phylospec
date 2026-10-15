@@ -3,9 +3,11 @@ package mappings.popfunc;
 import adapters.popfunc.IndicatorFallback;
 import adapters.popfunc.PositiveProbabilityAdapter;
 import adapters.popfunc.UnitPositiveFallback;
+import adapters.popfunc.ValidatedConsExpCons;
 import beast.base.evolution.tree.coalescent.PopulationFunction;
 import org.phylospec.annotations.GeneratorMapping;
 import org.phylospec.annotations.InputMapping;
+import org.phylospec.typeresolver.Stochasticity;
 
 /**
  * PhyloSpec mappings for PopFunc population functions.
@@ -21,14 +23,16 @@ public final class PopulationFunctionMappings {
 
     private PopulationFunctionMappings() {}
 
+    // The native implementation caches ancestral size at init and does not update it when
+    // any of these inputs change. Advertise only immutable inputs, not sampled or derived ones.
     @GeneratorMapping(
             component = "popfunc.functions.coalescent.constantExponentialConstantPopulationFunction",
-            implementation = popfunc.beast.evolution.populationmodel.Cons_Exp_ConsGrowth.class,
+            implementation = ValidatedConsExpCons.class,
             output = PopulationFunction.class)
-    @InputMapping(argument = "recentPopulationSize", input = "NCInput")
-    @InputMapping(argument = "growthRate", input = "rInput")
-    @InputMapping(argument = "growthStartAge", input = "xInput")
-    @InputMapping(argument = "growthEndAge", input = "tauInput")
+    @InputMapping(argument = "recentPopulationSize", input = "NCInput", accepts = Stochasticity.CONSTANT)
+    @InputMapping(argument = "growthRate", input = "rInput", accepts = Stochasticity.CONSTANT)
+    @InputMapping(argument = "growthStartAge", input = "xInput", accepts = Stochasticity.CONSTANT)
+    @InputMapping(argument = "growthEndAge", input = "tauInput", accepts = Stochasticity.CONSTANT)
     public static final class ConsExpCons {}
 
     @GeneratorMapping(

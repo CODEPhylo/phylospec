@@ -3,6 +3,7 @@ package tiling.popfunc;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import beast.base.evolution.tree.coalescent.Coalescent;
@@ -27,6 +28,9 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
@@ -36,9 +40,11 @@ import org.phylospec.lexer.Lexer;
 import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.TileLibrary;
+import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import org.phylospec.typeresolver.StochasticityResolver;
+import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import popfunc.beast.evolution.populationmodel.GompertzGrowth_f0;
@@ -49,6 +55,95 @@ import runner.PhyloSpecRunner;
 import operators.popfunc.ModelIndicatorOperator;
 
 public class PopFuncWorkflowTest {
+
+    @Test
+    public void runsFixedConsExpConsThroughRunner(@TempDir Path directory) throws Exception {
+        Path alignment = Path.of("../java/src/test/java/resources/primate-mtDNA.nex")
+                .toAbsolutePath().normalize();
+        String source = """
+                use popfunc.functions.coalescent
+                Alignment data = fromNexus(file="%s")
+                PositiveReal size = 1000.0
+                PositiveReal rate = 0.2
+                Age start = 2.0
+                Age end = 10.0
+                PopulationFunction population = constantExponentialConstantPopulationFunction(
+                    recentPopulationSize=size, growthRate=rate,
+                    growthStartAge=start, growthEndAge=end)
+                Tree tree ~ Coalescent(populationSize=population, taxa=taxa(data))
+                QMatrix qMatrix = jc69()
+                Alignment alignment ~ PhyloCTMC(tree=tree, qMatrix=qMatrix) observed as data
+                mcmc {
+                    Integer chainLength = 30
+                    Integer defaultLogEvery = 1
+                    Integer randomSeed = 12345
+                }
+                """.formatted(alignment);
+        String prefix = directory.resolve("cons-exp-cons").toString();
+        new PhyloSpecRunner(source, List.of("popfunc", "beast2")).runPhyloSpec(prefix);
+        List<String> trace = Files.readAllLines(Path.of(prefix + ".log")).stream()
+                .filter(line -> !line.isBlank() && !line.startsWith("#")).toList();
+        assertEquals(32, trace.size());
+        List<String> columns = java.util.Arrays.asList(trace.getFirst().strip().split("\\s+"));
+        for (String name : List.of("posterior", "prior", "likelihood")) {
+            int column = columns.indexOf(name);
+            assertTrue(column >= 0, "Missing trace column " + name);
+            for (int i = 1; i < trace.size(); i++) {
+                String[] values = trace.get(i).strip().split("\\s+");
+                assertEquals(i - 1, Integer.parseInt(values[0]));
+                assertTrue(Double.isFinite(Double.parseDouble(values[column])), trace.get(i));
+            }
+        }
+        assertTrue(Files.readString(Path.of(prefix + ".trees")).contains("STATE_30"));
+        assertTrue(Files.size(Path.of(prefix + ".state.xml")) > 0);
+    }
+
+    @ParameterizedTest(name = "ConsExpCons rejects {0}, derived={1}")
+    @CsvSource({
+        "recentPopulationSize, false", "growthRate, false", "growthStartAge, false", "growthEndAge, false",
+        "recentPopulationSize, true", "growthRate, true", "growthStartAge, true", "growthEndAge, true"
+    })
+    public void rejectsChangingConsExpConsInputsBeforeConstructingTheNativeModel(
+            String argument, boolean derived) {
+        String population = """
+                PopulationFunction population = constantExponentialConstantPopulationFunction(
+                    recentPopulationSize=1000.0, growthRate=0.2, growthStartAge=2.0, growthEndAge=10.0)
+                """.replaceAll(argument + "=[0-9.]+", argument + "=value");
+        String declarations = derived
+                ? "PositiveReal sampled ~ LogNormal(logMean=0.0, logSd=1.0)\nPositiveReal value = sampled * 2.0\n"
+                : "PositiveReal value ~ LogNormal(logMean=0.0, logSd=1.0)\n";
+        TileApplicationError error = assertThrows(TileApplicationError.class,
+                () -> tile("use popfunc.functions.coalescent\n" + declarations + population));
+        assertTrue(error.getMessage().contains("expects a constant"), error.getMessage());
+        assertTrue(error.getMessage().contains("'" + argument + "'"), error.getMessage());
+        // The resolver propagates STOCHASTIC through expressions that depend on a draw.
+        assertTrue(error.getMessage().contains("random variable"), error.getMessage());
+    }
+
+    @Test
+    public void rejectsNegativeConsExpConsAgeDuringTypeChecking() {
+        assertThrows(TypeError.class, () -> tile("""
+                use popfunc.functions.coalescent
+                PopulationFunction population = constantExponentialConstantPopulationFunction(
+                    recentPopulationSize=1000.0, growthRate=0.2, growthStartAge=-1.0, growthEndAge=10.0)
+                """));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"recentPopulationSize", "growthRate", "growthStartAge", "growthEndAge"})
+    public void rejectsDeterministicConsExpConsInputs(String argument) {
+        // Unlike sampled * 2, this is DETERMINISTIC, not STOCHASTIC. It is not a folded literal.
+        String source = """
+                use popfunc.functions.coalescent
+                PositiveReal fixed = 2.0
+                PositiveReal value = fixed * 2.0
+                PopulationFunction population = constantExponentialConstantPopulationFunction(
+                    recentPopulationSize=1000.0, growthRate=0.2, growthStartAge=2.0, growthEndAge=10.0)
+                """.replaceAll(argument + "=[0-9.]+", argument + "=value");
+        TileApplicationError error = assertThrows(TileApplicationError.class, () -> tile(source));
+        assertTrue(error.getMessage().contains("expects a constant for '" + argument + "'"), error.getMessage());
+        assertTrue(error.getMessage().contains("deterministic value"), error.getMessage());
+    }
 
     @Test
     public void buildsCompleteGompertzAnalysis() throws Exception {
@@ -364,7 +459,7 @@ public class PopFuncWorkflowTest {
         }
     }
 
-    private static String modelSelectionSource(Path alignment, int chainLength) {
+    static String modelSelectionSource(Path alignment, int chainLength) {
         return """
                 use popfunc.functions.coalescent
                 use popfunc.distributions
@@ -409,6 +504,8 @@ public class PopFuncWorkflowTest {
 
                 mcmc {
                     Integer chainLength = %d
+                    Integer defaultLogEvery = 1
+                    Integer randomSeed = 12345
                 }
                 """.formatted(alignment.toString(), chainLength);
     }
