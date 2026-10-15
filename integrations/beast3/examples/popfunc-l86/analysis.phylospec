@@ -1,0 +1,57 @@
+// Probability-model counterpart of PopFunc-paper real/L86/data/L86.xml.
+// The verifier extracts the XML's 32 x 598 alignment without changing its contents.
+// Two independent indicators retain the original four-model and ancestral choices.
+use popfunc.functions.coalescent
+use popfunc.distributions
+use phylonco.functions.substitution
+use phylonco.distributions.alignment
+
+data {
+    Alignment data = fromNexus(file="l86.nex")
+}
+
+model {
+    PositiveReal N0_con ~ LogNormal(logMean=3.0,logSd=2.0)
+    PositiveReal N_max ~ LogNormal(logMean=4.5,logSd=2.0)
+    PositiveReal b ~ LogNormal(logMean=3.0,logSd=1.0)
+    PositiveReal t50 ~ LogNormal(logMean=-2.2,logSd=0.8)
+    Probability f0 ~ Beta(alpha=1.0,beta=1.0)
+    PositiveReal N0 ~ LogNormal(logMean=4.5,logSd=2.0)
+    PositiveReal NA ~ LogNormal(logMean=4.0,logSd=2.0)
+
+    PopulationFunction constant0 = constantPopulationFunction(populationSize=N0_con)
+    PopulationFunction exponential0 = exponentialPopulationFunction(populationSize=N_max,growthRate=b)
+    PopulationFunction logistic0 = logisticPopulationFunction(inflectionAge=t50,carryingCapacity=N_max,growthRate=b)
+    PopulationFunction gompertz0 = gompertzF0PopulationFunction(initialProportion=f0,initialPopulationSize=N0,growthRate=b)
+    Vector<PopulationFunction> withoutAncestor = [constant0,exponential0,logistic0,gompertz0]
+    NonNegativeInteger I ~ modelIndicator(models=withoutAncestor)
+    PopulationFunction selection0 = stochasticPopulationSelection(indicator=I,models=withoutAncestor)
+
+    // Separate population objects share the same sampled inputs, not duplicated priors.
+    PopulationFunction constant1 = constantPopulationFunction(populationSize=N0_con)
+    PopulationFunction exponential1 = exponentialPopulationFunction(populationSize=N_max,growthRate=b,ancestralPopulationSize=NA)
+    PopulationFunction logistic1 = logisticPopulationFunction(inflectionAge=t50,carryingCapacity=N_max,growthRate=b,ancestralPopulationSize=NA)
+    PopulationFunction gompertz1 = gompertzF0PopulationFunction(initialProportion=f0,initialPopulationSize=N0,growthRate=b,ancestralPopulationSize=NA)
+    Vector<PopulationFunction> withAncestor = [constant1,exponential1,logistic1,gompertz1]
+    PopulationFunction selection1 = stochasticPopulationSelection(indicator=I,models=withAncestor)
+    Vector<PopulationFunction> ancestralModels = [selection0,selection1]
+    NonNegativeInteger I_na ~ modelIndicator(models=ancestralModels)
+    PopulationFunction population = stochasticPopulationSelection(indicator=I_na,models=ancestralModels)
+    Tree tree ~ Coalescent(populationSize=population,taxa=taxa(data))
+
+    Simplex pi ~ Dirichlet(concentration=[30.0,3.0,3.0,3.0,3.0,30.0,3.0,3.0,3.0,3.0,30.0,3.0,3.0,3.0,3.0,30.0])
+    Simplex rates ~ Dirichlet(concentration=[1.0,2.0,1.0,1.0,2.0,1.0])
+    QMatrix qMatrix = gt16(relativeRates=rates,freq=pi)
+    Probability delta ~ Beta(alpha=1.5,beta=4.5)
+    Probability epsilon ~ Beta(alpha=2.0,beta=18.0)
+    Vector<Rate> branchRates ~ StrictClock(clockRate=1.0,tree=tree)
+    Alignment latent ~ PhyloCTMC(tree=tree,qMatrix=qMatrix,branchRates=branchRates)
+    Alignment observed ~ GT16ErrorModel(epsilon=epsilon,delta=delta,alignment=latent) observed as data
+}
+
+// Functional check only: not the paper's four coupled chains or 20-million-step run.
+mcmc {
+    Integer chainLength = 30
+    Integer defaultLogEvery = 1
+    Integer randomSeed = 12345
+}
