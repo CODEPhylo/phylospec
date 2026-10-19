@@ -1232,8 +1232,8 @@
         "arguments": [
           {
             "name": "rate",
-            "type": "Rate",
-            "description": "Rate parameter",
+            "type": "PositiveReal",
+            "description": "Positive rate parameter (lambda), equal to the reciprocal of the distribution mean",
             "required": true
           }
         ]
@@ -1471,8 +1471,8 @@
         "arguments": [
           {
             "name": "rate",
-            "type": "Rate",
-            "description": "Rate parameter",
+            "type": "PositiveReal",
+            "description": "Positive expected number of events (lambda), equal to the distribution mean",
             "required": true
           }
         ]
@@ -1505,8 +1505,8 @@
         "arguments": [
           {
             "name": "birthRate",
-            "type": "Rate",
-            "description": "Birth rate parameter",
+            "type": "PositiveReal",
+            "description": "Birth rate per lineage per unit time",
             "required": true,
             "default": 1.0
           },
@@ -1526,8 +1526,8 @@
         "arguments": [
           {
             "name": "birthRate",
-            "type": "Rate",
-            "description": "Birth rate parameter",
+            "type": "PositiveReal",
+            "description": "Birth rate per lineage per unit time",
             "required": true,
             "default": 1.0
           },
@@ -1553,14 +1553,14 @@
         "arguments": [
           {
             "name": "birthRate",
-            "type": "Rate",
-            "description": "Birth rate parameter",
+            "type": "PositiveReal",
+            "description": "Birth rate per lineage per unit time",
             "required": true
           },
           {
             "name": "deathRate",
-            "type": "Rate",
-            "description": "Death rate parameter",
+            "type": "PositiveReal",
+            "description": "Death rate per lineage per unit time",
             "required": true
           },
           {
@@ -1592,14 +1592,14 @@
         "arguments": [
           {
             "name": "diversificationRate",
-            "type": "Rate",
-            "description": "Diversification rate parameter",
+            "type": "PositiveReal",
+            "description": "Net diversification rate (birth rate minus death rate)",
             "required": true
           },
           {
             "name": "turnover",
-            "type": "Rate",
-            "description": "Turnover parameter",
+            "type": "PositiveReal",
+            "description": "Death rate divided by birth rate",
             "required": true
           },
           {
@@ -1712,20 +1712,20 @@
         "arguments": [
           {
             "name": "speciationRate",
-            "type": "Rate",
-            "description": "Birth (speciation) rate",
+            "type": "PositiveReal",
+            "description": "Speciation rate per lineage per unit time",
             "required": true
           },
           {
             "name": "extinctionRate",
-            "type": "Rate",
-            "description": "Death (extinction) rate",
+            "type": "PositiveReal",
+            "description": "Extinction rate per lineage per unit time",
             "required": true
           },
           {
             "name": "serialSamplingRate",
-            "type": "Rate",
-            "description": "Fossil sampling rate through time",
+            "type": "PositiveReal",
+            "description": "Fossil sampling rate per lineage per unit time",
             "required": true
           },
           {
@@ -1757,20 +1757,20 @@
         "arguments": [
           {
             "name": "diversificationRate",
-            "type": "Rate",
-            "description": "Diversification rate parameter",
+            "type": "PositiveReal",
+            "description": "Net diversification rate (speciation rate minus extinction rate)",
             "required": true
           },
           {
             "name": "turnover",
-            "type": "Rate",
-            "description": "Turnover rate parameter",
+            "type": "PositiveReal",
+            "description": "Extinction rate divided by speciation rate",
             "required": true
           },
           {
             "name": "serialSamplingRate",
-            "type": "Rate",
-            "description": "Fossil sampling rate through time",
+            "type": "PositiveReal",
+            "description": "Fossil sampling rate per lineage per unit time",
             "required": true
           },
           {
@@ -1995,8 +1995,8 @@
         "arguments": [
           {
             "name": "clockRate",
-            "type": "Rate",
-            "description": "The base rate",
+            "type": "PositiveReal",
+            "description": "Clock rate shared by all branches",
             "required": false,
             "default": 1
           },
@@ -2022,8 +2022,8 @@
           },
           {
             "name": "clockRate",
-            "type": "Rate",
-            "description": "The distribution to draw the mean clock rate from",
+            "type": "PositiveReal",
+            "description": "Mean clock rate that scales the mean-one base distribution",
             "required": true
           },
           {
@@ -2146,38 +2146,38 @@
         "arguments": [
           {
             "name": "rateAC",
-            "type": "Rate",
-            "description": "Substitution rate for A to C",
+            "type": "PositiveReal",
+            "description": "Relative exchangeability between A and C",
             "required": true
           },
           {
             "name": "rateAG",
-            "type": "Rate",
-            "description": "Substitution rate for A to G",
+            "type": "PositiveReal",
+            "description": "Relative exchangeability between A and G",
             "required": true
           },
           {
             "name": "rateAT",
-            "type": "Rate",
-            "description": "Substitution rate for A to T",
+            "type": "PositiveReal",
+            "description": "Relative exchangeability between A and T",
             "required": true
           },
           {
             "name": "rateCG",
-            "type": "Rate",
-            "description": "Substitution rate for C to G",
+            "type": "PositiveReal",
+            "description": "Relative exchangeability between C and G",
             "required": true
           },
           {
             "name": "rateCT",
-            "type": "Rate",
-            "description": "Substitution rate for C to T",
+            "type": "PositiveReal",
+            "description": "Relative exchangeability between C and T",
             "required": true
           },
           {
             "name": "rateGT",
-            "type": "Rate",
-            "description": "Substitution rate for G to T",
+            "type": "PositiveReal",
+            "description": "Relative exchangeability between G and T",
             "required": true
           },
           {
