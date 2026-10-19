@@ -64,7 +64,7 @@ Multiple components can be registered for the same type; `getComponents` returns
 
 `resolveAlias` resolves both simple aliases (`Rate` → `PositiveReal`) and parameterised types (`Distribution<Rate>` → `Distribution<PositiveReal>`). `getComponents` automatically falls through to the resolved type when no direct registration exists.
 
-In the bundled library, scalar `Rate` references in generator argument types are expanded to `PositiveReal`. Their strict-positive domain is unchanged; the `Rate` alias definition and literal registration remain available. Descriptions distinguish event rates, rate ratios, and relative exchangeabilities.
+In the bundled library, scalar and nested `Rate` references in generator signatures are expanded to `PositiveReal`. Their strict-positive domain is unchanged; the `Rate` alias definition and literal registration remain available. Distribution and vector wrappers, including vector-length properties, are preserved. Descriptions distinguish event rates, rate ratios, and relative exchangeabilities.
 
 ---
 

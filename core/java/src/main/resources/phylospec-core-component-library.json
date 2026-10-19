@@ -1805,14 +1805,14 @@
                 },
                 {
                     "name": "branchRates",
-                    "description": "Rate-heterogeneity across branches",
-                    "type": "Vector<Rate>",
+                    "description": "Rate variation across branches",
+                    "type": "Vector<PositiveReal>",
                     "required": true
                 },
                 {
                     "name": "siteRates",
-                    "description": "Rate-heterogeneity across sites",
-                    "type": "Vector<Rate>",
+                    "description": "Rate variation across sites",
+                    "type": "Vector<PositiveReal>",
                     "required": true
                 },
                 {
@@ -1896,7 +1896,7 @@
             ]
         },
         {
-            "generatedType": "Distribution<Vector<Rate; num=tree.numBranches>>",
+            "generatedType": "Distribution<Vector<PositiveReal; num=tree.numBranches>>",
             "name": "StrictClock",
             "namespace": "phylospec.distributions.clock",
             "description": "Strict clock model for branch rates",
@@ -1917,15 +1917,15 @@
             ]
         },
         {
-            "generatedType": "Distribution<Vector<Rate; num=tree.numBranches>>",
+            "generatedType": "Distribution<Vector<PositiveReal; num=tree.numBranches>>",
             "name": "RelaxedClock",
             "namespace": "phylospec.distributions.clock",
             "description": "Relaxed clock model for branch rates",
             "arguments": [
                 {
                     "name": "base",
-                    "description": "The distribution with mean 1.0 to draw branch-wise rates from",
-                    "type": "Distribution<Rate>",
+                    "description": "Base distribution for branch rates, with mean 1.0",
+                    "type": "Distribution<PositiveReal>",
                     "required": true
                 },
                 {
@@ -1943,7 +1943,7 @@
             ]
         },
         {
-            "generatedType": "Distribution<Vector<Rate; num=numSites.value>>",
+            "generatedType": "Distribution<Vector<PositiveReal; num=numSites.value>>",
             "name": "DiscreteGammaInv",
             "namespace": "phylospec.distributions.siterates",
             "description": "Discrete gamma site rates with a proportion of invariant sites",
