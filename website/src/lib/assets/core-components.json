@@ -1897,14 +1897,14 @@
           },
           {
             "name": "branchRates",
-            "type": "Vector<Rate>",
-            "description": "Rate-heterogeneity across branches",
+            "type": "Vector<PositiveReal>",
+            "description": "Rate variation across branches",
             "required": true
           },
           {
             "name": "siteRates",
-            "type": "Vector<Rate>",
-            "description": "Rate-heterogeneity across sites",
+            "type": "Vector<PositiveReal>",
+            "description": "Rate variation across sites",
             "required": true
           },
           {
@@ -1989,7 +1989,7 @@
       },
       {
         "name": "StrictClock",
-        "generatedType": "Distribution<Vector<Rate; num=tree.numBranches>>",
+        "generatedType": "Distribution<Vector<PositiveReal; num=tree.numBranches>>",
         "namespace": "phylospec.distributions.clock",
         "description": "Strict clock model for branch rates",
         "arguments": [
@@ -2010,14 +2010,14 @@
       },
       {
         "name": "RelaxedClock",
-        "generatedType": "Distribution<Vector<Rate; num=tree.numBranches>>",
+        "generatedType": "Distribution<Vector<PositiveReal; num=tree.numBranches>>",
         "namespace": "phylospec.distributions.clock",
         "description": "Relaxed clock model for branch rates",
         "arguments": [
           {
             "name": "base",
-            "type": "Distribution<Rate>",
-            "description": "The distribution with mean 1.0 to draw branch-wise rates from",
+            "type": "Distribution<PositiveReal>",
+            "description": "Base distribution for branch rates, with mean 1.0",
             "required": true
           },
           {
@@ -2036,7 +2036,7 @@
       },
       {
         "name": "DiscreteGammaInv",
-        "generatedType": "Distribution<Vector<Rate; num=numSites.value>>",
+        "generatedType": "Distribution<Vector<PositiveReal; num=numSites.value>>",
         "namespace": "phylospec.distributions.siterates",
         "description": "Discrete gamma site rates with a proportion of invariant sites",
         "arguments": [
