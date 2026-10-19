@@ -670,7 +670,7 @@
           },
           {
             "name": "age",
-            "type": "Age",
+            "type": "NonNegativeReal",
             "description": "The age of the sample of this taxon",
             "required": false,
             "default": 0
@@ -833,7 +833,7 @@
       },
       {
         "name": "rootAge",
-        "generatedType": "Age",
+        "generatedType": "NonNegativeReal",
         "namespace": "phylospec.functions.accessor",
         "description": "Get the age of the root node in a tree",
         "arguments": [
@@ -847,7 +847,7 @@
       },
       {
         "name": "age",
-        "generatedType": "Age",
+        "generatedType": "NonNegativeReal",
         "namespace": "phylospec.functions.accessor",
         "description": "Get the age of a taxon in a tree",
         "arguments": [
@@ -867,7 +867,7 @@
       },
       {
         "name": "age",
-        "generatedType": "Age",
+        "generatedType": "NonNegativeReal",
         "namespace": "phylospec.functions.accessor",
         "description": "Get the age of a taxon",
         "arguments": [
@@ -881,9 +881,9 @@
       },
       {
         "name": "mrca",
-        "generatedType": "Age",
+        "generatedType": "NonNegativeReal",
         "namespace": "phylospec.functions.accessor",
-        "description": "Get the age of the most common recent ancestor of a clade in the tree",
+        "description": "Get the age of the most recent common ancestor of a clade in the tree",
         "arguments": [
           {
             "name": "clade",
@@ -1491,7 +1491,7 @@
           },
           {
             "name": "numValues",
-            "type": "Count",
+            "type": "NonNegativeInteger",
             "description": "The length of the returned chain",
             "required": true
           }
@@ -1533,7 +1533,7 @@
           },
           {
             "name": "rootAge",
-            "type": "Age",
+            "type": "NonNegativeReal",
             "description": "The age of the root",
             "required": true
           },
@@ -1578,7 +1578,7 @@
           },
           {
             "name": "rootAge",
-            "type": "Age",
+            "type": "NonNegativeReal",
             "description": "The age of the root",
             "required": false
           }
@@ -1611,7 +1611,7 @@
           },
           {
             "name": "rootAge",
-            "type": "Age",
+            "type": "NonNegativeReal",
             "description": "The age of the root",
             "required": false
           },
@@ -1737,7 +1737,7 @@
           },
           {
             "name": "rootAge",
-            "type": "Age",
+            "type": "NonNegativeReal",
             "description": "The age of the root",
             "required": false
           },
@@ -1782,7 +1782,7 @@
           },
           {
             "name": "rootAge",
-            "type": "Age",
+            "type": "NonNegativeReal",
             "description": "The age of the root",
             "required": false
           },
@@ -2387,7 +2387,7 @@
         "arguments": [
           {
             "name": "inflectionAge",
-            "type": "Age",
+            "type": "NonNegativeReal",
             "description": "The age of the inflection point t50",
             "required": true
           },

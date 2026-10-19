@@ -650,7 +650,7 @@
                     "default": 0,
                     "name": "age",
                     "description": "The age of the sample of this taxon",
-                    "type": "Age",
+                    "type": "NonNegativeReal",
                     "required": false
                 }
             ]
@@ -792,7 +792,7 @@
             "typeParameters": ["T"]
         },
         {
-            "generatedType": "Age",
+            "generatedType": "NonNegativeReal",
             "name": "rootAge",
             "namespace": "phylospec.functions.accessor",
             "description": "Get the age of the root node in a tree",
@@ -804,7 +804,7 @@
             }]
         },
         {
-            "generatedType": "Age",
+            "generatedType": "NonNegativeReal",
             "name": "age",
             "namespace": "phylospec.functions.accessor",
             "description": "Get the age of a taxon in a tree",
@@ -824,7 +824,7 @@
             ]
         },
         {
-            "generatedType": "Age",
+            "generatedType": "NonNegativeReal",
             "name": "age",
             "namespace": "phylospec.functions.accessor",
             "description": "Get the age of a taxon",
@@ -836,10 +836,10 @@
             }]
         },
         {
-            "generatedType": "Age",
+            "generatedType": "NonNegativeReal",
             "name": "mrca",
             "namespace": "phylospec.functions.accessor",
-            "description": "Get the age of the most common recent ancestor of a clade in the tree",
+            "description": "Get the age of the most recent common ancestor of a clade in the tree",
             "arguments": [
                 {
                     "name": "clade",
@@ -1404,7 +1404,7 @@
                 {
                     "name": "numValues",
                     "description": "The length of the returned chain",
-                    "type": "Count",
+                    "type": "NonNegativeInteger",
                     "required": true
                 }
             ]
@@ -1446,7 +1446,7 @@
                 {
                     "name": "rootAge",
                     "description": "The age of the root",
-                    "type": "Age",
+                    "type": "NonNegativeReal",
                     "required": true
                 },
                 {
@@ -1491,7 +1491,7 @@
                 {
                     "name": "rootAge",
                     "description": "The age of the root",
-                    "type": "Age",
+                    "type": "NonNegativeReal",
                     "required": false
                 }
             ]
@@ -1524,7 +1524,7 @@
                 {
                     "name": "rootAge",
                     "description": "The age of the root",
-                    "type": "Age",
+                    "type": "NonNegativeReal",
                     "required": false
                 },
                 {
@@ -1648,7 +1648,7 @@
                 {
                     "name": "rootAge",
                     "description": "The age of the root",
-                    "type": "Age",
+                    "type": "NonNegativeReal",
                     "required": false
                 },
                 {
@@ -1693,7 +1693,7 @@
                 {
                     "name": "rootAge",
                     "description": "The age of the root",
-                    "type": "Age",
+                    "type": "NonNegativeReal",
                     "required": false
                 },
                 {
@@ -2274,7 +2274,7 @@
                 {
                     "name": "inflectionAge",
                     "description": "The age of the inflection point t50",
-                    "type": "Age",
+                    "type": "NonNegativeReal",
                     "required": true
                 },
                 {
@@ -2312,7 +2312,7 @@
                 {
                     "name": "transitionAge",
                     "description": "Age at which exponential growth begins",
-                    "type": "Age",
+                    "type": "NonNegativeReal",
                     "required": true
                 },
                 {
