@@ -1,0 +1,8 @@
+// Minimal prior-only MCMC example. This short chain tests the installation.
+Real x ~ Normal(mean=0.0, sd=1.0)
+
+mcmc {
+    Integer chainLength = 30
+    Integer defaultLogEvery = 10
+    Integer randomSeed = 42
+}
