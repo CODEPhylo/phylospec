@@ -45,8 +45,9 @@ public class TypePropertyEngine {
             ResolvedTypeSet resolvedExpressionTypeSet,
             ComponentResolver componentResolver) {
         for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
+            ResolvedType matchingType = resolveLeafAliases(resolvedVariableType, componentResolver);
             for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
-                if (TypeUtils.covers(resolvedVariableType, resolvedExpressionType, componentResolver)) {
+                if (TypeUtils.covers(matchingType, resolvedExpressionType, componentResolver)) {
                     copyProperties(resolvedExpressionType, resolvedVariableType);
                 }
             }
@@ -58,16 +59,40 @@ public class TypePropertyEngine {
             ResolvedTypeSet resolvedExpressionTypeSet,
             ComponentResolver componentResolver) {
         for (ResolvedType resolvedVariableType : resolvedVariableTypeSet) {
+            ResolvedType matchingType = resolveLeafAliases(resolvedVariableType, componentResolver);
             // find the matching resolved types
             for (ResolvedType resolvedExpressionType : resolvedExpressionTypeSet) {
                 ResolvedType unwrappedExpressionType = TypeUtils.recoverTypeParameter(
                         "phylospec.types.Distribution", "T", resolvedExpressionType, componentResolver);
                 if (unwrappedExpressionType != null
-                        && TypeUtils.covers(resolvedVariableType, unwrappedExpressionType, componentResolver)) {
+                        && TypeUtils.covers(matchingType, unwrappedExpressionType, componentResolver)) {
                     copyProperties(unwrappedExpressionType, resolvedVariableType);
                 }
             }
         }
+    }
+
+    /**
+     * Resolves scalar aliases such as Rate inside a temporary matching type. Properties are still
+     * copied into the original declared type. Structural aliases such as Matrix<T> must retain
+     * their parameter layers because copyProperties pairs those layers by position.
+     */
+    private static ResolvedType resolveLeafAliases(ResolvedType type, ComponentResolver componentResolver) {
+        if (type.getParametersNames().isEmpty() && type.getAlias() != null) {
+            for (ResolvedType expanded : ResolvedType.fromString(type.getAlias(), componentResolver)) {
+                if (expanded.getAlias() == null && expanded.getParametersNames().isEmpty()) {
+                    return expanded;
+                }
+            }
+        }
+        if (type.getParameterTypes().isEmpty()) return type;
+
+        Map<String, ResolvedType> parameterTypes = new HashMap<>();
+        for (Map.Entry<String, ResolvedType> parameter :
+                type.getParameterTypes().entrySet()) {
+            parameterTypes.put(parameter.getKey(), resolveLeafAliases(parameter.getValue(), componentResolver));
+        }
+        return type.withParameterTypes(parameterTypes);
     }
 
     public void resolveIndexed(int indexCount, List<ResolvedTypeSet> rangeTypeSets, ResolvedTypeSet containerTypeSet) {
