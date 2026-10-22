@@ -1,6 +1,7 @@
 package tiling;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import beastconfig.BEASTState;
 import java.io.IOException;
@@ -124,15 +125,20 @@ public class TilingScriptFilesTest {
                     actualApplicationErrorLines.size(),
                     "Wrong number of application error lines for: " + psPath);
             for (int i = 0; i < expectedApplicationErrorLines.size(); i++) {
-                assertEquals(
-                        expectedApplicationErrorLines.get(i).trim(),
-                        actualApplicationErrorLines
-                                .get(i)
-                                .trim()
-                                .lines()
-                                .findFirst()
-                                .orElseThrow(),
-                        "Application error mismatch at index " + i + " for: " + psPath);
+                String expected = expectedApplicationErrorLines.get(i).trim();
+                String actual = actualApplicationErrorLines
+                        .get(i)
+                        .trim()
+                        .lines()
+                        .findFirst()
+                        .orElseThrow();
+                String message = "Application error mismatch at index " + i + " for: " + psPath;
+                // Opt in only when the message includes environment-specific paths or IO details.
+                if (expected.startsWith("prefix: ")) {
+                    assertTrue(actual.startsWith(expected.substring("prefix: ".length())), message + ": " + actual);
+                } else {
+                    assertEquals(expected, actual, message);
+                }
             }
         });
     }

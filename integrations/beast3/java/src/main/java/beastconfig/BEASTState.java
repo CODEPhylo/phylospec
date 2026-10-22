@@ -5,6 +5,7 @@ import beast.base.evolution.tree.Tree;
 import beast.base.inference.*;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.BiConsumer;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
@@ -19,6 +20,8 @@ public class BEASTState {
 
     public final String runName;
     private final Path sourceDirectory;
+    private final OutputPaths outputPaths;
+    private BiConsumer<String, Path> inputObserver = (reference, path) -> {};
     public long chainLength = 10_00_000;
     public int defaultLogEvery = 1000;
     public String outputPrefix;
@@ -55,8 +58,14 @@ public class BEASTState {
      * PhyloSpec source file.
      */
     public BEASTState(String runName, Path sourceDirectory) {
+        this(runName, sourceDirectory, null);
+    }
+
+    /** Creates a managed state when outputDirectory is supplied; null preserves legacy behavior. */
+    public BEASTState(String runName, Path sourceDirectory, Path outputDirectory) {
         this.runName = runName;
-        this.outputPrefix = runName;
+        this.outputPaths = outputDirectory == null ? null : new OutputPaths(outputDirectory);
+        this.outputPrefix = resolveUserOutputPath(runName);
         this.sourceDirectory = Objects.requireNonNull(sourceDirectory, "sourceDirectory")
                 .toAbsolutePath()
                 .normalize();
@@ -76,9 +85,36 @@ public class BEASTState {
     /** Resolves a file named by the model, preserving absolute paths. */
     public Path resolvePath(String path) {
         Path requested = Path.of(path);
-        return requested.isAbsolute()
+        Path resolved = requested.isAbsolute()
                 ? requested.normalize()
                 : sourceDirectory.resolve(requested).normalize();
+        inputObserver.accept(path, resolved);
+        return resolved;
+    }
+
+    /** Observes actual runtime file references, including computed filenames. */
+    public void setInputObserver(BiConsumer<String, Path> inputObserver) {
+        this.inputObserver = Objects.requireNonNull(inputObserver, "inputObserver");
+    }
+
+    /** Resolves a name declared by the user, preserving the old policy for unmanaged callers. */
+    public String resolveUserOutputPath(String path) {
+        return outputPaths == null ? path : outputPaths.resolveUserPath(path);
+    }
+
+    /** Resolves output names, including already resolved names contributed by packages. */
+    public String resolveOutputPath(String path) {
+        return outputPaths == null ? path : outputPaths.resolve(path);
+    }
+
+    /** Checks logger and state destinations together before native output begins. */
+    public void prepareOutputFiles(List<Logger> loggers, String stateFile) throws java.io.IOException {
+        if (outputPaths == null) return;
+        List<String> files = loggers.stream()
+                .map(logger -> logger.fileNameInput.get())
+                .filter(name -> name != null && !name.isEmpty())
+                .toList();
+        outputPaths.prepare(files, stateFile);
     }
 
     /**
