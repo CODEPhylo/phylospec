@@ -1,9 +1,11 @@
 package tiling.popfunc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import beast.base.core.BEASTInterface;
 import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeIntervals;
 import beast.base.evolution.tree.coalescent.Coalescent;
 import beast.base.evolution.tree.coalescent.PopulationFunction;
 import beast.base.inference.StateNode;
@@ -14,7 +16,8 @@ import beast.base.spec.evolution.operator.UpDownOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beastconfig.BEASTState;
 import java.util.List;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.phylospec.tiling.TypeToken;
 import popfunc.beast.evolution.populationmodel.GompertzGrowth_f0;
 import popfunc.beast.evolution.populationmodel.GompertzGrowth_t50;
@@ -23,10 +26,11 @@ import tiles.popfunc.PopFuncTileLibrary;
 
 public class PopFuncOperatorsTest {
 
-    @Test
-    public void addsOperatorsProvidedByGompertzF0() {
+    @ParameterizedTest(name = "explicitIntervals={0}")
+    @ValueSource(booleans = {false, true})
+    public void addsOperatorsProvidedByGompertzF0(boolean explicitIntervals) {
         GompertzGrowth_f0 model = gompertzF0();
-        BEASTState state = stateWithCoalescent(model);
+        BEASTState state = stateWithCoalescent(model, explicitIntervals);
         register(state, "f0", (StateNode) model.f0Input.get());
         register(state, "b", (StateNode) model.bInput.get());
 
@@ -39,15 +43,17 @@ public class PopFuncOperatorsTest {
                 state.operators.stream()
                         .filter(AdaptableVarianceMultivariateNormalOperator.class::isInstance)
                         .count());
+        assertOperatorsUseCoalescentTree(state);
     }
 
-    @Test
-    public void addsOperatorsForModelsInsideStochasticSelection() {
+    @ParameterizedTest(name = "explicitIntervals={0}")
+    @ValueSource(booleans = {false, true})
+    public void addsOperatorsForModelsInsideStochasticSelection(boolean explicitIntervals) {
         GompertzGrowth_f0 f0 = gompertzF0();
         GompertzGrowth_t50 t50 = gompertzT50();
         StochasticVariableSelection selection = new StochasticVariableSelection();
         selection.modelsInput.setValue(List.of(f0, t50), selection);
-        BEASTState state = stateWithCoalescent(selection);
+        BEASTState state = stateWithCoalescent(selection, explicitIntervals);
         register(state, "f0", (StateNode) f0.f0Input.get());
         register(state, "f0B", (StateNode) f0.bInput.get());
         register(state, "t50", (StateNode) t50.t50Input.get());
@@ -62,30 +68,51 @@ public class PopFuncOperatorsTest {
                 state.operators.stream()
                         .filter(AdaptableVarianceMultivariateNormalOperator.class::isInstance)
                         .count());
+        assertOperatorsUseCoalescentTree(state);
     }
 
-    @Test
-    public void skipsPackageOperatorsForFixedPopulationParameters() {
-        BEASTState state = stateWithCoalescent(gompertzF0());
+    @ParameterizedTest(name = "explicitIntervals={0}")
+    @ValueSource(booleans = {false, true})
+    public void skipsPackageOperatorsForFixedPopulationParameters(boolean explicitIntervals) {
+        BEASTState state = stateWithCoalescent(gompertzF0(), explicitIntervals);
 
         new PopFuncTileLibrary().configureState(state);
 
         assertEquals(0, state.operators.size());
     }
 
-    private static BEASTState stateWithCoalescent(PopulationFunction population) {
+    private static BEASTState stateWithCoalescent(PopulationFunction population, boolean explicitIntervals) {
         Tree tree = new Tree();
         tree.setID("tree");
         ((BEASTInterface) population).setID("population");
 
         Coalescent coalescent = new Coalescent();
         coalescent.popSizeInput.setValue(population, coalescent);
-        coalescent.treeInput.setValue(tree, coalescent);
+        if (explicitIntervals) {
+            TreeIntervals intervals = new TreeIntervals();
+            intervals.treeInput.setValue(tree, intervals);
+            coalescent.treeIntervalsInput.setValue(intervals, coalescent);
+        } else {
+            coalescent.treeInput.setValue(tree, coalescent);
+        }
 
         BEASTState state = new BEASTState("popfunc-operators");
         state.priorDistributions.put(tree, coalescent);
         register(state, "tree", tree);
         return state;
+    }
+
+    private static void assertOperatorsUseCoalescentTree(BEASTState state) {
+        Tree tree = (Tree) state.priorDistributions.keySet().iterator().next();
+        state.operators.stream()
+                .filter(UpDownOperator.class::isInstance)
+                .forEach(operator -> {
+                    List<StateNode> trees = operator.listStateNodes().stream()
+                            .filter(Tree.class::isInstance)
+                            .toList();
+                    assertEquals(1, trees.size());
+                    assertSame(tree, trees.getFirst());
+                });
     }
 
     private static void register(BEASTState state, String id, StateNode node) {
