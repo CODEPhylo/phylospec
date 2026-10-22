@@ -55,7 +55,10 @@ public final class PopFuncTileLibrary extends TileLibrary<BEASTState> {
             }
 
             PopulationFunction population = coalescent.popSizeInput.get();
-            if (!(coalescent.treeInput.get() instanceof Tree tree) || population == null) {
+            var treeInput = coalescent.treeIntervalsInput.get() == null
+                    ? coalescent.treeInput.get()
+                    : coalescent.treeIntervalsInput.get().treeInput.get();
+            if (!(treeInput instanceof Tree tree) || population == null) {
                 continue;
             }
 
