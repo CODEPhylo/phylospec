@@ -1,0 +1,31 @@
+use popfunc.functions.coalescent
+
+data {
+    Alignment data = fromNexus(file="data/four-taxa.nex")
+}
+
+model {
+    QMatrix qMatrix = jc69()
+    PositiveReal initialPopulationSize ~ LogNormal(logMean=5.0, logSd=0.5)
+    PositiveReal growthRate ~ LogNormal(logMean=-0.95, logSd=0.2)
+    Probability initialProportion ~ Beta(alpha=20.0, beta=7.0)
+    PositiveReal ancestralPopulationSize ~ LogNormal(logMean=3.0, logSd=0.3)
+    PopulationFunction populationSize = gompertzF0PopulationFunction(
+        initialProportion=initialProportion,
+        growthRate=growthRate,
+        initialPopulationSize=initialPopulationSize,
+        ancestralPopulationSize=ancestralPopulationSize
+    )
+    Tree tree ~ Coalescent(populationSize=populationSize, taxa=taxa(data))
+    Vector<Rate> branchRates ~ StrictClock(clockRate=0.01, tree=tree)
+    Alignment<Character> dataAlignment ~ PhyloCTMC(
+        tree=tree, qMatrix=qMatrix, branchRates=branchRates
+    ) observed as data
+}
+
+mcmc {
+    Integer chainLength = 30
+    Integer defaultLogEvery = 1
+    String outputPrefix = "analysis"
+    Integer randomSeed = 12345
+}
