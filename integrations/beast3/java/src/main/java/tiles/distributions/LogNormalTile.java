@@ -33,12 +33,19 @@ public class LogNormalTile
         beastState.setInput(distribution, distribution.MParameterInput, logMean);
         beastState.setInput(distribution, distribution.SParameterInput, logSd);
 
-        RealScalarParam<PositiveReal> defaultState = new RealScalarParam<>(0.5, PositiveReal.INSTANCE);
+        RealScalarParam<PositiveReal> defaultState =
+                new RealScalarParam<>(initialValue(logMean.get()), PositiveReal.INSTANCE);
 
         return new BoundDistribution<>(
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
                 OperatorSelector::getDefaultOperators);
+    }
+
+    /** Chooses the prior median as a starting value, within the positive finite double range. */
+    static double initialValue(double logMedian) {
+        // Only the initial value is bounded for numerical representability; the prior is unchanged.
+        return Math.max(Double.MIN_VALUE, Math.min(Double.MAX_VALUE, Math.exp(logMedian)));
     }
 }
