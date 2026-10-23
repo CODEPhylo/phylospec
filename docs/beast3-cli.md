@@ -68,6 +68,40 @@ file. Both run 30 steps with a fixed seed and log every 10 steps. They are
 installation checks, not chains long enough for posterior inference. Chain
 length, logging interval, and seed are defined in the script's `mcmc` block.
 
+### Primate HKY and Yule example
+
+Use the same launcher for the bundled HKY and Yule model:
+
+```sh
+"$PHYLOSPEC_DIR/bin/phylospec" check "$PHYLOSPEC_DIR/examples/hky-yule.phylospec"
+"$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_DIR/examples/hky-yule.phylospec" \
+  --out "$PWD/results/hky-yule-demo"
+```
+
+`examples/hky-yule.phylospec` uses `examples/data/primate-mtDNA.nex`: 12 primate
+taxa and 898 mitochondrial DNA sites, attributed in the Nexus file to Hayasaka,
+Gojobori and Horai (1988), *Molecular Biology and Evolution* 5:626–644.
+The example uses all sites as one partition; the file's charset declarations and
+PAUP constraints are not applied by this script.
+
+The sampled quantities are the tree, HKY `kappa`, and the four A/C/G/T base
+frequencies. Their priors are Yule with a fixed birth rate of `1.0`,
+`LogNormal(logMean=1.0, logSd=0.5)`, and `Dirichlet([1,1,1,1])`, respectively.
+The strict-clock rate is fixed at `1.0`; there is no absolute-time calibration,
+Gamma site-rate variation, or invariant-site component. This preserves the model
+from the existing HKY and Yule test example.
+
+Keep the script and its `data/` directory together when moving them. Its `mcmc`
+block explicitly sets 30 steps, seed `12345`, logging every step, and output prefix
+`hky-yule`. These short settings describe an analysis setup, not a converged
+posterior analysis. See the script for the complete model and parameter settings.
+The result directory contains `model.phylospec`, `run.json`, `console.log`, and
+`output/hky-yule.log`, `.trees`, and `.state.xml`. The trace records `kappa`, the
+four `baseFrequencies.1` through `.4` values in A/C/G/T order, tree summaries,
+and log posterior, log prior, and log likelihood. With these settings there are 31 logged
+states (0 through 30). A short chain need not update every coordinate; the four
+frequencies are sampled jointly as a simplex whose entries sum to one.
+
 ## Script locations and results
 
 Put your script wherever convenient. Keep any relative input files beside it in
@@ -163,7 +197,7 @@ uses the checked-in schema classes and leaves source formatting unchanged.
 The ZIP retains dependencies as separate JARs, including their embedded metadata.
 `LICENSE` covers PhyloSpec; dependencies retain their own licenses.
 
-A minimal acceptance pass checks help/version, runs both bundled examples from
+A minimal acceptance pass checks help/version, runs all three bundled examples from
 another working directory (including paths with spaces), verifies successful
 `run.json` and nonempty output files, rejects an existing output directory, and
 reports a missing input file clearly. Run the existing CLI regression tests as

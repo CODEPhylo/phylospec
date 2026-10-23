@@ -12,11 +12,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
+import javax.xml.parsers.DocumentBuilderFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
@@ -68,7 +72,9 @@ class CliDistributionIT {
                 "LICENSE",
                 "examples/normal.phylospec",
                 "examples/jc69-coalescent.phylospec",
-                "examples/data/tiny.nex")) {
+                "examples/hky-yule.phylospec",
+                "examples/data/tiny.nex",
+                "examples/data/primate-mtDNA.nex")) {
             assertTrue(Files.isRegularFile(installation.resolve(entry)), "Missing packaged file: " + entry);
         }
         try (var jars = Files.list(installation.resolve("lib"))) {
@@ -85,7 +91,7 @@ class CliDistributionIT {
         assertTrue(version.stdout().contains("BEAST runtime "), version.details());
         assertFalse(version.stdout().contains("unavailable"), version.details());
         assertFalse(version.stdout().contains("${"), version.details());
-        for (String example : List.of("normal", "jc69-coalescent")) {
+        for (String example : List.of("normal", "jc69-coalescent", "hky-yule")) {
             Result check = launch(
                     "check",
                     installation.resolve("examples/" + example + ".phylospec").toString());
@@ -97,6 +103,52 @@ class CliDistributionIT {
         assertTrue(
                 fileNames(workingDirectory).isEmpty(),
                 "check must not create analysis files in the invocation directory");
+    }
+
+    @Test
+    void packagedHkyYuleExampleRecordsSampledStateAndInputProvenance() throws Exception {
+        Path source = installation.resolve("examples/hky-yule.phylospec");
+        Path alignment = installation.resolve("examples/data/primate-mtDNA.nex");
+        assertEquals(Files.readString(Path.of("src/main/distribution/examples/hky-yule.phylospec")),
+                Files.readString(source));
+        assertEquals(hash(Path.of("src/main/distribution/examples/data/primate-mtDNA.nex")), hash(alignment));
+        Map<Path, String> before = hashes(source.getParent());
+        Path run = workingDirectory.resolve("HKY Yule results");
+        Result completed = launch("run", source.toString(), "--out", run.getFileName().toString());
+        assertEquals(0, completed.exitCode(), completed.details());
+        assertTrue(completed.stdout().contains("Run completed"), completed.details());
+        JsonNode record = assertSuccessfulRun(run, source);
+        assertEquals(1, record.path("settings").path("defaultLogEvery").asInt());
+        assertEquals(12345, record.path("settings").path("randomSeed").asLong());
+        assertEquals(12345, record.path("seeds").path("mcmc").path("observed").asLong());
+        assertEquals("output/hky-yule", record.path("settings").path("outputPrefix").asText());
+        assertEquals(source.toString(), record.path("source").path("path").asText());
+        assertEquals(1, record.path("inputs").size());
+        JsonNode input = record.path("inputs").get(0);
+        assertEquals(alignment.toString(), input.path("path").asText());
+        assertEquals("recorded", input.path("status").asText());
+        assertEquals(hash(alignment), input.path("sha256").asText());
+        assertEquals(3, record.path("expectedOutputs").size());
+        assertEquals(3, record.path("generatedOutputs").size());
+        assertEquals(1, record.path("libraries").size());
+        assertEquals("beast2", record.path("libraries").get(0).path("id").asText());
+
+        assertHkyTrace(run.resolve("output/hky-yule.log"));
+        String trees = Files.readString(run.resolve("output/hky-yule.trees"));
+        assertEquals(31, trees.lines().filter(line -> line.strip().startsWith("tree STATE_")).count());
+        assertTrue(trees.contains("tree STATE_30"));
+        var factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        var state = factory.newDocumentBuilder().parse(run.resolve("output/hky-yule.state.xml").toFile());
+        assertEquals("30", state.getDocumentElement().getAttribute("sample"));
+        var elements = state.getElementsByTagName("*");
+        Set<String> stateIds = new HashSet<>();
+        for (int index = 0; index < elements.getLength(); index++) {
+            var id = elements.item(index).getAttributes().getNamedItem("id");
+            if (id != null) stateIds.add(id.getNodeValue());
+        }
+        assertEquals(Set.of("tree", "kappa", "baseFrequencies"), stateIds);
+        assertEquals(before, hashes(source.getParent()), "run must leave the packaged examples unchanged");
     }
 
     @Test
@@ -212,6 +264,42 @@ class CliDistributionIT {
         }
         assertTrue(samples >= 2, "Expected multiple logged samples in " + trace);
         assertEquals(30, lastSample, "The short chain must reach its requested last sample");
+    }
+
+    private static void assertHkyTrace(Path trace) throws Exception {
+        List<String> lines = Files.readAllLines(trace).stream()
+                .map(String::strip)
+                .filter(line -> !line.isEmpty() && !line.startsWith("#"))
+                .toList();
+        List<String> columns = Arrays.asList(lines.getFirst().split("\\s+"));
+        assertTrue(columns.containsAll(List.of("posterior", "prior", "likelihood", "kappa", "tree.height", "tree.treeLength",
+                "baseFrequencies.1", "baseFrequencies.2", "baseFrequencies.3", "baseFrequencies.4")),
+                columns.toString());
+        assertEquals(32, lines.size(), "Header and samples 0 through 30 must be present");
+        for (int sample = 0; sample <= 30; sample++) {
+            String[] values = lines.get(sample + 1).split("\\s+");
+            assertEquals(columns.size(), values.length);
+            assertEquals(sample, Long.parseLong(values[0]));
+            assertEquals(
+                    Double.parseDouble(values[columns.indexOf("prior")])
+                            + Double.parseDouble(values[columns.indexOf("likelihood")]),
+                    Double.parseDouble(values[columns.indexOf("posterior")]),
+                    1e-8,
+                    "Posterior must equal prior plus likelihood at sample " + sample);
+            assertTrue(Double.parseDouble(values[columns.indexOf("kappa")]) > 0.0);
+            assertTrue(Double.parseDouble(values[columns.indexOf("tree.height")]) > 0.0);
+            assertTrue(Double.parseDouble(values[columns.indexOf("tree.treeLength")]) > 0.0);
+            double total = 0.0;
+            for (int base = 1; base <= 4; base++) {
+                double frequency = Double.parseDouble(values[columns.indexOf("baseFrequencies." + base)]);
+                assertTrue(frequency >= 0.0 && frequency <= 1.0);
+                total += frequency;
+            }
+            assertEquals(1.0, total, 1e-12, "Base frequencies must remain a simplex at sample " + sample);
+        }
+        // Sample 0 is logged after BEAST's first proposal. A short chain need not accept a
+        // change to every parameter; HkyYuleStateTest checks operator wiring and each parameter's
+        // accept/reject lifecycle independently of random operator selection.
     }
 
     private Result launch(String... arguments) throws Exception {
