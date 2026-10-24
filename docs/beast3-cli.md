@@ -6,55 +6,85 @@ and their Java dependencies. External model packages need their own PhyloSpec
 adapters. The examples below test a small supported workflow; they do not establish
 support for every model or constitute complete scientific analyses.
 
-## Install and check the launcher
+## First run: HKY and Yule
 
-1. Install Java **25** and check `java -version`. Set `JAVA_HOME` to its installation
-   directory, or make its `java` executable available on `PATH`.
-2. Obtain a CLI ZIP built from this repository and extract it to a writable
-   directory. No published release URL is assumed here. The unpacked directory
-   contains `bin/`, `lib/`, `examples/`, `USAGE.md`, and `LICENSE`.
-3. Run the launcher using its full path, or add the extracted `bin/` directory to
-   `PATH`. An unpacked distribution does not require Maven or a source checkout.
+Follow steps 1–4 in the **same terminal session** on macOS or Linux. The commands
+create separate installation and analysis directories under your home directory;
+`mktemp -d` gives each a unique name. The directory paths are printed below so you
+can find them later. Stop at any error before continuing to the next step.
 
-On macOS or Linux, replace the path below with the extracted directory:
+### 1. Install and check the launcher
+
+Install Java **25** and make it available on `PATH`. If `JAVA_HOME` is set, it must
+point to that Java installation: the launcher uses `JAVA_HOME` in preference to
+`PATH`. Obtain a CLI ZIP from the project maintainers, or follow
+[Build the distribution from source](#build-the-distribution-from-source).
+There is no published download URL assumed by this guide. Once you have the ZIP,
+running it does not require Maven or a source checkout.
+
+Set `PHYLOSPEC_ZIP` to your ZIP's actual location. These commands use the current
+`0.0.1-SNAPSHOT` distribution; change `PHYLOSPEC_VERSION` if your archive has a
+different version.
 
 ```sh
-PHYLOSPEC_DIR="/absolute/path/phylospec-beast3-0.0.1-SNAPSHOT"
+java -version
+PHYLOSPEC_VERSION="0.0.1-SNAPSHOT"
+PHYLOSPEC_ZIP="$HOME/Downloads/phylospec-beast3-$PHYLOSPEC_VERSION-cli.zip"
+PHYLOSPEC_INSTALL="$(mktemp -d "$HOME/phylospec-install.XXXXXX")"
+unzip "$PHYLOSPEC_ZIP" -d "$PHYLOSPEC_INSTALL"
+PHYLOSPEC_DIR="$PHYLOSPEC_INSTALL/phylospec-beast3-$PHYLOSPEC_VERSION"
+chmod +x "$PHYLOSPEC_DIR/bin/phylospec"
 "$PHYLOSPEC_DIR/bin/phylospec" --version
 "$PHYLOSPEC_DIR/bin/phylospec" --help
+printf 'Installation: %s\n' "$PHYLOSPEC_DIR"
 ```
 
-If the extraction tool did not preserve permissions, run
-`chmod +x "$PHYLOSPEC_DIR/bin/phylospec"` once. The launcher finds its own `lib/`
-directory, so commands can run from another working directory. Keep `bin/` and
-`lib/` together when moving the installation.
+`--version` should report PhyloSpec and the BEAST runtime; `--help` lists `check`
+and `run`. The installation contains `bin/`, `lib/`, `examples/`, `USAGE.md`, and
+`LICENSE`. Keep `bin/` and `lib/` together if you move it. No native accelerator
+is required for this example.
 
-On Windows, use Command Prompt:
+### 2. Prepare your script and data
 
-```bat
-set "PHYLOSPEC_DIR=C:\path\phylospec-beast3-0.0.1-SNAPSHOT"
-"%PHYLOSPEC_DIR%\bin\phylospec.cmd" --version
-"%PHYLOSPEC_DIR%\bin\phylospec.cmd" --help
-```
-
-The Windows launcher is supplied; actual platform testing must be reported
-separately. No native accelerator is required for these bundled examples.
-
-## Check and run an example
-
-Start with the small synthetic alignment example:
+Copy the bundled script and alignment into your own analysis directory:
 
 ```sh
-"$PHYLOSPEC_DIR/bin/phylospec" check "$PHYLOSPEC_DIR/examples/jc69-coalescent.phylospec"
-"$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_DIR/examples/jc69-coalescent.phylospec" \
-  --out "$PWD/results/jc69-demo"
+PHYLOSPEC_PROJECT="$(mktemp -d "$HOME/phylospec-hky-yule.XXXXXX")"
+mkdir "$PHYLOSPEC_PROJECT/data"
+cp "$PHYLOSPEC_DIR/examples/hky-yule.phylospec" "$PHYLOSPEC_PROJECT/hky-yule.phylospec"
+cp "$PHYLOSPEC_DIR/examples/data/primate-mtDNA.nex" "$PHYLOSPEC_PROJECT/data/primate-mtDNA.nex"
+cd "$PHYLOSPEC_PROJECT"
+printf 'Analysis directory: %s\n' "$PHYLOSPEC_PROJECT"
+ls -lh hky-yule.phylospec data/primate-mtDNA.nex
+cat hky-yule.phylospec
 ```
 
-Windows equivalents:
+Your files should have this layout:
 
-```bat
-"%PHYLOSPEC_DIR%\bin\phylospec.cmd" check "%PHYLOSPEC_DIR%\examples\jc69-coalescent.phylospec"
-"%PHYLOSPEC_DIR%\bin\phylospec.cmd" run "%PHYLOSPEC_DIR%\examples\jc69-coalescent.phylospec" --out "%CD%\results\jc69-demo"
+```text
+phylospec-hky-yule.<unique-name>/
+  hky-yule.phylospec
+  data/
+    primate-mtDNA.nex
+```
+
+The script reads `fromNexus("data/primate-mtDNA.nex")`. That path is relative to the
+**script's directory**, regardless of where the terminal is. Keep the script and
+`data/` together when moving your analysis. You can edit this copy in your text
+editor; no changes are needed for this first run.
+
+### 3. Check and run
+
+```sh
+"$PHYLOSPEC_DIR/bin/phylospec" check "$PHYLOSPEC_PROJECT/hky-yule.phylospec"
+```
+
+Continue when you see `Check passed`:
+
+```sh
+PHYLOSPEC_RUN="$PHYLOSPEC_PROJECT/results/run-01"
+"$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_PROJECT/hky-yule.phylospec" \
+  --out "$PHYLOSPEC_RUN"
 ```
 
 `check` validates syntax, static types, and available BEAST mappings. It does not
@@ -62,23 +92,65 @@ run MCMC or validate all data and native initialization. `run` reuses these chec
 builds the native model, and runs MCMC. Both default to the base library `beast2`
 (the existing internal ID for this BEAST integration).
 
-The example uses JC69, a constant-population coalescent, and an observed synthetic
-alignment. `normal.phylospec` is an even smaller prior-only example with no input
-file. Both run 30 steps with a fixed seed and log every 10 steps. They are
-installation checks, not chains long enough for posterior inference. Chain
-length, logging interval, and seed are defined in the script's `mcmc` block.
+`run` reports four stages: checking, model construction and initialization, MCMC,
+and output verification. Wait for `Run completed` and the result paths. If BEAGLE
+is unavailable, a note says BEAST will try its Java implementation; this note alone
+does not mean the run failed. Other warnings and errors remain visible.
 
-### Primate HKY and Yule example
+A failed run reports its error and, when available, the directory containing its
+run record and diagnostic log. It does not print `Run completed`. Check the reported
+script/data path and read `console.log` for details. `--debug` adds raw BEAST output
+and failure stack traces to the terminal.
 
-Use the same launcher for the bundled HKY and Yule model:
+### 4. View the results
 
 ```sh
-"$PHYLOSPEC_DIR/bin/phylospec" check "$PHYLOSPEC_DIR/examples/hky-yule.phylospec"
-"$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_DIR/examples/hky-yule.phylospec" \
-  --out "$PWD/results/hky-yule-demo"
+ls -lh "$PHYLOSPEC_RUN" "$PHYLOSPEC_RUN/output"
+head -n 12 "$PHYLOSPEC_RUN/run.json"
+head -n 6 "$PHYLOSPEC_RUN/output/hky-yule.log"
+tail -n 3 "$PHYLOSPEC_RUN/output/hky-yule.log"
 ```
 
-`examples/hky-yule.phylospec` uses `examples/data/primate-mtDNA.nex`: 12 primate
+In `run.json`, a successful run has `"status" : "succeeded"` and
+`"completionConfirmed" : true`. The trace's first line names the columns; subsequent
+lines are samples. For this script, expect **31 samples, numbered 0–30**, and 31
+trees. Column order can vary; identify quantities by their column names.
+
+| File inside `results/run-01/` | What it contains |
+| --- | --- |
+| `output/hky-yule.log` | Tab-separated samples: posterior, prior, likelihood, `kappa`, tree summaries, and four base frequencies. |
+| `output/hky-yule.trees` | Sampled trees in NEXUS format. |
+| `output/hky-yule.state.xml` | Final MCMC state. The CLI does not yet provide a resume command. |
+| `run.json` | Run status, effective settings, seed, input references, and output paths. |
+| `console.log` | Java/BEAST console output, including original diagnostic messages and failure details. |
+| `model.phylospec` | Snapshot of the script actually used. Input data are not copied into the result directory. |
+
+To inspect the diagnostic log:
+
+```sh
+tail -n 30 "$PHYLOSPEC_RUN/console.log"
+```
+
+The example runs **30 MCMC steps with seed 12345 and logs every step**. This verifies
+the setup and produces inspectable results; it does not establish convergence or
+provide enough samples for scientific conclusions. Chain length, logging interval,
+seed, and the `hky-yule` output prefix are in the script's `mcmc` block.
+
+To run again, choose a new result directory. Existing results are never overwritten:
+
+```sh
+PHYLOSPEC_RUN="$PHYLOSPEC_PROJECT/results/run-02"
+"$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_PROJECT/hky-yule.phylospec" \
+  --out "$PHYLOSPEC_RUN"
+```
+
+Use another unused name for later runs. In a new terminal session, set
+`PHYLOSPEC_DIR` and `PHYLOSPEC_PROJECT` to the printed installation and analysis
+paths, then set `PHYLOSPEC_RUN` to the result directory you want to inspect.
+
+### What this example models
+
+`hky-yule.phylospec` uses `data/primate-mtDNA.nex`: 12 primate
 taxa and 898 mitochondrial DNA sites, attributed in the Nexus file to Hayasaka,
 Gojobori and Horai (1988), *Molecular Biology and Evolution* 5:626–644.
 The example uses all sites as one partition; the file's charset declarations and
@@ -91,16 +163,36 @@ The strict-clock rate is fixed at `1.0`; there is no absolute-time calibration,
 Gamma site-rate variation, or invariant-site component. This preserves the model
 from the existing HKY and Yule test example.
 
-Keep the script and its `data/` directory together when moving them. Its `mcmc`
-block explicitly sets 30 steps, seed `12345`, logging every step, and output prefix
-`hky-yule`. These short settings describe an analysis setup, not a converged
-posterior analysis. See the script for the complete model and parameter settings.
-The result directory contains `model.phylospec`, `run.json`, `console.log`, and
-`output/hky-yule.log`, `.trees`, and `.state.xml`. The trace records `kappa`, the
-four `baseFrequencies.1` through `.4` values in A/C/G/T order, tree summaries,
-and log posterior, log prior, and log likelihood. With these settings there are 31 logged
-states (0 through 30). A short chain need not update every coordinate; the four
-frequencies are sampled jointly as a simplex whose entries sum to one.
+The trace's `baseFrequencies.1` through `.4` columns correspond to A/C/G/T,
+respectively. A short chain need not update every coordinate; the four frequencies
+are sampled jointly as a simplex whose entries sum to one.
+
+## Other quick examples and Windows launcher
+
+`jc69-coalescent.phylospec` uses JC69, a constant-population coalescent, and a
+synthetic alignment. `normal.phylospec` is a prior-only example with no input file.
+Both run 30 steps with a fixed seed and log every 10 steps. To try JC69 with the
+same installation:
+
+```sh
+"$PHYLOSPEC_DIR/bin/phylospec" check "$PHYLOSPEC_DIR/examples/jc69-coalescent.phylospec"
+"$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_DIR/examples/jc69-coalescent.phylospec" \
+  --out "$PHYLOSPEC_PROJECT/results/jc69-demo"
+```
+
+The Windows launcher is supplied; Windows execution needs its own platform
+validation. The tutorial above uses macOS/Linux shell syntax. After extracting
+the ZIP and copying the script and `data/` to an analysis folder, the equivalent
+Command Prompt commands are:
+
+```bat
+set "PHYLOSPEC_DIR=C:\path\phylospec-beast3-0.0.1-SNAPSHOT"
+set "PHYLOSPEC_PROJECT=C:\path\my-hky-analysis"
+"%PHYLOSPEC_DIR%\bin\phylospec.cmd" --version
+"%PHYLOSPEC_DIR%\bin\phylospec.cmd" --help
+"%PHYLOSPEC_DIR%\bin\phylospec.cmd" check "%PHYLOSPEC_PROJECT%\hky-yule.phylospec"
+"%PHYLOSPEC_DIR%\bin\phylospec.cmd" run "%PHYLOSPEC_PROJECT%\hky-yule.phylospec" --out "%PHYLOSPEC_PROJECT%\results\run-01"
+```
 
 ## Script locations and results
 
@@ -113,23 +205,31 @@ working directory. It must be absent or empty; an existing run is never overwrit
 Choose a new directory for another run. Without `--out`, the default is
 `runs/<script-name>-<unique-id>/` beside the script.
 
-For the example above, a successful run produces:
+For the HKY tutorial's first run, a successful run produces:
 
 ```text
-results/jc69-demo/
+results/run-01/
   model.phylospec
   run.json
   console.log
   output/
-    jc69-coalescent.log
-    jc69-coalescent.trees
-    jc69-coalescent.state.xml
+    hky-yule.log
+    hky-yule.trees
+    hky-yule.state.xml
 ```
 
 The snapshot is the source actually read; input data are not copied. `run.json`
 records source/input hashes, runtime and adapter information, effective settings,
 seeds, status, and expected/generated files. `console.log` retains console output
 and failure details. Native trace, tree, and state files stay in `output/`.
+
+The terminal omits BEAST's routine object-wrapping diagnostics and explains an
+unavailable optional BEAGLE accelerator as a Java fallback attempt. These original
+messages remain in `console.log`; other warnings and errors remain visible.
+`--debug` also shows the unfiltered BEAST output. The launchers explicitly enable
+the JNI access used by optional acceleration; they do not require BEAGLE to be installed.
+`console.log` captures Java/BEAST console streams, not low-level JVM or native-library
+writes directly to the operating system's stderr.
 
 `--run-name` changes the relative output prefix. A script `outputPrefix` overrides
 it. Explicit logger filenames also resolve inside `output/`; absolute paths and
