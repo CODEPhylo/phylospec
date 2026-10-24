@@ -34,7 +34,9 @@ public class LogNormalRealSpaceTile
         beastState.setInput(distribution, distribution.SParameterInput, logSd);
         beastState.setInput(distribution, distribution.hasMeanInRealSpaceInput, true);
 
-        RealScalarParam<PositiveReal> defaultState = new RealScalarParam<>(0.5, PositiveReal.INSTANCE);
+        double logMedian = Math.log(mean.get()) - 0.5 * logSd.get() * logSd.get();
+        RealScalarParam<PositiveReal> defaultState =
+                new RealScalarParam<>(LogNormalTile.initialValue(logMedian), PositiveReal.INSTANCE);
 
         return new BoundDistribution<>(
                 distribution,
