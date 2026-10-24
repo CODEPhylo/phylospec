@@ -1,0 +1,40 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -14,7 +14,7 @@
+ message(STATUS "BEAGLE_VERSION = ${BEAGLE_VERSION}")
+ message(STATUS "BEAGLE_PLUGIN_VERSION = ${BEAGLE_PLUGIN_VERSION}")
+ 
+-set(BEAGLE_OPTIMIZE_FOR_NATIVE_ARCH true)
++set(BEAGLE_OPTIMIZE_FOR_NATIVE_ARCH false)
+ 
+ option(BUILD_OPENCL "Build beagle with OpenCL library" ON)
+ option(BUILD_CUDA "Build beagle with CUDA library" ON)
+@@ -110,14 +110,14 @@
+ 	set(BEAGLE_OSX_NATIVE_ARCHITECTURE ${CMAKE_HOST_SYSTEM_PROCESSOR})
+ 
+ 	if(BEAGLE_OSX_NATIVE_ARCHITECTURE STREQUAL "arm64")
+-		set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+-		message(STATUS "macOS universal (x86_64 / arm64) build")
++		set(CMAKE_OSX_ARCHITECTURES "arm64")
++		message(STATUS "macOS arm64 build")
+ 	else()
+ 		message(STATUS "macOS x86_64 build")
+ 	endif()
+ 
+ 	# Seems necessary from macOS 10.15
+-	set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
++	set(CMAKE_INSTALL_RPATH "@loader_path")
+ endif(APPLE)
+ 
+ if (BEAGLE_OPTIMIZE_FOR_NATIVE_ARCH)
+--- a/libhmsbeagle/plugin/UnixSharedLibrary.h
++++ b/libhmsbeagle/plugin/UnixSharedLibrary.h
+@@ -38,7 +38,7 @@
+ UnixSharedLibrary::UnixSharedLibrary(const char* name)
+     : m_handle(0)
+ {
+-    std::string libname = "lib";
++    std::string libname = "@loader_path/lib";
+     libname += name;
+ #ifdef DLS_MACOS
+     libname += ".";

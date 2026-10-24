@@ -33,6 +33,7 @@ import org.junit.jupiter.api.io.TempDir;
         disabledReason = "POSIX archive acceptance; Windows launcher needs Windows verification")
 class CliDistributionIT {
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final boolean BUNDLED_BEAGLE = Boolean.getBoolean("phylospec.test.beagle");
 
     @TempDir
     Path temporary;
@@ -58,6 +59,14 @@ class CliDistributionIT {
             List<Path> roots = entries.toList();
             assertEquals(1, roots.size(), "Archive should contain one installation directory");
             installation = roots.getFirst();
+        }
+        if (BUNDLED_BEAGLE) {
+            // Remove the original location before launching: no baked-in build/extraction path may work.
+            installation = Files.move(installation, temporary.resolve("moved installation with spaces")).toRealPath();
+            for (String file : List.of("libhmsbeagle-jni.jnilib", "libhmsbeagle.1.dylib", "libhmsbeagle-cpu.40.so",
+                    "BEAGLE-LICENSE.txt", "beagle-build.properties")) {
+                assertTrue(Files.isRegularFile(installation.resolve("native/macos-arm64").resolve(file)), file);
+            }
         }
         assertTrue(
                 Files.isExecutable(installation.resolve("bin/phylospec")),
@@ -136,6 +145,17 @@ class CliDistributionIT {
             assertTrue(completed.stderr().contains("optional BEAGLE"), completed.details());
         }
         JsonNode record = assertSuccessfulRun(run, source);
+        JsonNode backends = record.path("runtime").path("likelihoodBackends");
+        assertEquals(1, backends.size(), record.toPrettyString());
+        if (BUNDLED_BEAGLE) {
+            JsonNode backend = backends.get(0);
+            assertEquals("BEAGLE", backend.path("implementation").asText(), record.toPrettyString());
+            assertTrue(backend.path("version").asText().startsWith("4.0.1"), record.toPrettyString());
+            assertEquals(0, backend.path("resourceNumber").asInt(-1), record.toPrettyString());
+            assertTrue(backend.path("resourceFlags").asText().contains("PROCESSOR_CPU"), record.toPrettyString());
+            assertTrue(completed.stdout().contains(": BEAGLE "), completed.details());
+            assertFalse(console.contains("Failed to load BEAGLE library:"), console);
+        }
         assertEquals(1, record.path("settings").path("defaultLogEvery").asInt());
         assertEquals(12345, record.path("settings").path("randomSeed").asLong());
         assertEquals(12345, record.path("seeds").path("mcmc").path("observed").asLong());
@@ -167,6 +187,16 @@ class CliDistributionIT {
         }
         assertEquals(Set.of("tree", "kappa", "baseFrequencies"), stateIds);
         assertEquals(before, hashes(source.getParent()), "run must leave the packaged examples unchanged");
+        if (BUNDLED_BEAGLE) {
+            // A damaged bundled install must not pass acceptance using a system BEAGLE instead.
+            Files.delete(installation.resolve("native/macos-arm64/libhmsbeagle-cpu.40.so"));
+            Path brokenRun = workingDirectory.resolve("broken native result");
+            Result broken = launch("run", source.toString(), "--out", brokenRun.toString());
+            assertNotEquals(0, broken.exitCode(), broken.details());
+            assertTrue(broken.stderr().contains("Bundled BEAGLE library is missing"), broken.details());
+            assertFalse(broken.stdout().contains("Run completed"), broken.details());
+            assertFalse(Files.exists(brokenRun));
+        }
     }
 
     @Test
@@ -335,9 +365,12 @@ class CliDistributionIT {
                 .redirectOutput(stdout.toFile())
                 .redirectError(stderr.toFile());
         builder.environment().put("JAVA_HOME", System.getProperty("java.home"));
-        for (String name : List.of("CLASSPATH", "JAVA_TOOL_OPTIONS", "JDK_JAVA_OPTIONS", "_JAVA_OPTIONS")) {
+        for (String name : List.of("CLASSPATH", "JAVA_TOOL_OPTIONS", "JDK_JAVA_OPTIONS", "_JAVA_OPTIONS",
+                "BEAGLE_LIB", "BEAGLE_PLUGIN_PATH", "PHYLOSPEC_BEAGLE_HOME",
+                "DYLD_LIBRARY_PATH", "DYLD_FALLBACK_LIBRARY_PATH", "LD_LIBRARY_PATH")) {
             builder.environment().remove(name);
         }
+        if (BUNDLED_BEAGLE) builder.environment().put("PATH", "/usr/bin:/bin:/usr/sbin:/sbin");
         Process child = builder.start();
         try {
             assertTrue(child.waitFor(90, TimeUnit.SECONDS), "Timed out: " + String.join(" ", command));
