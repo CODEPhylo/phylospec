@@ -17,6 +17,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class RunConsoleTest {
 
@@ -80,6 +82,106 @@ class RunConsoleTest {
     }
 
     @Test
+    void filtersKnownNativeChatterButPreservesWarningsErrorsAndOriginalLog(@TempDir Path directory) throws Exception {
+        try (SavedStreams saved = SavedStreams.current()) {
+            ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+            ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+            PrintStream originalOut = new PrintStream(stdout, true, StandardCharsets.UTF_8);
+            PrintStream originalErr = new PrintStream(stderr, true, StandardCharsets.UTF_8);
+            install(originalOut, originalErr);
+            Path log = directory.resolve("console.log");
+            String completeBlock = "BEASTObjectStore found non-BEASTObject:\n"
+                    + "java.lang.Double false beast.base.core.BEASTObject false\n"
+                    + "java.lang.Number false beast.base.core.BEASTObject false\n"
+                    + "java.lang.Object false beast.base.core.BEASTObject false\n";
+            String interruptedBlock = "BEASTObjectStore found non-BEASTObject:\n"
+                    + "java.util.ArrayList false beast.base.core.BEASTObject false\n";
+            String warning = "WARNING: state contains a node without an operator.\n";
+            String error = "Likelihood incorrectly calculated: -10 != -20\n";
+            String unrelatedClass = "java.lang.Double false beast.base.core.BEASTObject false\n";
+            String optionalBeagle = "Failed to load BEAGLE library: no hmsbeagle-jni in java.library.path\n";
+
+            try (RunConsole console = RunConsole.open(log, false)) {
+                assertSame(System.out, Log.info);
+                assertSame(System.err, Log.err);
+                assertSame(System.err, Log.warning);
+                assertSame(Log.nullStream, Log.debug);
+                System.err.print(completeBlock);
+                System.err.print(unrelatedClass);
+                Log.warning.print(warning);
+                System.err.print(interruptedBlock);
+                Log.err.print(error);
+                System.err.print(unrelatedClass);
+                System.err.print(optionalBeagle);
+                System.err.print("Another BEAGLE error must remain visible.\n");
+                System.out.print("MCMC information\n");
+                console.verify();
+            }
+
+            assertSame(originalOut, System.out);
+            assertSame(originalErr, System.err);
+            assertSame(originalErr, Log.warning);
+            assertEquals("MCMC information\n", stdout.toString(StandardCharsets.UTF_8));
+            assertEquals(
+                    unrelatedClass + warning + error + unrelatedClass
+                            + "Note: optional BEAGLE acceleration is unavailable; BEAST will try its Java implementation. "
+                            + "Details: " + log + "\nAnother BEAGLE error must remain visible.\n",
+                    stderr.toString(StandardCharsets.UTF_8));
+            assertEquals(
+                    completeBlock + unrelatedClass + warning + interruptedBlock + error + unrelatedClass
+                            + optionalBeagle + "Another BEAGLE error must remain visible.\nMCMC information\n",
+                    Files.readString(log));
+        }
+    }
+
+    @Test
+    void filteredConsolePreservesSplitUnicodeLongAndPartialLines(@TempDir Path directory) throws Exception {
+        try (SavedStreams saved = SavedStreams.current()) {
+            ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+            install(
+                    new PrintStream(new ByteArrayOutputStream()),
+                    new PrintStream(stderr, true, StandardCharsets.UTF_8));
+            Path log = directory.resolve("console.log");
+            String block = "BEASTObjectStore found non-BEASTObject:\r\n"
+                    + "java.lang.Object false beast.base.core.BEASTObject false\r\n";
+            String unicode = "Warning: 参数错误 — κ 必须为正。\r\n";
+            String longLine = "Failed to load BEAGLE library: " + "x".repeat(20_000) + "\r\n";
+            String partial = "BEASTObjectStore found non-BEASTObject:";
+            String original = block + unicode + longLine + partial;
+
+            try (RunConsole console = RunConsole.open(log, false)) {
+                // Includes split CRLF endings and multi-byte UTF-8 characters, with auto-flush between writes.
+                for (byte value : (block + unicode).getBytes(StandardCharsets.UTF_8)) {
+                    System.err.write(new byte[] {value}, 0, 1);
+                }
+                System.err.print(longLine);
+                System.err.print(partial);
+                console.verify();
+            }
+
+            assertEquals(unicode + longLine + partial, stderr.toString(StandardCharsets.UTF_8));
+            assertEquals(original, Files.readString(log));
+        }
+    }
+
+    @Test
+    void rawConsoleOptOutKeepsNativeMessagesUnchanged(@TempDir Path directory) throws Exception {
+        try (SavedStreams saved = SavedStreams.current()) {
+            ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+            install(new PrintStream(new ByteArrayOutputStream()), new PrintStream(stderr));
+            Path log = directory.resolve("console.log");
+            String original = "BEASTObjectStore found non-BEASTObject:\n"
+                    + "java.lang.Object false beast.base.core.BEASTObject false\n"
+                    + "Failed to load BEAGLE library: optional native library missing\n";
+            try (RunConsole console = RunConsole.open(log, true)) {
+                System.err.print(original);
+            }
+            assertEquals(original, stderr.toString(StandardCharsets.UTF_8));
+            assertEquals(original, Files.readString(log));
+        }
+    }
+
+    @Test
     void rejectsNestedCaptureAndDoesNotOverwriteAnExistingLog(@TempDir Path directory) throws Exception {
         Path first = directory.resolve("first.log");
         try (RunConsole console = RunConsole.open(first)) {
@@ -96,11 +198,13 @@ class RunConsoleTest {
         }
     }
 
-    @Test
-    void verifiesSuppressedStreamErrorsAndRestoresStreamsOnFailure(@TempDir Path directory) throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void verifiesSuppressedStreamErrorsAndRestoresStreamsOnFailure(boolean rawConsole, @TempDir Path directory)
+            throws Exception {
         PrintStream originalOut = System.out;
         PrintStream originalErr = System.err;
-        RunConsole console = RunConsole.open(directory.resolve("console.log"));
+        RunConsole console = RunConsole.open(directory.resolve("console.log"), rawConsole);
         try {
             console.out().close();
             console.out().println("cannot be written");
@@ -117,12 +221,13 @@ class RunConsoleTest {
         }
     }
 
-    @Test
-    void serializesConcurrentConsoleWrites(@TempDir Path directory) throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void serializesConcurrentConsoleWrites(boolean rawConsole, @TempDir Path directory) throws Exception {
         try (SavedStreams saved = SavedStreams.current()) {
             install(new PrintStream(new ByteArrayOutputStream()), new PrintStream(new ByteArrayOutputStream()));
             Path log = directory.resolve("console.log");
-            try (RunConsole console = RunConsole.open(log);
+            try (RunConsole console = RunConsole.open(log, rawConsole);
                     var workers = Executors.newFixedThreadPool(2)) {
                 var stdout = workers.submit(() -> {
                     for (int index = 0; index < 100; index++) System.out.println("out-" + index);

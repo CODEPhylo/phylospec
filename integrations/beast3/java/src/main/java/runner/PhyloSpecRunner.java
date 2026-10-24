@@ -189,12 +189,25 @@ public class PhyloSpecRunner {
     public void runPhyloSpec(String runName, Consumer<PhyloSpecDiagnostic> warningHandler)
             throws IOException, ParserConfigurationException, SAXException {
         CheckedModel checked = check(warningHandler);
-        runChecked(checked, new BEASTState(runName, sourceDirectory), null, () -> false);
+        runChecked(checked, new BEASTState(runName, sourceDirectory), null, () -> false, message -> {});
     }
 
     /** Runs with isolated output paths; the original source directory remains the input base. */
     public void runManaged(String runName, Path runDirectory, Consumer<PhyloSpecDiagnostic> warningHandler)
             throws IOException, ParserConfigurationException, SAXException {
+        runManaged(runName, runDirectory, warningHandler, message -> {}, true);
+    }
+
+    /** CLI feedback is optional; existing Java callers retain their original console behavior. */
+    RunRecord runManaged(
+            String runName,
+            Path runDirectory,
+            Consumer<PhyloSpecDiagnostic> warningHandler,
+            Consumer<String> progress,
+            boolean rawConsole)
+            throws IOException, ParserConfigurationException, SAXException {
+        String checking = "[1/4] Checking syntax, static types and BEAST 3 mappings...";
+        progress.accept(checking);
         CheckedModel checked = check(warningHandler);
         OutputPaths.checkRuntimeOverrides();
         // Reject an invalid CLI prefix before claiming a directory.
@@ -221,7 +234,12 @@ public class PhyloSpecRunner {
         try {
             Runtime.getRuntime().addShutdownHook(shutdown);
             hookRegistered = true;
-            try (RunConsole console = RunConsole.open(runDirectory.resolve("console.log"))) {
+            try (RunConsole console = RunConsole.open(runDirectory.resolve("console.log"), rawConsole)) {
+                console.log().println(checking);
+                Consumer<String> report = message -> {
+                    console.log().println(message);
+                    progress.accept(message);
+                };
                 record.warnings(checked.warnings);
                 checked.warnings.forEach(warning -> console.log().println(warning.format()));
                 BEASTState state = new BEASTState(runName, sourceDirectory, outputDirectory);
@@ -232,7 +250,7 @@ public class PhyloSpecRunner {
                         throw new UncheckedIOException("Could not record an input file.", error);
                     }
                 });
-                runChecked(checked, state, record, cancellationRequested::get);
+                runChecked(checked, state, record, cancellationRequested::get, report);
                 console.log().println("Execution and basic output checks completed.");
                 console.verify();
             }
@@ -240,6 +258,7 @@ public class PhyloSpecRunner {
                 throw new CancellationException("The managed run was interrupted before completion was recorded.");
             }
             record.succeeded();
+            return record;
         } catch (IOException
                 | ParserConfigurationException
                 | SAXException
@@ -279,8 +298,10 @@ public class PhyloSpecRunner {
             CheckedModel checked,
             BEASTState beastState,
             RunRecord record,
-            java.util.function.BooleanSupplier cancellationRequested)
+            java.util.function.BooleanSupplier cancellationRequested,
+            Consumer<String> progress)
             throws IOException, ParserConfigurationException, SAXException {
+        progress.accept("[2/4] Building and initializing the BEAST 3 model...");
         // Native inputs can initialize randomly during tile application, before the MCMC is built.
         Long scriptSeed = declaredSeed(checked.statements);
         Long constructionSeed = scriptSeed;
@@ -365,8 +386,10 @@ public class PhyloSpecRunner {
                 beastState.initializeBEASTObjects();
                 managed.checkCancellation();
                 record.running();
+                progress.accept("[3/4] Running MCMC (chain length: " + beastState.chainLength + ")...");
                 managed.run();
                 managed.checkCancellation();
+                progress.accept("[4/4] Checking result files and final state...");
                 managed.verifyLogs();
                 verifyOutputs(loggers, Path.of(stateFile), beastState.chainLength);
             } catch (IOException

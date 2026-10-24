@@ -222,6 +222,19 @@ final class RunRecord {
         return data.path("completionConfirmed").asBoolean();
     }
 
+    /** Actual logger and state paths, including user-specified filenames. */
+    synchronized List<OutputFile> outputFiles() {
+        var outputs = new java.util.ArrayList<OutputFile>();
+        for (var entry : data.withArray("expectedOutputs")) {
+            outputs.add(new OutputFile(
+                    entry.path("kind").asText(),
+                    directory.resolve(entry.path("path").asText())));
+        }
+        return List.copyOf(outputs);
+    }
+
+    record OutputFile(String kind, Path path) {}
+
     private void finish(String status, Throwable failure) throws IOException {
         if (isTerminal()) return;
         ObjectNode next = data.deepCopy();

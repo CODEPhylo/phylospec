@@ -60,4 +60,5 @@ case "$phylospec_major" in
 esac
 [ "$phylospec_major" -ge 25 ] || fail "Java 25 or newer is required; found $phylospec_version. Set JAVA_HOME or update java on PATH."
 
-exec "$phylospec_java" -cp "$phylospec_home/lib/*" runner.PhyloSpecCli "$@"
+# BEAGLE may load JNI acceleration; explicitly allow this existing optional native call.
+exec "$phylospec_java" --enable-native-access=ALL-UNNAMED -cp "$phylospec_home/lib/*" runner.PhyloSpecCli "$@"

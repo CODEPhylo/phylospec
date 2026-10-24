@@ -117,6 +117,24 @@ class CliDistributionIT {
         Result completed = launch("run", source.toString(), "--out", run.getFileName().toString());
         assertEquals(0, completed.exitCode(), completed.details());
         assertTrue(completed.stdout().contains("Run completed"), completed.details());
+        assertTrue(completed.stdout().contains("[3/4] Running MCMC (chain length: 30)"), completed.details());
+        assertTrue(completed.stdout().contains("[4/4] Checking result files and final state"), completed.details());
+        for (String filename : List.of("hky-yule.log", "hky-yule.trees", "hky-yule.state.xml")) {
+            assertTrue(
+                    completed
+                            .stdout()
+                            .contains(run.resolve("output").resolve(filename).toString()),
+                    completed.details());
+        }
+        String console = Files.readString(run.resolve("console.log"));
+        assertFalse(completed.stderr().contains("BEASTObjectStore found non-BEASTObject:"), completed.details());
+        assertFalse(completed.stderr().contains("Failed to load BEAGLE library:"), completed.details());
+        assertFalse(
+                completed.stderr().contains("A restricted method in java.lang.System has been called"),
+                completed.details());
+        if (console.contains("Failed to load BEAGLE library:")) {
+            assertTrue(completed.stderr().contains("optional BEAGLE"), completed.details());
+        }
         JsonNode record = assertSuccessfulRun(run, source);
         assertEquals(1, record.path("settings").path("defaultLogEvery").asInt());
         assertEquals(12345, record.path("settings").path("randomSeed").asLong());

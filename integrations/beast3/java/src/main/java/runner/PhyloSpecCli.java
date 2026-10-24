@@ -38,7 +38,7 @@ public final class PhyloSpecCli {
               --adapter-path <dir>   check/run: unpacked local adapter bundle (repeatable)
               --out <directory>      Run only: exact run directory (must be absent or empty)
               --run-name <prefix>    Run only: relative output prefix (default: script name)
-              --debug                Include stack traces when checking or execution fails
+              --debug                Show raw BEAST console output and failure stack traces
               -h, --help              Show this help
               --version              Show PhyloSpec and loaded BEAST runtime versions
               --                     Treat remaining arguments as file names
@@ -139,6 +139,9 @@ public final class PhyloSpecCli {
             }
             out.println("Check passed (engine: beast3; libraries: " + String.join(",", options.libraries())
                     + "). No MCMC was run.");
+            out.println("Checked: syntax, static types and available BEAST 3 mappings.");
+            out.println("Not checked: complete input-data validity, native model initialization or MCMC convergence.");
+            out.println("Next: use 'phylospec run' with the same script and library/adapter options.");
             return;
         }
 
@@ -148,14 +151,29 @@ public final class PhyloSpecCli {
                     ? source.getParent().resolve("runs").resolve(scriptName + "-" + UUID.randomUUID())
                     : options.outputDirectory().toAbsolutePath().normalize();
             String runName = options.runName() == null ? scriptName : options.runName();
+            RunRecord record;
             try {
-                runner.runManaged(runName, runDirectory, warningHandler);
+                record = runner.runManaged(runName, runDirectory, warningHandler, out::println, options.debug());
             } finally {
                 if (Files.isRegularFile(runDirectory.resolve("run.json"))) {
                     out.println("Results directory: " + runDirectory);
+                    out.println("Run record: " + runDirectory.resolve("run.json"));
+                    if (Files.isRegularFile(runDirectory.resolve("console.log"))) {
+                        out.println("BEAST console log: " + runDirectory.resolve("console.log"));
+                    }
                 }
             }
             out.println("Run completed (engine: beast3; libraries: " + String.join(",", options.libraries()) + ").");
+            for (var file : record.outputFiles()) {
+                String label =
+                        switch (file.kind()) {
+                            case "tree" -> "Trees";
+                            case "state" -> "Final state";
+                            default -> "Trace/log";
+                        };
+                out.println(label + ": " + file.path());
+            }
+            out.println("Execution and output checks succeeded; MCMC convergence has not been assessed.");
             return;
         }
 

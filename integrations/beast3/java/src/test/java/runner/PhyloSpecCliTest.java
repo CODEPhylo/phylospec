@@ -174,6 +174,9 @@ public class PhyloSpecCliTest {
         assertEquals(0, result.exitCode(), result.stderr());
         assertTrue(result.stdout().contains("libraries: beast2"));
         assertTrue(result.stdout().contains("No MCMC was run."));
+        assertTrue(result.stdout().contains("Checked: syntax, static types and available BEAST 3 mappings."));
+        assertTrue(result.stdout().contains("Not checked: complete input-data validity, native model initialization"));
+        assertTrue(result.stdout().contains("use 'phylospec run'"));
         try (var files = Files.list(directory)) {
             assertEquals(List.of(source), files.toList());
         }
@@ -195,7 +198,14 @@ public class PhyloSpecCliTest {
             assertEquals(1, occurrences(failure.stderr(), "Please note:"));
             assertEquals(1, occurrences(failure.stderr(), "There is a problem:"));
             assertFalse(failure.stderr().contains("Usage:"));
-            assertTrue(failure.stdout().isEmpty());
+            if (command.equals("check")) {
+                assertTrue(failure.stdout().isEmpty());
+            } else {
+                assertEquals(
+                        "[1/4] Checking syntax, static types and BEAST 3 mappings..." + System.lineSeparator(),
+                        failure.stdout());
+                assertFalse(Files.exists(directory.resolve("runs")));
+            }
         }
     }
 
@@ -239,6 +249,14 @@ public class PhyloSpecCliTest {
         assertEquals(0, failed.path("generatedOutputs").size());
         assertEquals(Files.readString(source), Files.readString(normalRun.resolve("model.phylospec")));
         assertTrue(Files.readString(normalRun.resolve("console.log")).contains("runner.PhyloSpecException"));
+        for (CliResult failure : List.of(normal, debug)) {
+            assertTrue(failure.stdout().contains("[2/4] Building and initializing"));
+            assertFalse(failure.stdout().contains("[3/4]"));
+            assertFalse(failure.stdout().contains("[4/4]"));
+            assertFalse(failure.stdout().contains("Run completed"));
+            assertFalse(failure.stdout().contains("Final state:"));
+            assertTrue(failure.stdout().contains("BEAST console log:"));
+        }
     }
 
     @Test
@@ -331,6 +349,9 @@ public class PhyloSpecCliTest {
         assertTrace(run.resolve("output/traces/custom.log"));
         assertTrue(Files.readString(run.resolve("output/trees/custom.trees")).contains("STATE_30"));
         assertTrue(Files.size(run.resolve("output/state/my analysis.state.xml")) > 0);
+        assertTrue(result.stdout().contains("Trace/log: " + run.resolve("output/traces/custom.log")));
+        assertTrue(result.stdout().contains("Trees: " + run.resolve("output/trees/custom.trees")));
+        assertTrue(result.stdout().contains("Final state: " + run.resolve("output/state/my analysis.state.xml")));
         try (var paths = Files.walk(run.resolve("output"))) {
             assertEquals(3, paths.filter(Files::isRegularFile).count());
         }
@@ -505,6 +526,22 @@ public class PhyloSpecCliTest {
         String console = Files.readString(run.resolve("console.log"));
         assertTrue(console.contains("Total calculation time"), console);
         assertTrue(console.contains("End likelihood"), console);
+        for (String text : List.of(result.stdout(), console)) {
+            int previous = -1;
+            for (String phase : List.of(
+                    "[1/4] Checking",
+                    "[2/4] Building and initializing",
+                    "[3/4] Running MCMC",
+                    "[4/4] Checking result")) {
+                int position = text.indexOf(phase);
+                assertTrue(position > previous, text);
+                assertEquals(position, text.lastIndexOf(phase), text);
+                previous = position;
+            }
+        }
+        assertTrue(result.stdout().contains("Run record: " + run.resolve("run.json")));
+        assertTrue(result.stdout().contains("BEAST console log: " + run.resolve("console.log")));
+        assertTrue(result.stdout().contains("MCMC convergence has not been assessed"));
         assertFalse(Files.exists(run.resolve("alignment.nex")), "Snapshot does not relocate or copy the input data");
     }
 
