@@ -64,6 +64,8 @@ Multiple components can be registered for the same type; `getComponents` returns
 
 `resolveAlias` resolves both simple aliases (`Rate` → `PositiveReal`) and parameterised types (`Distribution<Rate>` → `Distribution<PositiveReal>`). `getComponents` automatically falls through to the resolved type when no direct registration exists.
 
+In the bundled library, generator signatures expand `Rate` to `PositiveReal`, `Age` to `NonNegativeReal`, and `Count` to `NonNegativeInteger`, including nested occurrences. These substitutions preserve the original domains: rates remain strictly positive, while ages and counts still allow zero. Alias definitions and literal registrations remain available. Distribution and vector wrappers, including vector-length properties, are preserved. Descriptions distinguish event rates, rate ratios, and relative exchangeabilities.
+
 ---
 
 ## Literal components — `app/components/phylospec/literal/`

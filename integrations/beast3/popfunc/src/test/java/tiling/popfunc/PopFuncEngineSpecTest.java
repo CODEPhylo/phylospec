@@ -158,7 +158,7 @@ public class PopFuncEngineSpecTest {
                 List.of(
                         "phylospec.types.PositiveReal",
                         "phylospec.types.PositiveReal",
-                        "phylospec.types.Age",
+                        "phylospec.types.NonNegativeReal",
                         "phylospec.types.PositiveReal"),
                 expansionComponent.getArguments().stream().map(Argument::getType).toList());
         assertEquals(1, expansionComponent.getConstraints().size());

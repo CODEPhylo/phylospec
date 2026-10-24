@@ -650,7 +650,7 @@
                     "default": 0,
                     "name": "age",
                     "description": "The age of the sample of this taxon",
-                    "type": "Age",
+                    "type": "NonNegativeReal",
                     "required": false
                 }
             ]
@@ -792,7 +792,7 @@
             "typeParameters": ["T"]
         },
         {
-            "generatedType": "Age",
+            "generatedType": "NonNegativeReal",
             "name": "rootAge",
             "namespace": "phylospec.functions.accessor",
             "description": "Get the age of the root node in a tree",
@@ -804,7 +804,7 @@
             }]
         },
         {
-            "generatedType": "Age",
+            "generatedType": "NonNegativeReal",
             "name": "age",
             "namespace": "phylospec.functions.accessor",
             "description": "Get the age of a taxon in a tree",
@@ -824,7 +824,7 @@
             ]
         },
         {
-            "generatedType": "Age",
+            "generatedType": "NonNegativeReal",
             "name": "age",
             "namespace": "phylospec.functions.accessor",
             "description": "Get the age of a taxon",
@@ -836,10 +836,10 @@
             }]
         },
         {
-            "generatedType": "Age",
+            "generatedType": "NonNegativeReal",
             "name": "mrca",
             "namespace": "phylospec.functions.accessor",
-            "description": "Get the age of the most common recent ancestor of a clade in the tree",
+            "description": "Get the age of the most recent common ancestor of a clade in the tree",
             "arguments": [
                 {
                     "name": "clade",
@@ -1161,8 +1161,8 @@
             "description": "Exponential distribution for rate parameters",
             "arguments": [{
                 "name": "rate",
-                "description": "Rate parameter",
-                "type": "Rate",
+                "description": "Positive rate parameter (lambda), equal to the reciprocal of the distribution mean",
+                "type": "PositiveReal",
                 "required": true
             }]
         },
@@ -1384,8 +1384,8 @@
             "description": "Poisson distribution",
             "arguments": [{
                 "name": "rate",
-                "description": "Rate parameter",
-                "type": "Rate",
+                "description": "Positive expected number of events (lambda), equal to the distribution mean",
+                "type": "PositiveReal",
                 "required": true
             }]
         },
@@ -1404,7 +1404,7 @@
                 {
                     "name": "numValues",
                     "description": "The length of the returned chain",
-                    "type": "Count",
+                    "type": "NonNegativeInteger",
                     "required": true
                 }
             ]
@@ -1418,8 +1418,8 @@
                 {
                     "default": 1,
                     "name": "birthRate",
-                    "description": "Birth rate parameter",
-                    "type": "Rate",
+                    "description": "Birth rate per lineage per unit time",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
@@ -1439,14 +1439,14 @@
                 {
                     "default": 1,
                     "name": "birthRate",
-                    "description": "Birth rate parameter",
-                    "type": "Rate",
+                    "description": "Birth rate per lineage per unit time",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
                     "name": "rootAge",
                     "description": "The age of the root",
-                    "type": "Age",
+                    "type": "NonNegativeReal",
                     "required": true
                 },
                 {
@@ -1465,14 +1465,14 @@
             "arguments": [
                 {
                     "name": "birthRate",
-                    "description": "Birth rate parameter",
-                    "type": "Rate",
+                    "description": "Birth rate per lineage per unit time",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
                     "name": "deathRate",
-                    "description": "Death rate parameter",
-                    "type": "Rate",
+                    "description": "Death rate per lineage per unit time",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
@@ -1491,7 +1491,7 @@
                 {
                     "name": "rootAge",
                     "description": "The age of the root",
-                    "type": "Age",
+                    "type": "NonNegativeReal",
                     "required": false
                 }
             ]
@@ -1504,14 +1504,14 @@
             "arguments": [
                 {
                     "name": "diversificationRate",
-                    "description": "Diversification rate parameter",
-                    "type": "Rate",
+                    "description": "Net diversification rate (birth rate minus death rate)",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
                     "name": "turnover",
-                    "description": "Turnover parameter",
-                    "type": "Rate",
+                    "description": "Death rate divided by birth rate",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
@@ -1524,7 +1524,7 @@
                 {
                     "name": "rootAge",
                     "description": "The age of the root",
-                    "type": "Age",
+                    "type": "NonNegativeReal",
                     "required": false
                 },
                 {
@@ -1622,20 +1622,20 @@
             "arguments": [
                 {
                     "name": "speciationRate",
-                    "description": "Birth (speciation) rate",
-                    "type": "Rate",
+                    "description": "Speciation rate per lineage per unit time",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
                     "name": "extinctionRate",
-                    "description": "Death (extinction) rate",
-                    "type": "Rate",
+                    "description": "Extinction rate per lineage per unit time",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
                     "name": "serialSamplingRate",
-                    "description": "Fossil sampling rate through time",
-                    "type": "Rate",
+                    "description": "Fossil sampling rate per lineage per unit time",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
@@ -1648,7 +1648,7 @@
                 {
                     "name": "rootAge",
                     "description": "The age of the root",
-                    "type": "Age",
+                    "type": "NonNegativeReal",
                     "required": false
                 },
                 {
@@ -1667,20 +1667,20 @@
             "arguments": [
                 {
                     "name": "diversificationRate",
-                    "description": "Diversification rate parameter",
-                    "type": "Rate",
+                    "description": "Net diversification rate (speciation rate minus extinction rate)",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
                     "name": "turnover",
-                    "description": "Turnover rate parameter",
-                    "type": "Rate",
+                    "description": "Extinction rate divided by speciation rate",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
                     "name": "serialSamplingRate",
-                    "description": "Fossil sampling rate through time",
-                    "type": "Rate",
+                    "description": "Fossil sampling rate per lineage per unit time",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
@@ -1693,7 +1693,7 @@
                 {
                     "name": "rootAge",
                     "description": "The age of the root",
-                    "type": "Age",
+                    "type": "NonNegativeReal",
                     "required": false
                 },
                 {
@@ -1805,14 +1805,14 @@
                 },
                 {
                     "name": "branchRates",
-                    "description": "Rate-heterogeneity across branches",
-                    "type": "Vector<Rate>",
+                    "description": "Rate variation across branches",
+                    "type": "Vector<PositiveReal>",
                     "required": true
                 },
                 {
                     "name": "siteRates",
-                    "description": "Rate-heterogeneity across sites",
-                    "type": "Vector<Rate>",
+                    "description": "Rate variation across sites",
+                    "type": "Vector<PositiveReal>",
                     "required": true
                 },
                 {
@@ -1896,7 +1896,7 @@
             ]
         },
         {
-            "generatedType": "Distribution<Vector<Rate; num=tree.numBranches>>",
+            "generatedType": "Distribution<Vector<PositiveReal; num=tree.numBranches>>",
             "name": "StrictClock",
             "namespace": "phylospec.distributions.clock",
             "description": "Strict clock model for branch rates",
@@ -1904,8 +1904,8 @@
                 {
                     "default": 1,
                     "name": "clockRate",
-                    "description": "The base rate",
-                    "type": "Rate",
+                    "description": "Clock rate shared by all branches",
+                    "type": "PositiveReal",
                     "required": false
                 },
                 {
@@ -1917,21 +1917,21 @@
             ]
         },
         {
-            "generatedType": "Distribution<Vector<Rate; num=tree.numBranches>>",
+            "generatedType": "Distribution<Vector<PositiveReal; num=tree.numBranches>>",
             "name": "RelaxedClock",
             "namespace": "phylospec.distributions.clock",
             "description": "Relaxed clock model for branch rates",
             "arguments": [
                 {
                     "name": "base",
-                    "description": "The distribution with mean 1.0 to draw branch-wise rates from",
-                    "type": "Distribution<Rate>",
+                    "description": "Base distribution for branch rates, with mean 1.0",
+                    "type": "Distribution<PositiveReal>",
                     "required": true
                 },
                 {
                     "name": "clockRate",
-                    "description": "The distribution to draw the mean clock rate from",
-                    "type": "Rate",
+                    "description": "Mean clock rate that scales the mean-one base distribution",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
@@ -1943,7 +1943,7 @@
             ]
         },
         {
-            "generatedType": "Distribution<Vector<Rate; num=numSites.value>>",
+            "generatedType": "Distribution<Vector<PositiveReal; num=numSites.value>>",
             "name": "DiscreteGammaInv",
             "namespace": "phylospec.distributions.siterates",
             "description": "Discrete gamma site rates with a proportion of invariant sites",
@@ -2046,38 +2046,38 @@
             "arguments": [
                 {
                     "name": "rateAC",
-                    "description": "Substitution rate for A to C",
-                    "type": "Rate",
+                    "description": "Relative exchangeability between A and C",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
                     "name": "rateAG",
-                    "description": "Substitution rate for A to G",
-                    "type": "Rate",
+                    "description": "Relative exchangeability between A and G",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
                     "name": "rateAT",
-                    "description": "Substitution rate for A to T",
-                    "type": "Rate",
+                    "description": "Relative exchangeability between A and T",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
                     "name": "rateCG",
-                    "description": "Substitution rate for C to G",
-                    "type": "Rate",
+                    "description": "Relative exchangeability between C and G",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
                     "name": "rateCT",
-                    "description": "Substitution rate for C to T",
-                    "type": "Rate",
+                    "description": "Relative exchangeability between C and T",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
                     "name": "rateGT",
-                    "description": "Substitution rate for G to T",
-                    "type": "Rate",
+                    "description": "Relative exchangeability between G and T",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
@@ -2274,7 +2274,7 @@
                 {
                     "name": "inflectionAge",
                     "description": "The age of the inflection point t50",
-                    "type": "Age",
+                    "type": "NonNegativeReal",
                     "required": true
                 },
                 {
@@ -2312,7 +2312,7 @@
                 {
                     "name": "transitionAge",
                     "description": "Age at which exponential growth begins",
-                    "type": "Age",
+                    "type": "NonNegativeReal",
                     "required": true
                 },
                 {
