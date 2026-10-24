@@ -2,7 +2,8 @@
 
 This distribution provides one command for checking and running a `.phylospec`
 script with BEAST 3. It includes the PhyloSpec runtime, the base BEAST integration,
-and their Java dependencies. External model packages need their own PhyloSpec
+and their Java dependencies. The macOS Apple Silicon distribution also includes
+BEAGLE's native CPU libraries. External model packages need their own PhyloSpec
 adapters. The examples below test a small supported workflow; they do not establish
 support for every model or constitute complete scientific analyses.
 
@@ -22,14 +23,22 @@ point to that Java installation: the launcher uses `JAVA_HOME` in preference to
 There is no published download URL assumed by this guide. Once you have the ZIP,
 running it does not require Maven or a source checkout.
 
+Choose the ZIP for your platform:
+
+| ZIP suffix | Included calculation backend |
+| --- | --- |
+| `-cli-macos-arm64.zip` | macOS Apple Silicon: bundled BEAGLE CPU. Requires ARM64 Java 25 or newer; no separate BEAGLE installation, Homebrew, or library-path configuration is needed. |
+| `-cli.zip` | Generic Java distribution. BEAST can use its Java implementation without BEAGLE. Native BEAGLE libraries are not included. |
+
 Set `PHYLOSPEC_ZIP` to your ZIP's actual location. These commands use the current
-`0.0.1-SNAPSHOT` distribution; change `PHYLOSPEC_VERSION` if your archive has a
-different version.
+`0.0.1-SNAPSHOT` macOS Apple Silicon distribution; for the generic distribution,
+replace `-cli-macos-arm64.zip` with `-cli.zip`. Change `PHYLOSPEC_VERSION` if your
+archive has a different version.
 
 ```sh
 java -version
 PHYLOSPEC_VERSION="0.0.1-SNAPSHOT"
-PHYLOSPEC_ZIP="$HOME/Downloads/phylospec-beast3-$PHYLOSPEC_VERSION-cli.zip"
+PHYLOSPEC_ZIP="$HOME/Downloads/phylospec-beast3-$PHYLOSPEC_VERSION-cli-macos-arm64.zip"
 PHYLOSPEC_INSTALL="$(mktemp -d "$HOME/phylospec-install.XXXXXX")"
 unzip "$PHYLOSPEC_ZIP" -d "$PHYLOSPEC_INSTALL"
 PHYLOSPEC_DIR="$PHYLOSPEC_INSTALL/phylospec-beast3-$PHYLOSPEC_VERSION"
@@ -41,8 +50,10 @@ printf 'Installation: %s\n' "$PHYLOSPEC_DIR"
 
 `--version` should report PhyloSpec and the BEAST runtime; `--help` lists `check`
 and `run`. The installation contains `bin/`, `lib/`, `examples/`, `USAGE.md`, and
-`LICENSE`. Keep `bin/` and `lib/` together if you move it. No native accelerator
-is required for this example.
+`LICENSE`. The macOS Apple Silicon ZIP additionally contains `native/macos-arm64/`
+with BEAGLE libraries, version/build information, and its license. Move the whole
+installation directory together. The bundled backend uses the CPU; it does not
+include GPU support or libraries for other platforms.
 
 ### 2. Prepare your script and data
 
@@ -93,9 +104,12 @@ builds the native model, and runs MCMC. Both default to the base library `beast2
 (the existing internal ID for this BEAST integration).
 
 `run` reports four stages: checking, model construction and initialization, MCMC,
-and output verification. Wait for `Run completed` and the result paths. If BEAGLE
-is unavailable, a note says BEAST will try its Java implementation; this note alone
-does not mean the run failed. Other warnings and errors remain visible.
+and output verification. For this example, it also reports the actual likelihood
+backend: expect `BEAGLE` with a CPU resource when using the macOS Apple Silicon
+ZIP. Wait for `Run completed` and the result paths. If BEAGLE is unavailable, a note
+says BEAST will try its Java implementation; this note alone does not mean the run
+failed. A successful Java fallback does not confirm BEAGLE is working. Other
+warnings and errors remain visible.
 
 A failed run reports its error and, when available, the directory containing its
 run record and diagnostic log. It does not print `Run completed`. Check the reported
@@ -116,12 +130,19 @@ In `run.json`, a successful run has `"status" : "succeeded"` and
 lines are samples. For this script, expect **31 samples, numbered 0–30**, and 31
 trees. Column order can vary; identify quantities by their column names.
 
+`run.json` also records `runtime.likelihoodBackends` for likelihoods constructed by
+the base `PhyloCTMC` adapter. Each entry identifies the actual `BEAGLE` or `Java`
+implementation; BEAGLE entries include its version, resource number, name, and
+flags. This records the backend that initialized, rather than inferring it from
+the presence of a native library. It does not yet cover likelihoods supplied by
+external adapters.
+
 | File inside `results/run-01/` | What it contains |
 | --- | --- |
 | `output/hky-yule.log` | Tab-separated samples: posterior, prior, likelihood, `kappa`, tree summaries, and four base frequencies. |
 | `output/hky-yule.trees` | Sampled trees in NEXUS format. |
 | `output/hky-yule.state.xml` | Final MCMC state. The CLI does not yet provide a resume command. |
-| `run.json` | Run status, effective settings, seed, input references, and output paths. |
+| `run.json` | Run status, effective settings, seed, input references, output paths, and actual base `PhyloCTMC` likelihood backends. |
 | `console.log` | Java/BEAST console output, including original diagnostic messages and failure details. |
 | `model.phylospec` | Snapshot of the script actually used. Input data are not copied into the result directory. |
 
@@ -227,7 +248,10 @@ The terminal omits BEAST's routine object-wrapping diagnostics and explains an
 unavailable optional BEAGLE accelerator as a Java fallback attempt. These original
 messages remain in `console.log`; other warnings and errors remain visible.
 `--debug` also shows the unfiltered BEAST output. The launchers explicitly enable
-the JNI access used by optional acceleration; they do not require BEAGLE to be installed.
+the JNI access used by optional acceleration. The macOS Apple Silicon launcher
+automatically loads its bundled CPU libraries; the generic ZIP retains optional
+native discovery and Java fallback. Neither requires a separate BEAGLE installation
+to run the example.
 `console.log` captures Java/BEAST console streams, not low-level JVM or native-library
 writes directly to the operating system's stderr.
 
@@ -296,6 +320,33 @@ or Linux with `unzip`; they are explicitly skipped on Windows. The build command
 uses the checked-in schema classes and leaves source formatting unchanged.
 The ZIP retains dependencies as separate JARs, including their embedded metadata.
 `LICENSE` covers PhyloSpec; dependencies retain their own licenses.
+
+To additionally build the **macOS Apple Silicon BEAGLE CPU ZIP**, build on macOS
+Apple Silicon with ARM64 Java 25, Maven, CMake, and the Xcode command-line tools:
+
+```sh
+mvn -pl integrations/beast3/java -am -Pcli-dist,cli-dist-macos-arm64 \
+  -Djsonschema2pojo.skip=true -Dspotless.skip=true verify
+```
+
+This adds `phylospec-beast3-0.0.1-SNAPSHOT-cli-macos-arm64.zip` in the same target
+directory. The build uses
+`integrations/beast3/java/src/main/native/beagle/build-macos-arm64.sh` to download
+and checksum a pinned BEAGLE 4.0.1 source archive
+(`bf35ad4a28e5f03edaa10dfd77c1b54eee0d9595`), apply the checked-in macOS build/loading
+patch, and compile only the JNI bridge, core library, and CPU plugin. The first
+build needs network access for this source archive; no existing BEAGLE installation
+is used. The ZIP includes the patch, source revision/checksum, and MIT license.
+These native build tools are needed by distributors, not by users of the ZIP.
+
+The native libraries resolve dependencies and the CPU plugin from their own
+directory, so the extracted installation can be moved without setting loader
+environment variables. The native compilation target is macOS 11.0; that target
+alone does not establish compatibility with every macOS release or Java build.
+The current local acceptance environment is macOS 26.5 on Apple Silicon. Older
+macOS releases, downloaded-archive Gatekeeper handling, and other machines still
+need separate release acceptance. GPU and other-platform native bundles are outside
+this distribution's scope.
 
 A minimal acceptance pass checks help/version, runs all three bundled examples from
 another working directory (including paths with spaces), verifies successful
