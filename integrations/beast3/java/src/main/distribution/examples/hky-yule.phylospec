@@ -1,0 +1,26 @@
+// Primate mitochondrial DNA: 12 taxa, all 898 sites as one partition.
+// Keep the data/ directory beside this script.
+Alignment data = fromNexus("data/primate-mtDNA.nex")
+
+// Estimate the tree with a Yule prior; the birth rate is fixed at 1.0.
+Tree tree ~ Yule(
+    birthRate=1.0, taxa=taxa(data)
+)
+
+// Estimate HKY kappa and A/C/G/T frequencies; the strict-clock rate is fixed.
+Alignment alignment ~ PhyloCTMC(
+    tree,
+    branchRates~StrictClock(clockRate=1.0, tree),
+    qMatrix=hky(
+        kappa~LogNormal(logMean=1.0, logSd=0.5),
+        baseFrequencies~Dirichlet(repeat(value=1.0, num=4))
+    ),
+) observed as data
+
+// Short setup example only: 30 steps do not establish posterior convergence.
+mcmc {
+    Integer chainLength = 30
+    Integer defaultLogEvery = 1
+    Integer randomSeed = 12345
+    String outputPrefix = "hky-yule"
+}

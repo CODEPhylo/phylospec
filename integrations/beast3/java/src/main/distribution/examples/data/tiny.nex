@@ -1,0 +1,12 @@
+#NEXUS
+[Synthetic sequences created for the PhyloSpec CLI example.]
+begin data;
+    dimensions ntax=4 nchar=40;
+    format datatype=dna missing=? gap=-;
+    matrix
+        taxon_a ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT
+        taxon_b ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGA
+        taxon_c ACGTACGTACGTACGTACGTACGTACGTACGTACGTTCGA
+        taxon_d ACGTACGTACGTACGTACGTACGTACGTACGTACGGTCGA
+    ;
+end;

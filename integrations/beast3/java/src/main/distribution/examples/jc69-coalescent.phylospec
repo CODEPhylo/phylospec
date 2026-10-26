@@ -1,0 +1,12 @@
+// Synthetic four-taxon example; the input path is relative to this script.
+Alignment data = fromNexus("data/tiny.nex")
+Tree tree ~ Coalescent(populationSize=1.0, taxa=taxa(data))
+QMatrix qMatrix = jc69()
+Alignment alignment ~ PhyloCTMC(tree, qMatrix) observed as data
+
+// This short chain tests the workflow, not convergence.
+mcmc {
+    Integer chainLength = 30
+    Integer defaultLogEvery = 10
+    Integer randomSeed = 42
+}
