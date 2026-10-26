@@ -35,6 +35,7 @@ public final class PhyloSpecCli {
             Options:
               --engine beast3        Engine (default: beast3; no other engine is supported yet)
               --library <id[,id...]>  Tile libraries in preference order
+              --adapter-path <dir>   check/run: unpacked local adapter bundle (repeatable)
               --out <directory>      Run only: exact run directory (must be absent or empty)
               --run-name <prefix>    Run only: relative output prefix (default: script name)
               --debug                Show raw BEAST console output and failure stack traces
@@ -44,6 +45,10 @@ public final class PhyloSpecCli {
 
             check/run default to the base library 'beast2' (its existing internal ID).
             When libraries are specified, 'beast2' is appended only if absent.
+            Adapter paths use the command's working directory and contain direct *.jar files.
+            Use --library to select an adapter; supplying its directory does not select it.
+            The host PhyloSpec/BEAST runtime is retained; bundle copies do not replace it.
+            Bundles are local executable Java code. No packages are downloaded or installed.
             Legacy run requires --library and preserves its exact library order.
             New run writes to --out/output/, or beside the script in runs/<name>-<run-id>/output/.
             Relative --out paths use the command's working directory; input paths use the script directory.
@@ -115,12 +120,15 @@ public final class PhyloSpecCli {
             throw new IOException("PhyloSpec source file not found or not a regular file: " + source);
         }
 
-        executeModel(options, source, out, err);
+        try (LocalAdapterBundles adapters = LocalAdapterBundles.open(options.adapterPaths())) {
+            executeModel(options, source, adapters, out, err);
+        }
     }
 
-    private static void executeModel(Options options, Path source, PrintStream out, PrintStream err)
+    private static void executeModel(
+            Options options, Path source, LocalAdapterBundles adapters, PrintStream out, PrintStream err)
             throws IOException, ParserConfigurationException, SAXException {
-        PhyloSpecRunner runner = new PhyloSpecRunner(source, options.libraries());
+        PhyloSpecRunner runner = new PhyloSpecRunner(source, options.libraries(), adapters.bundles());
         Consumer<PhyloSpecDiagnostic> warningHandler = warning -> err.println(warning.format());
         if (options.command() == Command.CHECK) {
             try {
@@ -133,7 +141,7 @@ public final class PhyloSpecCli {
                     + "). No MCMC was run.");
             out.println("Checked: syntax, static types and available BEAST 3 mappings.");
             out.println("Not checked: complete input-data validity, native model initialization or MCMC convergence.");
-            out.println("Next: use 'phylospec run' with the same script and library options.");
+            out.println("Next: use 'phylospec run' with the same script and library/adapter options.");
             return;
         }
 
@@ -232,6 +240,7 @@ public final class PhyloSpecCli {
             String runName,
             Path outputDirectory,
             List<String> libraries,
+            List<Path> adapterPaths,
             boolean help,
             boolean version,
             boolean debug) {
@@ -252,6 +261,7 @@ public final class PhyloSpecCli {
             String runName = null;
             Path outputDirectory = null;
             List<String> libraries = new ArrayList<>();
+            List<Path> adapterPaths = new ArrayList<>();
             boolean help = false;
             boolean version = false;
             boolean debug = false;
@@ -297,6 +307,12 @@ public final class PhyloSpecCli {
                             throw new IllegalArgumentException("--run-name requires a non-blank path.");
                         Path.of(runName); // Report malformed paths as command errors, before execution.
                     }
+                    case "--adapter-path" -> {
+                        String value = requireValue(arguments, ++index, "--adapter-path");
+                        if (value.isBlank())
+                            throw new IllegalArgumentException("--adapter-path requires a non-blank directory.");
+                        adapterPaths.add(Path.of(value));
+                    }
                     case "--out" -> {
                         String value = requireValue(arguments, ++index, "--out");
                         if (value.isBlank())
@@ -323,6 +339,9 @@ public final class PhyloSpecCli {
                 if (command != Command.RUN && outputDirectory != null) {
                     throw new IllegalArgumentException("--out is only supported for the run subcommand.");
                 }
+                if (command == Command.LEGACY_RUN && !adapterPaths.isEmpty()) {
+                    throw new IllegalArgumentException("--adapter-path is only supported for check/run subcommands.");
+                }
                 if (command == Command.LEGACY_RUN && libraries.isEmpty()) {
                     throw new IllegalArgumentException("At least one --library must be supplied.");
                 }
@@ -330,7 +349,16 @@ public final class PhyloSpecCli {
             if (command != Command.LEGACY_RUN && !libraries.contains(BASE_LIBRARY)) {
                 libraries.add(BASE_LIBRARY);
             }
-            return new Options(command, source, runName, outputDirectory, List.copyOf(libraries), help, version, debug);
+            return new Options(
+                    command,
+                    source,
+                    runName,
+                    outputDirectory,
+                    List.copyOf(libraries),
+                    List.copyOf(adapterPaths),
+                    help,
+                    version,
+                    debug);
         }
 
         String action() {

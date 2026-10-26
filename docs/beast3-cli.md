@@ -207,6 +207,12 @@ and expected/generated output files. Input hashes cover files reported through
 the runner's input-path resolver. Input data are not copied, so the result
 directory is not a self-contained analysis archive.
 
+When local adapter bundles are supplied, `runtime.adapterBundles` records their
+paths, JAR hashes, sizes, and whether each JAR was added or skipped. This inventory
+is recorded before execution; it is not a list of every class used. Selected
+providers and their actual code sources are recorded separately under `libraries`.
+Bundle files are not copied into the result directory.
+
 Status normally progresses through `preparing` and `running` to `succeeded`,
 `failed`, or `cancelled`. After abrupt termination, the record can remain
 nonterminal or become `unconfirmed`; this does not establish that the process is
@@ -234,6 +240,7 @@ choose a new `--out` directory, such as `results/run-02`.
 | --- | --- |
 | `--engine beast3` | Select the supported engine; `beast3` is already the default. |
 | `--library <id[,id...]>` | Select tile libraries available on the runtime classpath, in preference order. |
+| `--adapter-path <directory>` | For `check`/`run`: load JARs directly inside an unpacked local adapter bundle. Repeat for additional bundles. |
 | `--out <directory>` | For `run`: exact directory for this run's record, logs, and outputs. |
 | `--run-name <prefix>` | For `run`: relative output prefix, unless the script sets `outputPrefix`. |
 | `--debug` | Show raw BEAST console output and failure stack traces in the terminal. |
@@ -245,6 +252,38 @@ choose a new `--out` directory, such as `results/run-02`.
 library ID. When libraries are explicitly selected, their order is preserved and
 `beast2` is appended only if absent. `--library` selects an available provider; it
 does not download models or add JARs to the classpath.
+
+## Use a local extension
+
+A local adapter bundle is an unpacked directory containing JARs for its PhyloSpec
+adapter, component definitions, native model implementation, and dependencies.
+A native BEAST model JAR alone does not supply its PhyloSpec mapping. For a prepared
+PopFunc bundle and a script using its supported generators:
+
+```sh
+"$PHYLOSPEC_DIR/bin/phylospec" check /path/to/popfunc-model.phylospec \
+  --adapter-path /path/to/phylospec-adapter --library popfunc
+"$PHYLOSPEC_DIR/bin/phylospec" run /path/to/popfunc-model.phylospec \
+  --adapter-path /path/to/phylospec-adapter --library popfunc \
+  --out "$PWD/results/popfunc-demo"
+```
+
+`--adapter-path` locates the bundle; `--library` selects its adapter ID. Supplying a
+directory does not automatically select every adapter in it. Paths are relative
+to the terminal's working directory and must directly contain JARs; subdirectories
+are not searched. Repeat `--adapter-path` for additional bundles. Libraries retain
+the requested preference order, with `beast2` appended if absent.
+
+The loader keeps the host PhyloSpec/BEAST runtime, skips bundle copies of it, and
+reports detected conflicts or missing dependencies. Bundles must be compatible
+with the host runtime. It loads local executable Java code; it does not download
+or install packages. For a run, bundle paths and JAR hashes are recorded alongside
+the actual selected providers. Restart the command after rebuilding an adapter.
+
+The PopFunc bundle includes `examples/gompertz.phylospec`, its data, and
+`examples/README.md`. That guide explains the model definition, Java mapping,
+package registration, fixed native dependency, build, and CLI loading steps.
+In a source checkout, it is at `integrations/beast3/popfunc/examples/README.md`.
 
 ## Diagnostics and failure handling
 
@@ -366,4 +405,5 @@ Without `check` or `run`, `--library` is required and its exact order is retaine
 This mode keeps the earlier output-prefix and script-output behavior; it does not
 create a managed result directory, script snapshot, run record, or console log.
 `--out` is unavailable in this mode. Use `run` for the result management described
-in this guide.
+in this guide. `--adapter-path` is supported only by the `check` and `run`
+subcommands.

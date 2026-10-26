@@ -134,7 +134,10 @@ public class PhyloSpecCliTest {
                 new String[] {"run", "model.phylospec", "--out"},
                 new String[] {"run", "model.phylospec", "--out", " "},
                 new String[] {"check", "model.phylospec", "--out", "results"},
-                new String[] {"--library", "beast2", "model.phylospec", "--out", "results"})) {
+                new String[] {"--library", "beast2", "model.phylospec", "--out", "results"},
+                new String[] {"check", "model.phylospec", "--adapter-path"},
+                new String[] {"check", "model.phylospec", "--adapter-path", " "},
+                new String[] {"--library", "beast2", "model.phylospec", "--adapter-path", "adapter"})) {
             CliResult result = invoke(arguments);
             assertEquals(2, result.exitCode(), String.join(" ", arguments) + "\n" + result.stderr());
             assertTrue(result.stderr().contains("Usage:"), result.stderr());
