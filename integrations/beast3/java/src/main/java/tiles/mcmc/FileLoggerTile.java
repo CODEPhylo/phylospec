@@ -37,7 +37,7 @@ public class FileLoggerTile extends TemplateTile<Void, BEASTState> {
     @Override
     protected Void applyTile(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Integer logEvery = this.logEveryInput.apply(state, indexVariables);
-        String fileName = this.fileNameInput.apply(state, indexVariables);
+        String fileName = state.resolveUserOutputPath(this.fileNameInput.apply(state, indexVariables));
         List<? extends BEASTObject> parameters = this.parametersInput.apply(state, indexVariables);
 
         List<BEASTObject> generalParameters = parameters != null ? new ArrayList<>(parameters) : null;

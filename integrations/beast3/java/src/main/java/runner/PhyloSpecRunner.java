@@ -3,16 +3,27 @@ package runner;
 import beast.base.inference.*;
 import beast.base.util.Randomizer;
 import beastconfig.BEASTState;
+import beastconfig.OutputPaths;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
@@ -169,8 +180,131 @@ public class PhyloSpecRunner {
     public void runPhyloSpec(String runName, Consumer<PhyloSpecDiagnostic> warningHandler)
             throws IOException, ParserConfigurationException, SAXException {
         CheckedModel checked = check(warningHandler);
-        seedRandomizer(checked.statements);
-        BEASTState beastState = new BEASTState(runName, sourceDirectory);
+        runChecked(checked, new BEASTState(runName, sourceDirectory), null, () -> false, message -> {});
+    }
+
+    /** Runs with isolated output paths; the original source directory remains the input base. */
+    public void runManaged(String runName, Path runDirectory, Consumer<PhyloSpecDiagnostic> warningHandler)
+            throws IOException, ParserConfigurationException, SAXException {
+        runManaged(runName, runDirectory, warningHandler, message -> {}, true);
+    }
+
+    /** CLI feedback is optional; existing Java callers retain their original console behavior. */
+    RunRecord runManaged(
+            String runName,
+            Path runDirectory,
+            Consumer<PhyloSpecDiagnostic> warningHandler,
+            Consumer<String> progress,
+            boolean rawConsole)
+            throws IOException, ParserConfigurationException, SAXException {
+        String checking = "[1/4] Checking syntax, static types and BEAST 3 mappings...";
+        progress.accept(checking);
+        CheckedModel checked = check(warningHandler);
+        OutputPaths.checkRuntimeOverrides();
+        // Reject an invalid CLI prefix before claiming a directory.
+        new OutputPaths(runDirectory.resolve("output")).resolveUserPath(runName);
+        Path outputDirectory = OutputPaths.createRunDirectory(runDirectory);
+        RunRecord record = RunRecord.create(runDirectory, source, sourceFile, sourceDirectory, checked.catalog);
+        AtomicBoolean cancellationRequested = new AtomicBoolean();
+        Thread owner = Thread.currentThread();
+        Thread shutdown = new Thread(
+                () -> {
+                    // Request cooperative cancellation. Interrupting native file writes could truncate logs.
+                    cancellationRequested.set(true);
+                    try {
+                        owner.join(2000);
+                        record.unconfirmed("The JVM shut down before the runner confirmed a terminal outcome.");
+                    } catch (IOException | InterruptedException error) {
+                        System.err.println("Could not finalize run record during shutdown: " + error.getMessage());
+                    }
+                },
+                "phylospec-run-shutdown");
+        boolean hookRegistered = false;
+        boolean restoreInterrupt = false;
+        try {
+            Runtime.getRuntime().addShutdownHook(shutdown);
+            hookRegistered = true;
+            try (RunConsole console = RunConsole.open(runDirectory.resolve("console.log"), rawConsole)) {
+                console.log().println(checking);
+                Consumer<String> report = message -> {
+                    console.log().println(message);
+                    progress.accept(message);
+                };
+                record.warnings(checked.warnings);
+                checked.warnings.forEach(warning -> console.log().println(warning.format()));
+                BEASTState state = new BEASTState(runName, sourceDirectory, outputDirectory);
+                state.setInputObserver((reference, path) -> {
+                    try {
+                        record.input(reference, path);
+                    } catch (IOException error) {
+                        throw new UncheckedIOException("Could not record an input file.", error);
+                    }
+                });
+                runChecked(checked, state, record, cancellationRequested::get, report);
+                console.log().println("Execution and basic output checks completed.");
+                console.verify();
+            }
+            if (cancellationRequested.get() || owner.isInterrupted()) {
+                throw new CancellationException("The managed run was interrupted before completion was recorded.");
+            }
+            record.succeeded();
+            return record;
+        } catch (IOException
+                | ParserConfigurationException
+                | SAXException
+                | RuntimeException
+                | java.lang.Error failure) {
+            // NIO must be able to write the terminal record even when the caller interrupted this thread.
+            restoreInterrupt = Thread.interrupted();
+            Throwable reported = failure;
+            boolean cancelled =
+                    failure instanceof CancellationException || cancellationRequested.get() || restoreInterrupt;
+            if (cancelled && !(failure instanceof CancellationException)) {
+                reported = new CancellationException("The managed run was interrupted before completion.");
+                reported.initCause(failure);
+            }
+            appendFailure(runDirectory, reported);
+            try {
+                if (cancelled) record.cancelled(reported);
+                else record.failed(reported);
+            } catch (IOException recordFailure) {
+                reported.addSuppressed(recordFailure);
+            }
+            if (cancelled) throw (CancellationException) reported;
+            throw failure;
+        } finally {
+            if (hookRegistered) {
+                try {
+                    Runtime.getRuntime().removeShutdownHook(shutdown);
+                } catch (IllegalStateException shuttingDown) {
+                    // The hook is already running; it will retain or confirm the recorded outcome.
+                }
+            }
+            if (restoreInterrupt) owner.interrupt();
+        }
+    }
+
+    private void runChecked(
+            CheckedModel checked,
+            BEASTState beastState,
+            RunRecord record,
+            java.util.function.BooleanSupplier cancellationRequested,
+            Consumer<String> progress)
+            throws IOException, ParserConfigurationException, SAXException {
+        progress.accept("[2/4] Building and initializing the BEAST 3 model...");
+        // Native inputs can initialize randomly during tile application, before the MCMC is built.
+        Long scriptSeed = declaredSeed(checked.statements);
+        Long constructionSeed = scriptSeed;
+        if (record == null) {
+            if (scriptSeed != null) Randomizer.setSeed(scriptSeed);
+        } else {
+            long seed = scriptSeed == null ? new SecureRandom().nextLong(1, Integer.MAX_VALUE) : scriptSeed;
+            constructionSeed = seed;
+            beastState.randomSeed = seed;
+            Randomizer.setSeed(seed);
+            record.seed("modelBuilding", seed, Randomizer.getSeed(), scriptSeed == null);
+        }
+
         try {
             beastState = checked.tiles.applyBestTiling(beastState);
         } catch (TileApplicationError error) {
@@ -207,30 +341,68 @@ public class PhyloSpecRunner {
         // build loggers
 
         List<Logger> loggers = beastState.buildLoggers(posterior, prior, likelihood);
+        String stateFile = beastState.resolveOutputPath(beastState.outputPrefix + ".state.xml");
+        beastState.prepareOutputFiles(loggers, stateFile);
 
         // create MCMC object
 
-        MCMC mcmc = new MCMC();
+        MCMC mcmc = record == null ? new MCMC() : new ManagedMCMC(cancellationRequested);
         beastState.setInput(mcmc, mcmc.chainLengthInput, beastState.chainLength);
         beastState.setInput(mcmc, mcmc.startStateInput, state);
         beastState.setInput(mcmc, mcmc.posteriorInput, posterior);
 
         beastState.setInput(mcmc, mcmc.operatorsInput, beastState.operators);
         beastState.setInput(mcmc, mcmc.loggersInput, loggers);
-        mcmc.setStateFile(beastState.outputPrefix + ".state.xml", false);
+        mcmc.setStateFile(stateFile, false);
 
         // run
 
         if (beastState.randomSeed != null) {
             Randomizer.setSeed(beastState.randomSeed);
         }
-        beastState.initializeBEASTObjects();
-
-        mcmc.run();
+        if (record == null) {
+            beastState.initializeBEASTObjects();
+            mcmc.run();
+        } else {
+            ManagedMCMC managed = (ManagedMCMC) mcmc;
+            record.configuration(beastState, loggers, stateFile);
+            record.seed(
+                    "mcmc",
+                    beastState.randomSeed,
+                    Randomizer.getSeed(),
+                    scriptSeed == null && Objects.equals(constructionSeed, beastState.randomSeed));
+            try {
+                managed.checkCancellation();
+                beastState.initializeBEASTObjects();
+                managed.checkCancellation();
+                record.running();
+                progress.accept("[3/4] Running MCMC (chain length: " + beastState.chainLength + ")...");
+                managed.run();
+                managed.checkCancellation();
+                progress.accept("[4/4] Checking result files and final state...");
+                managed.verifyLogs();
+                verifyOutputs(loggers, Path.of(stateFile), beastState.chainLength);
+            } catch (IOException
+                    | ParserConfigurationException
+                    | SAXException
+                    | RuntimeException
+                    | java.lang.Error failure) {
+                boolean interrupted = Thread.interrupted();
+                try {
+                    managed.close();
+                } catch (RuntimeException closeFailure) {
+                    failure.addSuppressed(closeFailure);
+                } finally {
+                    if (interrupted) Thread.currentThread().interrupt();
+                }
+                throw failure;
+            }
+        }
     }
 
-    /** Seeds model construction as well as the MCMC itself when a constant seed is supplied. */
-    private static void seedRandomizer(List<Stmt> statements) {
+    /** Finds the same constant seed used by the existing construction and initialization stages. */
+    private static Long declaredSeed(List<Stmt> statements) {
+        Long seed = null;
         for (Stmt statement : statements) {
             if (statement instanceof Stmt.Assignment assignment
                     && Stmt.Block.MCMC.equals(assignment.block)
@@ -238,8 +410,64 @@ public class PhyloSpecRunner {
                     && assignment.expression instanceof Expr.Literal literal
                     && literal.value instanceof Number number
                     && number.longValue() >= 0) {
-                Randomizer.setSeed(number.longValue());
+                seed = number.longValue();
             }
+        }
+        return seed;
+    }
+
+    static void verifyOutputs(List<Logger> loggers, Path stateFile, long chainLength) throws IOException {
+        List<Path> expected = new ArrayList<>();
+        for (Logger logger : loggers) {
+            String name = logger.fileNameInput.get();
+            if (name != null && !name.isEmpty()) expected.add(Path.of(name));
+        }
+        expected.add(stateFile);
+        for (Path path : expected) {
+            if (!Files.isRegularFile(path) || Files.size(path) == 0) {
+                throw new IOException("Expected output is missing or empty: " + path);
+            }
+        }
+        // BEAST can swallow state-write failures. Reject stale or truncated state XML.
+        XMLInputFactory factory = XMLInputFactory.newFactory();
+        factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+        factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+        try (var input = Files.newInputStream(stateFile)) {
+            var xml = factory.createXMLStreamReader(input);
+            try {
+                boolean rootSeen = false;
+                while (xml.hasNext()) {
+                    int event = xml.next();
+                    if (event == XMLStreamConstants.DTD) throw new IOException("State output must not contain a DTD.");
+                    if (event == XMLStreamConstants.START_ELEMENT && !rootSeen) {
+                        rootSeen = true;
+                        if (!xml.getLocalName().equals("itsabeastystatewerein")
+                                || !Long.toString(chainLength).equals(xml.getAttributeValue(null, "sample"))) {
+                            throw new IOException(
+                                    "State output does not contain the final sample " + chainLength + ": " + stateFile);
+                        }
+                    }
+                }
+                if (!rootSeen) throw new IOException("State output contains no state: " + stateFile);
+            } finally {
+                xml.close();
+            }
+        } catch (XMLStreamException malformed) {
+            throw new IOException("State output is incomplete or invalid: " + stateFile, malformed);
+        }
+    }
+
+    private static void appendFailure(Path directory, Throwable failure) {
+        StringWriter detail = new StringWriter();
+        failure.printStackTrace(new PrintWriter(detail));
+        try {
+            Files.writeString(
+                    directory.resolve("console.log"),
+                    detail.toString(),
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.APPEND);
+        } catch (IOException logFailure) {
+            failure.addSuppressed(logFailure);
         }
     }
 

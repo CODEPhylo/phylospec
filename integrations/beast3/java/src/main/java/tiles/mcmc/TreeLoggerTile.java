@@ -34,7 +34,7 @@ public class TreeLoggerTile extends TemplateTile<Void, BEASTState> {
     @Override
     protected Void applyTile(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Integer logEvery = this.logEveryInput.apply(state, indexVariables);
-        String fileName = this.fileNameInput.apply(state, indexVariables);
+        String fileName = state.resolveUserOutputPath(this.fileNameInput.apply(state, indexVariables));
         Tree tree = this.treeInput.apply(state, indexVariables);
 
         state.addTreeLoggerSpec(new TreeLoggerSpec<>(logEvery, fileName, tree));
