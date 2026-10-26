@@ -8,7 +8,7 @@ PhyloSpec provides a standardized way to describe phylogenetic modeling componen
 
 ## First Steps
 
-- To check and run scripts with BEAST 3, see the [CLI commands and run management guide](docs/beast3-cli.md).
+- To check and run scripts with the BEAST 3 command line, see the [CLI installation and usage guide](docs/beast3-cli.md).
 - Check out our [website](https://codephylo.github.io/phylospec).
 - Check out the [PRs](https://github.com/CODEPhylo/phylospec/pulls?q=is%3Apr+) and [our Blog](https://codephylo.github.io/phylospec/blog) for the latest progress.
 - Check out the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=CodePhylo.PhyloSpec) and the [OpenVSX extension](https://open-vsx.org/extension/CodePhylo/PhyloSpec).

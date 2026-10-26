@@ -1,135 +1,217 @@
 # PhyloSpec command line with BEAST 3
 
-The Java entry point `runner.PhyloSpecCli` checks and runs a `.phylospec` script
-with BEAST 3. The `check` and `run` commands share syntax, static-type, and backend
-mapping checks. `run` also creates a result directory, executes MCMC, and records
-its settings, status, and outputs. Only the BEAST 3 engine is supported by this
-entry point.
+The generic CLI ZIP provides one command for checking and running a `.phylospec`
+script with BEAST 3. It includes the PhyloSpec runtime, the base BEAST integration,
+and their Java dependencies. Only BEAST 3 is supported by this entry point.
+The examples demonstrate supported workflows; they do not establish support for
+every model or constitute complete scientific analyses.
 
-## Build and prepare the command
+## First run: HKY and Yule
 
-Use Java **25** and Maven. The following commands use macOS/Linux shell syntax.
-Run them in the same terminal session, starting at the repository root; check
-that `java -version` and `mvn -version` report the intended Java installation.
-Stop at any error before proceeding.
+Follow steps 1–4 in the **same terminal session** on macOS or Linux. The commands
+create separate installation and analysis directories under your home directory;
+`mktemp -d` gives each a unique name. The directory paths are printed below so you
+can find them later. Stop at any error before continuing to the next step.
+The existing local acceptance was on macOS. Linux and Windows still require their
+own execution checks; shell syntax or a supplied launcher alone is not platform
+validation.
+
+### 1. Install and check the launcher
+
+Install Java **25** and make it available on `PATH`. If `JAVA_HOME` is set, it must
+point to that Java installation: the launcher uses `JAVA_HOME` in preference to
+`PATH`. Obtain a CLI ZIP from the project maintainers, or follow
+[Build the distribution from source](#build-the-distribution-from-source).
+There is no published download URL assumed by this guide. Once you have the ZIP,
+running it does not require Maven or a source checkout.
+
+Set `PHYLOSPEC_ZIP` to your ZIP's actual location. These commands use the current
+`0.0.1-SNAPSHOT` distribution; change `PHYLOSPEC_VERSION` if your archive has a
+different version.
 
 ```sh
-cd /absolute/path/to/phylospec
-PHYLOSPEC_SOURCE="$PWD"
 java -version
-mvn -version
-
-mvn -pl integrations/beast3/java -am \
-  -Djava.only=true -Djsonschema2pojo.skip=true -Dspotless.skip=true install
-
-mvn -f "$PHYLOSPEC_SOURCE/integrations/beast3/java/pom.xml" \
-  dependency:build-classpath -DincludeScope=runtime \
-  "-Dmdep.outputFile=$PHYLOSPEC_SOURCE/integrations/beast3/java/target/runtime-classpath.txt"
-
-PHYLOSPEC_CLASSPATH="$PHYLOSPEC_SOURCE/integrations/beast3/java/target/classes:$(cat "$PHYLOSPEC_SOURCE/integrations/beast3/java/target/runtime-classpath.txt")"
-
-java --enable-native-access=ALL-UNNAMED -Djava.only=true \
-  -cp "$PHYLOSPEC_CLASSPATH" runner.PhyloSpecCli --version
-java --enable-native-access=ALL-UNNAMED -Djava.only=true \
-  -cp "$PHYLOSPEC_CLASSPATH" runner.PhyloSpecCli --help
+PHYLOSPEC_VERSION="0.0.1-SNAPSHOT"
+PHYLOSPEC_ZIP="$HOME/Downloads/phylospec-beast3-$PHYLOSPEC_VERSION-cli.zip"
+PHYLOSPEC_INSTALL="$(mktemp -d "$HOME/phylospec-install.XXXXXX")"
+unzip "$PHYLOSPEC_ZIP" -d "$PHYLOSPEC_INSTALL"
+PHYLOSPEC_DIR="$PHYLOSPEC_INSTALL/phylospec-beast3-$PHYLOSPEC_VERSION"
+chmod +x "$PHYLOSPEC_DIR/bin/phylospec"
+"$PHYLOSPEC_DIR/bin/phylospec" --version
+"$PHYLOSPEC_DIR/bin/phylospec" --help
+printf 'Installation: %s\n' "$PHYLOSPEC_DIR"
 ```
 
-The first Maven command builds and tests the integration and its upstream modules,
-then installs their JARs into your local Maven repository. This makes the matching
-PhyloSpec dependencies available to the second command, which writes the runtime
-classpath. Maven resolves the BEAST dependency version declared by the project.
-The build uses the checked-in schema classes and leaves source formatting unchanged.
-If you use a separate Maven cache with `-Dmaven.repo.local=...`, use the same cache
-for both commands.
+`--version` should report PhyloSpec and the BEAST runtime; `--help` lists `check`
+and `run`. The installation contains `bin/`, `lib/`, `examples/`, `USAGE.md`, and
+`LICENSE`. Move the whole installation directory together. Native accelerator
+libraries are not included in this ZIP, and none are required for this example.
 
-`-Djava.only=true` selects BEAST's Java likelihood implementation; no separate
-BEAGLE installation is needed for this workflow. It is a JVM property, so the
-Maven setting does not carry over to subsequent `java` commands. The commands above
-set it explicitly for both. `--enable-native-access=ALL-UNNAMED` permits JNI access
-if needed by the loaded runtime; it does not itself select or install an accelerator.
+### 2. Prepare your script and data
 
-The help text uses `phylospec` as the command name. In this source workflow, replace
-that name with the full `java ... runner.PhyloSpecCli` invocation shown above.
-
-## Prepare, check, and run a script
-
-This small prior-only example requires no input data. Create it outside the source
-checkout so its inputs and results have their own directory:
+Copy the bundled script and alignment into your own analysis directory:
 
 ```sh
-PHYLOSPEC_PROJECT="$(mktemp -d "$HOME/phylospec-example.XXXXXX")"
-cat > "$PHYLOSPEC_PROJECT/normal.phylospec" <<'EOF'
-Real x ~ Normal(mean=0.0, sd=1.0)
-
-mcmc {
-    Integer chainLength = 30
-    Integer defaultLogEvery = 10
-    Integer randomSeed = 42
-}
-EOF
-
-java --enable-native-access=ALL-UNNAMED -Djava.only=true \
-  -cp "$PHYLOSPEC_CLASSPATH" runner.PhyloSpecCli \
-  check "$PHYLOSPEC_PROJECT/normal.phylospec"
+PHYLOSPEC_PROJECT="$(mktemp -d "$HOME/phylospec-hky-yule.XXXXXX")"
+mkdir "$PHYLOSPEC_PROJECT/data"
+cp "$PHYLOSPEC_DIR/examples/hky-yule.phylospec" "$PHYLOSPEC_PROJECT/hky-yule.phylospec"
+cp "$PHYLOSPEC_DIR/examples/data/primate-mtDNA.nex" "$PHYLOSPEC_PROJECT/data/primate-mtDNA.nex"
+cd "$PHYLOSPEC_PROJECT"
+printf 'Analysis directory: %s\n' "$PHYLOSPEC_PROJECT"
+ls -lh hky-yule.phylospec data/primate-mtDNA.nex
+cat hky-yule.phylospec
 ```
 
-Continue when you see `Check passed`. A successful check confirms syntax, static
-types, and available BEAST 3 mappings. It does not run MCMC or establish complete
-input-data validity, successful native model initialization, or convergence.
-Some checks can inspect inputs while resolving their types.
+Your files should have this layout:
+
+```text
+phylospec-hky-yule.<unique-name>/
+  hky-yule.phylospec
+  data/
+    primate-mtDNA.nex
+```
+
+The script reads `fromNexus("data/primate-mtDNA.nex")`. That path is relative to the
+**script's directory**, regardless of where the terminal is. Keep the script and
+`data/` together when moving your analysis. You can edit this copy in your text
+editor; no changes are needed for this first run.
+
+### 3. Check and run
+
+```sh
+"$PHYLOSPEC_DIR/bin/phylospec" check "$PHYLOSPEC_PROJECT/hky-yule.phylospec"
+```
+
+Continue when you see `Check passed`:
 
 ```sh
 PHYLOSPEC_RUN="$PHYLOSPEC_PROJECT/results/run-01"
-java --enable-native-access=ALL-UNNAMED -Djava.only=true \
-  -cp "$PHYLOSPEC_CLASSPATH" runner.PhyloSpecCli \
-  run "$PHYLOSPEC_PROJECT/normal.phylospec" --out "$PHYLOSPEC_RUN"
+"$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_PROJECT/hky-yule.phylospec" \
+  --out "$PHYLOSPEC_RUN"
 ```
+
+`check` validates syntax, static types, and available BEAST mappings. It does not
+run MCMC or validate all data and native initialization. Some checks can inspect
+inputs while resolving their types. `run` reuses these checks,
+builds the native model, and runs MCMC. Both default to the base library `beast2`
+(the existing internal ID for this BEAST integration).
 
 `run` reports four stages: checking, model construction and initialization, MCMC,
-and output verification. Wait for `Run completed` and the result paths. The example
-runs 30 MCMC steps with seed 42 and logs every 10 steps. This demonstrates execution
-and output handling; it is too short to assess convergence or support scientific
-conclusions.
+and output verification. Wait for `Run completed` and the result paths. If BEAGLE
+is unavailable, a note says BEAST will try its Java implementation; this note alone
+does not mean the run failed or prove fallback succeeded. Other warnings and
+errors remain visible.
 
-## View the results
+A failed run reports its error and, when available, the directory containing its
+run record and diagnostic log. It does not print `Run completed`. Check the reported
+script/data path and read `console.log` for details. `--debug` adds raw BEAST output
+and failure stack traces to the terminal.
 
-For the example above, a successful run produces:
-
-```text
-results/run-01/
-  model.phylospec
-  run.json
-  console.log
-  output/
-    normal.log
-    normal.state.xml
-```
+### 4. View the results
 
 ```sh
 ls -lh "$PHYLOSPEC_RUN" "$PHYLOSPEC_RUN/output"
 head -n 12 "$PHYLOSPEC_RUN/run.json"
-head -n 6 "$PHYLOSPEC_RUN/output/normal.log"
+head -n 6 "$PHYLOSPEC_RUN/output/hky-yule.log"
+tail -n 3 "$PHYLOSPEC_RUN/output/hky-yule.log"
+```
+
+In `run.json`, a successful run has `"status" : "succeeded"` and
+`"completionConfirmed" : true`. The trace's first line names the columns; subsequent
+lines are samples. For this script, expect **31 samples, numbered 0–30**, and 31
+trees. Column order can vary; identify quantities by their column names.
+
+| File inside `results/run-01/` | What it contains |
+| --- | --- |
+| `output/hky-yule.log` | Tab-separated samples: posterior, prior, likelihood, `kappa`, tree summaries, and four base frequencies. |
+| `output/hky-yule.trees` | Sampled trees in NEXUS format. |
+| `output/hky-yule.state.xml` | Final MCMC state. The CLI does not yet provide a resume command. |
+| `run.json` | Run status, effective settings, seed, input references, and output paths. |
+| `console.log` | Java/BEAST console output, including original diagnostic messages and failure details. |
+| `model.phylospec` | Snapshot of the script actually used. Input data are not copied into the result directory. |
+
+To inspect the diagnostic log:
+
+```sh
 tail -n 30 "$PHYLOSPEC_RUN/console.log"
 ```
 
-| File | Contents |
-| --- | --- |
-| `output/normal.log` | Tab-separated MCMC samples; identify quantities by their column names. |
-| `output/normal.state.xml` | Final MCMC state. The CLI does not yet provide a resume command. |
-| `run.json` | Run status, runtime and selected component/library identities, effective settings, seeds, input references, and expected/generated output files. |
-| `console.log` | Java/BEAST console output, original diagnostic messages, and failure details captured during the managed run. |
-| `model.phylospec` | Snapshot of the script actually read. |
+The example runs **30 MCMC steps with seed 12345 and logs every step**. This verifies
+the setup and produces inspectable results; it does not establish convergence or
+provide enough samples for scientific conclusions. Chain length, logging interval,
+seed, and the `hky-yule` output prefix are in the script's `mcmc` block.
 
-Models with tree logging also produce tree files in `output/`. This prior-only
-example has no tree. The run record includes a script hash and hashes for input
-files reported through the runner's input-path resolver. Input data are not copied;
-the result directory is not a self-contained analysis archive.
+To run again, choose a new result directory. Existing results are never overwritten:
 
-Successful completion is recorded as `"status" : "succeeded"` together with
-`"completionConfirmed" : true`. The status normally progresses through `preparing`
-and `running` to `succeeded`, `failed`, or `cancelled`. After abrupt termination,
-the record can remain nonterminal or become `unconfirmed`; this does not establish
-that the process is still running. Failed/cancelled runs preserve partial files.
+```sh
+PHYLOSPEC_RUN="$PHYLOSPEC_PROJECT/results/run-02"
+"$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_PROJECT/hky-yule.phylospec" \
+  --out "$PHYLOSPEC_RUN"
+```
+
+Use another unused name for later runs. In a new terminal session, set
+`PHYLOSPEC_DIR` and `PHYLOSPEC_PROJECT` to the printed installation and analysis
+paths, then set `PHYLOSPEC_RUN` to the result directory you want to inspect.
+
+### What this example models
+
+`hky-yule.phylospec` uses `data/primate-mtDNA.nex`: 12 primate
+taxa and 898 mitochondrial DNA sites, attributed in the Nexus file to Hayasaka,
+Gojobori and Horai (1988), *Molecular Biology and Evolution* 5:626–644.
+The example uses all sites as one partition; the file's charset declarations and
+PAUP constraints are not applied by this script.
+
+The sampled quantities are the tree, HKY `kappa`, and the four A/C/G/T base
+frequencies. Their priors are Yule with a fixed birth rate of `1.0`,
+`LogNormal(logMean=1.0, logSd=0.5)`, and `Dirichlet([1,1,1,1])`, respectively.
+The strict-clock rate is fixed at `1.0`; there is no absolute-time calibration,
+Gamma site-rate variation, or invariant-site component. This preserves the model
+from the existing HKY and Yule test example.
+
+The trace's `baseFrequencies.1` through `.4` columns correspond to A/C/G/T,
+respectively. A short chain need not update every coordinate; the four frequencies
+are sampled jointly as a simplex whose entries sum to one.
+
+## Other quick examples and Windows launcher
+
+`jc69-coalescent.phylospec` uses JC69, a constant-population coalescent, and a
+synthetic alignment. `normal.phylospec` is a prior-only example with no input file.
+Both run 30 steps with a fixed seed and log every 10 steps. To try JC69 with the
+same installation:
+
+```sh
+"$PHYLOSPEC_DIR/bin/phylospec" check "$PHYLOSPEC_DIR/examples/jc69-coalescent.phylospec"
+"$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_DIR/examples/jc69-coalescent.phylospec" \
+  --out "$PHYLOSPEC_PROJECT/results/jc69-demo"
+```
+
+The Windows launcher is supplied; Windows execution needs its own platform
+validation. The tutorial above uses macOS/Linux shell syntax. After extracting
+the ZIP and copying the script and `data/` to an analysis folder, the equivalent
+Command Prompt commands are:
+
+```bat
+set "PHYLOSPEC_DIR=C:\path\phylospec-beast3-0.0.1-SNAPSHOT"
+set "PHYLOSPEC_PROJECT=C:\path\my-hky-analysis"
+"%PHYLOSPEC_DIR%\bin\phylospec.cmd" --version
+"%PHYLOSPEC_DIR%\bin\phylospec.cmd" --help
+"%PHYLOSPEC_DIR%\bin\phylospec.cmd" check "%PHYLOSPEC_PROJECT%\hky-yule.phylospec"
+"%PHYLOSPEC_DIR%\bin\phylospec.cmd" run "%PHYLOSPEC_PROJECT%\hky-yule.phylospec" --out "%PHYLOSPEC_PROJECT%\results\run-01"
+```
+
+## Run records and completion
+
+The script snapshot is the source actually read. `run.json` records its hash,
+runtime and selected component/library identities, effective settings, seeds,
+and expected/generated output files. Input hashes cover files reported through
+the runner's input-path resolver. Input data are not copied, so the result
+directory is not a self-contained analysis archive.
+
+Status normally progresses through `preparing` and `running` to `succeeded`,
+`failed`, or `cancelled`. After abrupt termination, the record can remain
+nonterminal or become `unconfirmed`; this does not establish that the process is
+still running. Failed/cancelled runs preserve partial files. Confirm success using
+both `"status" : "succeeded"` and `"completionConfirmed" : true`.
 
 ## Paths and command options
 
@@ -185,15 +267,99 @@ arguments, and `130` for cancellation caught by the CLI. OS termination signals 
 produce a different nonzero code. Successful execution and output checks do not
 establish MCMC convergence.
 
-## Existing invocation without a subcommand
+## Build the distribution from source
 
-The previous Java invocation remains available for existing callers:
+Developers need Java 25 and Maven. From the repository root:
+
+```sh
+mvn -pl integrations/beast3/java -am -Pcli-dist \
+  -Djava.only=true -Djsonschema2pojo.skip=true -Dspotless.skip=true verify
+```
+
+For version `0.0.1-SNAPSHOT`, the archive is
+`integrations/beast3/java/target/phylospec-beast3-0.0.1-SNAPSHOT-cli.zip`.
+The version in the filename follows the Maven project version. Dependencies must
+already be cached for an offline build (`mvn -o ...`). Extract the ZIP into a fresh
+directory and use its launcher for acceptance; running classes from the source
+tree alone does not test distribution completeness.
+
+The `cli-dist` profile builds the ZIP during `package` and runs the archive
+acceptance tests during `verify`. Those acceptance tests currently require macOS
+or Linux with `unzip`; they are explicitly skipped on Windows. The build command
+uses the checked-in schema classes and leaves source formatting unchanged.
+The ZIP retains dependencies as separate JARs, including their embedded metadata.
+`LICENSE` covers PhyloSpec; dependencies retain their own licenses.
+
+A minimal acceptance pass checks help/version, runs all three bundled examples from
+another working directory (including paths with spaces), verifies successful
+`run.json` and nonempty output files, rejects an existing output directory, and
+reports a missing input file clearly. Run the existing CLI regression tests as
+well. Linux and Windows execution require their own platform checks; do not infer
+them from a successful macOS run.
+
+## Run the Java entry point directly
+
+Developers can also invoke `runner.PhyloSpecCli` without a ZIP. These commands
+preserve the source workflow and build a runtime classpath from the same checkout.
+Use Java **25** and Maven, starting at the repository root in one terminal session.
+
+```sh
+cd /absolute/path/to/phylospec
+PHYLOSPEC_SOURCE="$PWD"
+java -version
+mvn -version
+
+mvn -pl integrations/beast3/java -am \
+  -Djava.only=true -Djsonschema2pojo.skip=true -Dspotless.skip=true install
+
+mvn -f "$PHYLOSPEC_SOURCE/integrations/beast3/java/pom.xml" \
+  dependency:build-classpath -DincludeScope=runtime \
+  "-Dmdep.outputFile=$PHYLOSPEC_SOURCE/integrations/beast3/java/target/runtime-classpath.txt"
+
+PHYLOSPEC_CLASSPATH="$PHYLOSPEC_SOURCE/integrations/beast3/java/target/classes:$(cat "$PHYLOSPEC_SOURCE/integrations/beast3/java/target/runtime-classpath.txt")"
+
+java --enable-native-access=ALL-UNNAMED -Djava.only=true \
+  -cp "$PHYLOSPEC_CLASSPATH" runner.PhyloSpecCli --version
+java --enable-native-access=ALL-UNNAMED -Djava.only=true \
+  -cp "$PHYLOSPEC_CLASSPATH" runner.PhyloSpecCli --help
+```
+
+The first Maven command builds and tests the integration and its upstream modules,
+then installs their JARs into your local Maven repository. This makes the matching
+PhyloSpec dependencies available to the second command, which writes the runtime
+classpath. Maven resolves the BEAST dependency version declared by the project.
+The build uses the checked-in schema classes and leaves source formatting unchanged.
+If you use a separate Maven cache with `-Dmaven.repo.local=...`, use the same cache
+for both commands.
+
+`-Djava.only=true` selects BEAST's Java likelihood implementation; no separate
+BEAGLE installation is needed for this workflow. It is a JVM property, so the
+Maven setting does not carry over to subsequent `java` commands. The commands above
+set it explicitly for both. `--enable-native-access=ALL-UNNAMED` permits JNI access
+if needed by the loaded runtime; it does not itself select or install an accelerator.
+
+The help text uses `phylospec` as the command name. In this source workflow, replace
+that name with the full `java ... runner.PhyloSpecCli` invocation shown above.
+
+For example, with the classpath prepared above:
 
 ```sh
 java --enable-native-access=ALL-UNNAMED -Djava.only=true \
   -cp "$PHYLOSPEC_CLASSPATH" runner.PhyloSpecCli \
-  --library beast2 --run-name "$PHYLOSPEC_PROJECT/legacy-normal" \
-  "$PHYLOSPEC_PROJECT/normal.phylospec"
+  check "$PHYLOSPEC_SOURCE/integrations/beast3/java/src/main/distribution/examples/hky-yule.phylospec"
+```
+
+## Existing invocation without a subcommand
+
+The previous Java invocation remains available for existing callers. After
+preparing the classpath above, use a fresh directory for its output:
+
+```sh
+PHYLOSPEC_LEGACY_RUN="$(mktemp -d "$HOME/phylospec-legacy.XXXXXX")"
+java --enable-native-access=ALL-UNNAMED -Djava.only=true \
+  -cp "$PHYLOSPEC_CLASSPATH" runner.PhyloSpecCli \
+  --library beast2 --run-name "$PHYLOSPEC_LEGACY_RUN/normal" \
+  "$PHYLOSPEC_SOURCE/integrations/beast3/java/src/main/distribution/examples/normal.phylospec"
 ```
 
 Without `check` or `run`, `--library` is required and its exact order is retained.

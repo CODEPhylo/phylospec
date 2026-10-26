@@ -1,0 +1,64 @@
+#!/bin/sh
+# Run the installed distribution without changing the caller's working directory.
+
+fail() {
+    printf 'PhyloSpec: %s\n' "$1" >&2
+    exit 1
+}
+
+phylospec_launcher=$0
+case "$phylospec_launcher" in
+    */*) ;;
+    *) phylospec_launcher=$(command -v "$phylospec_launcher") || fail "Cannot locate the launcher." ;;
+esac
+case "$phylospec_launcher" in
+    /*) ;;
+    *) phylospec_launcher=$(pwd -P)/$phylospec_launcher ;;
+esac
+
+# Resolve links one at a time; readlink -f is unavailable on some supported systems.
+phylospec_links=0
+while [ -L "$phylospec_launcher" ]; do
+    phylospec_links=$((phylospec_links + 1))
+    [ "$phylospec_links" -le 40 ] || fail "Too many launcher symbolic links."
+    phylospec_link_dir=$(CDPATH= cd -P "${phylospec_launcher%/*}" && pwd -P) || fail "Cannot locate the launcher directory."
+    phylospec_link=$(readlink "$phylospec_launcher") || fail "Cannot resolve the launcher symbolic link."
+    case "$phylospec_link" in
+        /*) phylospec_launcher=$phylospec_link ;;
+        *) phylospec_launcher=$phylospec_link_dir/$phylospec_link ;;
+    esac
+done
+phylospec_home=$(CDPATH= cd -P "${phylospec_launcher%/*}/.." && pwd -P) || fail "Cannot locate the installation directory."
+
+phylospec_has_jar=false
+for phylospec_jar in "$phylospec_home"/lib/*.jar; do
+    if [ -f "$phylospec_jar" ]; then
+        phylospec_has_jar=true
+        break
+    fi
+done
+[ "$phylospec_has_jar" = true ] || fail "No runtime JARs found in $phylospec_home/lib. Extract the complete distribution."
+
+if [ -n "${JAVA_HOME:-}" ]; then
+    phylospec_java=$JAVA_HOME/bin/java
+    [ -x "$phylospec_java" ] || fail "JAVA_HOME does not contain an executable bin/java: $JAVA_HOME"
+else
+    phylospec_java=$(command -v java) || fail "Java 25 or newer is required. Set JAVA_HOME or put java on PATH."
+fi
+
+phylospec_version_output=$("$phylospec_java" -version 2>&1) || fail "Java could not start. Check JAVA_HOME and the Java installation."
+case "$phylospec_version_output" in
+    *version\ \"*)
+        phylospec_version=${phylospec_version_output#*version \"}
+        phylospec_version=${phylospec_version%%\"*}
+        phylospec_major=${phylospec_version%%[.-]*}
+        ;;
+    *) fail "Cannot determine the Java version. Java 25 or newer is required." ;;
+esac
+case "$phylospec_major" in
+    ''|*[!0-9]*) fail "Cannot determine the Java version. Java 25 or newer is required." ;;
+esac
+[ "$phylospec_major" -ge 25 ] || fail "Java 25 or newer is required; found $phylospec_version. Set JAVA_HOME or update java on PATH."
+
+# BEAGLE may load JNI acceleration; explicitly allow this existing optional native call.
+exec "$phylospec_java" --enable-native-access=ALL-UNNAMED -cp "$phylospec_home/lib/*" runner.PhyloSpecCli "$@"
