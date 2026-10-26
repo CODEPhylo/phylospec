@@ -57,6 +57,7 @@ public class PhyloSpecRunner {
     private final Optional<List<String>> tileLibraryIds;
     private final Path sourceDirectory;
     private final Path sourceFile;
+    private final List<LocalAdapterBundles.Bundle> adapterBundles;
 
     /**
      * Constructs a runner for the given PhyloSpec source code.
@@ -66,6 +67,7 @@ public class PhyloSpecRunner {
         this.tileLibraryIds = Optional.empty();
         this.sourceDirectory = Path.of("").toAbsolutePath().normalize();
         this.sourceFile = null;
+        this.adapterBundles = List.of();
     }
 
     /**
@@ -77,15 +79,22 @@ public class PhyloSpecRunner {
         this.tileLibraryIds = Optional.of(List.copyOf(tileLibraryIds));
         this.sourceDirectory = Path.of("").toAbsolutePath().normalize();
         this.sourceFile = null;
+        this.adapterBundles = List.of();
     }
 
     /** Constructs a runner from a source file, resolving relative model inputs beside that file. */
     public PhyloSpecRunner(Path sourceFile, List<String> tileLibraryIds) throws IOException {
+        this(sourceFile, tileLibraryIds, List.of());
+    }
+
+    PhyloSpecRunner(Path sourceFile, List<String> tileLibraryIds, List<LocalAdapterBundles.Bundle> adapterBundles)
+            throws IOException {
         Path absoluteSource = sourceFile.toAbsolutePath().normalize();
         this.source = Files.readString(absoluteSource, StandardCharsets.UTF_8);
         this.tileLibraryIds = Optional.of(List.copyOf(tileLibraryIds));
         this.sourceDirectory = absoluteSource.getParent();
         this.sourceFile = absoluteSource;
+        this.adapterBundles = List.copyOf(adapterBundles);
     }
 
     /**
@@ -204,7 +213,8 @@ public class PhyloSpecRunner {
         // Reject an invalid CLI prefix before claiming a directory.
         new OutputPaths(runDirectory.resolve("output")).resolveUserPath(runName);
         Path outputDirectory = OutputPaths.createRunDirectory(runDirectory);
-        RunRecord record = RunRecord.create(runDirectory, source, sourceFile, sourceDirectory, checked.catalog);
+        RunRecord record =
+                RunRecord.create(runDirectory, source, sourceFile, sourceDirectory, checked.catalog, adapterBundles);
         AtomicBoolean cancellationRequested = new AtomicBoolean();
         Thread owner = Thread.currentThread();
         Thread shutdown = new Thread(
