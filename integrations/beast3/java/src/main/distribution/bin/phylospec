@@ -60,5 +60,25 @@ case "$phylospec_major" in
 esac
 [ "$phylospec_major" -ge 25 ] || fail "Java 25 or newer is required; found $phylospec_version. Set JAVA_HOME or update java on PATH."
 
-# BEAGLE may load JNI acceleration; explicitly allow this existing optional native call.
+# Platform distributions carry a private CPU-only BEAGLE build. Its native dependencies
+# and plugins resolve beside the library, without Homebrew or global loader variables.
+phylospec_native=$phylospec_home/native/macos-arm64
+if [ -d "$phylospec_home/native" ]; then
+    [ "$(uname -s)" = Darwin ] && [ "$(uname -m)" = arm64 ] || fail "This BEAGLE distribution requires macOS on Apple Silicon. Use the generic CLI ZIP on other platforms."
+    [ -d "$phylospec_native" ] || fail "Bundled BEAGLE directory is missing. Extract the complete distribution."
+    phylospec_java_settings=$("$phylospec_java" -XshowSettings:properties -version 2>&1) || fail "Cannot inspect the Java architecture."
+    phylospec_java_arch=$(printf '%s\n' "$phylospec_java_settings" | sed -n 's/^[[:space:]]*os.arch = //p')
+    case "$phylospec_java_arch" in
+        aarch64|arm64) ;;
+        *) fail "Bundled BEAGLE requires an ARM64 Java installation; found $phylospec_java_arch. Set JAVA_HOME to ARM64 Java 25 or newer." ;;
+    esac
+    for phylospec_library in libhmsbeagle-jni.jnilib libhmsbeagle.1.dylib libhmsbeagle-cpu.40.so; do
+        [ -f "$phylospec_native/$phylospec_library" ] || fail "Bundled BEAGLE library is missing: $phylospec_library. Extract the complete distribution."
+    done
+    exec "$phylospec_java" --enable-native-access=ALL-UNNAMED \
+        "-Djava.library.path=$phylospec_native" -Dbeagle.resource.order=0 \
+        -cp "$phylospec_home/lib/*" runner.PhyloSpecCli "$@"
+fi
+
+# The generic distribution retains BEAST's optional native discovery and Java fallback.
 exec "$phylospec_java" --enable-native-access=ALL-UNNAMED -cp "$phylospec_home/lib/*" runner.PhyloSpecCli "$@"

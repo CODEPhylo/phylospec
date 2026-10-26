@@ -303,6 +303,15 @@ public class PhyloSpecCliTest {
         assertEquals(0, result.exitCode(), result.stderr());
         assertTrue(result.stdout().contains("Run completed"));
         assertNativeOutputs(newPrefix);
+        JsonNode backend = readRecord(work.resolve("new analysis"))
+                .path("runtime")
+                .path("likelihoodBackends")
+                .get(0);
+        assertEquals("Java", backend.path("implementation").asText());
+        assertTrue(backend.path("version").isNull());
+        assertTrue(backend.path("resourceNumber").isNull());
+        assertTrue(result.stdout().contains(": Java (BEAGLE is not active)."));
+
         CliResult legacy = launch(work, "--library", "beast2", "--run-name", legacyPrefix, source.toString());
         assertEquals(0, legacy.exitCode(), legacy.stderr());
         assertNativeOutputs(legacyPrefix);

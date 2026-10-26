@@ -3,6 +3,7 @@ package runner;
 import beast.base.core.BEASTVersion2;
 import beast.base.inference.Logger;
 import beastconfig.BEASTState;
+import beastconfig.ReportingTreeLikelihood;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -192,6 +193,21 @@ final class RunRecord {
         ObjectNode next = editable();
         next.put("status", "running");
         next.put("mcmcStartedAt", Instant.now().toString());
+        save(next);
+    }
+
+    /** Records an initialized instance, rather than inferring activation from library availability. */
+    synchronized void likelihoodBackend(String id, ReportingTreeLikelihood.Backend backend) throws IOException {
+        ObjectNode next = editable();
+        ObjectNode runtime = (ObjectNode) next.get("runtime");
+        runtime.withArray("likelihoodBackends")
+                .addObject()
+                .put("likelihood", id)
+                .put("implementation", backend.implementation())
+                .put("version", backend.version())
+                .put("resourceNumber", backend.resourceNumber())
+                .put("resourceName", backend.resourceName())
+                .put("resourceFlags", backend.resourceFlags());
         save(next);
     }
 

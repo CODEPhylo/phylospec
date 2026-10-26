@@ -4,6 +4,7 @@ import beast.base.inference.*;
 import beast.base.util.Randomizer;
 import beastconfig.BEASTState;
 import beastconfig.OutputPaths;
+import beastconfig.ReportingTreeLikelihood;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -384,6 +385,17 @@ public class PhyloSpecRunner {
             try {
                 managed.checkCancellation();
                 beastState.initializeBEASTObjects();
+                for (Distribution distribution : beastState.likelihoodDistributions) {
+                    if (distribution instanceof ReportingTreeLikelihood treeLikelihood) {
+                        var backend = treeLikelihood.backend();
+                        record.likelihoodBackend(treeLikelihood.getID(), backend);
+                        progress.accept("Likelihood " + treeLikelihood.getID() + ": " + backend.implementation()
+                                + (backend.version() == null
+                                        ? " (BEAGLE is not active)."
+                                        : " " + backend.version() + ", resource " + backend.resourceNumber() + " ("
+                                                + backend.resourceName() + ")."));
+                    }
+                }
                 managed.checkCancellation();
                 record.running();
                 progress.accept("[3/4] Running MCMC (chain length: " + beastState.chainLength + ")...");
