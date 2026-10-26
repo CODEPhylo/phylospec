@@ -76,7 +76,7 @@ public class LoggerSelector {
             CompoundDistribution likelihood) {
         Logger logger = new Logger();
         beastState.setInput(logger, logger.everyInput, spec.logEvery());
-        beastState.setInput(logger, logger.fileNameInput, spec.fileName());
+        beastState.setInput(logger, logger.fileNameInput, beastState.resolveOutputPath(spec.fileName()));
         beastState.setInput(logger, logger.sortModeInput, Logger.SORTMODE.smart);
         beastState.setInput(logger, logger.sanitiseHeadersInput, true);
 
@@ -93,7 +93,7 @@ public class LoggerSelector {
     public static Logger buildTreeLogger(TreeLoggerSpec<Tree> spec, BEASTState beastState) {
         Logger logger = new Logger();
         beastState.setInput(logger, logger.everyInput, spec.logEvery());
-        beastState.setInput(logger, logger.fileNameInput, spec.fileName());
+        beastState.setInput(logger, logger.fileNameInput, beastState.resolveOutputPath(spec.fileName()));
         beastState.setInput(logger, logger.modeInput, beast.base.inference.Logger.LOGMODE.tree);
 
         List<BEASTObject> trees =

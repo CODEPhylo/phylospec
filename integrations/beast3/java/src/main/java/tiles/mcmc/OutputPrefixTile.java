@@ -45,7 +45,7 @@ public class OutputPrefixTile extends Tile<Void, BEASTState> implements Candidat
                     "MCMC output prefix must not be blank.",
                     "Use a non-empty prefix, for example outputPrefix=\"results/myRun\".");
         }
-        state.outputPrefix = prefix;
+        state.outputPrefix = state.resolveUserOutputPath(prefix);
         return null;
     }
 
