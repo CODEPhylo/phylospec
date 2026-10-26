@@ -10,6 +10,7 @@ import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beastconfig.BEASTState;
+import beastconfig.ReportingTreeLikelihood;
 import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.Partial;
@@ -59,7 +60,7 @@ public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, 
 
         // initialize tree likelihood
 
-        TreeLikelihood treeLikelihood = new TreeLikelihood();
+        TreeLikelihood treeLikelihood = new ReportingTreeLikelihood();
         beastState.setInput(treeLikelihood, treeLikelihood.treeInput, tree);
         beastState.setInput(treeLikelihood, treeLikelihood.siteModelInput, siteModel);
         beastState.setInput(treeLikelihood, treeLikelihood.branchRateModelInput, branchRateModel);

@@ -220,5 +220,64 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <!-- Opt in together with cli-dist; the generic ZIP remains available. -->
+            <id>cli-dist-macos-arm64</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>build-bundled-beagle</id>
+                                <phase>generate-resources</phase>
+                                <goals><goal>exec</goal></goals>
+                                <configuration>
+                                    <executable>sh</executable>
+                                    <arguments>
+                                        <argument>${project.basedir}/src/main/native/beagle/build-macos-arm64.sh</argument>
+                                        <argument>${project.build.directory}/beagle</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>package-cli-macos-arm64</id>
+                                <phase>package</phase>
+                                <goals><goal>single</goal></goals>
+                                <configuration>
+                                    <skipAssembly>false</skipAssembly>
+                                    <descriptors>
+                                        <descriptor>src/assembly/cli-macos-arm64.xml</descriptor>
+                                    </descriptors>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>${maven-surefire-plugin.version}</version>
+                        <configuration>
+                            <argLine>--enable-native-access=ALL-UNNAMED -Djava.library.path="${project.build.directory}/beagle/macos-arm64"</argLine>
+                            <includes>
+                                <include>**/CliDistributionIT.java</include>
+                                <include>**/HkyYuleBeagleIT.java</include>
+                            </includes>
+                            <systemPropertyVariables>
+                                <phylospec.distribution>${project.build.directory}/${project.build.finalName}-cli-macos-arm64.zip</phylospec.distribution>
+                                <phylospec.test.beagle>true</phylospec.test.beagle>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 </project>
