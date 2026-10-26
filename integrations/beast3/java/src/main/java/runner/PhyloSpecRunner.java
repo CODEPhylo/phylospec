@@ -9,8 +9,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import javax.xml.parsers.ParserConfigurationException;
+import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
@@ -29,6 +32,7 @@ import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
+import org.phylospec.workspace.Workspace;
 import org.xml.sax.SAXException;
 
 /// Top-level entry point for running a PhyloSpec model against BEAST 3.
@@ -36,11 +40,12 @@ import org.xml.sax.SAXException;
 /// Orchestrates the full pipeline: lexing and parsing the source, simplifying the AST,
 /// resolving variables and types, applying tiles to build a BEAST object graph, assembling
 /// the MCMC run (state, distributions, operators, loggers), and finally executing it.
-public class PhyloSpecRunner implements ErrorEventListener {
+public class PhyloSpecRunner {
 
     private final String source;
     private final Optional<List<String>> tileLibraryIds;
     private final Path sourceDirectory;
+    private final Path sourceFile;
 
     /**
      * Constructs a runner for the given PhyloSpec source code.
@@ -49,6 +54,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         this.source = source;
         this.tileLibraryIds = Optional.empty();
         this.sourceDirectory = Path.of("").toAbsolutePath().normalize();
+        this.sourceFile = null;
     }
 
     /**
@@ -59,6 +65,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         this.source = source;
         this.tileLibraryIds = Optional.of(List.copyOf(tileLibraryIds));
         this.sourceDirectory = Path.of("").toAbsolutePath().normalize();
+        this.sourceFile = null;
     }
 
     /** Constructs a runner from a source file, resolving relative model inputs beside that file. */
@@ -67,36 +74,55 @@ public class PhyloSpecRunner implements ErrorEventListener {
         this.source = Files.readString(absoluteSource, StandardCharsets.UTF_8);
         this.tileLibraryIds = Optional.of(List.copyOf(tileLibraryIds));
         this.sourceDirectory = absoluteSource.getParent();
+        this.sourceFile = absoluteSource;
     }
 
     /**
-     * Runs the full PhyloSpec-to-BEAST pipeline for the given run name.
-     * Any error detected during lexing, parsing, type resolution, or tiling is reported
-     * via {@link #errorDetected} and terminates the process immediately.
+     * Checks syntax, static types and available BEAST mappings without applying tiles or running
+     * MCMC. This does not validate all data or native initialization. Adapter registration and
+     * existing type-property inference still take place.
+     *
+     * @throws PhyloSpecException if a source or mapping error is detected
      */
-    public void runPhyloSpec(String runName) throws IOException, ParserConfigurationException, SAXException {
+    public CheckedModel check() throws IOException {
+        return check(warning -> {});
+    }
+
+    private CheckedModel check(Consumer<PhyloSpecDiagnostic> warningHandler) throws IOException {
         TileCatalog<BEASTState> catalog = tileLibraryIds.isPresent()
                 ? TileCatalog.select(BEASTState.class, tileLibraryIds.get())
                 : TileCatalog.discover(BEASTState.class);
+        Diagnostics diagnostics = new Diagnostics(warningHandler);
 
         // run lexer
 
         Lexer lexer = new Lexer(this.source);
-        lexer.registerEventListener(this);
+        diagnostics.stage = PhyloSpecDiagnostic.Stage.LEXING;
+        lexer.registerEventListener(diagnostics);
         List<Token> tokens = lexer.scanTokens();
 
         // run parser
 
         Parser parser = new Parser(tokens);
-        parser.registerEventListener(this);
+        diagnostics.stage = PhyloSpecDiagnostic.Stage.PARSING;
+        parser.registerEventListener(diagnostics);
         List<Stmt> statements = parser.parse();
 
         // simplify graph
 
-        statements = new RemoveGroupings().transform(statements);
-        statements = new EvaluateLiterals().transform(statements);
-        statements = new EvaluateScalarFunctions().transform(statements);
-        seedRandomizer(statements);
+        diagnostics.stage = PhyloSpecDiagnostic.Stage.SIMPLIFICATION;
+        try {
+            statements = new RemoveGroupings().transform(statements);
+            statements = new EvaluateLiterals().transform(statements);
+            statements = new EvaluateScalarFunctions().transform(statements);
+        } catch (ArithmeticException | ClassCastException error) {
+            throw diagnostics.failure(
+                    new Error(
+                            null,
+                            "Could not evaluate a constant expression.",
+                            "Check the operand types and values in constant expressions."),
+                    error);
+        }
 
         // run variable resolver
 
@@ -104,14 +130,14 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         // run type resolver
 
-        TypeResolver typeResolver = new TypeResolver(catalog.getComponentResolver());
-        typeResolver.registerEventListener(this);
+        TypeResolver typeResolver = new TypeResolver(catalog.getComponentResolver(), new Workspace(sourceDirectory));
+        diagnostics.stage = PhyloSpecDiagnostic.Stage.TYPE_CHECKING;
+        typeResolver.registerEventListener(diagnostics);
 
         try {
             typeResolver.visitStatements(statements);
         } catch (TypeError error) {
-            Range range = parser.getRangeForAstNode(error.getAstNode());
-            this.errorDetected(error.toError(range));
+            throw diagnostics.failure(error.toError(sourceRange(parser, error.getAstNode())), error);
         }
 
         StochasticityResolver stochasticityResolver = new StochasticityResolver();
@@ -121,16 +147,43 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
         EvaluateTiles<BEASTState> applyTiles =
                 new EvaluateTiles<>(catalog.getTiles(), variableResolver, stochasticityResolver);
-        BEASTState beastState = new BEASTState(runName, sourceDirectory);
+        diagnostics.stage = PhyloSpecDiagnostic.Stage.MAPPING;
         try {
             applyTiles.getBestTiling(statements);
-            beastState = applyTiles.applyBestTiling(beastState);
         } catch (TileApplicationError error) {
-            Range range = parser.getRangeForAstNode(error.getAstNode());
-            this.errorDetected(error.toError(range));
+            throw diagnostics.failure(error.toError(sourceRange(parser, error.getAstNode())), error);
         }
 
-        catalog.configureState(beastState);
+        return new CheckedModel(statements, parser, catalog, applyTiles, diagnostics.warnings);
+    }
+
+    /**
+     * Runs the full pipeline using the same checks as {@link #check()}. Source failures are thrown
+     * to the caller; use the overload with a warning handler to receive nonfatal diagnostics.
+     */
+    public void runPhyloSpec(String runName) throws IOException, ParserConfigurationException, SAXException {
+        runPhyloSpec(runName, warning -> {});
+    }
+
+    /** Runs the model, delivering warnings without choosing an output stream for the caller. */
+    public void runPhyloSpec(String runName, Consumer<PhyloSpecDiagnostic> warningHandler)
+            throws IOException, ParserConfigurationException, SAXException {
+        CheckedModel checked = check(warningHandler);
+        seedRandomizer(checked.statements);
+        BEASTState beastState = new BEASTState(runName, sourceDirectory);
+        try {
+            beastState = checked.tiles.applyBestTiling(beastState);
+        } catch (TileApplicationError error) {
+            PhyloSpecDiagnostic diagnostic = new PhyloSpecDiagnostic(
+                    PhyloSpecDiagnostic.Stage.MODEL_BUILDING,
+                    error.toError(sourceRange(checked.parser, error.getAstNode())),
+                    false,
+                    source,
+                    sourceFile);
+            throw new PhyloSpecException(diagnostic, error, checked.warnings);
+        }
+
+        checked.catalog.configureState(beastState);
 
         // add state
 
@@ -190,20 +243,67 @@ public class PhyloSpecRunner implements ErrorEventListener {
         }
     }
 
-    /**
-     * Prints the error to standard output and exits the process.
-     */
-    @Override
-    public void errorDetected(Error error) {
-        System.out.println(error.toStdOutString(this.source));
-        System.exit(1);
+    private static Range sourceRange(Parser parser, AstNode node) {
+        if (node == null) return null;
+        Range range = parser.getRangeForAstNode(node);
+        return range == null ? node.getRange() : range;
     }
 
     /**
-     * Prints the warning to standard output but does not exit the process.
+     * A successful static check. The matched model is kept private so execution can continue from
+     * this exact catalog and tiling without exposing mutable AST or native state to callers.
      */
-    @Override
-    public void warningDetected(Error warning) {
-        System.out.println(warning.toStdOutString(this.source, true));
+    public static final class CheckedModel {
+        private final List<Stmt> statements;
+        private final Parser parser;
+        private final TileCatalog<BEASTState> catalog;
+        private final EvaluateTiles<BEASTState> tiles;
+        private final List<PhyloSpecDiagnostic> warnings;
+
+        private CheckedModel(
+                List<Stmt> statements,
+                Parser parser,
+                TileCatalog<BEASTState> catalog,
+                EvaluateTiles<BEASTState> tiles,
+                List<PhyloSpecDiagnostic> warnings) {
+            this.statements = statements;
+            this.parser = parser;
+            this.catalog = catalog;
+            this.tiles = tiles;
+            this.warnings = List.copyOf(warnings);
+        }
+
+        public List<PhyloSpecDiagnostic> warnings() {
+            return warnings;
+        }
+    }
+
+    /** Each check owns its listener so warnings and stages cannot leak into the next call. */
+    private final class Diagnostics implements ErrorEventListener {
+        private final List<PhyloSpecDiagnostic> warnings = new ArrayList<>();
+        private final Consumer<PhyloSpecDiagnostic> warningHandler;
+        private PhyloSpecDiagnostic.Stage stage;
+
+        private Diagnostics(Consumer<PhyloSpecDiagnostic> warningHandler) {
+            this.warningHandler = Objects.requireNonNull(warningHandler, "warningHandler");
+        }
+
+        private PhyloSpecException failure(Error error, Throwable cause) {
+            return new PhyloSpecException(
+                    new PhyloSpecDiagnostic(stage, error, false, source, sourceFile), cause, warnings);
+        }
+
+        @Override
+        public void errorDetected(Error error) {
+            // Throwing here also prevents parser recovery from accepting a partial script.
+            throw failure(error, error);
+        }
+
+        @Override
+        public void warningDetected(Error warning) {
+            PhyloSpecDiagnostic diagnostic = new PhyloSpecDiagnostic(stage, warning, true, source, sourceFile);
+            warnings.add(diagnostic);
+            warningHandler.accept(diagnostic);
+        }
     }
 }
