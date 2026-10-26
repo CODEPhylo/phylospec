@@ -25,6 +25,9 @@ public final class PhyloSpecCli {
     public static void main(String[] arguments) {
         try {
             execute(arguments);
+        } catch (PhyloSpecException e) {
+            System.err.println(e.diagnostic().format());
+            System.exit(1);
         } catch (IllegalArgumentException | IOException e) {
             System.err.println("Error: " + e.getMessage());
             System.err.print(USAGE);
@@ -51,7 +54,8 @@ public final class PhyloSpecCli {
         String runName = options.runName() == null
                 ? withoutExtension(source).toString()
                 : Path.of(options.runName()).toAbsolutePath().normalize().toString();
-        new PhyloSpecRunner(source, options.libraries()).runPhyloSpec(runName);
+        new PhyloSpecRunner(source, options.libraries())
+                .runPhyloSpec(runName, warning -> System.err.println(warning.format()));
     }
 
     private static Path withoutExtension(Path source) {

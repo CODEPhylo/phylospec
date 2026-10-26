@@ -26,13 +26,8 @@ class UniformRunnerTest {
                 }
                 """.formatted(prefix.toString().replace("\\", "\\\\"));
 
-        new PhyloSpecRunner(source, List.of("beast2")) {
-            @Override
-            public void errorDetected(org.phylospec.errors.Error error) {
-                // The legacy runner normally exits the process on a diagnostic.
-                fail(error.toStdOutString(source));
-            }
-        }.runPhyloSpec("uniform");
+        // Source failures propagate as exceptions and fail the test directly.
+        new PhyloSpecRunner(source, List.of("beast2")).runPhyloSpec("uniform");
 
         List<String> lines = Files.readAllLines(Path.of(prefix + ".log")).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))

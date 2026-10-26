@@ -36,7 +36,9 @@ public class FromNexusTile extends GeneratorTile<DecoratedAlignment, BEASTState>
             nexusParser.parseFile(file);
         } catch (IOException e) {
             throw new TileApplicationError(
-                    "File not found.", "'" + path + "' could not be found. Does it exist? Select a valid file path.");
+                    getRootNode(),
+                    "Could not read input file.",
+                    "'" + path + "' resolves to '" + file + "'. " + e.getMessage());
         }
 
         Alignment alignment = nexusParser.m_alignment;

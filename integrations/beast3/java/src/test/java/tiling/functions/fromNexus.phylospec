@@ -10,7 +10,7 @@ Alignment alignment2 = fromNexus(
 // EXPECTED_TILES
 
 // EXPECTED_APPLICATION_ERRORS
-// File not found. 'hallo.nex' could not be found. Does it exist? Select a valid file path.
+// prefix: Could not read input file. 'hallo.nex' resolves to '
 // EXPECTED_APPLICATION_ERRORS
 
 // EXPECTED BEAST STATE
