@@ -3,6 +3,7 @@ package runner;
 import static org.junit.jupiter.api.Assertions.*;
 
 import beast.base.util.Randomizer;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -199,6 +200,22 @@ class PhyloSpecRunnerTest {
         }
         assertTrue(Files.readString(directory.resolve("analysis.trees")).contains("STATE_30"));
         assertTrue(Files.size(directory.resolve("analysis.state.xml")) > 0);
+    }
+
+    @Test
+    void outputValidationRejectsTruncatedStaleOrExternalEntityState(@TempDir Path directory) throws Exception {
+        Path state = directory.resolve("analysis.state.xml");
+        for (String invalid : List.of(
+                "<itsabeastystatewerein sample='30'><statenode>",
+                "<itsabeastystatewerein sample='20'></itsabeastystatewerein>",
+                "<!DOCTYPE state [<!ENTITY external SYSTEM 'file:///unavailable'>]>"
+                        + "<itsabeastystatewerein sample='30'>&external;</itsabeastystatewerein>")) {
+            Files.writeString(state, invalid);
+            assertThrows(IOException.class, () -> PhyloSpecRunner.verifyOutputs(List.of(), state, 30));
+        }
+        Files.writeString(
+                state, "<itsabeastystatewerein sample='30'></itsabeastystatewerein>\n<!-- operator settings -->");
+        assertDoesNotThrow(() -> PhyloSpecRunner.verifyOutputs(List.of(), state, 30));
     }
 
     private static PhyloSpecRunner runner(String source) {
