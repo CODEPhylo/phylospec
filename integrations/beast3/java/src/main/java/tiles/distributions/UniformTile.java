@@ -2,11 +2,12 @@ package tiles.distributions;
 
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.Uniform;
+import beast.base.spec.inference.operator.RealRandomWalkOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
-import beastconfig.OperatorSelector;
 import java.util.IdentityHashMap;
+import java.util.List;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiling.BoundDistribution;
@@ -31,12 +32,23 @@ public class UniformTile extends GeneratorTile<BoundDistribution<RealScalarParam
         beastState.setInput(distribution, distribution.lowerInput, lower);
         beastState.setInput(distribution, distribution.upperInput, upper);
 
-        RealScalarParam<Real> defaultState = new RealScalarParam<>();
+        // Read the bounds once for initialization; the prior keeps the original input objects.
+        double initialValue = lower.get() / 2.0 + upper.get() / 2.0;
+        RealScalarParam<Real> defaultState = new RealScalarParam<>(initialValue, Real.INSTANCE);
 
         return new BoundDistribution<>(
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
-                OperatorSelector::getDefaultOperators);
+                (stateNode, state) -> {
+                    RealRandomWalkOperator operator = new RealRandomWalkOperator();
+                    state.setInput(operator, operator.scalarInput, stateNode);
+                    // An additive proposal can leave zero and cross signs. Only its initial
+                    // window is based on these bounds; BEAST checks the current bounds each step.
+                    double window = Math.max(Double.MIN_VALUE, upper.get() / 4.0 - lower.get() / 4.0);
+                    state.setInput(operator, operator.windowSizeInput, window);
+                    state.setInput(operator, operator.m_pWeight, 5.0);
+                    return List.of(operator);
+                });
     }
 }

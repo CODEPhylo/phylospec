@@ -5,8 +5,9 @@ import beast.base.spec.inference.distribution.IntUniform;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.IntScalar;
 import beastconfig.BEASTState;
-import beastconfig.OperatorSelector;
 import java.util.IdentityHashMap;
+import java.util.List;
+import operators.IntScalarUniformOperator;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiling.BoundDistribution;
@@ -31,12 +32,19 @@ public class DiscreteUniformTile extends GeneratorTile<BoundDistribution<IntScal
         beastState.setInput(distribution, distribution.lowerInput, lower);
         beastState.setInput(distribution, distribution.upperInput, upper);
 
-        IntScalarParam<Int> defaultState = new IntScalarParam<>(0, Int.INSTANCE);
+        // Promote before adding so even a full-width integer interval has a legal midpoint.
+        int initialValue = (int) (((long) lower.get() + upper.get()) / 2);
+        IntScalarParam<Int> defaultState = new IntScalarParam<>(initialValue, Int.INSTANCE);
 
         return new BoundDistribution<>(
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
-                OperatorSelector::getDefaultOperators);
+                (stateNode, state) -> {
+                    IntScalarUniformOperator operator = new IntScalarUniformOperator();
+                    state.setInput(operator, operator.parameterInput, stateNode);
+                    state.setInput(operator, operator.m_pWeight, 10.0);
+                    return List.of(operator);
+                });
     }
 }
