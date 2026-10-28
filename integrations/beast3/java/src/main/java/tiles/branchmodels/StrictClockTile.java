@@ -3,6 +3,7 @@ package tiles.branchmodels;
 import beast.base.evolution.tree.Tree;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.evolution.branchratemodel.StrictClockModel;
+import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
@@ -14,7 +15,7 @@ import org.phylospec.tiling.tiles.AnnotatedGeneratorTile;
 @PhyloSpec(value = "StrictClock", role = PhyloSpec.Role.CLOCK_MODEL)
 public class StrictClockTile extends AnnotatedGeneratorTile<StrictClockModel, BEASTState> {
 
-    @PhyloParam("clockRate")
+    @PhyloParam(value = "clockRate", required = false, defaultValue = "1")
     GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> rateInput = input();
 
     @PhyloParam("tree")
@@ -23,6 +24,11 @@ public class StrictClockTile extends AnnotatedGeneratorTile<StrictClockModel, BE
     @Override
     public StrictClockModel applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<PositiveReal> rate = this.rateInput.apply(beastState, indexVariables);
+
+        if (rate == null) {
+            rate = new RealScalarParam<>(1.0, PositiveReal.INSTANCE);
+        }
+
         this.treeInput.apply(beastState, indexVariables);
 
         StrictClockModel strictClockModel = new StrictClockModel();
