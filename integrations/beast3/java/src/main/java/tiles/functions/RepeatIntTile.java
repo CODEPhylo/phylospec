@@ -8,6 +8,7 @@ import beastconfig.BEASTState;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.Set;
+import java.util.stream.IntStream;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.tiles.GeneratorTile;
@@ -38,12 +39,22 @@ public class RepeatIntTile extends GeneratorTile<IntVectorParam<Int>, BEASTState
     @Override
     public IntVectorParam<Int> applyTile(
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        int value = this.valueInput.apply(beastState, indexVariables).get();
+        IntScalarParam<? extends Int> value = this.valueInput.apply(beastState, indexVariables);
         int num = this.numInput.apply(beastState, indexVariables).get();
+        Int domain = value.getDomain();
 
         int[] values = new int[num];
-        Arrays.fill(values, value);
+        Arrays.fill(values, value.get());
 
-        return new IntVectorParam<>(values, Int.INSTANCE);
+        IntVectorParam<Int> result = new IntVectorParam<>();
+        result.domainTypeInput.setValue(domain, result);
+
+        // Match the vector bounds to the input domain before validation.
+        result.setLower(domain.getLower());
+        result.setUpper(domain.getUpper());
+
+        result.valuesInput.setValue(IntStream.of(values).boxed().toList(), result);
+        result.initAndValidate();
+        return result;
     }
 }

@@ -29,13 +29,13 @@ public class RepeatRealTile extends GeneratorTile<RealVectorParam<Real>, BEASTSt
     @Override
     public RealVectorParam<Real> applyTile(
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        double value = this.valueInput.apply(beastState, indexVariables).get();
+        RealScalarParam<? extends Real> value = this.valueInput.apply(beastState, indexVariables);
         int num = this.numInput.apply(beastState, indexVariables).get();
 
         double[] values = new double[num];
-        Arrays.fill(values, value);
+        Arrays.fill(values, value.get());
 
-        return new RealVectorParam<>(values, Real.INSTANCE);
+        return new RealVectorParam<>(values, value.getDomain());
     }
 
     @Override
