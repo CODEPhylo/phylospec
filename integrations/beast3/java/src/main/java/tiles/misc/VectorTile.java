@@ -10,6 +10,7 @@ import beastconfig.BEASTState;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.stream.IntStream;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.TypeToken;
@@ -162,8 +163,17 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array, BEASTState> {
                 if (domain == null) domain = scalar.getDomain();
             }
 
-            VectorTile tile = new VectorTile(
-                    TypeToken.parameterized(IntVectorParam.class, domainType), new IntVectorParam<>(values, domain));
+            IntVectorParam<Int> parameter = new IntVectorParam<>();
+            parameter.domainTypeInput.setValue(domain, parameter);
+
+            // Match the vector bounds to the element domain before validation.
+            parameter.setLower(domain.getLower());
+            parameter.setUpper(domain.getUpper());
+
+            parameter.valuesInput.setValue(IntStream.of(values).boxed().toList(), parameter);
+            parameter.initAndValidate();
+
+            VectorTile tile = new VectorTile(TypeToken.parameterized(IntVectorParam.class, domainType), parameter);
             tile.setWeight(weight);
             tile.setRootNode(array);
 
