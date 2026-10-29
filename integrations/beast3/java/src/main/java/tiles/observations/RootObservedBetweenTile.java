@@ -1,7 +1,6 @@
 package tiles.observations;
 
 import beast.base.evolution.tree.Tree;
-import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.evolution.tree.MRCAPrior;
 import beast.base.spec.inference.distribution.Uniform;
@@ -9,9 +8,11 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
+import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.tiles.TemplateTile;
+import tiling.RootAgeValue;
 
-public class RootObservedBetweenTile extends TemplateTile<RealScalarParam<PositiveReal>, BEASTState> {
+public class RootObservedBetweenTile extends TemplateTile<RootAgeValue, BEASTState> {
 
     @Override
     protected String getPhyloSpecTemplate() {
@@ -23,8 +24,7 @@ public class RootObservedBetweenTile extends TemplateTile<RealScalarParam<Positi
     TemplateTileInput<RealScalarParam<Real>, BEASTState> toInput = new TemplateTileInput<>("$to");
 
     @Override
-    public RealScalarParam<PositiveReal> applyTile(
-            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+    public RootAgeValue applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Tree tree = this.treeInput.apply(beastState, indexVariables);
         RealScalarParam<Real> from = this.fromInput.apply(beastState, indexVariables);
         RealScalarParam<Real> to = this.toInput.apply(beastState, indexVariables);
@@ -46,8 +46,14 @@ public class RootObservedBetweenTile extends TemplateTile<RealScalarParam<Positi
 
         beastState.addLikelihoodDistribution(prior, "rootCalibration");
 
-        // we return the observed root age
+        // Return the current root age, rather than its initial value.
 
-        return new RealScalarParam<>(tree.getRoot().getHeight(), PositiveReal.INSTANCE);
+        RootAgeValue value = new RootAgeValue();
+        beastState.setInput(value, value.treeInput, tree);
+        beastState.addCalculationNode(
+                value, new TypeToken<RootAgeValue>() {}, this.getId("rootAge", indexVariables, ""));
+        beastState.initBEASTObject(value);
+
+        return value;
     }
 }
