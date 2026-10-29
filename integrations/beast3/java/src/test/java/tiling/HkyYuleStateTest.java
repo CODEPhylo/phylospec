@@ -108,6 +108,8 @@ class HkyYuleStateTest {
         assertEquals(
                 List.of(1.0, 1.0, 1.0, 1.0),
                 model.frequenciesPrior().alphaInput.get().getElements());
+        assertSame(
+                PositiveReal.INSTANCE, model.frequenciesPrior().alphaInput.get().getDomain());
 
         SiteModel siteModel = assertInstanceOf(
                 SiteModel.class, model.likelihood().siteModelInput.get());

@@ -7,6 +7,7 @@ import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.IntStream;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
@@ -29,23 +30,32 @@ public class RangeTile extends GeneratorTile<IntVectorParam<Int>, BEASTState> {
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         int start = this.startInput.apply(beastState, indexVariables).get();
         int end = this.endInput.apply(beastState, indexVariables).get();
-        int num = Math.abs(end - start);
 
-        if (num == 0) {
+        long length = Math.abs((long) end - start) + 1L;
+        if (length > Integer.MAX_VALUE) {
             throw new TileApplicationError(
                     this.getRootNode(),
-                    "Empty range.",
-                    "You use a range with a length of 0. Specify a different start and end.",
-                    List.of("range(start=3, end=10)"));
+                    "Range too large.",
+                    "This range contains more than Integer.MAX_VALUE elements.",
+                    List.of("range(start=1, end=10)"));
         }
 
-        int[] values = new int[num];
-        int gap = start < end ? 1 : -1;
+        int[] values = new int[(int) length];
+        int step = start <= end ? 1 : -1;
 
-        for (int i = 0; i < num; i++) {
-            values[i] = start + i * gap;
+        for (int i = 0; i < values.length; i++) {
+            values[i] = start + i * step;
         }
 
-        return new IntVectorParam<>(values, Int.INSTANCE);
+        IntVectorParam<Int> result = new IntVectorParam<>();
+        result.domainTypeInput.setValue(Int.INSTANCE, result);
+
+        // Match the vector bounds to the declared integer domain before validation.
+        result.setLower(Int.INSTANCE.getLower());
+        result.setUpper(Int.INSTANCE.getUpper());
+
+        result.valuesInput.setValue(IntStream.of(values).boxed().toList(), result);
+        result.initAndValidate();
+        return result;
     }
 }

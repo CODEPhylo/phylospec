@@ -3,7 +3,6 @@ package tiling;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import beast.pkgmgmt.BEASTVersion;
 import java.io.IOException;
@@ -32,6 +31,12 @@ public class EngineSpecificationTest {
     public void describesAnnotatedStrictClockMapping() {
         GeneratorTileMappingDescriptor descriptor = new StrictClockTile().getMappingDescriptor();
 
+        assertEquals(
+                List.of(false, true),
+                descriptor.inputs().stream()
+                        .map(GeneratorTileMappingDescriptor.Input::required)
+                        .toList());
+        assertEquals("1", descriptor.inputs().getFirst().defaultValue().orElseThrow());
         assertEquals("StrictClock", descriptor.componentName());
         assertEquals(PhyloSpec.Role.CLOCK_MODEL, descriptor.role().orElseThrow());
         assertEquals(
@@ -94,7 +99,11 @@ public class EngineSpecificationTest {
         assertEquals(
                 List.of("clockRate", "tree"),
                 strictClock.getArguments().stream().map(Argument__1::getName).toList());
-        assertTrue(strictClock.getArguments().stream().allMatch(Argument__1::getRequired));
+        assertEquals(
+                List.of(false, true),
+                strictClock.getArguments().stream()
+                        .map(Argument__1::getRequired)
+                        .toList());
 
         assertFalse(
                 generators.stream()
