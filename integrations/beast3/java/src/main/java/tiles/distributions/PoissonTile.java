@@ -19,15 +19,20 @@ public class PoissonTile extends GeneratorTile<BoundDistribution<IntScalarParam<
         return "Poisson";
     }
 
-    GeneratorTileInput<RealScalar<NonNegativeReal>, BEASTState> rateInput = new GeneratorTileInput<>("rate");
+    GeneratorTileInput<RealScalar<? extends NonNegativeReal>, BEASTState> rateInput = new GeneratorTileInput<>("rate");
 
     @Override
     public BoundDistribution<IntScalarParam<NonNegativeInt>, Poisson> applyTile(
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        RealScalar<NonNegativeReal> rate = this.rateInput.apply(beastState, indexVariables);
+        RealScalar<? extends NonNegativeReal> rate = this.rateInput.apply(beastState, indexVariables);
 
         Poisson distribution = new Poisson();
-        beastState.setInput(distribution, distribution.lambdaInput, rate);
+
+        // BEAST only reads lambda through this input. Keep the original object,
+        // including its domain and live dependency on the sampled state.
+        @SuppressWarnings("unchecked")
+        RealScalar<NonNegativeReal> nativeRate = (RealScalar<NonNegativeReal>) rate;
+        beastState.setInput(distribution, distribution.lambdaInput, nativeRate);
 
         IntScalarParam<NonNegativeInt> defaultState = new IntScalarParam<>(0, NonNegativeInt.INSTANCE);
 

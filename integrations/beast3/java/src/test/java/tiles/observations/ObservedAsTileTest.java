@@ -104,10 +104,15 @@ class ObservedAsTileTest {
                     .findFirst()
                     .orElseThrow();
             fresh.inputs().put(fresh.observed().observedAs, Set.of(observation));
-            Set<Tile<?, BEASTState>> rebuilt = candidates(fresh);
+            // Observation type alone does not distinguish generator input alternatives.
+            // Rebuild the same complete combination while testing every original candidate.
+            Map<String, TypeToken<?>> expectedInputs = generatorInputTypes(candidate);
+            List<Tile<?, BEASTState>> rebuilt = candidates(fresh).stream()
+                    .filter(tile -> generatorInputTypes(tile).equals(expectedInputs))
+                    .toList();
             assertEquals(1, rebuilt.size());
             BEASTState graph = new BEASTState("observed-candidate");
-            Object actual = rebuilt.iterator().next().apply(graph, new IdentityHashMap<>());
+            Object actual = rebuilt.getFirst().apply(graph, new IdentityHashMap<>());
             assertTrue(model.parameterClass().isInstance(actual), "Incorrect observed parameter class: " + actual);
             Object domain = actual instanceof IntScalarParam<?> integer
                     ? integer.getDomain()
@@ -177,6 +182,18 @@ class ObservedAsTileTest {
         assertEquals(-Math.log(10.0), likelihood.calculateLogP(), 1e-12);
         assertTrue(graph.stateNodes.isEmpty());
         assertTrue(graph.operators.isEmpty());
+    }
+
+    private static Map<String, TypeToken<?>> generatorInputTypes(Tile<?, BEASTState> candidate) {
+        var observed = (ObservedAsTile) candidate;
+        var generator = (GeneratorTile<?, ?>) observed.distributionInput.getTile();
+        Map<String, TypeToken<?>> types = new HashMap<>();
+        for (var input : generator.getGeneratorTileInputs()) {
+            if (input.getTile() != null) {
+                types.put(input.getKey(), input.getTile().getTypeToken());
+            }
+        }
+        return types;
     }
 
     private static void keepObservationType(Fixture fixture, TypeToken<?> type) {
