@@ -80,6 +80,7 @@ class PositiveIIDTileTest {
                 "LogNormal(logMean=0.0,logSd=theta)",
                 "LogNormal(mean=2.0,logSd=theta)",
                 "LogNormal(mean=theta,logSd=0.5)",
+                "LogNormal(logMean=theta,logSd=0.5)",
                 "Gamma(shape=theta,rate=3.0)",
                 "Gamma(shape=2.0,rate=theta)"
             })
@@ -115,6 +116,13 @@ class PositiveIIDTileTest {
                     assertSame(theta, logNormal.MParameterInput.get());
                     assertSame(PositiveReal.INSTANCE, theta.getDomain());
                     assertTrue(logNormal.hasMeanInRealSpaceInput.get());
+                } else if (baseExpression.startsWith("LogNormal(logMean=theta")) {
+                    assertSame(theta, logNormal.MParameterInput.get());
+                    assertSame(PositiveReal.INSTANCE, theta.getDomain());
+                    assertFalse(logNormal.hasMeanInRealSpaceInput.get());
+                    for (double value : rates.getElements()) {
+                        assertEquals(Math.exp(theta.get()), value, DENSITY_TOLERANCE);
+                    }
                 } else {
                     assertSame(theta, logNormal.SParameterInput.get());
                 }
