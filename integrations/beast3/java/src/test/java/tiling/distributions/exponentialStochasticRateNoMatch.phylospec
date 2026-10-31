@@ -1,8 +1,8 @@
-Real r ~ Normal(mean=1.0, sd=2.0) // stochastic, not deterministic
+Real r ~ Normal(mean=1.0, sd=2.0) // Real does not guarantee a positive rate
 Real x ~ Exponential(rate=r)
 
 // EXPECTED_TILES
-// Unsupported operation. Your engine does not support a random variable for 'rate'.
+// Unsupported operation. Your engine cannot deal with the value you provided for the 'rate' argument for 'Exponential' (expected type RealScalar<PositiveReal>).
 // EXPECTED_TILES
 
 // EXPECTED BEAST STATE

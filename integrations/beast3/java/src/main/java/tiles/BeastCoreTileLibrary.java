@@ -80,6 +80,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new RepeatSimplexTile());
 
         tiles.add(new AlignmentTaxaTile());
+        tiles.add(new RootAgeTile());
         tiles.add(new NumBranchesTile());
         tiles.add(new NumTaxaAlignmentTile());
         tiles.add(new NumTaxaTreeTile());
@@ -109,6 +110,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new PoissonTile());
         tiles.add(new UniformTile());
         tiles.add(new DirichletTile());
+        tiles.add(new PositiveIIDTile());
 
         tiles.add(new YuleTile());
         tiles.add(new BirthDeathTile());
