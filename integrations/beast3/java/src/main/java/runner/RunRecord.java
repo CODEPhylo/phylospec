@@ -3,6 +3,7 @@ package runner;
 import beast.base.core.BEASTVersion2;
 import beast.base.inference.Logger;
 import beastconfig.BEASTState;
+import beastconfig.ReportingTreeLikelihood;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -35,6 +36,17 @@ final class RunRecord {
     static RunRecord create(
             Path runDirectory, String source, Path sourceFile, Path sourceDirectory, TileCatalog<BEASTState> catalog)
             throws IOException {
+        return create(runDirectory, source, sourceFile, sourceDirectory, catalog, List.of());
+    }
+
+    static RunRecord create(
+            Path runDirectory,
+            String source,
+            Path sourceFile,
+            Path sourceDirectory,
+            TileCatalog<BEASTState> catalog,
+            List<LocalAdapterBundles.Bundle> adapterBundles)
+            throws IOException {
         RunRecord record = new RunRecord(runDirectory);
         byte[] bytes = source.getBytes(StandardCharsets.UTF_8);
         Files.write(record.directory.resolve("model.phylospec"), bytes, StandardOpenOption.CREATE_NEW);
@@ -61,6 +73,26 @@ final class RunRecord {
         runtime.put("engine", "beast3");
         runtime.put("engineVersion", BEASTVersion2.INSTANCE.getVersionString());
         runtime.put("javaVersion", System.getProperty("java.version"));
+        ArrayNode bundles = runtime.putArray("adapterBundles");
+        for (var bundle : adapterBundles) {
+            ObjectNode entry = bundles.addObject();
+            entry.put("path", bundle.path());
+            entry.put("fingerprintedAt", bundle.fingerprintedAt());
+            ArrayNode jars = entry.putArray("jars");
+            for (var jar : bundle.jars()) {
+                jars.addObject()
+                        .put("path", jar.path())
+                        .put("sha256", jar.sha256())
+                        .put("size", jar.size())
+                        .put("use", jar.use());
+            }
+        }
+        runtime.put(
+                "adapterLoading",
+                "Explicit local bundle inventory, fingerprinted before execution; not a list of every class used. "
+                        + "Parent runtime classes take precedence. Host PhyloSpec/BEAST JAR copies are not added. "
+                        + "Selected providers and their actual code sources are recorded under libraries. "
+                        + "Bundles are not copied; native global registrations are not hot-unloaded.");
         ArrayNode libraries = initial.putArray("libraries");
         for (var library : catalog.getLibraries()) {
             Class<?> implementation = library.getClass();
@@ -161,6 +193,21 @@ final class RunRecord {
         ObjectNode next = editable();
         next.put("status", "running");
         next.put("mcmcStartedAt", Instant.now().toString());
+        save(next);
+    }
+
+    /** Records an initialized instance, rather than inferring activation from library availability. */
+    synchronized void likelihoodBackend(String id, ReportingTreeLikelihood.Backend backend) throws IOException {
+        ObjectNode next = editable();
+        ObjectNode runtime = (ObjectNode) next.get("runtime");
+        runtime.withArray("likelihoodBackends")
+                .addObject()
+                .put("likelihood", id)
+                .put("implementation", backend.implementation())
+                .put("version", backend.version())
+                .put("resourceNumber", backend.resourceNumber())
+                .put("resourceName", backend.resourceName())
+                .put("resourceFlags", backend.resourceFlags());
         save(next);
     }
 

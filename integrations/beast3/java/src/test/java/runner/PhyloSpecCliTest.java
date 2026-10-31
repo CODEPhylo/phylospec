@@ -134,7 +134,10 @@ public class PhyloSpecCliTest {
                 new String[] {"run", "model.phylospec", "--out"},
                 new String[] {"run", "model.phylospec", "--out", " "},
                 new String[] {"check", "model.phylospec", "--out", "results"},
-                new String[] {"--library", "beast2", "model.phylospec", "--out", "results"})) {
+                new String[] {"--library", "beast2", "model.phylospec", "--out", "results"},
+                new String[] {"check", "model.phylospec", "--adapter-path"},
+                new String[] {"check", "model.phylospec", "--adapter-path", " "},
+                new String[] {"--library", "beast2", "model.phylospec", "--adapter-path", "adapter"})) {
             CliResult result = invoke(arguments);
             assertEquals(2, result.exitCode(), String.join(" ", arguments) + "\n" + result.stderr());
             assertTrue(result.stderr().contains("Usage:"), result.stderr());
@@ -300,6 +303,15 @@ public class PhyloSpecCliTest {
         assertEquals(0, result.exitCode(), result.stderr());
         assertTrue(result.stdout().contains("Run completed"));
         assertNativeOutputs(newPrefix);
+        JsonNode backend = readRecord(work.resolve("new analysis"))
+                .path("runtime")
+                .path("likelihoodBackends")
+                .get(0);
+        assertEquals("Java", backend.path("implementation").asText());
+        assertTrue(backend.path("version").isNull());
+        assertTrue(backend.path("resourceNumber").isNull());
+        assertTrue(result.stdout().contains(": Java (BEAGLE is not active)."));
+
         CliResult legacy = launch(work, "--library", "beast2", "--run-name", legacyPrefix, source.toString());
         assertEquals(0, legacy.exitCode(), legacy.stderr());
         assertNativeOutputs(legacyPrefix);

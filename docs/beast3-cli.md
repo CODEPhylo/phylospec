@@ -1,8 +1,9 @@
 # PhyloSpec command line with BEAST 3
 
-The generic CLI ZIP provides one command for checking and running a `.phylospec`
+The CLI ZIP provides one command for checking and running a `.phylospec`
 script with BEAST 3. It includes the PhyloSpec runtime, the base BEAST integration,
-and their Java dependencies. Only BEAST 3 is supported by this entry point.
+and their Java dependencies. The macOS Apple Silicon ZIP also includes BEAGLE's
+native CPU libraries. Only BEAST 3 is supported by this entry point.
 The examples demonstrate supported workflows; they do not establish support for
 every model or constitute complete scientific analyses.
 
@@ -25,14 +26,22 @@ point to that Java installation: the launcher uses `JAVA_HOME` in preference to
 There is no published download URL assumed by this guide. Once you have the ZIP,
 running it does not require Maven or a source checkout.
 
+Choose the ZIP for your platform:
+
+| ZIP suffix | Included calculation backend |
+| --- | --- |
+| `-cli-macos-arm64.zip` | macOS Apple Silicon: bundled BEAGLE CPU. Requires ARM64 Java 25 or newer; no separate BEAGLE installation, Homebrew, or library-path configuration is needed. |
+| `-cli.zip` | Generic Java distribution. BEAST can use its Java implementation without BEAGLE. Native BEAGLE libraries are not included. |
+
 Set `PHYLOSPEC_ZIP` to your ZIP's actual location. These commands use the current
-`0.0.1-SNAPSHOT` distribution; change `PHYLOSPEC_VERSION` if your archive has a
-different version.
+`0.0.1-SNAPSHOT` macOS Apple Silicon distribution. For the generic distribution,
+including on Linux, replace `-cli-macos-arm64.zip` with `-cli.zip` before running
+the commands. Change `PHYLOSPEC_VERSION` if your archive has a different version.
 
 ```sh
 java -version
 PHYLOSPEC_VERSION="0.0.1-SNAPSHOT"
-PHYLOSPEC_ZIP="$HOME/Downloads/phylospec-beast3-$PHYLOSPEC_VERSION-cli.zip"
+PHYLOSPEC_ZIP="$HOME/Downloads/phylospec-beast3-$PHYLOSPEC_VERSION-cli-macos-arm64.zip"
 PHYLOSPEC_INSTALL="$(mktemp -d "$HOME/phylospec-install.XXXXXX")"
 unzip "$PHYLOSPEC_ZIP" -d "$PHYLOSPEC_INSTALL"
 PHYLOSPEC_DIR="$PHYLOSPEC_INSTALL/phylospec-beast3-$PHYLOSPEC_VERSION"
@@ -44,8 +53,11 @@ printf 'Installation: %s\n' "$PHYLOSPEC_DIR"
 
 `--version` should report PhyloSpec and the BEAST runtime; `--help` lists `check`
 and `run`. The installation contains `bin/`, `lib/`, `examples/`, `USAGE.md`, and
-`LICENSE`. Move the whole installation directory together. Native accelerator
-libraries are not included in this ZIP, and none are required for this example.
+`LICENSE`. The macOS Apple Silicon ZIP additionally contains `native/macos-arm64/`
+with BEAGLE libraries, version/build information, and its license. Move the whole
+installation directory together. The bundled backend uses the CPU; it does not
+include GPU support or libraries for other platforms. The generic ZIP still runs
+this example without a separate BEAGLE installation.
 
 ### 2. Prepare your script and data
 
@@ -97,10 +109,12 @@ builds the native model, and runs MCMC. Both default to the base library `beast2
 (the existing internal ID for this BEAST integration).
 
 `run` reports four stages: checking, model construction and initialization, MCMC,
-and output verification. Wait for `Run completed` and the result paths. If BEAGLE
-is unavailable, a note says BEAST will try its Java implementation; this note alone
-does not mean the run failed or prove fallback succeeded. Other warnings and
-errors remain visible.
+and output verification. It also reports the initialized likelihood backend for
+this example: expect `BEAGLE` with a CPU resource when using the macOS Apple Silicon
+ZIP. Wait for `Run completed` and the result paths. If BEAGLE is unavailable, a note
+says BEAST will try its Java implementation; this note alone does not mean the run
+failed or prove fallback succeeded. A successful Java fallback does not confirm
+BEAGLE is working. Other warnings and errors remain visible.
 
 A failed run reports its error and, when available, the directory containing its
 run record and diagnostic log. It does not print `Run completed`. Check the reported
@@ -121,12 +135,26 @@ In `run.json`, a successful run has `"status" : "succeeded"` and
 lines are samples. For this script, expect **31 samples, numbered 0–30**, and 31
 trees. Column order can vary; identify quantities by their column names.
 
+`run.json` also records `runtime.likelihoodBackends` for likelihoods constructed by
+the base `PhyloCTMC` adapter. Each entry identifies the actual `BEAGLE` or `Java`
+implementation; BEAGLE entries include its version, resource number, name, and
+flags. For the bundled CPU backend, expect version `4.0.1` and `PROCESSOR_CPU` in
+the resource flags. To inspect the recorded backend:
+
+```sh
+sed -n '/"likelihoodBackends"/,/]/p' "$PHYLOSPEC_RUN/run.json"
+```
+
+This records the backend that initialized. Native library files, `--version`, and
+a successful `check` alone do not confirm its activation. The reporting covers the
+base `PhyloCTMC` mapping, not arbitrary likelihoods supplied by external adapters.
+
 | File inside `results/run-01/` | What it contains |
 | --- | --- |
 | `output/hky-yule.log` | Tab-separated samples: posterior, prior, likelihood, `kappa`, tree summaries, and four base frequencies. |
 | `output/hky-yule.trees` | Sampled trees in NEXUS format. |
 | `output/hky-yule.state.xml` | Final MCMC state. The CLI does not yet provide a resume command. |
-| `run.json` | Run status, effective settings, seed, input references, and output paths. |
+| `run.json` | Run status, effective settings, seed, input references, output paths, and actual base `PhyloCTMC` likelihood backends. |
 | `console.log` | Java/BEAST console output, including original diagnostic messages and failure details. |
 | `model.phylospec` | Snapshot of the script actually used. Input data are not copied into the result directory. |
 
@@ -185,9 +213,9 @@ same installation:
   --out "$PHYLOSPEC_PROJECT/results/jc69-demo"
 ```
 
-The Windows launcher is supplied; Windows execution needs its own platform
-validation. The tutorial above uses macOS/Linux shell syntax. After extracting
-the ZIP and copying the script and `data/` to an analysis folder, the equivalent
+The Windows launcher is supplied in the generic ZIP; Windows execution needs its
+own platform validation. The tutorial above uses macOS/Linux shell syntax. After
+extracting the generic ZIP and copying the script and `data/` to an analysis folder, the equivalent
 Command Prompt commands are:
 
 ```bat
@@ -206,6 +234,12 @@ runtime and selected component/library identities, effective settings, seeds,
 and expected/generated output files. Input hashes cover files reported through
 the runner's input-path resolver. Input data are not copied, so the result
 directory is not a self-contained analysis archive.
+
+When local adapter bundles are supplied, `runtime.adapterBundles` records their
+paths, JAR hashes, sizes, and whether each JAR was added or skipped. This inventory
+is recorded before execution; it is not a list of every class used. Selected
+providers and their actual code sources are recorded separately under `libraries`.
+Bundle files are not copied into the result directory.
 
 Status normally progresses through `preparing` and `running` to `succeeded`,
 `failed`, or `cancelled`. After abrupt termination, the record can remain
@@ -234,6 +268,7 @@ choose a new `--out` directory, such as `results/run-02`.
 | --- | --- |
 | `--engine beast3` | Select the supported engine; `beast3` is already the default. |
 | `--library <id[,id...]>` | Select tile libraries available on the runtime classpath, in preference order. |
+| `--adapter-path <directory>` | For `check`/`run`: load JARs directly inside an unpacked local adapter bundle. Repeat for additional bundles. |
 | `--out <directory>` | For `run`: exact directory for this run's record, logs, and outputs. |
 | `--run-name <prefix>` | For `run`: relative output prefix, unless the script sets `outputPrefix`. |
 | `--debug` | Show raw BEAST console output and failure stack traces in the terminal. |
@@ -245,6 +280,38 @@ choose a new `--out` directory, such as `results/run-02`.
 library ID. When libraries are explicitly selected, their order is preserved and
 `beast2` is appended only if absent. `--library` selects an available provider; it
 does not download models or add JARs to the classpath.
+
+## Use a local extension
+
+A local adapter bundle is an unpacked directory containing JARs for its PhyloSpec
+adapter, component definitions, native model implementation, and dependencies.
+A native BEAST model JAR alone does not supply its PhyloSpec mapping. For a prepared
+PopFunc bundle and a script using its supported generators:
+
+```sh
+"$PHYLOSPEC_DIR/bin/phylospec" check /path/to/popfunc-model.phylospec \
+  --adapter-path /path/to/phylospec-adapter --library popfunc
+"$PHYLOSPEC_DIR/bin/phylospec" run /path/to/popfunc-model.phylospec \
+  --adapter-path /path/to/phylospec-adapter --library popfunc \
+  --out "$PWD/results/popfunc-demo"
+```
+
+`--adapter-path` locates the bundle; `--library` selects its adapter ID. Supplying a
+directory does not automatically select every adapter in it. Paths are relative
+to the terminal's working directory and must directly contain JARs; subdirectories
+are not searched. Repeat `--adapter-path` for additional bundles. Libraries retain
+the requested preference order, with `beast2` appended if absent.
+
+The loader keeps the host PhyloSpec/BEAST runtime, skips bundle copies of it, and
+reports detected conflicts or missing dependencies. Bundles must be compatible
+with the host runtime. It loads local executable Java code; it does not download
+or install packages. For a run, bundle paths and JAR hashes are recorded alongside
+the actual selected providers. Restart the command after rebuilding an adapter.
+
+The PopFunc bundle includes `examples/gompertz.phylospec`, its data, and
+`examples/README.md`. That guide explains the model definition, Java mapping,
+package registration, fixed native dependency, build, and CLI loading steps.
+In a source checkout, it is at `integrations/beast3/popfunc/examples/README.md`.
 
 ## Diagnostics and failure handling
 
@@ -259,6 +326,12 @@ loading fails, it explains that BEAST will try its Java implementation. This not
 alone does not mean the analysis failed or prove that fallback succeeded. Original
 messages remain in `console.log`; other warnings and errors remain visible.
 Use `--debug` to also see unfiltered output and stack traces in the terminal.
+The macOS Apple Silicon launcher locates its bundled CPU libraries inside the
+installation and selects their native-library path; the generic launcher retains
+BEAST's optional native discovery and Java fallback. The native ZIP checks its
+platform, Java architecture, and required library files before starting the CLI.
+If a bundled file is missing, extract a complete archive instead of interpreting
+a Java fallback as successful native installation.
 `console.log` captures Java/BEAST console streams, not low-level JVM or native-library
 writes directly to the operating system's stderr.
 
@@ -290,12 +363,57 @@ uses the checked-in schema classes and leaves source formatting unchanged.
 The ZIP retains dependencies as separate JARs, including their embedded metadata.
 `LICENSE` covers PhyloSpec; dependencies retain their own licenses.
 
+The Maven `-Djava.only=true` setting applies to its regression-test JVMs; it is not
+automatically passed to the separate JVM launched by the archive tests. The
+generic installed launcher retains BEAST's normal backend discovery.
+
 A minimal acceptance pass checks help/version, runs all three bundled examples from
 another working directory (including paths with spaces), verifies successful
 `run.json` and nonempty output files, rejects an existing output directory, and
 reports a missing input file clearly. Run the existing CLI regression tests as
 well. Linux and Windows execution require their own platform checks; do not infer
 them from a successful macOS run.
+
+### Build the macOS Apple Silicon BEAGLE CPU ZIP
+
+Build on macOS Apple Silicon with ARM64 Java 25, Maven, CMake, and the Xcode
+command-line tools:
+
+```sh
+mvn -pl integrations/beast3/java -am -Pcli-dist,cli-dist-macos-arm64 \
+  -Djsonschema2pojo.skip=true -Dspotless.skip=true verify
+```
+
+Do not add `-Djava.only=true` to this native acceptance command: the BEAGLE tests
+must initialize the native CPU backend and fail if they fall back to Java. The
+profile adds `HkyYuleBeagleIT`, which reuses the fixed-state numerical comparisons
+and acceptance/rejection checks against an independent Java reference. Archive
+acceptance also checks the backend recorded by the installed CLI after moving
+the installation directory, and rejects an installation with a missing CPU plugin.
+
+The command builds both the generic ZIP and
+`phylospec-beast3-0.0.1-SNAPSHOT-cli-macos-arm64.zip` in the integration's `target/`
+directory; with both profiles enabled, archive acceptance targets the native ZIP.
+Run the generic `cli-dist` command above separately to validate the generic ZIP.
+The build uses
+`integrations/beast3/java/src/main/native/beagle/build-macos-arm64.sh` to download
+and checksum a pinned BEAGLE 4.0.1 source archive
+(`bf35ad4a28e5f03edaa10dfd77c1b54eee0d9595`), apply the checked-in macOS build/loading
+patch, and compile only the JNI bridge, core library, and CPU plugin. The first
+build needs network access for this source archive; no existing BEAGLE installation
+is used. The ZIP includes the patch, source revision/checksum, and MIT license.
+These native build tools are needed by distributors, not by users of the ZIP.
+
+The native libraries resolve dependencies and the CPU plugin from their own
+directory, so the extracted installation can be moved without setting loader
+environment variables. The native compilation target is macOS 11.0; that target
+alone does not establish compatibility with every macOS release or Java build.
+Previous local acceptance used macOS 26.5 on Apple Silicon; it does not establish
+that a later source snapshot has been retested. Older macOS releases,
+downloaded-archive Gatekeeper handling, and other machines still need separate
+release acceptance. GPU and other-platform native bundles are outside this scope.
+The base HKY example's native acceptance does not establish PopFunc-plus-BEAGLE
+compatibility or long-chain convergence.
 
 ## Run the Java entry point directly
 
@@ -366,4 +484,5 @@ Without `check` or `run`, `--library` is required and its exact order is retaine
 This mode keeps the earlier output-prefix and script-output behavior; it does not
 create a managed result directory, script snapshot, run record, or console log.
 `--out` is unavailable in this mode. Use `run` for the result management described
-in this guide.
+in this guide. `--adapter-path` is supported only by the `check` and `run`
+subcommands.

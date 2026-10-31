@@ -148,7 +148,7 @@ class HkyYuleStateTest {
         assertNativeMatches(model);
     }
 
-    private static Stream<Arguments> proposals() {
+    static Stream<Arguments> proposals() {
         return Stream.of("tree", "treeTopology", "kappa", "baseFrequencies")
                 .flatMap(id -> Stream.of(Arguments.of(id, false), Arguments.of(id, true)));
     }
@@ -424,7 +424,7 @@ class HkyYuleStateTest {
                 .orElseThrow();
     }
 
-    private static Model buildExample() throws Exception {
+    private Model buildExample() throws Exception {
         String source = Files.readString(SOURCE);
         Randomizer.setSeed(12345);
         var catalog = TileCatalog.select(BEASTState.class, List.of("beast2"));
@@ -442,10 +442,9 @@ class HkyYuleStateTest {
         BEASTState graph = evaluator.applyBestTiling(new BEASTState("hky-yule-state", SOURCE.getParent()));
         catalog.configureState(graph);
         TreeLikelihood likelihood = assertInstanceOf(TreeLikelihood.class, graph.likelihoodDistributions.getFirst());
-        // Select the Java likelihood for an identical numerical implementation on both sides.
-        likelihood.implementationInput.setValue(TreeLikelihood.class.getName(), likelihood);
+        configureLikelihood(likelihood);
         graph.initializeBEASTObjects();
-        assertInstanceOf(BeerLikelihoodCore4.class, likelihood.getLikelihoodCore());
+        assertBackend(likelihood);
 
         Tree tree = assertInstanceOf(Tree.class, node(graph, "tree"));
         RealScalarParam<?> kappa = assertInstanceOf(RealScalarParam.class, node(graph, "kappa"));
@@ -462,6 +461,15 @@ class HkyYuleStateTest {
         assertTrue(Double.isFinite(state.robustlyCalcPosterior(posterior)));
         return new Model(
                 graph, tree, kappa, frequencies, yule, kappaPrior, frequenciesPrior, likelihood, posterior, state);
+    }
+
+    void configureLikelihood(TreeLikelihood likelihood) {
+        // The default suite compares the mapped graph with the independent Java reference.
+        likelihood.implementationInput.setValue(TreeLikelihood.class.getName(), likelihood);
+    }
+
+    void assertBackend(TreeLikelihood likelihood) {
+        assertInstanceOf(BeerLikelihoodCore4.class, likelihood.getLikelihoodCore());
     }
 
     private record Model(
