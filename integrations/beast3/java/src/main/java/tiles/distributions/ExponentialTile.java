@@ -4,14 +4,14 @@ import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.distribution.Exponential;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
 import beastconfig.OperatorSelector;
 import java.util.IdentityHashMap;
-import java.util.Set;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
-import org.phylospec.typeresolver.Stochasticity;
 import tiling.BoundDistribution;
+import tiling.ReciprocalValue;
 
 public class ExponentialTile
         extends GeneratorTile<BoundDistribution<RealScalarParam<NonNegativeReal>, Exponential>, BEASTState> {
@@ -21,17 +21,17 @@ public class ExponentialTile
         return "Exponential";
     }
 
-    GeneratorTileInput<RealScalarParam<PositiveReal>, BEASTState> rateInput = new GeneratorTileInput<>(
-            "rate",
-            // PhyloSpec uses a rate parameterization, but BEAST uses a mean parameterization
-            // this means that we have to transform the input, which would have an influence on the density of a RV
-            Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
+    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> rateInput = new GeneratorTileInput<>("rate");
 
     @Override
     public BoundDistribution<RealScalarParam<NonNegativeReal>, Exponential> applyTile(
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        RealScalarParam<PositiveReal> rate = this.rateInput.apply(beastState, indexVariables);
-        RealScalarParam<PositiveReal> mean = new RealScalarParam<>(1.0 / rate.get(), PositiveReal.INSTANCE);
+        RealScalar<PositiveReal> rate = this.rateInput.apply(beastState, indexVariables);
+
+        // Convert the conditional distribution's parameterization without
+        // replacing the sampled rate or changing its prior.
+        ReciprocalValue mean = new ReciprocalValue();
+        beastState.setInput(mean, mean.rateInput, rate);
 
         Exponential distribution = new Exponential();
         beastState.setInput(distribution, distribution.meanInput, mean);
