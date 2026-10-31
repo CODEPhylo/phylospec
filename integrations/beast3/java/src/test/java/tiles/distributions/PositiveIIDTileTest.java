@@ -79,6 +79,7 @@ class PositiveIIDTileTest {
             strings = {
                 "LogNormal(logMean=0.0,logSd=theta)",
                 "LogNormal(mean=2.0,logSd=theta)",
+                "LogNormal(mean=theta,logSd=0.5)",
                 "Gamma(shape=theta,rate=3.0)",
                 "Gamma(shape=2.0,rate=theta)"
             })
@@ -110,7 +111,13 @@ class PositiveIIDTileTest {
             assertTrue(law.getOutputs().contains(iid));
 
             if (law instanceof LogNormal logNormal) {
-                assertSame(theta, logNormal.SParameterInput.get());
+                if (baseExpression.startsWith("LogNormal(mean=theta")) {
+                    assertSame(theta, logNormal.MParameterInput.get());
+                    assertSame(PositiveReal.INSTANCE, theta.getDomain());
+                    assertTrue(logNormal.hasMeanInRealSpaceInput.get());
+                } else {
+                    assertSame(theta, logNormal.SParameterInput.get());
+                }
             } else {
                 Gamma gamma = assertInstanceOf(Gamma.class, law);
                 assertSame(
