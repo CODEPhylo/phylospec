@@ -60,6 +60,15 @@ public class UnboundDistribution<T, O extends beast.base.inference.Distribution>
     }
 
     /**
+     * Consumes this law as the base of another distribution without binding a
+     * separate value. The law and its dependencies remain in the BEAST graph.
+     */
+    public O consumeAsBase() {
+        this.markAsConsumed();
+        return this.distribution;
+    }
+
+    /**
      * Marks this distribution as resolved, so that it is wired into the BEAST state exactly once.
      * Resolving it twice would register the same distribution as both a prior and a likelihood, or
      * register it under two ids, which always indicates a bug in the calling tile.
