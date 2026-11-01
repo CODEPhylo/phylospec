@@ -1,10 +1,10 @@
 package tiles.functions;
 
-import beast.base.spec.domain.PositiveInt;
+import beast.base.spec.domain.Int;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
-import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.type.IntScalar;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
@@ -26,7 +26,7 @@ public class LogTile extends GeneratorTile<RealScalarParam<Real>, BEASTState> {
 
     GeneratorTileInput<RealScalarParam<? extends PositiveReal>, BEASTState> xInput =
             new GeneratorTileInput<>("x", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
-    GeneratorTileInput<IntScalarParam<? extends PositiveInt>, BEASTState> basisInput =
+    GeneratorTileInput<IntScalar<? extends Int>, BEASTState> basisInput =
             new GeneratorTileInput<>("base", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
@@ -44,7 +44,7 @@ public class LogTile extends GeneratorTile<RealScalarParam<Real>, BEASTState> {
         }
     }
 
-    private static Integer fixedBase(IntScalarParam<? extends PositiveInt> basis, AstNode node) {
+    private static Integer fixedBase(IntScalar<? extends Int> basis, AstNode node) {
         if (basis == null) return null;
         int value = basis.get();
         if (value <= 1) {
@@ -61,7 +61,7 @@ public class LogTile extends GeneratorTile<RealScalarParam<Real>, BEASTState> {
 
         GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> xInput =
                 new GeneratorTileInput<>("x", Set.of(Stochasticity.STOCHASTIC));
-        GeneratorTileInput<IntScalarParam<? extends PositiveInt>, BEASTState> basisInput =
+        GeneratorTileInput<IntScalar<? extends Int>, BEASTState> basisInput =
                 new GeneratorTileInput<>("base", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
         @Override

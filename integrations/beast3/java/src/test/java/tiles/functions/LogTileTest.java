@@ -58,10 +58,12 @@ class LogTileTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {2, 10})
-    void fixedInputKeepsTheExistingExplicitBasePath(int base) throws Exception {
-        BEASTState graph = build("PositiveReal x = 100.0\n" + "Real y ~ Normal(mean=log(x=x, base=" + base
-                + "), sd=1.0) observed as 0.3\n");
+    @CsvSource({"2,false", "10,false", "2,true", "10,true"})
+    void fixedInputSupportsLiteralAndComputedIntegerBases(int base, boolean computedBase) throws Exception {
+        String declaration = computedBase ? "Integer base = num(vector=range(start=1, end=" + base + "))\n" : "";
+        String baseArgument = computedBase ? "base" : Integer.toString(base);
+        BEASTState graph = build(declaration + "PositiveReal x = 100.0\n" + "Real y ~ Normal(mean=log(x=x, base="
+                + baseArgument + "), sd=1.0) observed as 0.3\n");
         Normal likelihood = likelihood(graph, "y_likelihood");
         RealScalarParam<?> result = assertInstanceOf(RealScalarParam.class, likelihood.meanInput.get());
         double expected = Math.log(100.0) / Math.log(base);
@@ -76,18 +78,31 @@ class LogTileTest {
 
     @ParameterizedTest
     @CsvSource(
-            value = {"natural,true", "natural,false", "2,true", "2,false", "10,true", "10,false"},
+            value = {
+                "natural,true,false",
+                "natural,false,false",
+                "2,true,false",
+                "2,false,false",
+                "10,true,false",
+                "10,false,false",
+                "2,true,true",
+                "2,false,true",
+                "10,true,true",
+                "10,false,true"
+            },
             nullValues = "natural")
-    void sharedAndInlineValuesUpdateLikelihoodsAndRestoreAcceptedAndRejectedStates(Integer base, boolean acceptFirst)
-            throws Exception {
-        String baseArgument = base == null ? "" : ", base=" + base;
-        BEASTState graph = build("""
+    void sharedAndInlineValuesUpdateLikelihoodsAndRestoreAcceptedAndRejectedStates(
+            Integer base, boolean acceptFirst, boolean computedBase) throws Exception {
+        String baseDeclaration = computedBase ? "Integer base = num(vector=range(start=1, end=" + base + "))\n" : "";
+        String baseArgument = base == null ? "" : ", base=" + (computedBase ? "base" : base);
+        String inlineBaseArgument = computedBase ? ", base=num(vector=range(start=1, end=" + base + "))" : baseArgument;
+        BEASTState graph = build(baseDeclaration + """
                 PositiveReal x ~ Gamma(shape=2.0, rate=1.0)
                 Real mu = log(x=x%s)
                 Real y ~ Normal(mean=mu, sd=1.0) observed as 0.3
                 Real z ~ Normal(mean=mu, sd=1.0) observed as 2.0
                 Real w ~ Normal(mean=log(x=x%s), sd=1.0) observed as -1.0
-                """.formatted(baseArgument, baseArgument));
+                """.formatted(baseArgument, inlineBaseArgument));
         RealScalarParam<?> x = parameter(graph, "x");
         Gamma prior = assertOriginalGammaDraw(graph, x);
         Normal first = likelihood(graph, "y_likelihood");
@@ -99,6 +114,8 @@ class LogTileTest {
         assertNotSame(shared, inline);
         assertSame(x, shared.xInput.get());
         assertSame(x, inline.xInput.get());
+        assertEquals(base, shared.baseInput.get());
+        assertEquals(base, inline.baseInput.get());
         assertSame(Real.INSTANCE, shared.getDomain());
         assertSame(Real.INSTANCE, inline.getDomain());
         assertTrue(x.getOutputs().containsAll(List.of(prior, shared, inline)));
@@ -275,6 +292,40 @@ class LogTileTest {
         assertThrows(
                 TileApplicationError.class,
                 () -> build(declaration + "Real y ~ Normal(mean=log(x=x, base=1), sd=1.0) observed as 0.3\n"));
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+            delimiter = '|',
+            value = {
+                "-2|false",
+                "0|false",
+                "1|false",
+                "-2|true",
+                "0|true",
+                "1|true",
+                "num(vector=range(start=1, end=1))|false",
+                "num(vector=range(start=1, end=1))|true"
+            })
+    void namedAndComputedInvalidBasesReachValueValidation(String baseExpression, boolean randomInput) {
+        String declaration = randomInput ? "PositiveReal x ~ Gamma(shape=2.0, rate=1.0)\n" : "PositiveReal x = 100.0\n";
+        TileApplicationError error = assertThrows(
+                TileApplicationError.class,
+                () -> build("Integer base = " + baseExpression + "\n" + declaration
+                        + "Real y ~ Normal(mean=log(x=x, base=base), sd=1.0) observed as 0.3\n"));
+        assertTrue(
+                error.getMessage().contains("Logarithm base must be an integer greater than 1."), error.getMessage());
+    }
+
+    @Test
+    void fixedIndexBaseReachesValueValidation() {
+        // The existing index starts at one, which must fail the same base check after integer binding.
+        TileApplicationError error = assertThrows(TileApplicationError.class, () -> build("""
+                PositiveReal x ~ Gamma(shape=2.0, rate=1.0)
+                Real result[i] = log(x=x, base=i) for i in 1:3
+                """));
+        assertTrue(
+                error.getMessage().contains("Logarithm base must be an integer greater than 1."), error.getMessage());
     }
 
     @ParameterizedTest
