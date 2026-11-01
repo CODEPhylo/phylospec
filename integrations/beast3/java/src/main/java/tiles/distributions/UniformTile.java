@@ -19,18 +19,24 @@ public class UniformTile extends GeneratorTile<BoundDistribution<RealScalarParam
         return "Uniform";
     }
 
-    GeneratorTileInput<RealScalar<Real>, BEASTState> lowerInput = new GeneratorTileInput<>("lower");
-    GeneratorTileInput<RealScalar<Real>, BEASTState> upperInput = new GeneratorTileInput<>("upper");
+    GeneratorTileInput<RealScalar<? extends Real>, BEASTState> lowerInput = new GeneratorTileInput<>("lower");
+    GeneratorTileInput<RealScalar<? extends Real>, BEASTState> upperInput = new GeneratorTileInput<>("upper");
 
     @Override
     public BoundDistribution<RealScalarParam<Real>, Uniform> applyTile(
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        RealScalar<Real> lower = this.lowerInput.apply(beastState, indexVariables);
-        RealScalar<Real> upper = this.upperInput.apply(beastState, indexVariables);
+        RealScalar<? extends Real> lower = this.lowerInput.apply(beastState, indexVariables);
+        RealScalar<? extends Real> upper = this.upperInput.apply(beastState, indexVariables);
 
         Uniform distribution = new Uniform();
-        beastState.setInput(distribution, distribution.lowerInput, lower);
-        beastState.setInput(distribution, distribution.upperInput, upper);
+        // BEAST only reads these bounds. Keep their original objects, domains,
+        // and live dependencies on the sampled states.
+        @SuppressWarnings("unchecked")
+        RealScalar<Real> nativeLower = (RealScalar<Real>) lower;
+        @SuppressWarnings("unchecked")
+        RealScalar<Real> nativeUpper = (RealScalar<Real>) upper;
+        beastState.setInput(distribution, distribution.lowerInput, nativeLower);
+        beastState.setInput(distribution, distribution.upperInput, nativeUpper);
 
         // Read the bounds once for initialization; the prior keeps the original input objects.
         double initialValue = lower.get() / 2.0 + upper.get() / 2.0;

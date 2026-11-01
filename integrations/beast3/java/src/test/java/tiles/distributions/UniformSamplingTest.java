@@ -9,7 +9,10 @@ import beast.base.inference.Operator;
 import beast.base.inference.State;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.Int;
+import beast.base.spec.domain.NonNegativeReal;
+import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
+import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.inference.distribution.IntUniform;
 import beast.base.spec.inference.distribution.Uniform;
 import beast.base.spec.inference.operator.RealRandomWalkOperator;
@@ -27,6 +30,7 @@ import operators.IntScalarUniformOperator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.phylospec.ast.transformers.EvaluateLiterals;
@@ -285,6 +289,231 @@ class UniformSamplingTest {
             assertEquals(accept ? proposedLogP : previousLogP, prior.getCurrentLogP(), 1e-12);
             assertEquals(-Math.log(discrete ? value(upper) : value(upper) - 1.0), prior.calculateLogP(), 1e-12);
         }
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "Gamma, PositiveReal, false",
+        "Gamma, PositiveReal, true",
+        "Exponential, NonNegativeReal, false",
+        "Exponential, NonNegativeReal, true",
+        "Beta, Probability, false",
+        "Beta, Probability, true"
+    })
+    void narrowerBoundsStayLiveThroughAcceptanceAndRejection(String family, String declaredType, boolean lowerBound)
+            throws Exception {
+        String upstreamCall =
+                switch (family) {
+                    case "Gamma" -> "Gamma(shape=2.0, rate=1.0)";
+                    case "Exponential" -> "Exponential(rate=2.0)";
+                    case "Beta" -> "Beta(alpha=2.0, beta=2.0)";
+                    default -> throw new IllegalArgumentException(family);
+                };
+        Real domain =
+                switch (family) {
+                    case "Gamma" -> PositiveReal.INSTANCE;
+                    case "Exponential" -> NonNegativeReal.INSTANCE;
+                    case "Beta" -> UnitInterval.INSTANCE;
+                    default -> throw new IllegalArgumentException(family);
+                };
+        double observed = lowerBound ? (family.equals("Beta") ? 0.6 : 1.2) : 0.4;
+        String interval = lowerBound ? "lower=bound, upper=2.0" : "lower=0.0, upper=bound";
+        BEASTState graph = build(declaredType + " bound ~ " + upstreamCall + "\n" + "Real y ~ Uniform(" + interval
+                + ") observed as " + realLiteral(observed));
+        RealScalarParam<?> bound = real(graph, "bound");
+        Distribution boundPrior = graph.priorDistributions.get(bound);
+        assertNotNull(boundPrior);
+        Uniform likelihood = assertInstanceOf(Uniform.class, graph.likelihoodDistributions.getFirst());
+        RealScalarParam<?> observation = assertInstanceOf(RealScalarParam.class, likelihood.paramInput.get());
+
+        assertEquals(1, graph.stateNodes.size());
+        assertEquals(1, graph.priorDistributions.size());
+        assertEquals(1, graph.likelihoodDistributions.size());
+        assertEquals(1, graph.operators.size());
+        assertEquals(List.of(bound), operator(graph, bound).listStateNodes());
+        assertFalse(graph.stateNodes.containsKey(observation));
+        assertSame(bound, lowerBound ? likelihood.lowerInput.get() : likelihood.upperInput.get());
+        assertSame(domain, bound.getDomain());
+        assertTrue(bound.getOutputs().contains(likelihood));
+        assertEquals(observed, observation.get(), 0.0);
+
+        CompoundDistribution posterior = new CompoundDistribution();
+        posterior.initByName("distribution", List.of(boundPrior, likelihood));
+        State state = state(graph, posterior);
+        double initialWidth = lowerBound ? 2.0 - bound.get() : bound.get();
+        assertEquals(
+                boundLogDensity(family, bound.get()) - Math.log(initialWidth),
+                state.robustlyCalcPosterior(posterior),
+                1e-12);
+
+        // The second proposal excludes the observation, but every interval remains valid.
+        // The third is a finite-density rejection; the last checks movement after restoration.
+        double[] proposals = lowerBound
+                ? new double[] {0.2, family.equals("Beta") ? 0.8 : 1.5, 0.3, 0.4}
+                : new double[] {0.8, 0.2, 0.6, 0.9};
+        boolean[] decisions = {true, false, false, true};
+        for (int step = 0; step < proposals.length; step++) {
+            double previousBound = bound.get();
+            double previousPrior = boundPrior.getCurrentLogP();
+            double previousLikelihood = likelihood.getCurrentLogP();
+            double previousPosterior = posterior.getCurrentLogP();
+            state.store(step + 1);
+            bound.set(proposals[step]);
+            double lower = lowerBound ? proposals[step] : 0.0;
+            double upper = lowerBound ? 2.0 : proposals[step];
+            assertTrue(lower < upper);
+            assertEquals(lower, likelihood.lowerInput.get().get(), 0.0);
+            assertEquals(upper, likelihood.upperInput.get().get(), 0.0);
+            assertEquals(observed, observation.get(), 0.0);
+
+            state.storeCalculationNodes();
+            state.checkCalculationNodesDirtiness();
+            double expectedPrior = boundLogDensity(family, proposals[step]);
+            boolean outside = observed < lower || observed > upper;
+            assertEquals(step == 1, outside);
+            double expectedLikelihood = outside ? Double.NEGATIVE_INFINITY : -Math.log(upper - lower);
+            double proposedPosterior = posterior.calculateLogP();
+            assertEquals(expectedPrior, boundPrior.getCurrentLogP(), 1e-12);
+            assertEquals(expectedLikelihood, likelihood.getCurrentLogP(), 1e-12);
+            assertEquals(expectedPrior + expectedLikelihood, proposedPosterior, 1e-12);
+            if (outside) {
+                assertEquals(Double.NEGATIVE_INFINITY, proposedPosterior);
+            } else {
+                assertTrue(Double.isFinite(proposedPosterior));
+                assertNotEquals(previousLikelihood, expectedLikelihood, 1e-12);
+            }
+
+            if (decisions[step]) {
+                state.acceptCalculationNodes();
+            } else {
+                state.restore();
+                state.restoreCalculationNodes();
+            }
+            state.setEverythingDirty(false);
+            double currentBound = decisions[step] ? proposals[step] : previousBound;
+            assertEquals(currentBound, bound.get(), 0.0);
+            assertSame(bound, lowerBound ? likelihood.lowerInput.get() : likelihood.upperInput.get());
+            assertSame(domain, bound.getDomain());
+            assertEquals(observed, observation.get(), 0.0);
+            assertEquals(
+                    lowerBound ? currentBound : 0.0, likelihood.lowerInput.get().get(), 0.0);
+            assertEquals(
+                    lowerBound ? 2.0 : currentBound, likelihood.upperInput.get().get(), 0.0);
+
+            // Verify caches before any recalculation can hide a failed restoration.
+            assertEquals(decisions[step] ? expectedPrior : previousPrior, boundPrior.getCurrentLogP(), 1e-12);
+            assertEquals(decisions[step] ? expectedLikelihood : previousLikelihood, likelihood.getCurrentLogP(), 1e-12);
+            assertEquals(decisions[step] ? proposedPosterior : previousPosterior, posterior.getCurrentLogP(), 1e-12);
+            double currentWidth = lowerBound ? 2.0 - currentBound : currentBound;
+            assertEquals(-Math.log(currentWidth), likelihood.calculateLogP(), 1e-12);
+            assertEquals(
+                    boundLogDensity(family, currentBound) - Math.log(currentWidth), posterior.calculateLogP(), 1e-12);
+        }
+    }
+
+    @Test
+    void twoNarrowerBoundsPreserveChildInitializationAndRestoreTogether() throws Exception {
+        BEASTState graph = build("""
+                Probability lower ~ Beta(alpha=2.0, beta=2.0)
+                PositiveReal upper ~ Gamma(shape=2.0, rate=1.0)
+                Real x ~ Uniform(lower=lower, upper=upper)
+                """);
+        RealScalarParam<?> lower = real(graph, "lower");
+        RealScalarParam<?> upper = real(graph, "upper");
+        RealScalarParam<?> x = real(graph, "x");
+        Distribution lowerPrior = graph.priorDistributions.get(lower);
+        Distribution upperPrior = graph.priorDistributions.get(upper);
+        Uniform childPrior = assertInstanceOf(Uniform.class, graph.priorDistributions.get(x));
+        assertEquals(3, graph.stateNodes.size());
+        assertEquals(3, graph.priorDistributions.size());
+        assertEquals(3, graph.operators.size());
+        assertTrue(graph.likelihoodDistributions.isEmpty());
+        assertSame(lower, childPrior.lowerInput.get());
+        assertSame(upper, childPrior.upperInput.get());
+        assertSame(UnitInterval.INSTANCE, lower.getDomain());
+        assertSame(PositiveReal.INSTANCE, upper.getDomain());
+        assertSame(Real.INSTANCE, x.getDomain());
+        assertTrue(lower.getOutputs().contains(childPrior));
+        assertTrue(upper.getOutputs().contains(childPrior));
+        assertEquals(0.75, x.get(), 0.0);
+        RealRandomWalkOperator childOperator = assertInstanceOf(RealRandomWalkOperator.class, operator(graph, x));
+        assertEquals(0.125, childOperator.windowSizeInput.get(), 0.0);
+        assertEquals(5.0, childOperator.m_pWeight.get(), 0.0);
+
+        CompoundDistribution posterior = new CompoundDistribution();
+        posterior.initByName("distribution", List.of(lowerPrior, upperPrior, childPrior));
+        State state = state(graph, posterior);
+        assertEquals(
+                boundLogDensity("Beta", lower.get())
+                        + boundLogDensity("Gamma", upper.get())
+                        - Math.log(upper.get() - lower.get()),
+                state.robustlyCalcPosterior(posterior),
+                1e-12);
+        double[][] proposals = {{0.2, 1.4}, {0.8, 0.9}, {0.3, 1.6}};
+        boolean[] decisions = {true, false, true};
+        for (int step = 0; step < proposals.length; step++) {
+            double previousLower = lower.get();
+            double previousUpper = upper.get();
+            double previousLowerPrior = lowerPrior.getCurrentLogP();
+            double previousUpperPrior = upperPrior.getCurrentLogP();
+            double previousChildPrior = childPrior.getCurrentLogP();
+            double previousPosterior = posterior.getCurrentLogP();
+            state.store(step + 1);
+            lower.set(proposals[step][0]);
+            upper.set(proposals[step][1]);
+            assertTrue(lower.get() < upper.get());
+            assertEquals(0.75, x.get(), 0.0, "Changing bounds must not reinitialize the sampled child.");
+            state.storeCalculationNodes();
+            state.checkCalculationNodesDirtiness();
+            double expectedLowerPrior = boundLogDensity("Beta", proposals[step][0]);
+            double expectedUpperPrior = boundLogDensity("Gamma", proposals[step][1]);
+            double expectedChildPrior =
+                    step == 1 ? Double.NEGATIVE_INFINITY : -Math.log(proposals[step][1] - proposals[step][0]);
+            double proposedPosterior = posterior.calculateLogP();
+            assertEquals(expectedLowerPrior, lowerPrior.getCurrentLogP(), 1e-12);
+            assertEquals(expectedUpperPrior, upperPrior.getCurrentLogP(), 1e-12);
+            assertEquals(expectedChildPrior, childPrior.getCurrentLogP(), 1e-12);
+            assertEquals(expectedLowerPrior + expectedUpperPrior + expectedChildPrior, proposedPosterior, 1e-12);
+            if (decisions[step]) {
+                state.acceptCalculationNodes();
+            } else {
+                state.restore();
+                state.restoreCalculationNodes();
+            }
+            state.setEverythingDirty(false);
+            assertEquals(decisions[step] ? proposals[step][0] : previousLower, lower.get(), 0.0);
+            assertEquals(decisions[step] ? proposals[step][1] : previousUpper, upper.get(), 0.0);
+            assertEquals(0.75, x.get(), 0.0);
+            assertSame(lower, childPrior.lowerInput.get());
+            assertSame(upper, childPrior.upperInput.get());
+            assertSame(UnitInterval.INSTANCE, lower.getDomain());
+            assertSame(PositiveReal.INSTANCE, upper.getDomain());
+            assertSame(Real.INSTANCE, x.getDomain());
+            assertEquals(0.125, childOperator.windowSizeInput.get(), 0.0);
+            assertEquals(5.0, childOperator.m_pWeight.get(), 0.0);
+
+            // Both bound priors and the child prior must restore before any recomputation.
+            assertEquals(decisions[step] ? expectedLowerPrior : previousLowerPrior, lowerPrior.getCurrentLogP(), 1e-12);
+            assertEquals(decisions[step] ? expectedUpperPrior : previousUpperPrior, upperPrior.getCurrentLogP(), 1e-12);
+            assertEquals(decisions[step] ? expectedChildPrior : previousChildPrior, childPrior.getCurrentLogP(), 1e-12);
+            assertEquals(decisions[step] ? proposedPosterior : previousPosterior, posterior.getCurrentLogP(), 1e-12);
+            assertEquals(-Math.log(upper.get() - lower.get()), childPrior.calculateLogP(), 1e-12);
+            assertEquals(
+                    boundLogDensity("Beta", lower.get())
+                            + boundLogDensity("Gamma", upper.get())
+                            - Math.log(upper.get() - lower.get()),
+                    posterior.calculateLogP(),
+                    1e-12);
+        }
+    }
+
+    private static double boundLogDensity(String family, double value) {
+        return switch (family) {
+            case "Gamma" -> Math.log(value) - value;
+            case "Exponential" -> Math.log(2.0) - 2.0 * value;
+            case "Beta" -> Math.log(6.0) + Math.log(value) + Math.log1p(-value);
+            default -> throw new IllegalArgumentException(family);
+        };
     }
 
     @Test
