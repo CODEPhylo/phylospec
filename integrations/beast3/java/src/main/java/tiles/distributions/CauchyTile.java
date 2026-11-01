@@ -19,17 +19,22 @@ public class CauchyTile extends GeneratorTile<BoundDistribution<RealScalarParam<
         return "Cauchy";
     }
 
-    GeneratorTileInput<RealScalar<Real>, BEASTState> locationInput = new GeneratorTileInput<>("location");
+    GeneratorTileInput<RealScalar<? extends Real>, BEASTState> locationInput = new GeneratorTileInput<>("location");
     GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> scaleInput = new GeneratorTileInput<>("scale");
 
     @Override
     public BoundDistribution<RealScalarParam<Real>, Cauchy> applyTile(
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        RealScalar<Real> location = this.locationInput.apply(beastState, indexVariables);
+        RealScalar<? extends Real> location = this.locationInput.apply(beastState, indexVariables);
         RealScalar<PositiveReal> scale = this.scaleInput.apply(beastState, indexVariables);
 
         Cauchy distribution = new Cauchy();
-        beastState.setInput(distribution, distribution.locationInput, location);
+
+        // BEAST only reads the location through this input. Keep the original
+        // object, including its domain and live dependency on the sampled state.
+        @SuppressWarnings("unchecked")
+        RealScalar<Real> nativeLocation = (RealScalar<Real>) location;
+        beastState.setInput(distribution, distribution.locationInput, nativeLocation);
         beastState.setInput(distribution, distribution.scaleInput, scale);
 
         RealScalarParam<Real> defaultState = new RealScalarParam<>();
