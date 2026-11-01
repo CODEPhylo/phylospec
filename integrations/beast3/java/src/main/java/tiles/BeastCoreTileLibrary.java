@@ -71,6 +71,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
 
         tiles.add(new EnvTile());
         tiles.add(new LogTile());
+        tiles.add(new LogTile.Live());
         tiles.add(new ExpTile());
         tiles.add(new ExpTile.Live());
         tiles.add(new SqrtTile());

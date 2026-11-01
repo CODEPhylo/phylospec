@@ -5,12 +5,15 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
 import java.util.Set;
 import org.phylospec.ast.Expr;
+import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.typeresolver.Stochasticity;
+import tiling.LogValue;
 
 public class LogTile extends GeneratorTile<RealScalarParam<Real>, BEASTState> {
 
@@ -36,6 +39,28 @@ public class LogTile extends GeneratorTile<RealScalarParam<Real>, BEASTState> {
         } else {
             // we use the given basis
             return new RealScalarParam<>(Math.log(x.get()) / Math.log(basis.get()), Real.INSTANCE);
+        }
+    }
+
+    /** Keeps a live dependency for the natural logarithm of a sampled positive scalar. */
+    public static class Live extends GeneratorTile<LogValue, BEASTState> {
+
+        GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> xInput =
+                new GeneratorTileInput<>("x", Set.of(Stochasticity.STOCHASTIC));
+
+        @Override
+        public String getPhyloSpecGeneratorName() {
+            return "log";
+        }
+
+        @Override
+        public LogValue applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+            RealScalar<? extends PositiveReal> x = this.xInput.apply(beastState, indexVariables);
+            LogValue value = new LogValue();
+            beastState.setInput(value, value.xInput, x);
+            beastState.addCalculationNode(value, new TypeToken<LogValue>() {}, this.getId("log", indexVariables, ""));
+            beastState.initBEASTObject(value);
+            return value;
         }
     }
 }
