@@ -90,6 +90,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new NumColsTile());
 
         tiles.add(new FromNexusTile());
+        tiles.add(new FromFastaTile());
         tiles.add(new FromTreeTile());
         tiles.add(new FromNewickTile());
         tiles.add(new ParserTile.Regex());

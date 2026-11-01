@@ -1,8 +1,5 @@
 package tiles.input;
 
-import beast.base.evolution.alignment.Alignment;
-import beast.base.evolution.alignment.TaxonSet;
-import beast.base.evolution.tree.TraitSet;
 import beast.base.parser.NexusParser;
 import beastconfig.BEASTState;
 import java.io.File;
@@ -41,44 +38,10 @@ public class FromNexusTile extends GeneratorTile<DecoratedAlignment, BEASTState>
                     "'" + path + "' resolves to '" + file + "'. " + e.getMessage());
         }
 
-        Alignment alignment = nexusParser.m_alignment;
-        TaxonSet taxonSet = new TaxonSet(alignment);
-        beastState.setInput(taxonSet, taxonSet.alignmentInput, alignment);
-
-        // build age and date trait set if needed
-
-        ParserTile.Parser ageParser = this.ageInput.apply(beastState, indexVariables);
-        ParserTile.Parser dateParser = this.dateInput.apply(beastState, indexVariables);
-
-        TraitSet ageTraitSet = null;
-        if (ageParser != null) {
-            ageTraitSet = new TraitSet();
-
-            StringBuilder traits = new StringBuilder();
-            for (String taxon : alignment.getTaxaNames()) {
-                traits.append(taxon).append("=").append(ageParser.parse(taxon)).append(",");
-            }
-
-            beastState.setInput(ageTraitSet, ageTraitSet.traitNameInput, "age");
-            beastState.setInput(ageTraitSet, ageTraitSet.taxaInput, taxonSet);
-            beastState.setInput(ageTraitSet, ageTraitSet.traitsInput, traits.toString());
-
-            ageTraitSet.initAndValidate();
-        } else if (dateParser != null) {
-            ageTraitSet = new TraitSet();
-
-            StringBuilder traits = new StringBuilder();
-            for (String taxon : alignment.getTaxaNames()) {
-                traits.append(taxon).append("=").append(dateParser.parse(taxon)).append(",");
-            }
-
-            beastState.setInput(ageTraitSet, ageTraitSet.traitNameInput, "date");
-            beastState.setInput(ageTraitSet, ageTraitSet.taxaInput, taxonSet);
-            beastState.setInput(ageTraitSet, ageTraitSet.traitsInput, traits.toString());
-
-            ageTraitSet.initAndValidate();
-        }
-
-        return new DecoratedAlignment(alignment, taxonSet, ageTraitSet);
+        return DecoratedAlignment.create(
+                beastState,
+                nexusParser.m_alignment,
+                this.ageInput.apply(beastState, indexVariables),
+                this.dateInput.apply(beastState, indexVariables));
     }
 }
