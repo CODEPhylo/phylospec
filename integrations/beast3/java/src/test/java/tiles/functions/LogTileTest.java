@@ -32,6 +32,7 @@ import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.TileCatalog;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.typeresolver.StochasticityResolver;
+import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiling.ExpValue;
@@ -274,6 +275,46 @@ class LogTileTest {
         assertThrows(
                 TileApplicationError.class,
                 () -> build(declaration + "Real y ~ Normal(mean=log(x=x, base=1), sd=1.0) observed as 0.3\n"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {2, 10})
+    void literalExplicitBasesKeepTheExistingNumericalMeaning(int base) throws Exception {
+        BEASTState graph = build("Real y ~ Normal(mean=log(x=100.0, base=" + base + "), sd=1.0) observed as 0.3\n");
+        Normal likelihood = likelihood(graph, "y_likelihood");
+        RealScalarParam<?> mean = assertInstanceOf(RealScalarParam.class, likelihood.meanInput.get());
+        double expected = Math.log(100.0) / Math.log(base);
+        assertEquals(expected, mean.get(), 0.0);
+        assertEquals(normalLogDensity(0.3, expected), likelihood.calculateLogP(), TOLERANCE);
+        assertTrue(graph.stateNodes.isEmpty());
+        assertTrue(graph.priorDistributions.isEmpty());
+        assertTrue(graph.operators.isEmpty());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {-2, 0, 1})
+    void literalInvalidBasesReachBackendValidation(int base) {
+        assertThrows(
+                TileApplicationError.class,
+                () -> build("Real y ~ Normal(mean=log(x=100.0, base=" + base + "), sd=1.0) observed as 0.3\n"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "log(x=100.0, base=0.5)",
+                "log(x=100.0, base=2.0)",
+                "log(x=100.0, typo=10)",
+                "log(x=100.0, x=10.0)",
+                "log(x=100.0, base=2, base=10)",
+                "log(base=10)",
+                "log(100.0, base=10)",
+                "log(100.0, 10)",
+                "log(x=0.0)",
+                "log(x=-1.0)"
+            })
+    void invalidLiteralCallsCannotBypassTypeChecking(String call) {
+        assertThrows(TypeError.class, () -> build("Real y ~ Normal(mean=" + call + ", sd=1.0) observed as 0.3\n"));
     }
 
     @Test
