@@ -34,6 +34,7 @@ import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.TileCatalog;
 import org.phylospec.typeresolver.StochasticityResolver;
+import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiling.ExpValue;
@@ -57,6 +58,28 @@ class ExpTileTest {
         assertTrue(graph.priorDistributions.isEmpty());
         assertTrue(graph.operators.isEmpty());
         assertEquals(normalLogDensity(2.0, Math.exp(x)), likelihood.calculateLogP(), TOLERANCE);
+    }
+
+    @ParameterizedTest
+    @ValueSource(doubles = {-1.0, 0.0, 1.0})
+    void literalInputProducesTheExpectedObservedLikelihood(double x) throws Exception {
+        BEASTState graph = build("Real y ~ Normal(mean=0.0, sd=exp(x=" + x + ")) observed as 2.0\n");
+        Normal likelihood = likelihood(graph, "y_likelihood");
+        RealScalarParam<?> result = assertInstanceOf(RealScalarParam.class, likelihood.sdInput.get());
+        assertEquals(Math.exp(x), result.get(), 0.0);
+        assertSame(PositiveReal.INSTANCE, result.getDomain());
+        assertTrue(graph.calculationNodes.isEmpty());
+        assertTrue(graph.stateNodes.isEmpty());
+        assertTrue(graph.priorDistributions.isEmpty());
+        assertTrue(graph.operators.isEmpty());
+        assertEquals(1, graph.likelihoodDistributions.size());
+        assertEquals(normalLogDensity(2.0, Math.exp(x)), likelihood.calculateLogP(), TOLERANCE);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"exp(x=0, typo=1)", "exp(x=0, x=1)", "exp()", "exp(0, 1)", "exp(x~0)"})
+    void invalidLiteralCallsAreRejectedBeforeBackendConstruction(String call) {
+        assertThrows(TypeError.class, () -> build("Real y ~ Normal(mean=0.0, sd=" + call + ") observed as 2.0\n"));
     }
 
     @ParameterizedTest

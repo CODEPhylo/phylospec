@@ -1,7 +1,6 @@
 package org.phylospec.ast.transformers;
 
 import java.util.List;
-import java.util.Objects;
 import org.phylospec.ast.ArgumentResolutionError;
 import org.phylospec.ast.AstTransformer;
 import org.phylospec.ast.Expr;
@@ -14,41 +13,18 @@ public class EvaluateScalarFunctions extends AstTransformer {
 
     @Override
     public Expr visitCall(Expr.Call expr) {
-        if ("log".equals(expr.functionName) || "sqrt".equals(expr.functionName)) {
-            // Transform children once, but do not erase a call that still needs validation.
-            super.visitCall(expr);
-            try {
-                return "log".equals(expr.functionName) ? foldLog(expr) : foldSqrt(expr);
-            } catch (ArgumentResolutionError | UnpackError e) {
-                return expr;
-            }
-        }
+        // Transform children once, but do not erase a call that still needs validation.
+        super.visitCall(expr);
         try {
             return switch (expr.functionName) {
-                case "exp" -> new Expr.Literal(Math.exp(this.get("x", expr.arguments, true)));
-                default -> super.visitCall(expr);
+                case "log" -> foldLog(expr);
+                case "sqrt" -> foldSqrt(expr);
+                case "exp" -> foldExp(expr);
+                default -> expr;
             };
-        } catch (UnpackError e) {
-            return super.visitCall(expr);
+        } catch (ArgumentResolutionError | UnpackError e) {
+            return expr;
         }
-    }
-
-    private double get(String name, Expr.Argument[] arguments, boolean isFirst) throws UnpackError {
-        if (arguments.length == 0) {
-            throw new UnpackError();
-        }
-
-        for (Expr.Argument argument : arguments) {
-            if (Objects.equals(argument.name, name)) {
-                return this.unpackDouble(argument.expression);
-            }
-        }
-
-        if (isFirst && arguments[0].name == null) {
-            return this.unpackDouble(arguments[0].expression);
-        }
-
-        throw new UnpackError();
     }
 
     private Expr.Literal foldLog(Expr.Call expr) throws UnpackError {
@@ -86,6 +62,15 @@ public class EvaluateScalarFunctions extends AstTransformer {
         return folded;
     }
 
+    private Expr.Literal foldExp(Expr.Call expr) throws UnpackError {
+        var arguments = expr.resolveArgumentNames(List.of(new Expr.Call.Parameter("x", true)));
+        double x = numericLiteral(arguments.get("x")).doubleValue();
+        // Preserve the existing Math.exp results, including floating-point underflow and overflow.
+        Expr.Literal folded = new Expr.Literal(Math.exp(x));
+        folded.attachRange(expr.getRange());
+        return folded;
+    }
+
     private Number numericLiteral(Expr.Argument argument) throws UnpackError {
         if (!(argument instanceof Expr.AssignedArgument)
                 || !(argument.expression instanceof Expr.Literal literal)
@@ -99,14 +84,6 @@ public class EvaluateScalarFunctions extends AstTransformer {
             return (Number) literal.value;
         }
         throw new UnpackError();
-    }
-
-    private double unpackDouble(Expr expression) throws UnpackError {
-        if (!(expression instanceof Expr.Literal literal)) throw new UnpackError();
-
-        if (!(literal.value instanceof Number number)) throw new UnpackError();
-
-        return number.doubleValue();
     }
 
     private class UnpackError extends Throwable {}

@@ -142,6 +142,68 @@ public class EvaluateScalarFunctionsTest {
                         new Expr.Call("Exponential", new Expr.AssignedArgument(null, new Expr.Literal(1.0)))));
     }
 
+    @ParameterizedTest
+    @CsvSource(
+            delimiter = '|',
+            value = {
+                "exp(x=-1) | 0.36787944117144233",
+                "exp(x=0) | 1.0",
+                "exp(x=1) | 2.718281828459045",
+                "exp(x=0.5) | 1.6487212707001282",
+                "exp(-1) | 0.36787944117144233",
+                "exp(x=exp(x=0)) | 2.718281828459045"
+            })
+    void validLiteralExponentialsAreFolded(String call, double expected) throws Exception {
+        List<Stmt> statements = parseNormalized("PositiveReal a = " + call);
+        Stmt.Assignment original = assertInstanceOf(Stmt.Assignment.class, statements.getFirst());
+        var originalRange = original.expression.getRange();
+        assertNotNull(originalRange);
+        statements = new EvaluateScalarFunctions().transform(statements);
+        Stmt.Assignment assignment = assertInstanceOf(Stmt.Assignment.class, statements.getFirst());
+        Expr.Literal result = assertInstanceOf(Expr.Literal.class, assignment.expression);
+        assertEquals(expected, ((Number) result.value).doubleValue(), 1e-14);
+        assertEquals(originalRange, result.getRange());
+        resolve(statements);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"exp(x=1, typo=2)", "exp(x=1, x=2)", "exp()", "exp(1, 2)", "exp(x~1)"})
+    void invalidLiteralExponentialsRemainCallsForValidation(String call) {
+        List<Stmt> statements = assertCallPreserved("Real a = " + call);
+        assertThrows(TypeError.class, () -> resolve(statements));
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "Real x = -1.0\nPositiveReal a = exp(x=x)",
+                "Real x ~ Normal(mean=0.0, sd=1.0)\nPositiveReal a = exp(x=x)"
+            })
+    void fixedAndRandomExponentialInputsAreNotFolded(String source) {
+        List<Stmt> statements = assertCallPreserved(source);
+        assertDoesNotThrow(() -> resolve(statements));
+    }
+
+    @Test
+    void explicitlyUnitBearingExponentialInputIsNotFolded() {
+        Expr.Literal x = new Expr.Literal(1, Unit.YEARS);
+        Expr.Call call = new Expr.Call("exp", new Expr.AssignedArgument("x", x));
+        Expr actual = call.accept(new EvaluateScalarFunctions());
+        assertSame(call, actual);
+        assertEquals(Unit.YEARS, x.unit);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {-1000, 1000})
+    void literalExponentialExtremesKeepTheExistingFloatingPointResults(int x) {
+        List<Stmt> statements = new EvaluateScalarFunctions().transform(parseNormalized("Real a = exp(x=" + x + ")"));
+        Stmt.Assignment assignment = assertInstanceOf(Stmt.Assignment.class, statements.getFirst());
+        Expr.Literal result = assertInstanceOf(Expr.Literal.class, assignment.expression);
+        double expected = x < 0 ? 0.0 : Double.POSITIVE_INFINITY;
+        assertEquals(expected, ((Number) result.value).doubleValue(), 0.0);
+        // Only folding compatibility is checked here; these results are not model-domain acceptance tests.
+    }
+
     @Test
     public void testSqrt() {
         testStatements("Real a = sqrt(4)", new Stmt.Assignment(new AstType.Atomic("Real"), "a", new Expr.Literal(2.0)));
