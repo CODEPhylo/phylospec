@@ -153,6 +153,56 @@ public class EvaluateScalarFunctionsTest {
                         new Expr.Call("Exponential", new Expr.AssignedArgument(null, new Expr.Literal(0.0)))));
     }
 
+    @ParameterizedTest
+    @CsvSource(
+            delimiter = '|',
+            value = {
+                "sqrt(x=0) | 0.0",
+                "sqrt(x=4) | 2.0",
+                "sqrt(x=0.25) | 0.5",
+                "sqrt(4) | 2.0",
+                "sqrt(x=sqrt(x=16)) | 2.0"
+            })
+    void validLiteralSquareRootsAreFolded(String call, double expected) throws Exception {
+        List<Stmt> statements = parseNormalized("NonNegativeReal a = " + call);
+        Stmt.Assignment original = assertInstanceOf(Stmt.Assignment.class, statements.getFirst());
+        var originalRange = original.expression.getRange();
+        assertNotNull(originalRange);
+        statements = new EvaluateScalarFunctions().transform(statements);
+        Stmt.Assignment assignment = assertInstanceOf(Stmt.Assignment.class, statements.getFirst());
+        Expr.Literal result = assertInstanceOf(Expr.Literal.class, assignment.expression);
+        assertEquals(expected, ((Number) result.value).doubleValue(), 0.0);
+        assertEquals(originalRange, result.getRange());
+        resolve(statements);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"sqrt(x=-1)", "sqrt(x=4, typo=1)", "sqrt(x=4, x=9)", "sqrt()", "sqrt(4, 9)", "sqrt(x~4)"})
+    void invalidLiteralSquareRootsRemainCallsForValidation(String call) {
+        List<Stmt> statements = assertCallPreserved("Real a = " + call);
+        assertThrows(TypeError.class, () -> resolve(statements));
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "NonNegativeReal x = 4.0\nNonNegativeReal a = sqrt(x=x)",
+                "PositiveReal x ~ Gamma(shape=2.0, rate=1.0)\nNonNegativeReal a = sqrt(x=x)"
+            })
+    void fixedAndRandomSquareRootInputsAreNotFolded(String source) {
+        List<Stmt> statements = assertCallPreserved(source);
+        assertDoesNotThrow(() -> resolve(statements));
+    }
+
+    @Test
+    void explicitlyUnitBearingSquareRootInputIsNotFolded() {
+        Expr.Literal x = new Expr.Literal(4, Unit.YEARS);
+        Expr.Call call = new Expr.Call("sqrt", new Expr.AssignedArgument("x", x));
+        Expr actual = call.accept(new EvaluateScalarFunctions());
+        assertSame(call, actual);
+        assertEquals(Unit.YEARS, x.unit);
+    }
+
     private static List<Stmt> assertCallPreserved(String source) {
         // Parse twice because AST transformers may mutate their input statements.
         List<Stmt> expected = parseNormalized(source);

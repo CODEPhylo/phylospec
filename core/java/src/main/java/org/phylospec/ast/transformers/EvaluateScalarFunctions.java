@@ -14,11 +14,11 @@ public class EvaluateScalarFunctions extends AstTransformer {
 
     @Override
     public Expr visitCall(Expr.Call expr) {
-        if ("log".equals(expr.functionName)) {
+        if ("log".equals(expr.functionName) || "sqrt".equals(expr.functionName)) {
             // Transform children once, but do not erase a call that still needs validation.
             super.visitCall(expr);
             try {
-                return foldLog(expr);
+                return "log".equals(expr.functionName) ? foldLog(expr) : foldSqrt(expr);
             } catch (ArgumentResolutionError | UnpackError e) {
                 return expr;
             }
@@ -26,7 +26,6 @@ public class EvaluateScalarFunctions extends AstTransformer {
         try {
             return switch (expr.functionName) {
                 case "exp" -> new Expr.Literal(Math.exp(this.get("x", expr.arguments, true)));
-                case "sqrt" -> new Expr.Literal(Math.sqrt(this.get("x", expr.arguments, true)));
                 default -> super.visitCall(expr);
             };
         } catch (UnpackError e) {
@@ -55,12 +54,12 @@ public class EvaluateScalarFunctions extends AstTransformer {
     private Expr.Literal foldLog(Expr.Call expr) throws UnpackError {
         var arguments = expr.resolveArgumentNames(
                 List.of(new Expr.Call.Parameter("x", true), new Expr.Call.Parameter("base", false)));
-        double x = logLiteral(arguments.get("x")).doubleValue();
+        double x = numericLiteral(arguments.get("x")).doubleValue();
         if (!(x > 0.0)) throw new UnpackError();
 
         double value = Math.log(x);
         if (arguments.containsKey("base")) {
-            Number base = logLiteral(arguments.get("base"));
+            Number base = numericLiteral(arguments.get("base"));
             // Preserve the core Integer requirement, including for integral-looking doubles.
             if (!(base instanceof Integer || base instanceof Long) || base.longValue() <= 1) {
                 throw new UnpackError();
@@ -74,7 +73,20 @@ public class EvaluateScalarFunctions extends AstTransformer {
         return folded;
     }
 
-    private Number logLiteral(Expr.Argument argument) throws UnpackError {
+    private Expr.Literal foldSqrt(Expr.Call expr) throws UnpackError {
+        var arguments = expr.resolveArgumentNames(List.of(new Expr.Call.Parameter("x", true)));
+        double x = numericLiteral(arguments.get("x")).doubleValue();
+        if (!(x >= 0.0)) throw new UnpackError();
+
+        double value = Math.sqrt(x);
+        if (!Double.isFinite(value)) throw new UnpackError();
+
+        Expr.Literal folded = new Expr.Literal(value);
+        folded.attachRange(expr.getRange());
+        return folded;
+    }
+
+    private Number numericLiteral(Expr.Argument argument) throws UnpackError {
         if (!(argument instanceof Expr.AssignedArgument)
                 || !(argument.expression instanceof Expr.Literal literal)
                 || literal.unit != Unit.IMPLICIT) {

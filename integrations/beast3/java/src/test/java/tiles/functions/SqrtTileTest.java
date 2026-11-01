@@ -56,6 +56,28 @@ class SqrtTileTest {
     }
 
     @ParameterizedTest
+    @ValueSource(doubles = {0.0, 4.0, 0.25})
+    void literalInputProducesTheExpectedObservedLikelihood(double x) throws Exception {
+        BEASTState graph = build("Real y ~ Cauchy(location=sqrt(x=" + x + "), scale=1.0) observed as 2.0\n");
+        Cauchy likelihood = likelihood(graph, "y_likelihood");
+        RealScalarParam<?> result = assertInstanceOf(RealScalarParam.class, likelihood.locationInput.get());
+        assertEquals(Math.sqrt(x), result.get(), 0.0);
+        assertTrue(graph.calculationNodes.isEmpty());
+        assertTrue(graph.stateNodes.isEmpty());
+        assertTrue(graph.priorDistributions.isEmpty());
+        assertTrue(graph.operators.isEmpty());
+        assertEquals(1, graph.likelihoodDistributions.size());
+        assertEquals(cauchyLogDensity(2.0, Math.sqrt(x), 1.0), likelihood.calculateLogP(), TOLERANCE);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"sqrt(x=-1)", "sqrt(x=4, typo=1)", "sqrt(x=4, x=9)", "sqrt()", "sqrt(4, 9)", "sqrt(x~4)"})
+    void invalidLiteralCallsAreRejectedBeforeBackendConstruction(String call) {
+        assertThrows(
+                TypeError.class, () -> build("Real y ~ Cauchy(location=" + call + ", scale=1.0) observed as 2.0\n"));
+    }
+
+    @ParameterizedTest
     @CsvSource({"Gamma, PositiveReal", "Exponential, NonNegativeReal"})
     void sharedInputUpdatesLikelihoodsAndRestoresAcceptedAndRejectedStates(String family, String declaredType)
             throws Exception {
