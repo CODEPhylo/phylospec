@@ -99,7 +99,8 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
 
         tiles.add(new SubsetTile());
 
-        tiles.add(new OffsetTile());
+        tiles.add(new OffsetTile.ConstantOnRight());
+        tiles.add(new OffsetTile.ConstantOnLeft());
         tiles.add(new NormalTile());
         tiles.add(new LogNormalTile());
         tiles.add(new LogNormalRealSpaceTile());

@@ -37,6 +37,7 @@ import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiling.ExpValue;
+import tiling.OffsetValue;
 
 class ExpTileTest {
     private static final double TOLERANCE = 1e-12;
@@ -249,7 +250,7 @@ class ExpTileTest {
 
     @Test
     void standaloneAndArithmeticExpressionsKeepTheExistingRpnPath() throws Exception {
-        // Multiplication exercises RPN without also matching the existing x + offset distribution template.
+        // Keep an independent check of the existing RPN multiplication path.
         BEASTState graph = build("""
                 Real x ~ Normal(mean=0.0, sd=1.0)
                 Real direct = exp(x=x)
@@ -278,6 +279,45 @@ class ExpTileTest {
             assertEquals(normalLogDensity(value, 1.0), prior.calculateLogP(), TOLERANCE);
             assertEquals(Math.exp(value), direct.getStatisticValue(0), TOLERANCE);
             assertEquals(Math.exp(value * 2.0), arithmetic.getStatisticValue(0), TOLERANCE);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shiftedAndUnshiftedExponentialsKeepTheOriginalStateInEitherOrder(boolean shiftedFirst) throws Exception {
+        String directDeclaration = "Real direct = exp(x=x)\n";
+        String shiftedDeclaration = "Real shifted = exp(x=x + 1.0)\n";
+        BEASTState graph = build("Real x ~ Normal(mean=0.0, sd=1.0)\n"
+                + (shiftedFirst ? shiftedDeclaration + directDeclaration : directDeclaration + shiftedDeclaration));
+        RealScalarParam<?> x = parameter(graph, "x");
+        RPNcalculator direct = rpn(graph, "direct");
+        RPNcalculator shifted = rpn(graph, "shifted");
+        assertEquals(1, graph.stateNodes.size());
+        assertEquals(1, graph.priorDistributions.size());
+        assertEquals(1, graph.operators.size());
+        Normal prior = assertInstanceOf(Normal.class, graph.priorDistributions.get(x));
+        assertSame(x, prior.paramInput.get());
+        assertSame(Real.INSTANCE, x.getDomain());
+        assertEquals(0.1, x.get(), 0.0);
+        assertEquals(0.0, prior.meanInput.get().get(), 0.0);
+        assertEquals(1.0, prior.sdInput.get().get(), 0.0);
+        ScaleOperator operator = assertInstanceOf(ScaleOperator.class, graph.operators.getFirst());
+        assertEquals(List.of(x), operator.listStateNodes());
+        assertEquals(5.0, operator.m_pWeight.get(), 0.0);
+
+        // RPN can either inline the addition or read an OffsetValue. Both must retain the same source state.
+        for (var node : graph.calculationNodes.keySet()) {
+            if (node instanceof OffsetValue offset) {
+                assertSame(x, offset.xInput.get());
+                assertEquals(1.0, offset.offsetInput.get(), 0.0);
+            }
+        }
+        for (double value : new double[] {-1.0, 0.0, 1.0}) {
+            x.set(value);
+            assertEquals("x", x.getID(), "Derived expressions must not rename their sampled input.");
+            assertEquals(normalLogDensity(value, 1.0), prior.calculateLogP(), TOLERANCE);
+            assertEquals(Math.exp(value), direct.getStatisticValue(0), TOLERANCE);
+            assertEquals(Math.exp(value + 1.0), shifted.getStatisticValue(0), TOLERANCE);
         }
     }
 
