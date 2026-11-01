@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
@@ -72,15 +73,20 @@ class LogTileTest {
         assertEquals(normalLogDensity(0.3, expected), likelihood.calculateLogP(), TOLERANCE);
     }
 
-    @Test
-    void sharedAndInlineValuesUpdateLikelihoodsAndRestoreAcceptedAndRejectedStates() throws Exception {
+    @ParameterizedTest
+    @CsvSource(
+            value = {"natural,true", "natural,false", "2,true", "2,false", "10,true", "10,false"},
+            nullValues = "natural")
+    void sharedAndInlineValuesUpdateLikelihoodsAndRestoreAcceptedAndRejectedStates(Integer base, boolean acceptFirst)
+            throws Exception {
+        String baseArgument = base == null ? "" : ", base=" + base;
         BEASTState graph = build("""
                 PositiveReal x ~ Gamma(shape=2.0, rate=1.0)
-                Real mu = log(x=x)
+                Real mu = log(x=x%s)
                 Real y ~ Normal(mean=mu, sd=1.0) observed as 0.3
                 Real z ~ Normal(mean=mu, sd=1.0) observed as 2.0
-                Real w ~ Normal(mean=log(x=x), sd=1.0) observed as -1.0
-                """);
+                Real w ~ Normal(mean=log(x=x%s), sd=1.0) observed as -1.0
+                """.formatted(baseArgument, baseArgument));
         RealScalarParam<?> x = parameter(graph, "x");
         Gamma prior = assertOriginalGammaDraw(graph, x);
         Normal first = likelihood(graph, "y_likelihood");
@@ -111,11 +117,11 @@ class LogTileTest {
         state.initByName("stateNode", List.copyOf(graph.stateNodes.keySet()));
         state.initialise();
         state.setPosterior(posterior);
-        assertEquals(expectedPosterior(x.get()), state.robustlyCalcPosterior(posterior), TOLERANCE);
+        assertEquals(expectedPosterior(x.get(), base), state.robustlyCalcPosterior(posterior), TOLERANCE);
 
         // Controlled proposals exercise negative, zero and positive log values without changing operator policy.
-        double[] proposals = {0.5, 1.0, 2.0, 4.0};
-        boolean[] decisions = {true, true, false, true};
+        double[] proposals = {0.5, 2.0, 1.0, 4.0};
+        boolean[] decisions = {acceptFirst, !acceptFirst, true, true};
         for (int step = 0; step < proposals.length; step++) {
             double previousX = x.get();
             double previousPrior = prior.getCurrentLogP();
@@ -125,7 +131,7 @@ class LogTileTest {
                     .toArray();
             state.store(step + 1);
             x.set(proposals[step]);
-            double expectedMean = Math.log(proposals[step]);
+            double expectedMean = logarithm(proposals[step], base);
             assertEquals(expectedMean, shared.get(), 0.0);
             assertEquals(expectedMean, inline.get(), 0.0);
             state.storeCalculationNodes();
@@ -134,7 +140,7 @@ class LogTileTest {
             assertTrue(inline.somethingIsDirty());
 
             double expectedPrior = gammaLogDensity(proposals[step]);
-            double[] expectedLikelihoods = expectedLikelihoods(proposals[step]);
+            double[] expectedLikelihoods = expectedLikelihoods(proposals[step], base);
             double proposedPosterior = posterior.calculateLogP();
             assertTrue(Double.isFinite(proposedPosterior));
             assertEquals(expectedPrior, prior.getCurrentLogP(), TOLERANCE);
@@ -142,7 +148,7 @@ class LogTileTest {
                 assertNotEquals(previousLikelihoods[i], expectedLikelihoods[i], TOLERANCE);
                 assertEquals(expectedLikelihoods[i], likelihoods.get(i).getCurrentLogP(), TOLERANCE);
             }
-            assertEquals(expectedPosterior(proposals[step]), proposedPosterior, TOLERANCE);
+            assertEquals(expectedPosterior(proposals[step], base), proposedPosterior, TOLERANCE);
             if (decisions[step]) {
                 state.acceptCalculationNodes();
             } else {
@@ -152,8 +158,10 @@ class LogTileTest {
             state.setEverythingDirty(false);
             double currentX = decisions[step] ? proposals[step] : previousX;
             assertEquals(currentX, x.get(), 0.0);
-            assertEquals(Math.log(currentX), shared.get(), 0.0);
-            assertEquals(Math.log(currentX), inline.get(), 0.0);
+            assertEquals(logarithm(currentX, base), shared.get(), 0.0);
+            assertEquals(logarithm(currentX, base), inline.get(), 0.0);
+            assertEquals(logarithm(currentX, base), loggedValue(shared), 0.0);
+            assertEquals(logarithm(currentX, base), loggedValue(inline), 0.0);
             assertEquals("x", x.getID());
             assertSame(x, prior.paramInput.get());
             assertSame(x, shared.xInput.get());
@@ -172,12 +180,12 @@ class LogTileTest {
             }
             assertEquals(
                     decisions[step] ? proposedPosterior : previousPosterior, posterior.getCurrentLogP(), TOLERANCE);
-            double[] currentLikelihoods = expectedLikelihoods(currentX);
+            double[] currentLikelihoods = expectedLikelihoods(currentX, base);
             for (int i = 0; i < likelihoods.size(); i++) {
                 assertEquals(currentLikelihoods[i], likelihoods.get(i).calculateLogP(), TOLERANCE);
             }
             assertEquals(gammaLogDensity(currentX), prior.calculateLogP(), TOLERANCE);
-            assertEquals(expectedPosterior(currentX), posterior.calculateLogP(), TOLERANCE);
+            assertEquals(expectedPosterior(currentX, base), posterior.calculateLogP(), TOLERANCE);
         }
     }
 
@@ -234,11 +242,54 @@ class LogTileTest {
         }
     }
 
+    @ParameterizedTest
+    @ValueSource(ints = {2, 10})
+    void explicitBaseOnRandomInputIsAppliedToStandaloneValues(int base) throws Exception {
+        BEASTState graph = build("""
+                PositiveReal x ~ Gamma(shape=2.0, rate=1.0)
+                Real mu = log(x=x, base=%d)
+                """.formatted(base));
+        RealScalarParam<?> x = parameter(graph, "x");
+        Gamma prior = assertOriginalGammaDraw(graph, x);
+        assertEquals(1, graph.calculationNodes.size());
+        LogValue result = assertInstanceOf(
+                LogValue.class, graph.calculationNodes.keySet().iterator().next());
+        assertSame(x, result.xInput.get());
+        assertSame(Real.INSTANCE, result.getDomain());
+        assertTrue(x.getOutputs().contains(result));
+        for (double value : new double[] {0.5, 1.0, 2.0, 100.0}) {
+            x.set(value);
+            assertEquals(logarithm(value, base), result.get(), 0.0);
+            assertEquals(logarithm(value, base), loggedValue(result), 0.0);
+            assertEquals(gammaLogDensity(value), prior.calculateLogP(), TOLERANCE);
+            assertEquals("x", x.getID());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void baseOneIsRejectedForNamedFixedAndRandomInputs(boolean randomInput) {
+        // A named input reaches the backend; folding all-literal expressions is outside this test's scope.
+        String declaration = randomInput ? "PositiveReal x ~ Gamma(shape=2.0, rate=1.0)\n" : "PositiveReal x = 100.0\n";
+        assertThrows(
+                TileApplicationError.class,
+                () -> build(declaration + "Real y ~ Normal(mean=log(x=x, base=1), sd=1.0) observed as 0.3\n"));
+    }
+
     @Test
-    void explicitBaseOnRandomInputIsNotSilentlyIgnored() {
+    void randomBaseIsStillRejected() {
         assertThrows(TileApplicationError.class, () -> build("""
                 PositiveReal x ~ Gamma(shape=2.0, rate=1.0)
-                Real mu = log(x=x, base=10)
+                Integer base ~ DiscreteUniform(lower=2, upper=10)
+                Real mu = log(x=x, base=base)
+                """));
+    }
+
+    @Test
+    void explicitBaseOnArithmeticRpnInputIsNotSilentlyIgnored() {
+        assertThrows(TileApplicationError.class, () -> build("""
+                PositiveReal x ~ Gamma(shape=2.0, rate=1.0)
+                Real mu = log(x=x * 2.0, base=10)
                 """));
     }
 
@@ -258,14 +309,18 @@ class LogTileTest {
         return prior;
     }
 
-    private static double[] expectedLikelihoods(double x) {
-        double mean = Math.log(x);
+    private static double logarithm(double x, Integer base) {
+        return base == null ? Math.log(x) : Math.log(x) / Math.log(base);
+    }
+
+    private static double[] expectedLikelihoods(double x, Integer base) {
+        double mean = logarithm(x, base);
         return new double[] {normalLogDensity(0.3, mean), normalLogDensity(2.0, mean), normalLogDensity(-1.0, mean)};
     }
 
-    private static double expectedPosterior(double x) {
+    private static double expectedPosterior(double x, Integer base) {
         double result = gammaLogDensity(x);
-        for (double likelihood : expectedLikelihoods(x)) result += likelihood;
+        for (double likelihood : expectedLikelihoods(x, base)) result += likelihood;
         return result;
     }
 
