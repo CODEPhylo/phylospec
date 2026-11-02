@@ -141,7 +141,9 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array, BEASTState> {
             if (domainType == UnitInterval.class) {
                 double sum = 0;
                 for (double v : values) sum += v;
-                if (Math.abs(sum - 1.0) <= 1e-6) {
+                // Match Simplex.isValid(): an invalid optional candidate must not
+                // prevent the ordinary real-vector candidate from being used.
+                if (Math.abs(sum - 1.0) <= 1e-10) {
                     VectorTile simplexTile = new VectorTile(TypeToken.of(SimplexParam.class), new SimplexParam(values));
                     simplexTile.setWeight(weight);
                     simplexTile.setRootNode(array);
