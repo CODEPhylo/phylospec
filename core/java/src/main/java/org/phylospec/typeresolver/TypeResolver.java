@@ -571,13 +571,13 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
                 switch (expr.value) {
                     case String ignored -> Set.of("String");
                     case Integer value -> {
-                        if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Probability");
+                        if (0 == value) yield Set.of("Integer", "NonNegativeInteger", "NonNegativeReal", "Probability");
                         if (1 == value) yield Set.of("PositiveReal", "PositiveInteger", "Probability");
                         if (0 < value) yield Set.of("PositiveInteger", "PositiveReal");
                         yield Set.of("Integer", "Real");
                     }
                     case Long value -> {
-                        if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Probability");
+                        if (0 == value) yield Set.of("Integer", "NonNegativeInteger", "NonNegativeReal", "Probability");
                         if (1 == value) yield Set.of("PositiveReal", "PositiveInteger", "Probability");
                         if (0 < value) yield Set.of("PositiveInteger", "PositiveReal");
                         yield Set.of("Integer", "Real");
