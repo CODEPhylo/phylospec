@@ -60,7 +60,8 @@ public class SubsetTile extends GeneratorTile<DecoratedAlignment, BEASTState> {
         beastState.setInput(filteredAlignment, filteredAlignment.alignmentInput, alignment.alignment());
         beastState.setInput(filteredAlignment, filteredAlignment.filterInput, filterString);
 
-        return new DecoratedAlignment(filteredAlignment, alignment.taxonSet(), alignment.ages());
+        return new DecoratedAlignment(
+                filteredAlignment, alignment.taxonSet(), alignment.ages(), alignment.speciesNames());
     }
 
     /**

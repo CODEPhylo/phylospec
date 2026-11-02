@@ -2,7 +2,6 @@ package tiles.input;
 
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.alignment.Sequence;
-import beast.base.evolution.tree.TraitSet;
 import beastconfig.BEASTState;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -32,6 +31,8 @@ public class FromFastaTile extends GeneratorTile<DecoratedAlignment, BEASTState>
             new GeneratorTileInput<>("file", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
     GeneratorTileInput<ParserTile.Parser, BEASTState> ageInput = new GeneratorTileInput<>("age", false);
     GeneratorTileInput<ParserTile.Parser, BEASTState> dateInput = new GeneratorTileInput<>("date", false);
+    GeneratorTileInput<ParserTile.Parser, BEASTState> speciesNameInput =
+            new GeneratorTileInput<>("speciesName", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
     public DecoratedAlignment applyTile(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
@@ -56,8 +57,8 @@ public class FromFastaTile extends GeneratorTile<DecoratedAlignment, BEASTState>
         ParserTile.Parser ageParser = ageInput.apply(state, indexVariables);
         ParserTile.Parser dateParser = dateInput.apply(state, indexVariables);
 
-        validateMetadata(resolved, alignment, ageParser, dateParser);
-        return DecoratedAlignment.create(state, alignment, ageParser, dateParser);
+        return DecoratedAlignment.create(
+                state, alignment, ageParser, dateParser, speciesNameInput.apply(state, indexVariables), resolved);
     }
 
     private static Alignment readAlignment(Path path) throws IOException {
@@ -135,48 +136,6 @@ public class FromFastaTile extends GeneratorTile<DecoratedAlignment, BEASTState>
                 throw new IllegalArgumentException(invalidSequence.getMessage(), e);
             }
             throw e;
-        }
-    }
-
-    private void validateMetadata(
-            Path path, Alignment alignment, ParserTile.Parser ageParser, ParserTile.Parser dateParser) {
-        ParserTile.Parser parser = ageParser != null ? ageParser : dateParser;
-        if (parser == null) {
-            return;
-        }
-
-        // Validate before TraitSet.initAndValidate(), whose native error handling
-        // can terminate the JVM for an unparseable date.
-        TraitSet validator = new TraitSet();
-        validator.traitNameInput.setValue(ageParser != null ? "age" : "date", validator);
-
-        for (String taxon : alignment.getTaxaNames()) {
-            try {
-                String raw = parser.parse(taxon);
-                if (raw == null || raw.isBlank()) {
-                    throw new IllegalArgumentException("The parser returned an empty value.");
-                }
-
-                // TraitSet encodes metadata as comma-separated taxon=value pairs.
-                if (taxon.contains(",") || taxon.contains("=") || raw.contains(",") || raw.contains("=")) {
-                    throw new IllegalArgumentException("Taxon names and parsed metadata must not contain ',' or '=' "
-                            + "when age/date metadata is used.");
-                }
-
-                String normalized = raw.replaceAll("\\s+", " ").strip();
-                double value = validator.convertValueToDouble(normalized);
-                if (!Double.isFinite(value)) {
-                    throw new IllegalArgumentException("The parsed value must be finite.");
-                }
-                if (ageParser != null && value < 0.0) {
-                    throw new IllegalArgumentException("A sampling age must not be negative.");
-                }
-            } catch (RuntimeException e) {
-                throw new TileApplicationError(
-                        getRootNode(),
-                        "Invalid sampling metadata.",
-                        "'" + path + "', taxon '" + taxon + "': " + e.getMessage());
-            }
         }
     }
 }

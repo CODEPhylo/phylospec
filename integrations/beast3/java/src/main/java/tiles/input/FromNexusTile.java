@@ -22,6 +22,8 @@ public class FromNexusTile extends GeneratorTile<DecoratedAlignment, BEASTState>
             new GeneratorTileInput<>("file", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
     GeneratorTileInput<ParserTile.Parser, BEASTState> ageInput = new GeneratorTileInput<>("age", false);
     GeneratorTileInput<ParserTile.Parser, BEASTState> dateInput = new GeneratorTileInput<>("date", false);
+    GeneratorTileInput<ParserTile.Parser, BEASTState> speciesNameInput =
+            new GeneratorTileInput<>("speciesName", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
     public DecoratedAlignment applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
@@ -42,6 +44,8 @@ public class FromNexusTile extends GeneratorTile<DecoratedAlignment, BEASTState>
                 beastState,
                 nexusParser.m_alignment,
                 this.ageInput.apply(beastState, indexVariables),
-                this.dateInput.apply(beastState, indexVariables));
+                this.dateInput.apply(beastState, indexVariables),
+                this.speciesNameInput.apply(beastState, indexVariables),
+                file.toPath());
     }
 }

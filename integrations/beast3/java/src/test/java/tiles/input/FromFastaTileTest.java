@@ -7,8 +7,10 @@ import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beastconfig.BEASTState;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -131,14 +133,23 @@ class FromFastaTileTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"age,bad", "age,NaN", "age,Infinity", "age,-1", "date,not-a-date"})
-    void rejectsInvalidSamplingMetadata(String kind, String value) throws Exception {
+    @CsvSource({
+        "fromFasta,age,bad", "fromFasta,age,NaN", "fromFasta,age,Infinity", "fromFasta,age,-1",
+                "fromFasta,date,not-a-date",
+        "fromNexus,age,bad", "fromNexus,age,NaN", "fromNexus,age,Infinity", "fromNexus,age,-1",
+                "fromNexus,date,not-a-date"
+    })
+    void rejectsInvalidSamplingMetadata(String reader, String kind, String value) throws Exception {
         Files.writeString(directory.resolve("input.fa"), ">a_" + value + "\nACGT\n>b_0\nACGA\n");
+        Files.writeString(directory.resolve("input.nex"), nexus("a_" + value + " ACGT\nb_0 ACGA", 2, 4));
+        String file = reader.equals("fromFasta") ? "input.fa" : "input.nex";
 
         TileApplicationError error =
-                assertThrows(TileApplicationError.class, () -> read(metadataSource("fromFasta", "input.fa", kind)));
+                assertThrows(TileApplicationError.class, () -> read(metadataSource(reader, file, kind)));
 
         assertTrue(error.getMessage().contains("Invalid sampling metadata"));
+        assertTrue(error.getMessage().contains(directory.resolve(file).toString()));
+        assertTrue(error.getMessage().contains("a_" + value));
     }
 
     @ParameterizedTest
@@ -153,14 +164,93 @@ class FromFastaTileTest {
     }
 
     @Test
-    void rejectsUnsupportedSpeciesNameInsteadOfIgnoringIt() throws Exception {
+    void readsSpeciesNamesWithoutRenamingOrMergingSamples() throws Exception {
         Files.writeString(directory.resolve("input.fa"), ">a_species\nACGT\n>b_species\nACGA\n");
 
-        assertThrows(TileApplicationError.class, () -> read("""
+        DecoratedAlignment data = read("""
                         Alignment data = fromFasta(
                             file="input.fa",
-                            speciesName=parse(delimiter="_", part=1))
-                        """));
+                            speciesName=parse(delimiter="_", part=2))
+                        """);
+        assertEquals(Map.of("a_species", "species", "b_species", "species"), data.speciesNames());
+        assertEquals(List.of("a_species", "b_species"), data.alignment().getTaxaNames());
+        assertEquals(2, data.alignment().getTaxonCount());
+        assertEquals("ACGT", data.alignment().getSequenceAsString("a_species"));
+        assertEquals("ACGA", data.alignment().getSequenceAsString("b_species"));
+        assertNull(data.ages());
+    }
+
+    @Test
+    void speciesMetadataIsCopiedWithoutReplacingNativeAlignmentInputs() throws Exception {
+        Files.writeString(directory.resolve("input.fa"), ">a_0\nACGT\n>b_1\nACGA\n");
+        DecoratedAlignment original = read(metadataSource("fromFasta", "input.fa", "age"));
+        Map<String, String> mutable = new HashMap<>(Map.of("a_0", "spA", "b_1", "spA"));
+        DecoratedAlignment decorated =
+                new DecoratedAlignment(original.alignment(), original.taxonSet(), original.ages(), mutable);
+        mutable.put("a_0", "changed");
+
+        assertEquals(Map.of("a_0", "spA", "b_1", "spA"), decorated.speciesNames());
+        assertThrows(
+                UnsupportedOperationException.class,
+                () -> decorated.speciesNames().clear());
+        assertSame(original.alignment(), decorated.alignment());
+        assertSame(original.taxonSet(), decorated.taxonSet());
+        assertSame(original.ages(), decorated.ages());
+    }
+
+    @Test
+    void nexusNamesArePreservedForSpeciesButMustBeRepresentableInSamplingTraits() throws Exception {
+        Files.writeString(directory.resolve("input.nex"), nexus("'a  b_0' ACGT\nc_1 ACGA", 2, 4));
+        DecoratedAlignment data = read("""
+                Alignment data = fromNexus(file="input.nex", speciesName=parse(regex="^(.*)_"))
+                """);
+        assertEquals(List.of("a  b_0", "c_1"), data.alignment().getTaxaNames());
+        assertEquals(Map.of("a  b_0", "a  b", "c_1", "c"), data.speciesNames());
+
+        TileApplicationError error = assertThrows(TileApplicationError.class, () -> read("""
+                Alignment data = fromNexus(file="input.nex", age=parse(regex="([01])$"))
+                """));
+        assertTrue(error.getMessage().contains("Invalid sampling metadata"));
+        assertTrue(error.getMessage().contains("a  b_0"));
+        assertTrue(error.getMessage().contains(directory.resolve("input.nex").toString()));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"fromFasta", "fromNexus"})
+    void serializesTheSameNormalizedSamplingValuesThatWereValidated(String reader) throws Exception {
+        String first = "a_\u20030\u2003_sample";
+        String second = "b_\u20032\u2003_sample";
+        Files.writeString(directory.resolve("input.fa"), ">" + first + "\nACGT\n>" + second + "\nACGA\n");
+        Files.writeString(directory.resolve("input.nex"), nexus("'" + first + "' ACGT\n'" + second + "' ACGA", 2, 4));
+        String file = reader.equals("fromFasta") ? "input.fa" : "input.nex";
+        DecoratedAlignment data = read(metadataSource(reader, file, "age"));
+
+        assertEquals(List.of(first, second), data.alignment().getTaxaNames());
+        assertEquals("0", data.ages().getStringValue(first));
+        assertEquals("2", data.ages().getStringValue(second));
+        assertEquals(0.0, data.ages().getValue(first));
+        assertEquals(2.0, data.ages().getValue(second));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"fromFasta", "fromNexus"})
+    void speciesMetadataDoesNotChangeFixedTreeHkyLikelihood(String reader) throws Exception {
+        Files.writeString(directory.resolve("input.fa"), ">a\nACGTRN-?\n>b\nACGTACGT\n>c\nACGTACGA\n");
+        Files.writeString(directory.resolve("input.nex"), nexus("a ACGTRN-?\nb ACGTACGT\nc ACGTACGA", 3, 8));
+        String file = reader.equals("fromFasta") ? "input.fa" : "input.nex";
+        String source = model(reader, file);
+        Built withoutMetadata = build(source);
+        Built withMetadata = build(
+                source.replace("file=\"" + file + "\"", "file=\"" + file + "\", speciesName=parse(regex=\"([abc])\")"));
+
+        TreeLikelihood reference = likelihood(withoutMetadata);
+        TreeLikelihood actual = likelihood(withMetadata);
+        double expected = reference.calculateLogP();
+        assertTrue(Double.isFinite(expected));
+        assertEquals(expected, actual.calculateLogP(), 1e-12);
+        assertEquals(
+                reference.dataInput.get().getTaxaNames(), actual.dataInput.get().getTaxaNames());
+        assertNoSampledState(withMetadata.graph());
     }
 
     @Test

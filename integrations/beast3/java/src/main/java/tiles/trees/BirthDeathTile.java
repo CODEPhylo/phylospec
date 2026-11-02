@@ -11,9 +11,11 @@ import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
 import beastconfig.OperatorSelector;
 import java.util.IdentityHashMap;
+import java.util.List;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.input.TaxaData;
+import tiles.input.TaxonValue;
 import tiling.BoundDistribution;
 
 public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthDeathGernhard08Model>, BEASTState> {
@@ -29,7 +31,7 @@ public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthD
             new GeneratorTileInput<>("turnover");
     GeneratorTileInput<RealScalar<UnitInterval>, BEASTState> samplingProbabilityInput =
             new GeneratorTileInput<>("samplingProbability", false);
-    GeneratorTileInput<TaxaData, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
+    GeneratorTileInput<List<TaxonValue>, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
     GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> rootAgeInput =
             new GeneratorTileInput<>("rootAge", false);
 
@@ -41,7 +43,7 @@ public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthD
         RealScalar<? extends PositiveReal> turnover = this.turnoverInput.apply(beastState, indexVariables);
         RealScalar<UnitInterval> samplingProbability = this.samplingProbabilityInput.apply(beastState, indexVariables);
         RealScalar<? extends PositiveReal> rootAge = this.rootAgeInput.apply(beastState, indexVariables);
-        TaxaData taxa = this.taxaInput.apply(beastState, indexVariables);
+        TaxaData taxa = TaxaData.fromList(beastState, this.taxaInput.apply(beastState, indexVariables));
 
         // initialize initial state
 

@@ -11,9 +11,11 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beastconfig.BEASTState;
 import beastconfig.OperatorSelector;
 import java.util.IdentityHashMap;
+import java.util.List;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.input.TaxaData;
+import tiles.input.TaxonValue;
 import tiling.BoundDistribution;
 
 public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coalescent>, BEASTState> {
@@ -24,13 +26,13 @@ public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coales
     }
 
     GeneratorTileInput<PopulationFunction, BEASTState> populationSizeInput = new GeneratorTileInput<>("populationSize");
-    GeneratorTileInput<TaxaData, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
+    GeneratorTileInput<List<TaxonValue>, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
 
     @Override
     public BoundDistribution<Tree, Coalescent> applyTile(
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         PopulationFunction populationSize = this.populationSizeInput.apply(beastState, indexVariables);
-        TaxaData taxa = this.taxaInput.apply(beastState, indexVariables);
+        TaxaData taxa = TaxaData.fromList(beastState, this.taxaInput.apply(beastState, indexVariables));
 
         // initialize initial state
 
