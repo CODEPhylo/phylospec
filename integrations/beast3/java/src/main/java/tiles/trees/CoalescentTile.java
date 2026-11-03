@@ -11,9 +11,11 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beastconfig.BEASTState;
 import beastconfig.OperatorSelector;
 import java.util.IdentityHashMap;
+import java.util.List;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
-import tiles.input.DecoratedAlignment;
+import tiles.input.TaxaData;
+import tiles.input.TaxonValue;
 import tiling.BoundDistribution;
 
 public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coalescent>, BEASTState> {
@@ -24,13 +26,13 @@ public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coales
     }
 
     GeneratorTileInput<PopulationFunction, BEASTState> populationSizeInput = new GeneratorTileInput<>("populationSize");
-    GeneratorTileInput<DecoratedAlignment, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
+    GeneratorTileInput<List<TaxonValue>, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
 
     @Override
     public BoundDistribution<Tree, Coalescent> applyTile(
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         PopulationFunction populationSize = this.populationSizeInput.apply(beastState, indexVariables);
-        DecoratedAlignment taxaAlignment = this.taxaInput.apply(beastState, indexVariables);
+        TaxaData taxa = TaxaData.fromList(beastState, this.taxaInput.apply(beastState, indexVariables));
 
         // initialize initial state
 
@@ -41,14 +43,13 @@ public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coales
                 new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
 
         RandomTree defaultState = new RandomTree();
-        beastState.setInput(defaultState, defaultState.taxaInput, taxaAlignment.alignment());
-        beastState.setInput(defaultState, defaultState.m_taxonset, taxaAlignment.taxonSet());
+        beastState.setInput(defaultState, defaultState.m_taxonset, taxa.taxonSet());
         beastState.setInput(defaultState, defaultState.populationFunctionInput, populationFunction);
 
         // set tip dates if provided
 
-        if (taxaAlignment.ages() != null) {
-            defaultState.setDateTrait(taxaAlignment.ages());
+        if (taxa.ages() != null) {
+            defaultState.setDateTrait(taxa.ages());
         }
 
         // initialize Coalescent

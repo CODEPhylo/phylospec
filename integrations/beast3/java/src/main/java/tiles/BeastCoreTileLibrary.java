@@ -53,6 +53,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new RangeTile());
         tiles.add(new IndexVariableTile());
         tiles.add(new IndexedTile());
+        tiles.add(new StringMapIndexTile());
         tiles.add(new IndexedStatementTile());
 
         tiles.add(new ObservedAsTile());
@@ -85,6 +86,11 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new SumIntVectorTile());
 
         tiles.add(new AlignmentTaxaTile());
+        tiles.add(new TreeTaxaTile());
+        tiles.add(new TaxonTile());
+        tiles.add(new TaxonNameTile());
+        tiles.add(new TaxonAgeTile());
+        tiles.add(new TaxonSpeciesTile());
         tiles.add(new RootAgeTile());
         tiles.add(new NumBranchesTile());
         tiles.add(new NumTaxaAlignmentTile());
@@ -96,6 +102,8 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new NumColsTile());
 
         tiles.add(new FromNexusTile());
+        tiles.add(new FromFastaTile());
+        tiles.add(new FromCSVTile());
         tiles.add(new FromTreeTile());
         tiles.add(new FromNewickTile());
         tiles.add(new ParserTile.Regex());

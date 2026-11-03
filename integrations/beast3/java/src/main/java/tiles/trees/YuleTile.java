@@ -10,9 +10,11 @@ import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
 import beastconfig.OperatorSelector;
 import java.util.IdentityHashMap;
+import java.util.List;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
-import tiles.input.DecoratedAlignment;
+import tiles.input.TaxaData;
+import tiles.input.TaxonValue;
 import tiling.BoundDistribution;
 
 public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>, BEASTState> {
@@ -24,7 +26,7 @@ public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>, 
 
     GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> birthRateInput =
             new GeneratorTileInput<>("birthRate");
-    GeneratorTileInput<DecoratedAlignment, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
+    GeneratorTileInput<List<TaxonValue>, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
     GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> rootAgeInput =
             new GeneratorTileInput<>("rootAge", false);
 
@@ -33,7 +35,7 @@ public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>, 
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<? extends PositiveReal> birthRate = this.birthRateInput.apply(beastState, indexVariables);
         RealScalar<? extends PositiveReal> rootAge = this.rootAgeInput.apply(beastState, indexVariables);
-        DecoratedAlignment taxaAlignment = this.taxaInput.apply(beastState, indexVariables);
+        TaxaData taxa = TaxaData.fromList(beastState, this.taxaInput.apply(beastState, indexVariables));
 
         // initialize initial state
 
@@ -44,14 +46,13 @@ public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>, 
                 new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
 
         RandomTree defaultState = new RandomTree();
-        beastState.setInput(defaultState, defaultState.taxaInput, taxaAlignment.alignment());
-        beastState.setInput(defaultState, defaultState.m_taxonset, taxaAlignment.taxonSet());
+        beastState.setInput(defaultState, defaultState.m_taxonset, taxa.taxonSet());
         beastState.setInput(defaultState, defaultState.populationFunctionInput, populationFunction);
 
         // set tip dates if provided
 
-        if (taxaAlignment.ages() != null) {
-            defaultState.setDateTrait(taxaAlignment.ages());
+        if (taxa.ages() != null) {
+            defaultState.setDateTrait(taxa.ages());
         }
 
         // initialize Yule
