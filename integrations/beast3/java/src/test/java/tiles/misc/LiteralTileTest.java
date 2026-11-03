@@ -21,6 +21,18 @@ import org.phylospec.tiling.tiles.Tile;
 public class LiteralTileTest {
 
     @ParameterizedTest
+    @ValueSource(ints = {0, 1})
+    void includesUnitIntervalCandidateAtIntegerEndpoints(int value) throws FailedTilingAttempt {
+        assertTrue(hasUnitIntervalCandidate(value));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 2})
+    void excludesIntegerUnitIntervalCandidateOutsideItsDomain(int value) throws FailedTilingAttempt {
+        assertFalse(hasUnitIntervalCandidate(value));
+    }
+
+    @ParameterizedTest
     @ValueSource(doubles = {0.0, 1.0})
     void includesUnitIntervalCandidateAtDoubleEndpoints(double value) throws FailedTilingAttempt {
         assertTrue(hasUnitIntervalCandidate(value));
@@ -49,13 +61,13 @@ public class LiteralTileTest {
                 .anyMatch(BoolScalar::get));
     }
 
-    private static boolean hasUnitIntervalCandidate(double expected) throws FailedTilingAttempt {
+    private static boolean hasUnitIntervalCandidate(Number expected) throws FailedTilingAttempt {
         Set<Tile<?, BEASTState>> candidates =
                 new LiteralTile<>().tryToTile(new Expr.Literal(expected), Map.of(), null, null);
         for (Tile<?, BEASTState> candidate : candidates) {
             Object value = candidate.apply(new BEASTState("probability-literal"), new IdentityHashMap<>());
             if (value instanceof RealScalarParam<?> scalar && scalar.getDomain() == UnitInterval.INSTANCE) {
-                assertEquals(expected, scalar.get(), 0.0);
+                assertEquals(expected.doubleValue(), scalar.get(), 0.0);
                 return true;
             }
         }

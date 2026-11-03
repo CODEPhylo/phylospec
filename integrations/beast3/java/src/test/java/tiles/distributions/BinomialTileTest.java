@@ -84,6 +84,56 @@ class BinomialTileTest {
         }
     }
 
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1})
+    void integerProbabilityEndpointsSupportSamplingDirectlyAndThroughNamedConstants(int probability) throws Exception {
+        for (boolean named : new boolean[] {false, true}) {
+            String declarations = named ? "Probability endpoint = " + probability + "\n" : "";
+            String input = named ? "endpoint" : Integer.toString(probability);
+            BEASTState graph =
+                    build(declarations + "NonNegativeInteger count ~ Binomial(numTrials=6, p=" + input + ")");
+            IntScalarParam<?> count = count(graph);
+            BinomialDistribution prior =
+                    assertInstanceOf(BinomialDistribution.class, graph.priorDistributions.get(count));
+
+            assertEquals(1, graph.stateNodes.size());
+            assertEquals(1, graph.priorDistributions.size());
+            assertTrue(graph.likelihoodDistributions.isEmpty());
+            assertSame(UnitInterval.INSTANCE, prior.pInput.get().getDomain());
+            assertEquals((double) probability, prior.pInput.get().get(), 0.0);
+            assertSame(count, prior.paramInput.get());
+            assertEquals(6 * probability, count.get());
+            assertEquals(0, count.getLower());
+            assertEquals(6, count.getUpper());
+            assertEquals(0.0, prior.calculateLogP(), 0.0);
+            assertEquals(List.of(6 * probability), prior.sample());
+            assertEquals(1, graph.operators.size());
+            assertInstanceOf(IntScalarUniformOperator.class, operator(graph, count));
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"0, 0", "0, 2", "1, 6", "1, 2"})
+    void integerProbabilityEndpointsPreservePossibleAndImpossibleObservations(int probability, int observedCount)
+            throws Exception {
+        for (boolean named : new boolean[] {false, true}) {
+            String declarations = named ? "Probability endpoint = " + probability + "\n" : "";
+            String input = named ? "endpoint" : Integer.toString(probability);
+            BEASTState graph = build(declarations + "NonNegativeInteger count ~ Binomial(numTrials=6, p=" + input
+                    + ") observed as " + observedCount);
+            assertTrue(graph.stateNodes.isEmpty());
+            assertTrue(graph.priorDistributions.isEmpty());
+            assertTrue(graph.operators.isEmpty());
+            assertEquals(1, graph.likelihoodDistributions.size());
+            BinomialDistribution likelihood =
+                    assertInstanceOf(BinomialDistribution.class, graph.likelihoodDistributions.getFirst());
+            assertSame(UnitInterval.INSTANCE, likelihood.pInput.get().getDomain());
+            assertEquals((double) probability, likelihood.pInput.get().get(), 0.0);
+            assertEquals(observedCount, likelihood.paramInput.get().get());
+            assertEquals(binomialLogProbability(6, observedCount, probability), likelihood.calculateLogP(), TOLERANCE);
+        }
+    }
+
     private static Stream<Arguments> observations() {
         return Stream.of(
                 Arguments.of("", "0", 0, 0.4, 0),

@@ -87,6 +87,14 @@ public class LiteralTile<T> extends AstNodeTile<T, Expr.Literal, BEASTState> {
                         literal));
             }
 
+            // Integer 0 and 1 are valid probabilities, just like 0.0 and 1.0.
+            if (0 <= number && number <= 1) {
+                tiles.add(new LiteralTile<>(
+                        new TypeToken<>() {},
+                        new RealScalarParam<>(number.doubleValue(), UnitInterval.INSTANCE),
+                        literal));
+            }
+
             return tiles;
         }
 
