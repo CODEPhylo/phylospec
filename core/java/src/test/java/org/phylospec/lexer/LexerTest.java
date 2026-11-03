@@ -47,6 +47,106 @@ public class LexerTest {
     }
 
     @Test
+    public void unicodeIdentifiersPreserveSpellingAndUtf16Ranges() {
+        List<String> names = List.of("π", "κ", "μ", "θ", "κ2", "mean_μ", "_θ", "α٢", "人口", "e\u0301", "𝛼");
+        String source = String.join(" ", names);
+        List<Error> errors = new ArrayList<>();
+        Lexer lexer = new Lexer(source);
+        lexer.registerEventListener(errors::add);
+        List<Token> tokens = lexer.scanTokens();
+
+        assertTrue(errors.isEmpty(), errors.toString());
+        int offset = 0;
+        for (int i = 0; i < names.size(); i++) {
+            String name = names.get(i);
+            assertEquals(new Token(TokenType.IDENTIFIER, name, null, 1, offset, offset + name.length()), tokens.get(i));
+            offset += name.length() + 1;
+        }
+        assertEquals(new Token(TokenType.EOF, "", null, 1, source.length(), source.length()), tokens.getLast());
+        assertEquals(names.size() + 1, tokens.size());
+    }
+
+    @Test
+    public void supplementaryLettersWorkInsideNamesAndInterpolationAcrossLines() {
+        String source = "a𝛼2+(θ)\nString s = \"${a𝛼2}\"\nκ";
+        List<Error> errors = new ArrayList<>();
+        Lexer lexer = new Lexer(source);
+        lexer.registerEventListener(errors::add);
+        List<Token> names = lexer.scanTokens().stream()
+                .filter(token -> token.type == TokenType.IDENTIFIER)
+                .toList();
+        assertTrue(errors.isEmpty(), errors.toString());
+        assertEquals(
+                List.of(
+                        new Token(TokenType.IDENTIFIER, "a𝛼2", null, 1, 0, 4),
+                        new Token(TokenType.IDENTIFIER, "θ", null, 1, 6, 7),
+                        new Token(TokenType.IDENTIFIER, "String", null, 2, 0, 6),
+                        new Token(TokenType.IDENTIFIER, "s", null, 2, 7, 8),
+                        new Token(TokenType.IDENTIFIER, "a𝛼2", null, 2, 14, 18),
+                        new Token(TokenType.IDENTIFIER, "κ", null, 3, 0, 1)),
+                names);
+    }
+
+    @Test
+    public void unicodeNamesDoNotSplitAtKeywordPrefixes() {
+        Lexer lexer = new Lexer("forθ trueπ observedα observed as");
+        List<Error> errors = new ArrayList<>();
+        lexer.registerEventListener(errors::add);
+        List<Token> tokens = lexer.scanTokens();
+
+        assertTrue(errors.isEmpty());
+        assertEquals(
+                List.of("forθ", "trueπ", "observedα"),
+                tokens.subList(0, 3).stream().map(token -> token.lexeme).toList());
+        assertTrue(tokens.subList(0, 3).stream().allMatch(token -> token.type == TokenType.IDENTIFIER));
+        assertEquals(TokenType.OBSERVED_AS, tokens.get(3).type);
+    }
+
+    @Test
+    public void invisibleCharactersAreNotSilentlyAcceptedInsideIdentifiers() {
+        for (String character : List.of("\u0000", "\u200B", "\u200D", "\uFEFF")) {
+            List<Error> errors = new ArrayList<>();
+            Lexer lexer = new Lexer("α" + character + "β");
+            lexer.registerEventListener(errors::add);
+            List<Token> tokens = lexer.scanTokens();
+            assertEquals(1, errors.size());
+            assertEquals(new Range(1, 1, 2), errors.getFirst().range());
+            assertEquals(
+                    List.of("α", "β"),
+                    tokens.stream()
+                            .filter(token -> token.type == TokenType.IDENTIFIER)
+                            .map(token -> token.lexeme)
+                            .toList());
+        }
+    }
+
+    @Test
+    public void unsupportedSupplementarySymbolProducesOneErrorAndKeepsFollowingOffsets() {
+        List<Error> errors = new ArrayList<>();
+        Lexer lexer = new Lexer("🙂 π");
+        lexer.registerEventListener(errors::add);
+        List<Token> tokens = lexer.scanTokens();
+
+        assertEquals(1, errors.size());
+        assertEquals("'🙂' is not an allowed character.", errors.getFirst().description());
+        assertEquals(new Range(1, 0, 2), errors.getFirst().range());
+        assertEquals(new Token(TokenType.IDENTIFIER, "π", null, 1, 3, 4), tokens.getFirst());
+    }
+
+    @Test
+    public void unicodeIdentifierSupportDoesNotChangeNumberLiterals() {
+        List<Error> errors = new ArrayList<>();
+        Lexer lexer = new Lexer("12.5 ٢ \u0301");
+        lexer.registerEventListener(errors::add);
+        List<Token> tokens = lexer.scanTokens();
+
+        assertEquals(new Token(TokenType.FLOAT, "12.5", 12.5, 1, 0, 4), tokens.getFirst());
+        assertEquals(2, errors.size());
+        assertEquals("'٢' is not an allowed character.", errors.get(0).description());
+        assertEquals("'\u0301' is not an allowed character.", errors.get(1).description());
+    }
+
+    @Test
     public void testNumberLiterals() {
         String source = "10.5\n10234453\n+50\n-5";
 
@@ -202,7 +302,9 @@ public class LexerTest {
 
         assertEquals("(line 1 2:3)", errors.get(0).range().toString());
         assertEquals("'£' is not an allowed character.", errors.get(0).description());
-        assertEquals("Only use letters or digits.", errors.get(0).hint());
+        assertEquals(
+                "Use Unicode identifier characters or supported punctuation.",
+                errors.get(0).hint());
 
         assertEquals("(line 1 9:49)", errors.get(1).range().toString());
         assertEquals(

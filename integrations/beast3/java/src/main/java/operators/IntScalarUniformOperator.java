@@ -9,7 +9,7 @@ import beast.base.util.Randomizer;
 /** Uniform proposals for an integer scalar, using its current effective bounds. */
 public final class IntScalarUniformOperator extends Operator {
 
-    public final Input<IntScalarParam<Int>> parameterInput =
+    public final Input<IntScalarParam<? extends Int>> parameterInput =
             new Input<>("parameter", "The integer scalar to update.", Input.Validate.REQUIRED);
 
     @Override
@@ -19,7 +19,7 @@ public final class IntScalarUniformOperator extends Operator {
 
     @Override
     public double proposal() {
-        IntScalarParam<Int> parameter = parameterInput.get();
+        IntScalarParam<? extends Int> parameter = parameterInput.get();
         int lower = parameter.getLower();
         int upper = parameter.getUpper();
         int current = parameter.get();

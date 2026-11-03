@@ -1,14 +1,19 @@
 package tiles.misc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.domain.PositiveInt;
+import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.IntVectorParam;
+import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.inference.parameter.SimplexParam;
 import beastconfig.BEASTState;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -18,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.TypeToken;
@@ -55,10 +62,43 @@ class VectorTileBoundaryTest {
         assertNotNull(new PhyloSpecRunner(source, List.of("beast2")).check());
     }
 
-    private static void assertIntegerVectors(List<Integer> expectedValues, Int... expectedDomains)
+    @ParameterizedTest
+    @CsvSource({"1.0, 0.0000001", "0.9999999, 0.0"})
+    void nearSimplexArraysRemainOrdinaryRealVectors(double first, double second) throws FailedTilingAttempt {
+        List<Double> expected = List.of(first, second);
+        Map<TypeToken<?>, Object> values = realVectorCandidates(expected);
+        Object ordinary = values.get(TypeToken.parameterized(RealVectorParam.class, Real.class));
+
+        assertTrue(ordinary instanceof RealVectorParam<?>);
+        assertEquals(expected, ((RealVectorParam<?>) ordinary).getElements());
+        assertFalse(values.values().stream().anyMatch(SimplexParam.class::isInstance));
+    }
+
+    @Test
+    void preservesSimplexCandidateWithDoubleEndpoints() throws FailedTilingAttempt {
+        List<Double> expected = List.of(0.0, 1.0, 0.0);
+        Map<TypeToken<?>, Object> values = realVectorCandidates(expected);
+        Object simplex = values.get(TypeToken.of(SimplexParam.class));
+
+        assertTrue(simplex instanceof SimplexParam);
+        assertEquals(expected, ((SimplexParam) simplex).getElements());
+    }
+
+    private static Map<TypeToken<?>, Object> realVectorCandidates(List<Double> expectedValues)
+            throws FailedTilingAttempt {
+        Map<TypeToken<?>, Object> values = new HashMap<>();
+        BEASTState state = new BEASTState("real-vector-boundary-test");
+        for (Tile<?, BEASTState> candidate : vectorCandidates(expectedValues)) {
+            candidate.setIndexVariables(Set.of());
+            values.put(candidate.getTypeToken(), candidate.apply(state, new IdentityHashMap<>()));
+        }
+        return values;
+    }
+
+    private static Set<Tile<?, BEASTState>> vectorCandidates(List<? extends Number> expectedValues)
             throws FailedTilingAttempt {
         List<Expr> elements = new ArrayList<>();
-        for (int value : expectedValues) {
+        for (Number value : expectedValues) {
             elements.add(new Expr.Literal(value));
         }
 
@@ -75,12 +115,15 @@ class VectorTileBoundaryTest {
             inputTiles.put(element, candidates);
         }
 
-        Set<Tile<?, BEASTState>> candidates = new VectorTile<>().tryToTile(array, inputTiles, variables, stochasticity);
+        return new VectorTile<>().tryToTile(array, inputTiles, variables, stochasticity);
+    }
 
+    private static void assertIntegerVectors(List<Integer> expectedValues, Int... expectedDomains)
+            throws FailedTilingAttempt {
         Map<TypeToken<?>, IntVectorParam<?>> actual = new HashMap<>();
         BEASTState state = new BEASTState("vector-boundary-test");
 
-        for (Tile<?, BEASTState> candidate : candidates) {
+        for (Tile<?, BEASTState> candidate : vectorCandidates(expectedValues)) {
             candidate.setIndexVariables(Set.of());
             Object value = candidate.apply(state, new IdentityHashMap<>());
 

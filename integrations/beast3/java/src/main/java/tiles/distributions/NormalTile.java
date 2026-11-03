@@ -19,17 +19,23 @@ public class NormalTile extends GeneratorTile<BoundDistribution<RealScalarParam<
         return "Normal";
     }
 
-    GeneratorTileInput<RealScalar<Real>, BEASTState> meanInput = new GeneratorTileInput<>("mean");
+    GeneratorTileInput<RealScalar<? extends Real>, BEASTState> meanInput = new GeneratorTileInput<>("mean");
     GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> sdInput = new GeneratorTileInput<>("sd");
 
     @Override
     public BoundDistribution<RealScalarParam<Real>, Normal> applyTile(
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        RealScalar<Real> mean = this.meanInput.apply(beastState, indexVariables);
+        RealScalar<? extends Real> mean = this.meanInput.apply(beastState, indexVariables);
         RealScalar<PositiveReal> sd = this.sdInput.apply(beastState, indexVariables);
 
         Normal distribution = new Normal();
-        beastState.setInput(distribution, distribution.meanInput, mean);
+
+        // BEAST only reads the mean through this input. Keep the original
+        // object, including its domain and live dependency on the sampled state.
+        @SuppressWarnings("unchecked")
+        RealScalar<Real> nativeMean = (RealScalar<Real>) mean;
+        beastState.setInput(distribution, distribution.meanInput, nativeMean);
+
         beastState.setInput(distribution, distribution.sdInput, sd);
 
         RealScalarParam<Real> defaultState = new RealScalarParam<>(0.1, Real.INSTANCE);

@@ -79,6 +79,8 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new RepeatRealTile());
         tiles.add(new RepeatIntTile());
         tiles.add(new RepeatSimplexTile());
+        tiles.add(new SumRealVectorTile());
+        tiles.add(new SumIntVectorTile());
 
         tiles.add(new AlignmentTaxaTile());
         tiles.add(new TreeTaxaTile());
@@ -86,6 +88,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new TaxonNameTile());
         tiles.add(new TaxonAgeTile());
         tiles.add(new TaxonSpeciesTile());
+        tiles.add(new RootAgeTile());
         tiles.add(new NumBranchesTile());
         tiles.add(new NumTaxaAlignmentTile());
         tiles.add(new NumTaxaTreeTile());
@@ -110,6 +113,9 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new LogNormalTile());
         tiles.add(new LogNormalRealSpaceTile());
         tiles.add(new BetaTile());
+        tiles.add(new BernoulliTile());
+        tiles.add(new CategoricalTile());
+        tiles.add(new BinomialTile());
         tiles.add(new CauchyTile());
         tiles.add(new DiscreteUniformTile());
         tiles.add(new ExponentialTile());
@@ -117,6 +123,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new PoissonTile());
         tiles.add(new UniformTile());
         tiles.add(new DirichletTile());
+        tiles.add(new PositiveIIDTile());
 
         tiles.add(new YuleTile());
         tiles.add(new BirthDeathTile());

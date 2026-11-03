@@ -128,12 +128,25 @@ class FromCSVTileTest {
     void rowAccessRetainsOneBasedBoundsChecks(int index) throws Exception {
         write("taxon\nsampleA\nsampleB\n");
         String source = tableSource("") + "\nString value = metadata[" + index + "][\"taxon\"]";
+        // Zero is a NonNegativeInteger, but backend bounds checks still reject it as a
+        // one-based row index. Type compatibility does not make the index valid.
+        TileApplicationError error = assertThrows(TileApplicationError.class, () -> build(source));
+        assertTrue(error.getMessage().contains("Index " + index), error.getMessage());
+        assertTrue(
+                error.getMessage().contains(index == 0 ? "smaller than 1" : "greater than the number of elements"),
+                error.getMessage());
+        assertTrue(error.getMessage().contains("between 1 and 2"), error.getMessage());
         if (index == 0) {
-            // The existing type checker rejects a literal zero before backend indexing.
-            assertThrows(TypeError.class, () -> build(source));
-        } else {
-            assertThrows(TileApplicationError.class, () -> build(source));
+            assertTrue(error.getMessage().contains("1-based indexing"), error.getMessage());
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2})
+    void firstAndLastRowsRemainAccessible(int index) throws Exception {
+        write("taxon\nsampleA\nsampleB\n");
+        String source = tableSource("") + "\nString value = metadata[" + index + "][\"taxon\"]";
+        assertEquals(index == 1 ? "sampleA" : "sampleB", build(source));
     }
 
     @Test

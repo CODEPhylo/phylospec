@@ -109,6 +109,8 @@ public class BeastXComparisonH1N1Test {
                             .run(
                                     RunnerOptions.builder(RUN_NAME)
                                             .mode(RunMode.EXECUTE_MCMC)
+                                            // Keep the tutorial's full chain; use a short chain only in this test.
+                                            .chainLengthOverride(10_000)
                                             .materializePhyloCTMC(true)
                                             .build()
                             );

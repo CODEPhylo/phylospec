@@ -1,7 +1,7 @@
 package org.phylospec;
 
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -38,14 +38,14 @@ public class PhyloSpec {
     }
 
     private static void runFile(String path) throws IOException {
-        byte[] bytes = Files.readAllBytes(Paths.get(path));
+        String source = Files.readString(Paths.get(path), StandardCharsets.UTF_8);
         TypeResolver resolver = loadTypeResolver();
-        run(new String(bytes, Charset.defaultCharset()), resolver);
+        run(source, resolver);
         if (hadError) System.exit(65);
     }
 
     private static void runPrompt() throws IOException {
-        InputStreamReader input = new InputStreamReader(System.in);
+        InputStreamReader input = new InputStreamReader(System.in, StandardCharsets.UTF_8);
         BufferedReader reader = new BufferedReader(input);
         TypeResolver resolver = loadTypeResolver();
 
