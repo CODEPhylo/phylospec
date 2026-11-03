@@ -19,18 +19,24 @@ public class DiscreteUniformTile extends GeneratorTile<BoundDistribution<IntScal
         return "DiscreteUniform";
     }
 
-    GeneratorTileInput<IntScalar<Int>, BEASTState> lowerInput = new GeneratorTileInput<>("lower");
-    GeneratorTileInput<IntScalar<Int>, BEASTState> upperInput = new GeneratorTileInput<>("upper");
+    GeneratorTileInput<IntScalar<? extends Int>, BEASTState> lowerInput = new GeneratorTileInput<>("lower");
+    GeneratorTileInput<IntScalar<? extends Int>, BEASTState> upperInput = new GeneratorTileInput<>("upper");
 
     @Override
     public BoundDistribution<IntScalarParam<Int>, IntUniform> applyTile(
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        IntScalar<Int> lower = this.lowerInput.apply(beastState, indexVariables);
-        IntScalar<Int> upper = this.upperInput.apply(beastState, indexVariables);
+        IntScalar<? extends Int> lower = this.lowerInput.apply(beastState, indexVariables);
+        IntScalar<? extends Int> upper = this.upperInput.apply(beastState, indexVariables);
 
         IntUniform distribution = new IntUniform();
-        beastState.setInput(distribution, distribution.lowerInput, lower);
-        beastState.setInput(distribution, distribution.upperInput, upper);
+        // BEAST only reads these bounds. Keep their original objects, domains,
+        // and live dependencies on the sampled states.
+        @SuppressWarnings("unchecked")
+        IntScalar<Int> nativeLower = (IntScalar<Int>) lower;
+        @SuppressWarnings("unchecked")
+        IntScalar<Int> nativeUpper = (IntScalar<Int>) upper;
+        beastState.setInput(distribution, distribution.lowerInput, nativeLower);
+        beastState.setInput(distribution, distribution.upperInput, nativeUpper);
 
         // Promote before adding so even a full-width integer interval has a legal midpoint.
         int initialValue = (int) (((long) lower.get() + upper.get()) / 2);

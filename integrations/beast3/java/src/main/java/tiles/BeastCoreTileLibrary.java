@@ -72,8 +72,11 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
 
         tiles.add(new EnvTile());
         tiles.add(new LogTile());
+        tiles.add(new LogTile.Live());
         tiles.add(new ExpTile());
+        tiles.add(new ExpTile.Live());
         tiles.add(new SqrtTile());
+        tiles.add(new SqrtTile.Live());
         tiles.add(new LinSpaceTile());
         tiles.add(new tiles.functions.RangeTile());
         tiles.add(new RepeatRealTile());
@@ -108,7 +111,8 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
 
         tiles.add(new SubsetTile());
 
-        tiles.add(new OffsetTile());
+        tiles.add(new OffsetTile.ConstantOnRight());
+        tiles.add(new OffsetTile.ConstantOnLeft());
         tiles.add(new NormalTile());
         tiles.add(new LogNormalTile());
         tiles.add(new LogNormalRealSpaceTile());

@@ -7,6 +7,7 @@ Real z = offset + normal
 // EXPECTED_TILES
 
 // EXPECTED BEAST STATE
-// SN: offset
-// P: offset_prior
+// SN: normal
+// P: normal_prior
+// CN: z
 // EXPECTED BEAST STATE
