@@ -1,6 +1,6 @@
 package tiling;
 
-import dr.evomodel.branchratemodel.DiscretizedBranchRates;
+import dr.evomodel.branchratemodel.BranchRateModel;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.distribution.AbstractDistributionLikelihood;
 import dr.inference.distribution.ParametricDistributionModel;
@@ -261,7 +261,7 @@ public class BeastXState {
     // Records the relaxed-clock model associated with a tree.
     public void addTreeRelaxedClockModel(
             TreeModel treeModel,
-            DiscretizedBranchRates relativeRelaxedClock,
+            BranchRateModel relativeRelaxedClock,
             Parameter rateCategoriesParameter,
             ParametricDistributionModel distributionModel,
             Parameter clockRateParameter
@@ -293,7 +293,7 @@ public class BeastXState {
     // Complete BEAST X object bundle needed to represent a relaxed clock model.
     public record RelaxedClockSpec(
             TreeModel treeModel,
-            DiscretizedBranchRates relativeRelaxedClock,
+            BranchRateModel relativeRelaxedClock,
             Parameter rateCategoriesParameter,
             ParametricDistributionModel distributionModel,
             Parameter clockRateParameter

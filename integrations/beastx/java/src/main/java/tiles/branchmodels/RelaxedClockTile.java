@@ -3,6 +3,7 @@ package tiles.branchmodels;
 import dr.evomodel.branchratemodel.BranchRateModel;
 import dr.evomodel.branchratemodel.DiscretizedBranchRates;
 import dr.evomodel.branchratemodel.MultiplicativeBranchRateModel;
+import dr.evomodel.branchratemodel.ScaledByTreeTimeBranchRateModel;
 import dr.evomodel.branchratemodel.StrictClockBranchRates;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.distribution.DistributionLikelihood;
@@ -124,18 +125,31 @@ public class RelaxedClockTile extends GeneratorTile<BranchRateModel, BeastXState
                 categoryId
         );
 
-        DiscretizedBranchRates relativeRelaxedClock =
+        // In BEAST X 10.5.0, the built-in normalization in DiscretizedBranchRates
+        // can retain a stale factor after category or tree-height proposals.
+        // The native tree-time wrapper preserves the same length-weighted mean
+        // while tracking all dependencies and storing/restoring its factor.
+        DiscretizedBranchRates rawRates =
                 new DiscretizedBranchRates(
                         tree,
                         rateCategories.getParameter(),
                         parametricDistribution,
                         1,
-                        true,
+                        false,
                         1.0,
                         false,
                         false,
                         false
                 );
+
+        rawRates.setId(
+                beastState.getAvailableID(
+                        this.getId("relaxedClockRawRates", indexVariables, "")
+                )
+        );
+
+        ScaledByTreeTimeBranchRateModel relativeRelaxedClock =
+                new ScaledByTreeTimeBranchRateModel(tree, rawRates, null);
 
         relativeRelaxedClock.setId(
                 beastState.getAvailableID(
