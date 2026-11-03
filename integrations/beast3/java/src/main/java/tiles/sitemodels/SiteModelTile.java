@@ -5,6 +5,7 @@ import beast.base.spec.domain.*;
 import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.IntScalar;
+import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
 import java.util.Objects;
@@ -19,7 +20,8 @@ public class SiteModelTile extends GeneratorTile<Partial<SiteModel, Substitution
         return "DiscreteGammaInv";
     }
 
-    GeneratorTileInput<RealScalarParam<PositiveReal>, BEASTState> shapeInput = new GeneratorTileInput<>("shape");
+    // Accept live calculated shapes as well as parameters, without copying their value.
+    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> shapeInput = new GeneratorTileInput<>("shape");
     GeneratorTileInput<Integer, BEASTState> numCategoriesInput = new GeneratorTileInput<>("numCategories");
     GeneratorTileInput<RealScalarParam<UnitInterval>, BEASTState> invariantProportionInput =
             new GeneratorTileInput<>("invariantProportion", false);
@@ -28,7 +30,7 @@ public class SiteModelTile extends GeneratorTile<Partial<SiteModel, Substitution
     @Override
     public Partial<SiteModel, SubstitutionModel> applyTile(
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        RealScalarParam<PositiveReal> shape = this.shapeInput.apply(beastState, indexVariables);
+        RealScalar<PositiveReal> shape = this.shapeInput.apply(beastState, indexVariables);
         Integer numCategories = this.numCategoriesInput.apply(beastState, indexVariables);
         RealScalarParam<UnitInterval> invariantProportion = Objects.requireNonNullElse(
                 invariantProportionInput.apply(beastState, indexVariables),

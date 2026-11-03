@@ -1,48 +1,93 @@
 package tiles.distributions;
 
 import beast.base.spec.domain.Real;
-import beast.base.spec.inference.distribution.OffsetReal;
-import beast.base.spec.inference.distribution.ScalarDistribution;
-import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
-import beastconfig.OperatorSelector;
 import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Set;
+import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
-import org.phylospec.tiling.tiles.TemplateTile;
-import tiling.BoundDistribution;
+import org.phylospec.lexer.TokenType;
+import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.tiling.tiles.AstNodeTile;
+import org.phylospec.tiling.tiles.Tile;
+import org.phylospec.typeresolver.Stochasticity;
+import org.phylospec.typeresolver.StochasticityResolver;
+import org.phylospec.typeresolver.VariableResolver;
+import tiling.OffsetValue;
 
-public class OffsetTile extends TemplateTile<RealScalarParam<Real>, BEASTState> {
+/** Adds a fixed constant to a live scalar without changing the scalar's sampling configuration. */
+public abstract class OffsetTile extends AstNodeTile<OffsetValue, Expr.Binary, BEASTState> {
 
     @Override
-    protected String getPhyloSpecTemplate() {
-        return """
-               Real x ~ $distribution
-               x + $offset
-               """;
+    public Class<Expr.Binary> getTargetNodeType() {
+        return Expr.Binary.class;
     }
 
-    TemplateTileInput<
-                    BoundDistribution<RealScalarParam<Real>, ? extends ScalarDistribution<RealScalar<Real>, Double>>,
-                    BEASTState>
-            distributionInput = new TemplateTileInput<>("$distribution");
-    TemplateTileInput<Double, BEASTState> offsetInput = new TemplateTileInput<>("$offset");
+    @Override
+    public TypeToken<?> getTypeToken() {
+        return new TypeToken<OffsetValue>() {};
+    }
 
     @Override
-    public RealScalarParam<Real> applyTile(
-            BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        BoundDistribution<RealScalarParam<Real>, ? extends ScalarDistribution<RealScalar<Real>, Double>> distribution =
-                this.distributionInput.apply(beastState, indexVariables);
-        Double offset = this.offsetInput.apply(beastState, indexVariables);
+    public Set<Tile<?, BEASTState>> tryToTile(
+            AstNode node,
+            Map<AstNode, Set<Tile<?, BEASTState>>> allInputTiles,
+            VariableResolver variableResolver,
+            StochasticityResolver stochasticityResolver)
+            throws FailedTilingAttempt {
+        if (!(node instanceof Expr.Binary binary) || binary.operator != TokenType.PLUS) {
+            throw new FailedTilingAttempt.Irrelevant();
+        }
+        return super.tryToTile(node, allInputTiles, variableResolver, stochasticityResolver);
+    }
 
-        beastState.addStateNodeWithoutOperators(distribution.getStateNode(), this.getTypeToken(), "offset");
-        beastState.addOperators(
-                distribution.getStateNode(),
-                OperatorSelector.getDefaultOperators(distribution.getStateNode(), beastState));
+    protected OffsetValue createValue(
+            BEASTState beastState,
+            RealScalar<? extends Real> x,
+            double offset,
+            IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+        OffsetValue value = new OffsetValue();
+        beastState.setInput(value, value.xInput, x);
+        beastState.setInput(value, value.offsetInput, offset);
+        beastState.addCalculationNode(value, new TypeToken<OffsetValue>() {}, this.getId("offset", indexVariables, ""));
+        beastState.initBEASTObject(value);
+        return value;
+    }
 
-        OffsetReal offsetDistribution = new OffsetReal(distribution.getDistribution(), offset);
-        beastState.addPriorDistribution(distribution.getStateNode(), offsetDistribution, "offset_prior");
+    public static class ConstantOnRight extends OffsetTile {
 
-        return distribution.getStateNode();
+        AstNodeTileInput<RealScalar<? extends Real>, Expr.Binary, BEASTState> xInput =
+                new AstNodeTileInput<>("x", expr -> expr.left, Set.of(Stochasticity.STOCHASTIC));
+        AstNodeTileInput<Double, Expr.Binary, BEASTState> offsetInput = new AstNodeTileInput<>(
+                "offset", expr -> expr.right, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
+
+        @Override
+        public OffsetValue applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+            return createValue(
+                    beastState,
+                    xInput.apply(beastState, indexVariables),
+                    offsetInput.apply(beastState, indexVariables),
+                    indexVariables);
+        }
+    }
+
+    public static class ConstantOnLeft extends OffsetTile {
+
+        AstNodeTileInput<RealScalar<? extends Real>, Expr.Binary, BEASTState> xInput =
+                new AstNodeTileInput<>("x", expr -> expr.right, Set.of(Stochasticity.STOCHASTIC));
+        AstNodeTileInput<Double, Expr.Binary, BEASTState> offsetInput = new AstNodeTileInput<>(
+                "offset", expr -> expr.left, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
+
+        @Override
+        public OffsetValue applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+            return createValue(
+                    beastState,
+                    xInput.apply(beastState, indexVariables),
+                    offsetInput.apply(beastState, indexVariables),
+                    indexVariables);
+        }
     }
 }
