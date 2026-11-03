@@ -61,36 +61,50 @@ public class TypeUtils {
             ComponentResolver componentResolver) {
         // check passed types and resolve type parameters
 
-        Map<String, List<ResolvedType>> possibleParameterTypeSets = new HashMap<>();
+        Map<String, List<ResolvedTypeSet>> possibleParameterTypeSets = new HashMap<>();
         Map<String, ResolvedTypeSet> possibleArgumentTypeSets = new HashMap<>();
         for (Argument parameter : generator.getArguments()) {
             String parameterName = parameter.getName();
-
             ResolvedTypeSet resolvedArgumentTypeSet = resolvedArgumentTypeSets.get(parameterName);
-            if (resolvedArgumentTypeSet == null) {
-                continue;
-            }
+            if (resolvedArgumentTypeSet == null) continue;
 
-            // check for every possible argument type if they can be assigned to
-            // the required parameter type. if yes, possibleParameterTypeSets is
-            // updated with the corresponding types for type parameters
-
-            boolean foundMatch = false;
+            // Types within one argument's typeset are alternative interpretations, not
+            // simultaneous constraints. In particular, an integer literal may also be real.
+            Map<String, ResolvedTypeSet> parameterAlternatives = new HashMap<>();
             ResolvedTypeSet matchingArgumentTypeSet = new ResolvedTypeSet();
             for (ResolvedType possibleArgumentType : resolvedArgumentTypeSet) {
-                if (TypeUtils.checkAssignabilityAndResolveTypeParameters(
+                Map<String, List<ResolvedType>> inferredParameters = new HashMap<>();
+                if (!checkAssignabilityAndResolveTypeParameters(
                         parameter.getType(),
                         possibleArgumentType,
                         generator.getTypeParameters(),
-                        possibleParameterTypeSets,
+                        inferredParameters,
                         componentResolver)) {
-                    foundMatch = true;
-                    matchingArgumentTypeSet.add(possibleArgumentType);
+                    continue;
                 }
+
+                // Repeated occurrences of T inside a single interpretation (e.g. Map<T,T>)
+                // must still have a common type. Do not keep partial matches from this branch.
+                Map<String, ResolvedType> candidateParameters = new HashMap<>();
+                boolean compatible = true;
+                for (var entry : inferredParameters.entrySet()) {
+                    ResolvedType commonType = getLowestCover(entry.getValue(), componentResolver);
+                    if (commonType == null) {
+                        compatible = false;
+                        break;
+                    }
+                    candidateParameters.put(entry.getKey(), commonType);
+                }
+                if (!compatible) continue;
+
+                matchingArgumentTypeSet.add(possibleArgumentType);
+                candidateParameters.forEach((name, type) -> parameterAlternatives
+                        .computeIfAbsent(name, ignored -> new ResolvedTypeSet())
+                        .add(type));
             }
             possibleArgumentTypeSets.put(parameterName, matchingArgumentTypeSet);
 
-            if (!foundMatch) {
+            if (matchingArgumentTypeSet.isEmpty()) {
                 throw new TypeError(
                         "Wrong argument type for function `"
                                 + generator.getName()
@@ -101,18 +115,23 @@ public class TypeUtils {
                                 + new ParsedType(parameter.getType()).stripNamespace()
                                 + "'.");
             }
+            parameterAlternatives.forEach((name, alternatives) -> possibleParameterTypeSets
+                    .computeIfAbsent(name, ignored -> new ArrayList<>())
+                    .add(alternatives));
         }
 
-        // find the lowest cover for every type parameter
-        // this is not the most specific way to handle this, as we ignore any
-        // dependencies within different type parameters
-
+        // Combine one interpretation per argument. Different generic parameters are still
+        // inferred independently, as before; this preserves the existing inference scope.
         Map<String, ResolvedTypeSet> parameterTypeSets = new HashMap<>();
-        for (String typeParameter : possibleParameterTypeSets.keySet()) {
-            parameterTypeSets.put(
-                    typeParameter,
-                    ResolvedTypeSet.of(
-                            TypeUtils.getLowestCover(possibleParameterTypeSets.get(typeParameter), componentResolver)));
+        for (var entry : possibleParameterTypeSets.entrySet()) {
+            ResolvedTypeSet commonTypes = getLowestCoverTypeSet(entry.getValue(), componentResolver);
+            if (commonTypes.isEmpty()) {
+                throw new TypeError(
+                        "Incompatible arguments for type parameter '" + entry.getKey() + "' of function '"
+                                + generator.getName() + "'.",
+                        "The arguments using this type parameter must have a common compatible type.");
+            }
+            parameterTypeSets.put(entry.getKey(), commonTypes);
         }
 
         // construct return type
