@@ -75,7 +75,7 @@ public class Lexer {
         startLine = currentLine;
         startLineStart = currentLineStart;
 
-        char c = advance();
+        int c = advanceCodePoint();
 
         switch (c) {
             // single-character tokens
@@ -199,7 +199,7 @@ public class Lexer {
 
             // all other types of tokens
             default:
-                if (isAlpha(c)) {
+                if (isIdentifierStart(c)) {
                     identifier();
                 } else if (isDigit(c)) {
                     number();
@@ -207,7 +207,9 @@ public class Lexer {
                     reportError(
                             "';' is not allowed here.", "PhyloSpec does not use semicolons at the end of statements.");
                 } else {
-                    reportError("'" + c + "' is not an allowed character.", "Only use letters or digits.");
+                    reportError(
+                            "'" + new String(Character.toChars(c)) + "' is not an allowed character.",
+                            "Use Unicode identifier characters or supported punctuation.");
                 }
         }
     }
@@ -293,7 +295,7 @@ public class Lexer {
     }
 
     private void identifier() {
-        while (isAlphaNumeric(peek())) advance();
+        while (isIdentifierPart(peekCodePoint())) advanceCodePoint();
 
         String text = source.substring(start, current);
 
@@ -354,19 +356,31 @@ public class Lexer {
 
     /* general helper methods */
 
-    private boolean isDigit(char c) {
+    private boolean isDigit(int c) {
         return c >= '0' && c <= '9';
     }
 
-    private boolean isAlpha(char c) {
-        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    private boolean isIdentifierStart(int codePoint) {
+        return codePoint == '_' || Character.isUnicodeIdentifierStart(codePoint);
     }
 
-    private boolean isAlphaNumeric(char c) {
-        return isAlpha(c) || isDigit(c);
+    private boolean isIdentifierPart(int codePoint) {
+        return Character.isUnicodeIdentifierPart(codePoint) && !Character.isIdentifierIgnorable(codePoint);
     }
 
     /* helper methods to inspect the source code */
+
+    // Keep offsets in UTF-16 code units for source ranges and the language server,
+    // but consume a whole Unicode code point when scanning identifiers.
+    private int advanceCodePoint() {
+        int codePoint = source.codePointAt(current);
+        current += Character.charCount(codePoint);
+        return codePoint;
+    }
+
+    private int peekCodePoint() {
+        return isAtEnd() ? -1 : source.codePointAt(current);
+    }
 
     /**
      * Returns the current character and advances the cursor afterward.
