@@ -103,6 +103,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new LogNormalTile());
         tiles.add(new LogNormalRealSpaceTile());
         tiles.add(new BetaTile());
+        tiles.add(new BernoulliTile());
         tiles.add(new CategoricalTile());
         tiles.add(new BinomialTile());
         tiles.add(new CauchyTile());
