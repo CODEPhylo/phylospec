@@ -571,13 +571,13 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
                 switch (expr.value) {
                     case String ignored -> Set.of("String");
                     case Integer value -> {
-                        if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Probability");
+                        if (0 == value) yield Set.of("Integer", "NonNegativeInteger", "NonNegativeReal", "Probability");
                         if (1 == value) yield Set.of("PositiveReal", "PositiveInteger", "Probability");
                         if (0 < value) yield Set.of("PositiveInteger", "PositiveReal");
                         yield Set.of("Integer", "Real");
                     }
                     case Long value -> {
-                        if (0 == value) yield Set.of("Integer", "NonNegativeReal", "Probability");
+                        if (0 == value) yield Set.of("Integer", "NonNegativeInteger", "NonNegativeReal", "Probability");
                         if (1 == value) yield Set.of("PositiveReal", "PositiveInteger", "Probability");
                         if (0 < value) yield Set.of("PositiveInteger", "PositiveReal");
                         yield Set.of("Integer", "Real");
@@ -1224,7 +1224,29 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
 
     private ResolvedTypeSet remember(AstType expr, ResolvedTypeSet resolvedType) {
         resolvedTypes.put(expr, resolvedType);
+        Set<String> resolvedNames = new HashSet<>();
+        for (ResolvedType type : resolvedType) {
+            // Bare generics, including nested parameters, may acquire their parameters later
+            // from the assigned expression. Metadata must not force that resolution early.
+            if (hasUnresolvedTypeParameters(type)) {
+                resolvedNames.add(type.getName());
+                continue;
+            }
+            TypeUtils.visitTypeAndParents(
+                    type,
+                    parent -> {
+                        resolvedNames.add(parent.getName());
+                        return TypeUtils.VisitorResult.CONTINUE;
+                    },
+                    componentResolver);
+        }
+        expr.setResolvedTypeNames(resolvedNames);
         return resolvedType;
+    }
+
+    private static boolean hasUnresolvedTypeParameters(ResolvedType type) {
+        return type.hasUnresolvedParameterTypes()
+                || type.getParameterTypes().values().stream().anyMatch(TypeResolver::hasUnresolvedTypeParameters);
     }
 
     private ResolvedTypeSet remember(String variableName, ResolvedTypeSet resolvedTypeSet) {

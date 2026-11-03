@@ -5,10 +5,8 @@ import beast.base.spec.inference.parameter.IntScalarParam;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Set;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
-import org.phylospec.typeresolver.Stochasticity;
 
 public class NumListTile extends GeneratorTile<IntScalarParam<NonNegativeInt>, BEASTState> {
 
@@ -17,8 +15,8 @@ public class NumListTile extends GeneratorTile<IntScalarParam<NonNegativeInt>, B
         return "num";
     }
 
-    GeneratorTileInput<? extends List<?>, BEASTState> vectorInput =
-            new GeneratorTileInput<>("vector", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
+    // Element values may be sampled while the number of entries remains fixed.
+    GeneratorTileInput<? extends List<?>, BEASTState> vectorInput = new GeneratorTileInput<>("vector");
 
     @Override
     public IntScalarParam<NonNegativeInt> applyTile(

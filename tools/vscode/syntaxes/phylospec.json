@@ -57,7 +57,7 @@
             "patterns": [
                 {
                     "name": "meta.decorator.phylospec",
-                    "match": "@[a-zA-Z_][a-zA-Z0-9_]*",
+                    "match": "@[\\p{ID_Start}_\\x{2E2F}][\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]]*(?![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])",
                     "captures": {
                         "0": {
                             "name": "entity.name.function.decorator.phylospec"
@@ -70,7 +70,7 @@
             "patterns": [
                 {
                     "name": "meta.import.phylospec",
-                    "match": "\\b(import)\\b\\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\\.[a-zA-Z_][a-zA-Z0-9_]*)*)",
+                    "match": "(?<![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])(import)(?![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])\\s+([\\p{ID_Start}_\\x{2E2F}][\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]]*(?:\\.[\\p{ID_Start}_\\x{2E2F}][\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]]*)*)(?![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])",
                     "captures": {
                         "1": {
                             "name": "keyword.control.import.phylospec"
@@ -86,27 +86,27 @@
             "patterns": [
                 {
                     "name": "keyword.control.phylospec",
-                    "match": "\\b(import)\\b"
+                    "match": "(?<![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])(import)(?![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])"
                 },
                 {
                     "name": "keyword.control.phylospec",
-                    "match": "\\b(for)\\b"
+                    "match": "(?<![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])(for)(?![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])"
                 },
                 {
                     "name": "keyword.control.phylospec",
-                    "match": "\\b(in)\\b"
+                    "match": "(?<![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])(in)(?![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])"
                 },
                 {
                     "name": "keyword.control.phylospec",
-                    "match": "\\b(observed as)\\b"
+                    "match": "(?<![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])(observed as)(?![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])"
                 },
                 {
                     "name": "keyword.control.phylospec",
-                    "match": "\\b(observed between)\\b"
+                    "match": "(?<![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])(observed between)(?![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])"
                 },
                 {
                     "name": "keyword.control.phylospec",
-                    "match": "\\b(per)\\b"
+                    "match": "(?<![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])(per)(?![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])"
                 }
             ]
         },
@@ -114,11 +114,11 @@
             "patterns": [
                 {
                     "name": "entity.name.type.phylospec",
-                    "match": "\\b[A-Z][a-zA-Z0-9_]*\\b(?=\\s+[a-zA-Z_])"
+                    "match": "(?<![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])[\\p{Lu}\\p{Lt}][\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]]*(?![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])(?=\\s+[\\p{ID_Start}_\\x{2E2F}])"
                 },
                 {
                     "name": "meta.type.generic.phylospec",
-                    "begin": "\\b([A-Z][a-zA-Z0-9_]*)\\s*(<)",
+                    "begin": "(?<![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])([\\p{Lu}\\p{Lt}][\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]]*)\\s*(<)",
                     "end": "(>)",
                     "beginCaptures": {
                         "1": {
@@ -143,7 +143,7 @@
                         },
                         {
                             "name": "entity.name.type.phylospec",
-                            "match": "\\b[A-Z][a-zA-Z0-9_]*\\b"
+                            "match": "(?<![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])[\\p{Lu}\\p{Lt}][\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]]*(?![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])"
                         }
                     ]
                 }
@@ -153,7 +153,7 @@
             "patterns": [
                 {
                     "name": "entity.name.function.phylospec",
-                    "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*(?=\\s*\\()"
+                    "match": "(?<![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])[\\p{ID_Start}_\\x{2E2F}][\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]]*(?=\\s*\\()"
                 }
             ]
         },
@@ -181,11 +181,11 @@
                 },
                 {
                     "name": "constant.numeric",
-                    "match": "Myr"
+                    "match": "(?<![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])Myr(?![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])"
                 },
                 {
                     "name": "constant.numeric",
-                    "match": "yr"
+                    "match": "(?<![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])yr(?![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])"
                 }
             ]
         },
@@ -202,7 +202,7 @@
                         },
                         {
                             "name": "meta.interpolation.phylospec",
-                            "match": "(\\$\\{)([a-zA-Z_][a-zA-Z0-9_]*)(\\})",
+                            "match": "(\\$\\{)([\\p{ID_Start}_\\x{2E2F}][\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]]*)(\\})",
                             "captures": {
                                 "1": {
                                     "name": "punctuation.definition.template-expression.begin.phylospec"
@@ -235,7 +235,7 @@
             "patterns": [
                 {
                     "name": "constant.language.boolean.phylospec",
-                    "match": "\\b(true|false)\\b"
+                    "match": "(?<![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])(true|false)(?![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])"
                 }
             ]
         },
@@ -243,7 +243,7 @@
             "patterns": [
                 {
                     "name": "variable.other.phylospec",
-                    "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+                    "match": "(?<![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])[\\p{ID_Start}_\\x{2E2F}][\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]]*(?![\\p{ID_Continue}\\x{2E2F}&&[^\\p{Cf}]])"
                 }
             ]
         }

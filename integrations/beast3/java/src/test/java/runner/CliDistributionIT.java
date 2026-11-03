@@ -216,6 +216,57 @@ class CliDistributionIT {
     }
 
     @Test
+    void packagedCliPreservesGreekIdentifiersInSourceTraceAndState() throws Exception {
+        Path source = temporary.resolve("unicode-hky.phylospec");
+        Files.writeString(
+                source,
+                UnicodeIdentifiersTest.greekHkyModel(
+                        installation.resolve("examples/data/primate-mtDNA.nex").toString()));
+        Result checked = launch("check", source.toString());
+        assertEquals(0, checked.exitCode(), checked.details());
+        assertTrue(checked.stdout().contains("Check passed"), checked.details());
+        assertTrue(checked.stdout().contains("No MCMC was run."), checked.details());
+        assertTrue(fileNames(workingDirectory).isEmpty());
+
+        Path run = workingDirectory.resolve("Greek identifier results");
+        Result completed = launch("run", source.toString(), "--out", run.toString());
+        assertEquals(0, completed.exitCode(), completed.details());
+        assertTrue(completed.stdout().contains("Run completed"), completed.details());
+        assertSuccessfulRun(run, source);
+        String trace = Files.readString(run.resolve("output/unicode-hky.log"));
+        String header = trace.lines()
+                .filter(line -> !line.isBlank() && !line.startsWith("#"))
+                .findFirst()
+                .orElseThrow();
+        List<String> columns = Arrays.asList(header.strip().split("\\s+"));
+        assertTrue(
+                columns.containsAll(List.of(
+                        "posterior",
+                        "prior",
+                        "likelihood",
+                        "κ",
+                        "θ.height",
+                        "θ.treeLength",
+                        "π.1",
+                        "π.2",
+                        "π.3",
+                        "π.4")),
+                header);
+        var factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        var state = factory.newDocumentBuilder()
+                .parse(run.resolve("output/unicode-hky.state.xml").toFile());
+        assertEquals("30", state.getDocumentElement().getAttribute("sample"));
+        var elements = state.getElementsByTagName("*");
+        Set<String> ids = new HashSet<>();
+        for (int index = 0; index < elements.getLength(); index++) {
+            var id = elements.item(index).getAttributes().getNamedItem("id");
+            if (id != null) ids.add(id.getNodeValue());
+        }
+        assertEquals(Set.of("θ", "κ", "π"), ids);
+    }
+
+    @Test
     void packagedPhylogeneticExampleRunsAndCannotOverwriteAnExistingResult() throws Exception {
         Path source = installation.resolve("examples/jc69-coalescent.phylospec");
         Path run = workingDirectory.resolve("results with spaces");

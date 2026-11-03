@@ -21,6 +21,7 @@ import dr.inference.operators.UniformIntegerOperator;
 import dr.inference.operators.UpDownOperator;
 import tiling.BeastXState;
 
+import java.util.Arrays;
 import java.util.List;
 
 /** Materializes selected operator specifications for direct BEAST X execution. */
@@ -48,9 +49,7 @@ public final class OperatorBuilder {
                     spec.parameter(), spec.tuning(),
                     RandomWalkOperator.BoundaryCondition.reflecting,
                     spec.weight(), AdaptationMode.DEFAULT);
-            case DELTA_EXCHANGE -> new DeltaExchangeOperator(
-                    spec.parameter(), null, spec.tuning(), spec.weight(), false,
-                    AdaptationMode.DEFAULT);
+            case DELTA_EXCHANGE -> deltaExchangeOperator(spec);
             case INTEGER_RANDOM_WALK -> new RandomWalkIntegerOperator(
                     spec.parameter(), (int) spec.tuning(), spec.weight());
             case INTEGER_SWAP -> swapOperator(spec);
@@ -71,6 +70,15 @@ public final class OperatorBuilder {
             case TREE_WILSON_BALDING -> new WilsonBalding(spec.tree(), spec.weight());
             case TREE_CLOCK_UP_DOWN -> treeClockUpDownOperator(spec);
         };
+    }
+
+    private DeltaExchangeOperator deltaExchangeOperator(OperatorSpec spec) {
+        // Match BEAST X's XML default: every simplex element has unit weight.
+        int[] weights = new int[spec.parameter().getDimension()];
+        Arrays.fill(weights, 1);
+        return new DeltaExchangeOperator(
+                spec.parameter(), weights, spec.tuning(), spec.weight(), false,
+                AdaptationMode.DEFAULT);
     }
 
     private SwapOperator swapOperator(OperatorSpec spec) {
@@ -105,7 +113,7 @@ public final class OperatorBuilder {
 
     private ScaleOperator rootScaleOperator(OperatorSpec spec) {
         DefaultTreeModel tree = defaultTree(spec);
-        Parameter rootHeight = tree.createNodeHeightsParameter(false, true, false);
+        Parameter rootHeight = tree.getRootHeightParameter();
         rootHeight.setId(tree.getId() + ".rootHeight");
         return new ScaleOperator(
                 rootHeight, spec.tuning(), AdaptationMode.DEFAULT, spec.weight());

@@ -368,11 +368,27 @@ PhyloSpec supports standard numerical operations to enable mathematical transfor
 
 ## Naming Conventions
 
-- Types and functions returning distributions should use PascalCase (e.g., `PositiveReal`). Only alphanumeric characters are allowed, they must start with a letter.
-- Variable names should use camelCase (e.g., `rate`) and can contain Unicode characters. They must start with a letter (a greek letter like `α` also works).
-- Function not returning distributions should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
-- Function argument names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
-- Attribute names should use camelCase (e.g., `log`). Only alphanumeric characters are allowed, they must start with a letter.
+- Types and functions returning distributions should use PascalCase (e.g., `PositiveReal`).
+- Variables, functions not returning distributions, function arguments, and attributes should use camelCase (e.g., `birthRate`). Mathematical names such as `π`, `κ`, `μ`, and `θ` are also supported.
+
+All identifiers use the same Unicode rules, evaluated by code point:
+
+- The first code point must satisfy Java's `Character.isUnicodeIdentifierStart(int)` or be an underscore (`_`).
+- Each later code point must satisfy `Character.isUnicodeIdentifierPart(int)` and must not satisfy `Character.isIdentifierIgnorable(int)`.
+
+These rules allow Unicode letters, including letters outside the Basic Multilingual Plane, and allow combining marks and decimal digits after the first code point. They reject identifier-ignorable control and format characters. Numeric literals still use only ASCII digits (`0`–`9`).
+
+```phylospec
+Real π = 3.14159
+PositiveReal κ = 2.0
+Rate μ = 0.01
+Real θ = κ * μ
+String label = "theta_${θ}"
+```
+
+Names preserve their exact code-point spelling: no Unicode normalization or case folding is applied. For example, `μ` (Greek small letter mu) and `µ` (micro sign) are distinct names, as are `é` and `e` followed by a combining acute accent. Use the same spelling at every reference, including string interpolation.
+
+Editor and website highlighting uses Unicode identifier properties with Java's U+2E2F addition; the Java runtime's rules above determine validity.
 
 ## Engine-Specific Features
 

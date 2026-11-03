@@ -1,8 +1,10 @@
 package org.phylospec.ast;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Types are a type of nodes in the AST tree and correspond to types for variables.
@@ -13,6 +15,22 @@ public abstract class AstType extends AstNode {
 
     @JsonPropertyDescription("The name of the type prefixed by its namespace.")
     public String name;
+
+    private Set<String> resolvedTypeNames = Set.of();
+
+    /**
+     * Returns the fully qualified names of this resolved type and its aliases and ancestors.
+     * This derived metadata is available to engine mappings and is not part of the serialized AST.
+     */
+    @JsonIgnore
+    public Set<String> getResolvedTypeNames() {
+        return resolvedTypeNames;
+    }
+
+    /** Records an immutable snapshot of the names found during type resolution. */
+    public void setResolvedTypeNames(Set<String> resolvedTypeNames) {
+        this.resolvedTypeNames = Set.copyOf(resolvedTypeNames);
+    }
 
     public abstract <S, E, T> T accept(AstVisitor<S, E, T> visitor);
 

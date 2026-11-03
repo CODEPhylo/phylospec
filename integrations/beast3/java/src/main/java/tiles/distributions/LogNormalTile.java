@@ -20,17 +20,21 @@ public class LogNormalTile
         return "LogNormal";
     }
 
-    GeneratorTileInput<RealScalar<Real>, BEASTState> logMeanInput = new GeneratorTileInput<>("logMean");
+    GeneratorTileInput<RealScalar<? extends Real>, BEASTState> logMeanInput = new GeneratorTileInput<>("logMean");
     GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> logSdInput = new GeneratorTileInput<>("logSd");
 
     @Override
     public BoundDistribution<RealScalarParam<PositiveReal>, LogNormal> applyTile(
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        RealScalar<Real> logMean = this.logMeanInput.apply(beastState, indexVariables);
+        RealScalar<? extends Real> logMean = this.logMeanInput.apply(beastState, indexVariables);
         RealScalar<PositiveReal> logSd = this.logSdInput.apply(beastState, indexVariables);
 
         LogNormal distribution = new LogNormal();
-        beastState.setInput(distribution, distribution.MParameterInput, logMean);
+        // BEAST only reads M through this input. Preserve the original object's
+        // domain and live dependency while keeping the log-space parameterization.
+        @SuppressWarnings("unchecked")
+        RealScalar<Real> nativeLogMean = (RealScalar<Real>) logMean;
+        beastState.setInput(distribution, distribution.MParameterInput, nativeLogMean);
         beastState.setInput(distribution, distribution.SParameterInput, logSd);
 
         RealScalarParam<PositiveReal> defaultState =
