@@ -3,6 +3,7 @@ module org.phylospec.beast3 {
     requires beast.pkgmgmt;
     requires java.xml;
     requires org.apache.commons.math4.legacy;
+    requires org.apache.commons.statistics.distribution;
     requires transitive org.phylospec.core;
 
     exports beastconfig;
