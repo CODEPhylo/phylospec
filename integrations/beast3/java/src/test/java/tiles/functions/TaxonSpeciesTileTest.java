@@ -185,25 +185,32 @@ class TaxonSpeciesTileTest {
             assertEquals(i, filtered.ages().getValue(names.get(i)), 1e-12);
         }
 
-        Built built = build(source + """
-                Taxa samples = taxa(alignment=filtered)
+        String taxaSource = source + "Taxa samples = taxa(alignment=filtered)\n";
+        // These assertions check separate metadata paths. Keep the scripts small so
+        // unrelated outputs do not multiply the tiler's cross-statement candidates.
+        Built species = build(taxaSource + """
                 String firstSpecies = species(taxon=samples[1])
                 String secondSpecies = species(taxon=samples[2])
                 String thirdSpecies = species(taxon=samples[3])
+                """);
+        assertEquals("spA", value(species, "firstSpecies"));
+        assertEquals("spA", value(species, "secondSpecies"));
+        assertEquals("spB", value(species, "thirdSpecies"));
+
+        Built metadata = build(taxaSource + """
                 String secondName = name(taxon=samples[2])
                 NonNegativeReal secondAge = age(taxon=samples[2])
                 NonNegativeInteger count = num(vector=samples)
-                Tree inferred ~ Coalescent(populationSize=100.0, taxa=samples)
                 """);
-        assertEquals("spA", value(built, "firstSpecies"));
-        assertEquals("spA", value(built, "secondSpecies"));
-        assertEquals("spB", value(built, "thirdSpecies"));
-        assertEquals(names.get(1), value(built, "secondName"));
+        assertEquals(names.get(1), value(metadata, "secondName"));
         assertEquals(
                 1.0,
-                assertInstanceOf(RealScalar.class, value(built, "secondAge")).get(),
+                assertInstanceOf(RealScalar.class, value(metadata, "secondAge")).get(),
                 1e-12);
-        assertEquals(3, assertInstanceOf(IntScalar.class, value(built, "count")).get());
+        assertEquals(
+                3, assertInstanceOf(IntScalar.class, value(metadata, "count")).get());
+
+        Built built = build(taxaSource + "Tree inferred ~ Coalescent(populationSize=100.0, taxa=samples)\n");
         assertEquals(1, built.graph().stateNodes.size());
         Tree tree = assertInstanceOf(
                 Tree.class, built.graph().stateNodes.keySet().iterator().next());

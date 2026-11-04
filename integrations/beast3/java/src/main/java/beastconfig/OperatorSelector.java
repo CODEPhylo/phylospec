@@ -105,10 +105,13 @@ public class OperatorSelector {
             beastState.setInput(intRandomWalkOperator, intRandomWalkOperator.m_pWeight, 10.0);
             operators.add(intRandomWalkOperator);
 
-            SwapOperator swapOperator = new SwapOperator();
-            swapOperator.intparameterInput.setValue(intVector, swapOperator);
-            beastState.setInput(swapOperator, swapOperator.m_pWeight, 10.0);
-            operators.add(swapOperator);
+            // Swapping requires two distinct elements; a singleton still uses the random walk.
+            if (intVector.size() > 1) {
+                SwapOperator swapOperator = new SwapOperator();
+                swapOperator.intparameterInput.setValue(intVector, swapOperator);
+                beastState.setInput(swapOperator, swapOperator.m_pWeight, 10.0);
+                operators.add(swapOperator);
+            }
         }
 
         return operators;
