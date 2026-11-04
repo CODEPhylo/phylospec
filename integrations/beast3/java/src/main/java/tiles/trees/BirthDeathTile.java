@@ -45,23 +45,7 @@ public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthD
         RealScalar<? extends PositiveReal> rootAge = this.rootAgeInput.apply(beastState, indexVariables);
         TaxaData taxa = TaxaData.fromList(beastState, this.taxaInput.apply(beastState, indexVariables));
 
-        // initialize initial state
-
-        ConstantPopulation populationFunction = new ConstantPopulation();
-        beastState.setInput(
-                populationFunction,
-                populationFunction.popSizeParameter,
-                new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
-
-        RandomTree defaultState = new RandomTree();
-        beastState.setInput(defaultState, defaultState.m_taxonset, taxa.taxonSet());
-        beastState.setInput(defaultState, defaultState.populationFunctionInput, populationFunction);
-
-        // set tip dates if provided
-
-        if (taxa.ages() != null) {
-            defaultState.setDateTrait(taxa.ages());
-        }
+        RandomTree defaultState = createInitialTree(beastState, taxa);
 
         // initialize BD
 
@@ -77,5 +61,21 @@ public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthD
                 defaultState,
                 tree -> beastState.setInput(birthDeathModel, birthDeathModel.treeInput, tree),
                 OperatorSelector::getDefaultOperators);
+    }
+
+    static RandomTree createInitialTree(BEASTState beastState, TaxaData taxa) {
+        ConstantPopulation populationFunction = new ConstantPopulation();
+        beastState.setInput(
+                populationFunction,
+                populationFunction.popSizeParameter,
+                new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+
+        RandomTree defaultState = new RandomTree();
+        beastState.setInput(defaultState, defaultState.m_taxonset, taxa.taxonSet());
+        beastState.setInput(defaultState, defaultState.populationFunctionInput, populationFunction);
+        if (taxa.ages() != null) {
+            defaultState.setDateTrait(taxa.ages());
+        }
+        return defaultState;
     }
 }
