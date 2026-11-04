@@ -138,6 +138,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
 
         tiles.add(new YuleTile());
         tiles.add(new BirthDeathTile());
+        tiles.add(new BirthDeathRatesTile());
         tiles.add(new ConstantCoalescentTile());
         tiles.add(new CoalescentTile());
         // tiles.add(new ConstantPopulationTile());
