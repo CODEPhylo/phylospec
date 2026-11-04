@@ -1,0 +1,96 @@
+{
+  "name" : "phylonco",
+  "engineVersion" : "1.3.0-SNAPSHOT",
+  "dependsOn" : [ "beast2" ],
+  "generators" : [ {
+    "name" : "fromMpileup",
+    "namespace" : "phylonco",
+    "arguments" : [ {
+      "name" : "file",
+      "required" : true,
+      "canBeStochastic" : false
+    }, {
+      "name" : "cellNames",
+      "required" : true,
+      "canBeStochastic" : false
+    } ]
+  }, {
+    "name" : "taxa",
+    "namespace" : "phylospec.functions.accessor",
+    "arguments" : [ {
+      "name" : "readCounts",
+      "required" : true,
+      "canBeStochastic" : true
+    } ]
+  }, {
+    "name" : "numTaxa",
+    "namespace" : "phylospec.functions.accessor",
+    "arguments" : [ {
+      "name" : "readCounts",
+      "required" : true,
+      "canBeStochastic" : true
+    } ]
+  }, {
+    "name" : "numSites",
+    "namespace" : "phylospec.functions.accessor",
+    "arguments" : [ {
+      "name" : "readCounts",
+      "required" : true,
+      "canBeStochastic" : true
+    } ]
+  }, {
+    "name" : "gt10",
+    "namespace" : "phylonco",
+    "arguments" : [ {
+      "name" : "relativeRates",
+      "required" : true,
+      "canBeStochastic" : true
+    }, {
+      "name" : "genotypeFrequencies",
+      "required" : true,
+      "canBeStochastic" : true
+    } ]
+  }, {
+    "name" : "ReadCountModel",
+    "namespace" : "phylonco",
+    "arguments" : [ {
+      "name" : "tree",
+      "required" : true,
+      "canBeStochastic" : true
+    }, {
+      "name" : "qMatrix",
+      "required" : true,
+      "canBeStochastic" : true
+    }, {
+      "name" : "sequencingError",
+      "required" : true,
+      "canBeStochastic" : true
+    }, {
+      "name" : "allelicDropout",
+      "required" : true,
+      "canBeStochastic" : true
+    }, {
+      "name" : "meanAllelicCoverage",
+      "required" : true,
+      "canBeStochastic" : true
+    }, {
+      "name" : "allelicCoverageVariance",
+      "required" : true,
+      "canBeStochastic" : true
+    }, {
+      "name" : "cellSizeFactors",
+      "required" : true,
+      "canBeStochastic" : true
+    }, {
+      "name" : "homozygousOverdispersion",
+      "required" : true,
+      "canBeStochastic" : true
+    }, {
+      "name" : "heterozygousOverdispersion",
+      "required" : true,
+      "canBeStochastic" : true
+    } ]
+  } ],
+  "installationInstructions" : "Install the phylonco BEAST package (beast3 branch).",
+  "installationWebsite" : "https://github.com/bioDS/beast-phylonco"
+}

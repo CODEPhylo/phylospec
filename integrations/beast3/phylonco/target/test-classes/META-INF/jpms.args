@@ -1,0 +1,4 @@
+--patch-module
+org.phylospec.beast3.phylonco=_
+--add-reads
+org.phylospec.beast3.phylonco=ALL-UNNAMED
