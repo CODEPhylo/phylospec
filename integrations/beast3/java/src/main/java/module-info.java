@@ -9,6 +9,8 @@ module org.phylospec.beast3 {
     exports org.phylospec.beast3.adapters;
     exports tiling;
     exports runner;
+    // tile input records (e.g. DecoratedAlignment) are used by extension tile libraries
+    exports tiles.input;
 
     // we have to open the tiles to the core such that the tiling machinery can use reflection
     opens tiles to

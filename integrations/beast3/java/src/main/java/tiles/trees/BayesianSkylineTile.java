@@ -55,7 +55,9 @@ public class BayesianSkylineTile extends GeneratorTile<BoundDistribution<Tree, B
         IntVector<? extends PositiveInt> groupSizesVector = this.groupSizesInput.apply(state, indices);
         DecoratedAlignment taxa = this.taxaInput.apply(state, indices);
 
-        int numTaxa = taxa.taxonSet() != null ? taxa.taxonSet().getTaxonCount() : taxa.alignment().getTaxonCount();
+        int numTaxa = taxa.taxonSet() != null
+                ? taxa.taxonSet().getTaxonCount()
+                : taxa.alignment().getTaxonCount();
         int events = numTaxa - 1;
 
         if (populationSizes.size() != groupSizesVector.size()) {

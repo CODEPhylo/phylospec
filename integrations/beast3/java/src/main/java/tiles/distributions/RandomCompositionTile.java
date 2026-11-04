@@ -7,11 +7,11 @@ import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.inference.operator.DeltaExchangeOperator;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntSimplexParam;
-import beastconfig.BEASTState;
-import beastconfig.UniformComposition;
 import beast.base.spec.type.IntScalar;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.Tensor;
+import beastconfig.BEASTState;
+import beastconfig.UniformComposition;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.IdentityHashMap;
@@ -106,17 +106,17 @@ public abstract class RandomCompositionTile
             }
             double right = stack.pop();
             double left = stack.pop();
-            stack.push(switch (token) {
-                case "+" -> left + right;
-                case "-" -> left - right;
-                case "*" -> left * right;
-                case "/" -> left / right;
-                default -> throw new IllegalArgumentException("Unsupported operator '" + token + "' in total.");
-            });
+            stack.push(
+                    switch (token) {
+                        case "+" -> left + right;
+                        case "-" -> left - right;
+                        case "*" -> left * right;
+                        case "/" -> left / right;
+                        default -> throw new IllegalArgumentException("Unsupported operator '" + token + "' in total.");
+                    });
         }
         return stack.pop();
     }
-
 
     @Override
     public String getPhyloSpecGeneratorName() {
@@ -143,8 +143,8 @@ public abstract class RandomCompositionTile
         if (parts < 1 || total < parts) {
             throw new TileApplicationError(
                     this.getRootNode(),
-                    "RandomComposition needs 1 <= numParts <= total, but got numParts=" + parts + " and total="
-                            + total + ".",
+                    "RandomComposition needs 1 <= numParts <= total, but got numParts=" + parts + " and total=" + total
+                            + ".",
                     "Use fewer parts or a larger total.");
         }
 
