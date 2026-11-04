@@ -28,11 +28,11 @@ import org.phylospec.ast.transformers.RemoveGroupings;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
+import org.phylospec.tiling.TileCatalog;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import runner.PhyloSpecRunner;
-import org.phylospec.tiling.TileCatalog;
 
 /**
  * Tiles for the classic Bayesian skyline as used by the CRC09 single-cell model:
@@ -71,7 +71,8 @@ class BayesianSkylineTileTest {
         assertEquals(-Math.log(120.0), prior.calculateLogP(), 1e-12);
 
         groups.set(0, 4);
-        assertEquals(Double.NEGATIVE_INFINITY, prior.calculateLogP(), "compositions with the wrong sum have zero density");
+        assertEquals(
+                Double.NEGATIVE_INFINITY, prior.calculateLogP(), "compositions with the wrong sum have zero density");
 
         List<Operator> operators = state.operators;
         assertEquals(1, operators.size());
@@ -82,7 +83,8 @@ class BayesianSkylineTileTest {
     @Test
     void randomCompositionRejectsMorePartsThanTotal() {
         Exception failure = assertThrows(
-                Exception.class, () -> evaluate("Vector<PositiveInteger> groups ~ RandomComposition(total=3, numParts=5)"));
+                Exception.class,
+                () -> evaluate("Vector<PositiveInteger> groups ~ RandomComposition(total=3, numParts=5)"));
         assertTrue(failure.getMessage().contains("numParts <= total"), failure.getMessage());
     }
 
@@ -105,8 +107,8 @@ class BayesianSkylineTileTest {
         sizes.set(1, 0.5);
         sizes.set(2, 3.0);
         chain.initAndValidate();
-        double expected = exponentialLogDensity(1.5, 2.0) + exponentialLogDensity(0.5, 1.5)
-                + exponentialLogDensity(3.0, 0.5);
+        double expected =
+                exponentialLogDensity(1.5, 2.0) + exponentialLogDensity(0.5, 1.5) + exponentialLogDensity(3.0, 0.5);
         assertEquals(expected, chain.calculateLogP(), 1e-10);
     }
 
@@ -203,7 +205,8 @@ class BayesianSkylineTileTest {
         stochasticity.visitStatements(statements);
         var evaluator = new EvaluateTiles<>(catalog.getTiles(), new VariableResolver(statements), stochasticity);
         evaluator.getBestTiling(statements);
-        BEASTState state = evaluator.applyBestTiling(new BEASTState(this.directory.resolve("test").toString(), this.directory));
+        BEASTState state = evaluator.applyBestTiling(
+                new BEASTState(this.directory.resolve("test").toString(), this.directory));
         catalog.configureState(state);
         state.initializeBEASTObjects();
         return state;
