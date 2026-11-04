@@ -43,6 +43,16 @@
             <groupId>io.github.bioDS</groupId>
             <artifactId>phylonco-beast</artifactId>
             <version>${phylonco.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.github.compevol</groupId>
+                    <artifactId>beast-fx</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
