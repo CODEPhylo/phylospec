@@ -11,14 +11,37 @@ read-count error model with the genotypes integrated out).
 
 | Part | Component library | BEAST 3 tile |
 |------|-------------------|--------------|
-| `fromMpileup`, `ReadCount` type | done (`phylonco`) | todo |
-| `taxa` / `numTaxa` / `numSites` for `ReadCount` | done (`phylospec.functions.accessor`) | todo |
-| `gt10` | done (`phylonco`) | todo |
-| `ReadCountModel` | done (`phylonco`) | todo (`ReadCountTreeLikelihood` from beast-phylonco's `beast3` branch) |
-| `RandomComposition`, Bayesian skyline overload of `SkylineCoalescent`, positive `ExponentialMarkovChain` | done (core) | done (`BeastCoreTileLibrary`, tested incl. a short MCMC run) |
+| `fromMpileup`, `ReadCount` type | done (`phylonco`) | done (`FromMpileupTile`, same counting rules as LPhy) |
+| `taxa` / `numTaxa` / `numSites` for `ReadCount` | done (`phylospec.functions.accessor`) | done |
+| `gt10` | done (`phylonco`) | done (`GT10Tile`) |
+| `ReadCountModel` | done (`phylonco`) | done (`ReadCountTreeLikelihood`) |
+| `RandomComposition`, Bayesian skyline overload of `SkylineCoalescent`, positive `ExponentialMarkovChain` | done (core) | done (`BeastCoreTileLibrary`) |
 
-`examples/CRC09.phylospec` passes the PhyloSpec type checker (core + this library)
-with no errors or warnings.
+`examples/CRC09.phylospec` passes the type checker with no errors or warnings, and
+`CRC09ModelTest` runs the same model structure as an MCMC on a small synthetic mpileup
+(`src/test/resources/six-cells.mpileup`, 6 cells, 30 sites).
+
+## Building locally
+
+This module depends on beast-phylonco's `beast3` branch, which is not published yet:
+
+```bash
+# 1. beast-phylonco, beast3 branch
+cd beast-phylonco && git checkout beast3 && mvn -pl phylonco-beast -am install -DskipTests
+# 2. PhyloSpec with this module
+cd phylospec && mvn -P phylonco -pl integrations/beast3/phylonco -am test
+```
+
+Running a model needs the library ids `phylonco` and `beast2`, e.g.
+`new PhyloSpecRunner(source, List.of("phylonco", "beast2"))`.
+
+## Mpileup reading
+
+`fromMpileup` follows LPhy's `readMpileup` + `toReadCount` (no site filtering; CRC09 uses an
+already filtered file). `.`/`,` count as the reference base, `^` plus its quality character,
+`$`, indels (`+n`/`-n` and their bases), `*`, `<` and `>` are skipped, and A/C/G/T count in
+either case. Lines with fewer than three columns per cell are skipped entirely (LPhy keeps their
+position but drops their data, which shifts later sites).
 
 ## Design notes / open questions
 
@@ -35,5 +58,8 @@ with no errors or warnings.
 - **Accessor overloads live in `phylospec.functions.accessor`.** `ComponentResolver.importNamespace`
   removes same-named generators from other namespaces, so putting `taxa(ReadCount)` in
   `phylonco` would shadow `taxa(Alignment)` after `use phylonco`.
-- **Genotype character types** (`UnphasedGenotype`, ...) are not declared yet: `PhyloCTMC`
-  returns `Alignment<Character>`, and the tile can infer the data type from `gt10`.
+- **GT10 rate keys.** phylonco's GT10 looks up the six rates by key (AC ... GT) on a
+  `RealVectorParam`, so `GT10Tile` adds these keys to the `relativeRates` parameter.
+- **Placeholder alignment for taxa.** Tree tiles take their taxa from an alignment, so
+  `taxa(readCounts)` returns a one-site placeholder alignment with the cell names. It never
+  enters a likelihood; `ReadCountTreeLikelihood` builds its own scaffold from the read counts.
