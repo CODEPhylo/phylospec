@@ -120,6 +120,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new BernoulliTile());
         tiles.add(new CategoricalTile());
         tiles.add(new BinomialTile());
+        tiles.add(new GeometricTile());
         tiles.add(new CauchyTile());
         tiles.add(new DiscreteUniformTile());
         tiles.add(new ExponentialTile());
