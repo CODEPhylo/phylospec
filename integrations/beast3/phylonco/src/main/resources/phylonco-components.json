@@ -1,0 +1,181 @@
+{
+  "componentLibrary": {
+    "name": "Phylonco",
+    "version": "0.1.0",
+    "description": "PhyloSpec components provided by the beast-phylonco package (single-cell genotype and read-count models).",
+    "types": [
+      {
+        "name": "ReadCount",
+        "namespace": "phylonco",
+        "typeProperties": [
+          "numTaxa",
+          "numSites"
+        ],
+        "description": "Nucleotide read counts (A, C, G, T) for every cell and site, e.g. loaded from an mpileup file"
+      }
+    ],
+    "generators": [
+      {
+        "name": "fromMpileup",
+        "namespace": "phylonco",
+        "generatedType": "ReadCount<;numTaxa=names.num>",
+        "description": "Loads nucleotide read counts from an mpileup file; names gives the cell (taxon) name of each sample column, in order",
+        "arguments": [
+          {
+            "name": "file",
+            "description": "Path to the mpileup file",
+            "type": "String",
+            "required": true
+          },
+          {
+            "name": "names",
+            "description": "Cell names, one per sample column of the mpileup file",
+            "type": "Vector<String>",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "taxa",
+        "namespace": "phylospec.functions.accessor",
+        "generatedType": "Taxa<;num=readCounts.numTaxa>",
+        "description": "Returns the taxa (cells) of read-count data",
+        "arguments": [
+          {
+            "name": "readCounts",
+            "description": "Read-count data",
+            "type": "ReadCount",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "numTaxa",
+        "namespace": "phylospec.functions.accessor",
+        "generatedType": "PositiveInteger<;value=readCounts.numTaxa>",
+        "description": "Returns the number of cells in read-count data",
+        "arguments": [
+          {
+            "name": "readCounts",
+            "description": "Read-count data",
+            "type": "ReadCount",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "numSites",
+        "namespace": "phylospec.functions.accessor",
+        "generatedType": "PositiveInteger<;value=readCounts.numSites>",
+        "description": "Returns the number of sites in read-count data",
+        "arguments": [
+          {
+            "name": "readCounts",
+            "description": "Read-count data",
+            "type": "ReadCount",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "gt10",
+        "namespace": "phylonco",
+        "generatedType": "QMatrix",
+        "description": "GT10 model of unphased diploid genotypes (10 states) with GTR-like nucleotide exchangeabilities",
+        "arguments": [
+          {
+            "name": "relativeRates",
+            "description": "Relative nucleotide substitution rates in AC, AG, AT, CG, CT, GT order",
+            "type": "Simplex",
+            "required": true
+          },
+          {
+            "name": "genotypeFrequencies",
+            "description": "Equilibrium frequencies of the 10 unphased genotypes",
+            "type": "Simplex",
+            "required": true
+          }
+        ],
+        "constraints": [
+          {
+            "argument": "relativeRates",
+            "property": "num",
+            "operator": "equals",
+            "constant": 6
+          },
+          {
+            "argument": "genotypeFrequencies",
+            "property": "num",
+            "operator": "equals",
+            "constant": 10
+          }
+        ]
+      },
+      {
+        "name": "ReadCountModel",
+        "namespace": "phylonco",
+        "generatedType": "Distribution<ReadCount<;numTaxa=genotypes.numTaxa, numSites=genotypes.numSites>>",
+        "description": "Read counts generated from a (latent) genotype alignment, with sequencing error, allelic dropout, a negative-binomial coverage model and Dirichlet-multinomial allele counts. Ploidy (allelic dropout) and coverage are integrated out.",
+        "arguments": [
+          {
+            "name": "genotypes",
+            "description": "Genotype alignment, usually latent and drawn from a PhyloCTMC with gt10",
+            "type": "Alignment",
+            "required": true
+          },
+          {
+            "name": "sequencingError",
+            "description": "Sequencing error probability (epsilon)",
+            "type": "Probability",
+            "required": true
+          },
+          {
+            "name": "allelicDropout",
+            "description": "Allelic dropout probability (delta)",
+            "type": "Probability",
+            "required": true
+          },
+          {
+            "name": "meanAllelicCoverage",
+            "description": "Mean coverage of a single allele (t)",
+            "type": "PositiveReal",
+            "required": true
+          },
+          {
+            "name": "allelicCoverageVariance",
+            "description": "Variance of the coverage of a single allele (v)",
+            "type": "PositiveReal",
+            "required": true
+          },
+          {
+            "name": "cellSizeFactors",
+            "description": "Size factor of every cell (s)",
+            "type": "Vector<PositiveReal>",
+            "required": true
+          },
+          {
+            "name": "homozygousOverdispersion",
+            "description": "Dirichlet-multinomial overdispersion for homozygous genotypes (w1)",
+            "type": "PositiveReal",
+            "required": true
+          },
+          {
+            "name": "heterozygousOverdispersion",
+            "description": "Dirichlet-multinomial overdispersion for heterozygous genotypes (w2)",
+            "type": "PositiveReal",
+            "required": true
+          }
+        ],
+        "constraints": [
+          {
+            "argument": "cellSizeFactors",
+            "property": "num",
+            "operator": "equals",
+            "otherArgument": "genotypes",
+            "otherProperty": "numTaxa"
+          }
+        ]
+      }
+    ]
+  }
+}
