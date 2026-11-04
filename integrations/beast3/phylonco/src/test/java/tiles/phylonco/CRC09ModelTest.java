@@ -1,0 +1,170 @@
+package tiles.phylonco;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import beast.base.inference.Distribution;
+import beastconfig.BEASTState;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.IntStream;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.phylospec.ast.transformers.EvaluateLiterals;
+import org.phylospec.ast.transformers.EvaluateScalarFunctions;
+import org.phylospec.ast.transformers.RemoveGroupings;
+import org.phylospec.lexer.Lexer;
+import org.phylospec.parser.Parser;
+import org.phylospec.tiling.EvaluateTiles;
+import org.phylospec.tiling.TileCatalog;
+import org.phylospec.typeresolver.StochasticityResolver;
+import org.phylospec.typeresolver.TypeResolver;
+import org.phylospec.typeresolver.VariableResolver;
+import phylonco.beast.evolution.likelihood.ReadCountTreeLikelihood;
+import phylonco.beast.evolution.readcountmodel.LikelihoodReadCountModel;
+import runner.PhyloSpecRunner;
+
+/** The CRC09 model structure on a small synthetic data set (6 cells, 30 sites). */
+class CRC09ModelTest {
+
+    private static final List<String> LIBRARIES = List.of("phylonco", "beast2");
+
+    /** Same statements as examples/CRC09.phylospec, with 6 cells and 2 skyline groups. */
+    private static final String MODEL = """
+            use phylonco
+
+            data {
+                Vector<String> cellNames = ["c1", "c2", "c3", "c4", "c5", "c6"]
+                ReadCount readCounts = fromMpileup(file="%s", names=cellNames)
+                Taxa taxa = taxa(readCounts)
+                PositiveInteger numCells = numTaxa(readCounts)
+            }
+
+            model {
+                Simplex genotypeFrequencies ~ Dirichlet(
+                    concentration=[3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0]
+                )
+                Simplex relativeRates ~ Dirichlet(concentration=[2.0, 20.0, 2.0, 2.0, 20.0, 2.0])
+                QMatrix qMatrix = gt10(relativeRates=relativeRates, genotypeFrequencies=genotypeFrequencies)
+
+                PositiveInteger numGroups = 2
+                Vector<PositiveInteger> groupSizes ~ RandomComposition(total=numCells - 1, numParts=numGroups)
+                PositiveReal initialMean ~ LogNormal(logMean=-5.0, logSd=2.0)
+                Vector<PositiveReal> populationSizes ~ ExponentialMarkovChain(initialMean=initialMean, numValues=numGroups)
+                Tree tree ~ SkylineCoalescent(populationSizes=populationSizes, groupSizes=groupSizes, taxa=taxa)
+
+                Probability epsilon ~ Beta(alpha=1.0, beta=30.0)
+                Probability delta ~ Beta(alpha=1.0, beta=4.0)
+                PositiveReal t ~ LogNormal(logMean=1.7, logSd=0.05)
+                PositiveReal v ~ LogNormal(logMean=2.96, logSd=0.13)
+                PositiveReal w1 ~ LogNormal(logMean=0.1, logSd=0.5)
+                PositiveReal w2 ~ LogNormal(logMean=1.0, logSd=0.8)
+                Vector<PositiveReal> s ~ IID(base=LogNormal(logMean=0.2, logSd=0.72), num=numCells)
+
+                ReadCount reads ~ ReadCountModel(
+                    tree=tree,
+                    qMatrix=qMatrix,
+                    sequencingError=epsilon,
+                    allelicDropout=delta,
+                    meanAllelicCoverage=t,
+                    allelicCoverageVariance=v,
+                    cellSizeFactors=s,
+                    homozygousOverdispersion=w1,
+                    heterozygousOverdispersion=w2
+                ) observed as readCounts
+            }
+            """;
+
+    @TempDir
+    Path directory;
+
+    private Path data() throws Exception {
+        Path target = this.directory.resolve("six-cells.mpileup");
+        if (!Files.exists(target)) {
+            try (var in = getClass().getResourceAsStream("/six-cells.mpileup")) {
+                Files.copy(in, target);
+            }
+        }
+        return target;
+    }
+
+    @Test
+    void readCountModelBecomesOneReadCountTreeLikelihood() throws Exception {
+        BEASTState state = evaluate(MODEL.formatted(data()));
+
+        assertEquals(1, state.likelihoodDistributions.size(), state.likelihoodDistributions.toString());
+        Distribution likelihood = state.likelihoodDistributions.getFirst();
+        ReadCountTreeLikelihood treeLikelihood = assertInstanceOf(ReadCountTreeLikelihood.class, likelihood);
+        LikelihoodReadCountModel readCountModel = treeLikelihood.readCountModelInput.get();
+        assertTrue(state.priorDistributions.values().stream().noneMatch(prior -> prior == readCountModel),
+                "the read-count model must not be counted a second time");
+        assertEquals(6, readCountModel.readCountInput.get().getTaxaNumber());
+        assertEquals(30, readCountModel.readCountInput.get().getSiteNumber());
+
+        double logP = treeLikelihood.calculateLogP();
+        assertTrue(Double.isFinite(logP) && logP < 0.0, "log likelihood " + logP);
+    }
+
+    @Test
+    void crc09StructureRunsAsMCMC() throws Exception {
+        Path source = this.directory.resolve("crc09-small.phylospec");
+        Files.writeString(source, MODEL.formatted("six-cells.mpileup") + """
+
+                mcmc {
+                    Integer chainLength = 20000
+                    Integer defaultLogEvery = 1000
+                }
+                """);
+        data();
+        String prefix = this.directory.resolve("analysis").toString();
+
+        new PhyloSpecRunner(source, LIBRARIES).runPhyloSpec(prefix);
+
+        List<String> trace = Files.readAllLines(this.directory.resolve("analysis.log")).stream()
+                .filter(line -> !line.isBlank() && !line.startsWith("#"))
+                .toList();
+        List<String> columns = List.of(trace.getFirst().trim().split("\\s+"));
+        assertTrue(columns.contains("likelihood"), columns.toString());
+        List<Integer> groups = IntStream.range(0, columns.size())
+                .filter(i -> columns.get(i).startsWith("groupSizes"))
+                .boxed()
+                .toList();
+        assertEquals(2, groups.size(), columns.toString());
+
+        double first = Double.NaN;
+        double last = Double.NaN;
+        for (String row : trace.subList(1, trace.size())) {
+            String[] values = row.trim().split("\\s+");
+            double likelihood = Double.parseDouble(values[columns.indexOf("likelihood")]);
+            assertTrue(Double.isFinite(likelihood), row);
+            if (Double.isNaN(first)) first = likelihood;
+            last = likelihood;
+            int sum = 0;
+            for (int column : groups) sum += (int) Double.parseDouble(values[column]);
+            assertEquals(5, sum, row);
+        }
+        assertTrue(last > first, "the likelihood should improve from the default state: " + first + " -> " + last);
+    }
+
+    private BEASTState evaluate(String source) throws Exception {
+        var catalog = TileCatalog.select(BEASTState.class, LIBRARIES);
+        var lexer = new Lexer(source);
+        lexer.registerEventListener(error -> fail(error.toStdOutString(source)));
+        var parser = new Parser(lexer.scanTokens());
+        parser.registerEventListener(error -> fail(error.toStdOutString(source)));
+        var statements = new EvaluateScalarFunctions()
+                .transform(new EvaluateLiterals().transform(new RemoveGroupings().transform(parser.parse())));
+        new TypeResolver(catalog.getComponentResolver()).visitStatements(statements);
+        var stochasticity = new StochasticityResolver();
+        stochasticity.visitStatements(statements);
+        var evaluator = new EvaluateTiles<>(catalog.getTiles(), new VariableResolver(statements), stochasticity);
+        evaluator.getBestTiling(statements);
+        BEASTState state = evaluator.applyBestTiling(new BEASTState(this.directory.resolve("test").toString(), this.directory));
+        catalog.configureState(state);
+        state.initializeBEASTObjects();
+        return state;
+    }
+}

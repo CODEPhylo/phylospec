@@ -198,6 +198,12 @@
             </modules>
         </profile>
         <profile>
+            <id>phylonco</id>
+            <modules>
+                <module>integrations/beast3/phylonco</module>
+            </modules>
+        </profile>
+        <profile>
             <id>release</id>
             <build>
                 <plugins>
