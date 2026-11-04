@@ -29,6 +29,7 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
@@ -297,6 +298,19 @@ class NonNegativeIntegerIIDTileTest {
         assertThrows(
                 TileApplicationError.class,
                 () -> evaluate("Vector<Integer> counts ~ IID(base=DiscreteUniform(lower=-2,upper=2),num=3)"));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "'Binomial(numTrials=3,p=0.5)', false",
+        "'Binomial(numTrials=3,p=0.5)', true",
+        "'Geometric(p=0.5)', false",
+        "'Geometric(p=0.5)', true"
+    })
+    void rejectsUnvalidatedIntegerBasesBeforeSamplingOrObservation(String base, boolean observed) {
+        String source = "Vector<NonNegativeInteger> counts ~ IID(base=" + base + ",num=3)"
+                + (observed ? " observed as [0,1,2]" : "");
+        assertThrows(TileApplicationError.class, () -> evaluate(source));
     }
 
     @ParameterizedTest

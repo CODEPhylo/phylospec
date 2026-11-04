@@ -2,7 +2,7 @@ package tiles.distributions;
 
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.inference.distribution.IID;
-import beast.base.spec.inference.distribution.ScalarDistribution;
+import beast.base.spec.inference.distribution.Poisson;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.type.IntScalar;
@@ -18,7 +18,7 @@ import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.typeresolver.Stochasticity;
 import tiling.BoundDistribution;
 
-/** IID binding for non-negative integer scalar laws with a fixed vector length. */
+/** Fixed-length IID binding for the currently supported Poisson base distribution. */
 public class NonNegativeIntegerIIDTile
         extends GeneratorTile<
                 BoundDistribution<
@@ -26,11 +26,7 @@ public class NonNegativeIntegerIIDTile
                         IID<IntVectorParam<NonNegativeInt>, IntScalar<NonNegativeInt>, Integer>>,
                 BEASTState> {
 
-    GeneratorTileInput<
-                    BoundDistribution<
-                            ? extends IntScalarParam<NonNegativeInt>,
-                            ? extends ScalarDistribution<? extends IntScalar<NonNegativeInt>, Integer>>,
-                    BEASTState>
+    GeneratorTileInput<BoundDistribution<? extends IntScalarParam<NonNegativeInt>, ? extends Poisson>, BEASTState>
             baseInput = new GeneratorTileInput<>("base");
 
     GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>, BEASTState> numInput =
@@ -66,7 +62,7 @@ public class NonNegativeIntegerIIDTile
             throw new TileApplicationError(
                     this.getRootNode(),
                     "IID requires a non-negative initial value from its base distribution.",
-                    "Use a supported non-negative integer distribution such as Poisson.");
+                    "Use Poisson as the base distribution.");
         }
 
         int[] values = new int[size];
