@@ -1,6 +1,6 @@
 // CRC09: single-cell read-count phylogeny (translated from CRC09.lphy)
 // 25 colorectal cancer cells, unphased genotypes (GT10), classic Bayesian skyline,
-// latent genotype alignment, read-count error model.
+// genotypes integrated out under a read-count error model.
 
 use phylonco
 
@@ -37,10 +37,6 @@ model {
     Vector<PositiveReal> populationSizes ~ ExponentialMarkovChain(initialMean=initialMean, numValues=numGroups)
     Tree tree ~ SkylineCoalescent(populationSizes=populationSizes, groupSizes=groupSizes, taxa=taxa)
 
-    // --- latent genotype alignment (not observed) --------------------------
-
-    Alignment genotypes ~ PhyloCTMC(tree=tree, qMatrix=qMatrix, numSites=numSites)
-
     // --- read-count observation model --------------------------------------
 
     Probability epsilon ~ Beta(alpha=1.0, beta=30.0)
@@ -51,8 +47,11 @@ model {
     PositiveReal w2 ~ LogNormal(logMean=1.0, logSd=0.8)
     Vector<PositiveReal> s ~ IID(base=LogNormal(logMean=0.2, logSd=0.72), num=numCells)
 
+    // genotypes evolve on the tree under GT10 and are integrated out (as in BEAST's
+    // ReadCountTreeLikelihood), so there is no explicit genotype alignment here
     ReadCount reads ~ ReadCountModel(
-        genotypes=genotypes,
+        tree=tree,
+        qMatrix=qMatrix,
         sequencingError=epsilon,
         allelicDropout=delta,
         meanAllelicCoverage=t,
