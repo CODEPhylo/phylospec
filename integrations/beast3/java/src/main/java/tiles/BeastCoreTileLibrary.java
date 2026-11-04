@@ -111,11 +111,15 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new UniformTile());
         tiles.add(new DirichletTile());
         tiles.add(new PositiveIIDTile());
+        tiles.add(new tiles.distributions.ExponentialMarkovChainTile());
+        tiles.add(new tiles.distributions.RandomCompositionTile.Value());
+        tiles.add(new tiles.distributions.RandomCompositionTile.Calculated());
 
         tiles.add(new YuleTile());
         tiles.add(new BirthDeathTile());
         tiles.add(new ConstantCoalescentTile());
         tiles.add(new CoalescentTile());
+        tiles.add(new tiles.trees.BayesianSkylineTile());
         // tiles.add(new ConstantPopulationTile());
         // tiles.add(new ExponentialPopulationTile());
 

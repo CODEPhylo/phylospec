@@ -15,7 +15,8 @@ latent genotype alignment, read-count error model).
 | `taxa` / `numTaxa` / `numSites` for `ReadCount` | done (`phylospec.functions.accessor`) | todo |
 | `gt10` | done (`phylonco`) | todo |
 | `ReadCountModel` | done (`phylonco`) | todo (`LikelihoodReadCountModel`, MATreeLikelihood, Gibbs operators) |
-| `RandomComposition`, Bayesian skyline overload of `SkylineCoalescent`, `PhyloCTMC(numSites=...)`, positive `ExponentialMarkovChain` | done (core) | todo |
+| `RandomComposition`, Bayesian skyline overload of `SkylineCoalescent`, positive `ExponentialMarkovChain` | done (core) | done (`BeastCoreTileLibrary`, tested incl. a short MCMC run) |
+| `PhyloCTMC(numSites=...)` for latent alignments | done (core) | todo (MATreeLikelihood) |
 
 `examples/CRC09.phylospec` passes the PhyloSpec type checker (core + this library)
 with no errors or warnings.
