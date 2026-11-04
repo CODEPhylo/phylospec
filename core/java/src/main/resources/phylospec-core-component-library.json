@@ -1852,57 +1852,6 @@
             ]
         },
         {
-            "generatedType": "Distribution<Alignment<Character; numSites=numSites.value, numTaxa=tree.numTaxa>>",
-            "name": "PhyloCTMC",
-            "namespace": "phylospec.distributions.sequence",
-            "description": "Phylogenetic continuous-time Markov chain with an explicit number of sites (e.g. for a latent alignment that is not observed directly)",
-            "arguments": [
-                {
-                    "name": "tree",
-                    "description": "Phylogenetic tree",
-                    "type": "Tree",
-                    "required": true
-                },
-                {
-                    "name": "qMatrix",
-                    "description": "Q Matrix",
-                    "type": "QMatrix",
-                    "required": true
-                },
-                {
-                    "name": "numSites",
-                    "description": "Number of sites of the generated alignment",
-                    "type": "PositiveInteger",
-                    "required": true
-                },
-                {
-                    "name": "siteRates",
-                    "description": "Rate heterogeneity across sites",
-                    "type": "Vector<Real>",
-                    "required": false
-                },
-                {
-                    "name": "branchRates",
-                    "description": "Rate heterogeneity across branches",
-                    "type": "Vector<Real>",
-                    "required": false
-                }
-            ],
-            "constraints": [{
-                "argument": "tree",
-                "otherProperty": "num",
-                "property": "numBranches",
-                "otherArgument": "branchRates",
-                "operator": "equals"
-            }, {
-                "argument": "siteRates",
-                "otherProperty": "value",
-                "property": "num",
-                "otherArgument": "numSites",
-                "operator": "equals"
-            }]
-        },
-        {
             "generatedType": "Distribution<Alignment<Real; numSites=siteRates.num, numTaxa=tree.numTaxa>>",
             "name": "PhyloBM",
             "namespace": "phylospec.distributions.continuous",

@@ -114,13 +114,19 @@
       {
         "name": "ReadCountModel",
         "namespace": "phylonco",
-        "generatedType": "Distribution<ReadCount<;numTaxa=genotypes.numTaxa, numSites=genotypes.numSites>>",
-        "description": "Read counts generated from a (latent) genotype alignment, with sequencing error, allelic dropout, a negative-binomial coverage model and Dirichlet-multinomial allele counts. Ploidy (allelic dropout) and coverage are integrated out.",
+        "generatedType": "Distribution<ReadCount<;numTaxa=tree.numTaxa>>",
+        "description": "Read counts of single cells evolving on a tree: unphased genotypes evolve under qMatrix (e.g. gt10) and are observed through sequencing error, allelic dropout, a negative-binomial coverage model and Dirichlet-multinomial allele counts. Genotypes, ploidy and coverage are integrated out.",
         "arguments": [
           {
-            "name": "genotypes",
-            "description": "Genotype alignment, usually latent and drawn from a PhyloCTMC with gt10",
-            "type": "Alignment",
+            "name": "tree",
+            "description": "Cell phylogeny",
+            "type": "Tree",
+            "required": true
+          },
+          {
+            "name": "qMatrix",
+            "description": "Genotype substitution model, e.g. gt10",
+            "type": "QMatrix",
             "required": true
           },
           {
@@ -171,7 +177,7 @@
             "argument": "cellSizeFactors",
             "property": "num",
             "operator": "equals",
-            "otherArgument": "genotypes",
+            "otherArgument": "tree",
             "otherProperty": "numTaxa"
           }
         ]
