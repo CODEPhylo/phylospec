@@ -16,13 +16,19 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.phylospec.ast.Expr;
+import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
 import org.phylospec.ast.transformers.RemoveGroupings;
@@ -31,6 +37,7 @@ import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.TileCatalog;
 import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeError;
@@ -122,6 +129,72 @@ class LinSpaceTileTest {
         assertSame(Real.INSTANCE, result.getDomain());
     }
 
+    private static Stream<Arguments> fixedComputedInputs() {
+        return Stream.of(
+                Arguments.of(
+                        "", "start=sum(vector=[-2.0,1.0]),end=sum(vector=[1.0,2.0]),num=3", List.of(-1.0, 1.0, 3.0), 2),
+                Arguments.of(
+                        "Real first=sum(vector=[-2.0,1.0])\nReal last=sum(vector=[1.0,2.0])\n",
+                        "start=first,end=last,num=3",
+                        List.of(-1.0, 1.0, 3.0),
+                        2),
+                Arguments.of(
+                        "PositiveReal first=1.0\nNonNegativeReal last=0.0\n",
+                        "start=first,end=last,num=3",
+                        List.of(1.0, 0.5, 0.0),
+                        0));
+    }
+
+    @ParameterizedTest
+    @MethodSource("fixedComputedInputs")
+    void scriptAcceptsFixedComputedEndpointsAndNarrowerDomains(
+            String declarations, String arguments, List<Double> expected, int calculations) throws Exception {
+        Compiled result = compile(declarations + "Vector<Real> grid=linspace(" + arguments + ")");
+        assertEquals(expected, result.vector("grid").getElements());
+        assertEquals(calculations, result.state.calculationNodes.size());
+    }
+
+    @Test
+    void sharedComputedEndpointIsReusedWithoutSamplingState() throws Exception {
+        Compiled result = compile("""
+                Real boundary=sum(vector=[-1.0,1.0])
+                Vector<Real> first=linspace(start=-2.0,end=boundary,num=3)
+                Vector<Real> second=linspace(start=boundary,end=2.0,num=3)
+                Vector<Real> equal=linspace(start=boundary,end=boundary,num=3)
+                Vector<Real> single=linspace(start=boundary,end=2.0,num=1)
+                """);
+        assertEquals(List.of(-2.0, -1.0, 0.0), result.vector("first").getElements());
+        assertEquals(List.of(0.0, 1.0, 2.0), result.vector("second").getElements());
+        assertEquals(List.of(0.0, 0.0, 0.0), result.vector("equal").getElements());
+        assertEquals(List.of(0.0), result.vector("single").getElements());
+        assertEquals(1, result.state.calculationNodes.size());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"start,false", "end,false", "start,true", "end,true"})
+    void stochasticAndStochasticallyDerivedEndpointsRemainUnsupported(String argument, boolean derived) {
+        String declarations = derived
+                ? "Vector<PositiveReal> values~IID(base=LogNormal(logMean=0.0,logSd=0.5),num=2)\n"
+                        + "Real boundary=sum(vector=values)\n"
+                : "Real boundary~Normal(mean=1.0,sd=0.5)\n";
+        String arguments = argument.equals("start") ? "start=boundary,end=3.0" : "start=0.0,end=boundary";
+        TileApplicationError error = assertThrows(
+                TileApplicationError.class,
+                () -> compile(declarations + "Vector<Real> grid=linspace(" + arguments + ",num=3)"));
+        assertTrue(error.getMessage().contains("random variable"), error.getMessage());
+        assertTrue(error.getMessage().contains("'" + argument + "'"), error.getMessage());
+    }
+
+    @Test
+    void stochasticCountRemainsUnsupported() {
+        TileApplicationError error = assertThrows(TileApplicationError.class, () -> compile("""
+                        PositiveInteger count~Categorical(probabilities=[0.5,0.5])
+                        Vector<Real> grid=linspace(start=0.0,end=1.0,num=count)
+                        """));
+        assertTrue(error.getMessage().contains("random variable"), error.getMessage());
+        assertTrue(error.getMessage().contains("'num'"), error.getMessage());
+    }
+
     @ParameterizedTest
     @ValueSource(ints = {0, -1})
     void scriptStillRequiresAPositiveCount(int num) {
@@ -130,6 +203,12 @@ class LinSpaceTileTest {
     }
 
     private static RealVectorParam<?> fromScript(String source) throws Exception {
+        Compiled result = compile(source);
+        assertTrue(result.state.calculationNodes.isEmpty());
+        return result.vector("grid");
+    }
+
+    private static Compiled compile(String source) throws Exception {
         var catalog = TileCatalog.select(BEASTState.class, List.of("beast2"));
         Lexer lexer = new Lexer(source);
         lexer.registerEventListener(error -> fail(error.toStdOutString(source)));
@@ -142,16 +221,25 @@ class LinSpaceTileTest {
         stochasticity.visitStatements(statements);
         var evaluator = new EvaluateTiles<>(catalog.getTiles(), new VariableResolver(statements), stochasticity);
         var tiles = evaluator.getBestTiling(statements);
-        assertEquals(1, tiles.size());
-        BEASTState state = new BEASTState("linspace-script-test");
-        Object result = tiles.getFirst().apply(state, new IdentityHashMap<>());
+        BEASTState state = evaluator.applyBestTiling(new BEASTState("linspace-script-test"));
+        Map<String, Object> values = new LinkedHashMap<>();
+        for (var tile : tiles) {
+            if (tile.getRootNode() instanceof Stmt.Assignment assignment) {
+                values.put(assignment.name, tile.apply(state, new IdentityHashMap<>()));
+            }
+        }
         state.initializeBEASTObjects();
         assertTrue(state.stateNodes.isEmpty());
-        assertTrue(state.calculationNodes.isEmpty());
         assertTrue(state.priorDistributions.isEmpty());
         assertTrue(state.likelihoodDistributions.isEmpty());
         assertTrue(state.operators.isEmpty());
-        return assertInstanceOf(RealVectorParam.class, result);
+        return new Compiled(state, values);
+    }
+
+    private record Compiled(BEASTState state, Map<String, Object> values) {
+        RealVectorParam<?> vector(String name) {
+            return assertInstanceOf(RealVectorParam.class, values.get(name));
+        }
     }
 
     private static RealVectorParam<Real> linspace(double start, double end, int num) {
