@@ -2,7 +2,9 @@ package tiles.trees;
 
 import beast.base.evolution.tree.Tree;
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.Real;
 import beast.base.spec.domain.UnitInterval;
+import beast.base.spec.evolution.tree.coalescent.RandomTree;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
 import beastconfig.OperatorSelector;
@@ -17,8 +19,9 @@ import tiles.input.TaxonValue;
 import tiling.BirthDeathRateValue;
 import tiling.BoundDistribution;
 import tiling.LiveBirthDeathModel;
+import tiling.RootAgeSupport;
 
-/** Direct birth/death rates, without root-age conditioning, in the native birth > death range. */
+/** Direct birth/death rates in the native birth > death range, optionally conditioned on root age. */
 public class BirthDeathRatesTile extends GeneratorTile<BoundDistribution<Tree, LiveBirthDeathModel>, BEASTState> {
 
     GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> birthRateInput =
@@ -28,8 +31,9 @@ public class BirthDeathRatesTile extends GeneratorTile<BoundDistribution<Tree, L
     GeneratorTileInput<RealScalar<UnitInterval>, BEASTState> samplingProbabilityInput =
             new GeneratorTileInput<>("samplingProbability", false);
     GeneratorTileInput<List<TaxonValue>, BEASTState> taxaInput = new GeneratorTileInput<>("taxa");
+    GeneratorTileInput<RealScalar<? extends Real>, BEASTState> rootAgeInput =
+            new GeneratorTileInput<>("rootAge", false);
 
-    // rootAge is deliberately not declared: the tiler rejects it rather than silently ignoring it.
     @Override
     public String getPhyloSpecGeneratorName() {
         return "BirthDeath";
@@ -46,6 +50,7 @@ public class BirthDeathRatesTile extends GeneratorTile<BoundDistribution<Tree, L
         RealScalar<? extends PositiveReal> birth = birthRateInput.apply(state, indices);
         RealScalar<? extends PositiveReal> death = deathRateInput.apply(state, indices);
         RealScalar<UnitInterval> samplingProbability = samplingProbabilityInput.apply(state, indices);
+        RealScalar<? extends Real> rootAge = rootAgeInput.apply(state, indices);
         TaxaData taxa = TaxaData.fromList(state, taxaInput.apply(state, indices));
 
         BirthDeathRateValue diversification = rateValue(state, birth, death, false);
@@ -64,11 +69,13 @@ public class BirthDeathRatesTile extends GeneratorTile<BoundDistribution<Tree, L
         if (samplingProbability != null) {
             state.setInput(distribution, distribution.sampleProbabilityInput, samplingProbability);
         }
-        Tree initialTree = BirthDeathTile.createInitialTree(state, taxa);
+        RandomTree initialTree = BirthDeathTile.createInitialTree(state, taxa);
+        RootAgeSupport.prepare(
+                state, distribution, distribution.rootAgeParameterInput, initialTree, rootAge, getRootNode());
         return new BoundDistribution<>(
                 distribution,
                 initialTree,
-                tree -> state.setInput(distribution, distribution.treeInput, tree),
+                tree -> RootAgeSupport.bindTree(state, distribution, tree, taxa, rootAge),
                 OperatorSelector::getDefaultOperators);
     }
 

@@ -22,6 +22,7 @@ import tiles.rpn.RPNAssignmentTile;
 import tiles.sitemodels.*;
 import tiles.substitutionmodels.*;
 import tiles.trees.*;
+import tiling.RootAgeSupport;
 
 /**
  * This class loads all known tiles into a static field.
@@ -36,6 +37,11 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
     @Override
     public Class<BEASTState> getStateType() {
         return BEASTState.class;
+    }
+
+    @Override
+    public void configureState(BEASTState state) {
+        RootAgeSupport.configureOperators(state);
     }
 
     @Override
