@@ -258,7 +258,7 @@ class SumTileTest {
         assertEquals(initial, logged(sum), 0.0);
     }
 
-    private static BEASTState compile(String source) throws Exception {
+    static BEASTState compile(String source) throws Exception {
         return compile(parse(source));
     }
 

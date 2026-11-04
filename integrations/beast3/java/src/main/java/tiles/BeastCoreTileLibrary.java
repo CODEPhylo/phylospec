@@ -82,8 +82,11 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new RepeatRealTile());
         tiles.add(new RepeatIntTile());
         tiles.add(new RepeatSimplexTile());
+        tiles.add(new RepeatListTile());
         tiles.add(new SumRealVectorTile());
+        tiles.add(new SumRealVectorTile.Scalars());
         tiles.add(new SumIntVectorTile());
+        tiles.add(new SumIntVectorTile.Scalars());
 
         tiles.add(new AlignmentTaxaTile());
         tiles.add(new TreeTaxaTile());
