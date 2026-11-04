@@ -3,8 +3,8 @@ package tiles.functions;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.IntScalarParam;
-import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
 import java.util.Set;
@@ -19,9 +19,9 @@ public class LinSpaceTile extends GeneratorTile<RealVectorParam<Real>, BEASTStat
         return "linspace";
     }
 
-    GeneratorTileInput<RealScalarParam<? extends Real>, BEASTState> startInput =
+    GeneratorTileInput<RealScalar<? extends Real>, BEASTState> startInput =
             new GeneratorTileInput<>("start", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
-    GeneratorTileInput<RealScalarParam<? extends Real>, BEASTState> endInput =
+    GeneratorTileInput<RealScalar<? extends Real>, BEASTState> endInput =
             new GeneratorTileInput<>("end", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
     GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>, BEASTState> numInput =
             new GeneratorTileInput<>("num", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
@@ -37,6 +37,16 @@ public class LinSpaceTile extends GeneratorTile<RealVectorParam<Real>, BEASTStat
 
         if (num == 1) {
             values[0] = start;
+        } else if (num > 1 && Double.isFinite(start) && Double.isFinite(end)) {
+            values[0] = start;
+            values[num - 1] = end;
+            double span = end - start;
+            for (int i = 1; i < num - 1; i++) {
+                double fraction = (double) i / (num - 1);
+                // Avoid rounding a tiny step to zero before constructing the interior values.
+                // If the span overflows, interpolate the opposite-sign endpoints without subtracting them.
+                values[i] = Double.isFinite(span) ? start + fraction * span : (1.0 - fraction) * start + fraction * end;
+            }
         } else {
             double gap = (end - start) / (num - 1);
             for (int i = 0; i < num; i++) {

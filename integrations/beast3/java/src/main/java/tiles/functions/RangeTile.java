@@ -1,8 +1,8 @@
 package tiles.functions;
 
 import beast.base.spec.domain.Int;
-import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
+import beast.base.spec.type.IntScalar;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -20,9 +20,9 @@ public class RangeTile extends GeneratorTile<IntVectorParam<Int>, BEASTState> {
         return "range";
     }
 
-    GeneratorTileInput<IntScalarParam<? extends Int>, BEASTState> startInput =
+    GeneratorTileInput<IntScalar<? extends Int>, BEASTState> startInput =
             new GeneratorTileInput<>("start", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
-    GeneratorTileInput<IntScalarParam<? extends Int>, BEASTState> endInput =
+    GeneratorTileInput<IntScalar<? extends Int>, BEASTState> endInput =
             new GeneratorTileInput<>("end", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override

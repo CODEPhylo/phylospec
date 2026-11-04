@@ -69,13 +69,22 @@ class PhyloSpecRunnerTest {
 
     @Test
     void distinguishesMissingBackendMappingFromTypeErrors() throws Exception {
-        String source = Files.readString(Path.of("src/test/java/tiling/functions/sqrtOfRVNoMatch.phylospec"));
+        String source = """
+                PositiveReal end ~ Gamma(shape=2.0, rate=1.0)
+                Vector<Real> xs = linspace(start=0.0, end=end, num=3)
+                """;
         PhyloSpecException failure =
                 assertThrows(PhyloSpecException.class, () -> runner(source).check());
 
         assertDiagnostic(failure, PhyloSpecDiagnostic.Stage.MAPPING);
         assertInstanceOf(TileApplicationError.class, failure.getCause());
         assertTrue(failure.diagnostic().error().hint().contains("random variable"));
+    }
+
+    @Test
+    void acceptsLiveSquareRootMapping() throws Exception {
+        String source = Files.readString(Path.of("src/test/java/tiling/functions/sqrtOfRV.phylospec"));
+        assertDoesNotThrow(() -> runner(source).check());
     }
 
     @Test

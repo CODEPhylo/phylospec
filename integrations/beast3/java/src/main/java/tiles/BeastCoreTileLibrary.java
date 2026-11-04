@@ -53,6 +53,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new RangeTile());
         tiles.add(new IndexVariableTile());
         tiles.add(new IndexedTile());
+        tiles.add(new StringMapIndexTile());
         tiles.add(new IndexedStatementTile());
 
         tiles.add(new ObservedAsTile());
@@ -71,16 +72,28 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
 
         tiles.add(new EnvTile());
         tiles.add(new LogTile());
+        tiles.add(new LogTile.Live());
         tiles.add(new ExpTile());
+        tiles.add(new ExpTile.Live());
         tiles.add(new SqrtTile());
+        tiles.add(new SqrtTile.Live());
         tiles.add(new LinSpaceTile());
         tiles.add(new tiles.functions.RangeTile());
         tiles.add(new RepeatRealTile());
         tiles.add(new RepeatIntTile());
         tiles.add(new RepeatSimplexTile());
+        tiles.add(new SumRealVectorTile());
+        tiles.add(new SumIntVectorTile());
 
         tiles.add(new AlignmentTaxaTile());
+        tiles.add(new TreeTaxaTile());
+        tiles.add(new TaxonTile());
+        tiles.add(new TaxonNameTile());
+        tiles.add(new TaxonAgeTile());
+        tiles.add(new TaxonSpeciesTile());
         tiles.add(new RootAgeTile());
+        tiles.add(new MrcaTile());
+        tiles.add(new TipAgeTile());
         tiles.add(new NumBranchesTile());
         tiles.add(new NumTaxaAlignmentTile());
         tiles.add(new NumTaxaTreeTile());
@@ -91,6 +104,8 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new NumColsTile());
 
         tiles.add(new FromNexusTile());
+        tiles.add(new FromFastaTile());
+        tiles.add(new FromCSVTile());
         tiles.add(new FromTreeTile());
         tiles.add(new FromNewickTile());
         tiles.add(new ParserTile.Regex());
@@ -98,11 +113,17 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
 
         tiles.add(new SubsetTile());
 
-        tiles.add(new OffsetTile());
+        tiles.add(new OffsetTile.ConstantOnRight());
+        tiles.add(new OffsetTile.ConstantOnLeft());
+        tiles.add(new OffsetDistributionTile());
         tiles.add(new NormalTile());
         tiles.add(new LogNormalTile());
         tiles.add(new LogNormalRealSpaceTile());
         tiles.add(new BetaTile());
+        tiles.add(new BernoulliTile());
+        tiles.add(new CategoricalTile());
+        tiles.add(new BinomialTile());
+        tiles.add(new GeometricTile());
         tiles.add(new CauchyTile());
         tiles.add(new DiscreteUniformTile());
         tiles.add(new ExponentialTile());
@@ -111,6 +132,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new UniformTile());
         tiles.add(new DirichletTile());
         tiles.add(new PositiveIIDTile());
+        tiles.add(new NonNegativeIntegerIIDTile());
         tiles.add(new tiles.distributions.ExponentialMarkovChainTile());
         tiles.add(new tiles.distributions.RandomCompositionTile.Value());
         tiles.add(new tiles.distributions.RandomCompositionTile.Calculated());

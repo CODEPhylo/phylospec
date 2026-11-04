@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.phylospec.parser.CsvParser;
 import org.phylospec.workspace.Workspace;
 
 /**
@@ -36,37 +37,18 @@ final class LightweightFileParsers {
     private LightweightFileParsers() {}
 
     static Optional<Integer> parseCsv(Path path) {
-        return parseCached(path, ParserKind.CSV, LightweightFileParsers::parseCsvContents);
+        return parseCsv(path, ",", false);
     }
 
-    private static Optional<Integer> parseCsvContents(String csv) {
-        int records = 0;
-        boolean inQuotes = false;
-        boolean recordHasContent = false;
-
-        for (int index = 0; index < csv.length(); index++) {
-            char current = csv.charAt(index);
-            if (current == '"') {
-                recordHasContent = true;
-                if (inQuotes && index + 1 < csv.length() && csv.charAt(index + 1) == '"') {
-                    index++;
-                } else {
-                    inQuotes = !inQuotes;
-                }
-            } else if (!inQuotes && (current == '\n' || current == '\r')) {
-                if (recordHasContent) records++;
-                recordHasContent = false;
-                if (current == '\r' && index + 1 < csv.length() && csv.charAt(index + 1) == '\n') {
-                    index++;
-                }
-            } else if (!Character.isWhitespace(current)) {
-                recordHasContent = true;
-            }
-        }
-
-        if (inQuotes) return Optional.empty();
-        if (recordHasContent) records++;
-        return Optional.of(Math.max(0, records - 1));
+    static Optional<Integer> parseCsv(Path path, String delimiter, boolean suppliedHeaders) {
+        // Cache the record count by delimiter; the same file may be read with or without a header row.
+        return parseCached(
+                        path,
+                        ParserKind.CSV,
+                        delimiter,
+                        contents ->
+                                Optional.of(CsvParser.parse(contents, delimiter).size()))
+                .map(records -> suppliedHeaders ? records : Math.max(0, records - 1));
     }
 
     static Optional<AlignmentProperties> parseFasta(Path path) {
@@ -178,8 +160,13 @@ final class LightweightFileParsers {
     }
 
     private static <T> Optional<T> parseCached(Path path, ParserKind parserKind, Function<String, Optional<T>> parser) {
+        return parseCached(path, parserKind, "", parser);
+    }
+
+    private static <T> Optional<T> parseCached(
+            Path path, ParserKind parserKind, String parserOptions, Function<String, Optional<T>> parser) {
         try {
-            CacheKey key = new CacheKey(path.toAbsolutePath().normalize(), parserKind);
+            CacheKey key = new CacheKey(path.toAbsolutePath().normalize(), parserKind, parserOptions);
             evictIfFull(key);
             CacheEntry entry = FILE_CACHE.compute(key, (ignored, cached) -> loadCacheEntry(key.path(), cached, parser));
             if (entry == null) return Optional.empty();
@@ -282,7 +269,7 @@ final class LightweightFileParsers {
         TREE
     }
 
-    private record CacheKey(Path path, ParserKind parserKind) {}
+    private record CacheKey(Path path, ParserKind parserKind, String parserOptions) {}
 
     private record FileSignature(long size, FileTime lastModifiedTime, Object fileKey) {
 

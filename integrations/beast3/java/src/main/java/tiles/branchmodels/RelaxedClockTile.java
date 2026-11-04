@@ -31,8 +31,8 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel, BEASTSt
                             ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>>,
                     BEASTState>
             baseInput = new GeneratorTileInput<>("base");
-    GeneratorTileInput<RealScalarParam<PositiveReal>, BEASTState> clockRateInput =
-            new GeneratorTileInput<>("clockRate");
+    // Keep the scalar interface so live calculated rates can be connected without copying their value.
+    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> clockRateInput = new GeneratorTileInput<>("clockRate");
     GeneratorTileInput<Tree, BEASTState> treeInput = new GeneratorTileInput<>("tree");
 
     @Override
@@ -42,7 +42,7 @@ public class RelaxedClockTile extends GeneratorTile<UCRelaxedClockModel, BEASTSt
                         ? extends RealScalarParam<? extends PositiveReal>,
                         ? extends ScalarDistribution<? extends RealScalar<? extends PositiveReal>, Double>>
                 base = this.baseInput.apply(beastState, indexVariables);
-        RealScalarParam<PositiveReal> clockRate = this.clockRateInput.apply(beastState, indexVariables);
+        RealScalar<PositiveReal> clockRate = this.clockRateInput.apply(beastState, indexVariables);
         Tree tree = this.treeInput.apply(beastState, indexVariables);
 
         // make sure that the distribution has mean rate 1.0

@@ -1,6 +1,8 @@
 package tiles.input;
 
+import beast.base.spec.domain.Int;
 import beast.base.spec.evolution.alignment.FilteredAlignment;
+import beast.base.spec.type.IntScalar;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
 import java.util.Set;
@@ -17,19 +19,19 @@ public class SubsetTile extends GeneratorTile<DecoratedAlignment, BEASTState> {
     }
 
     GeneratorTileInput<DecoratedAlignment, BEASTState> alignmentInput = new GeneratorTileInput<>("alignment");
-    GeneratorTileInput<Integer, BEASTState> startInput =
+    GeneratorTileInput<IntScalar<? extends Int>, BEASTState> startInput =
             new GeneratorTileInput<>("start", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
-    GeneratorTileInput<Integer, BEASTState> endInput =
+    GeneratorTileInput<IntScalar<? extends Int>, BEASTState> endInput =
             new GeneratorTileInput<>("end", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
-    GeneratorTileInput<Integer, BEASTState> codonPositionInput = new GeneratorTileInput<>(
+    GeneratorTileInput<IntScalar<? extends Int>, BEASTState> codonPositionInput = new GeneratorTileInput<>(
             "codonPosition", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
     public DecoratedAlignment applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         DecoratedAlignment alignment = this.alignmentInput.apply(beastState, indexVariables);
-        Integer start = this.startInput.apply(beastState, indexVariables);
-        Integer end = this.endInput.apply(beastState, indexVariables);
-        Integer codonPosition = this.codonPositionInput.apply(beastState, indexVariables);
+        Integer start = valueOrNull(this.startInput.apply(beastState, indexVariables));
+        Integer end = valueOrNull(this.endInput.apply(beastState, indexVariables));
+        Integer codonPosition = valueOrNull(this.codonPositionInput.apply(beastState, indexVariables));
         int siteCount = alignment.alignment().getSiteCount();
 
         if (start != null && end != null && end < start) {
@@ -60,7 +62,12 @@ public class SubsetTile extends GeneratorTile<DecoratedAlignment, BEASTState> {
         beastState.setInput(filteredAlignment, filteredAlignment.alignmentInput, alignment.alignment());
         beastState.setInput(filteredAlignment, filteredAlignment.filterInput, filterString);
 
-        return new DecoratedAlignment(filteredAlignment, alignment.taxonSet(), alignment.ages());
+        return new DecoratedAlignment(
+                filteredAlignment, alignment.taxonSet(), alignment.ages(), alignment.speciesNames());
+    }
+
+    private static Integer valueOrNull(IntScalar<? extends Int> value) {
+        return value == null ? null : value.get();
     }
 
     /**
