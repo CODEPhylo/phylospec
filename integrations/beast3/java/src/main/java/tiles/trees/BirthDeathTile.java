@@ -2,6 +2,7 @@ package tiles.trees;
 
 import beast.base.evolution.tree.Tree;
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.Real;
 import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.evolution.speciation.BirthDeathGernhard08Model;
 import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
@@ -17,6 +18,8 @@ import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.input.TaxaData;
 import tiles.input.TaxonValue;
 import tiling.BoundDistribution;
+import tiling.LiveBirthDeathGernhard08Model;
+import tiling.RootAgeSupport;
 
 public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthDeathGernhard08Model>, BEASTState> {
 
@@ -32,7 +35,7 @@ public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthD
     GeneratorTileInput<RealScalar<UnitInterval>, BEASTState> samplingProbabilityInput =
             new GeneratorTileInput<>("samplingProbability", false);
     GeneratorTileInput<List<TaxonValue>, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
-    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> rootAgeInput =
+    GeneratorTileInput<RealScalar<? extends Real>, BEASTState> rootAgeInput =
             new GeneratorTileInput<>("rootAge", false);
 
     @Override
@@ -42,24 +45,30 @@ public class BirthDeathTile extends GeneratorTile<BoundDistribution<Tree, BirthD
                 this.diversificationRateInput.apply(beastState, indexVariables);
         RealScalar<? extends PositiveReal> turnover = this.turnoverInput.apply(beastState, indexVariables);
         RealScalar<UnitInterval> samplingProbability = this.samplingProbabilityInput.apply(beastState, indexVariables);
-        RealScalar<? extends PositiveReal> rootAge = this.rootAgeInput.apply(beastState, indexVariables);
+        RealScalar<? extends Real> rootAge = this.rootAgeInput.apply(beastState, indexVariables);
         TaxaData taxa = TaxaData.fromList(beastState, this.taxaInput.apply(beastState, indexVariables));
 
         RandomTree defaultState = createInitialTree(beastState, taxa);
 
         // initialize BD
 
-        BirthDeathGernhard08Model birthDeathModel = new BirthDeathGernhard08Model();
+        LiveBirthDeathGernhard08Model birthDeathModel = new LiveBirthDeathGernhard08Model();
         beastState.setInput(birthDeathModel, birthDeathModel.birthDiffRateParameterInput, diversificationRate);
         beastState.setInput(birthDeathModel, birthDeathModel.relativeDeathRateParameterInput, turnover);
         if (samplingProbability != null)
             beastState.setInput(birthDeathModel, birthDeathModel.sampleProbabilityInput, samplingProbability);
-        if (rootAge != null) beastState.setInput(birthDeathModel, birthDeathModel.originHeightParameterInput, rootAge);
+        RootAgeSupport.prepare(
+                beastState,
+                birthDeathModel,
+                birthDeathModel.rootAgeParameterInput,
+                defaultState,
+                rootAge,
+                getRootNode());
 
         return new BoundDistribution<>(
                 birthDeathModel,
                 defaultState,
-                tree -> beastState.setInput(birthDeathModel, birthDeathModel.treeInput, tree),
+                tree -> RootAgeSupport.bindTree(beastState, birthDeathModel, tree, taxa, rootAge),
                 OperatorSelector::getDefaultOperators);
     }
 
