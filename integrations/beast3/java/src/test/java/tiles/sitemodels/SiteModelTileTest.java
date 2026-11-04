@@ -19,6 +19,7 @@ import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.spec.evolution.substitutionmodel.JukesCantor;
 import beast.base.spec.inference.distribution.Gamma;
 import beast.base.spec.inference.distribution.Normal;
+import beast.base.spec.inference.operator.RealRandomWalkOperator;
 import beast.base.spec.inference.operator.ScaleOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beastconfig.BEASTState;
@@ -181,7 +182,20 @@ class SiteModelTileTest {
                 StrictClockModel.class, model.likelihood().branchRateModelInput.get());
         assertEquals(1.0, clock.meanRateInput.get().get(), 0.0);
         if (sampled) {
-            ScaleOperator operator = assertInstanceOf(ScaleOperator.class, graph.operators.getFirst());
+            var operator = graph.operators.getFirst();
+            if (model.prior() instanceof Gamma) {
+                assertSame(
+                        model.source(),
+                        assertInstanceOf(ScaleOperator.class, operator)
+                                .parameterInput
+                                .get());
+            } else {
+                assertSame(
+                        model.source(),
+                        assertInstanceOf(RealRandomWalkOperator.class, operator)
+                                .scalarInput
+                                .get());
+            }
             assertEquals(List.of(model.source()), operator.listStateNodes());
             assertEquals(5.0, operator.m_pWeight.get(), 0.0);
         }

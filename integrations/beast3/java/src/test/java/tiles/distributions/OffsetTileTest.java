@@ -7,7 +7,7 @@ import beast.base.inference.Distribution;
 import beast.base.inference.State;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.Normal;
-import beast.base.spec.inference.operator.ScaleOperator;
+import beast.base.spec.inference.operator.RealRandomWalkOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.util.RPNcalculator;
 import beastconfig.BEASTState;
@@ -86,7 +86,7 @@ class OffsetTileTest {
         state.setPosterior(posterior);
         assertEquals(expectedPosterior(x.get()), state.robustlyCalcPosterior(posterior), TOLERANCE);
 
-        // Controlled proposals test dependency and restoration behavior, not the unchanged operator's mixing.
+        // Controlled proposals isolate dependency and restoration checks from proposal randomness.
         double[] proposals = {-1.0, 0.0, 1.0, 0.5};
         boolean[] decisions = {true, true, false, true};
         for (int step = 0; step < proposals.length; step++) {
@@ -234,7 +234,8 @@ class OffsetTileTest {
         assertEquals(mean, prior.meanInput.get().get(), 0.0);
         assertEquals(sd, prior.sdInput.get().get(), 0.0);
         assertEquals(value.getID() + "_prior", prior.getID());
-        ScaleOperator operator = assertInstanceOf(ScaleOperator.class, graph.operators.getFirst());
+        RealRandomWalkOperator operator = assertInstanceOf(RealRandomWalkOperator.class, graph.operators.getFirst());
+        assertSame(value, operator.scalarInput.get());
         assertEquals(List.of(value), operator.listStateNodes());
         assertEquals(5.0, operator.m_pWeight.get(), 0.0);
         return prior;
