@@ -135,6 +135,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new UniformTile());
         tiles.add(new DirichletTile());
         tiles.add(new PositiveIIDTile());
+        tiles.add(new RealIIDTile());
         tiles.add(new NonNegativeIntegerIIDTile());
 
         tiles.add(new YuleTile());
