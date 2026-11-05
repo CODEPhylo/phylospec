@@ -131,6 +131,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new ExponentialTile());
         tiles.add(new GammaTile());
         tiles.add(new PoissonTile());
+        tiles.add(new ExponentialMarkovChainTile());
         tiles.add(new UniformTile());
         tiles.add(new DirichletTile());
         tiles.add(new PositiveIIDTile());
