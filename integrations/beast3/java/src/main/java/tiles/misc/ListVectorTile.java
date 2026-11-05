@@ -1,5 +1,11 @@
 package tiles.misc;
 
+import beast.base.spec.domain.Int;
+import beast.base.spec.domain.Real;
+import beast.base.spec.inference.parameter.IntScalarParam;
+import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.type.IntScalar;
+import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
 import java.util.*;
 import org.phylospec.Utils;
@@ -14,19 +20,25 @@ import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 
 /**
- * This tile matches an array and simply creates a Java List with all objects produced by the elements. A vector tile
- * is created for every combination of element tiles which have the same TypeToken.
+ * Creates a list of the original element objects. Prefer matching concrete element types;
+ * otherwise allow different scalar implementations within the same numeric family.
  */
 public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array, BEASTState> {
 
     private final List<Tile<?, BEASTState>> inputTiles;
+    private final TypeToken<?> elementType;
 
     public ListVectorTile() {
-        this.inputTiles = new ArrayList<>();
+        this(List.of());
     }
 
     public ListVectorTile(List<Tile<?, BEASTState>> inputTiles) {
+        this(inputTiles, null);
+    }
+
+    private ListVectorTile(List<Tile<?, BEASTState>> inputTiles, TypeToken<?> elementType) {
         this.inputTiles = inputTiles;
+        this.elementType = elementType;
     }
 
     @Override
@@ -46,18 +58,33 @@ public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array, BEASTS
             allPossibleInputTiles.add(elementTiles);
         }
 
-        // Only tiles with the same element type can form a vector. Group by TypeToken before
-        // visiting combinations so that incompatible combinations are never constructed. This is
+        // Keep the existing concrete-type matches. Group by TypeToken before visiting
+        // combinations so that incompatible combinations are never constructed. This is
         // especially important for long numeric vectors, where each literal has several possible
         // Java representations and the unfiltered Cartesian product grows exponentially.
 
         Map<TypeToken<?>, List<Set<Tile<?, BEASTState>>>> compatibleTilesByType =
                 commonElementTypes(allPossibleInputTiles);
 
+        if (compatibleTilesByType.isEmpty() && !array.elements.isEmpty()) {
+            addScalarFamily(
+                    compatibleTilesByType,
+                    array,
+                    allPossibleInputTiles,
+                    new TypeToken<RealScalar<? extends Real>>() {},
+                    new TypeToken<RealScalarParam<Real>>() {});
+            addScalarFamily(
+                    compatibleTilesByType,
+                    array,
+                    allPossibleInputTiles,
+                    new TypeToken<IntScalar<? extends Int>>() {},
+                    new TypeToken<IntScalarParam<Int>>() {});
+        }
+
         Set<Tile<?, BEASTState>> wiredUpTiles = new HashSet<>();
-        for (List<Set<Tile<?, BEASTState>>> compatibleInputTiles : compatibleTilesByType.values()) {
-            Utils.visitCombinations(compatibleInputTiles, inputTiles -> {
-                Tile<?, BEASTState> tile = new ListVectorTile(inputTiles);
+        for (var entry : compatibleTilesByType.entrySet()) {
+            Utils.visitCombinations(entry.getValue(), inputTiles -> {
+                Tile<?, BEASTState> tile = new ListVectorTile(inputTiles, entry.getKey());
                 tile.setRootNode(node);
 
                 int totalWeight = inputTiles.stream().mapToInt(Tile::getWeight).sum();
@@ -68,6 +95,36 @@ public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array, BEASTS
         }
 
         return wiredUpTiles;
+    }
+
+    private static void addScalarFamily(
+            Map<TypeToken<?>, List<Set<Tile<?, BEASTState>>>> families,
+            Expr.Array array,
+            List<Set<Tile<?, BEASTState>>> elementCandidates,
+            TypeToken<?> family,
+            TypeToken<?> literalType) {
+        List<Set<Tile<?, BEASTState>>> compatible = new ArrayList<>();
+        for (int i = 0; i < elementCandidates.size(); i++) {
+            Set<Tile<?, BEASTState>> candidates = new HashSet<>();
+            for (Tile<?, BEASTState> candidate : elementCandidates.get(i)) {
+                if (family.isAssignableFrom(candidate.getTypeToken())) candidates.add(candidate);
+            }
+            if (candidates.isEmpty()) return;
+
+            // A bare literal has several domain representations of the same fixed value.
+            // This fallback exposes only the broad scalar family, so reuse its broad-domain
+            // literal rather than multiplying these equivalent choices across a long list.
+            // Named bindings and derived expressions retain all their candidate mappings.
+            if (array.elements.get(i) instanceof Expr.Literal
+                    && candidates.stream()
+                            .anyMatch(candidate -> candidate instanceof LiteralTile<?>
+                                    && literalType.equals(candidate.getTypeToken()))) {
+                candidates.removeIf(candidate ->
+                        candidate instanceof LiteralTile<?> && !literalType.equals(candidate.getTypeToken()));
+            }
+            compatible.add(candidates);
+        }
+        families.put(family, compatible);
     }
 
     private static Map<TypeToken<?>, List<Set<Tile<?, BEASTState>>>> commonElementTypes(
@@ -125,7 +182,8 @@ public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array, BEASTS
 
     @Override
     public TypeToken<?> getTypeToken() {
-        TypeToken<?> valueType = this.inputTiles.getFirst().getTypeToken();
+        TypeToken<?> valueType =
+                elementType == null ? this.inputTiles.getFirst().getTypeToken() : elementType;
         if (valueType != null) return TypeToken.listOf(valueType);
 
         // we return the basic vector type
