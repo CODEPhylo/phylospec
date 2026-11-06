@@ -6,8 +6,9 @@ import beast.base.spec.inference.distribution.Poisson;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
-import beastconfig.OperatorSelector;
 import java.util.IdentityHashMap;
+import java.util.List;
+import operators.IntScalarRandomWalkOperator;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiling.BoundDistribution;
@@ -40,6 +41,11 @@ public class PoissonTile extends GeneratorTile<BoundDistribution<IntScalarParam<
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
-                OperatorSelector::getDefaultOperators);
+                (value, graph) -> {
+                    IntScalarRandomWalkOperator operator = new IntScalarRandomWalkOperator();
+                    graph.setInput(operator, operator.parameterInput, value);
+                    graph.setInput(operator, operator.m_pWeight, 10.0);
+                    return List.of(operator);
+                });
     }
 }
