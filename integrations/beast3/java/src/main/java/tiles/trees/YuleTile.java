@@ -2,6 +2,7 @@ package tiles.trees;
 
 import beast.base.evolution.tree.Tree;
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.Real;
 import beast.base.spec.evolution.speciation.YuleModel;
 import beast.base.spec.evolution.tree.coalescent.ConstantPopulation;
 import beast.base.spec.evolution.tree.coalescent.RandomTree;
@@ -16,6 +17,8 @@ import org.phylospec.tiling.tiles.GeneratorTile;
 import tiles.input.TaxaData;
 import tiles.input.TaxonValue;
 import tiling.BoundDistribution;
+import tiling.LiveYuleModel;
+import tiling.RootAgeSupport;
 
 public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>, BEASTState> {
 
@@ -27,14 +30,14 @@ public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>, 
     GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> birthRateInput =
             new GeneratorTileInput<>("birthRate");
     GeneratorTileInput<List<TaxonValue>, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
-    GeneratorTileInput<RealScalar<? extends PositiveReal>, BEASTState> rootAgeInput =
+    GeneratorTileInput<RealScalar<? extends Real>, BEASTState> rootAgeInput =
             new GeneratorTileInput<>("rootAge", false);
 
     @Override
     public BoundDistribution<Tree, YuleModel> applyTile(
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         RealScalar<? extends PositiveReal> birthRate = this.birthRateInput.apply(beastState, indexVariables);
-        RealScalar<? extends PositiveReal> rootAge = this.rootAgeInput.apply(beastState, indexVariables);
+        RealScalar<? extends Real> rootAge = this.rootAgeInput.apply(beastState, indexVariables);
         TaxaData taxa = TaxaData.fromList(beastState, this.taxaInput.apply(beastState, indexVariables));
 
         // initialize initial state
@@ -57,14 +60,15 @@ public class YuleTile extends GeneratorTile<BoundDistribution<Tree, YuleModel>, 
 
         // initialize Yule
 
-        YuleModel yuleModel = new YuleModel();
+        LiveYuleModel yuleModel = new LiveYuleModel();
         beastState.setInput(yuleModel, yuleModel.birthDiffRateParameterInput, birthRate);
-        if (rootAge != null) beastState.setInput(yuleModel, yuleModel.originHeightParameterInput, rootAge);
+        RootAgeSupport.prepare(
+                beastState, yuleModel, yuleModel.rootAgeParameterInput, defaultState, rootAge, getRootNode());
 
         return new BoundDistribution<>(
                 yuleModel,
                 defaultState,
-                tree -> beastState.setInput(yuleModel, yuleModel.treeInput, tree),
+                tree -> RootAgeSupport.bindTree(beastState, yuleModel, tree, taxa, rootAge),
                 OperatorSelector::getDefaultOperators);
     }
 }
