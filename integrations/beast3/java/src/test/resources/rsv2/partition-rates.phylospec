@@ -1,0 +1,35 @@
+// RSV2 alignment and tutorial: https://github.com/LinguaPhylo/linguaPhylo/tree/dd3fc6723d8a4bece920e380a13fb9bafa5e87ce/tutorials
+// Codon positions 3, 1, 2 contain 209, 210, 210 sites; coefficients are fixed for this dataset.
+Alignment source = fromNexus(file="RSV2.nex", date=parse(regex=".*s(\d+)$"))
+Taxa samples = taxa(source)
+Rate mu ~ LogNormal(logMean=-5.0, logSd=1.25)
+PositiveReal theta ~ LogNormal(logMean=3.0, logSd=2.0)
+Tree tree ~ Coalescent(populationSize=theta, taxa=samples)
+Vector<Rate> clock ~ StrictClock(clockRate=mu, tree=tree)
+
+// One joint set of weights: rate[i] = (629 / partitionLength[i]) * weights[i].
+Simplex weights ~ Dirichlet(concentration=[1.0,1.0,1.0])
+
+Alignment codon1 = subset(alignment=source, start=1, end=629, codonPosition=3)
+Simplex pi1 ~ Dirichlet(concentration=[2.0,2.0,2.0,2.0])
+PositiveReal kappa1 ~ LogNormal(logMean=1.0, logSd=0.5)
+QMatrix q1 = hky(kappa=kappa1, baseFrequencies=pi1)
+Alignment a1 ~ PhyloCTMC(tree=tree,qMatrix=q1,branchRates=clock,rate=3.0095693779904304 * weights[1]) observed as codon1
+
+Alignment codon2 = subset(alignment=source, start=1, end=629, codonPosition=1)
+Simplex pi2 ~ Dirichlet(concentration=[2.0,2.0,2.0,2.0])
+PositiveReal kappa2 ~ LogNormal(logMean=1.0, logSd=0.5)
+QMatrix q2 = hky(kappa=kappa2, baseFrequencies=pi2)
+Alignment a2 ~ PhyloCTMC(tree=tree,qMatrix=q2,branchRates=clock,rate=2.9952380952380953 * weights[2]) observed as codon2
+
+Alignment codon3 = subset(alignment=source, start=1, end=629, codonPosition=2)
+Simplex pi3 ~ Dirichlet(concentration=[2.0,2.0,2.0,2.0])
+PositiveReal kappa3 ~ LogNormal(logMean=1.0, logSd=0.5)
+QMatrix q3 = hky(kappa=kappa3, baseFrequencies=pi3)
+Alignment a3 ~ PhyloCTMC(tree=tree,qMatrix=q3,branchRates=clock,rate=2.9952380952380953 * weights[3]) observed as codon3
+
+mcmc {
+  Integer chainLength = 5
+  Integer defaultLogEvery = 1
+  Integer randomSeed = 12345
+}

@@ -23,7 +23,7 @@ Alignment alignment ~ PhyloCTMC(
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Function `PhyloCTMC` takes no argument named `Q`. Do you mean 'tree'?
+// Function `PhyloCTMC` takes no argument named `Q`. Do you mean 'rate'?
 // EXPECT TYPE_ERRORS
 
 // EXPECT TYPES
