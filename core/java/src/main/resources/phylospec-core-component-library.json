@@ -1253,6 +1253,90 @@
             }]
         },
         {
+            "generatedType": "Distribution<Vector<PositiveReal; num=concentration.num>>",
+            "name": "WeightedDirichlet",
+            "namespace": "phylospec.distributions",
+            "description": "Draw p from Dirichlet(concentration) and return x[i] = mean * sum(weights) * p[i] / weights[i]. The weighted mean of x is mean.",
+            "arguments": [
+                {
+                    "name": "concentration",
+                    "description": "Positive Dirichlet concentration parameters",
+                    "type": "Vector<PositiveReal>",
+                    "required": true
+                },
+                {
+                    "name": "weights",
+                    "description": "Positive weights, such as partition site counts",
+                    "type": "Vector<PositiveReal>",
+                    "required": true
+                },
+                {
+                    "default": 1,
+                    "name": "mean",
+                    "description": "Weighted mean of the generated values",
+                    "type": "PositiveReal",
+                    "required": false
+                }
+            ],
+            "constraints": [
+                {
+                    "argument": "concentration",
+                    "otherProperty": "num",
+                    "property": "num",
+                    "otherArgument": "weights",
+                    "operator": "equals"
+                },
+                {
+                    "argument": "concentration",
+                    "constant": 0,
+                    "property": "num",
+                    "operator": "greaterThan"
+                }
+            ]
+        },
+        {
+            "generatedType": "Distribution<Vector<PositiveReal; num=concentration.num>>",
+            "name": "WeightedDirichlet",
+            "namespace": "phylospec.distributions",
+            "description": "Draw p from Dirichlet(concentration) and return x[i] = mean * sum(weights) * p[i] / weights[i]. The weighted mean of x is mean.",
+            "arguments": [
+                {
+                    "name": "concentration",
+                    "description": "Positive Dirichlet concentration parameters",
+                    "type": "Vector<PositiveReal>",
+                    "required": true
+                },
+                {
+                    "name": "weights",
+                    "description": "Positive integer weights, such as partition site counts",
+                    "type": "Vector<PositiveInteger>",
+                    "required": true
+                },
+                {
+                    "default": 1,
+                    "name": "mean",
+                    "description": "Weighted mean of the generated values",
+                    "type": "PositiveReal",
+                    "required": false
+                }
+            ],
+            "constraints": [
+                {
+                    "argument": "concentration",
+                    "otherProperty": "num",
+                    "property": "num",
+                    "otherArgument": "weights",
+                    "operator": "equals"
+                },
+                {
+                    "argument": "concentration",
+                    "constant": 0,
+                    "property": "num",
+                    "operator": "greaterThan"
+                }
+            ]
+        },
+        {
             "generatedType": "Distribution<Vector<Real; num=mean.num>>",
             "name": "MultivariateNormal",
             "namespace": "phylospec.distributions",

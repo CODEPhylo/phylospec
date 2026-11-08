@@ -138,6 +138,8 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new PoissonTile());
         tiles.add(new UniformTile());
         tiles.add(new DirichletTile());
+        tiles.add(new WeightedDirichletTile());
+        tiles.add(new WeightedDirichletTile.IntegerScalars());
         tiles.add(new PositiveIIDTile());
         tiles.add(new NonNegativeIntegerIIDTile());
 
