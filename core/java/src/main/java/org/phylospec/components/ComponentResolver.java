@@ -453,6 +453,32 @@ public class ComponentResolver {
         return knownTypes.get(typeNameWithoutGenerics);
     }
 
+    /** Resolves a type or explains how to bring a registered type into scope. */
+    public Type requireType(String typeName) {
+        Type type = resolveType(typeName);
+        if (type != null) return type;
+
+        ParsedType parsed = new ParsedType(typeName);
+        if (parsed.getNamespace().isEmpty()) {
+            String name = parsed.getAtomicTypeName();
+            List<String> imports = knownNamespaces.stream()
+                    .filter(namespace -> knownTypes.containsKey(namespace + "." + name))
+                    .sorted()
+                    .map(namespace -> "'use " + namespace + "'")
+                    .toList();
+            if (!imports.isEmpty()) {
+                String hint = imports.size() == 1
+                        ? "Add " + imports.getFirst() + " before this declaration."
+                        : "Choose the intended namespace and add one of these imports: " + String.join(", ", imports)
+                                + ".";
+                throw new TypeError("The type '" + name + "' has not been imported.", hint);
+            }
+        }
+
+        throw new TypeError(
+                "The type '" + typeName + "' does not exist.", "Are you looking for '" + findClosestType(typeName) + "'?");
+    }
+
     /**
      * Returns all imported generators.
      */

@@ -337,7 +337,7 @@ public abstract class Expr extends AstNode {
             Map<String, Argument> boundArguments = new LinkedHashMap<>();
             ArgumentResolutionError missingNameError = null;
             ArgumentResolutionError duplicateNameError = null;
-            ArgumentResolutionError unknownNameError = null;
+            Argument unknownArgument = null;
 
             for (Argument argument : arguments) {
                 String parameterName = resolveArgumentName(argument, parameterNames, requiredParameters);
@@ -347,10 +347,7 @@ public abstract class Expr extends AstNode {
                         missingNameError = new ArgumentResolutionError.MissingName(argument);
                     }
                 } else if (!parameterNames.contains(parameterName)) {
-                    if (unknownNameError == null) {
-                        unknownNameError =
-                                new ArgumentResolutionError.UnknownName(argument, parameterName, parameterNames);
-                    }
+                    if (unknownArgument == null) unknownArgument = argument;
                 } else if (boundArguments.containsKey(parameterName)) {
                     if (duplicateNameError == null) {
                         duplicateNameError = new ArgumentResolutionError.DuplicateName(argument, parameterName);
@@ -365,7 +362,12 @@ public abstract class Expr extends AstNode {
 
             if (missingNameError != null) throw missingNameError;
             if (duplicateNameError != null) throw duplicateNameError;
-            if (unknownNameError != null) throw unknownNameError;
+            if (unknownArgument != null) {
+                String name = resolveArgumentName(unknownArgument, parameterNames, requiredParameters);
+                Set<String> available = new HashSet<>(parameterNames);
+                available.removeAll(boundArguments.keySet());
+                throw new ArgumentResolutionError.UnknownName(unknownArgument, name, parameterNames, available);
+            }
 
             // check that we have all required arguments
 
@@ -441,6 +443,10 @@ public abstract class Expr extends AstNode {
         @JsonPropertyDescription(
                 "The argument name. Null if the argument name is not specified for the first and only argument.")
         public String name;
+
+        /** Source location of an explicit argument name, when parsed from a script. */
+        @JsonIgnore
+        public Variable nameNode;
 
         @JsonPropertyDescription("The expression passed to the argument.")
         public Expr expression;

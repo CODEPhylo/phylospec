@@ -853,10 +853,10 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
                         switch (er) {
                             case ArgumentResolutionError.UnknownName e ->
                                 new TypeError(
-                                        expr,
+                                        e.argument.nameNode != null ? e.argument.nameNode : e.argument,
                                         "Function `" + generator.getName() + "` takes no argument named `" + e.name
                                                 + "`.",
-                                        "Do you mean '" + findClosest(e.allowedNames, e.name) + "'?");
+                                        argumentHint(e));
                             case ArgumentResolutionError.MissingRequired e ->
                                 new TypeError(
                                         expr,
@@ -1289,6 +1289,22 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
         return candidates.stream()
                 .min(Comparator.comparingInt(candidate -> Utils.editDistance(query, candidate)))
                 .orElse("");
+    }
+
+    private static String argumentHint(ArgumentResolutionError.UnknownName error) {
+        if (error.argument.name == null) return "Pass '" + error.name + "' with an explicit argument name.";
+        String closest = null;
+        int bestDistance = Integer.MAX_VALUE;
+        for (String candidate : error.suggestedNames) {
+            int distance = Utils.editDistance(error.name, candidate);
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                closest = candidate;
+            } else if (distance == bestDistance) {
+                closest = null;
+            }
+        }
+        return closest == null ? "" : "Do you mean '" + closest + "'?";
     }
 
     private void raiseWarning(Error warning) {

@@ -3,6 +3,7 @@ package tiles.phylonco;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -36,6 +37,7 @@ import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import phylonco.beast.evolution.likelihood.ReadCountTreeLikelihood;
 import phylonco.beast.evolution.readcountmodel.LikelihoodReadCountModel;
+import runner.PhyloSpecException;
 import runner.PhyloSpecRunner;
 
 /** The CRC09 model structure on a small synthetic data set (6 cells, 30 sites). */
@@ -100,6 +102,29 @@ class CRC09ModelTest {
             }
         }
         return target;
+    }
+
+    @Test
+    void checkHighlightsMisspelledReadCountArgument() throws Exception {
+        String source = MODEL.formatted(data()).replace("sequencingError=epsilon", "seqError=epsilon");
+        var error = assertThrows(PhyloSpecException.class, () -> new PhyloSpecRunner(source, LIBRARIES).check())
+                .diagnostic().error();
+
+        assertEquals("Do you mean 'sequencingError'?", error.hint());
+        var range = error.range();
+        assertEquals(range.startLine, range.endLine);
+        String line = source.lines().toList().get(range.startLine - 1);
+        assertEquals("seqError", line.substring(range.start, range.end));
+    }
+
+    @Test
+    void checkSuggestsImportForReadCount() throws Exception {
+        String source = MODEL.formatted(data()).replace("use phylonco\n", "");
+        var error = assertThrows(PhyloSpecException.class, () -> new PhyloSpecRunner(source, LIBRARIES).check())
+                .diagnostic().error();
+
+        assertTrue(error.description().contains("ReadCount"), error::description);
+        assertTrue(error.hint().contains("use phylonco"), error::hint);
     }
 
     @Test
