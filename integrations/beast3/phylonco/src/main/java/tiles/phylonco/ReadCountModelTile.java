@@ -79,11 +79,11 @@ public class ReadCountModelTile
         state.setInput(likelihood, likelihood.branchRateModelInput, clock);
 
         return new UnboundDistribution<>(likelihood, data -> {
-            if (cellSizeFactors.size() != data.taxa().alignment().getTaxonCount()) {
+            if (cellSizeFactors.size() != data.numCells()) {
                 throw new TileApplicationError(
                         this.getRootNode(),
                         "cellSizeFactors has " + cellSizeFactors.size() + " values but the data has "
-                                + data.taxa().alignment().getTaxonCount() + " cells.",
+                                + data.numCells() + " cells.",
                         "Use one size factor per cell.");
             }
             // BEASTState.setInput initialises the value right away, so the read-count model is

@@ -31,8 +31,7 @@ public final class ReadCountAccessorTiles {
 
         @Override
         public TaxaData applyTile(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indices) {
-            var taxa = this.readCountsInput.apply(state, indices).taxa();
-            return new TaxaData(taxa.taxonSet(), taxa.ages(), taxa.speciesNames());
+            return this.readCountsInput.apply(state, indices).taxa();
         }
     }
 
@@ -51,7 +50,7 @@ public final class ReadCountAccessorTiles {
 
         @Override
         public IntScalarParam<NonNegativeInt> applyTile(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indices) {
-            int cells = this.readCountsInput.apply(state, indices).taxa().alignment().getTaxonCount();
+            int cells = this.readCountsInput.apply(state, indices).numCells();
             return new IntScalarParam<>(cells, NonNegativeInt.INSTANCE);
         }
     }
