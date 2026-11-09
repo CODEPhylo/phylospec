@@ -29,6 +29,10 @@ public final class PhyloncoTileLibrary extends TileLibrary<BEASTState> {
                 new ReadCountAccessorTiles.NumSites(),
                 new GT10Tile(),
                 new ReadCountModelTile(),
+                new LatentReadCountTiles.GenotypeAlignment(),
+                new LatentReadCountTiles.PloidyDraw(),
+                new LatentReadCountTiles.CoverageDraw(),
+                new GenotypeReadCountModelTile(),
                 new ObservedAsReadCountTile());
     }
 

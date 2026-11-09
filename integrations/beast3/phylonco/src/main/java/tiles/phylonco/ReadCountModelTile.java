@@ -10,6 +10,8 @@ import beast.base.spec.type.RealVector;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
 import java.util.Optional;
+import java.util.function.Consumer;
+import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
@@ -54,18 +56,47 @@ public class ReadCountModelTile
     @Override
     public UnboundDistribution<ReadCountData, ReadCountTreeLikelihood> applyTile(
             BEASTState state, IdentityHashMap<Expr.Variable, Integer> indices) {
-        Tree tree = this.treeInput.apply(state, indices);
-        GT10 gt10 = this.qMatrixInput.apply(state, indices);
-        RealVector<?> cellSizeFactors = this.cellSizeFactorsInput.apply(state, indices);
+        return treeLikelihood(
+                state,
+                this.getRootNode(),
+                this.treeInput.apply(state, indices),
+                this.qMatrixInput.apply(state, indices),
+                this.sequencingErrorInput.apply(state, indices),
+                this.allelicDropoutInput.apply(state, indices),
+                this.meanAllelicCoverageInput.apply(state, indices),
+                this.allelicCoverageVarianceInput.apply(state, indices),
+                this.cellSizeFactorsInput.apply(state, indices),
+                this.homozygousOverdispersionInput.apply(state, indices),
+                this.heterozygousOverdispersionInput.apply(state, indices),
+                data -> {});
+    }
 
+    /**
+     * Builds the read-count tree likelihood. Both forms of {@code ReadCountModel} use it, so they
+     * produce the same BEAST objects. {@code checkData} runs on the observed read counts before
+     * they are attached.
+     */
+    static UnboundDistribution<ReadCountData, ReadCountTreeLikelihood> treeLikelihood(
+            BEASTState state,
+            AstNode rootNode,
+            Tree tree,
+            GT10 gt10,
+            RealScalar<?> sequencingError,
+            RealScalar<?> allelicDropout,
+            RealScalar<?> meanAllelicCoverage,
+            RealScalar<?> allelicCoverageVariance,
+            RealVector<?> cellSizeFactors,
+            RealScalar<?> homozygousOverdispersion,
+            RealScalar<?> heterozygousOverdispersion,
+            Consumer<ReadCountData> checkData) {
         LikelihoodReadCountModel readCountModel = new LikelihoodReadCountModel();
-        state.setInput(readCountModel, readCountModel.epsilonInput, this.sequencingErrorInput.apply(state, indices));
-        state.setInput(readCountModel, readCountModel.deltaInput, this.allelicDropoutInput.apply(state, indices));
-        state.setInput(readCountModel, readCountModel.tInput, this.meanAllelicCoverageInput.apply(state, indices));
-        state.setInput(readCountModel, readCountModel.vInput, this.allelicCoverageVarianceInput.apply(state, indices));
+        state.setInput(readCountModel, readCountModel.epsilonInput, sequencingError);
+        state.setInput(readCountModel, readCountModel.deltaInput, allelicDropout);
+        state.setInput(readCountModel, readCountModel.tInput, meanAllelicCoverage);
+        state.setInput(readCountModel, readCountModel.vInput, allelicCoverageVariance);
         state.setInput(readCountModel, readCountModel.sInput, cellSizeFactors);
-        state.setInput(readCountModel, readCountModel.w1Input, this.homozygousOverdispersionInput.apply(state, indices));
-        state.setInput(readCountModel, readCountModel.w2Input, this.heterozygousOverdispersionInput.apply(state, indices));
+        state.setInput(readCountModel, readCountModel.w1Input, homozygousOverdispersion);
+        state.setInput(readCountModel, readCountModel.w2Input, heterozygousOverdispersion);
 
         SiteModel siteModel = new SiteModel();
         state.setInput(siteModel, siteModel.substModelInput, gt10);
@@ -79,9 +110,10 @@ public class ReadCountModelTile
         state.setInput(likelihood, likelihood.branchRateModelInput, clock);
 
         return new UnboundDistribution<>(likelihood, data -> {
+            checkData.accept(data);
             if (cellSizeFactors.size() != data.numCells()) {
                 throw new TileApplicationError(
-                        this.getRootNode(),
+                        rootNode,
                         "cellSizeFactors has " + cellSizeFactors.size() + " values but the data has "
                                 + data.numCells() + " cells.",
                         "Use one size factor per cell.");

@@ -23,9 +23,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
 import org.phylospec.ast.transformers.RemoveGroupings;
@@ -33,6 +37,7 @@ import org.phylospec.lexer.Lexer;
 import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.TileCatalog;
+import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
@@ -92,6 +97,31 @@ class CRC09ModelTest {
             }
             """;
 
+    /** LPhy's explicit form of the observation model: latent genotypes, ploidy and coverage. */
+    private static final String EXPLICIT_READS = """
+            PositiveInteger numSites = numSites(readCounts)
+            Alignment genotypes ~ PhyloCTMC(tree=tree, qMatrix=qMatrix, numSites=numSites)
+            Matrix<PositiveInteger> ploidy ~ Ploidy(numCells=numCells, numSites=numSites, allelicDropout=delta)
+            Matrix<NonNegativeInteger> coverage ~ CoverageModel(
+                ploidy=ploidy, meanAllelicCoverage=t, allelicCoverageVariance=v, cellSizeFactors=s
+            )
+            ReadCount reads ~ ReadCountModel(
+                genotypes=genotypes,
+                ploidy=ploidy,
+                coverage=coverage,
+                sequencingError=epsilon,
+                homozygousOverdispersion=w1,
+                heterozygousOverdispersion=w2
+            )""";
+
+    /** {@link #MODEL} with its compact ReadCountModel statement replaced by the explicit form. */
+    private static String model(boolean explicit) {
+        if (!explicit) return MODEL;
+        int start = MODEL.indexOf("ReadCount reads ~ ReadCountModel(");
+        int end = MODEL.indexOf(" observed as readCounts");
+        return MODEL.substring(0, start) + EXPLICIT_READS + MODEL.substring(end);
+    }
+
     @TempDir
     Path directory;
 
@@ -142,9 +172,17 @@ class CRC09ModelTest {
         assertFalse(error.hint().contains("use phylospec"), error::hint);
     }
 
-    @Test
-    void readCountModelBecomesOneReadCountTreeLikelihood() throws Exception {
-        BEASTState state = evaluate(MODEL.formatted(data()));
+    /** The shipped examples must keep passing the checker; the CRC09 data are not needed for that. */
+    @ParameterizedTest
+    @ValueSource(strings = {"CRC09.phylospec", "CRC09-explicit.phylospec"})
+    void examplesPassTheChecker(String example) throws Exception {
+        new PhyloSpecRunner(Path.of("examples", example), LIBRARIES).check();
+    }
+
+    @ParameterizedTest(name = "explicit={0}")
+    @ValueSource(booleans = {false, true})
+    void readCountModelBecomesOneReadCountTreeLikelihood(boolean explicit) throws Exception {
+        BEASTState state = evaluate(model(explicit).formatted(data()));
 
         assertEquals(1, state.likelihoodDistributions.size(), state.likelihoodDistributions.toString());
         Distribution likelihood = state.likelihoodDistributions.getFirst();
@@ -160,12 +198,48 @@ class CRC09ModelTest {
     }
 
     @Test
-    void fixedStateMatchesLPhyBeastLikelihoodAndSharedPriorTerms() throws Exception {
+    void explicitFormIntegratesTheLatentDrawsOut() throws Exception {
+        Set<String> compact = stateNodeIds(evaluate(model(false).formatted(data())));
+        Set<String> explicit = stateNodeIds(evaluate(model(true).formatted(data())));
+
+        // genotypes, ploidy and coverage are integrated out, so both forms sample the same nodes
+        assertEquals(compact, explicit);
+        assertFalse(explicit.contains("genotypes") || explicit.contains("ploidy") || explicit.contains("coverage"),
+                explicit::toString);
+    }
+
+    @Test
+    void latentGenotypesCannotBeUsedOutsideTheReadCountModel() throws Exception {
+        String source = model(true).formatted(data())
+                .replace("ReadCount reads ~", "PositiveInteger genotypeSites = numSites(genotypes)\n    ReadCount reads ~");
+
+        assertThrows(PhyloSpecException.class, () -> new PhyloSpecRunner(source, LIBRARIES).check());
+    }
+
+    @Test
+    void coverageMustUseTheSamePloidyAsTheReadCountModel() throws Exception {
+        String source = model(true).formatted(data())
+                .replace("Matrix<NonNegativeInteger> coverage", """
+                        Matrix<PositiveInteger> otherPloidy ~ Ploidy(numCells=numCells, numSites=numSites, allelicDropout=delta)
+                        Matrix<NonNegativeInteger> coverage""")
+                .replace("ploidy=ploidy, meanAllelicCoverage", "ploidy=otherPloidy, meanAllelicCoverage");
+
+        var error = assertThrows(TileApplicationError.class, () -> evaluate(source));
+        assertTrue(error.getMessage().contains("same ploidy"), error::getMessage);
+    }
+
+    private static Set<String> stateNodeIds(BEASTState state) {
+        return state.stateNodes.keySet().stream().map(StateNode::getID).collect(Collectors.toSet());
+    }
+
+    @ParameterizedTest(name = "explicit={0}")
+    @ValueSource(booleans = {false, true})
+    void fixedStateMatchesLPhyBeastLikelihoodAndSharedPriorTerms(boolean explicit) throws Exception {
         Properties reference = new Properties();
         try (var in = getClass().getResourceAsStream("/crc09-reference.properties")) {
             reference.load(in);
         }
-        BEASTState graph = evaluate(MODEL.formatted(data()));
+        BEASTState graph = evaluate(model(explicit).formatted(data()));
         Distribution likelihood = graph.likelihoodDistributions.getFirst();
         assertEquals(1, graph.likelihoodDistributions.size());
         CompoundDistribution prior = new CompoundDistribution();
@@ -220,10 +294,11 @@ class CRC09ModelTest {
         }
     }
 
-    @Test
-    void crc09StructureRunsAsMCMC() throws Exception {
+    @ParameterizedTest(name = "explicit={0}")
+    @ValueSource(booleans = {false, true})
+    void crc09StructureRunsAsMCMC(boolean explicit) throws Exception {
         Path source = this.directory.resolve("crc09-small.phylospec");
-        Files.writeString(source, MODEL.formatted("six-cells.mpileup") + """
+        Files.writeString(source, model(explicit).formatted("six-cells.mpileup") + """
 
                 mcmc {
                     Integer chainLength = 20000

@@ -181,6 +181,117 @@
             "otherProperty": "numTaxa"
           }
         ]
+      },
+      {
+        "name": "Ploidy",
+        "namespace": "phylonco",
+        "generatedType": "Distribution<Matrix<PositiveInteger; numRows=numCells.value, numCols=numSites.value>>",
+        "description": "Number of alleles retained (1 or 2) in every cell at every site, after allelic dropout. As in LPhy's Ploidy; the BEAST 3 engine integrates it out inside the read-count likelihood.",
+        "arguments": [
+          {
+            "name": "numCells",
+            "description": "Number of cells (n in LPhy)",
+            "type": "PositiveInteger",
+            "required": true
+          },
+          {
+            "name": "numSites",
+            "description": "Number of sites (l in LPhy)",
+            "type": "PositiveInteger",
+            "required": true
+          },
+          {
+            "name": "allelicDropout",
+            "description": "Probability that one allele of a cell drops out at a site (delta)",
+            "type": "Probability",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "CoverageModel",
+        "namespace": "phylonco",
+        "generatedType": "Distribution<Matrix<NonNegativeInteger; numRows=ploidy.numRows, numCols=ploidy.numCols>>",
+        "description": "Read depth of every cell at every site: negative binomial with mean t * s * ploidy and variance from v. As in LPhy's CoverageModel; the BEAST 3 engine integrates it out inside the read-count likelihood.",
+        "arguments": [
+          {
+            "name": "ploidy",
+            "description": "Retained alleles per cell and site, drawn from Ploidy (alpha in LPhy)",
+            "type": "Matrix<PositiveInteger>",
+            "required": true
+          },
+          {
+            "name": "meanAllelicCoverage",
+            "description": "Mean coverage of a single allele (t)",
+            "type": "PositiveReal",
+            "required": true
+          },
+          {
+            "name": "allelicCoverageVariance",
+            "description": "Variance of the coverage of a single allele (v)",
+            "type": "PositiveReal",
+            "required": true
+          },
+          {
+            "name": "cellSizeFactors",
+            "description": "Size factor of every cell (s)",
+            "type": "Vector<PositiveReal>",
+            "required": true
+          }
+        ],
+        "constraints": [
+          {
+            "argument": "cellSizeFactors",
+            "property": "num",
+            "operator": "equals",
+            "otherArgument": "ploidy",
+            "otherProperty": "numRows"
+          }
+        ]
+      },
+      {
+        "name": "ReadCountModel",
+        "namespace": "phylonco",
+        "generatedType": "Distribution<ReadCount<;numTaxa=genotypes.numTaxa, numSites=genotypes.numSites>>",
+        "description": "Read counts given the genotypes, ploidy and coverage of every cell and site: Dirichlet-multinomial allele counts with sequencing error. As in LPhy's ReadCountModel. When genotypes, ploidy and coverage are used only here, the BEAST 3 engine integrates them out, giving the same likelihood as the compact ReadCountModel(tree, qMatrix, ...).",
+        "arguments": [
+          {
+            "name": "genotypes",
+            "description": "Unphased genotype alignment, drawn from PhyloCTMC with a genotype qMatrix such as gt10 (D in LPhy)",
+            "type": "Alignment",
+            "required": true
+          },
+          {
+            "name": "ploidy",
+            "description": "Retained alleles per cell and site, drawn from Ploidy (alpha in LPhy)",
+            "type": "Matrix<PositiveInteger>",
+            "required": true
+          },
+          {
+            "name": "coverage",
+            "description": "Read depth per cell and site, drawn from CoverageModel",
+            "type": "Matrix<NonNegativeInteger>",
+            "required": true
+          },
+          {
+            "name": "sequencingError",
+            "description": "Sequencing error probability (epsilon)",
+            "type": "Probability",
+            "required": true
+          },
+          {
+            "name": "homozygousOverdispersion",
+            "description": "Dirichlet-multinomial concentration for homozygous or single-allele read counts (w1). At fixed read depth, larger values give less overdispersion.",
+            "type": "PositiveReal",
+            "required": true
+          },
+          {
+            "name": "heterozygousOverdispersion",
+            "description": "Dirichlet-multinomial concentration for heterozygous read counts when both alleles are retained (w2). At fixed read depth, larger values give less overdispersion.",
+            "type": "PositiveReal",
+            "required": true
+          }
+        ]
       }
     ]
   }
