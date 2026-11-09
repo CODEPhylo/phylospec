@@ -4,17 +4,19 @@ import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Optional;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
-import tiles.input.DecoratedAlignment;
+import tiles.input.TaxaData;
+import tiles.input.TaxonValue;
 
 /** {@code taxa}, {@code numTaxa} and {@code numSites} for read-count data. */
 public final class ReadCountAccessorTiles {
 
     private ReadCountAccessorTiles() {}
 
-    public static class Taxa extends GeneratorTile<DecoratedAlignment, BEASTState> {
+    public static class Taxa extends GeneratorTile<List<TaxonValue>, BEASTState> {
         GeneratorTileInput<ReadCountData, BEASTState> readCountsInput = new GeneratorTileInput<>("readCounts");
 
         @Override
@@ -28,8 +30,9 @@ public final class ReadCountAccessorTiles {
         }
 
         @Override
-        public DecoratedAlignment applyTile(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indices) {
-            return this.readCountsInput.apply(state, indices).taxa();
+        public TaxaData applyTile(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indices) {
+            var taxa = this.readCountsInput.apply(state, indices).taxa();
+            return new TaxaData(taxa.taxonSet(), taxa.ages(), taxa.speciesNames());
         }
     }
 
