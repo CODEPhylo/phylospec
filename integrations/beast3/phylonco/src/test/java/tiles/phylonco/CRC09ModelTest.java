@@ -2,6 +2,7 @@ package tiles.phylonco;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -125,6 +126,20 @@ class CRC09ModelTest {
 
         assertTrue(error.description().contains("ReadCount"), error::description);
         assertTrue(error.hint().contains("use phylonco"), error::hint);
+    }
+
+    @Test
+    void checkExplainsHowToLoadAMissingAdapter() throws Exception {
+        String source = MODEL.formatted(data());
+        var error = assertThrows(PhyloSpecException.class, () -> new PhyloSpecRunner(source, List.of("beast2"))
+                        .check())
+                .diagnostic()
+                .error();
+
+        assertTrue(error.description().contains("'phylonco'"), error::description);
+        assertTrue(error.hint().contains("--adapter-path"), error::hint);
+        assertTrue(error.hint().contains("--library phylonco"), error::hint);
+        assertFalse(error.hint().contains("use phylospec"), error::hint);
     }
 
     @Test
