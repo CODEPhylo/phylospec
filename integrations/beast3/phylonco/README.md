@@ -23,17 +23,69 @@ read-count error model with the genotypes integrated out).
 
 ## Building locally
 
-This module depends on beast-phylonco's `beast3` branch, which is not published yet:
+This module depends on beast-phylonco's `beast3` branch, which is not published yet. Build the
+commit the tests and the LPhyBEAST reference were made with:
 
 ```bash
-# 1. beast-phylonco, beast3 branch
-cd beast-phylonco && git checkout beast3 && mvn -pl phylonco-beast -am install -DskipTests
+# 1. beast-phylonco at the pinned beast3 commit
+git clone https://github.com/bioDS/beast-phylonco.git
+cd beast-phylonco && git checkout --detach 7a7e51d44a51c00e7e81297a97a8bd8550ea3b9d
+mvn -pl phylonco-beast -am install -DskipTests
 # 2. PhyloSpec with this module
 cd phylospec && mvn -P phylonco -pl integrations/beast3/phylonco -am test
 ```
 
-Running a model needs the library ids `phylonco` and `beast2`, e.g.
+The module is behind the `phylonco` Maven profile, and the pull-request CI builds only `core/java`
+and `integrations/beast3/java`. Its tests, including the LPhyBEAST comparison, therefore run only
+in a local build with the steps above.
+
+From Java, running a model needs the library ids `phylonco` and `beast2`, e.g.
 `new PhyloSpecRunner(source, List.of("phylonco", "beast2"))`.
+
+## Running CRC09 with the CLI
+
+**Data.** The CRC09 read counts are not public and are not distributed with PhyloSpec. Obtain
+`CRC09_filtered.mpileup` from the data owners and place it at `examples/data/CRC09_filtered.mpileup`
+(paths in a script are relative to the script's directory; `examples/data/` is ignored by git).
+The file is a samtools mpileup that has already been filtered: `chrom pos ref`, then
+`depth bases qualities` for each of the 25 cells, in the order of `cellNames` in the script.
+
+**Build** the CLI distribution and this adapter bundle (see [the CLI guide](../../../docs/beast3-cli.md)
+for the generic, non-macOS distribution):
+
+```bash
+mvn -pl integrations/beast3/java -am -Pcli-dist-macos-arm64 package -DskipTests
+mvn -P phylonco -pl integrations/beast3/phylonco -am package -DskipTests
+mkdir -p "$HOME/phylospec-cli"
+unzip -q integrations/beast3/java/target/phylospec-beast3-0.0.1-SNAPSHOT-cli-macos-arm64.zip -d "$HOME/phylospec-cli"
+```
+
+The adapter bundle is the directory `integrations/beast3/phylonco/target/phylospec-adapter`
+(also packaged as `target/phylospec-beast3-phylonco-0.0.1-SNAPSHOT-adapter.zip`).
+
+**Check and run.** Load the bundle with `--adapter-path` and select it with `--library phylonco`:
+
+```bash
+PHYLOSPEC="$HOME/phylospec-cli/phylospec-beast3-0.0.1-SNAPSHOT/bin/phylospec"
+ADAPTER="$PWD/integrations/beast3/phylonco/target/phylospec-adapter"
+cd integrations/beast3/phylonco/examples
+"$PHYLOSPEC" check CRC09.phylospec --adapter-path "$ADAPTER" --library phylonco
+"$PHYLOSPEC" run CRC09.phylospec --adapter-path "$ADAPTER" --library phylonco --out "$PWD/results/crc09"
+```
+
+Without `--adapter-path`, `use phylonco` fails with a hint to load the bundle. The example has no
+`mcmc` block, so `run` uses the CLI defaults; append one to set the chain length:
+
+```
+mcmc {
+    Integer chainLength = 10000
+    Integer defaultLogEvery = 100
+}
+```
+
+On an Apple Silicon laptop, 10,000 iterations take about two minutes. In the first few thousand
+iterations, several parameters (e.g. `t` and most `s`) may not have moved yet while the operators
+tune; this is not a sign of a wiring problem, and convergence needs much longer chains.
 
 ## Fixed-state comparison with LPhyBEAST
 
@@ -92,7 +144,9 @@ prints the native likelihood and prior from the XML, including their individual 
 already filtered file). `.`/`,` count as the reference base, `^` plus its quality character,
 `$`, indels (`+n`/`-n` and their bases), `*`, `<` and `>` are skipped, and A/C/G/T count in
 either case. Lines with fewer than three columns per cell are skipped entirely (LPhy keeps their
-position but drops their data, which shifts later sites).
+position but drops their data, which shifts later sites). A line with more cell columns than
+`names` is an error, so a short `names` list cannot silently drop cells, and a malformed indel
+reports its line and cell.
 
 ## Design notes / open questions
 

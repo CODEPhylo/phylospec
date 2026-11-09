@@ -138,35 +138,4 @@
         </plugins>
     </build>
 
-    <profiles>
-        <profile>
-            <id>cli-dist</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <version>${maven-surefire-plugin.version}</version>
-                        <configuration>
-                            <includes>
-                                <include>**/GompertzCliDistributionIT.java</include>
-                            </includes>
-                            <systemPropertyVariables>
-                                <phylospec.distribution>${project.basedir}/../java/target/phylospec-beast3-${project.version}-cli.zip</phylospec.distribution>
-                                <phylonco.distribution>${project.build.directory}/${project.build.finalName}-adapter.zip</phylonco.distribution>
-                            </systemPropertyVariables>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>integration-test</goal>
-                                    <goal>verify</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>
