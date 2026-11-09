@@ -33,12 +33,6 @@ public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coales
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         PopulationFunction populationSize = this.populationSizeInput.apply(beastState, indexVariables);
         TaxaData taxa = TaxaData.fromList(beastState, this.taxaInput.apply(beastState, indexVariables));
-        return bind(beastState, taxa, populationSize, new Coalescent());
-    }
-
-    /** Shared initialization and final-tree binding for population-function coalescent models. */
-    static <T extends Coalescent> BoundDistribution<Tree, T> bind(
-            BEASTState beastState, TaxaData taxa, PopulationFunction populationSize, T model) {
 
         // initialize initial state
 
@@ -60,6 +54,7 @@ public class CoalescentTile extends GeneratorTile<BoundDistribution<Tree, Coales
 
         // initialize Coalescent
 
+        Coalescent model = new Coalescent();
         beastState.setInput(model, model.popSizeInput, populationSize);
 
         return new BoundDistribution<>(
