@@ -125,12 +125,7 @@ public class ResolvedType {
             boolean allowUnresolvedTypeParameter) {
         // we build a map of the type parameters and then use the more general overloaded method
 
-        Type typeComponent = componentResolver.resolveType(typeString);
-        if (typeComponent == null) {
-            throw new TypeError(
-                    "The type '" + typeString + "' does not exist.",
-                    "Are you looking for '" + componentResolver.findClosestType(typeString) + "'?");
-        }
+        Type typeComponent = componentResolver.requireType(typeString);
 
         if (typeParameters.size() != typeComponent.getTypeParameters().size()) {
             throw new TypeError(
@@ -179,12 +174,7 @@ public class ResolvedType {
             Map<String, ResolvedTypeSet> typeParameters,
             ComponentResolver componentResolver,
             boolean allowUnresolvedTypeParameter) {
-        Type typeComponent = componentResolver.resolveType(typeString);
-        if (typeComponent == null) {
-            throw new TypeError(
-                    "The type '" + typeString + "' does not exist.",
-                    "Are you looking for '" + componentResolver.findClosestType(typeString) + "'?");
-        }
+        Type typeComponent = componentResolver.requireType(typeString);
 
         // resolve the possible type parameters
 
