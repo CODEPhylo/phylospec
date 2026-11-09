@@ -9,11 +9,13 @@ import beast.base.evolution.tree.TreeParser;
 import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
+import beast.base.inference.StateNode;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.evolution.speciation.BirthDeathGernhard08Model;
 import beast.base.spec.inference.distribution.LogNormal;
 import beast.base.spec.inference.distribution.Normal;
+import beast.base.spec.inference.operator.RealRandomWalkOperator;
 import beast.base.spec.inference.operator.ScaleOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.util.Randomizer;
@@ -111,11 +113,17 @@ class BirthDeathRatesTileTest {
         assertOriginalPrior(graph, birthSource, family.equals("direct"), 1.1, 0.3);
         assertOriginalPrior(graph, death, true, -0.7, 0.2);
         for (var operator : graph.operators) {
-            ScaleOperator scale = assertInstanceOf(ScaleOperator.class, operator);
-            assertEquals(5.0, scale.m_pWeight.get());
-            assertEquals(1, scale.listStateNodes().size());
-            assertTrue(scale.listStateNodes().contains(birthSource)
-                    || scale.listStateNodes().contains(death));
+            assertEquals(5.0, operator.m_pWeight.get());
+            assertEquals(1, operator.listStateNodes().size());
+            StateNode target = operator.listStateNodes().getFirst();
+            assertTrue(target == birthSource || target == death);
+
+            // the unbounded log birth rate is proposed additively, the positive rates are scaled
+            if (target == birthSource && family.equals("derived")) {
+                assertInstanceOf(RealRandomWalkOperator.class, operator);
+            } else {
+                assertInstanceOf(ScaleOperator.class, operator);
+            }
         }
         for (BirthDeathGernhard08Model law : laws) {
             BirthDeathRateValue net =
