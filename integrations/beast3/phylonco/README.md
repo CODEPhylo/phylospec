@@ -3,9 +3,13 @@
 PhyloSpec components for the single-cell models of
 [beast-phylonco](https://github.com/bioDS/beast-phylonco).
 
-Motivating model: `examples/CRC09.phylospec`, a translation of `CRC09.lphy`
-(25 colorectal cancer cells, GT10 unphased genotypes, classic Bayesian skyline,
-read-count error model with the genotypes integrated out).
+Motivating model: CRC09, a translation of `CRC09.lphy` (25 colorectal cancer cells, GT10
+unphased genotypes, classic Bayesian skyline, read-count error model), in two forms:
+
+- `examples/CRC09.phylospec`: the observation model as one `ReadCountModel(tree, qMatrix, ...)`
+  statement, with genotypes, ploidy and coverage already integrated out.
+- `examples/CRC09-explicit.phylospec`: every generative step as in `CRC09.lphy`. The latent
+  genotypes, ploidy and coverage are separate draws, and the BEAST 3 engine integrates them out.
 
 ## Status
 
@@ -14,12 +18,38 @@ read-count error model with the genotypes integrated out).
 | `fromMpileup`, `ReadCount` type | done (`phylonco`) | done (`FromMpileupTile`, same counting rules as LPhy) |
 | `taxa` / `numTaxa` / `numSites` for `ReadCount` | done (`phylospec.functions.accessor`) | done |
 | `gt10` | done (`phylonco`) | done (`GT10Tile`) |
-| `ReadCountModel` | done (`phylonco`) | done (`ReadCountTreeLikelihood`) |
+| `ReadCountModel(tree, qMatrix, ...)` (compact) | done (`phylonco`) | done (`ReadCountModelTile` -> `ReadCountTreeLikelihood`) |
+| Explicit form: latent `PhyloCTMC(numSites)`, `Ploidy`, `CoverageModel`, `ReadCountModel(genotypes, ploidy, coverage, ...)` | done (core and `phylonco`) | done (`LatentReadCountTiles`, `GenotypeReadCountModelTile` -> the same `ReadCountTreeLikelihood`) |
 | `RandomComposition`, Bayesian skyline overload of `SkylineCoalescent`, positive `ExponentialMarkovChain` | done (core) | done (`BeastCoreTileLibrary`) |
 
-`examples/CRC09.phylospec` passes the type checker with no errors or warnings, and
-`CRC09ModelTest` runs the same model structure as an MCMC on a small synthetic mpileup
-(`src/test/resources/six-cells.mpileup`, 6 cells, 30 sites).
+Both examples pass `phylospec check` (tested in `CRC09ModelTest`), and
+`CRC09ModelTest` runs the same model structure, in both forms, as an MCMC on a small synthetic
+mpileup (`src/test/resources/six-cells.mpileup`, 6 cells, 30 sites).
+
+## Explicit and compact forms
+
+`CRC09-explicit.phylospec` writes every generative step, with the same components as `CRC09.lphy`:
+
+| LPhy (`CRC09.lphy`) | PhyloSpec (`examples/CRC09-explicit.phylospec`) |
+| --- | --- |
+| `A ~ PhyloCTMC(L=l, Q=Q, dataType=unphasedGenotype(), tree=psi)` | `genotypes ~ PhyloCTMC(tree=tree, qMatrix=qMatrix, numSites=numSites)` |
+| `alpha ~ Ploidy(n=n, l=l, delta=delta)` | `ploidy ~ Ploidy(numCells=numCells, numSites=numSites, allelicDropout=delta)` |
+| `cov ~ CoverageModel(s=s, t=t, alpha=alpha, v=v)` | `coverage ~ CoverageModel(ploidy=ploidy, meanAllelicCoverage=t, allelicCoverageVariance=v, cellSizeFactors=s)` |
+| `r ~ ReadCountModel(epsilon=epsilon, w1=w1, w2=w2, D=A, coverage=cov, alpha=alpha)` | `reads ~ ReadCountModel(genotypes=genotypes, ploidy=ploidy, coverage=coverage, sequencingError=epsilon, homozygousOverdispersion=w1, heterozygousOverdispersion=w2)` |
+
+The data type follows from the GT10 `qMatrix`, so `PhyloCTMC` needs no `dataType`.
+
+The engine decides how to evaluate this. `genotypes`, `ploidy` and `coverage` are not sampled:
+the latent draws are matched by `LatentReadCountTiles`, and `GenotypeReadCountModelTile`
+builds phylonco's `ReadCountTreeLikelihood`, which integrates the genotypes out by pruning and
+ploidy and coverage out per cell and site, as LPhyBEAST does. A latent variable used anywhere
+else cannot be integrated out and is rejected, as is a coverage drawn with a different ploidy
+than the one passed to `ReadCountModel`.
+
+The compact `ReadCountModel(tree, qMatrix, sequencingError, allelicDropout, ...)`
+(`examples/CRC09.phylospec`) states the integrated model in one statement and builds the same
+likelihood. `CRC09ModelTest` checks that
+both forms sample the same parameters and give the same fixed-state likelihood.
 
 ## Building locally
 
@@ -73,8 +103,9 @@ cd integrations/beast3/phylonco/examples
 "$PHYLOSPEC" run CRC09.phylospec --adapter-path "$ADAPTER" --library phylonco --out "$PWD/results/crc09"
 ```
 
-Without `--adapter-path`, `use phylonco` fails with a hint to load the bundle. The example has no
-`mcmc` block, so `run` uses the CLI defaults; append one to set the chain length:
+`CRC09-explicit.phylospec` runs the same way. Without `--adapter-path`, `use phylonco` fails
+with a hint to load the bundle. Neither example has an `mcmc` block, so `run` uses the CLI
+defaults; append one to set the chain length:
 
 ```
 mcmc {
@@ -90,7 +121,7 @@ tune; this is not a sign of a wiring problem, and convergence needs much longer 
 ## Fixed-state comparison with LPhyBEAST
 
 The fixed-state regression in [CRC09ModelTest](src/test/java/tiles/phylonco/CRC09ModelTest.java)
-compares the PhyloSpec model with the
+compares both PhyloSpec forms with the
 [LPhy version](src/test/reference/crc09-six-cells.lphy) on the same six cells and 30 sites.
 Both languages translate to the native Phylonco read-count tree likelihood, integrating over
 the unobserved genotypes. The [fixed state](src/test/resources/crc09-reference.properties)
@@ -101,6 +132,8 @@ read-count parameters. The reference is evaluated before any MCMC proposal.
 | --- | ---: | ---: |
 | Read-count tree likelihood | -878.8089507260435 | -878.8089507260435 |
 | Total prior | 27.97213555097137 | 29.35842991209126 |
+
+The explicit and the compact PhyloSpec forms give the same values.
 
 There are four ordered ways to split five coalescent events between two nonempty groups.
 PhyloSpec includes the uniform log mass of `-log(4)` for the selected composition.
@@ -150,16 +183,14 @@ reports its line and cell.
 
 ## Design notes / open questions
 
-- **ReadCountModel is one distribution on the tree.** The LPhy model has four statements
-  (`PhyloCTMC` for the genotype alignment A, then `Ploidy`, `CoverageModel`, `ReadCountModel`).
-  beast-phylonco's `beast3` branch evaluates all of it in one `ReadCountTreeLikelihood`:
-  ploidy (alpha in {1, 2}, via allelic dropout) and coverage (negative binomial from t, v, s)
-  are integrated out per cell and site, and the genotypes are integrated out by Felsenstein
-  pruning under GT10. Nothing but the tree and parameters is sampled, so
-  `ReadCountModel(tree, qMatrix, ...)` describes the same model and keeps the tile one-to-one.
-- **Possible later change:** a form with an explicit genotype alignment
-  (`Alignment A ~ PhyloCTMC(...)`, `ReadCountModel(genotypes=A, ...)`) reads closer to LPhy,
-  but needs the tiling to match the two statements together. Not needed for CRC09.
+- **One native likelihood for both forms.** beast-phylonco's `beast3` branch evaluates the
+  whole observation model in one `ReadCountTreeLikelihood`: ploidy (alpha in {1, 2}, via
+  allelic dropout) and coverage (negative binomial from t, v, s) are integrated out per cell
+  and site, and the genotypes by Felsenstein pruning under GT10. Nothing but the tree and
+  parameters is sampled. Both PhyloSpec forms call `ReadCountModelTile.treeLikelihood`.
+- **Latent draws are matched, not sampled.** Each latent draw has a template tile that only
+  collects its arguments (as `DrawnSiteRatesTile` does for drawn site rates). Statements that
+  another statement refers to are not tiled on their own, so the draws need no state nodes.
 - **Accessor overloads live in `phylospec.functions.accessor`.** `ComponentResolver.importNamespace`
   removes same-named generators from other namespaces, so putting `taxa(ReadCount)` in
   `phylonco` would shadow `taxa(Alignment)` after `use phylonco`.

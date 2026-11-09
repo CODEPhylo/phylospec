@@ -1,6 +1,7 @@
 // CRC09: single-cell read-count phylogeny (translated from CRC09.lphy)
 // 25 colorectal cancer cells, unphased genotypes (GT10), classic Bayesian skyline,
 // genotypes integrated out under a read-count error model.
+// CRC09-explicit.phylospec writes the same model with every generative step, as in LPhy.
 
 use phylonco
 
