@@ -836,8 +836,10 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
 
         ResolvedTypeSet possibleReturnTypes = new ResolvedTypeSet();
         Set<String> possibleNamespaces = new HashSet<>();
-        TypeError lastError = null;
-        Set<String> errorMessages = new HashSet<>();
+        // If no version fits, report only the versions that know the most of the given argument
+        // names: a misspelled argument of one version is not a reason to list every other version.
+        int bestFit = -1;
+        Map<String, TypeError> closestErrors = new TreeMap<>();
         for (Generator generator : generators) {
             // resolve argument names and the corresponding type sets
 
@@ -881,8 +883,7 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
                                                         + "'.");
                         };
 
-                lastError = error;
-                errorMessages.add(error.getMessage());
+                bestFit = rememberClosestError(closestErrors, bestFit, argumentNameFit(expr, generator), error);
                 continue;
             }
 
@@ -915,17 +916,16 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
                 }
             } catch (TypeError e) {
                 e.attachAstNode(expr);
-                lastError = e;
-                errorMessages.add(e.getMessage());
+                bestFit = rememberClosestError(closestErrors, bestFit, argumentNameFit(expr, generator), e);
             }
         }
 
         // throw errors if needed
 
-        if (possibleReturnTypes.isEmpty() && errorMessages.isEmpty()) {
+        if (possibleReturnTypes.isEmpty() && closestErrors.isEmpty()) {
             throw new TypeError(expr, "Function `" + expr.functionName + "` with the given arguments does not exist.");
-        } else if (possibleReturnTypes.isEmpty() && errorMessages.size() == 1) {
-            throw lastError;
+        } else if (possibleReturnTypes.isEmpty() && closestErrors.size() == 1) {
+            throw closestErrors.values().iterator().next();
         } else if (possibleReturnTypes.isEmpty()) {
             String description = "Function `" + expr.functionName + "` with the given arguments does not exist.";
 
@@ -933,10 +933,12 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
                     + generators.size()
                     + " versions of '"
                     + expr.functionName
-                    + "'. Neither of them can be used:");
+                    + (closestErrors.size() == generators.size()
+                            ? "'. Neither of them can be used:"
+                            : "'. None of them can be used. These match the most argument names:"));
 
             int i = 1;
-            for (String error : errorMessages.stream().sorted().toList()) {
+            for (String error : closestErrors.keySet()) {
                 hint.append("\n ").append(i++).append(". ").append(error);
             }
 
@@ -1289,6 +1291,26 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
         return candidates.stream()
                 .min(Comparator.comparingInt(candidate -> Utils.editDistance(query, candidate)))
                 .orElse("");
+    }
+
+    /** The number of explicitly named arguments of the call that this version declares. */
+    private static int argumentNameFit(Expr.Call call, Generator generator) {
+        Set<String> declared = new HashSet<>();
+        generator.getArguments().forEach(argument -> declared.add(argument.getName()));
+        int fit = 0;
+        for (Expr.Argument argument : call.arguments) {
+            if (argument.name != null && declared.contains(argument.name)) fit++;
+        }
+        return fit;
+    }
+
+    /** Keeps the errors of the best-fitting versions, deduplicated by message, and returns the best fit. */
+    private static int rememberClosestError(
+            Map<String, TypeError> closestErrors, int bestFit, int fit, TypeError error) {
+        if (fit < bestFit) return bestFit;
+        if (fit > bestFit) closestErrors.clear();
+        closestErrors.putIfAbsent(error.getMessage(), error);
+        return fit;
     }
 
     private static String argumentHint(ArgumentResolutionError.UnknownName error) {
