@@ -476,7 +476,8 @@ public class ComponentResolver {
         }
 
         throw new TypeError(
-                "The type '" + typeName + "' does not exist.", "Are you looking for '" + findClosestType(typeName) + "'?");
+                "The type '" + typeName + "' does not exist.",
+                "Are you looking for '" + findClosestType(typeName) + "'?");
     }
 
     /**
