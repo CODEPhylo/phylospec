@@ -16,7 +16,9 @@ class TypeImportHintTest {
         resolver.importNamespace(List.of("sample"));
 
         var error = assertThrows(TypeError.class, () -> ResolvedType.fromString("Vector<SampleCount>", resolver));
-        assertEquals("Add 'use sample.types' before this declaration.", error.toError(null).hint());
+        assertEquals(
+                "Add 'use sample.types' before this declaration.",
+                error.toError(null).hint());
         resolver.importNamespace(List.of("sample", "types"));
         assertDoesNotThrow(() -> ResolvedType.fromString("Vector<SampleCount>", resolver));
     }
@@ -24,7 +26,8 @@ class TypeImportHintTest {
     @Test
     void listsAllMatchingNamespacesInOrder() throws IOException {
         var resolver = resolverWithSampleCounts("zeta", "alpha");
-        var error = assertThrows(TypeError.class, () -> ResolvedType.fromString("SampleCount", List.of(), resolver, false));
+        var error =
+                assertThrows(TypeError.class, () -> ResolvedType.fromString("SampleCount", List.of(), resolver, false));
         assertEquals(
                 "Choose the intended namespace and add one of these imports: 'use alpha', 'use zeta'.",
                 error.toError(null).hint());
