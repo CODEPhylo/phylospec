@@ -14,6 +14,7 @@ import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.evolution.speciation.BirthDeathGernhard08Model;
 import beast.base.spec.inference.distribution.LogNormal;
 import beast.base.spec.inference.distribution.Normal;
+import beast.base.spec.inference.operator.RealRandomWalkOperator;
 import beast.base.spec.inference.operator.ScaleOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.util.Randomizer;
@@ -111,11 +112,14 @@ class BirthDeathRatesTileTest {
         assertOriginalPrior(graph, birthSource, family.equals("direct"), 1.1, 0.3);
         assertOriginalPrior(graph, death, true, -0.7, 0.2);
         for (var operator : graph.operators) {
-            ScaleOperator scale = assertInstanceOf(ScaleOperator.class, operator);
-            assertEquals(5.0, scale.m_pWeight.get());
-            assertEquals(1, scale.listStateNodes().size());
-            assertTrue(scale.listStateNodes().contains(birthSource)
-                    || scale.listStateNodes().contains(death));
+            // logBirth ~ Normal lives on the whole Real line, so it gets additive proposals.
+            if (family.equals("derived") && operator.listStateNodes().contains(birthSource)) {
+                assertInstanceOf(RealRandomWalkOperator.class, operator);
+            } else assertInstanceOf(ScaleOperator.class, operator);
+            assertEquals(5.0, operator.m_pWeight.get());
+            assertEquals(1, operator.listStateNodes().size());
+            assertTrue(operator.listStateNodes().contains(birthSource)
+                    || operator.listStateNodes().contains(death));
         }
         for (BirthDeathGernhard08Model law : laws) {
             BirthDeathRateValue net =

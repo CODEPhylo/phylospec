@@ -98,6 +98,9 @@ class SpeciationLiveParametersTest {
             if (birthDeath && derived && operator.listStateNodes().contains(turnover)) {
                 RealRandomWalkOperator walk = assertInstanceOf(RealRandomWalkOperator.class, operator);
                 assertEquals(0.25, walk.windowSizeInput.get());
+            } else if (derived) {
+                // logRate ~ Normal lives on the whole Real line, so it gets additive proposals.
+                assertInstanceOf(RealRandomWalkOperator.class, operator);
             } else assertInstanceOf(ScaleOperator.class, operator);
             assertEquals(5.0, operator.m_pWeight.get());
             assertEquals(1, operator.listStateNodes().size());
