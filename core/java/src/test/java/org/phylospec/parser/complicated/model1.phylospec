@@ -23,7 +23,9 @@ Alignment alignment ~ PhyloCTMC(
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
-// Function `PhyloCTMC` takes no argument named `Q`. Do you mean 'tree'?
+// Function `PhyloCTMC` with the given arguments does not exist. There are 2 versions of 'PhyloCTMC'. Neither of them can be used:
+// 1. Function `PhyloCTMC` takes no argument named `Q`. Do you mean 'qMatrix'?
+// 2. Function `PhyloCTMC` takes no argument named `Q`. Do you mean 'siteRates'?
 // EXPECT TYPE_ERRORS
 
 // EXPECT TYPES

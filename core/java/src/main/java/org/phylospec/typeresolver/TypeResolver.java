@@ -851,12 +851,17 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
             } catch (ArgumentResolutionError er) {
                 TypeError error =
                         switch (er) {
-                            case ArgumentResolutionError.UnknownName e ->
-                                new TypeError(
+                            case ArgumentResolutionError.UnknownName e -> {
+                                String closestUnusedName = findClosest(e.getUnusedNames(), e.name);
+                                yield new TypeError(
                                         expr,
                                         "Function `" + generator.getName() + "` takes no argument named `" + e.name
                                                 + "`.",
-                                        "Do you mean '" + findClosest(e.allowedNames, e.name) + "'?");
+                                        closestUnusedName.isBlank()
+                                                ? "All arguments of `" + generator.getName()
+                                                        + "` are already specified. Remove this argument."
+                                                : "Do you mean '" + closestUnusedName + "'?");
+                            }
                             case ArgumentResolutionError.MissingRequired e ->
                                 new TypeError(
                                         expr,

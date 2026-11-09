@@ -337,7 +337,8 @@ public abstract class Expr extends AstNode {
             Map<String, Argument> boundArguments = new LinkedHashMap<>();
             ArgumentResolutionError missingNameError = null;
             ArgumentResolutionError duplicateNameError = null;
-            ArgumentResolutionError unknownNameError = null;
+            Argument unknownNameArgument = null;
+            String unknownName = null;
 
             for (Argument argument : arguments) {
                 String parameterName = resolveArgumentName(argument, parameterNames, requiredParameters);
@@ -347,9 +348,9 @@ public abstract class Expr extends AstNode {
                         missingNameError = new ArgumentResolutionError.MissingName(argument);
                     }
                 } else if (!parameterNames.contains(parameterName)) {
-                    if (unknownNameError == null) {
-                        unknownNameError =
-                                new ArgumentResolutionError.UnknownName(argument, parameterName, parameterNames);
+                    if (unknownNameArgument == null) {
+                        unknownNameArgument = argument;
+                        unknownName = parameterName;
                     }
                 } else if (boundArguments.containsKey(parameterName)) {
                     if (duplicateNameError == null) {
@@ -365,7 +366,10 @@ public abstract class Expr extends AstNode {
 
             if (missingNameError != null) throw missingNameError;
             if (duplicateNameError != null) throw duplicateNameError;
-            if (unknownNameError != null) throw unknownNameError;
+            if (unknownNameArgument != null) {
+                throw new ArgumentResolutionError.UnknownName(
+                        unknownNameArgument, unknownName, parameterNames, Set.copyOf(boundArguments.keySet()));
+            }
 
             // check that we have all required arguments
 

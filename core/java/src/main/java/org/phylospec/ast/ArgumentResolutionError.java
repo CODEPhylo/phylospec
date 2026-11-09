@@ -1,5 +1,6 @@
 package org.phylospec.ast;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -26,11 +27,20 @@ public abstract sealed class ArgumentResolutionError extends RuntimeException {
         public final Expr.Argument argument;
         public final String name;
         public final Set<String> allowedNames;
+        public final Set<String> usedNames;
 
-        public UnknownName(Expr.Argument argument, String name, Set<String> allowedNames) {
+        public UnknownName(Expr.Argument argument, String name, Set<String> allowedNames, Set<String> usedNames) {
             this.argument = argument;
             this.name = name;
             this.allowedNames = allowedNames;
+            this.usedNames = usedNames;
+        }
+
+        /** Returns the allowed names which are not bound to any argument of the call. */
+        public Set<String> getUnusedNames() {
+            Set<String> unusedNames = new HashSet<>(this.allowedNames);
+            unusedNames.removeAll(this.usedNames);
+            return unusedNames;
         }
     }
 

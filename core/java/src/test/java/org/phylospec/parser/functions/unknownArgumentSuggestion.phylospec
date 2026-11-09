@@ -1,0 +1,15 @@
+Real a ~ Normal(mean=1.0, meanx=2.0)
+Real b ~ Normal(meanx=2.0, mean=1.0)
+Real c ~ Normal(mean=1.0, sd=2.0, mea=3.0)
+
+// EXPECT AST
+// (DR Real a (CA Normal (AA mean 1.0) (AA meanx 2.0)))
+// (DR Real b (CA Normal (AA meanx 2.0) (AA mean 1.0)))
+// (DR Real c (CA Normal (AA mean 1.0) (AA sd 2.0) (AA mea 3.0)))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Function `Normal` takes no argument named `meanx`. Do you mean 'sd'?
+// Function `Normal` takes no argument named `meanx`. Do you mean 'sd'?
+// Function `Normal` takes no argument named `mea`. All arguments of `Normal` are already specified. Remove this argument.
+// EXPECT TYPE_ERRORS
