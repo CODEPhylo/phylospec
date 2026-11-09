@@ -378,6 +378,7 @@ public class PhyloSpecRunner {
         }
         if (record == null) {
             beastState.initializeBEASTObjects();
+            initializeLikelihood(beastState, likelihood);
             mcmc.run();
         } else {
             ManagedMCMC managed = (ManagedMCMC) mcmc;
@@ -390,6 +391,7 @@ public class PhyloSpecRunner {
             try {
                 managed.checkCancellation();
                 beastState.initializeBEASTObjects();
+                initializeLikelihood(beastState, likelihood);
                 for (Distribution distribution : beastState.likelihoodDistributions) {
                     if (distribution instanceof ReportingTreeLikelihood treeLikelihood) {
                         var backend = treeLikelihood.backend();
@@ -425,6 +427,14 @@ public class PhyloSpecRunner {
                 throw failure;
             }
         }
+    }
+
+    private static void initializeLikelihood(BEASTState state, CompoundDistribution likelihood) {
+        // Fully observed terms may have no path from a sampled StateNode. BEAST's dirty
+        // traversal will never evaluate those terms, so seed their caches before MCMC.
+        // Subsequent parameter/tree proposals retain the normal BEAST dirty traversal.
+        for (Distribution distribution : state.likelihoodDistributions) distribution.calculateLogP();
+        likelihood.calculateLogP();
     }
 
     /** Finds the same constant seed used by the existing construction and initialization stages. */
