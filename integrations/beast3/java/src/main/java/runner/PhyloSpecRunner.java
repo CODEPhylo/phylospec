@@ -114,6 +114,11 @@ public class PhyloSpecRunner {
                 ? TileCatalog.select(BEASTState.class, tileLibraryIds.get())
                 : TileCatalog.discover(BEASTState.class);
         Diagnostics diagnostics = new Diagnostics(warningHandler);
+        catalog.getComponentResolver()
+                .setUnknownNamespaceHint(namespace -> "No loaded component library provides '" + namespace
+                        + "'. If an adapter bundle provides it, pass the bundle directory with --adapter-path"
+                        + " and select its library with --library (e.g. --adapter-path <bundle> --library "
+                        + namespace + ").");
 
         // run lexer
 
