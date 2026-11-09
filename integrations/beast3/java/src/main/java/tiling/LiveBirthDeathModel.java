@@ -2,9 +2,10 @@ package tiling;
 
 import beast.base.evolution.tree.TreeInterface;
 import beast.base.evolution.tree.TreeUtils;
+import beast.base.spec.evolution.speciation.BirthDeathGernhard08Model;
 
 /** Native birth-death likelihood with dependency tracking for derived rate inputs. */
-public final class LiveBirthDeathModel extends LiveBirthDeathGernhard08Model {
+public final class LiveBirthDeathModel extends BirthDeathGernhard08Model {
 
     @Override
     public void initAndValidate() {
@@ -27,5 +28,12 @@ public final class LiveBirthDeathModel extends LiveBirthDeathGernhard08Model {
                     "BirthDeath(birthRate, deathRate) currently requires contemporaneous tips; "
                             + "the native Gernhard08 model does not support dated tips.");
         }
+    }
+
+    @Override
+    protected boolean requiresRecalculation() {
+        // The native method only checks direct StateNodes. Our rate conversions are CalculationNodes.
+        // BEAST calls this on affected dependency paths, so unrelated proposals still use cached logP.
+        return true;
     }
 }

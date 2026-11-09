@@ -59,7 +59,7 @@ class BirthDeathRatesTileTest {
         BirthDeathGernhard08Model direct = law(graph, "direct_likelihood");
         BirthDeathGernhard08Model equivalent = law(graph, "equivalent_likelihood");
         assertInstanceOf(LiveBirthDeathModel.class, direct);
-        assertInstanceOf(BirthDeathGernhard08Model.class, equivalent);
+        assertEquals(BirthDeathGernhard08Model.class, equivalent.getClass());
         assertNull(direct.originHeightParameterInput.get());
         assertFalse(direct.conditionalOnRootInput.get());
         assertEquals(1.5, direct.birthDiffRateParameterInput.get().get());
@@ -260,7 +260,7 @@ class BirthDeathRatesTileTest {
     }
 
     @Test
-    void mismatchedObservedRootIsNotTreatedAsAnOriginBound() {
+    void directRatesDoNotSilentlyTreatRootAgeAsOriginHeight() {
         assertThrows(
                 TileApplicationError.class,
                 () -> build(
