@@ -6,9 +6,11 @@ import beast.base.inference.CompoundDistribution;
 import beast.base.inference.State;
 import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.Gamma;
 import beast.base.spec.inference.distribution.IID;
 import beast.base.spec.inference.distribution.LogNormal;
+import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
@@ -241,10 +243,17 @@ class PositiveIIDTileTest {
     }
 
     @Test
-    void doesNotNarrowSignedNormalToPositiveRates() {
-        assertThrows(
-                TileApplicationError.class,
-                () -> evaluate("Vector<Real> values ~ IID(base=Normal(mean=0.0,sd=1.0),num=3)"));
+    void doesNotNarrowSignedNormalToPositiveRates() throws Exception {
+        BEASTState state = evaluate("Vector<Real> rates ~ IID(base=Normal(mean=0.0,sd=1.0),num=3)");
+        RealVectorParam<?> values = rates(state);
+        assertSame(Real.INSTANCE, values.getDomain());
+        IID<?, ?, ?> prior = assertInstanceOf(IID.class, state.priorDistributions.get(values));
+        assertInstanceOf(Normal.class, prior.distInput.get());
+        values.set(0, -1.0);
+        values.set(1, 0.0);
+        values.set(2, 1.0);
+        assertArrayEquals(new double[] {-1.0, 0.0, 1.0}, values.getValues(), 0.0);
+        assertEquals(-1.5 * Math.log(2.0 * Math.PI) - 1.0, prior.calculateLogP(), DENSITY_TOLERANCE);
     }
 
     @Test

@@ -21,6 +21,7 @@ import beast.base.spec.inference.distribution.Gamma;
 import beast.base.spec.inference.distribution.LogNormal;
 import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.operator.IntRandomWalkOperator;
+import beast.base.spec.inference.operator.RealRandomWalkOperator;
 import beast.base.spec.inference.operator.ScaleOperator;
 import beast.base.spec.inference.operator.SwapOperator;
 import beast.base.spec.inference.parameter.IntVectorParam;
@@ -208,13 +209,25 @@ class RelaxedClockTileTest {
         assertEquals(10.0, walk.m_pWeight.get(), 0.0);
         assertEquals(10.0, swap.m_pWeight.get(), 0.0);
         if (sampledRate) {
-            ScaleOperator scale = graph.operators.stream()
-                    .filter(ScaleOperator.class::isInstance)
-                    .map(ScaleOperator.class::cast)
+            var operator = graph.operators.stream()
+                    .filter(candidate -> candidate.listStateNodes().contains(model.source()))
                     .findFirst()
                     .orElseThrow();
-            assertEquals(List.of(model.source()), scale.listStateNodes());
-            assertEquals(5.0, scale.m_pWeight.get(), 0.0);
+            if (model.prior() instanceof Gamma) {
+                assertSame(
+                        model.source(),
+                        assertInstanceOf(ScaleOperator.class, operator)
+                                .parameterInput
+                                .get());
+            } else {
+                assertSame(
+                        model.source(),
+                        assertInstanceOf(RealRandomWalkOperator.class, operator)
+                                .scalarInput
+                                .get());
+            }
+            assertEquals(List.of(model.source()), operator.listStateNodes());
+            assertEquals(5.0, operator.m_pWeight.get(), 0.0);
         }
         assertInstanceOf(BeerLikelihoodCore4.class, model.likelihood().getLikelihoodCore());
     }
