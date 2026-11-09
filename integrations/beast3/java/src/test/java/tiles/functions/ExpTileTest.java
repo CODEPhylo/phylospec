@@ -13,6 +13,7 @@ import beast.base.spec.inference.distribution.Beta;
 import beast.base.spec.inference.distribution.Exponential;
 import beast.base.spec.inference.distribution.Gamma;
 import beast.base.spec.inference.distribution.Normal;
+import beast.base.spec.inference.operator.RealRandomWalkOperator;
 import beast.base.spec.inference.operator.ScaleOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.util.RPNcalculator;
@@ -129,7 +130,14 @@ class ExpTileTest {
         assertEquals(2, graph.calculationNodes.size());
         assertTrue(graph.calculationNodes.keySet().containsAll(List.of(first, second)));
         assertEquals(1, graph.operators.size());
-        ScaleOperator operator = assertInstanceOf(ScaleOperator.class, graph.operators.getFirst());
+        var operator = graph.operators.getFirst();
+        if (family.equals("Normal")) {
+            RealRandomWalkOperator walk = assertInstanceOf(RealRandomWalkOperator.class, operator);
+            assertSame(x, walk.scalarInput.get());
+        } else {
+            ScaleOperator scale = assertInstanceOf(ScaleOperator.class, operator);
+            assertSame(x, scale.parameterInput.get());
+        }
         assertEquals(List.of(x), operator.listStateNodes());
         assertEquals(5.0, operator.m_pWeight.get(), 0.0);
         double initialValue =
@@ -288,7 +296,8 @@ class ExpTileTest {
         assertEquals(1, graph.stateNodes.size());
         assertEquals(1, graph.priorDistributions.size());
         assertEquals(1, graph.operators.size());
-        ScaleOperator operator = assertInstanceOf(ScaleOperator.class, graph.operators.getFirst());
+        RealRandomWalkOperator operator = assertInstanceOf(RealRandomWalkOperator.class, graph.operators.getFirst());
+        assertSame(x, operator.scalarInput.get());
         assertEquals(List.of(x), operator.listStateNodes());
         assertEquals(5.0, operator.m_pWeight.get(), 0.0);
         Normal prior = assertInstanceOf(Normal.class, graph.priorDistributions.get(x));
@@ -324,7 +333,8 @@ class ExpTileTest {
         assertEquals(0.1, x.get(), 0.0);
         assertEquals(0.0, prior.meanInput.get().get(), 0.0);
         assertEquals(1.0, prior.sdInput.get().get(), 0.0);
-        ScaleOperator operator = assertInstanceOf(ScaleOperator.class, graph.operators.getFirst());
+        RealRandomWalkOperator operator = assertInstanceOf(RealRandomWalkOperator.class, graph.operators.getFirst());
+        assertSame(x, operator.scalarInput.get());
         assertEquals(List.of(x), operator.listStateNodes());
         assertEquals(5.0, operator.m_pWeight.get(), 0.0);
 

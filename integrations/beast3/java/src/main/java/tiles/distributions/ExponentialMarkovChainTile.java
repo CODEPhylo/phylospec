@@ -1,15 +1,18 @@
 package tiles.distributions;
 
+import beast.base.core.Input;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.inference.distribution.MarkovChainDistribution;
+import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.spec.type.RealScalar;
+import beast.base.spec.type.RealVector;
 import beastconfig.BEASTState;
 import beastconfig.OperatorSelector;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.phylospec.ast.Expr;
@@ -17,16 +20,19 @@ import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.typeresolver.Stochasticity;
 import tiling.BoundDistribution;
+import tiling.LiveExponentialMarkovChainDistribution;
 
 /**
- * {@code ExponentialMarkovChain(initialMean, numValues)}: x[0] ~ Exp(mean = initialMean) and
- * x[i] ~ Exp(mean = x[i-1]). Maps to BEAST's {@link MarkovChainDistribution} with shape 1 (a gamma
- * with shape 1 is an exponential) and an initial mean as the boundary condition.
+ * Fixed-length exponential chain: x[0] ~ Exp(mean = initialMean) and x[i] ~ Exp(mean = x[i-1]).
+ * The values are positive, as in BEAST 3's {@code MarkovChainDistribution}, so the chain can feed
+ * positive vector inputs such as skyline population sizes.
  */
 public class ExponentialMarkovChainTile
-        extends GeneratorTile<BoundDistribution<RealVectorParam<PositiveReal>, MarkovChainDistribution>, BEASTState> {
+        extends GeneratorTile<
+                BoundDistribution<RealVectorParam<PositiveReal>, LiveExponentialMarkovChainDistribution>, BEASTState> {
 
-    GeneratorTileInput<RealScalar<PositiveReal>, BEASTState> initialMeanInput = new GeneratorTileInput<>("initialMean");
+    GeneratorTileInput<RealScalar<? extends Real>, BEASTState> initialMeanInput =
+            new GeneratorTileInput<>("initialMean");
     GeneratorTileInput<IntScalarParam<? extends NonNegativeInt>, BEASTState> numValuesInput =
             new GeneratorTileInput<>("numValues", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
@@ -41,29 +47,53 @@ public class ExponentialMarkovChainTile
     }
 
     @Override
-    public BoundDistribution<RealVectorParam<PositiveReal>, MarkovChainDistribution> applyTile(
+    public BoundDistribution<RealVectorParam<PositiveReal>, LiveExponentialMarkovChainDistribution> applyTile(
             BEASTState state, IdentityHashMap<Expr.Variable, Integer> indices) {
-        RealScalar<PositiveReal> initialMean = this.initialMeanInput.apply(state, indices);
-        int size = this.numValuesInput.apply(state, indices).get();
-
-        if (size < 1) {
+        RealScalar<? extends Real> initialMean = initialMeanInput.apply(state, indices);
+        int size = numValuesInput.apply(state, indices).get();
+        if (size < 0) {
             throw new TileApplicationError(
-                    this.getRootNode(),
-                    "ExponentialMarkovChain requires a positive number of values.",
-                    "Provide a fixed positive integer for numValues.");
+                    getRootNode(), "Invalid exponential chain length.", "Provide a fixed non-negative numValues.");
+        }
+        double initial = initialMean.get();
+        if (size > 0 && (!Double.isFinite(initial) || initial <= 0.0)) {
+            throw new TileApplicationError(
+                    getRootNode(),
+                    "Invalid exponential chain initial mean.",
+                    "initialMean must be finite and greater than zero for a nonempty chain.");
         }
 
-        // default state: every value equal to the current initial mean (the chain's expectation)
-        double initial = initialMean.get();
-        if (!Double.isFinite(initial) || initial <= 0.0) {
-            initial = 1.0;
-        }
         double[] values = new double[size];
         Arrays.fill(values, initial);
-        RealVectorParam<PositiveReal> chain = new RealVectorParam<>(values, PositiveReal.INSTANCE);
+        RealVectorParam<PositiveReal> chain;
+        if (size == 0) {
+            // The native constructor assumes at least one value. Configure just
+            // this empty instance explicitly, without changing other vector inputs.
+            chain = new RealVectorParam<PositiveReal>() {
+                @Override
+                public void fromXML(String shape, String... storedValues) {
+                    // The native state reader splits empty text into one blank value.
+                    if ("0".equals(shape) && storedValues.length == 1 && storedValues[0].isBlank()) {
+                        super.fromXML(shape, new String[0]);
+                    } else {
+                        super.fromXML(shape, storedValues);
+                    }
+                }
+            };
+            chain.dimensionInput.setValue(0, chain);
+            chain.domainTypeInput.setValue(PositiveReal.INSTANCE, chain);
+            chain.valuesInput.setRule(Input.Validate.OPTIONAL);
+            chain.initAndValidate();
+        } else {
+            chain = new RealVectorParam<>(values, PositiveReal.INSTANCE);
+        }
 
-        MarkovChainDistribution distribution = new MarkovChainDistribution();
-        state.setInput(distribution, distribution.initialMeanInput, initialMean);
+        LiveExponentialMarkovChainDistribution distribution = new LiveExponentialMarkovChainDistribution();
+        // The type checker requires a positive initial mean. A computed mean can still
+        // carry a wider native domain, so keep its object and check its value on every evaluation.
+        @SuppressWarnings("unchecked")
+        RealScalar<PositiveReal> nativeMean = (RealScalar<PositiveReal>) initialMean;
+        state.setInput(distribution, distribution.initialMeanInput, nativeMean);
         state.setInput(distribution, distribution.shapeInput, 1.0);
 
         return new BoundDistribution<>(
@@ -72,12 +102,16 @@ public class ExponentialMarkovChainTile
                 value -> {
                     if (value.size() != size) {
                         throw new TileApplicationError(
-                                this.getRootNode(),
+                                getRootNode(),
                                 "The chain length does not match numValues.",
                                 "Provide exactly " + size + " values.");
                     }
-                    state.setInput(distribution, distribution.paramInput, value);
+                    // Observed values may carry a wider native domain; the distribution
+                    // checks their exponential support on every evaluation.
+                    @SuppressWarnings("unchecked")
+                    RealVector<PositiveReal> nativeValues = (RealVector<PositiveReal>) (RealVector<?>) value;
+                    state.setInput(distribution, distribution.paramInput, nativeValues);
                 },
-                OperatorSelector::getDefaultOperators);
+                (value, graph) -> value.size() == 0 ? List.of() : OperatorSelector.getDefaultOperators(value, graph));
     }
 }
