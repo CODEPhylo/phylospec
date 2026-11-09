@@ -1,15 +1,26 @@
 package tiles.phylonco;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeParser;
+import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
+import beast.base.inference.State;
+import beast.base.inference.StateNode;
+import beast.base.spec.inference.parameter.IntVectorParam;
+import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.RealVectorParam;
 import beastconfig.BEASTState;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -106,6 +117,67 @@ class CRC09ModelTest {
 
         double logP = treeLikelihood.calculateLogP();
         assertTrue(Double.isFinite(logP) && logP < 0.0, "log likelihood " + logP);
+    }
+
+    @Test
+    void fixedStateMatchesLPhyBeastLikelihoodAndSharedPriorTerms() throws Exception {
+        Properties reference = new Properties();
+        try (var in = getClass().getResourceAsStream("/crc09-reference.properties")) {
+            reference.load(in);
+        }
+        BEASTState graph = evaluate(MODEL.formatted(data()));
+        Distribution likelihood = graph.likelihoodDistributions.getFirst();
+        assertEquals(1, graph.likelihoodDistributions.size());
+        CompoundDistribution prior = new CompoundDistribution();
+        prior.initByName("distribution", new ArrayList<>(graph.priorDistributions.values()));
+        CompoundDistribution posterior = new CompoundDistribution();
+        posterior.initByName("distribution", List.of(prior, likelihood));
+        State state = new State();
+        state.initByName("stateNode", new ArrayList<>(graph.stateNodes.keySet()));
+        state.initialise();
+        state.setPosterior(posterior);
+
+        for (StateNode node : graph.stateNodes.keySet()) {
+            assertTrue(reference.containsKey(node.getID()), "Missing fixed state for " + node.getID());
+            setReferenceValue(node, reference.getProperty(node.getID()));
+        }
+        state.robustlyCalcPosterior(posterior);
+        // The generated LPhyBEAST prior omits the uniform mass on the four positive
+        // compositions of five coalescences into two groups: (1,4), (2,3), (3,2), (4,1).
+        double logGroupMass = -Math.log(4.0);
+        Distribution groupPrior = graph.priorDistributions.entrySet().stream()
+                .filter(entry -> entry.getKey().getID().equals("groupSizes"))
+                .findFirst().orElseThrow().getValue();
+        double lphyBeastPrior = Double.parseDouble(reference.getProperty("lphybeastLogPrior"));
+        assertAll(
+                () -> assertEquals(Double.parseDouble(reference.getProperty("lphybeastLogLikelihood")),
+                        likelihood.getCurrentLogP(), 1e-8, "read-count tree log likelihood"),
+                () -> assertEquals(logGroupMass, groupPrior.getCurrentLogP(), 1e-12, "composition log mass"),
+                () -> assertEquals(lphyBeastPrior + logGroupMass, prior.getCurrentLogP(), 1e-8,
+                        "model log prior including the normalized composition mass"));
+    }
+
+    private static void setReferenceValue(StateNode node, String value) {
+        if (node instanceof Tree tree) {
+            TreeParser fixed = new TreeParser();
+            fixed.initByName("taxonset", tree.getTaxonset(), "newick", value,
+                    "IsLabelledNewick", true, "adjustTipHeights", false);
+            for (int i = 0; i < tree.getLeafNodeCount(); i++) {
+                assertEquals(tree.getNode(i).getID(), fixed.getNode(i).getID());
+            }
+            tree.assignFromWithoutID(fixed);
+        } else if (node instanceof RealScalarParam<?> scalar) {
+            scalar.set(Double.parseDouble(value));
+        } else if (node instanceof RealVectorParam<?> vector) {
+            String[] entries = value.split(" ");
+            assertEquals(vector.size(), entries.length, node.getID());
+            for (int i = 0; i < entries.length; i++) vector.set(i, Double.parseDouble(entries[i]));
+        } else {
+            var groups = assertInstanceOf(IntVectorParam.class, node);
+            String[] entries = value.split(" ");
+            assertEquals(groups.size(), entries.length, node.getID());
+            for (int i = 0; i < entries.length; i++) groups.set(i, Integer.parseInt(entries[i]));
+        }
     }
 
     @Test

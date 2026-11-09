@@ -15,11 +15,13 @@ import beast.base.spec.type.RealVector;
 import beastconfig.BEASTState;
 import beastconfig.OperatorSelector;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Optional;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
-import tiles.input.DecoratedAlignment;
+import tiles.input.TaxaData;
+import tiles.input.TaxonValue;
 import tiling.BoundDistribution;
 
 /**
@@ -36,7 +38,7 @@ public class BayesianSkylineTile extends GeneratorTile<BoundDistribution<Tree, B
             new GeneratorTileInput<>("populationSizes");
     GeneratorTileInput<IntVector<? extends PositiveInt>, BEASTState> groupSizesInput =
             new GeneratorTileInput<>("groupSizes");
-    GeneratorTileInput<DecoratedAlignment, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
+    GeneratorTileInput<List<TaxonValue>, BEASTState> taxaInput = new GeneratorTileInput<>("taxa", true);
 
     @Override
     public String getPhyloSpecGeneratorName() {
@@ -53,11 +55,9 @@ public class BayesianSkylineTile extends GeneratorTile<BoundDistribution<Tree, B
             BEASTState state, IdentityHashMap<Expr.Variable, Integer> indices) {
         RealVector<? extends PositiveReal> populationSizes = this.populationSizesInput.apply(state, indices);
         IntVector<? extends PositiveInt> groupSizesVector = this.groupSizesInput.apply(state, indices);
-        DecoratedAlignment taxa = this.taxaInput.apply(state, indices);
+        TaxaData taxa = TaxaData.fromList(state, this.taxaInput.apply(state, indices));
 
-        int numTaxa = taxa.taxonSet() != null
-                ? taxa.taxonSet().getTaxonCount()
-                : taxa.alignment().getTaxonCount();
+        int numTaxa = taxa.size();
         int events = numTaxa - 1;
 
         if (populationSizes.size() != groupSizesVector.size()) {
@@ -98,7 +98,6 @@ public class BayesianSkylineTile extends GeneratorTile<BoundDistribution<Tree, B
                 new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
 
         RandomTree defaultState = new RandomTree();
-        state.setInput(defaultState, defaultState.taxaInput, taxa.alignment());
         state.setInput(defaultState, defaultState.m_taxonset, taxa.taxonSet());
         state.setInput(defaultState, defaultState.populationFunctionInput, populationFunction);
         if (taxa.ages() != null) {

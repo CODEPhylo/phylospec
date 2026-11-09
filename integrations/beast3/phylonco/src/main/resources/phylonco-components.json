@@ -161,13 +161,13 @@
           },
           {
             "name": "homozygousOverdispersion",
-            "description": "Dirichlet-multinomial overdispersion for homozygous genotypes (w1)",
+            "description": "Dirichlet-multinomial concentration for homozygous or single-allele read counts (w1). At fixed read depth, larger values give less overdispersion.",
             "type": "PositiveReal",
             "required": true
           },
           {
             "name": "heterozygousOverdispersion",
-            "description": "Dirichlet-multinomial overdispersion for heterozygous genotypes (w2)",
+            "description": "Dirichlet-multinomial concentration for heterozygous read counts when both alleles are retained (w2). At fixed read depth, larger values give less overdispersion.",
             "type": "PositiveReal",
             "required": true
           }
