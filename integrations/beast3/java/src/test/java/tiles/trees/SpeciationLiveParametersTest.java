@@ -95,10 +95,12 @@ class SpeciationLiveParametersTest {
             if (birthDeath) assertInstanceOf(LogNormal.class, graph.priorDistributions.get(turnover));
         }
         for (var operator : graph.operators) {
+            // the unbounded log parameters are proposed additively, the positive ones are scaled
             if (birthDeath && derived && operator.listStateNodes().contains(turnover)) {
                 RealRandomWalkOperator walk = assertInstanceOf(RealRandomWalkOperator.class, operator);
                 assertEquals(0.25, walk.windowSizeInput.get());
-            } else assertInstanceOf(ScaleOperator.class, operator);
+            } else if (derived) assertInstanceOf(RealRandomWalkOperator.class, operator);
+            else assertInstanceOf(ScaleOperator.class, operator);
             assertEquals(5.0, operator.m_pWeight.get());
             assertEquals(1, operator.listStateNodes().size());
             assertTrue(operator.listStateNodes().stream().allMatch(graph.stateNodes::containsKey));
