@@ -13,6 +13,6 @@ Real d ~ LogNormal(logMean=0.0, logSdd=1.0)
 // EXPECT TYPE_ERRORS
 // Function `log` takes no argument named `a`. Do you mean 'x'?
 // Function `Uniform` takes no argument named `zzzzz`.
-// Function `log` takes no argument named `extra`.
+// Function `log` takes no argument named `extra`. All arguments of `log` are already specified. Remove this argument.
 // Function `LogNormal` takes no argument named `logSdd`. Do you mean 'logSd'?
 // EXPECT TYPE_ERRORS

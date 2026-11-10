@@ -858,7 +858,7 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
                                         e.argument.nameNode != null ? e.argument.nameNode : e.argument,
                                         "Function `" + generator.getName() + "` takes no argument named `" + e.name
                                                 + "`.",
-                                        argumentHint(e));
+                                        argumentHint(e, generator));
                             case ArgumentResolutionError.MissingRequired e ->
                                 new TypeError(
                                         expr,
@@ -1313,8 +1313,12 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
         return fit;
     }
 
-    private static String argumentHint(ArgumentResolutionError.UnknownName error) {
+    private static String argumentHint(ArgumentResolutionError.UnknownName error, Generator generator) {
         if (error.argument.name == null) return "Pass '" + error.name + "' with an explicit argument name.";
+        if (error.suggestedNames.isEmpty()) {
+            return "All arguments of `" + generator.getName() + "` are already specified. Remove this argument.";
+        }
+
         String closest = null;
         int bestDistance = Integer.MAX_VALUE;
         for (String candidate : error.suggestedNames) {
