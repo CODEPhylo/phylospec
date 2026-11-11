@@ -384,7 +384,7 @@ public class EngineSupportTest {
 
         EngineSupport engine = new EngineSupport(engine(
                 "overloadingEngine",
-                engineGenerator("PhyloCTMC", null, "tree", "qMatrix", "siteRates", "branchRates"),
+                engineGenerator("PhyloCTMC", null, "tree", "qMatrix", "siteRates", "branchRates", "numSites"),
                 engineGenerator("PhyloCTMC", null, "tree", "siteQMatrices", "siteRates", "branchRates")));
 
         assertTrue(
