@@ -234,11 +234,22 @@ class CRC09ModelTest {
 
     @ParameterizedTest(name = "explicit={0}")
     @ValueSource(booleans = {false, true})
-    void fixedStateMatchesLPhyBeastLikelihoodAndSharedPriorTerms(boolean explicit) throws Exception {
+    void fixedStatesMatchLPhyBeastTermByTerm(boolean explicit) throws Exception {
         Properties reference = new Properties();
         try (var in = getClass().getResourceAsStream("/crc09-reference.properties")) {
             reference.load(in);
         }
+        for (String name : reference.getProperty("states").split(",")) {
+            assertStateMatchesLPhyBeast(explicit, reference, name);
+        }
+    }
+
+    /**
+     * Compares the likelihood and every prior term at one fixed state. LPhyBEAST omits the
+     * uniform prior on the group sizes: its mass is -log 4 for the four compositions of five
+     * coalescences into two groups, (1,4), (2,3), (3,2) and (4,1).
+     */
+    private void assertStateMatchesLPhyBeast(boolean explicit, Properties reference, String name) throws Exception {
         BEASTState graph = evaluate(model(explicit).formatted(data()));
         Distribution likelihood = graph.likelihoodDistributions.getFirst();
         assertEquals(1, graph.likelihoodDistributions.size());
@@ -252,23 +263,30 @@ class CRC09ModelTest {
         state.setPosterior(posterior);
 
         for (StateNode node : graph.stateNodes.keySet()) {
-            assertTrue(reference.containsKey(node.getID()), "Missing fixed state for " + node.getID());
-            setReferenceValue(node, reference.getProperty(node.getID()));
+            String value = reference.getProperty(name + "." + node.getID());
+            assertTrue(value != null, "Missing fixed state for " + name + "." + node.getID());
+            setReferenceValue(node, value);
         }
         state.robustlyCalcPosterior(posterior);
-        // The generated LPhyBEAST prior omits the uniform mass on the four positive
-        // compositions of five coalescences into two groups: (1,4), (2,3), (3,2), (4,1).
-        double logGroupMass = -Math.log(4.0);
-        Distribution groupPrior = graph.priorDistributions.entrySet().stream()
-                .filter(entry -> entry.getKey().getID().equals("groupSizes"))
-                .findFirst().orElseThrow().getValue();
-        double lphyBeastPrior = Double.parseDouble(reference.getProperty("lphybeastLogPrior"));
-        assertAll(
-                () -> assertEquals(Double.parseDouble(reference.getProperty("lphybeastLogLikelihood")),
-                        likelihood.getCurrentLogP(), 1e-8, "read-count tree log likelihood"),
-                () -> assertEquals(logGroupMass, groupPrior.getCurrentLogP(), 1e-12, "composition log mass"),
-                () -> assertEquals(lphyBeastPrior + logGroupMass, prior.getCurrentLogP(), 1e-8,
-                        "model log prior including the normalized composition mass"));
+
+        Set<String> lphyBeastTerms = reference.stringPropertyNames().stream()
+                .filter(key -> key.startsWith(name + ".prior."))
+                .map(key -> key.substring((name + ".prior.").length()))
+                .collect(Collectors.toSet());
+        Set<String> phyloSpecTerms = graph.priorDistributions.keySet().stream()
+                .map(StateNode::getID)
+                .filter(id -> !id.equals("groupSizes"))
+                .collect(Collectors.toSet());
+        assertEquals(lphyBeastTerms, phyloSpecTerms, name + ": prior terms");
+        assertAll(graph.priorDistributions.entrySet().stream().map(term -> () -> {
+            String id = term.getKey().getID();
+            double expected = id.equals("groupSizes")
+                    ? -Math.log(4.0)
+                    : Double.parseDouble(reference.getProperty(name + ".prior." + id));
+            assertEquals(expected, term.getValue().getCurrentLogP(), 1e-8, name + ": prior of " + id);
+        }));
+        assertEquals(Double.parseDouble(reference.getProperty(name + ".likelihood")),
+                likelihood.getCurrentLogP(), 1e-8, name + ": read-count tree log likelihood");
     }
 
     private static void setReferenceValue(StateNode node, String value) {
@@ -334,6 +352,33 @@ class CRC09ModelTest {
             assertEquals(5, sum, row);
         }
         assertTrue(last > first, "the likelihood should improve from the default state: " + first + " -> " + last);
+    }
+
+    /**
+     * BEAST's debug mode recomputes the posterior from scratch after each of the first 6000 steps
+     * and compares it with the value computed incrementally, so every operator must trigger the
+     * right recalculations. On a difference BEAST stops the JVM, and Maven reports this test class
+     * as crashed ("The forked VM terminated without properly saying goodbye").
+     */
+    @ParameterizedTest(name = "explicit={0}")
+    @ValueSource(booleans = {false, true})
+    void everyMcmcStepKeepsThePosteriorConsistent(boolean explicit) throws Exception {
+        Path source = this.directory.resolve("crc09-debug.phylospec");
+        Files.writeString(source, model(explicit).formatted("six-cells.mpileup") + """
+
+                mcmc {
+                    Integer chainLength = 6000
+                    Integer defaultLogEvery = 1000
+                    Integer randomSeed = 1
+                }
+                """);
+        data();
+        System.setProperty("beast.debug", "true");
+        try {
+            new PhyloSpecRunner(source, LIBRARIES).runPhyloSpec(this.directory.resolve("debug").toString());
+        } finally {
+            System.clearProperty("beast.debug");
+        }
     }
 
     private BEASTState evaluate(String source) throws Exception {
