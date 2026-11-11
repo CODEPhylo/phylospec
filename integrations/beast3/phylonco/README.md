@@ -124,11 +124,13 @@ The fixed-state regression in [CRC09ModelTest](src/test/java/tiles/phylonco/CRC0
 compares both PhyloSpec forms with the
 [LPhy version](src/test/reference/crc09-six-cells.lphy) on the same six cells and 30 sites.
 Both languages translate to the native Phylonco read-count tree likelihood, integrating over
-the unobserved genotypes. The [fixed state](src/test/resources/crc09-reference.properties)
-specifies the labelled tree, skyline groups and population sizes, GT10 parameters and all
-read-count parameters. The reference is evaluated before any MCMC proposal.
+the unobserved genotypes. The [fixed states](src/test/resources/crc09-reference.properties)
+specify the labelled tree, skyline groups and population sizes, GT10 parameters and all
+read-count parameters. There are eight states: every split of the five coalescences into two
+groups, different tree shapes and heights, and extreme but valid parameter values. At each
+state the test compares the likelihood and every prior term, to 1e-8. For the first state:
 
-| Log density at the fixed state | PhyloSpec | LPhyBEAST |
+| Log density at the first fixed state | PhyloSpec | LPhyBEAST |
 | --- | ---: | ---: |
 | Read-count tree likelihood | -878.8089507260435 | -878.8089507260435 |
 | Total prior | 27.97213555097137 | 29.35842991209126 |
@@ -137,8 +139,12 @@ The explicit and the compact PhyloSpec forms give the same values.
 
 There are four ordered ways to split five coalescent events between two nonempty groups.
 PhyloSpec includes the uniform log mass of `-log(4)` for the selected composition.
-LPhyBEAST leaves this constant out of its prior. The prior terms agree after accounting
-for that mass. It cancels in MCMC ratios when the numbers of tips and groups are fixed.
+LPhyBEAST has no prior term for the group sizes. All other prior terms agree. The constant
+cancels in MCMC ratios when the numbers of tips and groups are fixed.
+
+The test `everyMcmcStepKeepsThePosteriorConsistent` runs a short chain in BEAST's debug mode,
+which recomputes the posterior from scratch after every step and stops if it differs from the
+value BEAST computed incrementally.
 
 ### Regenerate the reference
 
@@ -165,11 +171,13 @@ java -Djava.only=true -Dpicocli.disable.closures=true --module-path "$mp" \
   convert -seed 19 -l 2000 -o "$work/reference.xml" "$work/crc09-six-cells.lphy"
 java -Djava.only=true --module-path "$mp" --add-modules ALL-MODULE-PATH \
   "$module/src/test/reference/ReadCrc09Reference.java" "$work/reference.xml" \
-  "$module/src/test/resources/crc09-reference.properties"
+  "$module/src/test/resources/crc09-reference.properties" |
+  grep -E '^[A-Za-z0-9]+\.(likelihood|prior\.[A-Za-z0-9]+)='
 ```
 
-The evaluator replaces the generated initial state with the shared fixed values and
-prints the native likelihood and prior from the XML, including their individual terms.
+For each state, the evaluator replaces the generated initial state with the fixed values and
+prints the native likelihood and every prior term from the XML, named after the PhyloSpec
+parameters. These lines are the reference values at the end of the properties file.
 
 ## Mpileup reading
 

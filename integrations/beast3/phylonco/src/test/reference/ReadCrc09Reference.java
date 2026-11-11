@@ -12,24 +12,36 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Element;
 
-/** Evaluate the LPhyBEAST XML with the state used by the CRC09 numerical regression. */
+/**
+ * Evaluates the LPhyBEAST XML at each fixed state of the CRC09 numerical regression and prints
+ * the likelihood and every prior term as properties, named after the PhyloSpec parameters.
+ */
 class ReadCrc09Reference {
+    /** LPhy names that differ from the PhyloSpec names. */
+    private static final Map<String, String> NAMES = Map.of(
+            "pi", "genotypeFrequencies", "rates", "relativeRates", "psi", "tree", "N", "populationSizes",
+            "BayesianSkyline", "tree");
+
     public static void main(String[] args) throws Exception {
+        var states = new Properties();
+        try (var reader = Files.newBufferedReader(Path.of(args[1]))) {
+            states.load(reader);
+        }
+        for (String state : states.getProperty("states").split(",")) {
+            evaluate(Path.of(args[0]), states, state.trim());
+        }
+    }
+
+    private static void evaluate(Path xml, Properties states, String state) throws Exception {
         var factory = DocumentBuilderFactory.newInstance();
         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        var doc = factory.newDocumentBuilder().parse(Path.of(args[0]).toFile());
-        var state = new Properties();
-        try (var reader = Files.newBufferedReader(Path.of(args[1]))) {
-            state.load(reader);
-        }
-        var names = Map.of("pi", "genotypeFrequencies", "rates", "relativeRates",
-                "psi", "tree", "N", "populationSizes");
+        var doc = factory.newDocumentBuilder().parse(xml.toFile());
         var nodes = doc.getElementsByTagName("stateNode");
         for (int i = 0; i < nodes.getLength(); i++) {
             var node = (Element) nodes.item(i);
             String id = node.getAttribute("id");
-            String value = state.getProperty(names.getOrDefault(id, id));
-            if (value == null) throw new IllegalArgumentException("Missing fixed state for " + id);
+            String value = states.getProperty(state + "." + NAMES.getOrDefault(id, id));
+            if (value == null) throw new IllegalArgumentException("Missing fixed state for " + state + "." + id);
             if (node.hasAttribute("newick")) {
                 node.setAttribute("newick", value);
             } else if (node.hasAttribute("value")) {
@@ -48,12 +60,11 @@ class ReadCrc09Reference {
             graph.initAndValidate();
             graph.setPosterior(posterior);
             graph.robustlyCalcPosterior(posterior);
-            for (Distribution d : posterior.pDistributions.get()) {
-                System.out.printf("%s = %.14f%n", d.getID(), d.getCurrentLogP());
-                if (d instanceof CompoundDistribution group) {
-                    for (var term : group.pDistributions.get()) {
-                        System.out.printf("  %s = %.14f%n", term.getID(), term.getCurrentLogP());
-                    }
+            for (Distribution group : posterior.pDistributions.get()) {
+                for (Distribution term : ((CompoundDistribution) group).pDistributions.get()) {
+                    String name = term.getID().replace(".prior", "");
+                    String key = group.getID().equals("likelihood") ? "likelihood" : "prior." + NAMES.getOrDefault(name, name);
+                    System.out.printf("%s.%s=%.14f%n", state, key, term.getCurrentLogP());
                 }
             }
         } finally {
