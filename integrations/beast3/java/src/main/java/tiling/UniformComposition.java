@@ -1,4 +1,4 @@
-package beastconfig;
+package tiling;
 
 import beast.base.core.BEASTInterface;
 import beast.base.core.Description;
