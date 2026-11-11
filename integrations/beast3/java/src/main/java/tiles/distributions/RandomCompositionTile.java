@@ -7,13 +7,7 @@ import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.inference.operator.DeltaExchangeOperator;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntSimplexParam;
-import beast.base.spec.type.IntScalar;
-import beast.base.spec.type.RealScalar;
-import beast.base.spec.type.Tensor;
 import beastconfig.BEASTState;
-import beastconfig.UniformComposition;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +19,7 @@ import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.typeresolver.Stochasticity;
 import tiles.rpn.RPNCalculationResult;
 import tiling.BoundDistribution;
+import tiling.UniformComposition;
 
 /**
  * {@code RandomComposition(total, numParts)}: a uniformly distributed vector of numParts positive
@@ -72,7 +67,7 @@ public abstract class RandomCompositionTile
         @Override
         int total(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indices) {
             RPNCalculationResult calculation = this.totalInput.apply(state, indices);
-            double value = evaluateConstant(calculation);
+            double value = calculation.evaluateConstant();
             if (value != Math.rint(value)) {
                 throw new TileApplicationError(
                         this.getRootNode(),
@@ -87,36 +82,6 @@ public abstract class RandomCompositionTile
     abstract int total(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indices);
 
     abstract int numParts(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indices);
-
-    /** Evaluates a constant RPN calculation over scalar inputs (+, -, *, /). */
-    static double evaluateConstant(RPNCalculationResult calculation) {
-        Deque<Double> stack = new ArrayDeque<>();
-        for (String token : calculation.calculation().trim().split("\\s+")) {
-            int index = calculation.names().indexOf(token);
-            if (index >= 0) {
-                Tensor<?, ?> input = calculation.inputs().get(index);
-                if (input instanceof IntScalar<?> intScalar) {
-                    stack.push((double) intScalar.get());
-                } else if (input instanceof RealScalar<?> realScalar) {
-                    stack.push(realScalar.get());
-                } else {
-                    throw new IllegalArgumentException("Only scalar inputs are supported in total.");
-                }
-                continue;
-            }
-            double right = stack.pop();
-            double left = stack.pop();
-            stack.push(
-                    switch (token) {
-                        case "+" -> left + right;
-                        case "-" -> left - right;
-                        case "*" -> left * right;
-                        case "/" -> left / right;
-                        default -> throw new IllegalArgumentException("Unsupported operator '" + token + "' in total.");
-                    });
-        }
-        return stack.pop();
-    }
 
     @Override
     public String getPhyloSpecGeneratorName() {
