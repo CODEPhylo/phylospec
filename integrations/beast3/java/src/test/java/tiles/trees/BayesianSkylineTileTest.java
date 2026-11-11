@@ -16,7 +16,6 @@ import beast.base.spec.inference.parameter.IntSimplexParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import beastconfig.BEASTState;
-import beastconfig.UniformComposition;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -33,6 +32,7 @@ import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import runner.PhyloSpecRunner;
+import tiling.UniformComposition;
 
 /**
  * Tiles for the classic Bayesian skyline as used by the CRC09 single-cell model:
