@@ -57,7 +57,7 @@ class CRC09ModelTest {
 
             data {
                 Vector<String> cellNames = ["c1", "c2", "c3", "c4", "c5", "c6"]
-                ReadCount readCounts = fromMpileup(file="%s", names=cellNames)
+                ReadCount readCounts = fromMpileup(file="%s", cellNames)
                 Taxa taxa = taxa(readCounts)
                 PositiveInteger numCells = numTaxa(readCounts)
             }
@@ -67,13 +67,13 @@ class CRC09ModelTest {
                     concentration=[3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0]
                 )
                 Simplex relativeRates ~ Dirichlet(concentration=[2.0, 20.0, 2.0, 2.0, 20.0, 2.0])
-                QMatrix qMatrix = gt10(relativeRates=relativeRates, genotypeFrequencies=genotypeFrequencies)
+                QMatrix qMatrix = gt10(relativeRates, genotypeFrequencies)
 
                 PositiveInteger numGroups = 2
                 Vector<PositiveInteger> groupSizes ~ RandomComposition(total=numCells - 1, numParts=numGroups)
                 PositiveReal initialMean ~ LogNormal(logMean=-5.0, logSd=2.0)
-                Vector<PositiveReal> populationSizes ~ ExponentialMarkovChain(initialMean=initialMean, numValues=numGroups)
-                Tree tree ~ SkylineCoalescent(populationSizes=populationSizes, groupSizes=groupSizes, taxa=taxa)
+                Vector<PositiveReal> populationSizes ~ ExponentialMarkovChain(initialMean, numValues=numGroups)
+                Tree tree ~ SkylineCoalescent(populationSizes, groupSizes, taxa)
 
                 Probability epsilon ~ Beta(alpha=1.0, beta=30.0)
                 Probability delta ~ Beta(alpha=1.0, beta=4.0)
@@ -84,8 +84,8 @@ class CRC09ModelTest {
                 Vector<PositiveReal> s ~ IID(base=LogNormal(logMean=0.2, logSd=0.72), num=numCells)
 
                 ReadCount reads ~ ReadCountModel(
-                    tree=tree,
-                    qMatrix=qMatrix,
+                    tree,
+                    qMatrix,
                     sequencingError=epsilon,
                     allelicDropout=delta,
                     meanAllelicCoverage=t,
@@ -100,15 +100,15 @@ class CRC09ModelTest {
     /** LPhy's explicit form of the observation model: latent genotypes, ploidy and coverage. */
     private static final String EXPLICIT_READS = """
             PositiveInteger numSites = numSites(readCounts)
-            Alignment genotypes ~ PhyloCTMC(tree=tree, qMatrix=qMatrix, numSites=numSites)
-            Matrix<PositiveInteger> ploidy ~ Ploidy(numCells=numCells, numSites=numSites, allelicDropout=delta)
+            Alignment genotypes ~ PhyloCTMC(tree, qMatrix, numSites)
+            Matrix<PositiveInteger> ploidy ~ Ploidy(numCells, numSites, allelicDropout=delta)
             Matrix<NonNegativeInteger> coverage ~ CoverageModel(
-                ploidy=ploidy, meanAllelicCoverage=t, allelicCoverageVariance=v, cellSizeFactors=s
+                ploidy, meanAllelicCoverage=t, allelicCoverageVariance=v, cellSizeFactors=s
             )
             ReadCount reads ~ ReadCountModel(
-                genotypes=genotypes,
-                ploidy=ploidy,
-                coverage=coverage,
+                genotypes,
+                ploidy,
+                coverage,
                 sequencingError=epsilon,
                 homozygousOverdispersion=w1,
                 heterozygousOverdispersion=w2
@@ -220,12 +220,26 @@ class CRC09ModelTest {
     void coverageMustUseTheSamePloidyAsTheReadCountModel() throws Exception {
         String source = model(true).formatted(data())
                 .replace("Matrix<NonNegativeInteger> coverage", """
-                        Matrix<PositiveInteger> otherPloidy ~ Ploidy(numCells=numCells, numSites=numSites, allelicDropout=delta)
+                        Matrix<PositiveInteger> otherPloidy ~ Ploidy(numCells, numSites, allelicDropout=delta)
                         Matrix<NonNegativeInteger> coverage""")
-                .replace("ploidy=ploidy, meanAllelicCoverage", "ploidy=otherPloidy, meanAllelicCoverage");
+                .replace("ploidy, meanAllelicCoverage", "ploidy=otherPloidy, meanAllelicCoverage");
 
         var error = assertThrows(TileApplicationError.class, () -> evaluate(source));
         assertTrue(error.getMessage().contains("same ploidy"), error::getMessage);
+    }
+
+    @Test
+    void checkWarnsWhenGenotypesAndPloidyHaveDifferentNumbersOfSites() throws Exception {
+        // with the number of sites read from the file, the checker cannot compare them, so fix it
+        String source = model(true).formatted(data())
+                .replace("PositiveInteger numSites = numSites(readCounts)", "PositiveInteger numSites = 30")
+                .replace("Ploidy(numCells, numSites, allelicDropout=delta)", "Ploidy(numCells, numSites=29, allelicDropout=delta)");
+
+        List<String> warnings = new PhyloSpecRunner(source, LIBRARIES).check().warnings().stream()
+                .map(warning -> warning.error().description())
+                .toList();
+
+        assertTrue(warnings.contains("The inputs for 'ReadCountModel' might be invalid."), warnings::toString);
     }
 
     private static Set<String> stateNodeIds(BEASTState state) {

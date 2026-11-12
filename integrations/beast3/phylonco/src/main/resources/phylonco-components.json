@@ -18,8 +18,8 @@
       {
         "name": "fromMpileup",
         "namespace": "phylonco",
-        "generatedType": "ReadCount<;numTaxa=names.num>",
-        "description": "Loads nucleotide read counts from an mpileup file; names gives the cell (taxon) name of each sample column, in order",
+        "generatedType": "ReadCount<;numTaxa=cellNames.num>",
+        "description": "Loads nucleotide read counts from an mpileup file; cellNames gives the cell (taxon) name of each sample column, in order",
         "arguments": [
           {
             "name": "file",
@@ -28,7 +28,7 @@
             "required": true
           },
           {
-            "name": "names",
+            "name": "cellNames",
             "description": "Cell names, one per sample column of the mpileup file",
             "type": "Vector<String>",
             "required": true
@@ -290,6 +290,22 @@
             "description": "Dirichlet-multinomial concentration for heterozygous read counts when both alleles are retained (w2). At fixed read depth, larger values give less overdispersion.",
             "type": "PositiveReal",
             "required": true
+          }
+        ],
+        "constraints": [
+          {
+            "argument": "ploidy",
+            "property": "numRows",
+            "operator": "equals",
+            "otherArgument": "genotypes",
+            "otherProperty": "numTaxa"
+          },
+          {
+            "argument": "ploidy",
+            "property": "numCols",
+            "operator": "equals",
+            "otherArgument": "genotypes",
+            "otherProperty": "numSites"
           }
         ]
       }

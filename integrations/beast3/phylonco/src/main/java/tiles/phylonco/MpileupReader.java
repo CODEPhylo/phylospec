@@ -16,7 +16,7 @@ import java.util.List;
  * <p>Each line is {@code chrom pos ref} followed by three columns per cell
  * ({@code depth bases qualities}). Lines with too few columns are skipped as a whole
  * (LPhy records their position and skips only the cell data, which misaligns sites). A line with
- * more cell columns than names is an error, so a short names list cannot silently drop cells.
+ * more cell columns than cellNames is an error, so a short cellNames list cannot silently drop cells.
  */
 public final class MpileupReader {
 
@@ -57,7 +57,7 @@ public final class MpileupReader {
                 if (parts.length < 3 + 3 * cells.size()) continue;
                 if (parts.length > 3 + 3 * cells.size()) {
                     throw new IOException("Line " + lineNumber + " has " + (parts.length - 3) / 3
-                            + " cell columns, but names lists " + cells.size() + " cells.");
+                            + " cell columns, but cellNames lists " + cells.size() + " cells.");
                 }
 
                 int ref = baseIndex(parts[2].trim().isEmpty() ? 'N' : parts[2].trim().charAt(0));
