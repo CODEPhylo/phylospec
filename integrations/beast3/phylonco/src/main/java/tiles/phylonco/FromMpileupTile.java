@@ -11,13 +11,13 @@ import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.typeresolver.Stochasticity;
 
-/** {@code fromMpileup(file, names)}: read counts of every cell and site in an mpileup file. */
+/** {@code fromMpileup(file, cellNames)}: read counts of every cell and site in an mpileup file. */
 public class FromMpileupTile extends GeneratorTile<ReadCountData, BEASTState> {
 
     GeneratorTileInput<String, BEASTState> fileInput =
             new GeneratorTileInput<>("file", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
-    GeneratorTileInput<List<?>, BEASTState> namesInput =
-            new GeneratorTileInput<>("names", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
+    GeneratorTileInput<List<?>, BEASTState> cellNamesInput =
+            new GeneratorTileInput<>("cellNames", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
     public String getPhyloSpecGeneratorName() {
@@ -32,21 +32,21 @@ public class FromMpileupTile extends GeneratorTile<ReadCountData, BEASTState> {
     @Override
     public ReadCountData applyTile(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indices) {
         String path = this.fileInput.apply(state, indices);
-        List<String> names = this.namesInput.apply(state, indices).stream().map(String::valueOf).toList();
+        List<String> cellNames = this.cellNamesInput.apply(state, indices).stream().map(String::valueOf).toList();
 
         MpileupReader.Counts counts;
         try {
-            counts = MpileupReader.read(state.resolvePath(path), names);
+            counts = MpileupReader.read(state.resolvePath(path), cellNames);
         } catch (IOException e) {
             throw new TileApplicationError(
                     this.getRootNode(),
                     "Could not read the mpileup file. " + e.getMessage(),
-                    "Check the file path and that names has one entry per cell column.");
+                    "Check the file path and that cellNames has one entry per cell column.");
         }
         if (counts.numSites() == 0) {
             throw new TileApplicationError(
                     this.getRootNode(),
-                    "The mpileup file has no usable sites for " + names.size() + " cells.",
+                    "The mpileup file has no usable sites for " + cellNames.size() + " cells.",
                     "Every line needs chrom, pos, ref and three columns (depth, bases, qualities) per cell.");
         }
         return ReadCountData.of(counts, state);

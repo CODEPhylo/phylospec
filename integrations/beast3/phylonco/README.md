@@ -32,10 +32,10 @@ mpileup (`src/test/resources/six-cells.mpileup`, 6 cells, 30 sites).
 
 | LPhy (`CRC09.lphy`) | PhyloSpec (`examples/CRC09-explicit.phylospec`) |
 | --- | --- |
-| `A ~ PhyloCTMC(L=l, Q=Q, dataType=unphasedGenotype(), tree=psi)` | `genotypes ~ PhyloCTMC(tree=tree, qMatrix=qMatrix, numSites=numSites)` |
-| `alpha ~ Ploidy(n=n, l=l, delta=delta)` | `ploidy ~ Ploidy(numCells=numCells, numSites=numSites, allelicDropout=delta)` |
-| `cov ~ CoverageModel(s=s, t=t, alpha=alpha, v=v)` | `coverage ~ CoverageModel(ploidy=ploidy, meanAllelicCoverage=t, allelicCoverageVariance=v, cellSizeFactors=s)` |
-| `r ~ ReadCountModel(epsilon=epsilon, w1=w1, w2=w2, D=A, coverage=cov, alpha=alpha)` | `reads ~ ReadCountModel(genotypes=genotypes, ploidy=ploidy, coverage=coverage, sequencingError=epsilon, homozygousOverdispersion=w1, heterozygousOverdispersion=w2)` |
+| `A ~ PhyloCTMC(L=l, Q=Q, dataType=unphasedGenotype(), tree=psi)` | `genotypes ~ PhyloCTMC(tree, qMatrix, numSites)` |
+| `alpha ~ Ploidy(n=n, l=l, delta=delta)` | `ploidy ~ Ploidy(numCells, numSites, allelicDropout=delta)` |
+| `cov ~ CoverageModel(s=s, t=t, alpha=alpha, v=v)` | `coverage ~ CoverageModel(ploidy, meanAllelicCoverage=t, allelicCoverageVariance=v, cellSizeFactors=s)` |
+| `r ~ ReadCountModel(epsilon=epsilon, w1=w1, w2=w2, D=A, coverage=cov, alpha=alpha)` | `reads ~ ReadCountModel(genotypes, ploidy, coverage, sequencingError=epsilon, homozygousOverdispersion=w1, heterozygousOverdispersion=w2)` |
 
 The data type follows from the GT10 `qMatrix`, so `PhyloCTMC` needs no `dataType`.
 
@@ -186,7 +186,7 @@ already filtered file). `.`/`,` count as the reference base, `^` plus its qualit
 `$`, indels (`+n`/`-n` and their bases), `*`, `<` and `>` are skipped, and A/C/G/T count in
 either case. Lines with fewer than three columns per cell are skipped entirely (LPhy keeps their
 position but drops their data, which shifts later sites). A line with more cell columns than
-`names` is an error, so a short `names` list cannot silently drop cells, and a malformed indel
+`cellNames` is an error, so a short `cellNames` list cannot silently drop cells, and a malformed indel
 reports its line and cell.
 
 ## Design notes / open questions

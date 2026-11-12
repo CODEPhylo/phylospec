@@ -14,7 +14,7 @@ data {
         "TI-TS17", "TI-TS2", "TI-TS5", "TI-TS9", "TM-TNS3",
         "TM-TS11", "TM-TS17", "TM-TS20", "TM-TS4", "TM-TS5"
     ]
-    ReadCount readCounts = fromMpileup(file="data/CRC09_filtered.mpileup", names=cellNames)
+    ReadCount readCounts = fromMpileup(file="data/CRC09_filtered.mpileup", cellNames)
     Taxa taxa = taxa(readCounts)
     PositiveInteger numCells = numTaxa(readCounts)
     PositiveInteger numSites = numSites(readCounts)
@@ -27,15 +27,15 @@ model {
         concentration=[3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0]
     )
     Simplex relativeRates ~ Dirichlet(concentration=[2.0, 20.0, 2.0, 2.0, 20.0, 2.0])
-    QMatrix qMatrix = gt10(relativeRates=relativeRates, genotypeFrequencies=genotypeFrequencies)
+    QMatrix qMatrix = gt10(relativeRates, genotypeFrequencies)
 
     // --- tree prior: classic Bayesian skyline with 4 groups ----------------
 
     PositiveInteger numGroups = 4
     Vector<PositiveInteger> groupSizes ~ RandomComposition(total=numCells - 1, numParts=numGroups)
     PositiveReal initialMean ~ LogNormal(logMean=-5.0, logSd=2.0)
-    Vector<PositiveReal> populationSizes ~ ExponentialMarkovChain(initialMean=initialMean, numValues=numGroups)
-    Tree tree ~ SkylineCoalescent(populationSizes=populationSizes, groupSizes=groupSizes, taxa=taxa)
+    Vector<PositiveReal> populationSizes ~ ExponentialMarkovChain(initialMean, numValues=numGroups)
+    Tree tree ~ SkylineCoalescent(populationSizes, groupSizes, taxa)
 
     // --- read-count observation model --------------------------------------
 
@@ -49,19 +49,19 @@ model {
 
     // latent variables, integrated out by the engine (genotypes by pruning on the tree,
     // ploidy and coverage per cell and site), as LPhyBEAST does for CRC09.lphy
-    Alignment genotypes ~ PhyloCTMC(tree=tree, qMatrix=qMatrix, numSites=numSites)
-    Matrix<PositiveInteger> ploidy ~ Ploidy(numCells=numCells, numSites=numSites, allelicDropout=delta)
+    Alignment genotypes ~ PhyloCTMC(tree, qMatrix, numSites)
+    Matrix<PositiveInteger> ploidy ~ Ploidy(numCells, numSites, allelicDropout=delta)
     Matrix<NonNegativeInteger> coverage ~ CoverageModel(
-        ploidy=ploidy,
+        ploidy,
         meanAllelicCoverage=t,
         allelicCoverageVariance=v,
         cellSizeFactors=s
     )
 
     ReadCount reads ~ ReadCountModel(
-        genotypes=genotypes,
-        ploidy=ploidy,
-        coverage=coverage,
+        genotypes,
+        ploidy,
+        coverage,
         sequencingError=epsilon,
         homozygousOverdispersion=w1,
         heterozygousOverdispersion=w2
