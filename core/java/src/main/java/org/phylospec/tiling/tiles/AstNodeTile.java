@@ -80,7 +80,7 @@ public abstract class AstNodeTile<T, N extends AstNode, S> extends Tile<T, S> im
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("(").append(getClass().getSimpleName());
-        for (Field field : getClass().getDeclaredFields()) {
+        for (Field field : this.getAllFields()) {
             if (field.getType().equals(AstNodeTileInput.class)) {
                 field.setAccessible(true);
                 try {

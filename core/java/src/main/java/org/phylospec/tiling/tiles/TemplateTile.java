@@ -104,7 +104,7 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("(").append(getClass().getSimpleName());
-        for (Field field : getClass().getDeclaredFields()) {
+        for (Field field : this.getAllFields()) {
             if (field.getType().equals(TemplateTileInput.class)) {
                 field.setAccessible(true);
                 try {

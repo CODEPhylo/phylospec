@@ -233,6 +233,19 @@ public abstract class TypeToken<T> {
     }
 
     /**
+     * Resolves the type argument at {@code index} of {@code superclass} as seen from {@code subclass},
+     * following the generic supertype chain through any intermediate classes. Returns {@code null}
+     * if {@code superclass} is not a parameterized supertype of {@code subclass}.
+     */
+    public static TypeToken<?> resolveSupertypeArgument(Class<?> subclass, Class<?> superclass, int index) {
+        Type resolved = resolveAsParameterized(subclass, superclass, Map.of());
+        if (resolved instanceof ParameterizedType pt) {
+            return of(pt.getActualTypeArguments()[index]);
+        }
+        return null;
+    }
+
+    /**
      * Walks the generic supertype chain of {@code source} to find a parameterized
      * instantiation of {@code targetRaw}, substituting type variables as it descends.
      * Returns {@code null} if no match is found.
