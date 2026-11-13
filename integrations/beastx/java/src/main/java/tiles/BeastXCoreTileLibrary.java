@@ -248,6 +248,7 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new DiscreteUniformTile());
         tiles.add(new GeometricTile());
         tiles.add(new DirichletTile());
+        tiles.add(new DirichletTile.Live());
         tiles.add(new MultivariateNormalTile());
         tiles.add(new IIDTile.RealIID());
         tiles.add(new IIDTile.PositiveRealIID());

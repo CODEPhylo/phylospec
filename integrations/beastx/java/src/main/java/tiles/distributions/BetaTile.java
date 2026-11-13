@@ -8,6 +8,7 @@ import org.phylospec.domain.PositiveReal;
 import org.phylospec.domain.UnitInterval;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
+import tiling.params.BeastXParameters;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
@@ -41,8 +42,8 @@ public class BetaTile extends GeneratorTile<
         RealScalar<PositiveReal> beta =
                 this.betaInput.apply(beastState, indexVariables);
 
-        Parameter alphaParameter = new Parameter.Default(alpha.get());
-        Parameter betaParameter = new Parameter.Default(beta.get());
+        Parameter alphaParameter = BeastXParameters.toParameter(alpha);
+        Parameter betaParameter = BeastXParameters.toParameter(beta);
 
         BetaDistributionModel distributionModel =
                 new BetaDistributionModel(alphaParameter, betaParameter);

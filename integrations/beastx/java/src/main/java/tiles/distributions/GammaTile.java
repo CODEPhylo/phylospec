@@ -7,6 +7,7 @@ import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
+import tiling.params.BeastXParameters;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
@@ -40,8 +41,8 @@ public class GammaTile extends GeneratorTile<
         RealScalar<PositiveReal> rate =
                 this.rateInput.apply(beastState, indexVariables);
 
-        Parameter shapeParameter = new Parameter.Default(shape.get());
-        Parameter rateParameter = new Parameter.Default(rate.get());
+        Parameter shapeParameter = BeastXParameters.toParameter(shape);
+        Parameter rateParameter = BeastXParameters.toParameter(rate);
 
         GammaDistributionModel distributionModel =
                 new GammaDistributionModel(

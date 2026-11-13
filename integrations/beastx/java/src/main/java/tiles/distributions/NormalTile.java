@@ -8,6 +8,7 @@ import org.phylospec.domain.PositiveReal;
 import org.phylospec.domain.Real;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
+import tiling.params.BeastXParameters;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
@@ -42,10 +43,10 @@ public class NormalTile extends GeneratorTile<
                 this.sdInput.apply(beastState, indexVariables);
 
         Parameter meanParameter =
-                new Parameter.Default(mean.get());
+                BeastXParameters.toParameter(mean);
 
         Parameter sdParameter =
-                new Parameter.Default(sd.get());
+                BeastXParameters.toParameter(sd);
 
         NormalDistributionModel distributionModel =
                 new NormalDistributionModel(meanParameter, sdParameter);
