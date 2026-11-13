@@ -2,6 +2,7 @@ package tiling.xml;
 
 import dr.evomodel.tree.TreeModel;
 import dr.inference.distribution.AbstractDistributionLikelihood;
+import dr.inference.distribution.DirichletDistributionModel;
 import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.distribution.MultivariateDistributionLikelihood;
 import dr.inference.model.AbstractModelLikelihood;
@@ -132,7 +133,7 @@ public class XmlPlanBuilder {
         for (Parameter parameter : parameters) {
             plan.add(
                     XmlPlan.Section.PARAMETERS,
-                    stateParameterXmlBuilder.buildParameter(parameter)
+                    stateParameterXmlBuilder.buildParameter(state, parameter)
             );
         }
     }
@@ -293,7 +294,7 @@ public class XmlPlanBuilder {
             if (likelihood instanceof DistributionLikelihood distributionLikelihood) {
                 plan.add(
                         XmlPlan.Section.MCMC_PRIOR,
-                        scalarPriorXmlBuilder.buildPrior(entry.getKey(), distributionLikelihood)
+                        scalarPriorXmlBuilder.buildPrior(state, entry.getKey(), distributionLikelihood)
                 );
 
                 continue;
@@ -307,6 +308,19 @@ public class XmlPlanBuilder {
                                     entry.getKey(),
                                     multivariateLikelihood,
                                     dirichletDistribution
+                            )
+                    );
+                    continue;
+                }
+
+                if (multivariateLikelihood.getDistribution() instanceof DirichletDistributionModel dirichletModel) {
+                    plan.add(
+                            XmlPlan.Section.MCMC_PRIOR,
+                            dirichletPriorXmlBuilder.buildPrior(
+                                    state,
+                                    entry.getKey(),
+                                    multivariateLikelihood,
+                                    dirichletModel
                             )
                     );
                     continue;
