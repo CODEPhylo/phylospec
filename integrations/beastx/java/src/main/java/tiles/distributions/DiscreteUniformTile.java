@@ -7,11 +7,13 @@ import org.phylospec.ast.Expr;
 import org.phylospec.domain.Int;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.IntScalar;
+import org.phylospec.typeresolver.Stochasticity;
 import tiling.params.BeastXIntScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
+import java.util.Set;
 
 public class DiscreteUniformTile extends GeneratorTile<
         BoundDistribution<BeastXIntScalarParam<Int>, DistributionLikelihood>,
@@ -23,11 +25,12 @@ public class DiscreteUniformTile extends GeneratorTile<
         return "DiscreteUniform";
     }
 
+    // BEAST X's DiscreteUniformDistribution stores plain ints, so sampled bounds would be frozen.
     GeneratorTileInput<IntScalar<Int>, BeastXState> lowerInput =
-            new GeneratorTileInput<>("lower");
+            new GeneratorTileInput<>("lower", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     GeneratorTileInput<IntScalar<Int>, BeastXState> upperInput =
-            new GeneratorTileInput<>("upper");
+            new GeneratorTileInput<>("upper", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
     public BoundDistribution<BeastXIntScalarParam<Int>, DistributionLikelihood> applyTile(
