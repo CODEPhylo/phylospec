@@ -1,7 +1,10 @@
 package tiling.xml.builders;
 
+import dr.inference.distribution.DistributionLikelihood;
+import dr.inference.distribution.UniformDistributionModel;
 import dr.inference.model.Bounds;
 import dr.inference.model.Parameter;
+import tiling.BeastXState;
 import tiling.xml.XmlElement;
 
 import java.util.ArrayList;
@@ -12,7 +15,7 @@ import java.util.List;
  */
 public class StateParameterXmlBuilder {
 
-    public XmlElement buildParameter(Parameter parameter) {
+    public XmlElement buildParameter(BeastXState state, Parameter parameter) {
         XmlElement element =
                 XmlElement.element("parameter")
                         .withId(parameterId(parameter))
@@ -28,18 +31,33 @@ public class StateParameterXmlBuilder {
             double upper =
                     bounds.getUpperLimit(0);
 
-            if (Double.isFinite(lower)) {
+            if (Double.isFinite(lower) && !isSampledUniformBound(state, parameter, 0)) {
                 element =
                         element.withAttribute("lower", format(lower));
             }
 
-            if (Double.isFinite(upper)) {
+            if (Double.isFinite(upper) && !isSampledUniformBound(state, parameter, 1)) {
                 element =
                         element.withAttribute("upper", format(upper));
             }
         }
 
         return element;
+    }
+
+    /**
+     * Returns whether the given bound (0 = lower, 1 = upper) comes from a Uniform prior whose
+     * limit is itself sampled. XML can only store fixed bounds, so such a bound is left out;
+     * the Uniform prior density still rejects values outside the current limits.
+     */
+    private static boolean isSampledUniformBound(BeastXState state, Parameter parameter, int boundIndex) {
+        if (state.priorDistributions.get(parameter) instanceof DistributionLikelihood likelihood
+                && likelihood.getDistribution() instanceof UniformDistributionModel uniform) {
+            return uniform.getVariable(boundIndex) instanceof Parameter bound
+                    && state.stateNodes.containsKey(bound);
+        }
+
+        return false;
     }
 
     private static String parameterValues(Parameter parameter) {

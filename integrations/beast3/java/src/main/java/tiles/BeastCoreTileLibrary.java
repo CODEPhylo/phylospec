@@ -22,6 +22,7 @@ import tiles.rpn.RPNAssignmentTile;
 import tiles.sitemodels.*;
 import tiles.substitutionmodels.*;
 import tiles.trees.*;
+import tiling.RootAgeSupport;
 
 /**
  * This class loads all known tiles into a static field.
@@ -36,6 +37,11 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
     @Override
     public Class<BEASTState> getStateType() {
         return BEASTState.class;
+    }
+
+    @Override
+    public void configureState(BEASTState state) {
+        RootAgeSupport.configureOperators(state);
     }
 
     @Override
@@ -138,17 +144,25 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new ExponentialTile());
         tiles.add(new GammaTile());
         tiles.add(new PoissonTile());
+        tiles.add(new ExponentialMarkovChainTile());
         tiles.add(new UniformTile());
         tiles.add(new DirichletTile());
         tiles.add(new WeightedDirichletTile());
         tiles.add(new WeightedDirichletTile.IntegerScalars());
         tiles.add(new PositiveIIDTile());
+        tiles.add(new RealIIDTile());
+        tiles.add(new ProbabilityIIDTile());
         tiles.add(new NonNegativeIntegerIIDTile());
 
         tiles.add(new YuleTile());
         tiles.add(new BirthDeathTile());
+        tiles.add(new BirthDeathRatesTile());
         tiles.add(new ConstantCoalescentTile());
         tiles.add(new CoalescentTile());
+        tiles.add(new SkylineCoalescentTile());
+        tiles.add(new SkylineCoalescentTile.ListPopulations());
+        tiles.add(new SkylineCoalescentTile.ListTimes());
+        tiles.add(new SkylineCoalescentTile.Lists());
         // tiles.add(new ConstantPopulationTile());
         // tiles.add(new ExponentialPopulationTile());
 

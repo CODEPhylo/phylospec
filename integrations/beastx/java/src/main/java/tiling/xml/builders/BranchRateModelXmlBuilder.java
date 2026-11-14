@@ -12,6 +12,9 @@ import tiling.xml.XmlElement;
  */
 public class BranchRateModelXmlBuilder {
 
+    private final ScalarPriorXmlBuilder scalarPriorXmlBuilder =
+            new ScalarPriorXmlBuilder();
+
     public XmlElement buildStrictClockBranchRates(
             BeastXState state,
             TreeModel treeModel,
@@ -54,6 +57,7 @@ public class BranchRateModelXmlBuilder {
                 )
                 .withChild(
                         buildRelativeRelaxedClockBranchRates(
+                                state,
                                 treeModel,
                                 spec,
                                 id + "_relativeRates"
@@ -69,6 +73,7 @@ public class BranchRateModelXmlBuilder {
     }
 
     private XmlElement buildRelativeRelaxedClockBranchRates(
+            BeastXState state,
             TreeModel treeModel,
             BeastXState.RelaxedClockSpec spec,
             String id
@@ -78,10 +83,11 @@ public class BranchRateModelXmlBuilder {
         return XmlElement.element("scaledByTreeTimeBranchRates")
                 .withId(id)
                 .withChild(treeReference(treeModel))
-                .withChild(buildRawRelaxedClockBranchRates(treeModel, spec, id + "_raw"));
+                .withChild(buildRawRelaxedClockBranchRates(state, treeModel, spec, id + "_raw"));
     }
 
     private XmlElement buildRawRelaxedClockBranchRates(
+            BeastXState state,
             TreeModel treeModel,
             BeastXState.RelaxedClockSpec spec,
             String id
@@ -98,6 +104,7 @@ public class BranchRateModelXmlBuilder {
                         XmlElement.element("distribution")
                                 .withChild(
                                         parametricDistributionDefinition(
+                                                state,
                                                 id + "_distribution",
                                                 spec.distributionModel()
                                         )
@@ -112,46 +119,17 @@ public class BranchRateModelXmlBuilder {
     }
 
     private XmlElement parametricDistributionDefinition(
+            BeastXState state,
             String id,
             ParametricDistributionModel distribution
     ) {
         if (distribution instanceof LogNormalDistributionModel logNormalDistribution) {
-            return logNormalDistributionModelDefinition(id, logNormalDistribution);
+            return scalarPriorXmlBuilder.logNormalDistributionModel(state, id, logNormalDistribution);
         }
 
         throw unsupported(
                 "Only LogNormal relaxed-clock base distributions are supported for XML export at this stage."
         );
-    }
-
-    private XmlElement logNormalDistributionModelDefinition(
-            String id,
-            LogNormalDistributionModel distribution
-    ) {
-        return XmlElement.element("logNormalDistributionModel")
-                .withId(id)
-                .withChild(
-                        XmlElement.element("mu")
-                                .withChild(
-                                        inlineParameterDefinition(
-                                                id + "_mu",
-                                                distribution.getMu(),
-                                                null,
-                                                null
-                                        )
-                                )
-                )
-                .withChild(
-                        XmlElement.element("precision")
-                                .withChild(
-                                        inlineParameterDefinition(
-                                                id + "_precision",
-                                                distribution.getPrecision(),
-                                                null,
-                                                null
-                                        )
-                                )
-                );
     }
 
     private XmlElement parameterElement(

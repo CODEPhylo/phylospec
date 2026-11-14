@@ -6,10 +6,12 @@ import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.AstNodeTile;
 import org.phylospec.types.IntScalar;
+import org.phylospec.typeresolver.Stochasticity;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 
 public class IndexedTile extends AstNodeTile<Object, Expr.Index, BeastXState> {
 
@@ -19,10 +21,12 @@ public class IndexedTile extends AstNodeTile<Object, Expr.Index, BeastXState> {
                     expr -> expr.object
             );
 
+    // The element is chosen once while building the model, so a sampled index would be frozen.
     AstNodeTileInput<? extends IntScalar<? extends Int>, Expr.Index, BeastXState> firstIndexInput =
             new AstNodeTileInput<>(
                     "index",
-                    expr -> expr.indices.getFirst()
+                    expr -> expr.indices.getFirst(),
+                    Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
             );
 
     @Override

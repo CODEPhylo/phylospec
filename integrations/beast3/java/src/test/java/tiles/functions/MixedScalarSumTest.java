@@ -6,6 +6,7 @@ import static tiles.functions.SumTileTest.compile;
 import beast.base.core.Loggable;
 import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
+import beast.base.inference.Operator;
 import beast.base.inference.State;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.Int;
@@ -25,6 +26,8 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -286,12 +289,16 @@ class MixedScalarSumTest {
                 """));
     }
 
+    private static Map<String, Class<?>> operatorClassesById(BEASTState graph) {
+        return graph.operators.stream().collect(Collectors.toMap(Operator::getID, Operator::getClass));
+    }
+
     private static void assertSamplingUnchanged(BEASTState baseline, BEASTState graph) {
         assertEquals(baseline.stateNodes.size(), graph.stateNodes.size());
         assertEquals(baseline.priorDistributions.size(), graph.priorDistributions.size());
-        assertEquals(
-                baseline.operators.stream().map(Object::getClass).toList(),
-                graph.operators.stream().map(Object::getClass).toList());
+        // Compare each state node's operator by ID: the list order depends on tile application order,
+        // which the sum is allowed to change, but the operator kind for each node must not change.
+        assertEquals(operatorClassesById(baseline), operatorClassesById(graph));
         for (StateNode node : graph.stateNodes.keySet()) {
             StateNode original = parameter(baseline, node.getID());
             assertEquals(original.getClass(), node.getClass());

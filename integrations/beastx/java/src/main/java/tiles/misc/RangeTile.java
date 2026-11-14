@@ -6,23 +6,29 @@ import org.phylospec.domain.NonNegativeInt;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.AstNodeTile;
 import org.phylospec.types.IntScalar;
+import org.phylospec.typeresolver.Stochasticity;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 
 public class RangeTile extends AstNodeTile<Integer, Expr.Range, BeastXState> {
 
+    // Indexed statements are unrolled while building the model, so the number of elements
+    // cannot follow a sampled range bound.
     AstNodeTileInput<? extends IntScalar<NonNegativeInt>, Expr.Range, BeastXState> fromInput =
             new AstNodeTileInput<>(
                     "from",
-                    expr -> expr.from
+                    expr -> expr.from,
+                    Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
             );
 
     AstNodeTileInput<? extends IntScalar<NonNegativeInt>, Expr.Range, BeastXState> toInput =
             new AstNodeTileInput<>(
                     "to",
-                    expr -> expr.to
+                    expr -> expr.to,
+                    Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
             );
 
     @Override

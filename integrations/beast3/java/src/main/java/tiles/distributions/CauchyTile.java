@@ -3,11 +3,12 @@ package tiles.distributions;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.Cauchy;
+import beast.base.spec.inference.operator.RealRandomWalkOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
-import beastconfig.OperatorSelector;
 import java.util.IdentityHashMap;
+import java.util.List;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import tiling.BoundDistribution;
@@ -43,6 +44,12 @@ public class CauchyTile extends GeneratorTile<BoundDistribution<RealScalarParam<
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
-                OperatorSelector::getDefaultOperators);
+                (value, graph) -> {
+                    // Additive proposals can leave zero and cross signs.
+                    RealRandomWalkOperator operator = new RealRandomWalkOperator();
+                    graph.setInput(operator, operator.scalarInput, value);
+                    graph.setInput(operator, operator.m_pWeight, 5.0);
+                    return List.of(operator);
+                });
     }
 }

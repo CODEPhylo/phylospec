@@ -11,6 +11,7 @@ import dr.evomodel.speciation.BirthDeathSerialSamplingModel;
 import dr.evomodel.speciation.SpeciationLikelihood;
 import dr.evomodel.speciation.SpeciationModel;
 import dr.inference.distribution.AbstractDistributionLikelihood;
+import dr.inference.distribution.DirichletDistributionModel;
 import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.distribution.MultivariateDistributionLikelihood;
 import dr.inference.model.AbstractModelLikelihood;
@@ -128,14 +129,17 @@ public class XmlExportValidator {
             );
         }
 
-        if (!(multivariateLikelihood.getDistribution() instanceof DirichletDistribution dirichletDistribution)) {
+        int dimension;
+
+        if (multivariateLikelihood.getDistribution() instanceof DirichletDistribution dirichletDistribution) {
+            dimension = dirichletPriorXmlBuilder.counts(dirichletDistribution).length;
+        } else if (multivariateLikelihood.getDistribution() instanceof DirichletDistributionModel dirichletModel) {
+            dimension = dirichletModel.getDimension();
+        } else {
             throw unsupported("Only Dirichlet multivariate priors are supported for non-scalar multivariate parameters.");
         }
 
-        double[] counts =
-                dirichletPriorXmlBuilder.counts(dirichletDistribution);
-
-        if (counts.length != parameter.getDimension()) {
+        if (dimension != parameter.getDimension()) {
             throw unsupported("Dirichlet prior dimension must match the simplex parameter dimension.");
         }
     }
