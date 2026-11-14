@@ -29,7 +29,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     private final Map<String, AstNode> templateVariableMap;
 
     // maps the template draws onto the query draws they were matched with. this mapping has to be one-to-one
-    private final Map<Stmt.Draw, Stmt.Draw> drawBindings = new IdentityHashMap<>();
+    private final Map<AstNode, AstNode> drawBindings = new IdentityHashMap<>();
 
     private VariableResolver queryVariableResolver;
     private AstNode currentQueryNode = null;
@@ -116,8 +116,8 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         query = this.potentiallyPassThrough(query, this.queryVariableResolver);
         template = this.potentiallyPassThrough(template, templateVariableResolver);
 
-        if (template instanceof Stmt.Draw templateDraw && query instanceof Stmt.Draw queryDraw) {
-            this.bindDraws(templateDraw, queryDraw);
+        if (this.isDraw(template) && this.isDraw(query)) {
+            this.bindDraws(template, query);
         }
 
         // if the query is an observed statement but the template is not, this is fine, and we pass
@@ -154,18 +154,26 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     }
 
     /**
+     * Returns whether the node generates a value, which is the case for draw statements and inline drawn
+     * arguments (`x~dist`).
+     */
+    private boolean isDraw(AstNode node) {
+        return node instanceof Stmt.Draw || node instanceof Expr.DrawnArgument;
+    }
+
+    /**
      * Records that a template draw corresponds to a query draw. Draws are where values are generated, so
      * the same template draw must always correspond to the same query draw, and two different template
      * draws must not correspond to the same query draw. Throws a MatchingError otherwise.
      */
-    private void bindDraws(Stmt.Draw templateDraw, Stmt.Draw queryDraw) {
-        Stmt.Draw boundQueryDraw = this.drawBindings.get(templateDraw);
+    private void bindDraws(AstNode templateDraw, AstNode queryDraw) {
+        AstNode boundQueryDraw = this.drawBindings.get(templateDraw);
         if (boundQueryDraw != null) {
             this.check(boundQueryDraw == queryDraw);
             return;
         }
 
-        for (Stmt.Draw alreadyBoundQueryDraw : this.drawBindings.values()) {
+        for (AstNode alreadyBoundQueryDraw : this.drawBindings.values()) {
             this.check(alreadyBoundQueryDraw != queryDraw);
         }
 
@@ -458,7 +466,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         this.check(expr.operator == queryBinary.operator);
 
         Map<String, AstNode> snapshot = new HashMap<>(this.templateVariableMap);
-        Map<Stmt.Draw, Stmt.Draw> drawSnapshot = new IdentityHashMap<>(this.drawBindings);
+        Map<AstNode, AstNode> drawSnapshot = new IdentityHashMap<>(this.drawBindings);
         try {
             this.match(expr.left, queryBinary.left);
             this.match(expr.right, queryBinary.right);
@@ -558,6 +566,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
                 throw new MatchingError();
             }
 
+            this.bindDraws(templateDrawStmt, drawnQueryArg);
             this.match(templateDrawStmt.expression, drawnQueryArg.expression);
 
             return null;
@@ -601,6 +610,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
                 throw new MatchingError();
             }
 
+            this.bindDraws(expr, queryDrawStmt);
             this.match(expr.expression, queryDrawStmt.expression);
 
             return null;
