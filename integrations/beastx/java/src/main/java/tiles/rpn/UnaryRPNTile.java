@@ -20,11 +20,6 @@ import java.util.Set;
 public abstract class UnaryRPNTile extends AstNodeTile<BeastXRPNCalculationResult, Expr.Unary, BeastXState> {
 
     @Override
-    public Class<Expr.Unary> getTargetNodeType() {
-        return Expr.Unary.class;
-    }
-
-    @Override
     public Set<Tile<?, BeastXState>> tryToTile(
             AstNode node,
             Map<AstNode, Set<Tile<?, BeastXState>>> allInputTiles,

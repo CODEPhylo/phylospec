@@ -24,11 +24,6 @@ import org.phylospec.typeresolver.VariableResolver;
 public abstract class BinaryTile extends AstNodeTile<RPNCalculationResult, Expr.Binary, BEASTState> {
 
     @Override
-    public Class<Expr.Binary> getTargetNodeType() {
-        return Expr.Binary.class;
-    }
-
-    @Override
     public Set<Tile<?, BEASTState>> tryToTile(
             AstNode node,
             Map<AstNode, Set<Tile<?, BEASTState>>> allInputTiles,

@@ -22,11 +22,6 @@ import tiling.OffsetValue;
 public abstract class OffsetTile extends AstNodeTile<OffsetValue, Expr.Binary, BEASTState> {
 
     @Override
-    public Class<Expr.Binary> getTargetNodeType() {
-        return Expr.Binary.class;
-    }
-
-    @Override
     public Set<Tile<?, BEASTState>> tryToTile(
             AstNode node,
             Map<AstNode, Set<Tile<?, BEASTState>>> allInputTiles,

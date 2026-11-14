@@ -1,5 +1,6 @@
 package org.phylospec.tiling;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -243,6 +244,27 @@ public abstract class TypeToken<T> {
             return of(pt.getActualTypeArguments()[index]);
         }
         return null;
+    }
+
+    /**
+     * Resolves the generic type of {@code field} as seen from {@code subclass}. Type variables of the
+     * field's declaring class are replaced by the type arguments that {@code subclass} binds them to,
+     * so a field {@code Foo<T>} declared in {@code Base<T>} resolves to {@code Foo<String>} when seen
+     * from {@code Concrete extends Base<String>}. Type variables left unbound by {@code subclass} are kept.
+     */
+    public static Type resolveFieldType(Class<?> subclass, Field field) {
+        Type fieldType = field.getGenericType();
+        Class<?> declaringClass = field.getDeclaringClass();
+
+        Type resolvedDeclaringType = resolveAsParameterized(subclass, declaringClass, Map.of());
+        if (!(resolvedDeclaringType instanceof ParameterizedType declaringPt)) return fieldType;
+
+        TypeVariable<?>[] params = declaringClass.getTypeParameters();
+        Type[] args = declaringPt.getActualTypeArguments();
+        Map<TypeVariable<?>, Type> subs = new HashMap<>();
+        for (int i = 0; i < params.length; i++) subs.put(params[i], args[i]);
+
+        return substituteType(fieldType, subs);
     }
 
     /**

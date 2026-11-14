@@ -105,7 +105,7 @@ public abstract class Tile<T, S> {
                 try {
                     TileInput<?, S> input = (TileInput<?, S>) field.get(this);
                     this.configureTileInput(field, input);
-                    input.resolveTypeFromField(field);
+                    input.resolveTypeFromField(field, this.getClass());
                     inputs.add(input);
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);

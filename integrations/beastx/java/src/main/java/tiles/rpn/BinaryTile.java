@@ -20,11 +20,6 @@ import java.util.Set;
 public abstract class BinaryTile extends AstNodeTile<BeastXRPNCalculationResult, Expr.Binary, BeastXState> {
 
     @Override
-    public Class<Expr.Binary> getTargetNodeType() {
-        return Expr.Binary.class;
-    }
-
-    @Override
     public Set<Tile<?, BeastXState>> tryToTile(
             AstNode node,
             Map<AstNode, Set<Tile<?, BeastXState>>> allInputTiles,

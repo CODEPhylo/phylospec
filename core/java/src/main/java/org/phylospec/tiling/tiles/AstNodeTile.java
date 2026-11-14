@@ -1,10 +1,10 @@
 package org.phylospec.tiling.tiles;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.util.*;
 import java.util.function.Function;
 import org.phylospec.ast.AstNode;
+import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
@@ -16,8 +16,20 @@ import org.phylospec.typeresolver.VariableResolver;
  */
 public abstract class AstNodeTile<T, N extends AstNode, S> extends Tile<T, S> implements CandidateTile<S> {
 
+    /**
+     * Returns the AstNode type {@code N} covered by this tile. By default, this resolves the type
+     * parameter {@code N} through intermediate superclasses. If this cannot be determined at
+     * compile-time, a custom tile has to override this method.
+     */
     public Class<N> getTargetNodeType() {
-        return (Class<N>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[1];
+        TypeToken<?> nodeType = TypeToken.resolveSupertypeArgument(this.getClass(), AstNodeTile.class, 1);
+        if (nodeType == null || !(nodeType.getType() instanceof Class<?> nodeClass)) {
+            throw new IllegalArgumentException(
+                    "Tile "
+                            + this.getClass()
+                            + " has no AST node type parameter. Either specify the type in the type signature of the inheriting class, or override the getTargetNodeType method.");
+        }
+        return (Class<N>) nodeClass;
     }
 
     @Override
