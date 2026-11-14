@@ -384,8 +384,8 @@ public class EngineSupportTest {
 
         EngineSupport engine = new EngineSupport(engine(
                 "overloadingEngine",
-                engineGenerator("PhyloCTMC", null, "tree", "qMatrix", "siteRates", "branchRates"),
-                engineGenerator("PhyloCTMC", null, "tree", "siteQMatrices", "siteRates", "branchRates")));
+                engineGenerator("PhyloCTMC", null, "tree", "qMatrix", "siteRates", "branchRates", "rate"),
+                engineGenerator("PhyloCTMC", null, "tree", "siteQMatrices", "siteRates", "branchRates", "rate")));
 
         assertTrue(
                 engine.supports(getOverloadWithArgument("PhyloCTMC", "qMatrix")).isFullySupported());

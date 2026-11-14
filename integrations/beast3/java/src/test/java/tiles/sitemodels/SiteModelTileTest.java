@@ -23,11 +23,13 @@ import beast.base.spec.inference.operator.RealRandomWalkOperator;
 import beast.base.spec.inference.operator.ScaleOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beastconfig.BEASTState;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.phylospec.ast.transformers.EvaluateLiterals;
@@ -42,6 +44,9 @@ import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import org.phylospec.workspace.Workspace;
+import runner.PhyloSpecDiagnostic;
+import runner.PhyloSpecException;
+import runner.PhyloSpecRunner;
 import tiling.ExpValue;
 
 class SiteModelTileTest {
@@ -303,6 +308,93 @@ class SiteModelTileTest {
         return model.siteModel().getCategoryProportions(null).clone();
     }
 
+    @Test
+    void sharedSiteRatesKeepDistinctPartitionModelsAndLiveRateChecks(@TempDir Path directory) throws Exception {
+        Files.writeString(directory.resolve("input.fa"), ">A\nA\n>B\nC\n");
+        String source = """
+                Alignment data = fromFasta(file="input.fa")
+                Tree tree = fromNewick(newickString="(A:1.0,B:1.0);")
+                Vector<PositiveReal> categories ~ DiscreteGammaInv(shape=2.0,numCategories=2,numSites=1)
+                Simplex w ~ Dirichlet(concentration=[1.0,1.0])
+                Alignment a ~ PhyloCTMC(tree=tree,qMatrix=jc69(),siteRates=categories,rate=2.0*w[1]) observed as data
+                Alignment b ~ PhyloCTMC(tree=tree,qMatrix=jc69(),siteRates=categories,rate=1.5) observed as data
+                """;
+        BEASTState graph = compile(source, directory);
+        var likelihoods = graph.likelihoodDistributions.stream()
+                .map(TreeLikelihood.class::cast)
+                .sorted(java.util.Comparator.comparing(TreeLikelihood::getID))
+                .toList();
+        var first = (SiteModel) likelihoods.get(0).siteModelInput.get();
+        var second = (SiteModel) likelihoods.get(1).siteModelInput.get();
+        assertNotSame(first, second);
+        assertSame(first.shapeParameterInput.get(), second.shapeParameterInput.get());
+        assertSame(first.invarParameterInput.get(), second.invarParameterInput.get());
+        assertEquals(1.0, first.muParameterInput.get().get());
+        assertEquals(1.5, second.muParameterInput.get().get());
+        assertTrue(Double.isFinite(likelihoods.get(0).calculateLogP()));
+        var w = assertInstanceOf(
+                beast.base.spec.inference.parameter.SimplexParam.class,
+                graph.stateNodes.keySet().stream()
+                        .filter(node -> "w".equals(node.getID()))
+                        .findFirst()
+                        .orElseThrow());
+        w.set(0, 0.0);
+        w.set(1, 1.0);
+        var error = assertThrows(IllegalArgumentException.class, () -> first.getRateForCategory(0, null));
+        assertTrue(error.getMessage().contains("strictly positive PhyloCTMC rate; received 0.0"));
+        assertEquals(1.5, second.muParameterInput.get().get());
+    }
+
+    @Test
+    void zeroPartitionRateIsReportedDuringConstruction(@TempDir Path directory) throws Exception {
+        Files.writeString(directory.resolve("input.fa"), ">A\nA\n>B\nC\n");
+        String source = """
+                Alignment data = fromFasta(file="input.fa")
+                Tree tree = fromNewick(newickString="(A:1.0,B:1.0);")
+                Alignment a ~ PhyloCTMC(tree=tree,qMatrix=jc69(),rate=0.0) observed as data
+                """;
+        var error =
+                assertThrows(org.phylospec.tiling.errors.TileApplicationError.class, () -> compile(source, directory));
+        assertTrue(error.getMessage().contains("strictly positive PhyloCTMC rate; received 0.0"), error::getMessage);
+    }
+
+    @Test
+    void sampledSimplexIndexIsRejectedInsteadOfFrozenAtInitialization() {
+        String source = """
+                Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+                Tree tree ~ Yule(birthRate=1.0,taxa=taxa(data))
+                Simplex w ~ Dirichlet(concentration=[1.0,1.0])
+                NonNegativeInteger i ~ Poisson(rate=1.0)
+                Alignment a ~ PhyloCTMC(tree=tree,qMatrix=jc69(),rate=2.0*w[i]) observed as data
+                """;
+        var failure =
+                assertThrows(PhyloSpecException.class, () -> new PhyloSpecRunner(source, List.of("beast2")).check());
+        assertEquals(PhyloSpecDiagnostic.Stage.MAPPING, failure.diagnostic().stage());
+    }
+
+    private static BEASTState compile(String source, Path directory) throws Exception {
+        var catalog = TileCatalog.select(BEASTState.class, List.of("beast2"));
+        var lexer = new Lexer(source);
+        lexer.registerEventListener(error -> fail(error.toStdOutString(source)));
+        var parser = new Parser(lexer.scanTokens());
+        parser.registerEventListener(error -> fail(error.toStdOutString(source)));
+        var statements = new EvaluateScalarFunctions()
+                .transform(new EvaluateLiterals().transform(new RemoveGroupings().transform(parser.parse())));
+        new TypeResolver(catalog.getComponentResolver(), new Workspace(directory)).visitStatements(statements);
+        var stochasticity = new StochasticityResolver();
+        stochasticity.visitStatements(statements);
+        var evaluator = new EvaluateTiles<>(catalog.getTiles(), new VariableResolver(statements), stochasticity);
+        evaluator.getBestTiling(statements);
+        BEASTState graph = evaluator.applyBestTiling(new BEASTState("site-model-test", directory));
+        catalog.configureState(graph);
+        for (Distribution distribution : graph.likelihoodDistributions) {
+            TreeLikelihood likelihood = assertInstanceOf(TreeLikelihood.class, distribution);
+            likelihood.implementationInput.setValue(TreeLikelihood.class.getName(), likelihood);
+        }
+        graph.initializeBEASTObjects();
+        return graph;
+    }
+
     private static Model build(String shapeDeclaration, String sourceName, double invariant) throws Exception {
         String invariantArgument = invariant == 0.0 ? "" : ", invariantProportion=" + invariant;
         String source = "Alignment data = fromNexus(file=\"" + DATA.getFileName() + "\")\n"
@@ -311,23 +403,8 @@ class SiteModelTileTest {
                 + "Vector<PositiveReal> siteRates ~ DiscreteGammaInv(shape=shape, numCategories=4, "
                 + "numSites=numSites(alignment=data)" + invariantArgument + ")\n"
                 + "Alignment alignment ~ PhyloCTMC(tree=tree, qMatrix=jc69(), siteRates=siteRates) observed as data\n";
-        var catalog = TileCatalog.select(BEASTState.class, List.of("beast2"));
-        var lexer = new Lexer(source);
-        lexer.registerEventListener(error -> fail(error.toStdOutString(source)));
-        var parser = new Parser(lexer.scanTokens());
-        parser.registerEventListener(error -> fail(error.toStdOutString(source)));
-        var statements = new EvaluateScalarFunctions()
-                .transform(new EvaluateLiterals().transform(new RemoveGroupings().transform(parser.parse())));
-        new TypeResolver(catalog.getComponentResolver(), new Workspace(DATA.getParent())).visitStatements(statements);
-        var stochasticity = new StochasticityResolver();
-        stochasticity.visitStatements(statements);
-        var evaluator = new EvaluateTiles<>(catalog.getTiles(), new VariableResolver(statements), stochasticity);
-        evaluator.getBestTiling(statements);
-        BEASTState graph = evaluator.applyBestTiling(new BEASTState("site-model-test", DATA.getParent()));
-        catalog.configureState(graph);
+        BEASTState graph = compile(source, DATA.getParent());
         TreeLikelihood likelihood = assertInstanceOf(TreeLikelihood.class, graph.likelihoodDistributions.getFirst());
-        likelihood.implementationInput.setValue(TreeLikelihood.class.getName(), likelihood);
-        graph.initializeBEASTObjects();
         SiteModel siteModel = assertInstanceOf(SiteModel.class, likelihood.siteModelInput.get());
         Tree tree = assertInstanceOf(Tree.class, likelihood.treeInput.get());
         RealScalarParam<?> sampled = sourceName == null
