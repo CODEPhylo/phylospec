@@ -31,12 +31,13 @@ public abstract class TileInput<T, S> {
 
     /**
      * This can be called at runtime during reflection to resolve the type token
-     * from the type parameter of the field.
+     * from the type parameter of the field. Type variables of the class declaring the field are
+     * resolved as seen from the given tile class.
      */
-    void resolveTypeFromField(Field inputTileField) {
+    void resolveTypeFromField(Field inputTileField, Class<?> tileClass) {
         if (this.typeToken != null) return;
         // TileInput<T> — T is the first type argument
-        ParameterizedType fieldType = (ParameterizedType) inputTileField.getGenericType();
+        ParameterizedType fieldType = (ParameterizedType) TypeToken.resolveFieldType(tileClass, inputTileField);
         this.typeToken = (TypeToken<T>) TypeToken.of(fieldType.getActualTypeArguments()[0]);
     }
 

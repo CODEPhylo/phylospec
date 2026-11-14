@@ -1,0 +1,11 @@
+// TEMPLATE
+log(x~Exponential(rate=1.0)) + log(x~Exponential(rate=1.0))
+// TEMPLATE
+
+// QUERY
+Real b ~ Exponential(rate=1.0)
+log(x~Exponential(rate=1.0)) + log(x=b)
+// QUERY
+
+// MATCH
+// MATCH

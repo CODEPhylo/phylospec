@@ -5,7 +5,6 @@ import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveInt;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.lexer.TokenType;
-import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.IntScalar;
@@ -21,11 +20,6 @@ public abstract class LogRPNTile extends GeneratorTile<BeastXRPNCalculationResul
     @Override
     public String getPhyloSpecGeneratorName() {
         return "log";
-    }
-
-    @Override
-    public TypeToken<?> getTypeToken() {
-        return new TypeToken<BeastXRPNCalculationResult>() {};
     }
 
     protected BeastXRPNCalculationResult applyLogBase(

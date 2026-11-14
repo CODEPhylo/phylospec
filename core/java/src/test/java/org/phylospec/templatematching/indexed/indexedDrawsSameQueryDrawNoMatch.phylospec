@@ -1,0 +1,14 @@
+// TEMPLATE
+Real x[i] ~ Normal(mean=0.0, sd=1.0) for i in 1:5
+Real y[i] ~ Normal(mean=0.0, sd=1.0) for i in 1:5
+x[1] + y[1]
+// TEMPLATE
+
+// QUERY
+Real a[i] ~ Normal(mean=0.0, sd=1.0) for i in 1:5
+a[1] + a[1]
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH

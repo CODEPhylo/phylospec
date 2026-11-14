@@ -4,7 +4,6 @@ import beast.base.spec.type.Tensor;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
 import org.phylospec.ast.Expr;
-import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.tiles.GeneratorTile;
 
 /**
@@ -15,11 +14,6 @@ public abstract class ExpRPNTile extends GeneratorTile<RPNCalculationResult, BEA
     @Override
     public String getPhyloSpecGeneratorName() {
         return "exp";
-    }
-
-    @Override
-    public TypeToken<?> getTypeToken() {
-        return new TypeToken<RPNCalculationResult>() {};
     }
 
     public static class Rpn extends ExpRPNTile {
