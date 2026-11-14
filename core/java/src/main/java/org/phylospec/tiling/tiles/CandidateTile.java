@@ -6,6 +6,7 @@ import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.tiling.errors.PrunedTilingException;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeUtils;
@@ -54,11 +55,17 @@ public interface CandidateTile<S> {
      * wired-up tiles can have, the tiles of the {@link #getMaxWiredUpTiles} lightest consistent combinations of
      * compatible input tiles are returned. The limit applies per type, as the tiles using the returned tiles as
      * inputs pick them by type, so no type they could pick is lost.
+     *
+     * <p>The tiles which are not returned due to the limit are pruned. They are never lighter than the returned
+     * tiles of their type, so they are only needed if the returned ones are inconsistent with other tiles.
+     *
+     * @throws PrunedTilingException if no lighter consistent combination exists for an inconsistent combination, but
+     *     could exist with the pruned alternatives of its input tiles
      */
     default Set<Tile<?, S>> getWiredUpTiles(
             List<TileInput<?, S>> tileInputs, List<Set<Tile<?, S>>> compatibleInputTiles, AstNode rootNode) {
         Set<Tile<?, S>> wiredUpTiles = new HashSet<>();
-        Map<TypeToken<?>, Integer> numTilesPerType = new HashMap<>();
+        Map<TypeToken<?>, List<Tile<?, S>>> wiredUpTilesPerType = new HashMap<>();
 
         // heavier combinations can only lead to tiles of another type if the type depends on the input tiles
         boolean hasFixedTypeToken = this.createInstance().hasFixedTypeToken();
@@ -96,16 +103,35 @@ public interface CandidateTile<S> {
             wiredUpTile.setWeight(totalWeight);
             wiredUpTile.setRootNode(rootNode);
 
-            if (wiredUpTile.isInconsistent(new IdentityHashMap<>())) return TypeUtils.VisitorResult.CONTINUE;
+            TypeToken<?> typeToken = wiredUpTile.getTypeToken();
+
+            if (wiredUpTile.isInconsistent(new IdentityHashMap<>())) {
+                // a pruned alternative of an input tile could be consistent with the other input tiles. this would
+                // lead to a lighter tile of this type than the ones still to come
+
+                if (!wiredUpTilesPerType.containsKey(typeToken)
+                        && inputs.stream().anyMatch(Tile::hasPrunedAlternatives)) {
+                    throw new PrunedTilingException();
+                }
+
+                return TypeUtils.VisitorResult.CONTINUE;
+            }
 
             // the combinations are visited lightest first, so the lightest tiles of every type are kept
 
-            int numTilesOfType = numTilesPerType.merge(wiredUpTile.getTypeToken(), 1, Integer::sum);
-            if (numTilesOfType <= getMaxWiredUpTiles()) wiredUpTiles.add(wiredUpTile);
+            List<Tile<?, S>> wiredUpTilesOfType =
+                    wiredUpTilesPerType.computeIfAbsent(typeToken, ignored -> new ArrayList<>());
 
-            return hasFixedTypeToken && numTilesOfType >= getMaxWiredUpTiles()
-                    ? TypeUtils.VisitorResult.STOP
-                    : TypeUtils.VisitorResult.CONTINUE;
+            if (wiredUpTilesOfType.size() < getMaxWiredUpTiles()) {
+                wiredUpTilesOfType.add(wiredUpTile);
+                wiredUpTiles.add(wiredUpTile);
+                return TypeUtils.VisitorResult.CONTINUE;
+            }
+
+            // this tile is pruned
+
+            wiredUpTilesOfType.forEach(Tile::markPrunedAlternatives);
+            return hasFixedTypeToken ? TypeUtils.VisitorResult.STOP : TypeUtils.VisitorResult.CONTINUE;
         });
 
         return wiredUpTiles;
