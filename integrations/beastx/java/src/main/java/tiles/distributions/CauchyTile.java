@@ -6,12 +6,14 @@ import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.domain.Real;
 import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.types.RealScalar;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
+import java.util.Set;
 
 public class CauchyTile extends GeneratorTile<
         BoundDistribution<BeastXRealScalarParam<Real>, DistributionLikelihood>,
@@ -23,11 +25,18 @@ public class CauchyTile extends GeneratorTile<
         return "Cauchy";
     }
 
+    // BEAST X's CauchyDistribution stores plain doubles, so sampled values would be frozen.
     GeneratorTileInput<RealScalar<Real>, BeastXState> locationInput =
-            new GeneratorTileInput<>("location");
+            new GeneratorTileInput<>(
+                    "location",
+                    Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+            );
 
     GeneratorTileInput<RealScalar<PositiveReal>, BeastXState> scaleInput =
-            new GeneratorTileInput<>("scale");
+            new GeneratorTileInput<>(
+                    "scale",
+                    Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+            );
 
     @Override
     public BoundDistribution<BeastXRealScalarParam<Real>, DistributionLikelihood> applyTile(

@@ -10,11 +10,13 @@ import org.phylospec.domain.NonNegativeReal;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.types.RealScalar;
+import org.phylospec.typeresolver.Stochasticity;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 
 public class RootObservedBetweenTile extends TemplateTile<RealScalar<NonNegativeReal>, BeastXState> {
 
@@ -26,11 +28,12 @@ public class RootObservedBetweenTile extends TemplateTile<RealScalar<NonNegative
     TemplateTileInput<TreeModel, BeastXState> treeInput =
             new TemplateTileInput<>("$tree");
 
+    // The bounds are copied into the calibration prior, so sampled bounds would be frozen.
     TemplateTileInput<RealScalar<?>, BeastXState> fromInput =
-            new TemplateTileInput<>("$from");
+            new TemplateTileInput<>("$from", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     TemplateTileInput<RealScalar<?>, BeastXState> toInput =
-            new TemplateTileInput<>("$to");
+            new TemplateTileInput<>("$to", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
     public RealScalar<NonNegativeReal> applyTile(

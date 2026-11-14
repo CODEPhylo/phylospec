@@ -12,10 +12,12 @@ import org.phylospec.tiling.Partial;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.IntScalar;
 import org.phylospec.types.RealScalar;
+import org.phylospec.typeresolver.Stochasticity;
 import tiling.BeastXState;
 import tiling.params.BeastXRealScalarParam;
 
 import java.util.IdentityHashMap;
+import java.util.Set;
 
 public class SiteModelTile extends GeneratorTile<
         Partial<GammaSiteRateModel, SubstitutionModel>,
@@ -30,8 +32,9 @@ public class SiteModelTile extends GeneratorTile<
     GeneratorTileInput<RealScalar<PositiveReal>, BeastXState> shapeInput =
             new GeneratorTileInput<>("shape");
 
+    // The number of rate categories fixes the structure of the site model.
     GeneratorTileInput<IntScalar<? extends PositiveInt>, BeastXState> numCategoriesInput =
-            new GeneratorTileInput<>("numCategories");
+            new GeneratorTileInput<>("numCategories", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     GeneratorTileInput<RealScalar<UnitInterval>, BeastXState> invariantProportionInput =
             new GeneratorTileInput<>("invariantProportion", false);

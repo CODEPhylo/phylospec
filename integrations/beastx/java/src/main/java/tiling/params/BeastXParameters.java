@@ -3,6 +3,7 @@ package tiling.params;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import org.phylospec.types.RealScalar;
+import org.phylospec.types.RealVector;
 import org.phylospec.types.Simplex;
 
 /**
@@ -22,6 +23,14 @@ public final class BeastXParameters {
         }
 
         return new Parameter.Default(scalar.get());
+    }
+
+    public static Parameter toParameter(RealVector<?> vector) {
+        if (vector instanceof BeastXRealVectorParam<?> beastXVector) {
+            return beastXVector.getParameter();
+        }
+
+        return new Parameter.Default(vector.getDoubleArray());
     }
 
     public static Parameter toParameter(Simplex simplex) {
