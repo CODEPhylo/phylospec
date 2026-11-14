@@ -1,8 +1,10 @@
 package tiling.xml.builders;
 
+import dr.inference.distribution.DirichletDistributionModel;
 import dr.inference.distribution.MultivariateDistributionLikelihood;
 import dr.inference.model.Parameter;
 import dr.math.distributions.DirichletDistribution;
+import tiling.BeastXState;
 import tiling.xml.XmlElement;
 
 import java.lang.reflect.Field;
@@ -42,11 +44,70 @@ public class DirichletPriorXmlBuilder {
                 );
     }
 
+    /**
+     * Builds a Dirichlet prior whose concentration is sampled. BEAST X's dirichletParameterPrior
+     * copies the counts when parsing, so this uses a dirichletDistributionModel, which keeps
+     * a reference to the counts parameter.
+     */
+    public XmlElement buildPrior(
+            BeastXState state,
+            Parameter parameter,
+            MultivariateDistributionLikelihood likelihood,
+            DirichletDistributionModel distribution
+    ) {
+        String priorId =
+                likelihood.getId();
+
+        Parameter counts =
+                (Parameter) distribution.getVariable(0);
+
+        Parameter dispersion =
+                (Parameter) distribution.getVariable(1);
+
+        XmlElement countsElement =
+                state.stateNodes.containsKey(counts)
+                        ? parameterReference(counts)
+                        : inlineVectorParameterDefinition(priorId + "_counts", counts.getParameterValues(), 0.0, null);
+
+        return XmlElement.element("multivariateDistributionLikelihood")
+                .withId(priorId)
+                .withChild(
+                        XmlElement.element("distribution")
+                                .withChild(
+                                        XmlElement.element("dirichletDistributionModel")
+                                                .withId(priorId + "_distribution")
+                                                .withAttribute(
+                                                        "sumToNumberOfElements",
+                                                        Boolean.toString(sumToNumberOfElements(distribution))
+                                                )
+                                                .withChild(
+                                                        XmlElement.element("counts")
+                                                                .withChild(countsElement)
+                                                )
+                                                .withChild(
+                                                        XmlElement.element("dispersion")
+                                                                .withChild(
+                                                                        inlineVectorParameterDefinition(
+                                                                                priorId + "_dispersion",
+                                                                                dispersion.getParameterValues(),
+                                                                                null,
+                                                                                null
+                                                                        )
+                                                                )
+                                                )
+                                )
+                )
+                .withChild(
+                        XmlElement.element("data")
+                                .withChild(parameterReference(parameter))
+                );
+    }
+
     public double[] counts(DirichletDistribution distribution) {
         return ((double[]) readPrivateField(distribution, "counts")).clone();
     }
 
-    private boolean sumToNumberOfElements(DirichletDistribution distribution) {
+    private boolean sumToNumberOfElements(Object distribution) {
         return (boolean) readPrivateField(distribution, "sumToNumberOfElements");
     }
 
