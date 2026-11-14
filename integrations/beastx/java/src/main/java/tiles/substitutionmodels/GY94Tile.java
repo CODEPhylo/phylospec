@@ -10,6 +10,7 @@ import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import org.phylospec.types.Simplex;
+import tiling.params.BeastXParameters;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 
@@ -68,7 +69,7 @@ public class GY94Tile extends GeneratorTile<GY94CodonModel, BeastXState> {
         }
 
         FrequencyModel frequencyModel =
-                new FrequencyModel(codons, baseFrequencies.getDoubleArray());
+                new FrequencyModel(codons, BeastXParameters.toParameter(baseFrequencies));
 
         return new GY94CodonModel(
                 codons,

@@ -9,6 +9,7 @@ import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.Simplex;
 import tiling.BeastXState;
+import tiling.params.BeastXParameters;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -59,7 +60,7 @@ public class JTTTile extends GeneratorTile<EmpiricalAminoAcidModel, BeastXState>
 
             frequencies = new FrequencyModel(
                     AminoAcids.INSTANCE,
-                    baseFrequencies.getDoubleArray()
+                    BeastXParameters.toParameter(baseFrequencies)
             );
         }
 
