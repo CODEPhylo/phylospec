@@ -2,12 +2,14 @@ package tiles.distributions;
 
 import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.distribution.UniformDistributionModel;
+import dr.inference.model.Bounds;
 import dr.inference.model.Parameter;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.Real;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
+import tiling.params.BeastXParameters;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
@@ -51,8 +53,8 @@ public class UniformTile extends GeneratorTile<
             );
         }
 
-        Parameter lowerParameter = new Parameter.Default(lower.get());
-        Parameter upperParameter = new Parameter.Default(upper.get());
+        Parameter lowerParameter = BeastXParameters.toParameter(lower);
+        Parameter upperParameter = BeastXParameters.toParameter(upper);
 
         UniformDistributionModel distributionModel =
                 new UniformDistributionModel(lowerParameter, upperParameter);
@@ -63,7 +65,7 @@ public class UniformTile extends GeneratorTile<
         double defaultValue = (lower.get() + upper.get()) / 2.0;
 
         Parameter.Default defaultParameter = new Parameter.Default(defaultValue);
-        defaultParameter.addBounds(lower.get(), upper.get());
+        defaultParameter.addBounds(new LiveBounds(lowerParameter, upperParameter));
 
         BeastXRealScalarParam<Real> defaultState =
                 new BeastXRealScalarParam<>(defaultParameter, Real.INSTANCE);
@@ -73,5 +75,27 @@ public class UniformTile extends GeneratorTile<
                 defaultState,
                 state -> likelihood.addData(state.getParameter())
         );
+    }
+
+    /**
+     * Parameter bounds that always reflect the current values of the lower and upper parameters,
+     * so operators respect the bounds even when they are sampled.
+     */
+    private record LiveBounds(Parameter lower, Parameter upper) implements Bounds<Double> {
+
+        @Override
+        public Double getLowerLimit(int dimension) {
+            return this.lower.getParameterValue(0);
+        }
+
+        @Override
+        public Double getUpperLimit(int dimension) {
+            return this.upper.getParameterValue(0);
+        }
+
+        @Override
+        public int getBoundsDimension() {
+            return 1;
+        }
     }
 }

@@ -6,12 +6,14 @@ import dr.math.distributions.Distribution;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.Real;
 import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.types.RealScalar;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
+import java.util.Set;
 
 public class OffsetTile extends GeneratorTile<
         BoundDistribution<BeastXRealScalarParam<Real>, DistributionLikelihood>,
@@ -32,8 +34,12 @@ public class OffsetTile extends GeneratorTile<
             > baseInput =
             new GeneratorTileInput<>("base");
 
+    // The offset is stored as a plain double, so a sampled offset would be frozen.
     GeneratorTileInput<RealScalar<? extends Real>, BeastXState> offsetInput =
-            new GeneratorTileInput<>("offset");
+            new GeneratorTileInput<>(
+                    "offset",
+                    Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
+            );
 
     @Override
     public BoundDistribution<BeastXRealScalarParam<Real>, DistributionLikelihood> applyTile(
