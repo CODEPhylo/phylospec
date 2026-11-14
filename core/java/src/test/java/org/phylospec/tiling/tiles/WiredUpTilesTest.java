@@ -82,10 +82,28 @@ public class WiredUpTilesTest {
     public void rejectsTilingIfPrunedAlternativeCouldBeConsistent() {
         assertThrows(
                 PrunedTilingException.class,
-                () -> CandidateTile.runWithMaxWiredUpTiles(this::getTilesUsingHeaviestSharedTile));
+                () -> CandidateTile.runWithMaxWiredUpTiles(() -> this.getTilesUsingHeaviestSharedTile(Set.of())));
 
         // with all tiles, the alternative using the heaviest shared tile is found
-        assertEquals(1, this.getTilesUsingHeaviestSharedTile().size());
+        assertEquals(1, this.getTilesUsingHeaviestSharedTile(Set.of()).size());
+    }
+
+    @Test
+    public void marksLighterTilesIfPrunedAlternativeCouldBeConsistent() {
+        // this user tile does not use the shared node, so it is consistent with every shared tile
+        Tile<?, Object> lightestUserTile = new InputTile(COMMON_TYPE, 0, new Expr.Call("user"));
+
+        Set<Tile<?, Object>> limitedTiles = CandidateTile.runWithMaxWiredUpTiles(
+                () -> this.getTilesUsingHeaviestSharedTile(Set.of(lightestUserTile)));
+
+        assertEquals(1, limitedTiles.size());
+        assertTrue(limitedTiles.stream().allMatch(Tile::hasPrunedAlternatives));
+
+        // with all tiles, the alternative using the heaviest shared tile is found as well
+        Set<Tile<?, Object>> allTiles = this.getTilesUsingHeaviestSharedTile(Set.of(lightestUserTile));
+
+        assertEquals(2, allTiles.size());
+        assertFalse(allTiles.stream().anyMatch(Tile::hasPrunedAlternatives));
     }
 
     /* helpers */
@@ -105,10 +123,10 @@ public class WiredUpTilesTest {
 
     /**
      * Wires up a tile with two inputs: the heaviest tile of a shared node, and the tiles of a user of the shared node.
-     * Only the user tile wired up with the heaviest shared tile is consistent with it, which is the first one the
-     * limit prunes.
+     * Among the user tiles wired up with a shared tile, only the one using the heaviest shared tile is consistent
+     * with it, which is the first one the limit prunes. The given other user tiles are available as well.
      */
-    private Set<Tile<?, Object>> getTilesUsingHeaviestSharedTile() {
+    private Set<Tile<?, Object>> getTilesUsingHeaviestSharedTile(Set<Tile<?, Object>> otherUserTiles) {
         List<Tile<?, Object>> sharedTiles = this.createCommonInputTiles(new Expr.Call("shared"));
         Tile<?, Object> heaviestSharedTile = sharedTiles.getLast();
 
@@ -117,6 +135,7 @@ public class WiredUpTilesTest {
                         new FixedTypeTile().getTileInputs(),
                         List.of(new HashSet<>(sharedTiles)),
                         new Expr.Call("user"));
+        userTiles.addAll(otherUserTiles);
 
         TwoInputsTile candidateTile = new TwoInputsTile();
         Map<String, Set<Tile<?, Object>>> inputTilesByKey =

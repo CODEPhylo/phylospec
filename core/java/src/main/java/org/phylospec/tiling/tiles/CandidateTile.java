@@ -59,8 +59,11 @@ public interface CandidateTile<S> {
      * <p>The tiles which are not returned due to the limit are pruned. They are never lighter than the returned
      * tiles of their type, so they are only needed if the returned ones are inconsistent with other tiles.
      *
-     * @throws PrunedTilingException if no lighter consistent combination exists for an inconsistent combination, but
-     *     could exist with the pruned alternatives of its input tiles
+     * <p>Tiles can also be missing because a combination is only consistent with the pruned alternatives of its
+     * input tiles. The lighter returned tiles of their type are then marked as having pruned alternatives as well.
+     *
+     * @throws PrunedTilingException if an inconsistent combination could be consistent with the pruned alternatives
+     *     of its input tiles, and no lighter tile of its type exists
      */
     default Set<Tile<?, S>> getWiredUpTiles(
             List<TileInput<?, S>> tileInputs, List<Set<Tile<?, S>>> compatibleInputTiles, AstNode rootNode) {
@@ -107,11 +110,16 @@ public interface CandidateTile<S> {
 
             if (wiredUpTile.isInconsistent(new IdentityHashMap<>())) {
                 // a pruned alternative of an input tile could be consistent with the other input tiles. this would
-                // lead to a lighter tile of this type than the ones still to come
+                // lead to a tile of this type which is missing in the returned tiles
 
-                if (!wiredUpTilesPerType.containsKey(typeToken)
-                        && inputs.stream().anyMatch(Tile::hasPrunedAlternatives)) {
-                    throw new PrunedTilingException();
+                if (inputs.stream().anyMatch(Tile::hasPrunedAlternatives)) {
+                    List<Tile<?, S>> lighterTilesOfType = wiredUpTilesPerType.get(typeToken);
+
+                    // without a lighter tile of this type, the missing tile could be the lightest one
+                    if (lighterTilesOfType == null) throw new PrunedTilingException();
+
+                    // the missing tile is only needed if the lighter ones are inconsistent with other tiles
+                    lighterTilesOfType.forEach(Tile::markPrunedAlternatives);
                 }
 
                 return TypeUtils.VisitorResult.CONTINUE;
