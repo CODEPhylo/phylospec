@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.function.Supplier;
 import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
+import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
@@ -27,20 +28,20 @@ public interface CandidateTile<S> {
             throws FailedTilingAttempt;
 
     /**
-     * The maximum number of wired-up tiles created per candidate tile and AST node. If unbound, all are created.
+     * The maximum number of wired-up tiles kept per candidate tile, AST node and type. If unbound, all are kept.
      * Use {@link #runWithMaxWiredUpTiles} and {@link #getMaxWiredUpTiles} instead of accessing it directly.
      */
     ScopedValue<Integer> MAX_WIRED_UP_TILES = ScopedValue.newInstance();
 
     /**
-     * The number of lightest wired-up tiles created per candidate tile and AST node within
+     * The number of lightest wired-up tiles kept per candidate tile, AST node and type within
      * {@link #runWithMaxWiredUpTiles}.
      */
     int LIGHTEST_WIRED_UP_TILES = 16;
 
     /**
-     * Runs the given tiling while {@link #getWiredUpTiles} creates at most {@link #LIGHTEST_WIRED_UP_TILES} tiles per
-     * candidate tile and AST node. The limit is passed via a {@link ScopedValue}, as {@link #getWiredUpTiles} is
+     * Runs the given tiling while {@link #getWiredUpTiles} keeps at most {@link #LIGHTEST_WIRED_UP_TILES} tiles per
+     * candidate tile, AST node and type. The limit is passed via a {@link ScopedValue}, as {@link #getWiredUpTiles} is
      * called from within the {@link #tryToTile} implementations, which have no parameter for it. It only applies
      * while the tiling runs, so it never leaks into other tilings, even if the tiling throws.
      */
@@ -49,13 +50,18 @@ public interface CandidateTile<S> {
     }
 
     /**
-     * Creates wired up fresh tiles for the given inputs and their compatible input tiles. For the
-     * {@link #getMaxWiredUpTiles} lightest consistent combinations of compatible input tiles, a wired-up tile is
-     * created.
+     * Creates wired up fresh tiles for the given inputs and their compatible input tiles. For every type the
+     * wired-up tiles can have, the tiles of the {@link #getMaxWiredUpTiles} lightest consistent combinations of
+     * compatible input tiles are returned. The limit applies per type, as the tiles using the returned tiles as
+     * inputs pick them by type, so no type they could pick is lost.
      */
     default Set<Tile<?, S>> getWiredUpTiles(
             List<TileInput<?, S>> tileInputs, List<Set<Tile<?, S>>> compatibleInputTiles, AstNode rootNode) {
         Set<Tile<?, S>> wiredUpTiles = new HashSet<>();
+        Map<TypeToken<?>, Integer> numTilesPerType = new HashMap<>();
+
+        // heavier combinations can only lead to tiles of another type if the type depends on the input tiles
+        boolean hasFixedTypeToken = this.createInstance().hasFixedTypeToken();
 
         // ties are broken by identity, so that all consumers of a shared input tile prefer the same one
         Comparator<Tile<?, S>> byWeight =
@@ -90,20 +96,23 @@ public interface CandidateTile<S> {
             wiredUpTile.setWeight(totalWeight);
             wiredUpTile.setRootNode(rootNode);
 
-            if (!wiredUpTile.isInconsistent(new IdentityHashMap<>())) {
-                wiredUpTiles.add(wiredUpTile);
-            }
+            if (wiredUpTile.isInconsistent(new IdentityHashMap<>())) return TypeUtils.VisitorResult.CONTINUE;
 
-            return wiredUpTiles.size() < getMaxWiredUpTiles()
-                    ? TypeUtils.VisitorResult.CONTINUE
-                    : TypeUtils.VisitorResult.STOP;
+            // the combinations are visited lightest first, so the lightest tiles of every type are kept
+
+            int numTilesOfType = numTilesPerType.merge(wiredUpTile.getTypeToken(), 1, Integer::sum);
+            if (numTilesOfType <= getMaxWiredUpTiles()) wiredUpTiles.add(wiredUpTile);
+
+            return hasFixedTypeToken && numTilesOfType >= getMaxWiredUpTiles()
+                    ? TypeUtils.VisitorResult.STOP
+                    : TypeUtils.VisitorResult.CONTINUE;
         });
 
         return wiredUpTiles;
     }
 
     /**
-     * Returns the maximum number of wired-up tiles created per candidate tile and AST node. This is unlimited
+     * Returns the maximum number of wired-up tiles kept per candidate tile, AST node and type. This is unlimited
      * outside of {@link #runWithMaxWiredUpTiles}.
      */
     static int getMaxWiredUpTiles() {

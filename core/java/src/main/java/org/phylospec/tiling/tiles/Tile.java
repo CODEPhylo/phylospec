@@ -35,6 +35,19 @@ public abstract class Tile<T, S> {
     }
 
     /**
+     * Returns whether the type token of this tile is the same no matter which input tiles it is wired up with. By
+     * default, this is only assumed for tiles which do not override {@link #getTypeToken}. Tiles overriding it with
+     * a type that does not depend on their inputs can override this method to return true.
+     */
+    public boolean hasFixedTypeToken() {
+        try {
+            return this.getClass().getMethod("getTypeToken").getDeclaringClass() == Tile.class;
+        } catch (NoSuchMethodException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /**
      * Recursively walks this tile's wired sub-tiles and verifies that no AstNode is committed
      * to two different sub-tiles anywhere in the sub-graph.
      * Throws {@link InconsistentTilingException} if an inconsistency is detected at any depth.
