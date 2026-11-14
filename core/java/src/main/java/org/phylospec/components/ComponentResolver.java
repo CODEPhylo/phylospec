@@ -17,6 +17,7 @@ public class ComponentResolver {
 
     final List<ComponentLibrary> componentLibraries;
     final Set<String> knownNamespaces;
+    private java.util.function.Function<String, String> unknownNamespaceHint;
 
     private final Map<String, List<Generator>> knownGenerators; // there might be multiple generators with the same name
     private final Map<String, Type> knownTypes;
@@ -233,6 +234,34 @@ public class ComponentResolver {
     }
 
     /**
+     * Sets the hint for an import that no loaded component library provides, e.g. how the
+     * engine loads extension packages. The function receives the namespace.
+     */
+    public void setUnknownNamespaceHint(java.util.function.Function<String, String> hint) {
+        this.unknownNamespaceHint = hint;
+    }
+
+    /**
+     * Suggests the closest known namespace. When the engine has set a hint for packages that are
+     * not loaded, the closest namespace is suggested only for a likely misspelling; otherwise the
+     * namespace is probably provided by a package that is not loaded, and the engine's hint applies.
+     */
+    private TypeError unknownNamespace(String namespaceString) {
+        String closestNamespace = findClosestNamespace(namespaceString);
+        boolean likelyMisspelling =
+                Utils.editDistance(closestNamespace, namespaceString) <= Math.max(2, namespaceString.length() / 4);
+        if (unknownNamespaceHint != null && (closestNamespace.isEmpty() || !likelyMisspelling)) {
+            return new TypeError(
+                    "The import '" + namespaceString + "' does not exist.",
+                    unknownNamespaceHint.apply(namespaceString));
+        }
+        return new TypeError(
+                "The import '" + namespaceString + "' does not exist.",
+                "Do you want to use '" + closestNamespace + "'?",
+                List.of("use " + closestNamespace));
+    }
+
+    /**
      * Imports a namespace. This makes all registered components and types
      * in that namespace resolvable by their unqualified name. Throws a {@link TypeError}
      * if the namespace is not known.
@@ -241,11 +270,7 @@ public class ComponentResolver {
         String namespaceString = String.join(".", namespace);
 
         if (!knownNamespaces.contains(namespaceString)) {
-            String closestNamespace = findClosestNamespace(namespaceString);
-            throw new TypeError(
-                    "The import '" + namespaceString + "' does not exist.",
-                    "Do you want to use '" + closestNamespace + "'?",
-                    List.of("use " + closestNamespace));
+            throw unknownNamespace(namespaceString);
         }
 
         for (ComponentLibrary library : componentLibraries) {
@@ -281,11 +306,7 @@ public class ComponentResolver {
         String namespaceStringWithDot = String.join(".", namespace) + ".";
 
         if (!knownNamespaces.contains(namespaceString)) {
-            String closestNamespace = findClosestNamespace(namespaceString);
-            throw new TypeError(
-                    "The import '" + namespaceString + "' does not exist.",
-                    "Do you want to use '" + closestNamespace + "'?",
-                    List.of("use " + closestNamespace));
+            throw unknownNamespace(namespaceString);
         }
 
         for (ComponentLibrary library : componentLibraries) {
@@ -451,6 +472,33 @@ public class ComponentResolver {
     public Type resolveType(String typeName) {
         String typeNameWithoutGenerics = new ParsedType(typeName).stripGenerics();
         return knownTypes.get(typeNameWithoutGenerics);
+    }
+
+    /** Resolves a type or explains how to bring a registered type into scope. */
+    public Type requireType(String typeName) {
+        Type type = resolveType(typeName);
+        if (type != null) return type;
+
+        ParsedType parsed = new ParsedType(typeName);
+        if (parsed.getNamespace().isEmpty()) {
+            String name = parsed.getAtomicTypeName();
+            List<String> imports = knownNamespaces.stream()
+                    .filter(namespace -> knownTypes.containsKey(namespace + "." + name))
+                    .sorted()
+                    .map(namespace -> "'use " + namespace + "'")
+                    .toList();
+            if (!imports.isEmpty()) {
+                String hint = imports.size() == 1
+                        ? "Add " + imports.getFirst() + " before this declaration."
+                        : "Choose the intended namespace and add one of these imports: " + String.join(", ", imports)
+                                + ".";
+                throw new TypeError("The type '" + name + "' has not been imported.", hint);
+            }
+        }
+
+        throw new TypeError(
+                "The type '" + typeName + "' does not exist.",
+                "Are you looking for '" + findClosestType(typeName) + "'?");
     }
 
     /**

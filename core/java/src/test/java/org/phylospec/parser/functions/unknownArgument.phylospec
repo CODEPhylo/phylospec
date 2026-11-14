@@ -1,9 +1,18 @@
 Real a = log(a = 10)
+Real b ~ Uniform(zzzzz=1)
+Real c = log(x=5, base=10, extra=4)
+Real d ~ LogNormal(logMean=0.0, logSdd=1.0)
 
 // EXPECT AST
 // (AS Real a (CA log (AA a 10)))
+// (DR Real b (CA Uniform (AA zzzzz 1)))
+// (AS Real c (CA log (AA x 5) (AA base 10) (AA extra 4)))
+// (DR Real d (CA LogNormal (AA logMean 0.0) (AA logSdd 1.0)))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS
 // Function `log` takes no argument named `a`. Do you mean 'x'?
+// Function `Uniform` takes no argument named `zzzzz`.
+// Function `log` takes no argument named `extra`. All arguments of `log` are already specified. Remove this argument.
+// Function `LogNormal` takes no argument named `logSdd`. Do you mean 'logSd'?
 // EXPECT TYPE_ERRORS
