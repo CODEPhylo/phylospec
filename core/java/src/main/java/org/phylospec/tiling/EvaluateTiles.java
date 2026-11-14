@@ -4,6 +4,7 @@ import java.util.*;
 import org.phylospec.Utils;
 import org.phylospec.ast.*;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.tiling.errors.PrunedTilingException;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.CandidateTile;
 import org.phylospec.tiling.tiles.GeneratorTile;
@@ -77,7 +78,8 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
      *
      * <p>Both phases first only consider the {@link CandidateTile#LIGHTEST_WIRED_UP_TILES} lightest tiles per
      * candidate tile, AST node and type. This is fast, but can miss the tiles needed for a consistent
-     * tiling, so on failure, the tiling is repeated with all tiles.
+     * tiling. If the tiling fails, or if it rejects tiles whose pruned alternatives could have been accepted, it is
+     * repeated with all tiles.
      *
      * @param statements the top-level statements to tile
      * @return one best tile per unconsumed statement, in source order
@@ -85,7 +87,7 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
     public List<Tile<?, S>> getBestTiling(List<Stmt> statements) {
         try {
             return CandidateTile.runWithMaxWiredUpTiles(() -> this.computeBestTiling(statements));
-        } catch (TileApplicationError lightestTilesError) {
+        } catch (TileApplicationError | PrunedTilingException lightestTilesError) {
             var allTiles = new EvaluateTiles<>(this.candidateTiles, this.variableResolver, this.stochasticityResolver);
             return this.bestTiles = allTiles.getBestTilingOfAllTiles(statements);
         }
@@ -152,7 +154,12 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
             IdentityHashMap<AstNode, Tile<?, ?>> assignments = new IdentityHashMap<>();
 
             for (Tile<?, ?> tile : tiles) {
-                if (tile.isInconsistent(assignments)) return TypeUtils.VisitorResult.CONTINUE;
+                if (!tile.isInconsistent(assignments)) continue;
+
+                // pruned alternatives of these tiles could be consistent with each other
+                if (tiles.stream().anyMatch(Tile::hasPrunedAlternatives)) throw new PrunedTilingException();
+
+                return TypeUtils.VisitorResult.CONTINUE;
             }
 
             // we found a consistent tiling

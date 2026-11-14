@@ -221,6 +221,32 @@ public abstract class Tile<T, S> {
         this.indexVariables = currentIndexVariables;
     }
 
+    /* pruned alternatives */
+
+    // computed lazily, as it depends on the tiles wired up below this tile
+    private Boolean hasPrunedAlternatives;
+
+    /**
+     * Returns whether tiles which could take the place of this tile or of one of the tiles wired up below it were
+     * pruned. Such alternatives have the same root node and type, but are wired up with other input tiles.
+     */
+    public boolean hasPrunedAlternatives() {
+        if (this.hasPrunedAlternatives != null) return this.hasPrunedAlternatives;
+
+        try {
+            this.hasPrunedAlternatives =
+                    this.getWiredUpInputs().values().stream().anyMatch(Tile::hasPrunedAlternatives);
+        } catch (InconsistentTilingException e) {
+            this.hasPrunedAlternatives = false;
+        }
+
+        return this.hasPrunedAlternatives;
+    }
+
+    public void markPrunedAlternatives() {
+        this.hasPrunedAlternatives = true;
+    }
+
     /* tiling weight */
 
     private int weight = 0;

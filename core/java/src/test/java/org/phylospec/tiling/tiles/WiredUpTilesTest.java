@@ -1,15 +1,21 @@
 package org.phylospec.tiling.tiles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.errors.PrunedTilingException;
 
 public class WiredUpTilesTest {
 
@@ -17,6 +23,8 @@ public class WiredUpTilesTest {
     private static final TypeToken<?> RARE_TYPE = TypeToken.of(String.class);
 
     private static final int NUM_COMMON_INPUT_TILES = CandidateTile.LIGHTEST_WIRED_UP_TILES + 4;
+
+    /* limit per type */
 
     @Test
     public void keepsLightestTilesOfEveryTypeIfTypeDependsOnInputs() {
@@ -53,6 +61,33 @@ public class WiredUpTilesTest {
                 this.getWiredUpTiles(new FixedTypeTile()).size());
     }
 
+    /* pruned alternatives */
+
+    @Test
+    public void marksTilesWithPrunedAlternatives() {
+        Set<Tile<?, Object>> limitedTiles =
+                CandidateTile.runWithMaxWiredUpTiles(() -> this.getWiredUpTiles(new FixedTypeTile()));
+        Set<Tile<?, Object>> allTiles = this.getWiredUpTiles(new FixedTypeTile());
+
+        assertTrue(limitedTiles.stream().allMatch(Tile::hasPrunedAlternatives));
+        assertFalse(allTiles.stream().anyMatch(Tile::hasPrunedAlternatives));
+
+        // tiles wired up with such tiles have pruned alternatives as well
+        Set<Tile<?, Object>> tilesAbove = new FixedTypeTile()
+                .getWiredUpTiles(new FixedTypeTile().getTileInputs(), List.of(limitedTiles), new Expr.Call("above"));
+        assertTrue(tilesAbove.stream().allMatch(Tile::hasPrunedAlternatives));
+    }
+
+    @Test
+    public void rejectsTilingIfPrunedAlternativeCouldBeConsistent() {
+        assertThrows(
+                PrunedTilingException.class,
+                () -> CandidateTile.runWithMaxWiredUpTiles(this::getTilesUsingHeaviestSharedTile));
+
+        // with all tiles, the alternative using the heaviest shared tile is found
+        assertEquals(1, this.getTilesUsingHeaviestSharedTile().size());
+    }
+
     /* helpers */
 
     /**
@@ -62,13 +97,49 @@ public class WiredUpTilesTest {
     private <C extends Tile<?, Object> & CandidateTile<Object>> Set<Tile<?, Object>> getWiredUpTiles(C candidateTile) {
         AstNode inputNode = new Expr.Call("input");
 
-        Set<Tile<?, Object>> inputTiles = new HashSet<>();
-        for (int weight = 0; weight < NUM_COMMON_INPUT_TILES; weight++) {
-            inputTiles.add(new InputTile(COMMON_TYPE, weight, inputNode));
-        }
+        Set<Tile<?, Object>> inputTiles = new HashSet<>(this.createCommonInputTiles(inputNode));
         inputTiles.add(new InputTile(RARE_TYPE, NUM_COMMON_INPUT_TILES, inputNode));
 
         return candidateTile.getWiredUpTiles(candidateTile.getTileInputs(), List.of(inputTiles), new Expr.Call("root"));
+    }
+
+    /**
+     * Wires up a tile with two inputs: the heaviest tile of a shared node, and the tiles of a user of the shared node.
+     * Only the user tile wired up with the heaviest shared tile is consistent with it, which is the first one the
+     * limit prunes.
+     */
+    private Set<Tile<?, Object>> getTilesUsingHeaviestSharedTile() {
+        List<Tile<?, Object>> sharedTiles = this.createCommonInputTiles(new Expr.Call("shared"));
+        Tile<?, Object> heaviestSharedTile = sharedTiles.getLast();
+
+        Set<Tile<?, Object>> userTiles = new FixedTypeTile()
+                .getWiredUpTiles(
+                        new FixedTypeTile().getTileInputs(),
+                        List.of(new HashSet<>(sharedTiles)),
+                        new Expr.Call("user"));
+
+        TwoInputsTile candidateTile = new TwoInputsTile();
+        Map<String, Set<Tile<?, Object>>> inputTilesByKey =
+                Map.of("shared", Set.of(heaviestSharedTile), "user", userTiles);
+        List<TileInput<?, Object>> tileInputs = candidateTile.getTileInputs();
+
+        return candidateTile.getWiredUpTiles(
+                tileInputs,
+                tileInputs.stream()
+                        .map(tileInput -> inputTilesByKey.get(tileInput.getKey()))
+                        .toList(),
+                new Expr.Call("root"));
+    }
+
+    /**
+     * Creates more tiles of the common type than the limit allows, lightest first.
+     */
+    private List<Tile<?, Object>> createCommonInputTiles(AstNode inputNode) {
+        List<Tile<?, Object>> inputTiles = new ArrayList<>();
+        for (int weight = 0; weight < NUM_COMMON_INPUT_TILES; weight++) {
+            inputTiles.add(new InputTile(COMMON_TYPE, weight, inputNode));
+        }
+        return inputTiles;
     }
 
     private long countTilesOfType(Set<Tile<?, Object>> tiles, TypeToken<?> typeToken) {
@@ -119,6 +190,16 @@ public class WiredUpTilesTest {
         @Override
         protected Object applyTile(Object state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
             return this.input.apply(state, indexVariables);
+        }
+    }
+
+    static final class TwoInputsTile extends AstNodeTile<Object, Expr.Call, Object> {
+        AstNodeTileInput<Object, Expr.Call, Object> sharedInput = new AstNodeTileInput<>("shared", call -> call);
+        AstNodeTileInput<Object, Expr.Call, Object> userInput = new AstNodeTileInput<>("user", call -> call);
+
+        @Override
+        protected Object applyTile(Object state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+            return this.userInput.apply(state, indexVariables);
         }
     }
 }
