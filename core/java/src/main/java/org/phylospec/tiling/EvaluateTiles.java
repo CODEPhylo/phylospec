@@ -75,10 +75,24 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
      *       exponential blowup in the number of statements.</li>
      * </ol>
      *
+     * <p>Both phases first only consider the {@link CandidateTile#LIGHTEST_WIRED_UP_TILES} lightest tiles per
+     * candidate tile and AST node. This is fast, but can miss the tiles needed for a consistent
+     * tiling, so on failure, the tiling is repeated with all tiles.
+     *
      * @param statements the top-level statements to tile
      * @return one best tile per unconsumed statement, in source order
      */
     public List<Tile<?, S>> getBestTiling(List<Stmt> statements) {
+        try {
+            return CandidateTile.runWithMaxWiredUpTiles(() -> this.computeBestTiling(statements));
+        } catch (TileApplicationError lightestTilesError) {
+            // outside of runWithMaxWiredUpTiles, all wired-up tiles are created
+            var allTiles = new EvaluateTiles<>(this.candidateTiles, this.variableResolver, this.stochasticityResolver);
+            return this.bestTiles = allTiles.computeBestTiling(statements);
+        }
+    }
+
+    private List<Tile<?, S>> computeBestTiling(List<Stmt> statements) {
         // phase 1: bottom-up matching, last-to-first so multi-statement tiles can claim
         // predecessors
 

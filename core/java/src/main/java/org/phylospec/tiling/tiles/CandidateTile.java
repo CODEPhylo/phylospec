@@ -1,11 +1,13 @@
 package org.phylospec.tiling.tiles;
 
 import java.util.*;
+import java.util.function.Supplier;
 import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
+import org.phylospec.typeresolver.TypeUtils;
 import org.phylospec.typeresolver.VariableResolver;
 
 /**
@@ -25,14 +27,44 @@ public interface CandidateTile<S> {
             throws FailedTilingAttempt;
 
     /**
-     * Creates wired up fresh tiles for the given inputs and their compatible input tiles. For every combination of
-     * compatible input tiles, a wired-up tile is created.
+     * The maximum number of wired-up tiles created per candidate tile and AST node. If unbound, all are created.
+     * Use {@link #runWithMaxWiredUpTiles} and {@link #getMaxWiredUpTiles} instead of accessing it directly.
+     */
+    ScopedValue<Integer> MAX_WIRED_UP_TILES = ScopedValue.newInstance();
+
+    /**
+     * The number of lightest wired-up tiles created per candidate tile and AST node within
+     * {@link #runWithMaxWiredUpTiles}.
+     */
+    int LIGHTEST_WIRED_UP_TILES = 16;
+
+    /**
+     * Runs the given tiling while {@link #getWiredUpTiles} creates at most {@link #LIGHTEST_WIRED_UP_TILES} tiles per
+     * candidate tile and AST node. The limit is passed via a {@link ScopedValue}, as {@link #getWiredUpTiles} is
+     * called from within the {@link #tryToTile} implementations, which have no parameter for it. It only applies
+     * while the tiling runs, so it never leaks into other tilings, even if the tiling throws.
+     */
+    static <T> T runWithMaxWiredUpTiles(Supplier<T> tiling) {
+        return ScopedValue.where(MAX_WIRED_UP_TILES, LIGHTEST_WIRED_UP_TILES).call(tiling::get);
+    }
+
+    /**
+     * Creates wired up fresh tiles for the given inputs and their compatible input tiles. For the
+     * {@link #getMaxWiredUpTiles} lightest consistent combinations of compatible input tiles, a wired-up tile is
+     * created.
      */
     default Set<Tile<?, S>> getWiredUpTiles(
             List<TileInput<?, S>> tileInputs, List<Set<Tile<?, S>>> compatibleInputTiles, AstNode rootNode) {
         Set<Tile<?, S>> wiredUpTiles = new HashSet<>();
 
-        Utils.visitCombinations(compatibleInputTiles, inputs -> {
+        // ties are broken by identity, so that all consumers of a shared input tile prefer the same one
+        Comparator<Tile<?, S>> byWeight =
+                Comparator.<Tile<?, S>>comparingInt(Tile::getWeight).thenComparingInt(System::identityHashCode);
+        List<List<Tile<?, S>>> sortedInputTiles = compatibleInputTiles.stream()
+                .map(tiles -> tiles.stream().sorted(byWeight).toList())
+                .toList();
+
+        Utils.visitCombinationsByWeight(sortedInputTiles, Tile::getWeight, inputs -> {
             Tile<?, S> wiredUpTile = this.createInstance();
 
             // get TileInput fields from fresh instance
@@ -61,9 +93,21 @@ public interface CandidateTile<S> {
             if (!wiredUpTile.isInconsistent(new IdentityHashMap<>())) {
                 wiredUpTiles.add(wiredUpTile);
             }
+
+            return wiredUpTiles.size() < getMaxWiredUpTiles()
+                    ? TypeUtils.VisitorResult.CONTINUE
+                    : TypeUtils.VisitorResult.STOP;
         });
 
         return wiredUpTiles;
+    }
+
+    /**
+     * Returns the maximum number of wired-up tiles created per candidate tile and AST node. This is unlimited
+     * outside of {@link #runWithMaxWiredUpTiles}.
+     */
+    static int getMaxWiredUpTiles() {
+        return MAX_WIRED_UP_TILES.orElse(Integer.MAX_VALUE);
     }
 
     /**
