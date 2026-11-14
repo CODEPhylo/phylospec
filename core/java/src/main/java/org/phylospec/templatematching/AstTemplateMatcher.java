@@ -4,6 +4,7 @@ import java.util.*;
 import org.phylospec.ast.*;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
+import org.phylospec.lexer.TokenType;
 import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.VariableResolver;
 
@@ -472,7 +473,10 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             this.match(expr.left, queryBinary.left);
             this.match(expr.right, queryBinary.right);
         } catch (MatchingError firstError) {
-            // this did not work. restore bindings and try with swapped operand order
+            // this did not work. if the operator is commutative, restore bindings and try with
+            // swapped operand order
+
+            if (!this.isCommutative(expr.operator)) throw firstError;
 
             this.templateVariableMap.clear();
             this.templateVariableMap.putAll(snapshot);
@@ -494,6 +498,13 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         }
 
         return null;
+    }
+
+    /**
+     * Returns whether the operands of the binary operator can be swapped without changing the result.
+     */
+    private boolean isCommutative(TokenType operator) {
+        return operator == TokenType.PLUS || operator == TokenType.STAR;
     }
 
     @Override
