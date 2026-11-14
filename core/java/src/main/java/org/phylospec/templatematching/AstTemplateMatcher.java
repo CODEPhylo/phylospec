@@ -305,19 +305,20 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             this.currentIndexBindings.put(queryIndex, templateIndex);
         }
 
-        // match the ranges
+        try {
+            // match the ranges
 
-        for (int i = 0; i < indexed.ranges.size(); i++) {
-            this.match(indexed.ranges.get(i), queryIndexed.ranges.get(i));
+            for (int i = 0; i < indexed.ranges.size(); i++) {
+                this.match(indexed.ranges.get(i), queryIndexed.ranges.get(i));
+            }
+
+            // match the statement
+
+            this.match(indexed.statement, queryIndexed.statement);
+        } finally {
+            // reset the index bindings, also when the match fails, so that a retry starts clean
+            this.currentIndexBindings = null;
         }
-
-        // match the statement
-
-        this.match(indexed.statement, queryIndexed.statement);
-
-        // reset the index bindings
-
-        this.currentIndexBindings = null;
 
         return null;
     }
