@@ -3,7 +3,9 @@ package org.phylospec;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.phylospec.typeresolver.TypeUtils;
 
 public class Utils {
@@ -76,6 +78,39 @@ public class Utils {
         }
 
         return TypeUtils.VisitorResult.CONTINUE;
+    }
+
+    /// Like {@code visitOrderedCombinations}, but visits the combinations lightest first. The weight
+    /// of a combination is the sum of the weights of its items, and each list in
+    /// {@code sortedVariants} has to be sorted by weight, lightest first.
+    public static <T> void visitCombinationsByWeight(
+            List<? extends List<T>> sortedVariants,
+            ToIntFunction<T> weight,
+            Function<List<T>, TypeUtils.VisitorResult> visitor) {
+        if (sortedVariants.stream().anyMatch(List::isEmpty)) return;
+
+        // a combination is given by the index of its item in each list. every combination can be
+        // reached from a lighter one by taking the next item in one list
+
+        Function<List<Integer>, List<T>> getCombination = indices -> IntStream.range(0, indices.size())
+                .mapToObj(i -> sortedVariants.get(i).get(indices.get(i)))
+                .toList();
+        PriorityQueue<List<Integer>> queue = new PriorityQueue<List<Integer>>(Comparator.comparingInt(indices ->
+                getCombination.apply(indices).stream().mapToInt(weight).sum()));
+        Set<List<Integer>> queued = new HashSet<>(List.of(Collections.nCopies(sortedVariants.size(), 0)));
+        queue.addAll(queued);
+
+        while (!queue.isEmpty()) {
+            List<Integer> indices = queue.poll();
+            if (visitor.apply(getCombination.apply(indices)) == TypeUtils.VisitorResult.STOP) return;
+
+            for (int i = 0; i < indices.size(); i++) {
+                if (indices.get(i) + 1 == sortedVariants.get(i).size()) continue;
+                List<Integer> next = new ArrayList<>(indices);
+                next.set(i, indices.get(i) + 1);
+                if (queued.add(next)) queue.add(next);
+            }
+        }
     }
 
     public static int editDistance(String a, String b) {
