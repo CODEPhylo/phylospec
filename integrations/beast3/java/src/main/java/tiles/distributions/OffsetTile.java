@@ -27,11 +27,6 @@ public abstract class OffsetTile extends AstNodeTile<OffsetValue, Expr.Binary, B
     }
 
     @Override
-    public TypeToken<?> getTypeToken() {
-        return new TypeToken<OffsetValue>() {};
-    }
-
-    @Override
     public Set<Tile<?, BEASTState>> tryToTile(
             AstNode node,
             Map<AstNode, Set<Tile<?, BEASTState>>> allInputTiles,

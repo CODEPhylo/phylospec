@@ -4,7 +4,6 @@ import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.Real;
 import org.phylospec.lexer.TokenType;
-import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.tiling.tiles.AstNodeTile;
 import org.phylospec.tiling.tiles.Tile;
@@ -44,11 +43,6 @@ public abstract class BinaryTile extends AstNodeTile<BeastXRPNCalculationResult,
         }
 
         return super.tryToTile(node, allInputTiles, variableResolver, stochasticityResolver);
-    }
-
-    @Override
-    public TypeToken<?> getTypeToken() {
-        return new TypeToken<BeastXRPNCalculationResult>() {};
     }
 
     public static class RpnRpn extends BinaryTile {
