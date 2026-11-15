@@ -224,8 +224,18 @@ class CRC09ModelTest {
                         Matrix<NonNegativeInteger> coverage""")
                 .replace("ploidy, meanAllelicCoverage", "ploidy=otherPloidy, meanAllelicCoverage");
 
+        // the template's ploidy matches one draw only, so this model is not matched
+        assertThrows(TileApplicationError.class, () -> evaluate(source));
+    }
+
+    @Test
+    void explicitFormRejectsANumberOfSitesThatDiffersFromTheReadCounts() throws Exception {
+        // the test data have 30 sites
+        String source = model(true).formatted(data())
+                .replace("PositiveInteger numSites = numSites(readCounts)", "PositiveInteger numSites = 29");
+
         var error = assertThrows(TileApplicationError.class, () -> evaluate(source));
-        assertTrue(error.getMessage().contains("same ploidy"), error::getMessage);
+        assertTrue(error.getMessage().contains("read counts have 6 cells and 30 sites"), error::getMessage);
     }
 
     @Test
