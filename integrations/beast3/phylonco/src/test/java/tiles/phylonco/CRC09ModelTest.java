@@ -225,7 +225,8 @@ class CRC09ModelTest {
                 .replace("ploidy, meanAllelicCoverage", "ploidy=otherPloidy, meanAllelicCoverage");
 
         // the template's ploidy matches one draw only, so this model is not matched
-        assertThrows(TileApplicationError.class, () -> evaluate(source));
+        var error = assertThrows(TileApplicationError.class, () -> evaluate(source));
+        assertTrue(error.getMessage().contains("ReadCountModel needs the same ploidy that the coverage was drawn with."), error::getMessage);
     }
 
     @Test
