@@ -6,9 +6,11 @@ import beast.base.spec.type.IntScalar;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.AstNodeTile;
+import org.phylospec.typeresolver.Stochasticity;
 
 /**
  * This tile matches range statements like 1:5. Only ranges starting from 1 are supported. The result of this tile
@@ -16,10 +18,12 @@ import org.phylospec.tiling.tiles.AstNodeTile;
  */
 public class RangeTile extends AstNodeTile<Integer, Expr.Range, BEASTState> {
 
-    AstNodeTileInput<? extends IntScalar<NonNegativeInt>, Expr.Range, BEASTState> fromInput =
-            new AstNodeTileInput<>("from", expr -> expr.from);
+    // indexed statements are unrolled while building the model, so the number of elements
+    // cannot follow a sampled range bound
+    AstNodeTileInput<? extends IntScalar<NonNegativeInt>, Expr.Range, BEASTState> fromInput = new AstNodeTileInput<>(
+            "from", expr -> expr.from, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
     AstNodeTileInput<? extends IntScalar<NonNegativeInt>, Expr.Range, BEASTState> toInput =
-            new AstNodeTileInput<>("to", expr -> expr.to);
+            new AstNodeTileInput<>("to", expr -> expr.to, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
     public Integer applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
