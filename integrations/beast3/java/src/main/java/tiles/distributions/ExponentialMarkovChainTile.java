@@ -25,7 +25,7 @@ import tiling.LiveExponentialMarkovChainDistribution;
 /** Fixed-length exponential chain, retaining the core's Real input and output types. */
 public class ExponentialMarkovChainTile
         extends GeneratorTile<
-                BoundDistribution<RealVectorParam<Real>, LiveExponentialMarkovChainDistribution>, BEASTState> {
+                BoundDistribution<RealVectorParam<PositiveReal>, LiveExponentialMarkovChainDistribution>, BEASTState> {
 
     GeneratorTileInput<RealScalar<? extends Real>, BEASTState> initialMeanInput =
             new GeneratorTileInput<>("initialMean");
@@ -43,7 +43,7 @@ public class ExponentialMarkovChainTile
     }
 
     @Override
-    public BoundDistribution<RealVectorParam<Real>, LiveExponentialMarkovChainDistribution> applyTile(
+    public BoundDistribution<RealVectorParam<PositiveReal>, LiveExponentialMarkovChainDistribution> applyTile(
             BEASTState state, IdentityHashMap<Expr.Variable, Integer> indices) {
         RealScalar<? extends Real> initialMean = initialMeanInput.apply(state, indices);
         int size = numValuesInput.apply(state, indices).get();
@@ -61,7 +61,7 @@ public class ExponentialMarkovChainTile
 
         double[] values = new double[size];
         Arrays.fill(values, initial);
-        RealVectorParam<Real> chain;
+        RealVectorParam<PositiveReal> chain;
         if (size == 0) {
             // The native constructor assumes at least one value. Configure just
             // this empty instance explicitly, without changing other vector inputs.
@@ -80,7 +80,7 @@ public class ExponentialMarkovChainTile
             chain.valuesInput.setRule(Input.Validate.OPTIONAL);
             chain.initAndValidate();
         } else {
-            chain = new RealVectorParam<>(values, Real.INSTANCE);
+            chain = new RealVectorParam<>(values, PositiveReal.INSTANCE);
         }
 
         LiveExponentialMarkovChainDistribution distribution = new LiveExponentialMarkovChainDistribution();
