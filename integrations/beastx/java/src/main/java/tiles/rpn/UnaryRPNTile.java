@@ -4,7 +4,6 @@ import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.Real;
 import org.phylospec.lexer.TokenType;
-import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.tiling.tiles.AstNodeTile;
 import org.phylospec.tiling.tiles.Tile;
@@ -19,11 +18,6 @@ import java.util.Map;
 import java.util.Set;
 
 public abstract class UnaryRPNTile extends AstNodeTile<BeastXRPNCalculationResult, Expr.Unary, BeastXState> {
-
-    @Override
-    public Class<Expr.Unary> getTargetNodeType() {
-        return Expr.Unary.class;
-    }
 
     @Override
     public Set<Tile<?, BeastXState>> tryToTile(
@@ -41,11 +35,6 @@ public abstract class UnaryRPNTile extends AstNodeTile<BeastXRPNCalculationResul
         }
 
         return super.tryToTile(node, allInputTiles, variableResolver, stochasticityResolver);
-    }
-
-    @Override
-    public TypeToken<?> getTypeToken() {
-        return new TypeToken<BeastXRPNCalculationResult>() {};
     }
 
     public static class Rpn extends UnaryRPNTile {
