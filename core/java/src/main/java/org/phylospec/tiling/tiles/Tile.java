@@ -1,8 +1,6 @@
 package org.phylospec.tiling.tiles;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.*;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
@@ -25,16 +23,15 @@ public abstract class Tile<T, S> {
      * determined at compile-time, a custom tile has to override this method.
      */
     public TypeToken<?> getTypeToken() {
-        // parse the type parameter T
-        Type superclass = this.getClass().getGenericSuperclass();
-        if (superclass instanceof ParameterizedType pt) {
-            return TypeToken.of(pt.getActualTypeArguments()[0]);
-        } else {
+        // parse the type parameter T, resolving it through intermediate superclasses
+        TypeToken<?> typeToken = TypeToken.resolveSupertypeArgument(this.getClass(), Tile.class, 0);
+        if (typeToken == null) {
             throw new IllegalArgumentException(
                     "Tile "
                             + this.getClass()
                             + " has no return type parameter. Either specify the type in the type signature of the inheriting class, or override the getTypeToken method.");
         }
+        return typeToken;
     }
 
     /**
@@ -102,13 +99,13 @@ public abstract class Tile<T, S> {
      */
     protected List<TileInput<?, S>> getTileInputs() {
         List<TileInput<?, S>> inputs = new ArrayList<>();
-        for (Field field : this.getClass().getDeclaredFields()) {
+        for (Field field : this.getAllFields()) {
             if (TileInput.class.isAssignableFrom(field.getType())) {
                 field.setAccessible(true);
                 try {
                     TileInput<?, S> input = (TileInput<?, S>) field.get(this);
                     this.configureTileInput(field, input);
-                    input.resolveTypeFromField(field);
+                    input.resolveTypeFromField(field, this.getClass());
                     inputs.add(input);
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
@@ -116,6 +113,18 @@ public abstract class Tile<T, S> {
             }
         }
         return inputs;
+    }
+
+    /**
+     * Returns the fields declared by this tile's class and all its superclasses up to {@link Tile},
+     * with superclass fields first.
+     */
+    protected List<Field> getAllFields() {
+        LinkedList<Field> fields = new LinkedList<>();
+        for (Class<?> clazz = this.getClass(); clazz != null && clazz != Tile.class; clazz = clazz.getSuperclass()) {
+            fields.addAll(0, Arrays.asList(clazz.getDeclaredFields()));
+        }
+        return fields;
     }
 
     /**

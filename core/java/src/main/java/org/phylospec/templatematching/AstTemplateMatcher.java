@@ -4,6 +4,7 @@ import java.util.*;
 import org.phylospec.ast.*;
 import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
+import org.phylospec.lexer.TokenType;
 import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.VariableResolver;
 
@@ -27,6 +28,9 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     // maps template variable names (e.g. "$x") to the query sub-trees they were bound to
     private final Map<String, AstNode> templateVariableMap;
+
+    // maps the template draws onto the query draws they were matched with. this mapping has to be one-to-one
+    private final Map<AstNode, AstNode> drawBindings = new IdentityHashMap<>();
 
     private VariableResolver queryVariableResolver;
     private AstNode currentQueryNode = null;
@@ -77,6 +81,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     public Map<String, AstNode> match(AstNode queryRoot, VariableResolver queryVariableResolver) {
         this.queryVariableResolver = queryVariableResolver;
         this.templateVariableMap.clear();
+        this.drawBindings.clear();
         this.currentIndexBindings = null;
 
         try {
@@ -112,6 +117,10 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         query = this.potentiallyPassThrough(query, this.queryVariableResolver);
         template = this.potentiallyPassThrough(template, templateVariableResolver);
 
+        if (this.isDraw(template) && this.isDraw(query)) {
+            this.bindDraws(template, query);
+        }
+
         // if the query is an observed statement but the template is not, this is fine, and we pass
         // through the observation
 
@@ -143,6 +152,33 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             case AstType node -> node.accept(this);
             default -> throw new RuntimeException("Unknown type of AST node encountered. This should not happen.");
         }
+    }
+
+    /**
+     * Returns whether the node generates a value, which is the case for draw statements and inline drawn
+     * arguments (`x~dist`).
+     */
+    private boolean isDraw(AstNode node) {
+        return node instanceof Stmt.Draw || node instanceof Expr.DrawnArgument;
+    }
+
+    /**
+     * Records that a template draw corresponds to a query draw. Draws are where values are generated, so
+     * the same template draw must always correspond to the same query draw, and two different template
+     * draws must not correspond to the same query draw. Throws a MatchingError otherwise.
+     */
+    private void bindDraws(AstNode templateDraw, AstNode queryDraw) {
+        AstNode boundQueryDraw = this.drawBindings.get(templateDraw);
+        if (boundQueryDraw != null) {
+            this.check(boundQueryDraw == queryDraw);
+            return;
+        }
+
+        for (AstNode alreadyBoundQueryDraw : this.drawBindings.values()) {
+            this.check(alreadyBoundQueryDraw != queryDraw);
+        }
+
+        this.drawBindings.put(templateDraw, queryDraw);
     }
 
     /**
@@ -270,19 +306,20 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             this.currentIndexBindings.put(queryIndex, templateIndex);
         }
 
-        // match the ranges
+        try {
+            // match the ranges
 
-        for (int i = 0; i < indexed.ranges.size(); i++) {
-            this.match(indexed.ranges.get(i), queryIndexed.ranges.get(i));
+            for (int i = 0; i < indexed.ranges.size(); i++) {
+                this.match(indexed.ranges.get(i), queryIndexed.ranges.get(i));
+            }
+
+            // match the statement
+
+            this.match(indexed.statement, queryIndexed.statement);
+        } finally {
+            // reset the index bindings, also when the match fails, so that a retry starts clean
+            this.currentIndexBindings = null;
         }
-
-        // match the statement
-
-        this.match(indexed.statement, queryIndexed.statement);
-
-        // reset the index bindings
-
-        this.currentIndexBindings = null;
 
         return null;
     }
@@ -431,14 +468,20 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         this.check(expr.operator == queryBinary.operator);
 
         Map<String, AstNode> snapshot = new HashMap<>(this.templateVariableMap);
+        Map<AstNode, AstNode> drawSnapshot = new IdentityHashMap<>(this.drawBindings);
         try {
             this.match(expr.left, queryBinary.left);
             this.match(expr.right, queryBinary.right);
         } catch (MatchingError firstError) {
-            // this did not work. restore bindings and try with swapped operand order
+            // this did not work. if the operator is commutative, restore bindings and try with
+            // swapped operand order
+
+            if (!this.isCommutative(expr.operator)) throw firstError;
 
             this.templateVariableMap.clear();
             this.templateVariableMap.putAll(snapshot);
+            this.drawBindings.clear();
+            this.drawBindings.putAll(drawSnapshot);
 
             try {
                 this.match(expr.left, queryBinary.right);
@@ -448,11 +491,20 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
                 // restore bindings and re-throw the error caused by the original order
                 this.templateVariableMap.clear();
                 this.templateVariableMap.putAll(snapshot);
+                this.drawBindings.clear();
+                this.drawBindings.putAll(drawSnapshot);
                 throw firstError;
             }
         }
 
         return null;
+    }
+
+    /**
+     * Returns whether the operands of the binary operator can be swapped without changing the result.
+     */
+    private boolean isCommutative(TokenType operator) {
+        return operator == TokenType.PLUS || operator == TokenType.STAR;
     }
 
     @Override
@@ -526,6 +578,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
                 throw new MatchingError();
             }
 
+            this.bindDraws(templateDrawStmt, drawnQueryArg);
             this.match(templateDrawStmt.expression, drawnQueryArg.expression);
 
             return null;
@@ -569,6 +622,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
                 throw new MatchingError();
             }
 
+            this.bindDraws(expr, queryDrawStmt);
             this.match(expr.expression, queryDrawStmt.expression);
 
             return null;

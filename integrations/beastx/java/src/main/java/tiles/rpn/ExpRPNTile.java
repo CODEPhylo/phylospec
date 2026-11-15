@@ -1,7 +1,6 @@
 package tiles.rpn;
 
 import org.phylospec.ast.Expr;
-import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import tiling.rpn.BeastXRPNCalculationResult;
@@ -14,11 +13,6 @@ public abstract class ExpRPNTile extends GeneratorTile<BeastXRPNCalculationResul
     @Override
     public String getPhyloSpecGeneratorName() {
         return "exp";
-    }
-
-    @Override
-    public TypeToken<?> getTypeToken() {
-        return new TypeToken<BeastXRPNCalculationResult>() {};
     }
 
     public static class Rpn extends ExpRPNTile {

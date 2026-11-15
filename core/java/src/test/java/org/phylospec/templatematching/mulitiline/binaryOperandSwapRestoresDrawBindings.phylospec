@@ -1,0 +1,14 @@
+// TEMPLATE
+Real a ~ Exponential(rate=1.0)
+Real b ~ Normal(mean=0.0, sd=1.0)
+log(x=a) + log(x=b)
+// TEMPLATE
+
+// QUERY
+Real n ~ Normal(mean=0.0, sd=1.0)
+Real e ~ Exponential(rate=1.0)
+log(x=n) + log(x=e)
+// QUERY
+
+// MATCH
+// MATCH
