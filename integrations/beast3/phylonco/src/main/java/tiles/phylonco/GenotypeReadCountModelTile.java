@@ -6,25 +6,24 @@ import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.RealVector;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
-import java.util.Optional;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.errors.TileApplicationError;
-import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.tiling.tiles.TemplateTile;
 import phylonco.beast.evolution.likelihood.ReadCountTreeLikelihood;
 import phylonco.beast.evolution.substitutionmodel.GT10;
 import tiling.UnboundDistribution;
 
 /**
- * {@code ReadCountModel(genotypes, ploidy, coverage, ...)}, the explicit form of LPhy's model. The
- * genotypes, ploidy and coverage come from latent draws and
- * are integrated out: this builds the same likelihood as the compact
- * {@code ReadCountModel(tree, qMatrix, ...)} in {@link ReadCountModelTile}.
+ * {@code ReadCountModel(genotypes, ploidy, coverage, ...)}, the explicit form of LPhy's model. One
+ * template matches the latent genotypes, ploidy and coverage draws together with the
+ * {@code ReadCountModel}; they are integrated out, so this builds the same likelihood as the compact
+ * {@code ReadCountModel(tree, qMatrix, ...)} in {@link ReadCountModelTile}. The template's
+ * {@code ploidy} matches one draw only, so a coverage drawn with another ploidy is not matched.
  */
 public class GenotypeReadCountModelTile
         extends TemplateTile<UnboundDistribution<ReadCountData, ReadCountTreeLikelihood>, BEASTState> {
 
-   TemplateTileInput<Tree, BEASTState> treeInput = new TemplateTileInput<>("$tree");
+    TemplateTileInput<Tree, BEASTState> treeInput = new TemplateTileInput<>("$tree");
     TemplateTileInput<IntScalar<?>, BEASTState> numSitesCTMCInput = new TemplateTileInput<>("$numSitesCTMC");
     TemplateTileInput<IntScalar<?>, BEASTState> numSitesPloidyInput = new TemplateTileInput<>("$numSitesPloidy");
     TemplateTileInput<IntScalar<?>, BEASTState> numCellsInput = new TemplateTileInput<>("$numCells");
@@ -66,6 +65,17 @@ public class GenotypeReadCountModelTile
     @Override
     public UnboundDistribution<ReadCountData, ReadCountTreeLikelihood> applyTile(
             BEASTState state, IdentityHashMap<Expr.Variable, Integer> indices) {
+        int numSites = this.numSitesCTMCInput.apply(state, indices).get();
+        int numSitesPloidy = this.numSitesPloidyInput.apply(state, indices).get();
+        int numCells = this.numCellsInput.apply(state, indices).get();
+
+        if (numSites != numSitesPloidy) {
+            throw new TileApplicationError(
+                    this.getRootNode(),
+                    "The genotypes have " + numSites + " sites but the ploidy has " + numSitesPloidy + ".",
+                    "Use the same numSites in PhyloCTMC and Ploidy.");
+        }
+
         return ReadCountModelTile.treeLikelihood(
                 state,
                 this.getRootNode(),
@@ -79,18 +89,12 @@ public class GenotypeReadCountModelTile
                 this.homozygousOverdispersionInput.apply(state, indices),
                 this.heterozygousOverdispersionInput.apply(state, indices),
                 data -> {
-                    int numSitesCTMC = this.numSitesCTMCInput.apply(state, indices).get();
-                    int numSitesPloidy = this.numSitesPloidyInput.apply(state, indices).get();
-
-                    int numCellsData = data.numCells();
-                    int numCellsPloidy = this.numCellsInput.apply(state, indices).get();
-
-                    if (numSitesCTMC != numSitesPloidy || numCellsData != numCellsPloidy) {
+                    if (data.numSites() != numSites || data.numCells() != numCells) {
                         throw new TileApplicationError(
                                 this.getRootNode(),
-                                "The model has " + numCellsData + " cells and " + numSitesCTMC
-                                        + " sites, but the read counts have " + numCellsPloidy + " cells and "
-                                        + numSitesPloidy + " sites.",
+                                "The model has " + numCells + " cells and " + numSites
+                                        + " sites, but the read counts have " + data.numCells() + " cells and "
+                                        + data.numSites() + " sites.",
                                 "Use numTaxa(readCounts) and numSites(readCounts) for numCells and numSites.");
                     }
                 });

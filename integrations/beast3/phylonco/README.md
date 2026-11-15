@@ -19,7 +19,7 @@ unphased genotypes, classic Bayesian skyline, read-count error model), in two fo
 | `taxa` / `numTaxa` / `numSites` for `ReadCount` | done (`phylospec.functions.accessor`) | done |
 | `gt10` | done (`phylonco`) | done (`GT10Tile`) |
 | `ReadCountModel(tree, qMatrix, ...)` (compact) | done (`phylonco`) | done (`ReadCountModelTile` -> `ReadCountTreeLikelihood`) |
-| Explicit form: latent `PhyloCTMC(numSites)`, `Ploidy`, `CoverageModel`, `ReadCountModel(genotypes, ploidy, coverage, ...)` | done (core and `phylonco`) | done (`LatentReadCountTiles`, `GenotypeReadCountModelTile` -> the same `ReadCountTreeLikelihood`) |
+| Explicit form: latent `PhyloCTMC(numSites)`, `Ploidy`, `CoverageModel`, `ReadCountModel(genotypes, ploidy, coverage, ...)` | done (core and `phylonco`) | done (`GenotypeReadCountModelTile`: one template for the four statements -> the same `ReadCountTreeLikelihood`) |
 | `RandomComposition`, Bayesian skyline overload of `SkylineCoalescent`, positive `ExponentialMarkovChain` | done (core) | done (`BeastCoreTileLibrary`) |
 
 Both examples pass `phylospec check` (tested in `CRC09ModelTest`), and
@@ -40,11 +40,11 @@ mpileup (`src/test/resources/six-cells.mpileup`, 6 cells, 30 sites).
 The data type follows from the GT10 `qMatrix`, so `PhyloCTMC` needs no `dataType`.
 
 The engine decides how to evaluate this. `genotypes`, `ploidy` and `coverage` are not sampled:
-the latent draws are matched by `LatentReadCountTiles`, and `GenotypeReadCountModelTile`
-builds phylonco's `ReadCountTreeLikelihood`, which integrates the genotypes out by pruning and
-ploidy and coverage out per cell and site, as LPhyBEAST does. A latent variable used anywhere
-else cannot be integrated out and is rejected, as is a coverage drawn with a different ploidy
-than the one passed to `ReadCountModel`.
+`GenotypeReadCountModelTile` matches the four statements with one template and builds phylonco's
+`ReadCountTreeLikelihood`, which integrates the genotypes out by pruning and ploidy and coverage
+out per cell and site, as LPhyBEAST does. A latent variable used anywhere else cannot be
+integrated out and is rejected, as is a coverage drawn with a different ploidy than the one
+passed to `ReadCountModel`.
 
 The compact `ReadCountModel(tree, qMatrix, sequencingError, allelicDropout, ...)`
 (`examples/CRC09.phylospec`) states the integrated model in one statement and builds the same
