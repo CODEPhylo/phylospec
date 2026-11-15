@@ -5,6 +5,7 @@ import java.util.List;
 import org.phylospec.annotations.ComponentSource;
 import org.phylospec.tiling.TileLibrary;
 import org.phylospec.tiling.tiles.CandidateTile;
+import org.phylospec.tiling.tiles.TilePriority;
 
 /** BEAST 3 tiles for beast-phylonco: mpileup read counts, GT10 and the read-count tree likelihood. */
 @ComponentSource("/phylonco-components.json")
@@ -30,6 +31,7 @@ public final class PhyloncoTileLibrary extends TileLibrary<BEASTState> {
                 new GT10Tile(),
                 new ReadCountModelTile(),
                 new GenotypeReadCountModelTile(),
+                new ReadCountModelErrorTile(),
                 new ObservedAsReadCountTile());
     }
 
