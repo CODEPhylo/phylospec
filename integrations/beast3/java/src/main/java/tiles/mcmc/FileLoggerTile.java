@@ -7,7 +7,6 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 import org.phylospec.ast.Expr;
-import org.phylospec.components.Generator__1;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.typeresolver.Stochasticity;
@@ -15,12 +14,6 @@ import org.phylospec.typeresolver.Stochasticity;
 /// Matches a `fileLogger(...)` declaration in the `mcmc` block and registers a
 /// [org.phylospec.tiling.mcmc.FileLoggerSpec] on the state.
 public class FileLoggerTile extends TemplateTile<Void, BEASTState> {
-
-    // the logger is configured by the engine and is not a generator of the component library
-    @Override
-    public List<Generator__1> getGeneratorPatterns() {
-        return List.of();
-    }
 
     @Override
     protected String getPhyloSpecTemplate() {

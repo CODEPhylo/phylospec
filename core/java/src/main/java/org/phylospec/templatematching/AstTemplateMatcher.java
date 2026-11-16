@@ -99,6 +99,13 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
     }
 
     /**
+     * Returns the block the statements of the template belong to.
+     */
+    public Stmt.Block getBlock() {
+        return this.templateBlock;
+    }
+
+    /**
      * Returns all calls in the template, in the order they appear. This includes the calls in all statements
      * of the template and the calls nested in the arguments of other calls. Decorators are not included.
      */
