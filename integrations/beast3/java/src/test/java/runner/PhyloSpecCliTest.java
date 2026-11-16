@@ -3,10 +3,13 @@ package runner;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import beast.base.core.BEASTVersion2;
+import beast.base.inference.MCMC;
+import beast.base.parser.XMLParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;
@@ -124,6 +127,9 @@ public class PhyloSpecCliTest {
         for (String[] arguments : List.of(
                 new String[] {"check"},
                 new String[] {"run"},
+                new String[] {"export", "model.phylospec"},
+                new String[] {"export", "model.phylospec", "--xml"},
+                new String[] {"run", "model.phylospec", "--xml", "analysis.xml"},
                 new String[] {"check", "model.phylospec", "--engine", "beastx"},
                 new String[] {"check", "model.phylospec", "--engine"},
                 new String[] {"check", "model.phylospec", "--run-name", "analysis"},
@@ -163,6 +169,49 @@ public class PhyloSpecCliTest {
                 assertFalse(result.stderr().isBlank());
             }
         }
+    }
+
+    @Test
+    void exportsLoadableAnalysisWithoutRunningTheChain(@TempDir Path directory) throws Exception {
+        Path script = directory.resolve("normal.phylospec");
+        Files.writeString(script, """
+                Real x ~ Normal(mean=0.0, sd=1.0)
+                mcmc {
+                    Integer chainLength = 19
+                }
+                """);
+        Path output = directory.resolve("analysis.xml");
+        CliResult result = invoke("export", script.toString(), "--xml", output.toString());
+        assertEquals(0, result.exitCode(), result.stderr());
+        MCMC analysis = assertInstanceOf(MCMC.class, new XMLParser().parseFile(output.toFile()));
+        assertEquals(19L, analysis.chainLengthInput.get());
+        assertEquals(
+                "x",
+                analysis.startStateInput.get().stateNodeInput.get().getFirst().getID());
+        assertFalse(analysis.operatorsInput.get().isEmpty());
+        assertTrue(analysis.loggersInput.get().stream()
+                .anyMatch(logger -> "analysis.log".equals(logger.fileNameInput.get())));
+        try (var files = Files.list(directory)) {
+            assertEquals(List.of(output, script), files.sorted().toList());
+        }
+    }
+
+    @Test
+    void exportProtectsTheSourceAndPreservesTheDestinationOnFailure(@TempDir Path directory) throws Exception {
+        Path script = directory.resolve("model.phylospec");
+        String text = "Real x ~ Normal(mean=0.0, sd=1.0)";
+        Files.writeString(script, text);
+        CliResult sameFile = invoke("export", script.toString(), "--xml", script.toString());
+        assertEquals(1, sameFile.exitCode());
+        assertTrue(sameFile.stderr().contains("XML output is a model input"), sameFile.stderr());
+        assertEquals(text, Files.readString(script));
+
+        Path output = directory.resolve("analysis.xml");
+        Files.writeString(output, "previous export");
+        Files.writeString(script, "Real x ~ UnknownDistribution()");
+        CliResult failure = invoke("export", script.toString(), "--xml", output.toString());
+        assertEquals(1, failure.exitCode());
+        assertEquals("previous export", Files.readString(output));
     }
 
     @Test
