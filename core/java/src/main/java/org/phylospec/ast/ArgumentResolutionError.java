@@ -26,11 +26,17 @@ public abstract sealed class ArgumentResolutionError extends RuntimeException {
         public final Expr.Argument argument;
         public final String name;
         public final Set<String> allowedNames;
+        public final Set<String> suggestedNames;
 
         public UnknownName(Expr.Argument argument, String name, Set<String> allowedNames) {
+            this(argument, name, allowedNames, allowedNames);
+        }
+
+        public UnknownName(Expr.Argument argument, String name, Set<String> allowedNames, Set<String> suggestedNames) {
             this.argument = argument;
             this.name = name;
             this.allowedNames = allowedNames;
+            this.suggestedNames = suggestedNames;
         }
     }
 

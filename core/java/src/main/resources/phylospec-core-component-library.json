@@ -1366,6 +1366,33 @@
             }]
         },
         {
+            "generatedType": "Distribution<Vector<PositiveInteger; num=numParts.value>>",
+            "name": "RandomComposition",
+            "namespace": "phylospec.distributions",
+            "description": "Uniform distribution over the compositions of total into numParts positive integers (vectors of positive integers that sum to total)",
+            "arguments": [
+                {
+                    "name": "total",
+                    "description": "The integer to be split, e.g. the number of coalescent events",
+                    "type": "Integer",
+                    "required": true
+                },
+                {
+                    "name": "numParts",
+                    "description": "The number of positive parts",
+                    "type": "PositiveInteger",
+                    "required": true
+                }
+            ],
+            "constraints": [{
+                "argument": "numParts",
+                "otherProperty": "value",
+                "property": "value",
+                "otherArgument": "total",
+                "operator": "lessThanOrEqual"
+            }]
+        },
+        {
             "generatedType": "Distribution<NonNegativeInteger>",
             "name": "Geometric",
             "namespace": "phylospec.distributions",
@@ -1390,15 +1417,15 @@
             }]
         },
         {
-            "generatedType": "Distribution<Vector<Real; num=numValues.value>>",
+            "generatedType": "Distribution<Vector<PositiveReal; num=numValues.value>>",
             "name": "ExponentialMarkovChain",
             "namespace": "phylospec.distributions",
-            "description": "Generates a chain of auto-correlated random variables",
+            "description": "Generates a chain of auto-correlated positive random variables (each value is exponential with the previous value as its mean)",
             "arguments": [
                 {
                     "name": "initialMean",
                     "description": "The mean of the exponential for the first value of the chain",
-                    "type": "Real",
+                    "type": "PositiveReal",
                     "required": true
                 },
                 {
@@ -1616,6 +1643,39 @@
         },
         {
             "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
+            "name": "SkylineCoalescent",
+            "namespace": "phylospec.distributions.tree",
+            "description": "Classic Bayesian skyline coalescent: piecewise-constant population sizes whose epochs end at coalescent events, grouped by groupSizes",
+            "arguments": [
+                {
+                    "name": "populationSizes",
+                    "description": "Effective population size for each group of coalescent intervals",
+                    "type": "Vector<PositiveReal>",
+                    "required": true
+                },
+                {
+                    "name": "groupSizes",
+                    "description": "Number of coalescent events in each group (must sum to the number of taxa minus one)",
+                    "type": "Vector<PositiveInteger>",
+                    "required": true
+                },
+                {
+                    "name": "taxa",
+                    "description": "Taxa for the tree",
+                    "type": "Taxa",
+                    "required": true
+                }
+            ],
+            "constraints": [{
+                "argument": "populationSizes",
+                "otherProperty": "num",
+                "property": "num",
+                "otherArgument": "groupSizes",
+                "operator": "equals"
+            }]
+        },
+        {
+            "generatedType": "Distribution<Tree<;numTaxa=taxa.num>>",
             "name": "FossilizedBirthDeath",
             "namespace": "phylospec.distributions.tree",
             "description": "Fossilized birth-death process for trees with fossil taxa, conditioned on the number of taxa and root age",
@@ -1705,7 +1765,7 @@
             ]
         },
         {
-            "generatedType": "Distribution<Alignment<Character; numSites=siteRates.num, numTaxa=tree.numTaxa>>",
+            "generatedType": "Distribution<Alignment<Character; numSites=numSites.value, numSites=siteRates.num, numTaxa=tree.numTaxa>>",
             "name": "PhyloCTMC",
             "namespace": "phylospec.distributions.sequence",
             "description": "Phylogenetic continuous-time Markov chain",
@@ -1733,15 +1793,30 @@
                     "description": "Rate heterogeneity across branches",
                     "type": "Vector<Real>",
                     "required": false
+                },
+                {
+                    "name": "numSites",
+                    "description": "Number of sites, needed to generate an alignment that is not observed and has no site rates",
+                    "type": "PositiveInteger",
+                    "required": false
                 }
             ],
-            "constraints": [{
-                "argument": "tree",
-                "otherProperty": "num",
-                "property": "numBranches",
-                "otherArgument": "branchRates",
-                "operator": "equals"
-            }]
+            "constraints": [
+                {
+                    "argument": "tree",
+                    "otherProperty": "num",
+                    "property": "numBranches",
+                    "otherArgument": "branchRates",
+                    "operator": "equals"
+                },
+                {
+                    "argument": "siteRates",
+                    "otherProperty": "value",
+                    "property": "num",
+                    "otherArgument": "numSites",
+                    "operator": "equals"
+                }
+            ]
         },
         {
             "generatedType": "Distribution<Alignment<Character; numSites=siteRates.num, numTaxa=tree.numTaxa>>",

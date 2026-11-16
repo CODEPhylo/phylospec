@@ -142,7 +142,7 @@ class DirichletConcentrationBindingTest {
             assertSame(alpha, factor.alphaInput.get());
             assertTrue(alpha.getOutputs().contains(factor));
         }
-        assertSame(family.equals("Gamma") ? PositiveReal.INSTANCE : Real.INSTANCE, alpha.getDomain());
+        assertSame(family.equals("Normal") ? Real.INSTANCE : PositiveReal.INSTANCE, alpha.getDomain());
         double initial = family.equals("Normal") ? 0.1 : family.equals("Gamma") ? 1.0 : 1.5;
         assertArrayEquals(new double[] {initial, initial, initial}, alpha.getValues(), 0.0);
         assertArrayEquals(new double[] {1.0 / 3, 1.0 / 3, 1.0 / 3}, weights.getValues(), 0.0);

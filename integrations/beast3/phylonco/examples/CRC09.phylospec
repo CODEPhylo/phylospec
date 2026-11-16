@@ -1,0 +1,64 @@
+// CRC09: single-cell read-count phylogeny (translated from CRC09.lphy)
+// 25 colorectal cancer cells, unphased genotypes (GT10), classic Bayesian skyline,
+// genotypes integrated out under a read-count error model.
+// CRC09-explicit.phylospec writes the same model with every generative step, as in LPhy.
+
+use phylonco
+
+data {
+    // --- data -------------------------------------------------------------
+
+    Vector<String> cellNames = [
+        "TI-TNS10", "TI-TNS11", "TI-TNS12", "TI-TNS16", "TI-TNS17",
+        "TI-TNS18", "TI-TNS2", "TI-TNS3", "TI-TNS4", "TI-TNS9",
+        "TI-TS10", "TI-TS11", "TI-TS12", "TI-TS13", "TI-TS14",
+        "TI-TS17", "TI-TS2", "TI-TS5", "TI-TS9", "TM-TNS3",
+        "TM-TS11", "TM-TS17", "TM-TS20", "TM-TS4", "TM-TS5"
+    ]
+    ReadCount readCounts = fromMpileup(file="data/CRC09_filtered.mpileup", cellNames)
+    Taxa taxa = taxa(readCounts)
+    PositiveInteger numCells = numTaxa(readCounts)
+    PositiveInteger numSites = numSites(readCounts)
+}
+
+model {
+    // --- GT10 substitution model -------------------------------------------
+
+    Simplex genotypeFrequencies ~ Dirichlet(
+        concentration=[3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0]
+    )
+    Simplex relativeRates ~ Dirichlet(concentration=[2.0, 20.0, 2.0, 2.0, 20.0, 2.0])
+    QMatrix qMatrix = gt10(relativeRates, genotypeFrequencies)
+
+    // --- tree prior: classic Bayesian skyline with 4 groups ----------------
+
+    PositiveInteger numGroups = 4
+    Vector<PositiveInteger> groupSizes ~ RandomComposition(total=numCells - 1, numParts=numGroups)
+    PositiveReal initialMean ~ LogNormal(logMean=-5.0, logSd=2.0)
+    Vector<PositiveReal> populationSizes ~ ExponentialMarkovChain(initialMean, numValues=numGroups)
+    Tree tree ~ SkylineCoalescent(populationSizes, groupSizes, taxa)
+
+    // --- read-count observation model --------------------------------------
+
+    Probability epsilon ~ Beta(alpha=1.0, beta=30.0)
+    Probability delta ~ Beta(alpha=1.0, beta=4.0)
+    PositiveReal t ~ LogNormal(logMean=1.7, logSd=0.05)
+    PositiveReal v ~ LogNormal(logMean=2.96, logSd=0.13)
+    PositiveReal w1 ~ LogNormal(logMean=0.1, logSd=0.5)
+    PositiveReal w2 ~ LogNormal(logMean=1.0, logSd=0.8)
+    Vector<PositiveReal> s ~ IID(base=LogNormal(logMean=0.2, logSd=0.72), num=numCells)
+
+    // genotypes evolve on the tree under GT10 and are integrated out (as in BEAST's
+    // ReadCountTreeLikelihood), so there is no explicit genotype alignment here
+    ReadCount reads ~ ReadCountModel(
+        tree,
+        qMatrix,
+        sequencingError=epsilon,
+        allelicDropout=delta,
+        meanAllelicCoverage=t,
+        allelicCoverageVariance=v,
+        cellSizeFactors=s,
+        homozygousOverdispersion=w1,
+        heterozygousOverdispersion=w2
+    ) observed as readCounts
+}
