@@ -35,6 +35,19 @@ public abstract class Tile<T, S> {
     }
 
     /**
+     * Returns whether the type token of this tile is the same no matter which input tiles it is wired up with. By
+     * default, this is only assumed for tiles which do not override {@link #getTypeToken}. Tiles overriding it with
+     * a type that does not depend on their inputs can override this method to return true.
+     */
+    public boolean hasFixedTypeToken() {
+        try {
+            return this.getClass().getMethod("getTypeToken").getDeclaringClass() == Tile.class;
+        } catch (NoSuchMethodException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /**
      * Recursively walks this tile's wired sub-tiles and verifies that no AstNode is committed
      * to two different sub-tiles anywhere in the sub-graph.
      * Throws {@link InconsistentTilingException} if an inconsistency is detected at any depth.
@@ -215,6 +228,32 @@ public abstract class Tile<T, S> {
 
     public void setIndexVariables(Set<Expr.Variable> currentIndexVariables) {
         this.indexVariables = currentIndexVariables;
+    }
+
+    /* pruned alternatives */
+
+    // computed lazily, as it depends on the tiles wired up below this tile
+    private Boolean hasPrunedAlternatives;
+
+    /**
+     * Returns whether tiles which could take the place of this tile or of one of the tiles wired up below it were
+     * pruned. Such alternatives have the same root node and type, but are wired up with other input tiles.
+     */
+    public boolean hasPrunedAlternatives() {
+        if (this.hasPrunedAlternatives != null) return this.hasPrunedAlternatives;
+
+        try {
+            this.hasPrunedAlternatives =
+                    this.getWiredUpInputs().values().stream().anyMatch(Tile::hasPrunedAlternatives);
+        } catch (InconsistentTilingException e) {
+            this.hasPrunedAlternatives = false;
+        }
+
+        return this.hasPrunedAlternatives;
+    }
+
+    public void markPrunedAlternatives() {
+        this.hasPrunedAlternatives = true;
     }
 
     /* tiling weight */
