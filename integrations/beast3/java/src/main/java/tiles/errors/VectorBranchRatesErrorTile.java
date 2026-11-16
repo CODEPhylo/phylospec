@@ -9,8 +9,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.errors.TileApplicationError;
-import org.phylospec.tiling.tiles.TemplateTile;
-import org.phylospec.tiling.tiles.TilePriority;
+import org.phylospec.tiling.tiles.ErrorTile;
 import tiling.UnboundDistribution;
 
 /**
@@ -18,8 +17,7 @@ import tiling.UnboundDistribution;
  * This is currently not supported by BEAST.
  * Thus, this tile throws an error when it is applied successfully.
  */
-public class VectorBranchRatesErrorTile
-        extends TemplateTile<UnboundDistribution<Alignment, TreeLikelihood>, BEASTState> {
+public class VectorBranchRatesErrorTile extends ErrorTile<UnboundDistribution<Alignment, TreeLikelihood>, BEASTState> {
 
     @Override
     protected String getPhyloSpecTemplate() {
@@ -63,10 +61,5 @@ public class VectorBranchRatesErrorTile
                 "Explicit branch rates are not supported.",
                 "Use either 'StrictClock' or 'RelaxedClock' to specify branch rates.",
                 List.of("Vector<Rate> branchRates ~ StrictClock(rate=1.0)"));
-    }
-
-    @Override
-    public TilePriority getPriority() {
-        return TilePriority.ERROR;
     }
 }

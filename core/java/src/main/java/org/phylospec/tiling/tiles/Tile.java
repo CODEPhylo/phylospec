@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
+import org.phylospec.components.Generator__1;
 import org.phylospec.tiling.*;
 import org.phylospec.tiling.errors.InconsistentTilingException;
 import org.phylospec.tiling.errors.TileApplicationError;
@@ -32,6 +33,13 @@ public abstract class Tile<T, S> {
                             + " has no return type parameter. Either specify the type in the type signature of the inheriting class, or override the getTypeToken method.");
         }
         return typeToken;
+    }
+
+    /**
+     * Returns the generator patterns this tile can handle. Tiles which do not cover a generator call expose none.
+     */
+    public List<Generator__1> getGeneratorPatterns() {
+        return List.of();
     }
 
     /**
