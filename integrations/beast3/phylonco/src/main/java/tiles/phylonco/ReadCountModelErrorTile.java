@@ -7,8 +7,7 @@ import beast.base.spec.type.RealVector;
 import beastconfig.BEASTState;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.errors.TileApplicationError;
-import org.phylospec.tiling.tiles.TemplateTile;
-import org.phylospec.tiling.tiles.TilePriority;
+import org.phylospec.tiling.tiles.ErrorTile;
 import phylonco.beast.evolution.likelihood.ReadCountTreeLikelihood;
 import phylonco.beast.evolution.substitutionmodel.GT10;
 import tiling.UnboundDistribution;
@@ -25,7 +24,7 @@ import java.util.IdentityHashMap;
  * {@code CoverageModel}.
  */
 public class ReadCountModelErrorTile
-        extends TemplateTile<UnboundDistribution<ReadCountData, ReadCountTreeLikelihood>, BEASTState> {
+        extends ErrorTile<UnboundDistribution<ReadCountData, ReadCountTreeLikelihood>, BEASTState> {
 
     @Override
     protected String getPhyloSpecTemplate() {
@@ -56,10 +55,5 @@ public class ReadCountModelErrorTile
                 this.getRootNode(),
                 "ReadCountModel needs the same ploidy that the coverage was drawn with.",
                 "Pass the ploidy variable used in CoverageModel.");
-    }
-
-    @Override
-    public TilePriority getPriority() {
-        return TilePriority.ERROR;
     }
 }
