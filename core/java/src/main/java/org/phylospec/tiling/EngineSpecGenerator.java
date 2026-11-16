@@ -130,14 +130,19 @@ public class EngineSpecGenerator {
                 Generator__1 generator = tileGenerator;
 
                 if (componentResolver != null) {
-                    // templates can also call engine-specific functions which are not part of the
-                    // component library (e.g. loggers). we only list the calls known to the library
-                    if (!(tile instanceof GeneratorTile<?, ?>)) {
-                        generator = qualifyKnownGenerator(generator, componentResolver)
-                                .orElse(null);
-                        if (generator == null) continue;
+                    if (tile instanceof GeneratorTile<?, ?>) {
+                        validateGenerator(tile.getClass(), generator, componentResolver);
+                    } else {
+                        generator = qualifyGenerator(generator, componentResolver);
+
+                        // templates can also call engine-specific functions which are not part of the
+                        // component library (e.g. loggers). these are listed without a namespace
+                        if (!componentResolver
+                                .resolveGenerator(getResolvableGeneratorName(generator))
+                                .isEmpty()) {
+                            validateGenerator(tile.getClass(), generator, componentResolver);
+                        }
                     }
-                    validateGenerator(tile.getClass(), generator, componentResolver);
                 }
                 generators.add(generator);
             }
@@ -148,17 +153,16 @@ public class EngineSpecGenerator {
     }
 
     /**
-     * Returns the generator with the namespace of the library generator it calls, or an empty optional
-     * if the call is not a generator of the library. Calls in templates cannot name their namespace,
-     * so a generator which is not imported by default is qualified with its namespace if only one
-     * namespace declares a generator with this name.
+     * Returns the generator with the namespace of the library generator it calls. Calls in templates
+     * cannot name their namespace, so a generator which is not imported by default is qualified with
+     * its namespace if only one namespace declares a generator with this name. Otherwise, the
+     * generator is returned unchanged.
      */
-    private static Optional<Generator__1> qualifyKnownGenerator(
-            Generator__1 generator, ComponentResolver componentResolver) {
+    private static Generator__1 qualifyGenerator(Generator__1 generator, ComponentResolver componentResolver) {
         if (!componentResolver
                 .resolveGenerator(getResolvableGeneratorName(generator))
                 .isEmpty()) {
-            return Optional.of(generator);
+            return generator;
         }
 
         Set<String> namespaces = componentResolver.getKnownGenerators().values().stream()
@@ -167,14 +171,14 @@ public class EngineSpecGenerator {
                 .map(Generator::getNamespace)
                 .collect(Collectors.toSet());
 
-        if (namespaces.size() != 1) return Optional.empty();
+        if (namespaces.size() != 1) return generator;
 
         Generator__1 qualifiedGenerator = new Generator__1();
         qualifiedGenerator.setName(generator.getName());
         qualifiedGenerator.setNamespace(namespaces.iterator().next());
         qualifiedGenerator.setArguments(generator.getArguments());
 
-        return Optional.of(qualifiedGenerator);
+        return qualifiedGenerator;
     }
 
     /**
