@@ -3,8 +3,10 @@ package tiles.mcmc;
 import beast.base.evolution.tree.Tree;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Set;
 import org.phylospec.ast.Expr;
+import org.phylospec.components.Generator__1;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.typeresolver.Stochasticity;
@@ -12,6 +14,12 @@ import org.phylospec.typeresolver.Stochasticity;
 /// Matches a `treeLogger(...)` declaration in the `mcmc` block and registers a
 /// [org.phylospec.tiling.mcmc.TreeLoggerSpec] on the state.
 public class TreeLoggerTile extends TemplateTile<Void, BEASTState> {
+
+    // the logger is configured by the engine and is not a generator of the component library
+    @Override
+    public List<Generator__1> getGeneratorPatterns() {
+        return List.of();
+    }
 
     @Override
     protected String getPhyloSpecTemplate() {

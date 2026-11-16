@@ -130,19 +130,10 @@ public class EngineSpecGenerator {
                 Generator__1 generator = tileGenerator;
 
                 if (componentResolver != null) {
-                    if (tile instanceof GeneratorTile<?, ?>) {
-                        validateGenerator(tile.getClass(), generator, componentResolver);
-                    } else {
+                    if (!(tile instanceof GeneratorTile<?, ?>)) {
                         generator = qualifyGenerator(generator, componentResolver);
-
-                        // templates can also call engine-specific functions which are not part of the
-                        // component library (e.g. loggers). these are listed without a namespace
-                        if (!componentResolver
-                                .resolveGenerator(getResolvableGeneratorName(generator))
-                                .isEmpty()) {
-                            validateGenerator(tile.getClass(), generator, componentResolver);
-                        }
                     }
+                    validateGenerator(tile.getClass(), generator, componentResolver);
                 }
                 generators.add(generator);
             }
