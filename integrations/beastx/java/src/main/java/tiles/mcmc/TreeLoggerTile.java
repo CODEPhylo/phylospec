@@ -1,7 +1,6 @@
 package tiles.mcmc;
 
 import org.phylospec.ast.Expr;
-import org.phylospec.components.Generator__1;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.tiling.tiles.TileInput;
@@ -14,12 +13,6 @@ import java.util.List;
 import java.util.Set;
 
 public class TreeLoggerTile extends TemplateTile<Void, BeastXState> {
-
-    // the logger is configured by the engine and is not a generator of the component library
-    @Override
-    public List<Generator__1> getGeneratorPatterns() {
-        return List.of();
-    }
 
     @Override
     protected String getPhyloSpecTemplate() {

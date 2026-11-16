@@ -54,6 +54,11 @@ public class TemplateTileGeneratorPatternTest {
     }
 
     @Test
+    public void exposesNoPatternForMcmcTemplates() {
+        assertTrue(new McmcTile().getGeneratorPatterns().isEmpty());
+    }
+
+    @Test
     public void exposesNoPatternForErrorTiles() {
         assertTrue(new RejectingTile().getGeneratorPatterns().isEmpty());
     }
@@ -114,6 +119,23 @@ public class TemplateTileGeneratorPatternTest {
         }
 
         TemplateTileInput<Object, Object> distributionInput = new TemplateTileInput<>("$distribution");
+
+        @Override
+        protected Object applyTile(Object state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
+            return null;
+        }
+    }
+
+    static class McmcTile extends TemplateTile<Object, Object> {
+        @Override
+        protected String getPhyloSpecTemplate() {
+            return """
+                    mcmc {
+                        Logger screenLogger = screenLogger(logEvery=$logEvery)
+                    }""";
+        }
+
+        TemplateTileInput<Object, Object> logEveryInput = new TemplateTileInput<>("$logEvery");
 
         @Override
         protected Object applyTile(Object state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

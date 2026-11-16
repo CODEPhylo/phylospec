@@ -54,7 +54,8 @@ public class EngineSpecGenerator {
     /**
      * Generates an engine specification for the given tile library and engine metadata, and
      * writes it as JSON to "generated/<engine-name>-<engine-version>.json". The component resolver
-     * is only used to validate the generator tiles.
+     * is used to validate the generators of the tiles and to qualify the generators of template tiles
+     * with their namespace.
      */
     public static <S> void writeEngineSpecification(
             Path generatedDirectory,
@@ -96,8 +97,9 @@ public class EngineSpecGenerator {
 
     /**
      * Generates an engine specification for the given tile library and engine metadata. The
-     * component resolver is only used to validate the generator tiles, it does not contribute to
-     * the generated specification. It may be null, in which case no validation happens.
+     * component resolver is used to validate the generators of the tiles and to qualify the generators
+     * of template tiles with their namespace. It may be null, in which case no validation happens and
+     * the generators of template tiles are listed without a namespace.
      */
     public static <S> EngineSpecificationSchema generateEngineSpecification(
             TileLibrary<S> tileLibrary,
@@ -131,7 +133,7 @@ public class EngineSpecGenerator {
 
                 if (componentResolver != null) {
                     if (!(tile instanceof GeneratorTile<?, ?>)) {
-                        generator = qualifyGenerator(generator, componentResolver);
+                        generator = qualifyGenerator(tile.getClass(), generator, componentResolver);
                     }
                     validateGenerator(tile.getClass(), generator, componentResolver);
                 }
@@ -146,10 +148,13 @@ public class EngineSpecGenerator {
     /**
      * Returns the generator with the namespace of the library generator it calls. Calls in templates
      * cannot name their namespace, so a generator which is not imported by default is qualified with
-     * its namespace if only one namespace declares a generator with this name. Otherwise, the
-     * generator is returned unchanged.
+     * its namespace if only one namespace declares a generator with this name. A generator which no
+     * namespace declares is returned unchanged.
+     *
+     * @throws IllegalStateException if multiple namespaces declare a generator with this name
      */
-    private static Generator__1 qualifyGenerator(Generator__1 generator, ComponentResolver componentResolver) {
+    private static Generator__1 qualifyGenerator(
+            Class<?> tileClass, Generator__1 generator, ComponentResolver componentResolver) {
         if (!componentResolver
                 .resolveGenerator(getResolvableGeneratorName(generator))
                 .isEmpty()) {
@@ -162,7 +167,17 @@ public class EngineSpecGenerator {
                 .map(Generator::getNamespace)
                 .collect(Collectors.toSet());
 
-        if (namespaces.size() != 1) return generator;
+        if (namespaces.isEmpty()) return generator;
+
+        if (namespaces.size() > 1) {
+            throw new IllegalStateException("The tile '"
+                    + tileClass.getSimpleName()
+                    + "' calls the generator '"
+                    + generator.getName()
+                    + "' in its template, which is declared by the namespaces "
+                    + namespaces
+                    + ". None of them is imported by default, so it is ambiguous which one the tile implements.");
+        }
 
         Generator__1 qualifiedGenerator = new Generator__1();
         qualifiedGenerator.setName(generator.getName());
@@ -175,12 +190,11 @@ public class EngineSpecGenerator {
     /**
      * Validates a generator of a tile against the component library: the generator it implements has to
      * exist, its arguments have to be known, and its first argument has to be the one the component
-     * library expects in first position. The resolver is only used for these checks, the engine
-     * specification itself is built from the tile alone.
+     * library expects in first position.
      */
     private static void validateGenerator(
             Class<?> tileClass, Generator__1 generator, ComponentResolver componentResolver) {
-        // if the tile knows its namespace, we resolve the qualified name. otherwise a tile could be
+        // if the generator has a namespace, we resolve the qualified name. otherwise it could be
         // validated against a same-named generator of another imported namespace
 
         String phyloSpecGeneratorName = getResolvableGeneratorName(generator);
@@ -255,9 +269,8 @@ public class EngineSpecGenerator {
     }
 
     /**
-     * Returns the name under which the generator of the given tile can be resolved in a component
-     * library. This is the qualified name if the tile specifies its namespace, and the plain
-     * generator name otherwise.
+     * Returns the name under which the given generator can be resolved in a component library. This
+     * is the qualified name if the generator has a namespace, and the plain generator name otherwise.
      */
     private static String getResolvableGeneratorName(Generator__1 generator) {
         String generatorName = generator.getName();
