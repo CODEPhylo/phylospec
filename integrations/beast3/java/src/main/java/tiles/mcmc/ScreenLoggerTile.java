@@ -4,6 +4,7 @@ import beast.base.core.BEASTObject;
 import beastconfig.BEASTState;
 import java.util.*;
 import org.phylospec.ast.Expr;
+import org.phylospec.components.Generator__1;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.typeresolver.Stochasticity;
@@ -11,6 +12,12 @@ import org.phylospec.typeresolver.Stochasticity;
 /// Matches a `screenLogger(...)` declaration in the `mcmc` block and registers a
 /// [org.phylospec.tiling.mcmc.ScreenLoggerSpec] on the state.
 public class ScreenLoggerTile extends TemplateTile<Void, BEASTState> {
+
+    // the logger is configured by the engine and is not a generator of the component library
+    @Override
+    public List<Generator__1> getGeneratorPatterns() {
+        return List.of();
+    }
 
     @Override
     protected String getPhyloSpecTemplate() {
