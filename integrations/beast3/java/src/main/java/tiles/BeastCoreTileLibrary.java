@@ -68,7 +68,8 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new ObservedAsAlignmentTile());
         tiles.add(new RootObservedBetweenTile());
 
-        tiles.add(new ScaleTile());
+        tiles.add(new ScaleTile.FactorFirst());
+        tiles.add(new ScaleTile.FactorSecond());
         tiles.add(new PositiveProductTile());
         tiles.add(new BinaryTile.RpnRpn());
         tiles.add(new BinaryTile.RpnReal());

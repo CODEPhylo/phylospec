@@ -47,6 +47,24 @@ public class PartitionRateOperatorTest {
     }
 
     @Test
+    public void testConstantFactorMayFollowTheWeight() {
+        BEASTState state = tile(MODEL.replaceAll("3\\.0 \\* (partitionWeights\\[\\d])", "$1 * 3.0"));
+
+        DeltaExchangeOperator weights = deltaExchangeOn(state, 3);
+        assertEquals(0.25, weights.deltaInput.get(), 1e-12);
+        assertEquals(2.0, weights.m_pWeight.get(), 1e-12);
+    }
+
+    @Test
+    public void testPartitionWeightsAreTunedWhateverTheFormOfTheRate() {
+        BEASTState state = tile(MODEL.replaceAll("3\\.0 \\* (partitionWeights\\[\\d])", "(6.0 * $1) * 0.5"));
+
+        DeltaExchangeOperator weights = deltaExchangeOn(state, 3);
+        assertEquals(0.25, weights.deltaInput.get(), 1e-12);
+        assertEquals(2.0, weights.m_pWeight.get(), 1e-12);
+    }
+
+    @Test
     public void testOtherSimplexKeepsDefaultTuning() {
         BEASTState state = tile(MODEL);
 
