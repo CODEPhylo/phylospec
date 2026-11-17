@@ -1,8 +1,6 @@
 package org.phylospec.tiling.tiles;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.*;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
@@ -25,15 +23,27 @@ public abstract class Tile<T, S> {
      * determined at compile-time, a custom tile has to override this method.
      */
     public TypeToken<?> getTypeToken() {
-        // parse the type parameter T
-        Type superclass = this.getClass().getGenericSuperclass();
-        if (superclass instanceof ParameterizedType pt) {
-            return TypeToken.of(pt.getActualTypeArguments()[0]);
-        } else {
+        // parse the type parameter T, resolving it through intermediate superclasses
+        TypeToken<?> typeToken = TypeToken.resolveSupertypeArgument(this.getClass(), Tile.class, 0);
+        if (typeToken == null) {
             throw new IllegalArgumentException(
                     "Tile "
                             + this.getClass()
                             + " has no return type parameter. Either specify the type in the type signature of the inheriting class, or override the getTypeToken method.");
+        }
+        return typeToken;
+    }
+
+    /**
+     * Returns whether the type token of this tile is the same no matter which input tiles it is wired up with. By
+     * default, this is only assumed for tiles which do not override {@link #getTypeToken}. Tiles overriding it with
+     * a type that does not depend on their inputs can override this method to return true.
+     */
+    public boolean hasFixedTypeToken() {
+        try {
+            return this.getClass().getMethod("getTypeToken").getDeclaringClass() == Tile.class;
+        } catch (NoSuchMethodException e) {
+            throw new IllegalStateException(e);
         }
     }
 
@@ -102,13 +112,13 @@ public abstract class Tile<T, S> {
      */
     protected List<TileInput<?, S>> getTileInputs() {
         List<TileInput<?, S>> inputs = new ArrayList<>();
-        for (Field field : this.getClass().getDeclaredFields()) {
+        for (Field field : this.getAllFields()) {
             if (TileInput.class.isAssignableFrom(field.getType())) {
                 field.setAccessible(true);
                 try {
                     TileInput<?, S> input = (TileInput<?, S>) field.get(this);
                     this.configureTileInput(field, input);
-                    input.resolveTypeFromField(field);
+                    input.resolveTypeFromField(field, this.getClass());
                     inputs.add(input);
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
@@ -116,6 +126,18 @@ public abstract class Tile<T, S> {
             }
         }
         return inputs;
+    }
+
+    /**
+     * Returns the fields declared by this tile's class and all its superclasses up to {@link Tile},
+     * with superclass fields first.
+     */
+    protected List<Field> getAllFields() {
+        LinkedList<Field> fields = new LinkedList<>();
+        for (Class<?> clazz = this.getClass(); clazz != null && clazz != Tile.class; clazz = clazz.getSuperclass()) {
+            fields.addAll(0, Arrays.asList(clazz.getDeclaredFields()));
+        }
+        return fields;
     }
 
     /**
@@ -206,6 +228,32 @@ public abstract class Tile<T, S> {
 
     public void setIndexVariables(Set<Expr.Variable> currentIndexVariables) {
         this.indexVariables = currentIndexVariables;
+    }
+
+    /* pruned alternatives */
+
+    // computed lazily, as it depends on the tiles wired up below this tile
+    private Boolean hasPrunedAlternatives;
+
+    /**
+     * Returns whether tiles which could take the place of this tile or of one of the tiles wired up below it were
+     * pruned. Such alternatives have the same root node and type, but are wired up with other input tiles.
+     */
+    public boolean hasPrunedAlternatives() {
+        if (this.hasPrunedAlternatives != null) return this.hasPrunedAlternatives;
+
+        try {
+            this.hasPrunedAlternatives =
+                    this.getWiredUpInputs().values().stream().anyMatch(Tile::hasPrunedAlternatives);
+        } catch (InconsistentTilingException e) {
+            this.hasPrunedAlternatives = false;
+        }
+
+        return this.hasPrunedAlternatives;
+    }
+
+    public void markPrunedAlternatives() {
+        this.hasPrunedAlternatives = true;
     }
 
     /* tiling weight */

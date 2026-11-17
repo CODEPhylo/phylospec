@@ -1,0 +1,12 @@
+// TEMPLATE
+Real x ~ Exponential(rate=1.0)
+Real w = log(x=x) + log(x=x)
+// TEMPLATE
+
+// QUERY
+Real y ~ Exponential(rate=1.0)
+Real w = log(x=y) + log(x=y)
+// QUERY
+
+// MATCH
+// MATCH

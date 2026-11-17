@@ -1,6 +1,9 @@
 package runner;
 
 import beast.base.inference.*;
+import beast.base.parser.XMLParser;
+import beast.base.parser.XMLParserException;
+import beast.base.parser.XMLProducer;
 import beast.base.util.Randomizer;
 import beastconfig.BEASTState;
 import beastconfig.OutputPaths;
@@ -10,8 +13,10 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -114,6 +119,11 @@ public class PhyloSpecRunner {
                 ? TileCatalog.select(BEASTState.class, tileLibraryIds.get())
                 : TileCatalog.discover(BEASTState.class);
         Diagnostics diagnostics = new Diagnostics(warningHandler);
+        catalog.getComponentResolver()
+                .setUnknownNamespaceHint(namespace -> "No loaded component library provides '" + namespace
+                        + "'. If an adapter bundle provides it, pass the bundle directory with --adapter-path"
+                        + " and select its library with --library (e.g. --adapter-path <bundle> --library "
+                        + namespace + ").");
 
         // run lexer
 
@@ -191,6 +201,60 @@ public class PhyloSpecRunner {
             throws IOException, ParserConfigurationException, SAXException {
         CheckedModel checked = check(warningHandler);
         runChecked(checked, new BEASTState(runName, sourceDirectory), null, () -> false, message -> {});
+    }
+
+    /** Exports a full analysis XML and verifies that BEAST can load the MCMC without running it. */
+    public void exportXml(Path output) throws IOException, ParserConfigurationException, SAXException {
+        exportXml(output, warning -> {});
+    }
+
+    void exportXml(Path output, Consumer<PhyloSpecDiagnostic> warningHandler)
+            throws IOException, ParserConfigurationException, SAXException {
+        Path target = output.toAbsolutePath().normalize();
+        if (target.getFileName() == null || Files.isDirectory(target)) {
+            throw new IOException("Expected an XML output file: " + target);
+        }
+        String name = target.getFileName().toString();
+        String prefix = name.endsWith(".xml") && name.length() > 4 ? name.substring(0, name.length() - 4) : name;
+        BEASTState state = BEASTState.forXmlExport(prefix, sourceDirectory);
+        List<Path> inputs = new ArrayList<>();
+        if (sourceFile != null) inputs.add(sourceFile);
+        state.setInputObserver((reference, path) -> inputs.add(path));
+        CheckedModel checked = check(warningHandler);
+        Long seed = declaredSeed(checked.statements);
+        Randomizer.getSeed();
+        if (seed != null) Randomizer.setSeed(seed);
+
+        MCMC mcmc = new MCMC();
+        buildMcmc(checked, state, mcmc);
+        if (Files.exists(target)) {
+            for (Path input : inputs) {
+                if (Files.isSameFile(target, input)) throw new IOException("XML output is a model input: " + input);
+            }
+        }
+        if (state.randomSeed != null) Randomizer.setSeed(state.randomSeed);
+        state.initializeBEASTObjects();
+        if (state.prepareXml != null) state.prepareXml.run();
+        String xml = new XMLProducer().toXML(mcmc);
+        if (xml == null || xml.isBlank()) throw new IOException("BEAST could not serialize the analysis XML.");
+
+        Files.createDirectories(target.getParent());
+        Path staged = Files.createTempFile(target.getParent(), ".phylospec-export-", ".xml");
+        try {
+            Files.writeString(staged, xml, StandardCharsets.UTF_8);
+            if (!(new XMLParser().parseFile(staged.toFile()) instanceof MCMC)) {
+                throw new IOException("The exported XML did not load as a BEAST MCMC.");
+            }
+            try {
+                Files.move(staged, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException unsupported) {
+                Files.move(staged, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (XMLParserException invalid) {
+            throw new IOException("BEAST could not load the exported analysis: " + invalid.getMessage(), invalid);
+        } finally {
+            Files.deleteIfExists(staged);
+        }
     }
 
     /** Runs with isolated output paths; the original source directory remains the input base. */
@@ -316,54 +380,11 @@ public class PhyloSpecRunner {
             record.seed("modelBuilding", seed, Randomizer.getSeed(), scriptSeed == null);
         }
 
-        try {
-            beastState = checked.tiles.applyBestTiling(beastState);
-        } catch (TileApplicationError error) {
-            PhyloSpecDiagnostic diagnostic = new PhyloSpecDiagnostic(
-                    PhyloSpecDiagnostic.Stage.MODEL_BUILDING,
-                    error.toError(sourceRange(checked.parser, error.getAstNode())),
-                    false,
-                    source,
-                    sourceFile);
-            throw new PhyloSpecException(diagnostic, error, checked.warnings);
-        }
-
-        checked.catalog.configureState(beastState);
-
-        // add state
-
-        State state = new State();
-        beastState.setInput(state, state.stateNodeInput, new ArrayList<>(beastState.stateNodes.keySet()));
-
-        // add distribution
-
-        CompoundDistribution prior = new CompoundDistribution();
-        prior.setID(beastState.getAvailableID("prior"));
-        beastState.setInput(prior, prior.pDistributions, new ArrayList<>(beastState.priorDistributions.values()));
-
-        CompoundDistribution likelihood = new CompoundDistribution();
-        likelihood.setID(beastState.getAvailableID("likelihood"));
-        beastState.setInput(likelihood, likelihood.pDistributions, beastState.likelihoodDistributions);
-
-        CompoundDistribution posterior = new CompoundDistribution();
-        posterior.setID(beastState.getAvailableID("posterior"));
-        beastState.setInput(posterior, posterior.pDistributions, List.of(prior, likelihood));
-
-        // build loggers
-
-        List<Logger> loggers = beastState.buildLoggers(posterior, prior, likelihood);
+        MCMC mcmc = record == null ? new MCMC() : new ManagedMCMC(cancellationRequested);
+        CompoundDistribution likelihood = buildMcmc(checked, beastState, mcmc);
+        List<Logger> loggers = mcmc.loggersInput.get();
         String stateFile = beastState.resolveOutputPath(beastState.outputPrefix + ".state.xml");
         beastState.prepareOutputFiles(loggers, stateFile);
-
-        // create MCMC object
-
-        MCMC mcmc = record == null ? new MCMC() : new ManagedMCMC(cancellationRequested);
-        beastState.setInput(mcmc, mcmc.chainLengthInput, beastState.chainLength);
-        beastState.setInput(mcmc, mcmc.startStateInput, state);
-        beastState.setInput(mcmc, mcmc.posteriorInput, posterior);
-
-        beastState.setInput(mcmc, mcmc.operatorsInput, beastState.operators);
-        beastState.setInput(mcmc, mcmc.loggersInput, loggers);
         mcmc.setStateFile(stateFile, false);
 
         // run
@@ -422,6 +443,56 @@ public class PhyloSpecRunner {
                 throw failure;
             }
         }
+    }
+
+    /** Builds the same BEAST state, distributions, proposals and loggers for execution and export. */
+    private CompoundDistribution buildMcmc(CheckedModel checked, BEASTState beastState, MCMC mcmc) {
+        try {
+            checked.tiles.applyBestTiling(beastState);
+        } catch (TileApplicationError error) {
+            PhyloSpecDiagnostic diagnostic = new PhyloSpecDiagnostic(
+                    PhyloSpecDiagnostic.Stage.MODEL_BUILDING,
+                    error.toError(sourceRange(checked.parser, error.getAstNode())),
+                    false,
+                    source,
+                    sourceFile);
+            throw new PhyloSpecException(diagnostic, error, checked.warnings);
+        }
+
+        checked.catalog.configureState(beastState);
+
+        // add state
+
+        State state = new State();
+        beastState.setInput(state, state.stateNodeInput, new ArrayList<>(beastState.stateNodes.keySet()));
+
+        // add distribution
+
+        CompoundDistribution prior = new CompoundDistribution();
+        prior.setID(beastState.getAvailableID("prior"));
+        beastState.setInput(prior, prior.pDistributions, new ArrayList<>(beastState.priorDistributions.values()));
+
+        CompoundDistribution likelihood = new CompoundDistribution();
+        likelihood.setID(beastState.getAvailableID("likelihood"));
+        beastState.setInput(likelihood, likelihood.pDistributions, beastState.likelihoodDistributions);
+
+        CompoundDistribution posterior = new CompoundDistribution();
+        posterior.setID(beastState.getAvailableID("posterior"));
+        beastState.setInput(posterior, posterior.pDistributions, List.of(prior, likelihood));
+
+        // build loggers
+
+        List<Logger> loggers = beastState.buildLoggers(posterior, prior, likelihood);
+
+        // create MCMC object
+
+        beastState.setInput(mcmc, mcmc.chainLengthInput, beastState.chainLength);
+        beastState.setInput(mcmc, mcmc.startStateInput, state);
+        beastState.setInput(mcmc, mcmc.posteriorInput, posterior);
+
+        beastState.setInput(mcmc, mcmc.operatorsInput, beastState.operators);
+        beastState.setInput(mcmc, mcmc.loggersInput, loggers);
+        return likelihood;
     }
 
     private static void initializeLikelihood(BEASTState state, CompoundDistribution likelihood) {

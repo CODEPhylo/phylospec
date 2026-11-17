@@ -1,0 +1,12 @@
+// TEMPLATE
+1.0 / $x
+// TEMPLATE
+
+// QUERY
+Real a = 5.0
+a / 1.0
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH

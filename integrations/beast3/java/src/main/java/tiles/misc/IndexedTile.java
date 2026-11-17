@@ -5,17 +5,23 @@ import beast.base.spec.type.IntScalar;
 import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.AstNodeTile;
+import org.phylospec.typeresolver.Stochasticity;
 
 public class IndexedTile extends AstNodeTile<Object, Expr.Index, BEASTState> {
 
     AstNodeTileInput<List<?>, Expr.Index, BEASTState> vectorInput =
             new AstNodeTileInput<>("vector", expr -> expr.object);
+    // the element is chosen once while building the model, so a sampled index would be frozen
     AstNodeTileInput<? extends IntScalar<? extends Int>, Expr.Index, BEASTState> firstIndexInput =
-            new AstNodeTileInput<>("index", expr -> expr.indices.getFirst());
+            new AstNodeTileInput<>(
+                    "index",
+                    expr -> expr.indices.getFirst(),
+                    Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
     public Object applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

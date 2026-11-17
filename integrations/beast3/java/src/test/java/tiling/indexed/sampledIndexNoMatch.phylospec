@@ -1,0 +1,11 @@
+Probability ps[i] ~ Beta(alpha=1.0, beta=1.0) for i in 1:3
+PositiveInteger z ~ Categorical(probabilities=[0.1, 0.2, 0.7])
+Boolean b ~ Bernoulli(p=ps[z])
+
+// EXPECTED_TILES
+// Unsupported operation. Your engine does not support a random variable for 'index'.
+// EXPECTED_TILES
+
+// EXPECTED BEAST STATE
+// NO_STATE
+// EXPECTED BEAST STATE

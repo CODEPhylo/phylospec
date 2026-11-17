@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.phylospec</groupId>
+        <artifactId>phylospec</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>phylospec-beast3-phylonco</artifactId>
+    <packaging>jar</packaging>
+
+    <name>PhyloSpec phylonco Integration</name>
+    <description>PhyloSpec adapter for the beast-phylonco BEAST package (beast3 branch)</description>
+
+    <properties>
+        <phylonco.version>1.3.0-SNAPSHOT</phylonco.version>
+        <phylospec.adapter.bundle.skip>false</phylospec.adapter.bundle.skip>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.phylospec</groupId>
+            <artifactId>phylospec-beast3</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.phylospec</groupId>
+            <artifactId>phylospec-beast3-tile-processor</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <!-- beast-phylonco, beast3 branch: install it locally first (mvn -pl phylonco-beast -am install) -->
+            <groupId>io.github.bioDS</groupId>
+            <artifactId>phylonco-beast</artifactId>
+            <version>${phylonco.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.github.compevol</groupId>
+                    <artifactId>beast-fx</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.phylospec</groupId>
+                            <artifactId>phylospec-beast3-tile-processor</artifactId>
+                            <version>${project.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <configuration>
+                            <compilerArgs>
+                                <arg>-Aphylospec.generatedPackage=tiles.phylonco.generated</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <id>generate-engine-specification</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>utils.phylonco.PhyloncoEngineSpec</mainClass>
+                            <arguments>
+                                <argument>${project.build.outputDirectory}/META-INF/phylospec/engines/phylonco.json</argument>
+                                <argument>${phylonco.version}</argument>
+                            </arguments>
+                            <classpathScope>runtime</classpathScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>package-adapter-zip</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/adapter.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

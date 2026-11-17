@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
@@ -43,6 +44,18 @@ public class TilingScriptFilesTest {
         return tests;
     }
 
+    @TestFactory
+    public Iterable<DynamicTest> testAllPsScriptsTileAsWellAsWithAllTiles() throws IOException {
+        List<Path> psFiles = this.findPsFiles(Paths.get("src/test/java/tiling"));
+        psFiles.sort(Comparator.comparing(Path::toString));
+
+        List<DynamicTest> tests = new ArrayList<>();
+        for (Path psFile : psFiles) {
+            tests.add(this.assertScriptTilesAsWellAsWithAllTiles(psFile));
+        }
+        return tests;
+    }
+
     private List<Path> findPsFiles(Path root) throws IOException {
         try (Stream<Path> paths = Files.walk(root)) {
             return paths.filter(Files::isRegularFile)
@@ -57,29 +70,13 @@ public class TilingScriptFilesTest {
         String source = String.join("\n", lines);
 
         return DynamicTest.dynamicTest(psPath.getFileName().toString(), () -> {
-            // lex and parse
-
-            List<Token> tokens = new Lexer(source).scanTokens();
-            List<Stmt> statements = new Parser(tokens).parse();
-
-            // simplify
-
-            statements = new RemoveGroupings().transform(statements);
-            statements = new EvaluateLiterals().transform(statements);
-
-            // resolve variables and stochasticity
-
-            VariableResolver variableResolver = new VariableResolver(statements);
-
-            StochasticityResolver stochasticityResolver = new StochasticityResolver();
-            stochasticityResolver.visitStatements(statements);
+            List<Stmt> statements = this.parseStatements(source);
 
             // tile each statement, skipping imports (which have no tile by design)
 
             List<String> actualTileLines = new ArrayList<>();
 
-            EvaluateTiles<BEASTState> evaluateTiles =
-                    new EvaluateTiles(new BeastCoreTileLibrary().getTiles(), variableResolver, stochasticityResolver);
+            EvaluateTiles<BEASTState> evaluateTiles = this.createEvaluateTiles(statements);
             List<Tile<?, BEASTState>> bestTilings = null;
             try {
                 bestTilings = evaluateTiles.getBestTiling(statements);
@@ -177,5 +174,61 @@ public class TilingScriptFilesTest {
         }
 
         return expected;
+    }
+
+    /**
+     * Asserts that the tiling which first only considers the lightest tiles is as good as the tiling which considers
+     * all tiles right away: both have to fail with the same error, or find equally heavy tiles for every statement.
+     */
+    private DynamicTest assertScriptTilesAsWellAsWithAllTiles(Path psPath) throws IOException {
+        String source = Files.readString(psPath, StandardCharsets.UTF_8);
+
+        return DynamicTest.dynamicTest(psPath.getFileName().toString(), () -> {
+            List<Stmt> statements = this.parseStatements(source);
+
+            String expected = this.describeTiling(
+                    () -> this.createEvaluateTiles(statements).getBestTilingOfAllTiles(statements));
+            String actual = this.describeTiling(
+                    () -> this.createEvaluateTiles(statements).getBestTiling(statements));
+
+            assertEquals(expected, actual, "Tiling differs from the tiling with all tiles for: " + psPath);
+        });
+    }
+
+    /**
+     * Describes the outcome of the given tiling by the weight of the best tile of every statement, or by the error
+     * message if the tiling fails.
+     */
+    private String describeTiling(Supplier<List<Tile<?, BEASTState>>> tiling) {
+        try {
+            return "weights " + tiling.get().stream().map(Tile::getWeight).toList();
+        } catch (TileApplicationError e) {
+            return "error " + e.getMessage();
+        }
+    }
+
+    private List<Stmt> parseStatements(String source) {
+        // lex and parse
+
+        List<Token> tokens = new Lexer(source).scanTokens();
+        List<Stmt> statements = new Parser(tokens).parse();
+
+        // simplify
+
+        statements = new RemoveGroupings().transform(statements);
+        statements = new EvaluateLiterals().transform(statements);
+
+        return statements;
+    }
+
+    private EvaluateTiles<BEASTState> createEvaluateTiles(List<Stmt> statements) {
+        // resolve variables and stochasticity
+
+        VariableResolver variableResolver = new VariableResolver(statements);
+
+        StochasticityResolver stochasticityResolver = new StochasticityResolver();
+        stochasticityResolver.visitStatements(statements);
+
+        return new EvaluateTiles<>(new BeastCoreTileLibrary().getTiles(), variableResolver, stochasticityResolver);
     }
 }

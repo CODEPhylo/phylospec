@@ -1,7 +1,7 @@
 # PhyloSpec command line with BEAST 3
 
-The CLI ZIP provides one command for checking and running a `.phylospec`
-script with BEAST 3. It includes the PhyloSpec runtime, the base BEAST integration,
+The CLI can check a `.phylospec` script, export a BEAST 3 analysis XML, or run an analysis.
+The ZIP includes the PhyloSpec runtime, the base BEAST integration,
 and their Java dependencies. The macOS Apple Silicon ZIP also includes BEAGLE's
 native CPU libraries. Only BEAST 3 is supported by this entry point.
 The examples demonstrate supported workflows; they do not establish support for
@@ -51,8 +51,8 @@ chmod +x "$PHYLOSPEC_DIR/bin/phylospec"
 printf 'Installation: %s\n' "$PHYLOSPEC_DIR"
 ```
 
-`--version` should report PhyloSpec and the BEAST runtime; `--help` lists `check`
-and `run`. The installation contains `bin/`, `lib/`, `examples/`, `USAGE.md`, and
+`--version` should report PhyloSpec and the BEAST runtime. `--help` lists `check`,
+`export` and `run`. The installation contains `bin/`, `lib/`, `examples/`, `USAGE.md`, and
 `LICENSE`. The macOS Apple Silicon ZIP additionally contains `native/macos-arm64/`
 with BEAGLE libraries, version/build information, and its license. Move the whole
 installation directory together. The bundled backend uses the CPU; it does not
@@ -268,7 +268,8 @@ choose a new `--out` directory, such as `results/run-02`.
 | --- | --- |
 | `--engine beast3` | Select the supported engine; `beast3` is already the default. |
 | `--library <id[,id...]>` | Select tile libraries available on the runtime classpath, in preference order. |
-| `--adapter-path <directory>` | For `check`/`run`: load JARs directly inside an unpacked local adapter bundle. Repeat for additional bundles. |
+| `--adapter-path <directory>` | Load an unpacked local adapter bundle for `check`, `export` or `run`. Repeat for additional bundles. |
+| `--xml <file>` | Destination for `export`. The XML contains the model and its MCMC configuration. The filename stem supplies the default log prefix. |
 | `--out <directory>` | For `run`: exact directory for this run's record, logs, and outputs. |
 | `--run-name <prefix>` | For `run`: relative output prefix, unless the script sets `outputPrefix`. |
 | `--debug` | Show raw BEAST console output and failure stack traces in the terminal. |
@@ -276,10 +277,21 @@ choose a new `--out` directory, such as `results/run-02`.
 | `--version` | Show PhyloSpec and loaded BEAST runtime versions. |
 | `--` | Treat the remaining argument as the script filename, including a name beginning with `-`. |
 
-`check` and `run` default to `beast2`, the base integration's existing internal
+`check`, `export` and `run` default to `beast2`, the base integration's existing internal
 library ID. When libraries are explicitly selected, their order is preserved and
 `beast2` is appended only if absent. `--library` selects an available provider; it
 does not download models or add JARs to the classpath.
+
+## Export a BEAST 3 analysis XML
+
+```sh
+"$PHYLOSPEC_DIR/bin/phylospec" export model.phylospec --xml analysis.xml
+```
+
+The command builds the model and checks that BEAST can load the XML before
+replacing the destination file. The destination must be separate from the script
+and its declared input files. Load the exported file with the BEAST packages
+required by its model classes. Supply a seed to BEAST when running the XML.
 
 ## Use a local extension
 
@@ -480,9 +492,9 @@ java --enable-native-access=ALL-UNNAMED -Djava.only=true \
   "$PHYLOSPEC_SOURCE/integrations/beast3/java/src/main/distribution/examples/normal.phylospec"
 ```
 
-Without `check` or `run`, `--library` is required and its exact order is retained.
+Without a subcommand, `--library` is required and its exact order is retained.
 This mode keeps the earlier output-prefix and script-output behavior; it does not
 create a managed result directory, script snapshot, run record, or console log.
 `--out` is unavailable in this mode. Use `run` for the result management described
-in this guide. `--adapter-path` is supported only by the `check` and `run`
+in this guide. `--adapter-path` is supported by the `check`, `export` and `run`
 subcommands.

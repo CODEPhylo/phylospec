@@ -645,29 +645,30 @@ public class Parser {
     }
 
     private Expr.Argument argument() throws Error {
+        // Arguments can start on a new line. Start their source range at the first actual token.
+        while (tokens.get(current).type == TokenType.EOL) current++;
         startAstNode();
 
         Expr expression = expression();
 
-        if (!(expression instanceof Expr.Variable)) {
+        if (!(expression instanceof Expr.Variable variable)) {
             return remember(new Expr.AssignedArgument(expression));
         }
 
         // remove the assignment of the variable token, because we will remember it as an argument
         forgetLast();
 
-        String argumentName = ((Expr.Variable) expression).variableName;
-
+        Expr.Argument argument;
         if (match(TokenType.TILDE)) {
-            expression = expression();
-            return remember(new Expr.DrawnArgument(argumentName, expression));
+            argument = new Expr.DrawnArgument(variable.variableName, expression());
         } else if (match(TokenType.EQUAL)) {
-            expression = expression();
-            return remember(new Expr.AssignedArgument(argumentName, expression));
+            argument = new Expr.AssignedArgument(variable.variableName, expression());
         } else {
             // we have no argument name
             return remember(new Expr.AssignedArgument(expression));
         }
+        argument.nameNode = variable;
+        return remember(argument);
     }
 
     private Expr array() throws Error {

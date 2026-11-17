@@ -1,0 +1,14 @@
+// TEMPLATE
+Real x ~ Exponential(rate=$rate)
+Real w = log(x=x) + log(x=x)
+// TEMPLATE
+
+// QUERY
+Real x ~ Exponential(rate=$rate)
+Real xx ~ Exponential(rate=$rate)
+Real w = log(x=x) + log(x=xx)
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH

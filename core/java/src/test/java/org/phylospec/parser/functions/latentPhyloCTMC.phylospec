@@ -1,0 +1,15 @@
+// A latent alignment with an explicit number of sites (e.g. single-cell genotypes)
+Alignment data = fromNexus(file="src/test/java/org/phylospec/resources/primate-mtDNA.nex")
+Tree tree ~ Yule(birthRate=1.0, taxa=taxa(data))
+QMatrix qMatrix = jc69()
+Alignment genotypes ~ PhyloCTMC(tree=tree, qMatrix=qMatrix, numSites=10)
+
+// EXPECT AST
+// (AS Alignment data (CA fromNexus (AA file "src/test/java/org/phylospec/resources/primate-mtDNA.nex")))
+// (DR Tree tree (CA Yule (AA birthRate 1.0) (AA taxa (CA taxa (AA null data)))))
+// (AS QMatrix qMatrix (CA jc69 ))
+// (DR Alignment genotypes (CA PhyloCTMC (AA tree tree) (AA qMatrix qMatrix) (AA numSites 10)))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS

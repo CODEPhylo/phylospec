@@ -8,10 +8,8 @@ import beast.base.inference.Operator;
 import beast.base.inference.State;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.NonNegativeInt;
-import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
-import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.inference.distribution.MarkovChainDistribution;
 import beast.base.spec.inference.operator.ScaleOperator;
 import beast.base.spec.inference.parameter.IntScalarParam;
@@ -49,6 +47,7 @@ import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.typeresolver.StochasticityResolver;
+import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import runner.PhyloSpecRunner;
@@ -60,13 +59,13 @@ class ExponentialMarkovChainTileTest {
     private static final double[] SECOND = {1.1, 0.4};
 
     @ParameterizedTest
-    @ValueSource(strings = {"1", "0.7", "Real", "PositiveReal", "NonNegativeReal", "Probability"})
-    void fixedMeansInitializeTheNativeChainAndKeepRealDomain(String meanSource) throws Exception {
+    @ValueSource(strings = {"1", "0.7", "PositiveReal"})
+    void fixedMeansInitializeTheNativeChainWithAPositiveDomain(String meanSource) throws Exception {
         boolean literal = Character.isDigit(meanSource.charAt(0));
         double initial = meanSource.equals("1") ? 1.0 : 0.7;
         String source = literal ? "" : meanSource + " fixed = 0.7\n";
         BEASTState graph = build(source + "NonNegativeInteger n = 3\n"
-                + "Vector<Real> chain ~ ExponentialMarkovChain(initialMean="
+                + "Vector<PositiveReal> chain ~ ExponentialMarkovChain(initialMean="
                 + (literal ? meanSource : "fixed") + ", numValues=n)");
         RealVectorParam<?> chain = chain(graph);
         MarkovChainDistribution prior = chainPrior(graph, chain);
@@ -74,7 +73,7 @@ class ExponentialMarkovChainTileTest {
         assertEquals(1, graph.priorDistributions.size());
         assertTrue(graph.likelihoodDistributions.isEmpty());
         assertSame(chain, prior.paramInput.get());
-        assertSame(Real.INSTANCE, chain.getDomain());
+        assertSame(PositiveReal.INSTANCE, chain.getDomain());
         assertArrayEquals(new double[] {initial, initial, initial}, chain.getValues(), 0.0);
         assertEquals(initial, prior.initialMeanInput.get().get(), 0.0);
         assertEquals(1.0, prior.shapeInput.get(), 0.0);
@@ -90,11 +89,7 @@ class ExponentialMarkovChainTileTest {
     }
 
     private static Stream<Arguments> liveMeans() {
-        return Stream.of(
-                Arguments.of("Real", "Normal(mean=1.0, sd=0.5)", Real.INSTANCE, 0.1),
-                Arguments.of("PositiveReal", "Gamma(shape=2.0, rate=1.0)", PositiveReal.INSTANCE, 1.0),
-                Arguments.of("NonNegativeReal", "Exponential(rate=2.0)", NonNegativeReal.INSTANCE, 1.0),
-                Arguments.of("Probability", "Beta(alpha=2.0, beta=2.0)", UnitInterval.INSTANCE, 0.5));
+        return Stream.of(Arguments.of("PositiveReal", "Gamma(shape=2.0, rate=1.0)", PositiveReal.INSTANCE, 1.0));
     }
 
     @ParameterizedTest
@@ -102,7 +97,7 @@ class ExponentialMarkovChainTileTest {
     void liveMeansKeepTheirOriginalInputIdentityDomainAndInitialValue(
             String declaredType, String law, Real domain, double initial) throws Exception {
         BEASTState graph = build(declaredType + " mean ~ " + law + "\n"
-                + "Vector<Real> chain ~ ExponentialMarkovChain(initialMean=mean, numValues=3)");
+                + "Vector<PositiveReal> chain ~ ExponentialMarkovChain(initialMean=mean, numValues=3)");
         RealScalarParam<?> mean = mean(graph);
         RealVectorParam<?> chain = chain(graph);
         MarkovChainDistribution prior = chainPrior(graph, chain);
@@ -119,14 +114,38 @@ class ExponentialMarkovChainTileTest {
     }
 
     @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "Real mean ~ Normal(mean=1.0, sd=0.5)",
+                "NonNegativeReal mean ~ Exponential(rate=2.0)",
+                "Probability mean ~ Beta(alpha=2.0, beta=2.0)"
+            })
+    void initialMeansThatMayBeNonPositiveAreTypeErrors(String meanStatement) {
+        TypeError error = assertThrows(
+                TypeError.class,
+                () -> build(meanStatement + "\n"
+                        + "Vector<PositiveReal> chain ~ ExponentialMarkovChain(initialMean=mean, numValues=3)"));
+        assertTrue(error.getMessage().contains("initialMean"), error.getMessage());
+    }
+
+    @Test
+    void wideningTheGeneratedChainToRealVectorIsAllowed() throws Exception {
+        BEASTState graph = build("Vector<Real> chain ~ ExponentialMarkovChain(initialMean=1.5, numValues=3)");
+        RealVectorParam<?> chain = chain(graph);
+        assertSame(PositiveReal.INSTANCE, chain.getDomain());
+        assertEquals(
+                logDensity(1.5, chain.getValues()), chainPrior(graph, chain).calculateLogP(), TOLERANCE);
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"0", "1", "num(vector=[1,2,3])"})
     void fixedLengthsIncludeAnEmptyChainWithoutAnOperator(String size) throws Exception {
         BEASTState graph =
-                build("Vector<Real> chain ~ ExponentialMarkovChain(initialMean=1.5, numValues=" + size + ")");
+                build("Vector<PositiveReal> chain ~ ExponentialMarkovChain(initialMean=1.5, numValues=" + size + ")");
         RealVectorParam<?> chain = chain(graph);
         int expected = size.equals("0") ? 0 : size.equals("1") ? 1 : 3;
         assertEquals(expected, chain.size());
-        assertSame(Real.INSTANCE, chain.getDomain());
+        assertSame(PositiveReal.INSTANCE, chain.getDomain());
         MarkovChainDistribution prior = chainPrior(graph, chain);
         assertEquals(logDensity(1.5, chain.getValues()), prior.calculateLogP(), TOLERANCE);
         assertEquals(expected == 0 ? 0 : 1, graph.operators.size());
@@ -136,7 +155,7 @@ class ExponentialMarkovChainTileTest {
 
     @Test
     void emptyGeneratedChainSurvivesNativeStateXmlRoundTrip() throws Exception {
-        BEASTState graph = build("Vector<Real> chain ~ ExponentialMarkovChain(initialMean=1.5, numValues=0)");
+        BEASTState graph = build("Vector<PositiveReal> chain ~ ExponentialMarkovChain(initialMean=1.5, numValues=0)");
         RealVectorParam<?> chain = chain(graph);
         MarkovChainDistribution prior = chainPrior(graph, chain);
         CompoundDistribution posterior = posterior(List.of(prior));
@@ -145,15 +164,15 @@ class ExponentialMarkovChainTileTest {
         String xml = state.toXML(17);
         assertDoesNotThrow(() -> state.fromXML(xml));
         assertEquals(0, chain.size());
-        assertSame(Real.INSTANCE, chain.getDomain());
+        assertSame(PositiveReal.INSTANCE, chain.getDomain());
         assertSame(chain, prior.paramInput.get());
         assertTrue(graph.operators.isEmpty());
         assertEquals(0.0, state.robustlyCalcPosterior(posterior), 0.0);
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"[0.7,1.4,0.9]", "[1.2,0.0]", "[0.0,1.2]", "[1.2,-0.3]"})
-    void observationsKeepTheirValuesAndTheirExponentialSupport(String values) throws Exception {
+    @ValueSource(strings = {"[0.7,1.4,0.9]", "[1.1,0.4]"})
+    void positiveObservationsKeepTheirValues(String values) throws Exception {
         double[] observed = Arrays.stream(
                         values.substring(1, values.length() - 1).split(","))
                 .mapToDouble(Double::parseDouble)
@@ -171,16 +190,37 @@ class ExponentialMarkovChainTileTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {"[1.2,0.0]", "[0.0,1.2]", "[1.2,-0.3]"})
+    void nonPositiveObservationsAreRejected(String values) {
+        int length = values.split(",").length;
+        // The chain values are PositiveReal, as in BEAST 3's MarkovChainDistribution.
+        assertThrows(
+                TileApplicationError.class,
+                () -> build("Vector<Real> data ~ ExponentialMarkovChain(initialMean=1.5, numValues=" + length
+                        + ") observed as " + values));
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"0", "0.0", "-0.5"})
     void invalidInitialMeansGiveATargetedDiagnostic(String initialMean) {
+        // The type checker rejects non-positive literals before tiling.
         for (boolean observed : new boolean[] {false, true}) {
-            TileApplicationError error = assertThrows(
-                    TileApplicationError.class,
+            TypeError error = assertThrows(
+                    TypeError.class,
                     () -> build("Vector<Real> chain ~ ExponentialMarkovChain(initialMean=" + initialMean
                             + ", numValues=2)" + (observed ? " observed as [0.7,1.4]" : "")));
-            assertTrue(error.getMessage().toLowerCase().contains("initial mean"), error.getMessage());
             assertTrue(error.getMessage().contains("initialMean"), error.getMessage());
         }
+
+        // A computed mean can still carry a wider native domain; the tile checks its value.
+        ExponentialMarkovChainTile tile = new ExponentialMarkovChainTile();
+        tile.initialMeanInput.setTile(valueTile(new RealScalarParam<>(Double.parseDouble(initialMean), Real.INSTANCE)));
+        tile.numValuesInput.setTile(valueTile(new IntScalarParam<>(2, NonNegativeInt.INSTANCE)));
+        TileApplicationError error = assertThrows(
+                TileApplicationError.class,
+                () -> tile.applyTile(new BEASTState("invalid-mean"), new IdentityHashMap<>()));
+        assertTrue(error.getMessage().toLowerCase().contains("initial mean"), error.getMessage());
+        assertTrue(error.getMessage().contains("initialMean"), error.getMessage());
     }
 
     @Test
@@ -220,7 +260,7 @@ class ExponentialMarkovChainTileTest {
 
     @Test
     void actualScaleProposalsCanMoveEveryElementWithoutChangingBounds() throws Exception {
-        BEASTState graph = build("Vector<Real> chain ~ ExponentialMarkovChain(initialMean=1.5, numValues=3)");
+        BEASTState graph = build("Vector<PositiveReal> chain ~ ExponentialMarkovChain(initialMean=1.5, numValues=3)");
         RealVectorParam<?> chain = chain(graph);
         Operator operator = operator(graph, chain);
         double lower = chain.getLower();
@@ -236,7 +276,7 @@ class ExponentialMarkovChainTileTest {
             }
         }
         for (boolean changed : moved) assertTrue(changed, "Every chain element must be sampled.");
-        assertSame(Real.INSTANCE, chain.getDomain());
+        assertSame(PositiveReal.INSTANCE, chain.getDomain());
         assertEquals(lower, chain.getLower());
         assertEquals(upper, chain.getUpper());
     }
@@ -323,8 +363,8 @@ class ExponentialMarkovChainTileTest {
 
     @ParameterizedTest
     @ValueSource(doubles = {0.0, -0.5})
-    void invalidLiveMeanProposalsHaveZeroDensityAndRestoreTheAcceptedState(double invalidMean) throws Exception {
-        BEASTState graph = build("Real mean ~ Normal(mean=1.0, sd=0.5)\n" + sharedChains());
+    void nonPositiveLiveMeansAreRejectedByTheDomain(double invalidMean) throws Exception {
+        BEASTState graph = build("PositiveReal mean ~ Gamma(shape=2.0, rate=1.0)\n" + sharedChains());
         RealScalarParam<?> mean = mean(graph);
         RealVectorParam<?> chain = chain(graph);
         List<Distribution> factors = List.of(
@@ -335,26 +375,12 @@ class ExponentialMarkovChainTileTest {
         CompoundDistribution posterior = posterior(factors);
         State state = state(graph, posterior);
         double previousPosterior = state.robustlyCalcPosterior(posterior);
-        double[] previousFactors =
-                factors.stream().mapToDouble(Distribution::getCurrentLogP).toArray();
         double previousMean = mean.get();
-        double[] previousChain = chain.getValues();
         assertTrue(Double.isFinite(previousPosterior));
-        state.store(1);
-        mean.set(invalidMean);
-        state.storeCalculationNodes();
-        state.checkCalculationNodesDirtiness();
-        for (Distribution factor : factors.subList(1, factors.size())) {
-            assertEquals(Double.NEGATIVE_INFINITY, factor.calculateLogP());
-        }
-        assertEquals(Double.NEGATIVE_INFINITY, posterior.calculateLogP());
-        finishProposal(state, false);
+        // The mean is a PositiveReal, so a non-positive value never reaches the chain density.
+        // LiveExponentialMarkovChainDistributionTest covers the density's own support checks.
+        assertThrows(IllegalArgumentException.class, () -> mean.set(invalidMean));
         assertEquals(previousMean, mean.get(), 0.0);
-        assertArrayEquals(previousChain, chain.getValues(), 0.0);
-        for (int i = 0; i < factors.size(); i++) {
-            assertEquals(previousFactors[i], factors.get(i).getCurrentLogP(), TOLERANCE);
-        }
-        assertEquals(previousPosterior, posterior.getCurrentLogP(), TOLERANCE);
         assertEquals(previousPosterior, posterior.calculateLogP(), TOLERANCE);
     }
 
@@ -401,9 +427,9 @@ class ExponentialMarkovChainTileTest {
 
     private static String sharedChains() {
         return """
-                Vector<Real> chain ~ ExponentialMarkovChain(initialMean=mean, numValues=3)
-                Vector<Real> first ~ ExponentialMarkovChain(initialMean=mean, numValues=3) observed as [0.7,1.4,0.9]
-                Vector<Real> second ~ ExponentialMarkovChain(initialMean=mean, numValues=2) observed as [1.1,0.4]
+                Vector<PositiveReal> chain ~ ExponentialMarkovChain(initialMean=mean, numValues=3)
+                Vector<PositiveReal> first ~ ExponentialMarkovChain(initialMean=mean, numValues=3) observed as [0.7,1.4,0.9]
+                Vector<PositiveReal> second ~ ExponentialMarkovChain(initialMean=mean, numValues=2) observed as [1.1,0.4]
                 """;
     }
 

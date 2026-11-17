@@ -1,0 +1,24 @@
+// Classic Bayesian skyline with random group sizes
+// (CRC09 single-cell model).
+Alignment data = fromNexus(file="src/test/java/org/phylospec/resources/primate-mtDNA.nex")
+Taxa taxa = taxa(data)
+PositiveInteger numGroups = 4
+Vector<PositiveInteger> groupSizes ~ RandomComposition(total=numTaxa(data) - 1, numParts=numGroups)
+PositiveReal initialMean ~ LogNormal(logMean=-5.0, logSd=2.0)
+Vector<PositiveReal> populationSizes ~ ExponentialMarkovChain(initialMean=initialMean, numValues=numGroups)
+Tree tree ~ SkylineCoalescent(populationSizes=populationSizes, groupSizes=groupSizes, taxa=taxa)
+Tree fixedEpochTree ~ SkylineCoalescent(populationSizes=[1.0, 2.0], changeTimes=[0.5], taxa=taxa)
+
+// EXPECT AST
+// (AS Alignment data (CA fromNexus (AA file "src/test/java/org/phylospec/resources/primate-mtDNA.nex")))
+// (AS Taxa taxa (CA taxa (AA null data)))
+// (AS PositiveInteger numGroups 4)
+// (DR Vector<PositiveInteger> groupSizes (CA RandomComposition (AA total (- (CA numTaxa (AA null data)) 1)) (AA numParts numGroups)))
+// (DR PositiveReal initialMean (CA LogNormal (AA logMean (- 5.0)) (AA logSd 2.0)))
+// (DR Vector<PositiveReal> populationSizes (CA ExponentialMarkovChain (AA initialMean initialMean) (AA numValues numGroups)))
+// (DR Tree tree (CA SkylineCoalescent (AA populationSizes populationSizes) (AA groupSizes groupSizes) (AA taxa taxa)))
+// (DR Tree fixedEpochTree (CA SkylineCoalescent (AA populationSizes (AR 1.0 2.0)) (AA changeTimes (AR 0.5)) (AA taxa taxa)))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS

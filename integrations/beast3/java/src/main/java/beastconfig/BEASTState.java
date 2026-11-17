@@ -21,11 +21,14 @@ public class BEASTState {
     public final String runName;
     private final Path sourceDirectory;
     private final OutputPaths outputPaths;
+    private final boolean xmlExport;
     private BiConsumer<String, Path> inputObserver = (reference, path) -> {};
     public long chainLength = 10_00_000;
     public int defaultLogEvery = 1000;
     public String outputPrefix;
     public Long randomSeed;
+    /** Optional adapter preparation of the initialized graph immediately before XML serialization. */
+    public java.lang.Runnable prepareXml;
 
     private final List<BEASTObject> beastObjects;
     private final Set<BEASTObject> initializedBeastObjects;
@@ -63,7 +66,20 @@ public class BEASTState {
 
     /** Creates a managed state when outputDirectory is supplied; null preserves legacy behavior. */
     public BEASTState(String runName, Path sourceDirectory, Path outputDirectory) {
+        this(runName, sourceDirectory, outputDirectory, false);
+    }
+
+    public static BEASTState forXmlExport(String runName, Path sourceDirectory) {
+        return new BEASTState(runName, sourceDirectory, null, true);
+    }
+
+    public boolean isXmlExport() {
+        return xmlExport;
+    }
+
+    private BEASTState(String runName, Path sourceDirectory, Path outputDirectory, boolean xmlExport) {
         this.runName = runName;
+        this.xmlExport = xmlExport;
         this.outputPaths = outputDirectory == null ? null : new OutputPaths(outputDirectory);
         this.outputPrefix = resolveUserOutputPath(runName);
         this.sourceDirectory = Objects.requireNonNull(sourceDirectory, "sourceDirectory")

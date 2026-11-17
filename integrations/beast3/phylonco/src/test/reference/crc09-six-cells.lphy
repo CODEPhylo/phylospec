@@ -1,0 +1,29 @@
+data {
+  cellNames = ["c1", "c2", "c3", "c4", "c5", "c6"];
+  mpileup = readMpileup(file="six-cells.mpileup", names=cellNames);
+  r = toReadCount(mpileup=mpileup);
+  l = r.nchar();
+  taxa = taxa(names=cellNames);
+  n = ntaxa(taxa=taxa);
+}
+model {
+  epsilon ~ Beta(alpha=1, beta=30);
+  w1 ~ LogNormal(meanlog=0.1, sdlog=0.5);
+  w2 ~ LogNormal(meanlog=1.0, sdlog=0.8);
+  π ~ Dirichlet(conc=[3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0]);
+  rates ~ Dirichlet(conc=[2.0, 20.0, 2.0, 2.0, 20.0, 2.0]);
+  Q = gt10(rates=rates, freq=π);
+  numGroups = 2;
+  groupSizes ~ RandomComposition(k=numGroups, n=n-1);
+  initialMean ~ LogNormal(meanlog=-5.0, sdlog=2.0);
+  N ~ ExpMarkovChain(initialMean=initialMean, n=numGroups);
+  ψ ~ SkylineCoalescent(groupSizes=groupSizes, taxa=taxa, theta=N);
+  A ~ PhyloCTMC(L=l, Q=Q, dataType=unphasedGenotype(), tree=ψ);
+  s ~ LogNormal(meanlog=0.2, sdlog=0.72, replicates=n);
+  t ~ LogNormal(meanlog=1.7, sdlog=0.05);
+  delta ~ Beta(alpha=1, beta=4);
+  alpha ~ Ploidy(n=n, l=l, delta=delta);
+  v ~ LogNormal(meanlog=2.96, sdlog=0.13);
+  cov ~ CoverageModel(s=s, t=t, alpha=alpha, v=v);
+  r ~ ReadCountModel(epsilon=epsilon, w1=w1, w2=w2, D=A, coverage=cov, alpha=alpha);
+}

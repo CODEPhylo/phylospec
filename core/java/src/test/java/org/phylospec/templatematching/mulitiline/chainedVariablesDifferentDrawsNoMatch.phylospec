@@ -1,0 +1,18 @@
+// TEMPLATE
+Real x ~ Exponential(rate=1.0)
+Real a = x
+Real b = x
+log(x=a + b)
+// TEMPLATE
+
+// QUERY
+Real y ~ Exponential(rate=1.0)
+Real z ~ Exponential(rate=1.0)
+Real c = y
+Real d = z
+log(x=c + d)
+// QUERY
+
+// MATCH
+// NO MATCH
+// MATCH

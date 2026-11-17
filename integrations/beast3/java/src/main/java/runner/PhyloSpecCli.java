@@ -23,6 +23,7 @@ public final class PhyloSpecCli {
 
     private static final String USAGE = """
             Usage: phylospec check [options] <model.phylospec>
+                   phylospec export [options] <model.phylospec> --xml <analysis.xml>
                    phylospec run [options] <model.phylospec>
                    phylospec [options] <model.phylospec>  (legacy run)
                    phylospec --help | --version
@@ -30,12 +31,14 @@ public final class PhyloSpecCli {
             Commands:
               check  Check syntax, static types and BEAST 3 mappings; do not run MCMC.
                      A successful check does not validate all data or native initialization.
+              export Write and load-check a complete BEAST 3 analysis XML without running MCMC.
               run    Check and execute the model with BEAST 3.
 
             Options:
               --engine beast3        Engine (default: beast3; no other engine is supported yet)
               --library <id[,id...]>  Tile libraries in preference order
-              --adapter-path <dir>   check/run: unpacked local adapter bundle (repeatable)
+              --adapter-path <dir>   check/export/run: unpacked local adapter bundle (repeatable)
+              --xml <file>           Export only: destination XML (default log prefix: XML file stem)
               --out <directory>      Run only: exact run directory (must be absent or empty)
               --run-name <prefix>    Run only: relative output prefix (default: script name)
               --debug                Show raw BEAST console output and failure stack traces
@@ -43,7 +46,7 @@ public final class PhyloSpecCli {
               --version              Show PhyloSpec and loaded BEAST runtime versions
               --                     Treat remaining arguments as file names
 
-            check/run default to the base library 'beast2' (its existing internal ID).
+            check/export/run default to the base library 'beast2' (its existing internal ID).
             When libraries are specified, 'beast2' is appended only if absent.
             Adapter paths use the command's working directory and contain direct *.jar files.
             Use --library to select an adapter; supplying its directory does not select it.
@@ -145,6 +148,13 @@ public final class PhyloSpecCli {
             return;
         }
 
+        if (options.command() == Command.EXPORT) {
+            runner.exportXml(options.xmlFile(), warningHandler);
+            out.println("Exported BEAST 3 analysis: "
+                    + options.xmlFile().toAbsolutePath().normalize());
+            return;
+        }
+
         if (options.command() == Command.RUN) {
             String scriptName = withoutExtension(source).getFileName().toString();
             Path runDirectory = options.outputDirectory() == null
@@ -230,6 +240,7 @@ public final class PhyloSpecCli {
 
     enum Command {
         CHECK,
+        EXPORT,
         RUN,
         LEGACY_RUN
     }
@@ -239,6 +250,7 @@ public final class PhyloSpecCli {
             Path source,
             String runName,
             Path outputDirectory,
+            Path xmlFile,
             List<String> libraries,
             List<Path> adapterPaths,
             boolean help,
@@ -252,6 +264,9 @@ public final class PhyloSpecCli {
                 if (arguments[0].equals("check")) {
                     command = Command.CHECK;
                     firstOption = 1;
+                } else if (arguments[0].equals("export")) {
+                    command = Command.EXPORT;
+                    firstOption = 1;
                 } else if (arguments[0].equals("run")) {
                     command = Command.RUN;
                     firstOption = 1;
@@ -260,6 +275,7 @@ public final class PhyloSpecCli {
             Path source = null;
             String runName = null;
             Path outputDirectory = null;
+            Path xmlFile = null;
             List<String> libraries = new ArrayList<>();
             List<Path> adapterPaths = new ArrayList<>();
             boolean help = false;
@@ -319,6 +335,11 @@ public final class PhyloSpecCli {
                             throw new IllegalArgumentException("--out requires a non-blank directory.");
                         outputDirectory = Path.of(value);
                     }
+                    case "--xml" -> {
+                        String value = requireValue(arguments, ++index, "--xml");
+                        if (value.isBlank()) throw new IllegalArgumentException("--xml requires a non-blank file.");
+                        xmlFile = Path.of(value);
+                    }
                     default -> {
                         if (argument.startsWith("-")) {
                             throw new IllegalArgumentException("Unknown option: " + argument);
@@ -333,14 +354,20 @@ public final class PhyloSpecCli {
 
             if (!help && !version) {
                 if (source == null) throw new IllegalArgumentException("A PhyloSpec source file is required.");
-                if (command == Command.CHECK && runName != null) {
+                if ((command == Command.CHECK || command == Command.EXPORT) && runName != null) {
                     throw new IllegalArgumentException("--run-name is only supported for run.");
+                }
+                if (command == Command.EXPORT && xmlFile == null) {
+                    throw new IllegalArgumentException("The export subcommand requires --xml <file>.");
+                }
+                if (command != Command.EXPORT && xmlFile != null) {
+                    throw new IllegalArgumentException("--xml is only supported for the export subcommand.");
                 }
                 if (command != Command.RUN && outputDirectory != null) {
                     throw new IllegalArgumentException("--out is only supported for the run subcommand.");
                 }
                 if (command == Command.LEGACY_RUN && !adapterPaths.isEmpty()) {
-                    throw new IllegalArgumentException("--adapter-path is only supported for check/run subcommands.");
+                    throw new IllegalArgumentException("--adapter-path is only supported for check/export/run.");
                 }
                 if (command == Command.LEGACY_RUN && libraries.isEmpty()) {
                     throw new IllegalArgumentException("At least one --library must be supplied.");
@@ -354,6 +381,7 @@ public final class PhyloSpecCli {
                     source,
                     runName,
                     outputDirectory,
+                    xmlFile,
                     List.copyOf(libraries),
                     List.copyOf(adapterPaths),
                     help,
@@ -363,7 +391,11 @@ public final class PhyloSpecCli {
 
         String action() {
             if (version) return "read version information";
-            return command == Command.CHECK ? "check the PhyloSpec model" : "run the PhyloSpec model";
+            return switch (command) {
+                case CHECK -> "check the PhyloSpec model";
+                case EXPORT -> "export the BEAST 3 XML";
+                default -> "run the PhyloSpec model";
+            };
         }
 
         private static String requireValue(String[] arguments, int index, String option) {
