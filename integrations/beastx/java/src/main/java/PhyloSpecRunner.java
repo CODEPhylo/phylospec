@@ -93,6 +93,19 @@ public class PhyloSpecRunner implements ErrorEventListener {
         runner.matchTiles(runner.parseAndResolve());
     }
 
+    /** Builds the public XML export model using the script directory for every input Tile. */
+    static BeastXModel buildXmlExportModel(Path script, String defaultPrefix, Consumer<String> warningHandler,
+                                           Consumer<Path> inputObserver)
+            throws IOException {
+        Path source = script.toAbsolutePath().normalize();
+        PhyloSpecRunner runner = new PhyloSpecRunner(
+                readSource(source), new Workspace(source.getParent()), warningHandler);
+        BeastXState state = new BeastXState(defaultPrefix, source.getParent(), inputObserver);
+        runner.tile(runner.parseAndResolve(), state);
+        state.configureDefaultXmlLoggers(defaultPrefix);
+        return runner.runPipeline.buildModel(state, false);
+    }
+
     /**
      * Builds an XML run for a source file and writes it to the requested path.
      */
@@ -407,9 +420,13 @@ public class PhyloSpecRunner implements ErrorEventListener {
             ParsedPhyloSpec parsed,
             String runName
     ) {
+        return tile(parsed, new BeastXState(runName));
+    }
+
+    private BeastXState tile(ParsedPhyloSpec parsed, BeastXState state) {
         EvaluateTiles<BeastXState> tiles = matchTiles(parsed);
         try {
-            return tiles.applyBestTiling(new BeastXState(runName));
+            return tiles.applyBestTiling(state);
         } catch (TileApplicationError error) {
             throw tilingFailure(parsed, error);
         }

@@ -69,7 +69,7 @@ public class FromCSVTile extends GeneratorTile<List<Map<String, String>>, BeastX
                 this.headersInput.apply(beastState, indexVariables);
 
         List<String> lines =
-                readLines(file);
+                readLines(beastState.resolveInput(file));
 
         if (lines.isEmpty()) {
             throw new TileApplicationError(
@@ -138,9 +138,9 @@ public class FromCSVTile extends GeneratorTile<List<Map<String, String>>, BeastX
         return rows;
     }
 
-    private static List<String> readLines(String file) {
+    private static List<String> readLines(Path file) {
         try {
-            return Files.readAllLines(Path.of(file));
+            return Files.readAllLines(file);
         } catch (IOException e) {
             throw new TileApplicationError(
                     "Could not read CSV file.",

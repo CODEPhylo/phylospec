@@ -97,16 +97,32 @@ public class XmlElement {
         return text;
     }
 
+    // BEAST X's XMLWriter prints values verbatim. Keep the model values raw until serialization.
+    static String attributeValue(Object value) {
+        return escapeText(String.valueOf(value)).replace("\"", "&quot;")
+                .replace("\t", "&#9;").replace("\n", "&#10;").replace("\r", "&#13;");
+    }
+
+    private static String escapeText(String value) {
+        return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
     public void write(XMLWriter writer) {
+        Attribute[] encoded = new Attribute[attributes.size()];
+        for (int i = 0; i < attributes.size(); i++) {
+            Attribute attribute = attributes.get(i);
+            encoded[i] = new Attribute.Default<>(attribute.getAttributeName(), attributeValue(attribute.getAttributeValue()));
+        }
+
         if (children.isEmpty() && (text == null || text.isBlank())) {
-            writer.writeTag(tag, attributes.toArray(Attribute[]::new), true);
+            writer.writeTag(tag, encoded, true);
             return;
         }
 
-        writer.writeOpenTag(tag, attributes);
+        writer.writeOpenTag(tag, encoded);
 
         if (text != null && !text.isBlank()) {
-            writer.writeText(text);
+            writer.writeText(escapeText(text));
         }
 
         for (XmlElement child : children) {

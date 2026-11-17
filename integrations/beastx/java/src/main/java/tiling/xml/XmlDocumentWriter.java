@@ -118,7 +118,7 @@ public class XmlDocumentWriter {
         List<Attribute> attributes =
                 new ArrayList<>();
 
-        attributes.add(new Attribute.Default<>(XMLParser.ID, state.runName + "_mcmc"));
+        attributes.add(new Attribute.Default<>(XMLParser.ID, XmlElement.attributeValue(state.runName + "_mcmc")));
         attributes.add(new Attribute.Default<>("chainLength", state.chainLength));
         attributes.add(new Attribute.Default<>("autoOptimize", "true"));
 

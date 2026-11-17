@@ -14,12 +14,14 @@ import tiling.model.StartingTreeSpec;
 import tiling.params.BeastXParam;
 import tiling.xml.XmlPlan;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Intermediate state produced while evaluating BEAST X tiles.
@@ -34,6 +36,8 @@ import java.util.Set;
 public class BeastXState {
 
     public final String runName;
+    private final Path inputDirectory;
+    private final Consumer<Path> inputObserver;
 
     // BEAST X parameters that are part of the MCMC state.
     public final Map<Parameter, TypeToken<?>> stateNodes;
@@ -74,7 +78,13 @@ public class BeastXState {
     private final Set<String> ids;
 
     public BeastXState(String runName) {
+        this(runName, Path.of(""), path -> {});
+    }
+
+    public BeastXState(String runName, Path inputDirectory, Consumer<Path> inputObserver) {
         this.runName = runName;
+        this.inputDirectory = inputDirectory;
+        this.inputObserver = inputObserver;
         this.stateNodes = new HashMap<>();
         this.stateNodesByPhyloSpecName = new HashMap<>();
         this.calculationNodes = new HashMap<>();
@@ -278,6 +288,36 @@ public class BeastXState {
         );
     }
     
+    /** A relative input belongs to the source file; the CLI also protects that file during export. */
+    public Path resolveInput(String file) {
+        Path path = inputDirectory.resolve(file);
+        inputObserver.accept(path);
+        return path;
+    }
+
+    /** Fill only missing logger kinds on the freshly built export state, before XML planning. */
+    public void configureDefaultXmlLoggers(String fallbackPrefix) {
+        String prefix = outputPrefix == null ? fallbackPrefix : outputPrefix;
+        if (screenLoggerSpecs.isEmpty() || fileLoggerSpecs.isEmpty()) {
+            List<String> columns = new ArrayList<>();
+            boolean hasLikelihood = !likelihoodDistributions.isEmpty() || !observedTreeDistributions.isEmpty();
+            if (hasLikelihood) columns.add("posterior");
+            columns.add("prior");
+            if (hasLikelihood) columns.add("likelihood");
+            for (String tree : treeModelsByPhyloSpecName.keySet().stream().sorted().toList()) {
+                columns.add(tree + ".height");
+                columns.add(tree + ".treeLength");
+            }
+            columns.addAll(stateNodesByPhyloSpecName.keySet().stream().sorted().toList());
+            if (screenLoggerSpecs.isEmpty()) addScreenLoggerSpec(defaultLogEvery, columns);
+            if (fileLoggerSpecs.isEmpty()) addFileLoggerSpec(defaultLogEvery, prefix + ".log", columns);
+        }
+        if (treeLoggerSpecs.isEmpty() && !treePriorDistributions.isEmpty()) {
+            addTreeLoggerSpec(defaultLogEvery, prefix + ".trees",
+                    treeModelsByPhyloSpecName.keySet().stream().sorted().toList());
+        }
+    }
+
     public void addScreenLoggerSpec(long logEvery, List<String> parameterNames) {
         this.screenLoggerSpecs.add(new ScreenLoggerSpec(logEvery, parameterNames));
     }

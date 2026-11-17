@@ -6,18 +6,21 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.spi.ToolProvider;
 
-/** Runs an installed engine's static checker without exposing the BEAST 3 host classpath. */
-final class InstalledEngineCheck {
-    private InstalledEngineCheck() {}
+/** Runs a packaged engine tool without exposing the BEAST 3 host classpath. */
+final class InstalledEngineTool {
+    private InstalledEngineTool() {}
 
-    static int run(String engine, Path source, boolean debug, PrintStream out, PrintStream err) throws IOException {
+    static int run(PhyloSpecCli.Options options, Path source, PrintStream out, PrintStream err) throws IOException {
+        String engine = options.engine();
+        String command = options.command().name().toLowerCase(java.util.Locale.ROOT);
         String home = System.getProperty("phylospec.home");
         if (home == null || home.isBlank()) {
-            throw new IOException("Use the installed phylospec launcher to check with " + engine + ".");
+            throw new IOException("Use the installed phylospec launcher for " + engine + " " + command + ".");
         }
         Path lib = Path.of(home).resolve("engines").resolve(engine).resolve("lib");
         if (!Files.isDirectory(lib)) {
@@ -39,15 +42,23 @@ final class InstalledEngineCheck {
             try {
                 // Core also discovers Tile libraries and type-property providers via the context loader.
                 thread.setContextClassLoader(loader);
-                String name = "phylospec-" + engine + "-check";
+                String name = "phylospec-" + engine + "-" + command;
                 for (ToolProvider tool : ServiceLoader.load(ToolProvider.class, loader)) {
                     if (name.equals(tool.name())) {
-                        String[] args =
-                                debug ? new String[] {source.toString(), "--debug"} : new String[] {source.toString()};
-                        return tool.run(out, err, args);
+                        List<String> args = new ArrayList<>();
+                        args.add(source.toString());
+                        if (options.xmlFile() != null) {
+                            args.add(options.xmlFile()
+                                    .toAbsolutePath()
+                                    .normalize()
+                                    .toString());
+                        }
+                        if (options.debug()) args.add("--debug");
+                        return tool.run(out, err, args.toArray(String[]::new));
                     }
                 }
-                throw new IOException("Missing " + engine + " checker in " + lib + ". Extract the complete CLI ZIP.");
+                throw new IOException(
+                        "Missing " + engine + " " + command + " tool in " + lib + ". Extract the complete CLI ZIP.");
             } finally {
                 thread.setContextClassLoader(previous);
             }

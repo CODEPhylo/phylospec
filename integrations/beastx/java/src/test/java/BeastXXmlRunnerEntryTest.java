@@ -2,12 +2,15 @@ import dr.inference.mcmc.MCMC;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.io.TempDir;
+import tiling.BeastXState;
 import tiling.runner.BeastXRunResult;
 import tiling.runner.XmlRunResult;
 import tiling.runner.XmlRunnerOptions;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -15,6 +18,32 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BeastXXmlRunnerEntryTest {
+
+    @Test
+    void publicExportKeepsExplicitFileLoggerAndFillsMissingKinds(@TempDir Path directory) throws Exception {
+        Path script = directory.resolve("scalar.phylospec");
+        Files.writeString(script, """
+                Real x ~ Normal(mean=0.0, sd=1.0)
+                mcmc {
+                    Integer defaultLogEvery = 3
+                    String outputPrefix = "userPrefix"
+                    Logger fileLogger = fileLogger(logEvery=7, file="selected.log", parameters=[x])
+                }
+                """);
+        BeastXState state = PhyloSpecRunner.buildXmlExportModel(script, "exported", warning -> {}, path -> {}).beastState;
+        assertEquals(List.of(new BeastXState.ScreenLoggerSpec(3, List.of("prior", "x"))), state.screenLoggerSpecs);
+        assertEquals(List.of(new BeastXState.FileLoggerSpec(7, "selected.log", List.of("x"))), state.fileLoggerSpecs);
+        assertTrue(state.treeLoggerSpecs.isEmpty());
+    }
+
+    @Test
+    void publicExportDerivesLogPrefixFromXmlStemWhenOmitted(@TempDir Path directory) throws Exception {
+        Path script = directory.resolve("scalar.phylospec");
+        Files.writeString(script, "Real x ~ Normal(mean=0.0, sd=1.0)");
+        BeastXState state = PhyloSpecRunner.buildXmlExportModel(script, "renamed", warning -> {}, path -> {}).beastState;
+        assertEquals("renamed.log", state.fileLoggerSpecs.getFirst().fileName());
+        assertTrue(state.treeLoggerSpecs.isEmpty());
+    }
 
     @Test
     public void phyloSpecRunnerWritesAndRunsXmlMCMCThroughSingleEntryPoint() throws Exception {

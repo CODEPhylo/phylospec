@@ -18,7 +18,7 @@ import org.phylospec.errors.Error;
 import org.phylospec.tiling.errors.WrappedTileApplicationError;
 import org.xml.sax.SAXException;
 
-/** Command-line entry point for checking PhyloSpec scripts and running BEAST 3 analyses. */
+/** Command-line entry point for checking scripts, exporting analysis XML and running BEAST 3 analyses. */
 public final class PhyloSpecCli {
 
     private static final String USAGE = """
@@ -31,11 +31,11 @@ public final class PhyloSpecCli {
             Commands:
               check  Check syntax, static types and mappings for the selected engine; do not run MCMC.
                      A successful check does not validate all data or native initialization.
-              export Write and load-check a complete BEAST 3 analysis XML without running MCMC.
+              export Write and load-check analysis XML for the selected engine without running MCMC.
               run    Check and execute the model with BEAST 3.
 
             Options:
-              --engine <id>          check: beast3 (default) or beastx; export and run: beast3
+              --engine <id>          check/export: beast3 (default) or beastx; run: beast3
               --library <id[,id...]>  Tile libraries in preference order
               --adapter-path <dir>   check/export/run: unpacked local adapter bundle (repeatable)
               --xml <file>           Export only: destination XML (default log prefix: XML file stem)
@@ -46,7 +46,7 @@ public final class PhyloSpecCli {
               --version              Show PhyloSpec and the default BEAST 3 runtime versions
               --                     Treat remaining arguments as file names
 
-            BEAST X check uses its base library 'beastX' and does not load local adapters.
+            BEAST X check/export uses its base library 'beastX' and does not load local adapters.
             BEAST 3 check/export/run default to the base library 'beast2' (its existing internal ID).
             When libraries are specified, 'beast2' is appended only if absent.
             Adapter paths use the command's working directory and contain direct *.jar files.
@@ -103,8 +103,9 @@ public final class PhyloSpecCli {
 
     /** Executes a command without terminating the calling JVM. */
     public static void execute(String[] arguments) throws IOException, ParserConfigurationException, SAXException {
-        if (execute(Options.parse(arguments), System.out, System.err) != 0) {
-            throw new IOException("PhyloSpec check failed. See the diagnostic above.");
+        Options options = Options.parse(arguments);
+        if (execute(options, System.out, System.err) != 0) {
+            throw new IOException("Could not " + options.action() + ". See the diagnostic above.");
         }
     }
 
@@ -126,7 +127,7 @@ public final class PhyloSpecCli {
         }
 
         if (options.engine().equals("beastx")) {
-            return InstalledEngineCheck.run(options.engine(), source, options.debug(), out, err);
+            return InstalledEngineTool.run(options, source, out, err);
         }
         try (LocalAdapterBundles adapters = LocalAdapterBundles.open(options.adapterPaths())) {
             executeModel(options, source, adapters, out, err);
@@ -367,12 +368,13 @@ public final class PhyloSpecCli {
             String engine = selectedEngine == null ? "beast3" : selectedEngine;
             if (!help && !version) {
                 if (engine.equals("beastx")) {
-                    if (command != Command.CHECK) {
-                        throw new IllegalArgumentException("BEAST X is currently available only for check.");
+                    if (command != Command.CHECK && command != Command.EXPORT) {
+                        throw new IllegalArgumentException(
+                                "BEAST X is available for check and export. Run requires beast3.");
                     }
                     if (!adapterPaths.isEmpty() || !libraries.isEmpty() && !libraries.equals(List.of("beastX"))) {
                         throw new IllegalArgumentException(
-                                "BEAST X check supports only the base library beastX and no --adapter-path.");
+                                "BEAST X supports only the base library beastX and no --adapter-path.");
                     }
                 }
                 if (source == null) throw new IllegalArgumentException("A PhyloSpec source file is required.");
@@ -417,7 +419,7 @@ public final class PhyloSpecCli {
             if (version) return "read version information";
             return switch (command) {
                 case CHECK -> "check the PhyloSpec model";
-                case EXPORT -> "export the BEAST 3 XML";
+                case EXPORT -> "export the analysis XML";
                 default -> "run the PhyloSpec model";
             };
         }

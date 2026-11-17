@@ -39,7 +39,7 @@ public class FromTreeTile extends GeneratorTile<DefaultTreeModel, BeastXState> {
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
         String path =
-                this.fileInput.apply(beastState, indexVariables);
+                beastState.resolveInput(this.fileInput.apply(beastState, indexVariables)).toString();
 
         Tree tree;
         if (isNexusPath(path)) {

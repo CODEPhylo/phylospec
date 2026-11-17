@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPathFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
@@ -53,7 +54,7 @@ class CliDistributionIT {
         workingDirectory = Files.createDirectory(temporary.resolve("independent working directory"))
                 .toRealPath();
         processLogs = Files.createDirectory(temporary.resolve("process logs"));
-        Result extracted = execute(List.of("unzip", "-q", archive.toString(), "-d", extraction.toString()));
+        Result extracted = execute(List.of("unzip", "-q", archive.toString(), "-d", extraction.toString()), Map.of());
         assertEquals(0, extracted.exitCode(), extracted.details());
         try (var entries = Files.list(extraction)) {
             List<Path> roots = entries.toList();
@@ -156,15 +157,70 @@ class CliDistributionIT {
     }
 
     @Test
-    void packagedBeastXRejectsExecutionAndXmlExport() throws Exception {
+    void packagedBeastXRejectsExecution() throws Exception {
         String script = installation.resolve("examples/hky-yule.phylospec").toString();
-        for (Result result : List.of(
-                launch("run", "--engine", "beastx", script, "--out", "results"),
-                launch("export", "--engine", "beastx", script, "--xml", "analysis.xml"))) {
-            assertEquals(2, result.exitCode(), result.details());
-            assertTrue(result.stderr().contains("beastx"), result.details());
-        }
+        Result result = launch("run", "--engine", "beastx", script, "--out", "results");
+        assertEquals(2, result.exitCode(), result.details());
         assertTrue(fileNames(workingDirectory).isEmpty());
+    }
+
+    @Test
+    void packagedBeastXExportsHkyYuleWithoutWritingLogs() throws Exception {
+        Path source = installation.resolve("examples/hky-yule.phylospec");
+        Path directory = Files.createDirectory(workingDirectory.resolve("exported XML"));
+        Path xml = directory.resolve("analysis.xml");
+        // Native XML loading can open loggers in the caller's directory. Check both plausible locations.
+        Files.writeString(workingDirectory.resolve("hky-yule.log"), "previous trace");
+        Files.writeString(directory.resolve("hky-yule.trees"), "previous trees");
+        Map<Path, String> before = hashes(workingDirectory);
+        Map<Path, String> sourceFiles = hashes(source.getParent());
+
+        // Native load-checks of sequence likelihoods require BEAGLE. Only the generic ZIP needs
+        // the separately installed test runtime; exercise the Apple Silicon ZIP's own CPU libraries.
+        Map<String, String> nativeEnvironment = BUNDLED_BEAGLE
+                ? Map.of()
+                : Map.of(
+                        "JDK_JAVA_OPTIONS",
+                        "\"-Djava.library.path=" + System.getProperty("java.library.path")
+                                + "\" -Dbeagle.resource.order=0");
+        Result result = launch(
+                nativeEnvironment,
+                "export",
+                "--engine",
+                "beastx",
+                source.toString(),
+                "--xml",
+                workingDirectory.relativize(xml).toString());
+        assertEquals(0, result.exitCode(), result.details());
+
+        var document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xml.toFile());
+        var xpath = XPathFactory.newInstance().newXPath();
+        for (String condition : List.of(
+                "count(/beast/alignment/sequence) = 12",
+                "count(/beast/alignment/sequence[string-length(normalize-space(.)) = 898]) = 12",
+                "/beast/siteModel/substitutionModel/hkyModel/@idref = /beast/hkyModel/@id",
+                "/beast/treeLikelihood/strictClockBranchRates/@idref = /beast/strictClockBranchRates/@id",
+                "//speciationLikelihood/model/yuleModel/@idref = /beast/yuleModel/@id",
+                "/beast/mcmc/joint/likelihood/treeLikelihood/@idref = /beast/treeLikelihood/@id",
+                "/beast/mcmc/@chainLength = '30'",
+                "count(/beast/mcmc/log[not(@fileName) and @logEvery='1']) = 1",
+                "count(/beast/mcmc/log[@fileName='hky-yule.log' and @logEvery='1']) = 1",
+                "/beast/mcmc/log[@fileName]/parameter/@idref = /beast/hkyModel/kappa/parameter/@idref",
+                "/beast/mcmc/log[@fileName]/parameter/@idref = /beast/frequencyModel/frequencies/parameter/@idref",
+                "count(/beast/mcmc/logTree[@fileName='hky-yule.trees' and @logEvery='1']) = 1")) {
+            assertTrue(xpath.evaluateExpression(condition, document, Boolean.class), condition);
+        }
+
+        Path alignment = source.getParent().resolve("data/primate-mtDNA.nex");
+        Result collision = launch(
+                nativeEnvironment, "export", "--engine", "beastx", source.toString(), "--xml", alignment.toString());
+        assertEquals(1, collision.exitCode(), collision.details());
+        assertTrue(collision.stderr().contains(alignment.toString()), collision.details());
+
+        Map<Path, String> after = hashes(workingDirectory);
+        after.remove(workingDirectory.relativize(xml));
+        assertEquals(before, after, "Only the requested XML may be written");
+        assertEquals(sourceFiles, hashes(source.getParent()), "Export must preserve the tutorial and data");
     }
 
     @Test
@@ -485,13 +541,17 @@ class CliDistributionIT {
     }
 
     private Result launch(String... arguments) throws Exception {
+        return launch(Map.of(), arguments);
+    }
+
+    private Result launch(Map<String, String> environment, String... arguments) throws Exception {
         List<String> command = new ArrayList<>();
         command.add(installation.resolve("bin/phylospec").toString());
         command.addAll(List.of(arguments));
-        return execute(command);
+        return execute(command, environment);
     }
 
-    private Result execute(List<String> command) throws Exception {
+    private Result execute(List<String> command, Map<String, String> environment) throws Exception {
         Path stdout = Files.createTempFile(processLogs, "stdout-", ".txt");
         Path stderr = Files.createTempFile(processLogs, "stderr-", ".txt");
         ProcessBuilder builder = new ProcessBuilder(command)
@@ -512,6 +572,7 @@ class CliDistributionIT {
                 "LD_LIBRARY_PATH")) {
             builder.environment().remove(name);
         }
+        builder.environment().putAll(environment);
         if (BUNDLED_BEAGLE) builder.environment().put("PATH", "/usr/bin:/bin:/usr/sbin:/sbin");
         Process child = builder.start();
         try {

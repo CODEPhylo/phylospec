@@ -1,9 +1,9 @@
 # PhyloSpec command line
 
-The CLI can check a `.phylospec` script against BEAST 3 or BEAST X. BEAST 3
-is the default and also supports XML export and MCMC execution.
+The CLI can check a `.phylospec` script and export analysis XML for BEAST 3
+or BEAST X. BEAST 3 is the default and supports MCMC execution with `run`.
 The ZIP includes both engines' Java dependencies. The macOS Apple Silicon ZIP
-also includes BEAGLE's native CPU libraries for BEAST 3.
+also includes BEAGLE's native CPU libraries.
 The examples demonstrate supported workflows; they do not establish support for
 every model or constitute complete scientific analyses.
 
@@ -31,7 +31,7 @@ Choose the ZIP for your platform:
 | ZIP suffix | Included calculation backend |
 | --- | --- |
 | `-cli-macos-arm64.zip` | macOS Apple Silicon: bundled BEAGLE CPU. Requires ARM64 Java 25 or newer; no separate BEAGLE installation, Homebrew, or library-path configuration is needed. |
-| `-cli.zip` | Generic Java distribution. BEAST can use its Java implementation without BEAGLE. Native BEAGLE libraries are not included. |
+| `-cli.zip` | Generic Java distribution. BEAST 3 supports a Java likelihood fallback. BEAST X XML load-checks of sequence likelihoods require a separate native BEAGLE runtime. |
 
 Set `PHYLOSPEC_ZIP` to your ZIP's actual location. These commands use the current
 `0.0.1-SNAPSHOT` macOS Apple Silicon distribution. For the generic distribution,
@@ -273,8 +273,8 @@ choose a new `--out` directory, such as `results/run-02`.
 
 | Option | Meaning |
 | --- | --- |
-| `--engine <id>` | For `check`, select `beast3` (default) or `beastx`. `export` and `run` support BEAST 3. |
-| `--library <id[,id...]>` | Select BEAST 3 tile libraries in preference order. BEAST X checks use its base library, `beastX`. |
+| `--engine <id>` | For `check` and `export`, select `beast3` (default) or `beastx`. The `run` command supports BEAST 3. |
+| `--library <id[,id...]>` | Select BEAST 3 tile libraries in preference order. BEAST X checking and export use its base library, `beastX`. |
 | `--adapter-path <directory>` | Load an unpacked local BEAST 3 adapter bundle for `check`, `export` or `run`. Repeat for additional bundles. |
 | `--xml <file>` | Destination for `export`. The XML contains the model and its MCMC configuration. The filename stem supplies the default log prefix. |
 | `--out <directory>` | For `run`: exact directory for this run's record, logs, and outputs. |
@@ -289,7 +289,7 @@ library ID. When libraries are explicitly selected, their order is preserved and
 `beast2` is appended only if absent. `--library` selects an available provider; it
 does not download models or add JARs to the classpath.
 
-## Export a BEAST 3 analysis XML
+## Export a native analysis XML
 
 ```sh
 "$PHYLOSPEC_DIR/bin/phylospec" export model.phylospec --xml analysis.xml
@@ -299,6 +299,23 @@ The command builds the model and checks that BEAST can load the XML before
 replacing the destination file. The destination must be separate from the script
 and its declared input files. Load the exported file with the BEAST packages
 required by its model classes. Supply a seed to BEAST when running the XML.
+
+To export the same HKY and Yule tutorial for BEAST X from any working directory:
+
+```sh
+"$PHYLOSPEC_DIR/bin/phylospec" export --engine beastx \
+  "$PHYLOSPEC_DIR/examples/hky-yule.phylospec" --xml hky-yule-beastx.xml
+```
+
+The input alignment is resolved beside the script. The XML contains the alignment,
+the 30-step MCMC configuration and the default loggers for `hky-yule.log` and
+`hky-yule.trees` at interval 1. Export validates the model with BEAST X and
+publishes the XML without running the chain or opening those user log files.
+The packaged Apple Silicon CPU runtime supports the native likelihood load-check.
+With a generic ZIP, configure an installed BEAGLE JNI and CPU plugin for this
+validation, for example by setting `JDK_JAVA_OPTIONS` to
+`"-Djava.library.path=/absolute/path/to/beagle/lib" -Dbeagle.resource.order=0`
+when invoking the launcher.
 
 ## Use a local extension
 
@@ -411,6 +428,7 @@ unset for this regression so the BEAST X tests can exercise BEAGLE. The installe
 CLI can perform a static `check` for either engine without this Maven setup.
 
 A minimal acceptance pass checks the same HKY and Yule script against both engines,
+exports its BEAST X analysis XML while preserving existing trace and tree logs,
 checks help/version, runs the bundled BEAST 3 examples from
 another working directory (including paths with spaces), verifies successful
 `run.json` and nonempty output files, rejects an existing output directory, and
@@ -464,8 +482,7 @@ compatibility or long-chain convergence.
 ## Run the Java entry point directly
 
 Developers can also invoke `runner.PhyloSpecCli` without a ZIP. These commands
-build a BEAST 3 runtime classpath from the same checkout. For the dual-engine
-`check` workflow above, use the packaged launcher.
+build a BEAST 3 runtime classpath from the same checkout. For BEAST X `check` and `export`, use the packaged launcher.
 Use Java **25** and Maven, starting at the repository root in one terminal session.
 
 ```sh
