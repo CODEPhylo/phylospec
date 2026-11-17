@@ -13,6 +13,7 @@ import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.AstNodeTile;
 import org.phylospec.tiling.tiles.Tile;
+import org.phylospec.tiling.tiles.TilePriority;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiling.ScaledScalar;
@@ -31,6 +32,12 @@ public abstract class ScaleTile extends AstNodeTile<RealScalar<NonNegativeReal>,
     @Override
     public Class<Expr.Binary> getTargetNodeType() {
         return Expr.Binary.class;
+    }
+
+    /** Arithmetic keeps the RPN path wherever it fits, so this tile is only used where a scalar is required. */
+    @Override
+    public TilePriority getPriority() {
+        return TilePriority.LOW;
     }
 
     @Override
