@@ -44,6 +44,8 @@ module org.phylospec.beast3 {
     opens tiles.trees to
             org.phylospec.core;
 
+    uses java.util.spi.ToolProvider;
+
     provides org.phylospec.tiling.TileLibrary with
             tiles.BeastCoreTileLibrary;
 }

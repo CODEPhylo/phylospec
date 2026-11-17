@@ -1,9 +1,9 @@
-# PhyloSpec command line with BEAST 3
+# PhyloSpec command line
 
-The CLI can check a `.phylospec` script, export a BEAST 3 analysis XML, or run an analysis.
-The ZIP includes the PhyloSpec runtime, the base BEAST integration,
-and their Java dependencies. The macOS Apple Silicon ZIP also includes BEAGLE's
-native CPU libraries. Only BEAST 3 is supported by this entry point.
+The CLI can check a `.phylospec` script against BEAST 3 or BEAST X. BEAST 3
+is the default and also supports XML export and MCMC execution.
+The ZIP includes both engines' Java dependencies. The macOS Apple Silicon ZIP
+also includes BEAGLE's native CPU libraries for BEAST 3.
 The examples demonstrate supported workflows; they do not establish support for
 every model or constitute complete scientific analyses.
 
@@ -94,7 +94,15 @@ editor; no changes are needed for this first run.
 "$PHYLOSPEC_DIR/bin/phylospec" check "$PHYLOSPEC_PROJECT/hky-yule.phylospec"
 ```
 
-Continue when you see `Check passed`:
+This checks the script against BEAST 3. To check the same model against the
+BEAST X base library, use the same installation and script:
+
+```sh
+"$PHYLOSPEC_DIR/bin/phylospec" check --engine beastx "$PHYLOSPEC_PROJECT/hky-yule.phylospec"
+```
+
+The success message identifies the selected engine. To run the BEAST 3 analysis
+after its check passes:
 
 ```sh
 PHYLOSPEC_RUN="$PHYLOSPEC_PROJECT/results/run-01"
@@ -105,8 +113,7 @@ PHYLOSPEC_RUN="$PHYLOSPEC_PROJECT/results/run-01"
 `check` validates syntax, static types, and available BEAST mappings. It does not
 run MCMC or validate all data and native initialization. Some checks can inspect
 inputs while resolving their types. `run` reuses these checks,
-builds the native model, and runs MCMC. Both default to the base library `beast2`
-(the existing internal ID for this BEAST integration).
+builds the native BEAST 3 model, and runs MCMC.
 
 `run` reports four stages: checking, model construction and initialization, MCMC,
 and output verification. It also reports the initialized likelihood backend for
@@ -266,9 +273,9 @@ choose a new `--out` directory, such as `results/run-02`.
 
 | Option | Meaning |
 | --- | --- |
-| `--engine beast3` | Select the supported engine; `beast3` is already the default. |
-| `--library <id[,id...]>` | Select tile libraries available on the runtime classpath, in preference order. |
-| `--adapter-path <directory>` | Load an unpacked local adapter bundle for `check`, `export` or `run`. Repeat for additional bundles. |
+| `--engine <id>` | For `check`, select `beast3` (default) or `beastx`. `export` and `run` support BEAST 3. |
+| `--library <id[,id...]>` | Select BEAST 3 tile libraries in preference order. BEAST X checks use its base library, `beastX`. |
+| `--adapter-path <directory>` | Load an unpacked local BEAST 3 adapter bundle for `check`, `export` or `run`. Repeat for additional bundles. |
 | `--xml <file>` | Destination for `export`. The XML contains the model and its MCMC configuration. The filename stem supplies the default log prefix. |
 | `--out <directory>` | For `run`: exact directory for this run's record, logs, and outputs. |
 | `--run-name <prefix>` | For `run`: relative output prefix, unless the script sets `outputPrefix`. |
@@ -277,7 +284,7 @@ choose a new `--out` directory, such as `results/run-02`.
 | `--version` | Show PhyloSpec and loaded BEAST runtime versions. |
 | `--` | Treat the remaining argument as the script filename, including a name beginning with `-`. |
 
-`check`, `export` and `run` default to `beast2`, the base integration's existing internal
+For BEAST 3, `check`, `export` and `run` default to `beast2`, the base integration's existing internal
 library ID. When libraries are explicitly selected, their order is preserved and
 `beast2` is appended only if absent. `--library` selects an available provider; it
 does not download models or add JARs to the classpath.
@@ -354,11 +361,35 @@ establish MCMC convergence.
 
 ## Build the distribution from source
 
-Developers need Java 25 and Maven. From the repository root:
+Developers need Java 25 and Maven. When building the ZIP for the first time,
+install the pinned BEAST X runtime into your local Maven repository. This step
+is only needed when building from source. From the repository root:
+
+```sh
+./integrations/beastx/install-beast-mcmc.sh
+```
+
+The verification build includes BEAST X tests that execute native tree likelihoods.
+Point the forked test JVM at a BEAGLE installation with a JNI bridge and a CPU
+plugin. On macOS Apple Silicon, the `native/macos-arm64` directory of an
+already extracted PhyloSpec CPU ZIP contains both. If building from scratch on
+that platform, the repository's existing build script can prepare the same
+libraries in a fresh directory outside the Maven build:
+
+```sh
+beagle_build=$(mktemp -d)
+sh integrations/beast3/java/src/main/native/beagle/build-macos-arm64.sh "$beagle_build"
+beagle_cpu_lib="$beagle_build/macos-arm64"
+```
+
+If reusing an extracted CPU ZIP, set `beagle_cpu_lib` to its absolute native
+directory instead. Use the CPU library directory for your platform when running
+the following verification:
 
 ```sh
 mvn -pl integrations/beast3/java -am -Pcli-dist \
-  -Djava.only=true -Djsonschema2pojo.skip=true -Dspotless.skip=true verify
+  "-DargLine=--enable-native-access=ALL-UNNAMED -Djava.library.path=\"$beagle_cpu_lib\" -Dbeagle.resource.order=0" \
+  -Djsonschema2pojo.skip=true -Dspotless.skip=true verify
 ```
 
 For version `0.0.1-SNAPSHOT`, the archive is
@@ -375,11 +406,12 @@ uses the checked-in schema classes and leaves source formatting unchanged.
 The ZIP retains dependencies as separate JARs, including their embedded metadata.
 `LICENSE` covers PhyloSpec; dependencies retain their own licenses.
 
-The Maven `-Djava.only=true` setting applies to its regression-test JVMs; it is not
-automatically passed to the separate JVM launched by the archive tests. The
-generic installed launcher retains BEAST's normal backend discovery.
+The Maven `argLine` configures the forked test JVM. Leave `-Djava.only=true`
+unset for this regression so the BEAST X tests can exercise BEAGLE. The installed
+CLI can perform a static `check` for either engine without this Maven setup.
 
-A minimal acceptance pass checks help/version, runs all three bundled examples from
+A minimal acceptance pass checks the same HKY and Yule script against both engines,
+checks help/version, runs the bundled BEAST 3 examples from
 another working directory (including paths with spaces), verifies successful
 `run.json` and nonempty output files, rejects an existing output directory, and
 reports a missing input file clearly. Run the existing CLI regression tests as
@@ -389,10 +421,12 @@ them from a successful macOS run.
 ### Build the macOS Apple Silicon BEAGLE CPU ZIP
 
 Build on macOS Apple Silicon with ARM64 Java 25, Maven, CMake, and the Xcode
-command-line tools:
+command-line tools. Reuse the test library directory prepared above for the
+BEAST X tests, which run before the BEAST 3 module builds its native ZIP:
 
 ```sh
 mvn -pl integrations/beast3/java -am -Pcli-dist,cli-dist-macos-arm64 \
+  "-DargLine=--enable-native-access=ALL-UNNAMED -Djava.library.path=\"$beagle_cpu_lib\" -Dbeagle.resource.order=0" \
   -Djsonschema2pojo.skip=true -Dspotless.skip=true verify
 ```
 
@@ -430,7 +464,8 @@ compatibility or long-chain convergence.
 ## Run the Java entry point directly
 
 Developers can also invoke `runner.PhyloSpecCli` without a ZIP. These commands
-preserve the source workflow and build a runtime classpath from the same checkout.
+build a BEAST 3 runtime classpath from the same checkout. For the dual-engine
+`check` workflow above, use the packaged launcher.
 Use Java **25** and Maven, starting at the repository root in one terminal session.
 
 ```sh

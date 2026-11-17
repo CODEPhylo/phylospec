@@ -123,6 +123,63 @@ class CliDistributionIT {
     }
 
     @Test
+    void enginesHaveSeparateRuntimeJars() throws Exception {
+        try (var jars = Files.list(installation.resolve("lib"))) {
+            assertFalse(jars.map(path -> path.getFileName().toString())
+                    .anyMatch(name -> name.startsWith("phylospec-beastx-") || name.startsWith("beast-mcmc-")));
+        }
+        try (var jars = Files.list(installation.resolve("engines/beastx/lib"))) {
+            assertFalse(jars.map(path -> path.getFileName().toString())
+                    .anyMatch(name -> name.startsWith("phylospec-beast3-")
+                            || name.startsWith("beast-base-")
+                            || name.startsWith("beast-pkgmgmt-")));
+        }
+    }
+
+    @Test
+    void packagedHkyYuleChecksBothEngines() throws Exception {
+        String script = installation.resolve("examples/hky-yule.phylospec").toString();
+        List<Path> before = fileNames(installation);
+        assertSuccessfulCheck(launch("check", script), "beast3", "beast2");
+        assertSuccessfulCheck(launch("check", "--engine", "beast3", script), "beast3", "beast2");
+        assertSuccessfulCheck(launch("check", script, "--engine", "beastx"), "beastx", "beastX");
+        assertEquals(before, fileNames(installation));
+        assertTrue(fileNames(workingDirectory).isEmpty(), "check must not write analysis files");
+    }
+
+    private static void assertSuccessfulCheck(Result result, String engine, String library) {
+        assertEquals(0, result.exitCode(), result.details());
+        assertTrue(
+                result.stdout().contains("Check passed (engine: " + engine + "; libraries: " + library + ")"),
+                result.details());
+        assertTrue(result.stdout().contains("No MCMC was run."), result.details());
+    }
+
+    @Test
+    void packagedBeastXRejectsExecutionAndXmlExport() throws Exception {
+        String script = installation.resolve("examples/hky-yule.phylospec").toString();
+        for (Result result : List.of(
+                launch("run", "--engine", "beastx", script, "--out", "results"),
+                launch("export", "--engine", "beastx", script, "--xml", "analysis.xml"))) {
+            assertEquals(2, result.exitCode(), result.details());
+            assertTrue(result.stderr().contains("beastx"), result.details());
+        }
+        assertTrue(fileNames(workingDirectory).isEmpty());
+    }
+
+    @Test
+    void missingBeastXRuntimeDoesNotFallBackOrBreakBeast3() throws Exception {
+        Path beastX = installation.resolve("engines/beastx/lib");
+        Files.move(beastX, temporary.resolve("removed BEAST X libraries"));
+        String script = installation.resolve("examples/hky-yule.phylospec").toString();
+        Result missing = launch("check", "--engine", "beastx", script);
+        assertNotEquals(0, missing.exitCode(), missing.details());
+        assertFalse(missing.stdout().contains("Check passed"), missing.details());
+        assertSuccessfulCheck(launch("check", script), "beast3", "beast2");
+        assertTrue(fileNames(workingDirectory).isEmpty());
+    }
+
+    @Test
     void packagedHkyYuleExampleRecordsSampledStateAndInputProvenance() throws Exception {
         Path source = installation.resolve("examples/hky-yule.phylospec");
         Path alignment = installation.resolve("examples/data/primate-mtDNA.nex");

@@ -18,6 +18,7 @@ import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
+import org.phylospec.workspace.Workspace;
 import org.xml.sax.SAXException;
 import tiling.BeastXModel;
 import tiling.BeastXState;
@@ -31,12 +32,11 @@ import tiling.runner.BeastXRunPipeline;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.nio.file.Path;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.function.Consumer;
 
 /*
 * Entry point for running PhyloSpec models with the BEAST X backend.
@@ -48,6 +48,8 @@ import java.util.List;
 public class PhyloSpecRunner implements ErrorEventListener {
 
     private final String source;
+    private final Workspace workspace;
+    private final Consumer<String> warningHandler;
 
     private final BeastXRunPipeline runPipeline;
 
@@ -55,11 +57,14 @@ public class PhyloSpecRunner implements ErrorEventListener {
      * Creates a runner for the given PhyloSpec source string.
      */
     public PhyloSpecRunner(String source) {
-        this.source =
-                source;
+        this(source, new Workspace(), warning -> {});
+    }
 
-        this.runPipeline =
-                new BeastXRunPipeline();
+    private PhyloSpecRunner(String source, Workspace workspace, Consumer<String> warningHandler) {
+        this.source = source;
+        this.workspace = workspace;
+        this.warningHandler = warningHandler;
+        this.runPipeline = new BeastXRunPipeline();
     }
 
     /* --- Static convenient methods for easy creation of a runner.  --- */
@@ -69,13 +74,23 @@ public class PhyloSpecRunner implements ErrorEventListener {
      */
     public static PhyloSpecRunner fromFile(Path sourcePath)
             throws IOException {
+        return new PhyloSpecRunner(readSource(sourcePath));
+    }
+
+    private static String readSource(Path sourcePath) throws IOException {
         if (sourcePath == null) {
             throw new IllegalArgumentException("sourcePath must not be null.");
         }
 
-        return new PhyloSpecRunner(
-                Files.readString(sourcePath, StandardCharsets.UTF_8)
-        );
+        return Files.readString(sourcePath, StandardCharsets.UTF_8);
+    }
+
+    /** Checks a script with its own input directory, without applying Tiles or creating a native model. */
+    public static void checkFile(Path sourcePath, Consumer<String> warningHandler) throws IOException {
+        Path source = sourcePath.toAbsolutePath().normalize();
+        PhyloSpecRunner runner = new PhyloSpecRunner(
+                readSource(source), new Workspace(source.getParent()), warningHandler);
+        runner.matchTiles(runner.parseAndResolve());
     }
 
     /**
@@ -355,7 +370,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
                 new VariableResolver(statements);
 
         TypeResolver typeResolver =
-                new TypeResolver(componentResolver);
+                new TypeResolver(componentResolver, workspace);
+        typeResolver.registerEventListener(this);
 
         try {
             typeResolver.visitStatements(statements);
@@ -391,28 +407,28 @@ public class PhyloSpecRunner implements ErrorEventListener {
             ParsedPhyloSpec parsed,
             String runName
     ) {
-        // Load all BEAST X backend tiles and prepare the tiling evaluator.
-        EvaluateTiles<BeastXState> applyTiles =
-                new EvaluateTiles<>(
-                        TileLibrary.loadAll(BeastXState.class),
-                        parsed.variableResolver,
-                        parsed.stochasticityResolver
-                );
-
-        BeastXState beastState =
-                new BeastXState(runName);
-
+        EvaluateTiles<BeastXState> tiles = matchTiles(parsed);
         try {
-            // Find and apply the best tile sequence for the parsed PhyloSpec statements.
-            applyTiles.getBestTiling(parsed.statements);
-            return applyTiles.applyBestTiling(beastState);
+            return tiles.applyBestTiling(new BeastXState(runName));
         } catch (TileApplicationError error) {
-            Range range =
-                    parsed.parser.getRangeForAstNode(error.getAstNode());
-
-            this.errorDetected(error.toError(range));
-            throw new IllegalStateException("Unreachable after errorDetected.");
+            throw tilingFailure(parsed, error);
         }
+    }
+
+    private EvaluateTiles<BeastXState> matchTiles(ParsedPhyloSpec parsed) {
+        EvaluateTiles<BeastXState> tiles = new EvaluateTiles<>(
+                TileLibrary.loadAll(BeastXState.class), parsed.variableResolver, parsed.stochasticityResolver);
+        try {
+            tiles.getBestTiling(parsed.statements);
+            return tiles;
+        } catch (TileApplicationError error) {
+            throw tilingFailure(parsed, error);
+        }
+    }
+
+    private PhyloSpecRunnerException tilingFailure(ParsedPhyloSpec parsed, TileApplicationError error) {
+        Range range = parsed.parser.getRangeForAstNode(error.getAstNode());
+        return new PhyloSpecRunnerException(error.toError(range).toStdOutString(source), error);
     }
 
     private static ComponentResolver loadComponentResolver() {
@@ -433,6 +449,11 @@ public class PhyloSpecRunner implements ErrorEventListener {
     @Override
     public void errorDetected(Error error) {
         throw new PhyloSpecRunnerException(error.toStdOutString(this.source));
+    }
+
+    @Override
+    public void warningDetected(Error warning) {
+        warningHandler.accept(warning.toStdOutString(source, true));
     }
 
     /**

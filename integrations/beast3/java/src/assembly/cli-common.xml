@@ -12,6 +12,19 @@
             <scope>runtime</scope>
         </dependencySet>
     </dependencySets>
+    <!-- These backends have some identical Java class names and must use separate classpaths. -->
+    <moduleSets>
+        <moduleSet>
+            <useAllReactorProjects>true</useAllReactorProjects>
+            <includes><include>org.phylospec:phylospec-beastx</include></includes>
+            <binaries>
+                <attachmentClassifier>cli-runtime</attachmentClassifier>
+                <outputDirectory>engines/beastx/lib</outputDirectory>
+                <includeDependencies>false</includeDependencies>
+                <unpack>true</unpack>
+            </binaries>
+        </moduleSet>
+    </moduleSets>
     <fileSets>
         <fileSet>
             <directory>src/main/distribution/bin</directory>

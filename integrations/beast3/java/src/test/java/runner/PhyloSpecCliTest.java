@@ -85,6 +85,21 @@ public class PhyloSpecCliTest {
     }
 
     @Test
+    void selectsTheRequestedCheckEngineAndItsBaseLibrary() {
+        assertEquals(
+                "beast3",
+                PhyloSpecCli.Options.parse(new String[] {"check", "model.phylospec"})
+                        .engine());
+        for (String[] args : List.of(
+                new String[] {"check", "--engine", "beastx", "model.phylospec"},
+                new String[] {"check", "model.phylospec", "--library", "beastX", "--engine", "beastx"})) {
+            var options = PhyloSpecCli.Options.parse(args);
+            assertEquals("beastx", options.engine());
+            assertEquals(List.of("beastX"), options.libraries());
+        }
+    }
+
+    @Test
     void newCommandsPreserveProviderOrderAndAppendBaseOnlyWhenMissing() {
         for (String command : List.of("check", "run")) {
             assertEquals(
@@ -130,7 +145,13 @@ public class PhyloSpecCliTest {
                 new String[] {"export", "model.phylospec"},
                 new String[] {"export", "model.phylospec", "--xml"},
                 new String[] {"run", "model.phylospec", "--xml", "analysis.xml"},
-                new String[] {"check", "model.phylospec", "--engine", "beastx"},
+                new String[] {"check", "model.phylospec", "--engine", "unknown"},
+                new String[] {"check", "model.phylospec", "--engine", "beastx", "--engine", "beast3"},
+                new String[] {"run", "model.phylospec", "--engine", "beastx"},
+                new String[] {"export", "model.phylospec", "--xml", "analysis.xml", "--engine", "beastx"},
+                new String[] {"--library", "beastX", "model.phylospec", "--engine", "beastx"},
+                new String[] {"check", "model.phylospec", "--library", "beast2", "--engine", "beastx"},
+                new String[] {"check", "model.phylospec", "--adapter-path", "local", "--engine", "beastx"},
                 new String[] {"check", "model.phylospec", "--engine"},
                 new String[] {"check", "model.phylospec", "--run-name", "analysis"},
                 new String[] {"run", "model.phylospec", "--run-name", " "},

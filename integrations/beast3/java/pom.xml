@@ -175,6 +175,20 @@
     <profiles>
         <profile>
             <id>cli-dist</id>
+            <dependencies>
+                <!-- Order the reactor for the distribution without adding BEAST X classes to this backend. -->
+                <dependency>
+                    <groupId>org.phylospec</groupId>
+                    <artifactId>phylospec-beastx</artifactId>
+                    <version>${project.version}</version>
+                    <type>pom</type>
+                    <scope>provided</scope>
+                    <optional>true</optional>
+                    <exclusions>
+                        <exclusion><groupId>*</groupId><artifactId>*</artifactId></exclusion>
+                    </exclusions>
+                </dependency>
+            </dependencies>
             <build>
                 <plugins>
                     <plugin>
