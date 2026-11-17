@@ -12,8 +12,11 @@ import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeParser;
 import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
+import beast.base.inference.Operator;
 import beast.base.inference.State;
 import beast.base.inference.StateNode;
+import beast.base.spec.evolution.operator.AdaptableVarianceMultivariateNormalOperator;
+import beast.base.spec.evolution.operator.UpDownOperator;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
@@ -21,7 +24,9 @@ import beastconfig.BEASTState;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -251,6 +256,48 @@ class CRC09ModelTest {
                 .toList();
 
         assertTrue(warnings.contains("The inputs for 'ReadCountModel' might be invalid."), warnings::toString);
+    }
+
+    @ParameterizedTest(name = "explicit={0}")
+    @ValueSource(booleans = {false, true})
+    void coverageParametersGetTheJointMovesOfLPhyBeast(boolean explicit) throws Exception {
+        BEASTState state = evaluate(model(explicit).formatted(data()));
+
+        assertEquals(
+                Map.of("readCountModel.tv", List.of("t", "v", "|"),
+                        "readCountModel.stv", List.of("t", "v", "|", "s"),
+                        "readCountModel.AVMN", List.of("t", "s", "v")),
+                readCountOperators(state));
+    }
+
+    @Test
+    void fixedCoverageParametersGetNoProposal() throws Exception {
+        String source = MODEL.formatted(data())
+                .replace("PositiveReal t ~ LogNormal(logMean=1.7, logSd=0.05)", "PositiveReal t = 5.0");
+
+        assertEquals(
+                Map.of("readCountModel.stv", List.of("v", "|", "s"), "readCountModel.AVMN", List.of("s", "v")),
+                readCountOperators(evaluate(source)));
+    }
+
+    /**
+     * The IDs of the parameters each joint read-count move changes; for an up-down move, those
+     * scaled up, then "|", then those scaled down.
+     */
+    private static Map<String, List<String>> readCountOperators(BEASTState state) {
+        Map<String, List<String>> operators = new HashMap<>();
+        for (Operator operator : state.operators) {
+            if (operator instanceof UpDownOperator upDown) {
+                List<String> ids = new ArrayList<>();
+                upDown.upInput.get().forEach(parameter -> ids.add(((StateNode) parameter).getID()));
+                ids.add("|");
+                upDown.downInput.get().forEach(parameter -> ids.add(((StateNode) parameter).getID()));
+                operators.put(upDown.getID(), ids);
+            } else if (operator instanceof AdaptableVarianceMultivariateNormalOperator avmn) {
+                operators.put(avmn.getID(), avmn.listStateNodes().stream().map(StateNode::getID).toList());
+            }
+        }
+        return operators;
     }
 
     private static Set<String> stateNodeIds(BEASTState state) {

@@ -114,9 +114,16 @@ mcmc {
 }
 ```
 
-On an Apple Silicon laptop, 10,000 iterations take about two minutes. In the first few thousand
-iterations, several parameters (e.g. `t` and most `s`) may not have moved yet while the operators
-tune; this is not a sign of a wiring problem, and convergence needs much longer chains.
+On an Apple Silicon laptop, 10,000 iterations take about two minutes, and convergence needs much
+longer chains. The default starting values (e.g. `sequencingError` 0.5) are far from the
+posterior, so on the full CRC09 data allow a burn-in of about 300,000 iterations.
+
+The likelihood depends on `t`, `v` and `s` only through `t * s` and `v * s^2`, so the posterior
+has a long, narrow ridge that single-parameter moves follow slowly. As in LPhyBEAST, the adapter
+adds three joint moves for the sampled ones: `t` and `v` scaled together, `t` and `v` scaled
+against `s`, and an adaptive multivariate normal move on the log scale of `t`, `s` and `v`.
+Along the ridge only the priors constrain them, so `t`, `v` and `s` on their own still mix slowly,
+in LPhyBEAST as well; `t * s` and `v * s^2` mix well.
 
 ## Fixed-state comparison with LPhyBEAST
 
