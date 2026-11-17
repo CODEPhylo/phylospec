@@ -309,7 +309,7 @@ class SiteModelTileTest {
     }
 
     @Test
-    void sharedSiteRatesKeepDistinctPartitionModelsAndLiveRateChecks(@TempDir Path directory) throws Exception {
+    void sharedSiteRatesKeepDistinctPartitionModelsAndLiveRates(@TempDir Path directory) throws Exception {
         Files.writeString(directory.resolve("input.fa"), ">A\nA\n>B\nC\n");
         String source = """
                 Alignment data = fromFasta(file="input.fa")
@@ -338,10 +338,10 @@ class SiteModelTileTest {
                         .filter(node -> "w".equals(node.getID()))
                         .findFirst()
                         .orElseThrow());
+        // a rate of 0 during MCMC reaches the site model, so the proposal is rejected rather than ending the run
         w.set(0, 0.0);
         w.set(1, 1.0);
-        var error = assertThrows(IllegalArgumentException.class, () -> first.getRateForCategory(0, null));
-        assertTrue(error.getMessage().contains("strictly positive PhyloCTMC rate; received 0.0"));
+        assertEquals(0.0, first.getRateForCategory(0, null));
         assertEquals(1.5, second.muParameterInput.get().get());
     }
 
