@@ -118,6 +118,11 @@ On an Apple Silicon laptop, 10,000 iterations take about two minutes. In the fir
 iterations, several parameters (e.g. `t` and most `s`) may not have moved yet while the operators
 tune; this is not a sign of a wiring problem, and convergence needs much longer chains.
 
+The likelihood depends on `t`, `v` and `s` only through `t * s` and `v * s^2`, so the posterior
+has a long, narrow ridge that single-parameter moves follow slowly. As in LPhyBEAST, the adapter
+adds three joint moves for the sampled ones: `t` and `v` scaled together, `t` and `v` scaled
+against `s`, and an adaptive multivariate normal move on the log scale of `t`, `s` and `v`.
+
 ## Fixed-state comparison with LPhyBEAST
 
 The fixed-state regression in [CRC09ModelTest](src/test/java/tiles/phylonco/CRC09ModelTest.java)
