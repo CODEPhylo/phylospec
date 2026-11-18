@@ -115,8 +115,8 @@ mcmc {
 ```
 
 On an Apple Silicon laptop, 10,000 iterations take about two minutes, and convergence needs much
-longer chains. The default starting values (e.g. `sequencingError` 0.5) are far from the
-posterior, so on the full CRC09 data allow a burn-in of about 300,000 iterations.
+longer chains. On the full CRC09 data the likelihood, tree and error rates settle within about
+30,000 iterations, but `t`, `v` and `s` on their own can take several hundred thousand (see below).
 
 The likelihood depends on `t`, `v` and `s` only through `t * s` and `v * s^2`, so the posterior
 has a long, narrow ridge that single-parameter moves follow slowly. As in LPhyBEAST, the adapter

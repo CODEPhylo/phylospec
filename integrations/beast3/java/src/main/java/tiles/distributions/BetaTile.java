@@ -32,12 +32,19 @@ public class BetaTile extends GeneratorTile<BoundDistribution<RealScalarParam<Un
         beastState.setInput(distribution, distribution.alphaInput, alpha);
         beastState.setInput(distribution, distribution.betaInput, beta);
 
-        RealScalarParam<UnitInterval> defaultState = new RealScalarParam<>(0.5, UnitInterval.INSTANCE);
+        RealScalarParam<UnitInterval> defaultState =
+                new RealScalarParam<>(initialValue(alpha.get(), beta.get()), UnitInterval.INSTANCE);
 
         return new BoundDistribution<>(
                 distribution,
                 defaultState,
                 stateNode -> beastState.setInput(distribution, distribution.paramInput, stateNode),
                 OperatorSelector::getDefaultOperators);
+    }
+
+    /** Chooses the prior mean alpha / (alpha + beta) as a starting value, or 0.5 if it is not inside (0, 1). */
+    static double initialValue(double alpha, double beta) {
+        double mean = alpha / (alpha + beta);
+        return mean > 0.0 && mean < 1.0 ? mean : 0.5;
     }
 }

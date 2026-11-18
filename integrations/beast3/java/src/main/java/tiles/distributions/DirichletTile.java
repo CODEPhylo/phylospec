@@ -53,9 +53,14 @@ public class DirichletTile extends GeneratorTile<BoundDistribution<SimplexParam,
         RealVector<PositiveReal> nativeConcentration = (RealVector<PositiveReal>) concentration;
         beastState.setInput(distribution, distribution.alphaInput, nativeConcentration);
 
-        // default state: uniform simplex of the same dimension as the concentration vector
+        // default state: the prior mean alpha_i / sum(alpha), or the uniform simplex if the sum overflows
+        double sum = 0.0;
+        for (int i = 0; i < dim; i++) sum += concentration.get(i);
         double[] defaultValues = new double[dim];
         Arrays.fill(defaultValues, 1.0 / dim);
+        if (Double.isFinite(sum)) {
+            for (int i = 0; i < dim; i++) defaultValues[i] = concentration.get(i) / sum;
+        }
         SimplexParam defaultState = new SimplexParam(defaultValues);
 
         return new BoundDistribution<>(

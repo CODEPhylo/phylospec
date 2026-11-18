@@ -90,12 +90,13 @@ public class BayesianSkylineTile extends GeneratorTile<BoundDistribution<Tree, B
                     "For random group sizes use RandomComposition(total=numTaxa(...) - 1, numParts=...).");
         }
 
-        // default state: a random coalescent tree under a constant population
+        // default state: a random coalescent tree under a constant population of the mean starting
+        // population size, so that the starting tree is on the scale of the model
         ConstantPopulation populationFunction = new ConstantPopulation();
         state.setInput(
                 populationFunction,
                 populationFunction.popSizeParameter,
-                new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+                new RealScalarParam<>(initialPopulationSize(populationSizes), PositiveReal.INSTANCE));
 
         RandomTree defaultState = new RandomTree();
         state.setInput(defaultState, defaultState.m_taxonset, taxa.taxonSet());
@@ -117,5 +118,13 @@ public class BayesianSkylineTile extends GeneratorTile<BoundDistribution<Tree, B
                     state.setInput(model, model.treeIntervalsInput, intervals);
                 },
                 OperatorSelector::getDefaultOperators);
+    }
+
+    /** The mean of the starting population sizes, or 1.0 if it is not finite and positive. */
+    static double initialPopulationSize(RealVector<? extends PositiveReal> populationSizes) {
+        double sum = 0.0;
+        for (int i = 0; i < populationSizes.size(); i++) sum += populationSizes.get(i);
+        double mean = sum / populationSizes.size();
+        return Double.isFinite(mean) && mean > 0.0 ? mean : 1.0;
     }
 }

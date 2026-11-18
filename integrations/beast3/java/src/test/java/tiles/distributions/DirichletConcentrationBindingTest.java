@@ -60,7 +60,7 @@ class DirichletConcentrationBindingTest {
 
     @ParameterizedTest
     @CsvSource({"Real,false", "Real,true", "PositiveReal,false", "PositiveReal,true"})
-    void fixedDeclaredRealVectorsRetainTheNativeLawAndUniformInitializer(String declaredType, boolean observed)
+    void fixedDeclaredRealVectorsRetainTheNativeLawAndPriorMeanInitializer(String declaredType, boolean observed)
             throws Exception {
         BEASTState graph = build("Vector<" + declaredType + "> alpha = [1.2,2.3,0.7]\n"
                 + "Simplex weights ~ Dirichlet(concentration=alpha)" + (observed ? " observed as [0.2,0.3,0.5]" : ""));
@@ -70,9 +70,9 @@ class DirichletConcentrationBindingTest {
                 .mapToDouble(Double::doubleValue)
                 .toArray();
         assertArrayEquals(new double[] {1.2, 2.3, 0.7}, concentration, 0.0);
-        double[] expected = observed ? FIRST : new double[] {1.0 / 3, 1.0 / 3, 1.0 / 3};
+        double[] expected = observed ? FIRST : new double[] {1.2 / 4.2, 2.3 / 4.2, 0.7 / 4.2};
         SimplexParam weights = assertInstanceOf(SimplexParam.class, distribution.paramInput.get());
-        assertArrayEquals(expected, weights.getValues(), 0.0);
+        assertArrayEquals(expected, weights.getValues(), 1e-15);
         assertSame(UnitInterval.INSTANCE, weights.getDomain());
         assertEquals(observed ? 0 : 1, graph.stateNodes.size());
         assertEquals(observed ? 0 : 1, graph.priorDistributions.size());
@@ -145,7 +145,7 @@ class DirichletConcentrationBindingTest {
         assertSame(family.equals("Normal") ? Real.INSTANCE : PositiveReal.INSTANCE, alpha.getDomain());
         double initial = family.equals("Normal") ? 0.1 : family.equals("Gamma") ? 1.0 : 1.5;
         assertArrayEquals(new double[] {initial, initial, initial}, alpha.getValues(), 0.0);
-        assertArrayEquals(new double[] {1.0 / 3, 1.0 / 3, 1.0 / 3}, weights.getValues(), 0.0);
+        assertArrayEquals(new double[] {1.0 / 3, 1.0 / 3, 1.0 / 3}, weights.getValues(), 1e-15);
         assertEquals(2, graph.stateNodes.size());
         assertEquals(2, graph.priorDistributions.size());
         assertEquals(2, graph.likelihoodDistributions.size());
