@@ -417,7 +417,9 @@ public final class PhyloSpecCli {
 
         Path runDirectory(Path source) {
             return outputDirectory == null
-                    ? source.getParent().resolve("runs").resolve(withoutExtension(source).getFileName() + "-" + UUID.randomUUID())
+                    ? source.getParent()
+                            .resolve("runs")
+                            .resolve(withoutExtension(source).getFileName() + "-" + UUID.randomUUID())
                     : outputDirectory.toAbsolutePath().normalize();
         }
 

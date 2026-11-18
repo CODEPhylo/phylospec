@@ -162,8 +162,14 @@ class CliDistributionIT {
         Path alignment = source.getParent().resolve("data/primate-mtDNA.nex");
         Map<Path, String> inputsBefore = hashes(source.getParent());
         Path run = workingDirectory.resolve("BEAST X results");
-        Result first = launch(beastXEnvironment(), "run", "--engine", "beastx",
-                source.toString(), "--out", run.getFileName().toString());
+        Result first = launch(
+                beastXEnvironment(),
+                "run",
+                "--engine",
+                "beastx",
+                source.toString(),
+                "--out",
+                run.getFileName().toString());
         assertEquals(0, first.exitCode(), first.details());
         assertTrue(first.stdout().contains("Run completed (engine: beastx"), first.details());
 
@@ -189,8 +195,8 @@ class CliDistributionIT {
         assertEquals("analysis.xml", record.at("/xml/path").asText(), details);
         assertEquals(hash(xml), record.at("/xml/sha256").asText(), details);
         Path exported = temporary.resolve("comparison/hky-yule.xml");
-        Result export = launch(beastXEnvironment(), "export", "--engine", "beastx", source.toString(),
-                "--xml", exported.toString());
+        Result export = launch(
+                beastXEnvironment(), "export", "--engine", "beastx", source.toString(), "--xml", exported.toString());
         assertEquals(0, export.exitCode(), export.details());
         assertEquals(-1L, Files.mismatch(xml, exported), "HKY + Yule must use the same XML for export and run");
         var document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xml.toFile());
@@ -211,19 +217,25 @@ class CliDistributionIT {
         assertTrue(Files.readString(trace).contains("[seed=12345]"), "BEAST X must report the effective seed");
         assertHkyTrace(trace, "joint", "baseFrequencies");
         String trees = Files.readString(run.resolve("output/hky-yule.trees"));
-        assertEquals(31, trees.lines().filter(line -> line.strip().startsWith("tree STATE_")).count());
+        assertEquals(
+                31,
+                trees.lines()
+                        .filter(line -> line.strip().startsWith("tree STATE_"))
+                        .count());
         assertTrue(trees.contains("tree STATE_30 "), trees);
 
         Path repeated = workingDirectory.resolve("same seed");
-        Result second = launch(beastXEnvironment(), "run", source.toString(), "--engine", "beastx",
-                "--out", repeated.toString());
+        Result second = launch(
+                beastXEnvironment(), "run", source.toString(), "--engine", "beastx", "--out", repeated.toString());
         assertEquals(0, second.exitCode(), second.details());
-        assertEquals(beastXTraceSamples(trace), beastXTraceSamples(repeated.resolve("output/hky-yule.log")),
+        assertEquals(
+                beastXTraceSamples(trace),
+                beastXTraceSamples(repeated.resolve("output/hky-yule.log")),
                 "Independent processes using the same seed must reproduce the numeric trace");
 
         Map<Path, String> previous = hashes(run);
-        Result collision = launch(beastXEnvironment(), "run", "--engine", "beastx", source.toString(),
-                "--out", run.toString());
+        Result collision =
+                launch(beastXEnvironment(), "run", "--engine", "beastx", source.toString(), "--out", run.toString());
         assertNotEquals(0, collision.exitCode(), collision.details());
         assertEquals(previous, hashes(run), "A second run must preserve all previous results");
         try (var children = Files.list(workingDirectory)) {
@@ -245,8 +257,8 @@ class CliDistributionIT {
         Path sentry = workingDirectory.resolve("sentry.log");
         Files.writeString(sentry, "existing trace");
         Path run = workingDirectory.resolve("unsafe result");
-        Result rejected = launch(beastXEnvironment(), "run", "--engine", "beastx", source.toString(),
-                "--out", run.toString());
+        Result rejected =
+                launch(beastXEnvironment(), "run", "--engine", "beastx", source.toString(), "--out", run.toString());
         assertNotEquals(0, rejected.exitCode(), rejected.details());
         assertEquals("existing trace", Files.readString(sentry));
         assertFalse(Files.exists(run.resolve("output/sentry.log")));
@@ -256,7 +268,8 @@ class CliDistributionIT {
     }
 
     private static List<String> beastXTraceSamples(Path trace) throws Exception {
-        return Files.readAllLines(trace).stream().map(String::strip)
+        return Files.readAllLines(trace).stream()
+                .map(String::strip)
                 .filter(line -> !line.isEmpty() && Character.isDigit(line.charAt(0)))
                 .toList();
     }
@@ -266,8 +279,10 @@ class CliDistributionIT {
         // The generic ZIP uses the native JNI/plugin directory configured for the test JVM.
         return BUNDLED_BEAGLE
                 ? Map.of()
-                : Map.of("JDK_JAVA_OPTIONS", "\"-Djava.library.path=" + System.getProperty("java.library.path")
-                        + "\" -Dbeagle.resource.order=0");
+                : Map.of(
+                        "JDK_JAVA_OPTIONS",
+                        "\"-Djava.library.path=" + System.getProperty("java.library.path")
+                                + "\" -Dbeagle.resource.order=0");
     }
 
     @Test

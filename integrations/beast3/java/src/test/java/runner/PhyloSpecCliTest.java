@@ -112,7 +112,8 @@ public class PhyloSpecCliTest {
     @Test
     void selectsBeastXForManagedRuns() {
         var options = PhyloSpecCli.Options.parse(
-                new String[] {"run", "--engine", "beastx", "model.phylospec", "--run-name", "sample", "--out", "results"});
+                new String[] {"run", "--engine", "beastx", "model.phylospec", "--run-name", "sample", "--out", "results"
+                });
         assertEquals(PhyloSpecCli.Command.RUN, options.command());
         assertEquals("beastx", options.engine());
         assertEquals(List.of("beastX"), options.libraries());

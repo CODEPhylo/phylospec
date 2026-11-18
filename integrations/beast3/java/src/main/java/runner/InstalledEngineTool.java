@@ -27,7 +27,8 @@ final class InstalledEngineTool {
         return lib.toAbsolutePath().normalize();
     }
 
-    static int run(PhyloSpecCli.Command requested, PhyloSpecCli.Options options, Path source, PrintStream out, PrintStream err)
+    static int run(
+            PhyloSpecCli.Command requested, PhyloSpecCli.Options options, Path source, PrintStream out, PrintStream err)
             throws IOException {
         String engine = options.engine();
         String command = requested.name().toLowerCase(java.util.Locale.ROOT);

@@ -33,24 +33,27 @@ final class InstalledBeastXRun {
         out.println("Saving analysis.xml and running BEAST X. Console log: " + console);
 
         String executable = java.io.File.separatorChar == '\\' ? "java.exe" : "java";
-        String java = Path.of(System.getProperty("java.home"), "bin", executable).toString();
+        String java =
+                Path.of(System.getProperty("java.home"), "bin", executable).toString();
         var args = new ArrayList<>(List.of(java, "--enable-native-access=ALL-UNNAMED"));
         // The macOS launcher selects the bundled CPU library on the host JVM.
         for (String key : List.of("java.library.path", "beagle.resource.order")) {
             String value = System.getProperty(key);
             if (value != null) args.add("-D" + key + "=" + value);
         }
-        args.addAll(List.of("-cp", lib.resolve("*").toString(), "BeastXRunTool",
-                source.toString(), directory.toString(), prefix));
+        args.addAll(List.of(
+                "-cp", lib.resolve("*").toString(), "BeastXRunTool", source.toString(), directory.toString(), prefix));
         if (options.debug()) args.add("--debug");
-        ProcessBuilder builder = new ProcessBuilder(args).directory(output.toFile()).redirectErrorStream(true);
+        ProcessBuilder builder =
+                new ProcessBuilder(args).directory(output.toFile()).redirectErrorStream(true);
         if (!options.debug()) builder.redirectOutput(console.toFile());
         int exit = execute(builder, console, options.debug(), out);
 
         if (!Files.isRegularFile(record)) throw new IOException("No BEAST X run record was written. See " + console);
         out.println("Run record: " + record);
         var result = new ObjectMapper().readTree(record.toFile());
-        if (exit != 0 || !"succeeded".equals(result.path("status").asText())
+        if (exit != 0
+                || !"succeeded".equals(result.path("status").asText())
                 || !result.path("completionConfirmed").asBoolean()) {
             err.println("BEAST X run did not complete: "
                     + result.path("error").path("message").asText("see " + console));
@@ -67,14 +70,16 @@ final class InstalledBeastXRun {
         return 0;
     }
 
-    private static int execute(ProcessBuilder builder, Path console, boolean debug, PrintStream out) throws IOException {
+    private static int execute(ProcessBuilder builder, Path console, boolean debug, PrintStream out)
+            throws IOException {
         Process process = builder.start();
         Thread shutdown = new Thread(process::destroy, "phylospec-beastx-shutdown");
         try {
             Runtime.getRuntime().addShutdownHook(shutdown);
             process.getOutputStream().close(); // Managed runs supply all inputs through the script and XML.
             if (debug) {
-                try (var input = process.getInputStream(); var log = Files.newOutputStream(console)) {
+                try (var input = process.getInputStream();
+                        var log = Files.newOutputStream(console)) {
                     byte[] buffer = new byte[8192];
                     int count;
                     while ((count = input.read(buffer)) != -1) {
