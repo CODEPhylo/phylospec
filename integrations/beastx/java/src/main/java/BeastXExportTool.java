@@ -58,11 +58,16 @@ public final class BeastXExportTool implements ToolProvider {
     }
 
     static void publishValidated(String xml, Path target) throws Exception {
+        publish(xml, target, true);
+    }
+
+    /** A managed run validates the published file by loading it once for execution. */
+    static void publish(String xml, Path target, boolean validateBeforeReplacing) throws Exception {
         Files.createDirectories(target.getParent());
         Path staged = Files.createTempFile(target.getParent(), ".phylospec-export-", ".xml");
         try {
             Files.writeString(staged, xml);
-            new XmlRunner().validateExport(staged);
+            if (validateBeforeReplacing) new XmlRunner().validateExport(staged);
             try {
                 Files.move(staged, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
             } catch (AtomicMoveNotSupportedException unsupported) {

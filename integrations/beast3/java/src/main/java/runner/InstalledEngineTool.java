@@ -15,9 +15,7 @@ import java.util.spi.ToolProvider;
 final class InstalledEngineTool {
     private InstalledEngineTool() {}
 
-    static int run(PhyloSpecCli.Options options, Path source, PrintStream out, PrintStream err) throws IOException {
-        String engine = options.engine();
-        String command = options.command().name().toLowerCase(java.util.Locale.ROOT);
+    static Path runtimeLib(String engine, String command) throws IOException {
         String home = System.getProperty("phylospec.home");
         if (home == null || home.isBlank()) {
             throw new IOException("Use the installed phylospec launcher for " + engine + " " + command + ".");
@@ -26,6 +24,14 @@ final class InstalledEngineTool {
         if (!Files.isDirectory(lib)) {
             throw new IOException("Missing " + engine + " runtime in " + lib + ". Extract the complete CLI ZIP.");
         }
+        return lib.toAbsolutePath().normalize();
+    }
+
+    static int run(PhyloSpecCli.Command requested, PhyloSpecCli.Options options, Path source, PrintStream out, PrintStream err)
+            throws IOException {
+        String engine = options.engine();
+        String command = requested.name().toLowerCase(java.util.Locale.ROOT);
+        Path lib = runtimeLib(engine, command);
         List<Path> jars;
         try (var files = Files.list(lib)) {
             jars = files.filter(p -> p.getFileName().toString().endsWith(".jar") && Files.isRegularFile(p))

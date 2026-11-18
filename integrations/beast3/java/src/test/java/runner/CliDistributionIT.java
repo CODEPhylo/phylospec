@@ -157,11 +157,117 @@ class CliDistributionIT {
     }
 
     @Test
-    void packagedBeastXRejectsExecution() throws Exception {
-        String script = installation.resolve("examples/hky-yule.phylospec").toString();
-        Result result = launch("run", "--engine", "beastx", script, "--out", "results");
-        assertEquals(2, result.exitCode(), result.details());
-        assertTrue(fileNames(workingDirectory).isEmpty());
+    void packagedBeastXRunsHkyYuleFromSavedXmlWithTheScriptSeed() throws Exception {
+        Path source = installation.resolve("examples/hky-yule.phylospec");
+        Path alignment = source.getParent().resolve("data/primate-mtDNA.nex");
+        Map<Path, String> inputsBefore = hashes(source.getParent());
+        Path run = workingDirectory.resolve("BEAST X results");
+        Result first = launch(beastXEnvironment(), "run", "--engine", "beastx",
+                source.toString(), "--out", run.getFileName().toString());
+        assertEquals(0, first.exitCode(), first.details());
+        assertTrue(first.stdout().contains("Run completed (engine: beastx"), first.details());
+
+        JsonNode record = JSON.readTree(run.resolve("run.json").toFile());
+        String details = record.toPrettyString();
+        assertEquals("succeeded", record.path("status").asText(), details);
+        assertTrue(record.path("completionConfirmed").asBoolean(), details);
+        assertEquals("beastx", record.at("/runtime/engine").asText(), details);
+        assertEquals(30, record.at("/settings/chainLength").asLong(), details);
+        assertEquals(30, record.path("completedChainLength").asLong(), details);
+        assertEquals(1, record.at("/settings/defaultLogEvery").asLong(), details);
+        for (String phase : List.of("modelBuilding", "mcmc")) {
+            assertEquals(12345L, record.at("/seeds/" + phase + "/requested").asLong(), details);
+            assertEquals(12345L, record.at("/seeds/" + phase + "/observed").asLong(), details);
+        }
+        assertEquals(hash(source), record.at("/source/sha256").asText(), details);
+        assertEquals(-1L, Files.mismatch(source, run.resolve("model.phylospec")));
+        assertEquals(alignment.toString(), record.at("/inputs/0/path").asText(), details);
+        assertEquals(hash(alignment), record.at("/inputs/0/sha256").asText(), details);
+        assertTrue(Files.size(run.resolve("console.log")) > 0);
+
+        Path xml = run.resolve("analysis.xml");
+        assertEquals("analysis.xml", record.at("/xml/path").asText(), details);
+        assertEquals(hash(xml), record.at("/xml/sha256").asText(), details);
+        Path exported = temporary.resolve("comparison/hky-yule.xml");
+        Result export = launch(beastXEnvironment(), "export", "--engine", "beastx", source.toString(),
+                "--xml", exported.toString());
+        assertEquals(0, export.exitCode(), export.details());
+        assertEquals(-1L, Files.mismatch(xml, exported), "HKY + Yule must use the same XML for export and run");
+        var document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xml.toFile());
+        var xpath = XPathFactory.newInstance().newXPath();
+        assertEquals("30", xpath.evaluate("/beast/mcmc/@chainLength", document));
+        assertEquals("12", xpath.evaluate("count(/beast/alignment/sequence)", document));
+        assertEquals("hky-yule.log", xpath.evaluate("/beast/mcmc/log[@fileName]/@fileName", document));
+        assertEquals("hky-yule.trees", xpath.evaluate("/beast/mcmc/logTree/@fileName", document));
+
+        Set<String> outputs = Set.of("output/hky-yule.log", "output/hky-yule.trees");
+        for (String key : List.of("expectedOutputs", "generatedOutputs")) {
+            Set<String> recorded = new HashSet<>();
+            record.path(key).forEach(output -> recorded.add(output.path("path").asText()));
+            assertEquals(outputs, recorded, details);
+        }
+        Path trace = run.resolve("output/hky-yule.log");
+        assertFiniteTrace(trace);
+        assertTrue(Files.readString(trace).contains("[seed=12345]"), "BEAST X must report the effective seed");
+        assertHkyTrace(trace, "joint", "baseFrequencies");
+        String trees = Files.readString(run.resolve("output/hky-yule.trees"));
+        assertEquals(31, trees.lines().filter(line -> line.strip().startsWith("tree STATE_")).count());
+        assertTrue(trees.contains("tree STATE_30 "), trees);
+
+        Path repeated = workingDirectory.resolve("same seed");
+        Result second = launch(beastXEnvironment(), "run", source.toString(), "--engine", "beastx",
+                "--out", repeated.toString());
+        assertEquals(0, second.exitCode(), second.details());
+        assertEquals(beastXTraceSamples(trace), beastXTraceSamples(repeated.resolve("output/hky-yule.log")),
+                "Independent processes using the same seed must reproduce the numeric trace");
+
+        Map<Path, String> previous = hashes(run);
+        Result collision = launch(beastXEnvironment(), "run", "--engine", "beastx", source.toString(),
+                "--out", run.toString());
+        assertNotEquals(0, collision.exitCode(), collision.details());
+        assertEquals(previous, hashes(run), "A second run must preserve all previous results");
+        try (var children = Files.list(workingDirectory)) {
+            assertEquals(Set.of(run, repeated), Set.copyOf(children.toList()));
+        }
+        assertEquals(inputsBefore, hashes(source.getParent()), "Run must preserve the source and inputs");
+    }
+
+    @Test
+    void managedBeastXRunKeepsLoggersInsideTheOutputDirectory() throws Exception {
+        Path source = temporary.resolve("escaping-prefix.phylospec");
+        Files.writeString(source, """
+                Real x ~ Normal(mean=0.0, sd=1.0)
+                mcmc {
+                    Integer chainLength = 2
+                    String outputPrefix = "../../sentry"
+                }
+                """);
+        Path sentry = workingDirectory.resolve("sentry.log");
+        Files.writeString(sentry, "existing trace");
+        Path run = workingDirectory.resolve("unsafe result");
+        Result rejected = launch(beastXEnvironment(), "run", "--engine", "beastx", source.toString(),
+                "--out", run.toString());
+        assertNotEquals(0, rejected.exitCode(), rejected.details());
+        assertEquals("existing trace", Files.readString(sentry));
+        assertFalse(Files.exists(run.resolve("output/sentry.log")));
+        var record = JSON.readTree(run.resolve("run.json").toFile());
+        assertEquals("failed", record.path("status").asText(), record.toPrettyString());
+        assertFalse(record.has("mcmcStartedAt"), "A rejected output path must prevent native MCMC from starting");
+    }
+
+    private static List<String> beastXTraceSamples(Path trace) throws Exception {
+        return Files.readAllLines(trace).stream().map(String::strip)
+                .filter(line -> !line.isEmpty() && Character.isDigit(line.charAt(0)))
+                .toList();
+    }
+
+    private static Map<String, String> beastXEnvironment() {
+        // Exercise the Apple Silicon ZIP's native libraries after clearing the inherited environment.
+        // The generic ZIP uses the native JNI/plugin directory configured for the test JVM.
+        return BUNDLED_BEAGLE
+                ? Map.of()
+                : Map.of("JDK_JAVA_OPTIONS", "\"-Djava.library.path=" + System.getProperty("java.library.path")
+                        + "\" -Dbeagle.resource.order=0");
     }
 
     @Test
@@ -175,16 +281,8 @@ class CliDistributionIT {
         Map<Path, String> before = hashes(workingDirectory);
         Map<Path, String> sourceFiles = hashes(source.getParent());
 
-        // Native load-checks of sequence likelihoods require BEAGLE. Only the generic ZIP needs
-        // the separately installed test runtime; exercise the Apple Silicon ZIP's own CPU libraries.
-        Map<String, String> nativeEnvironment = BUNDLED_BEAGLE
-                ? Map.of()
-                : Map.of(
-                        "JDK_JAVA_OPTIONS",
-                        "\"-Djava.library.path=" + System.getProperty("java.library.path")
-                                + "\" -Dbeagle.resource.order=0");
         Result result = launch(
-                nativeEnvironment,
+                beastXEnvironment(),
                 "export",
                 "--engine",
                 "beastx",
@@ -213,7 +311,7 @@ class CliDistributionIT {
 
         Path alignment = source.getParent().resolve("data/primate-mtDNA.nex");
         Result collision = launch(
-                nativeEnvironment, "export", "--engine", "beastx", source.toString(), "--xml", alignment.toString());
+                beastXEnvironment(), "export", "--engine", "beastx", source.toString(), "--xml", alignment.toString());
         assertEquals(1, collision.exitCode(), collision.details());
         assertTrue(collision.stderr().contains(alignment.toString()), collision.details());
 
@@ -295,7 +393,7 @@ class CliDistributionIT {
         assertEquals(1, record.path("libraries").size());
         assertEquals("beast2", record.path("libraries").get(0).path("id").asText());
 
-        assertHkyTrace(run.resolve("output/hky-yule.log"));
+        assertHkyTrace(run.resolve("output/hky-yule.log"), "posterior", "baseFrequencies.");
         String trees = Files.readString(run.resolve("output/hky-yule.trees"));
         assertEquals(
                 31,
@@ -494,7 +592,7 @@ class CliDistributionIT {
         assertEquals(30, lastSample, "The short chain must reach its requested last sample");
     }
 
-    private static void assertHkyTrace(Path trace) throws Exception {
+    private static void assertHkyTrace(Path trace, String posterior, String frequencyPrefix) throws Exception {
         List<String> lines = Files.readAllLines(trace).stream()
                 .map(String::strip)
                 .filter(line -> !line.isEmpty() && !line.startsWith("#"))
@@ -502,16 +600,16 @@ class CliDistributionIT {
         List<String> columns = Arrays.asList(lines.getFirst().split("\\s+"));
         assertTrue(
                 columns.containsAll(List.of(
-                        "posterior",
+                        posterior,
                         "prior",
                         "likelihood",
                         "kappa",
                         "tree.height",
                         "tree.treeLength",
-                        "baseFrequencies.1",
-                        "baseFrequencies.2",
-                        "baseFrequencies.3",
-                        "baseFrequencies.4")),
+                        frequencyPrefix + "1",
+                        frequencyPrefix + "2",
+                        frequencyPrefix + "3",
+                        frequencyPrefix + "4")),
                 columns.toString());
         assertEquals(32, lines.size(), "Header and samples 0 through 30 must be present");
         for (int sample = 0; sample <= 30; sample++) {
@@ -521,7 +619,7 @@ class CliDistributionIT {
             assertEquals(
                     Double.parseDouble(values[columns.indexOf("prior")])
                             + Double.parseDouble(values[columns.indexOf("likelihood")]),
-                    Double.parseDouble(values[columns.indexOf("posterior")]),
+                    Double.parseDouble(values[columns.indexOf(posterior)]),
                     1e-8,
                     "Posterior must equal prior plus likelihood at sample " + sample);
             assertTrue(Double.parseDouble(values[columns.indexOf("kappa")]) > 0.0);
@@ -529,7 +627,7 @@ class CliDistributionIT {
             assertTrue(Double.parseDouble(values[columns.indexOf("tree.treeLength")]) > 0.0);
             double total = 0.0;
             for (int base = 1; base <= 4; base++) {
-                double frequency = Double.parseDouble(values[columns.indexOf("baseFrequencies." + base)]);
+                double frequency = Double.parseDouble(values[columns.indexOf(frequencyPrefix + base)]);
                 assertTrue(frequency >= 0.0 && frequency <= 1.0);
                 total += frequency;
             }

@@ -110,6 +110,17 @@ public class PhyloSpecCliTest {
     }
 
     @Test
+    void selectsBeastXForManagedRuns() {
+        var options = PhyloSpecCli.Options.parse(
+                new String[] {"run", "--engine", "beastx", "model.phylospec", "--run-name", "sample", "--out", "results"});
+        assertEquals(PhyloSpecCli.Command.RUN, options.command());
+        assertEquals("beastx", options.engine());
+        assertEquals(List.of("beastX"), options.libraries());
+        assertEquals("sample", options.runName());
+        assertEquals(Path.of("results"), options.outputDirectory());
+    }
+
+    @Test
     void newCommandsPreserveProviderOrderAndAppendBaseOnlyWhenMissing() {
         for (String command : List.of("check", "run")) {
             assertEquals(
@@ -157,7 +168,7 @@ public class PhyloSpecCliTest {
                 new String[] {"run", "model.phylospec", "--xml", "analysis.xml"},
                 new String[] {"check", "model.phylospec", "--engine", "unknown"},
                 new String[] {"check", "model.phylospec", "--engine", "beastx", "--engine", "beast3"},
-                new String[] {"run", "model.phylospec", "--engine", "beastx"},
+                new String[] {"run", "model.phylospec", "--engine", "beastx", "--adapter-path", "local"},
                 new String[] {"export", "--engine", "beastx", "model.phylospec"},
                 new String[] {
                     "export", "--engine", "beastx", "model.phylospec", "--xml", "out.xml", "--adapter-path", "local"

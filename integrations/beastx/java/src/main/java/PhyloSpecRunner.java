@@ -13,6 +13,7 @@ import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.TileLibrary;
+import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeError;
@@ -20,6 +21,7 @@ import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import org.phylospec.workspace.Workspace;
 import org.xml.sax.SAXException;
+import tiles.mcmc.RandomSeedTile;
 import tiling.BeastXModel;
 import tiling.BeastXState;
 import tiling.runner.RunMode;
@@ -35,6 +37,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -97,11 +100,17 @@ public class PhyloSpecRunner implements ErrorEventListener {
     static BeastXModel buildXmlExportModel(Path script, String defaultPrefix, Consumer<String> warningHandler,
                                            Consumer<Path> inputObserver)
             throws IOException {
+        return buildXmlExportModel(script, readSource(script), defaultPrefix, warningHandler, inputObserver, null);
+    }
+
+    static BeastXModel buildXmlExportModel(Path script, String sourceText, String defaultPrefix,
+                                           Consumer<String> warningHandler, Consumer<Path> inputObserver,
+                                           Consumer<Long> beforeModel) {
         Path source = script.toAbsolutePath().normalize();
         PhyloSpecRunner runner = new PhyloSpecRunner(
-                readSource(source), new Workspace(source.getParent()), warningHandler);
+                sourceText, new Workspace(source.getParent()), warningHandler);
         BeastXState state = new BeastXState(defaultPrefix, source.getParent(), inputObserver);
-        runner.tile(runner.parseAndResolve(), state);
+        runner.tile(runner.parseAndResolve(), state, beforeModel);
         state.configureDefaultXmlLoggers(defaultPrefix);
         return runner.runPipeline.buildModel(state, false);
     }
@@ -420,24 +429,32 @@ public class PhyloSpecRunner implements ErrorEventListener {
             ParsedPhyloSpec parsed,
             String runName
     ) {
-        return tile(parsed, new BeastXState(runName));
+        return tile(parsed, new BeastXState(runName), null);
     }
 
-    private BeastXState tile(ParsedPhyloSpec parsed, BeastXState state) {
-        EvaluateTiles<BeastXState> tiles = matchTiles(parsed);
+    private BeastXState tile(ParsedPhyloSpec parsed, BeastXState state, Consumer<Long> beforeModel) {
+        List<Tile<?, BeastXState>> tiles = matchTiles(parsed);
         try {
-            return tiles.applyBestTiling(state);
+            if (beforeModel != null) {
+                // The seed Tile accepts constant expressions and references. Apply it before any
+                // stochastic initializer; Tile.apply caches that result for the ordinary traversal.
+                for (var tile : tiles) {
+                    if (tile instanceof RandomSeedTile) tile.apply(state, new IdentityHashMap<>());
+                }
+                beforeModel.accept(state.randomSeed);
+            }
+            for (var tile : tiles) tile.apply(state, new IdentityHashMap<>());
+            return state;
         } catch (TileApplicationError error) {
             throw tilingFailure(parsed, error);
         }
     }
 
-    private EvaluateTiles<BeastXState> matchTiles(ParsedPhyloSpec parsed) {
+    private List<Tile<?, BeastXState>> matchTiles(ParsedPhyloSpec parsed) {
         EvaluateTiles<BeastXState> tiles = new EvaluateTiles<>(
                 TileLibrary.loadAll(BeastXState.class), parsed.variableResolver, parsed.stochasticityResolver);
         try {
-            tiles.getBestTiling(parsed.statements);
-            return tiles;
+            return tiles.getBestTiling(parsed.statements);
         } catch (TileApplicationError error) {
             throw tilingFailure(parsed, error);
         }

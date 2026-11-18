@@ -18,7 +18,7 @@ import org.phylospec.errors.Error;
 import org.phylospec.tiling.errors.WrappedTileApplicationError;
 import org.xml.sax.SAXException;
 
-/** Command-line entry point for checking scripts, exporting analysis XML and running BEAST 3 analyses. */
+/** Command-line entry point for checking scripts, exporting analysis XML and running managed analyses. */
 public final class PhyloSpecCli {
 
     private static final String USAGE = """
@@ -32,10 +32,10 @@ public final class PhyloSpecCli {
               check  Check syntax, static types and mappings for the selected engine; do not run MCMC.
                      A successful check does not validate all data or native initialization.
               export Write and load-check analysis XML for the selected engine without running MCMC.
-              run    Check and execute the model with BEAST 3.
+              run    Check and execute the model with the selected engine.
 
             Options:
-              --engine <id>          check/export: beast3 (default) or beastx; run: beast3
+              --engine <id>          check/export/run: beast3 (default) or beastx
               --library <id[,id...]>  Tile libraries in preference order
               --adapter-path <dir>   check/export/run: unpacked local adapter bundle (repeatable)
               --xml <file>           Export only: destination XML (default log prefix: XML file stem)
@@ -46,7 +46,7 @@ public final class PhyloSpecCli {
               --version              Show PhyloSpec and the default BEAST 3 runtime versions
               --                     Treat remaining arguments as file names
 
-            BEAST X check/export uses its base library 'beastX' and does not load local adapters.
+            BEAST X check/export/run uses its base library 'beastX' and does not load local adapters.
             BEAST 3 check/export/run default to the base library 'beast2' (its existing internal ID).
             When libraries are specified, 'beast2' is appended only if absent.
             Adapter paths use the command's working directory and contain direct *.jar files.
@@ -59,6 +59,7 @@ public final class PhyloSpecCli {
             Script outputPrefix overrides --run-name; explicit logger names are relative to output/.
             Output paths must stay inside output/. Absolute script output paths are rejected.
             Managed runs save model.phylospec, run.json and console.log beside output/.
+            BEAST X also saves the executed analysis.xml in the run directory.
             A nonterminal or unconfirmed run.json does not confirm that a process is still running.
             Legacy run retains its existing --run-name path and script output behavior; --out is unavailable.
             """;
@@ -127,7 +128,10 @@ public final class PhyloSpecCli {
         }
 
         if (options.engine().equals("beastx")) {
-            return InstalledEngineTool.run(options, source, out, err);
+            if (options.command() == Command.RUN) {
+                return InstalledBeastXRun.run(options, source, out, err);
+            }
+            return InstalledEngineTool.run(options.command(), options, source, out, err);
         }
         try (LocalAdapterBundles adapters = LocalAdapterBundles.open(options.adapterPaths())) {
             executeModel(options, source, adapters, out, err);
@@ -163,11 +167,8 @@ public final class PhyloSpecCli {
         }
 
         if (options.command() == Command.RUN) {
-            String scriptName = withoutExtension(source).getFileName().toString();
-            Path runDirectory = options.outputDirectory() == null
-                    ? source.getParent().resolve("runs").resolve(scriptName + "-" + UUID.randomUUID())
-                    : options.outputDirectory().toAbsolutePath().normalize();
-            String runName = options.runName() == null ? scriptName : options.runName();
+            Path runDirectory = options.runDirectory(source);
+            String runName = options.outputPrefix(source);
             RunRecord record;
             try {
                 record = runner.runManaged(runName, runDirectory, warningHandler, out::println, options.debug());
@@ -368,9 +369,8 @@ public final class PhyloSpecCli {
             String engine = selectedEngine == null ? "beast3" : selectedEngine;
             if (!help && !version) {
                 if (engine.equals("beastx")) {
-                    if (command != Command.CHECK && command != Command.EXPORT) {
-                        throw new IllegalArgumentException(
-                                "BEAST X is available for check and export. Run requires beast3.");
+                    if (command == Command.LEGACY_RUN) {
+                        throw new IllegalArgumentException("Use the run subcommand for BEAST X.");
                     }
                     if (!adapterPaths.isEmpty() || !libraries.isEmpty() && !libraries.equals(List.of("beastX"))) {
                         throw new IllegalArgumentException(
@@ -413,6 +413,16 @@ public final class PhyloSpecCli {
                     help,
                     version,
                     debug);
+        }
+
+        Path runDirectory(Path source) {
+            return outputDirectory == null
+                    ? source.getParent().resolve("runs").resolve(withoutExtension(source).getFileName() + "-" + UUID.randomUUID())
+                    : outputDirectory.toAbsolutePath().normalize();
+        }
+
+        String outputPrefix(Path source) {
+            return runName == null ? withoutExtension(source).getFileName().toString() : runName;
         }
 
         String action() {

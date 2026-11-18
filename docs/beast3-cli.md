@@ -1,7 +1,7 @@
 # PhyloSpec command line
 
-The CLI can check a `.phylospec` script and export analysis XML for BEAST 3
-or BEAST X. BEAST 3 is the default and supports MCMC execution with `run`.
+The same CLI checks a `.phylospec` script, exports native XML and runs MCMC
+with BEAST 3 (the default) or BEAST X (`--engine beastx`).
 The ZIP includes both engines' Java dependencies. The macOS Apple Silicon ZIP
 also includes BEAGLE's native CPU libraries.
 The examples demonstrate supported workflows; they do not establish support for
@@ -31,7 +31,7 @@ Choose the ZIP for your platform:
 | ZIP suffix | Included calculation backend |
 | --- | --- |
 | `-cli-macos-arm64.zip` | macOS Apple Silicon: bundled BEAGLE CPU. Requires ARM64 Java 25 or newer; no separate BEAGLE installation, Homebrew, or library-path configuration is needed. |
-| `-cli.zip` | Generic Java distribution. BEAST 3 supports a Java likelihood fallback. BEAST X XML load-checks of sequence likelihoods require a separate native BEAGLE runtime. |
+| `-cli.zip` | Generic Java distribution. BEAST 3 supports a Java likelihood fallback. BEAST X export and execution of sequence likelihoods require a separately installed native BEAGLE runtime. |
 
 Set `PHYLOSPEC_ZIP` to your ZIP's actual location. These commands use the current
 `0.0.1-SNAPSHOT` macOS Apple Silicon distribution. For the generic distribution,
@@ -110,12 +110,33 @@ PHYLOSPEC_RUN="$PHYLOSPEC_PROJECT/results/run-01"
   --out "$PHYLOSPEC_RUN"
 ```
 
+To run the same 30-step script with BEAST X, choose a separate result directory.
+The input alignment is still resolved relative to the script. The Apple Silicon CPU
+ZIP includes the required BEAGLE runtime. For the generic ZIP, configure BEAGLE
+as described under **Export a native analysis XML**.
+
+```sh
+PHYLOSPEC_X_RUN="$PHYLOSPEC_PROJECT/results/run-beastx-01"
+"$PHYLOSPEC_DIR/bin/phylospec" run --engine beastx "$PHYLOSPEC_PROJECT/hky-yule.phylospec" \
+  --out "$PHYLOSPEC_X_RUN"
+head -n 5 "$PHYLOSPEC_X_RUN/output/hky-yule.log"
+tail -n 2 "$PHYLOSPEC_X_RUN/output/hky-yule.trees"
+```
+
+BEAST X loads the saved `analysis.xml` and runs it in `output/`. The trace header
+reports the script's seed (`12345`). For this example, look for state 30 in the
+trace and `tree STATE_30` in the tree log. The BEAST X `run.json` records the
+XML's SHA-256 digest, the effective seed and the result files. When rerunning
+the XML with BEAST X, use the recorded seed and a fresh working directory for
+its relative log paths. Supply a positive seed in the script or omit it to let
+the managed run select and record one.
+
 `check` validates syntax, static types, and available BEAST mappings. It does not
 run MCMC or validate all data and native initialization. Some checks can inspect
-inputs while resolving their types. `run` reuses these checks,
-builds the native BEAST 3 model, and runs MCMC.
+inputs while resolving their types. Each engine reuses its checks before
+building the native model and running MCMC.
 
-`run` reports four stages: checking, model construction and initialization, MCMC,
+The BEAST 3 `run` reports four stages: checking, model construction and initialization, MCMC,
 and output verification. It also reports the initialized likelihood backend for
 this example: expect `BEAGLE` with a CPU resource when using the macOS Apple Silicon
 ZIP. Wait for `Run completed` and the result paths. If BEAGLE is unavailable, a note
@@ -137,7 +158,7 @@ head -n 6 "$PHYLOSPEC_RUN/output/hky-yule.log"
 tail -n 3 "$PHYLOSPEC_RUN/output/hky-yule.log"
 ```
 
-In `run.json`, a successful run has `"status" : "succeeded"` and
+For the default BEAST 3 run, a successful `run.json` has `"status" : "succeeded"` and
 `"completionConfirmed" : true`. The trace's first line names the columns; subsequent
 lines are samples. For this script, expect **31 samples, numbered 0–30**, and 31
 trees. Column order can vary; identify quantities by their column names.
@@ -237,8 +258,8 @@ set "PHYLOSPEC_PROJECT=C:\path\my-hky-analysis"
 ## Run records and completion
 
 The script snapshot is the source actually read. `run.json` records its hash,
-runtime and selected component/library identities, effective settings, seeds,
-and expected/generated output files. Input hashes cover files reported through
+the engine, effective settings, seeds, and expected/generated output files.
+BEAST 3 also records the selected component and library identities. Input hashes cover files reported through
 the runner's input-path resolver. Input data are not copied, so the result
 directory is not a self-contained analysis archive.
 
@@ -273,8 +294,8 @@ choose a new `--out` directory, such as `results/run-02`.
 
 | Option | Meaning |
 | --- | --- |
-| `--engine <id>` | For `check` and `export`, select `beast3` (default) or `beastx`. The `run` command supports BEAST 3. |
-| `--library <id[,id...]>` | Select BEAST 3 tile libraries in preference order. BEAST X checking and export use its base library, `beastX`. |
+| `--engine <id>` | Select `beast3` (default) or `beastx` for `check`, `export` and `run`. |
+| `--library <id[,id...]>` | Select BEAST 3 tile libraries in preference order. BEAST X uses its base library, `beastX`. |
 | `--adapter-path <directory>` | Load an unpacked local BEAST 3 adapter bundle for `check`, `export` or `run`. Repeat for additional bundles. |
 | `--xml <file>` | Destination for `export`. The XML contains the model and its MCMC configuration. The filename stem supplies the default log prefix. |
 | `--out <directory>` | For `run`: exact directory for this run's record, logs, and outputs. |
@@ -429,7 +450,8 @@ CLI can perform a static `check` for either engine without this Maven setup.
 
 A minimal acceptance pass checks the same HKY and Yule script against both engines,
 exports its BEAST X analysis XML while preserving existing trace and tree logs,
-checks help/version, runs the bundled BEAST 3 examples from
+and runs the packaged BEAST X example twice to check seed reproducibility,
+the XML digest, and the trace and tree logs. It also checks help/version, runs the bundled BEAST 3 examples from
 another working directory (including paths with spaces), verifies successful
 `run.json` and nonempty output files, rejects an existing output directory, and
 reports a missing input file clearly. Run the existing CLI regression tests as
@@ -482,7 +504,7 @@ compatibility or long-chain convergence.
 ## Run the Java entry point directly
 
 Developers can also invoke `runner.PhyloSpecCli` without a ZIP. These commands
-build a BEAST 3 runtime classpath from the same checkout. For BEAST X `check` and `export`, use the packaged launcher.
+build a BEAST 3 runtime classpath from the same checkout. For BEAST X commands, use the packaged launcher.
 Use Java **25** and Maven, starting at the repository root in one terminal session.
 
 ```sh
