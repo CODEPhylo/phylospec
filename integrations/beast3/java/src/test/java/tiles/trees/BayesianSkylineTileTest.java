@@ -128,6 +128,19 @@ class BayesianSkylineTileTest {
     }
 
     @Test
+    void startingTreeIsOnTheScaleOfThePopulationSizes() throws Exception {
+        BEASTState state = evaluate("""
+                Alignment data = fromNexus("%s")
+                Tree tree ~ SkylineCoalescent(populationSizes=[0.01, 0.03], groupSizes=[8, 3], taxa=taxa(data))
+                """.formatted(absolute(DATA)));
+
+        // a coalescent tree of 12 taxa under a population of 0.02 has an expected height of
+        // about 0.04; under the previous population of 1.0 it was about 1.8
+        double height = stateNode(state, "tree", Tree.class).getRoot().getHeight();
+        assertTrue(height > 0.0 && height < 0.4, "starting tree height " + height);
+    }
+
+    @Test
     void skylineCoalescentRejectsGroupSizesWithTheWrongSum() {
         Exception failure = assertThrows(Exception.class, () -> evaluate("""
                 Alignment data = fromNexus("%s")

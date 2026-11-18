@@ -76,7 +76,7 @@ class ProbabilityIIDTileTest {
         assertSame(values, prior.paramInput.get());
         assertSame(UnitInterval.INSTANCE, values.getDomain());
         double[] initial = new double[size];
-        Arrays.fill(initial, 0.5);
+        Arrays.fill(initial, 2.0 / (2.0 + 3.0)); // the prior mean of Beta(2, 3)
         assertArrayEquals(initial, values.getValues(), 0.0);
         assertNotEquals(1.0, Arrays.stream(values.getValues()).sum(), "IID probabilities need not sum to one.");
         assertEquals(0.0, values.getLower(), 0.0);

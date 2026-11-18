@@ -251,7 +251,7 @@ class ScalarDistributionSamplingTest {
     private static Stream<Arguments> positiveFamilies() {
         return Stream.of(
                 Arguments.of("PositiveReal", "Gamma(shape=2.0, rate=1.0)", PositiveReal.INSTANCE, 1.0),
-                Arguments.of("Probability", "Beta(alpha=2.0, beta=3.0)", UnitInterval.INSTANCE, 0.5),
+                Arguments.of("Probability", "Beta(alpha=2.0, beta=3.0)", UnitInterval.INSTANCE, 2.0 / (2.0 + 3.0)),
                 Arguments.of("NonNegativeReal", "Exponential(rate=2.0)", NonNegativeReal.INSTANCE, 1.0),
                 Arguments.of("PositiveReal", "LogNormal(logMean=0.3, logSd=0.4)", PositiveReal.INSTANCE, Math.exp(0.3)),
                 Arguments.of(
