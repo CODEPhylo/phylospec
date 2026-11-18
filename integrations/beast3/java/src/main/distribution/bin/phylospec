@@ -77,8 +77,8 @@ if [ -d "$phylospec_home/native" ]; then
     done
     exec "$phylospec_java" --enable-native-access=ALL-UNNAMED \
         "-Djava.library.path=$phylospec_native" -Dbeagle.resource.order=0 \
-        -cp "$phylospec_home/lib/*" runner.PhyloSpecCli "$@"
+        "-Dphylospec.home=$phylospec_home" -cp "$phylospec_home/lib/*" runner.PhyloSpecCli "$@"
 fi
 
 # The generic distribution retains BEAST's optional native discovery and Java fallback.
-exec "$phylospec_java" --enable-native-access=ALL-UNNAMED -cp "$phylospec_home/lib/*" runner.PhyloSpecCli "$@"
+exec "$phylospec_java" --enable-native-access=ALL-UNNAMED "-Dphylospec.home=$phylospec_home" -cp "$phylospec_home/lib/*" runner.PhyloSpecCli "$@"

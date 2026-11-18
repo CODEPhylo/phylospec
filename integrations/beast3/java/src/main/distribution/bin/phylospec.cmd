@@ -35,7 +35,7 @@ if %PHYLOSPEC_JAVA_MAJOR% LSS 25 (
 )
 
 rem BEAGLE may load JNI acceleration; explicitly allow this existing optional native call.
-"%PHYLOSPEC_JAVA%" --enable-native-access=ALL-UNNAMED -cp "%PHYLOSPEC_HOME%\lib\*" runner.PhyloSpecCli %*
+"%PHYLOSPEC_JAVA%" --enable-native-access=ALL-UNNAMED "-Dphylospec.home=%PHYLOSPEC_HOME%" -cp "%PHYLOSPEC_HOME%\lib\*" runner.PhyloSpecCli %*
 exit /b %errorlevel%
 
 :unknown_java_version

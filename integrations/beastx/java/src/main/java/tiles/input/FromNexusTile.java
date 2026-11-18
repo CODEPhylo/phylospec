@@ -60,7 +60,7 @@ public class FromNexusTile extends GeneratorTile<Alignment, BeastXState> {
         }
 
         File file =
-                new File(path);
+                beastState.resolveInput(path).toFile();
 
         try (FileReader reader = new FileReader(file)) {
             NexusImporter importer =

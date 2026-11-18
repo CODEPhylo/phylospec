@@ -36,7 +36,7 @@ public class FromFastaTile extends GeneratorTile<Alignment, BeastXState> {
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
         String path = this.fileInput.apply(beastState, indexVariables);
-        File file = new File(path);
+        File file = beastState.resolveInput(path).toFile();
 
         try (FileReader reader = new FileReader(file)) {
             FastaImporter importer =

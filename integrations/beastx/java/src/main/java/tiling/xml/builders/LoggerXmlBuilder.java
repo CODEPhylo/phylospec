@@ -203,7 +203,7 @@ public class LoggerXmlBuilder {
                     XmlElement.ref("prior", "prior");
 
             case LIKELIHOOD_LOG_NAME -> {
-                if (state.likelihoodDistributions.isEmpty()) {
+                if (state.likelihoodDistributions.isEmpty() && state.observedTreeDistributions.isEmpty()) {
                     throw new IllegalArgumentException(
                             "Cannot log 'likelihood' because this BEAST X XML model has no likelihood block."
                     );
