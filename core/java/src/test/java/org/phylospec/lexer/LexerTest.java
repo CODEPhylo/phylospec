@@ -251,6 +251,40 @@ public class LexerTest {
     }
 
     @Test
+    public void testTooSmallScientificNumberLiteral() {
+        for (String source : List.of("1e-999", "0.000_1e-400")) {
+            List<Error> errors = new ArrayList<>();
+            Lexer lexer = new Lexer(source);
+            lexer.registerEventListener(errors::add);
+            List<Token> tokens = lexer.scanTokens();
+
+            assertEquals(1, errors.size(), source);
+            assertEquals(
+                    "'" + source + "' is too close to zero to be represented.",
+                    errors.getFirst().description());
+            assertEquals("Try a larger number.", errors.getFirst().hint());
+            assertEquals(
+                    List.of(TokenType.EOF), tokens.stream().map(t -> t.type).toList(), source);
+        }
+    }
+
+    @Test
+    public void testZeroNumberLiterals() {
+        String source = "0.0 0e5 0.0e-999";
+
+        List<Error> errors = new ArrayList<>();
+        Lexer lexer = new Lexer(source);
+        lexer.registerEventListener(errors::add);
+        List<Token> tokens = lexer.scanTokens();
+
+        assertEquals(0, errors.size());
+        assertEquals(new Token(TokenType.FLOAT, "0.0", 0.0, 1, 0, 3), tokens.get(0));
+        assertEquals(new Token(TokenType.FLOAT, "0e5", 0.0, 1, 4, 7), tokens.get(1));
+        assertEquals(new Token(TokenType.FLOAT, "0.0e-999", 0.0, 1, 8, 16), tokens.get(2));
+        assertEquals(TokenType.EOF, tokens.get(3).type);
+    }
+
+    @Test
     public void testStringLiterals() {
         String source = "\"Hallo this is a string\"\n\"This is a\nmultiline\r\nstring\"";
 
