@@ -629,6 +629,60 @@
             }]
         },
         {
+            "generatedType": "Taxa<;num=num.value>",
+            "name": "taxa",
+            "namespace": "phylospec.functions.accessor",
+            "description": "Create the given number of taxa named \"1\", \"2\", ..., \"num\", all sampled at age zero",
+            "arguments": [{
+                "name": "num",
+                "description": "Number of taxa to create",
+                "type": "PositiveInteger",
+                "required": true
+            }]
+        },
+        {
+            "generatedType": "Taxa<;num=names.num>",
+            "name": "taxa",
+            "namespace": "phylospec.functions.accessor",
+            "description": "Create taxa from a list of names, with optional species names and sampling ages given in the same order",
+            "arguments": [
+                {
+                    "name": "names",
+                    "description": "Taxon names",
+                    "type": "Vector<String>",
+                    "required": true
+                },
+                {
+                    "name": "species",
+                    "description": "Species name of each taxon",
+                    "type": "Vector<String>",
+                    "required": false
+                },
+                {
+                    "name": "ages",
+                    "description": "Sampling age of each taxon (all zero if omitted)",
+                    "type": "Vector<NonNegativeReal>",
+                    "required": false
+                }
+            ],
+            "constraints": [
+                {
+                    "argument": "species",
+                    "otherProperty": "num",
+                    "property": "num",
+                    "otherArgument": "names",
+                    "operator": "equals"
+                },
+                {
+                    "argument": "ages",
+                    "otherProperty": "num",
+                    "property": "num",
+                    "otherArgument": "names",
+                    "operator": "equals"
+                }
+            ]
+        },
+        {
             "generatedType": "Taxon",
             "name": "taxon",
             "namespace": "phylospec.functions.accessor",

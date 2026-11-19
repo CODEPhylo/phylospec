@@ -229,15 +229,36 @@ Extract a subset of sites from an alignment.
 
 These functions work with taxonomic data.
 
-#### `taxonset(names: Vector<String>) -> TaxonSet`
+When there is no data to read taxa from, for example when simulating, these functions create
+taxa directly (they mirror LPhy's `taxa(names=1:n)` and `taxa(names=..., ages=...)`):
 
-Create a taxon set from taxon names.
+```phylospec
+Tree tree ~ Yule(birthRate=1.0, taxa=taxa(num=100))
+Taxa dated = taxa(names=["A", "B", "C"], ages=[0.0, 1.0, 2.5])
+```
 
-**Package:** `phylospec.functions.taxa`
+#### `taxa(num: PositiveInteger) -> Taxa`
 
-| Parameter | Type            | Description        | Default | Required |
-|-----------|-----------------|--------------------|---------|----------|
-| `names`   | `Vector<String>`| Array of taxon names | None  | Yes      |
+Create `num` taxa named `"1"`, `"2"`, ..., `"num"`, all sampled at age zero.
+
+**Package:** `phylospec.functions.accessor`
+
+| Parameter | Type              | Description              | Default | Required |
+|-----------|-------------------|--------------------------|---------|----------|
+| `num`     | `PositiveInteger` | Number of taxa to create | None    | Yes      |
+
+#### `taxa(names: Vector<String>, species?: Vector<String>, ages?: Vector<NonNegativeReal>) -> Taxa`
+
+Create taxa from a list of names. Species names and sampling ages, if given, are matched to the
+names by position and must have the same length.
+
+**Package:** `phylospec.functions.accessor`
+
+| Parameter | Type                      | Description                     | Default  | Required |
+|-----------|---------------------------|---------------------------------|----------|----------|
+| `names`   | `Vector<String>`          | Taxon names (must be unique)    | None     | Yes      |
+| `species` | `Vector<String>`          | Species name of each taxon      | None     | No       |
+| `ages`    | `Vector<NonNegativeReal>` | Sampling age of each taxon      | All zero | No       |
 
 ## 6. Tree Functions
 

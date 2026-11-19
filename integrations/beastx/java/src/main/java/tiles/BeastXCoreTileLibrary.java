@@ -71,6 +71,8 @@ import tiles.functions.AgeTaxonTile;
 import tiles.functions.AgeNodeTreeTile;
 import tiles.functions.MRCATile;
 import tiles.functions.TreeTaxaTile;
+import tiles.functions.NumberedTaxaTile;
+import tiles.functions.NamedTaxaTile;
 import tiles.functions.NumRowsTile;
 import tiles.functions.NumColsTile;
 import tiles.functions.SumRealVectorTile;
@@ -220,6 +222,8 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new MRCATile());
         tiles.add(new AlignmentTaxaTile());
         tiles.add(new TreeTaxaTile());
+        tiles.add(new NumberedTaxaTile());
+        tiles.add(new NamedTaxaTile());
         tiles.add(new SumRealVectorTile());
 
         // BEAST X MCMC configuration

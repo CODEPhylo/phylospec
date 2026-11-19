@@ -96,6 +96,8 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
 
         tiles.add(new AlignmentTaxaTile());
         tiles.add(new TreeTaxaTile());
+        tiles.add(new NumberedTaxaTile());
+        tiles.add(new NamedTaxaTile());
         tiles.add(new TaxonTile());
         tiles.add(new TaxonNameTile());
         tiles.add(new TaxonAgeTile());

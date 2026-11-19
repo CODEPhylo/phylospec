@@ -1,0 +1,24 @@
+Taxa numbered = taxa(num=10)
+Taxa named = taxa(names=["A", "B", "C"])
+Taxa dated = taxa(names=["A", "B", "C"], species=["x", "x", "y"], ages=[0.0, 1.0, 2.5])
+Tree tree ~ Yule(birthRate=1.0, taxa=taxa(num=5))
+
+// EXPECT AST
+// (AS Taxa numbered (CA taxa (AA num 10)))
+// (AS Taxa named (CA taxa (AA names (AR "A" "B" "C"))))
+// (AS Taxa dated (CA taxa (AA names (AR "A" "B" "C")) (AA species (AR "x" "x" "y")) (AA ages (AR 0.0 1.0 2.5))))
+// (DR Tree tree (CA Yule (AA birthRate 1.0) (AA taxa (CA taxa (AA num 5)))))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS
+
+// EXPECT TYPES
+// Taxa<;num=10>
+// Vector<Taxon;num=10>
+// Taxa<;num=3>
+// Vector<Taxon;num=3>
+// Taxa<;num=3>
+// Vector<Taxon;num=3>
+// Tree<;numTaxa=5>
+// EXPECT TYPES
