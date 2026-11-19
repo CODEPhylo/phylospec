@@ -397,7 +397,7 @@ Real θ = κ * μ
 String label = "theta_${θ}"
 ```
 
-Names preserve their exact code-point spelling: no Unicode normalization or case folding is applied. For example, `μ` (Greek small letter mu) and `µ` (micro sign) are distinct names, as are `é` and `e` followed by a combining acute accent. Use the same spelling at every reference, including string interpolation.
+Names are normalized to Unicode Normalization Form C (NFC), so canonically equivalent spellings refer to the same name. For example, `é` typed as a single character and `e` followed by a combining acute accent are the same name, including in string interpolation. Compatibility variants are not merged and no case folding is applied: `μ` (Greek small letter mu) and `µ` (micro sign) are distinct names, as are `α` and `𝛼` (mathematical italic alpha). String literals are kept exactly as written.
 
 Editor and website highlighting uses Unicode identifier properties with Java's U+2E2F addition; the Java runtime's rules above determine validity.
 
