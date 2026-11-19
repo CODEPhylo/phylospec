@@ -411,13 +411,13 @@ class ProbabilityIIDTileTest {
         Path prefix = directory.resolve("probability-iid");
         String source = sharedModel() + """
                 mcmc {
-                    Integer chainLength = 200
-                    Integer randomSeed = 69204
-                    Integer defaultLogEvery = 1
-                    String outputPrefix = "%s"
+                    Sampler sampler = mcmc(chainLength=200)
+                    Logger fileLogger = fileLogger(file="%s.log", logEvery=1)
                 }
                 """.formatted(prefix.toString().replace("\\", "\\\\"));
-        new PhyloSpecRunner(source, List.of("beast2")).runPhyloSpec("probability-iid");
+        PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(69204L);
+        runner.runPhyloSpec(prefix.toString());
         List<String> lines = Files.readAllLines(Path.of(prefix + ".log")).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))
                 .toList();

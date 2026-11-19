@@ -284,13 +284,13 @@ class MixtureTileTest {
                 + (observed ? " observed as 0.5\n" : "\n");
         String source = model + """
                 mcmc {
-                    Integer chainLength = 100
-                    Integer randomSeed = 94731
-                    Integer defaultLogEvery = 5
-                    String outputPrefix = "%s"
+                    Sampler sampler = mcmc(chainLength=100)
+                    Logger fileLogger = fileLogger(file="%s.log", logEvery=5)
                 }
                 """.formatted(prefix.toString().replace("\\", "\\\\"));
-        new PhyloSpecRunner(source, List.of("beast2")).runPhyloSpec("mixture-short-chain");
+        PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(94731L);
+        runner.runPhyloSpec(prefix.toString());
         List<String> lines = Files.readAllLines(Path.of(prefix + ".log")).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))
                 .toList();

@@ -86,8 +86,8 @@ final class BeastXRunRecord {
     void configure(BeastXState state, Path publishedXml, long effectiveSeed) throws IOException {
         data.putObject("xml").put("path", directory.relativize(publishedXml.toAbsolutePath().normalize()).toString())
                 .put("sha256", sha256(publishedXml));
-        ObjectNode settings = data.putObject("settings").put("chainLength", state.chainLength)
-                .put("defaultLogEvery", state.defaultLogEvery).put("randomSeed", effectiveSeed)
+        ObjectNode settings = data.putObject("settings").put("chainLength", state.getSamplerSpec().chainLength())
+                .put("randomSeed", effectiveSeed)
                 .put("outputPrefix", state.outputPrefix == null ? state.runName : state.outputPrefix);
         ArrayNode loggers = settings.putArray("loggers");
         for (var spec : state.screenLoggerSpecs) {

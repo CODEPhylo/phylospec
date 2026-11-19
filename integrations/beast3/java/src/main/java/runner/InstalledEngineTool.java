@@ -60,6 +60,9 @@ final class InstalledEngineTool {
                                     .normalize()
                                     .toString());
                         }
+                        if (options.seed() != null && requested == PhyloSpecCli.Command.EXPORT) {
+                            args.addAll(List.of("--seed", options.seed().toString()));
+                        }
                         if (options.debug()) args.add("--debug");
                         return tool.run(out, err, args.toArray(String[]::new));
                     }

@@ -141,8 +141,7 @@ public class BeastXObservedTreeDistributionTest {
                         + """
 
                         mcmc {
-                            Integer chainLength = 5
-                            Integer randomSeed = 1234
+                            Sampler sampler = mcmc(chainLength=5)
                             Logger screenLogger = screenLogger(
                                 logEvery=1,
                                 parameters=[birthRate]
@@ -195,8 +194,7 @@ public class BeastXObservedTreeDistributionTest {
                 ) observed as treeData
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
                     Logger screenLogger = screenLogger(
                         logEvery=1,
                         parameters=[diversificationRate]

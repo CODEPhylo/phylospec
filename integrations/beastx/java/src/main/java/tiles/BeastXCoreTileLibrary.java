@@ -101,13 +101,10 @@ import tiles.rpn.SqrtRPNTile;
 import tiles.rpn.UnaryRPNTile;
 
 import tiles.mcmc.AutoOperatorConfigTile;
-import tiles.mcmc.ChainLengthTile;
-import tiles.mcmc.DefaultLogEveryTile;
-import tiles.mcmc.OutputPrefixTile;
+import tiles.mcmc.McmcSamplerTile;
 import tiles.mcmc.ScreenLoggerTile;
 import tiles.mcmc.FileLoggerTile;
 import tiles.mcmc.TreeLoggerTile;
-import tiles.mcmc.RandomSeedTile;
 
 import tiles.sitemodels.SiteModelTile;
 import tiles.sitemodels.DrawnSiteRatesTile;
@@ -238,10 +235,7 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new SumIntVectorTile());
 
         // BEAST X MCMC configuration
-        tiles.add(new ChainLengthTile());
-        tiles.add(new RandomSeedTile());
-        tiles.add(new DefaultLogEveryTile());
-        tiles.add(new OutputPrefixTile());
+        tiles.add(new McmcSamplerTile());
         tiles.add(new AutoOperatorConfigTile());
         tiles.add(new ScreenLoggerTile());
         tiles.add(new FileLoggerTile());

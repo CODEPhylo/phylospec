@@ -171,7 +171,7 @@ class CliDistributionIT {
     }
 
     @Test
-    void packagedBeastXRunsHkyYuleFromSavedXmlWithTheScriptSeed() throws Exception {
+    void packagedBeastXRunsHkyYuleFromSavedXmlWithTheGivenSeed() throws Exception {
         Path source = installation.resolve("examples/hky-yule.phylospec");
         Path alignment = source.getParent().resolve("data/primate-mtDNA.nex");
         Map<Path, String> inputsBefore = hashes(source.getParent());
@@ -183,7 +183,9 @@ class CliDistributionIT {
                 "beastx",
                 source.toString(),
                 "--out",
-                run.getFileName().toString());
+                run.getFileName().toString(),
+                "--seed",
+                "12345");
         assertEquals(0, first.exitCode(), first.details());
         assertTrue(first.stdout().contains("Run completed (engine: beastx"), first.details());
 
@@ -194,7 +196,6 @@ class CliDistributionIT {
         assertEquals("beastx", record.at("/runtime/engine").asText(), details);
         assertEquals(30, record.at("/settings/chainLength").asLong(), details);
         assertEquals(30, record.path("completedChainLength").asLong(), details);
-        assertEquals(1, record.at("/settings/defaultLogEvery").asLong(), details);
         for (String phase : List.of("modelBuilding", "mcmc")) {
             assertEquals(12345L, record.at("/seeds/" + phase + "/requested").asLong(), details);
             assertEquals(12345L, record.at("/seeds/" + phase + "/observed").asLong(), details);
@@ -210,7 +211,15 @@ class CliDistributionIT {
         assertEquals(hash(xml), record.at("/xml/sha256").asText(), details);
         Path exported = temporary.resolve("comparison/hky-yule.xml");
         Result export = launch(
-                beastXEnvironment(), "export", "--engine", "beastx", source.toString(), "--xml", exported.toString());
+                beastXEnvironment(),
+                "export",
+                "--engine",
+                "beastx",
+                source.toString(),
+                "--xml",
+                exported.toString(),
+                "--seed",
+                "12345");
         assertEquals(0, export.exitCode(), export.details());
         assertEquals(-1L, Files.mismatch(xml, exported), "HKY + Yule must use the same XML for export and run");
         var document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xml.toFile());
@@ -240,7 +249,15 @@ class CliDistributionIT {
 
         Path repeated = workingDirectory.resolve("same seed");
         Result second = launch(
-                beastXEnvironment(), "run", source.toString(), "--engine", "beastx", "--out", repeated.toString());
+                beastXEnvironment(),
+                "run",
+                source.toString(),
+                "--engine",
+                "beastx",
+                "--out",
+                repeated.toString(),
+                "--seed",
+                "12345");
         assertEquals(0, second.exitCode(), second.details());
         assertEquals(
                 beastXTraceSamples(trace),
@@ -260,12 +277,12 @@ class CliDistributionIT {
 
     @Test
     void managedBeastXRunKeepsLoggersInsideTheOutputDirectory() throws Exception {
-        Path source = temporary.resolve("escaping-prefix.phylospec");
+        Path source = temporary.resolve("escaping-logger.phylospec");
         Files.writeString(source, """
                 Real x ~ Normal(mean=0.0, sd=1.0)
                 mcmc {
-                    Integer chainLength = 2
-                    String outputPrefix = "../../sentry"
+                    Sampler sampler = mcmc(chainLength=2)
+                    Logger trace = fileLogger(file="../../sentry.log")
                 }
                 """);
         Path sentry = workingDirectory.resolve("sentry.log");
@@ -373,7 +390,7 @@ class CliDistributionIT {
         Map<Path, String> before = hashes(source.getParent());
         Path run = workingDirectory.resolve("HKY Yule results");
         Result completed =
-                launch("run", source.toString(), "--out", run.getFileName().toString());
+                launch("run", source.toString(), "--out", run.getFileName().toString(), "--seed", "12345");
         assertEquals(0, completed.exitCode(), completed.details());
         assertTrue(completed.stdout().contains("Run completed"), completed.details());
         assertTrue(completed.stdout().contains("[3/4] Running MCMC (chain length: 30)"), completed.details());
@@ -406,7 +423,6 @@ class CliDistributionIT {
             assertTrue(completed.stdout().contains(": BEAGLE "), completed.details());
             assertFalse(console.contains("Failed to load BEAGLE library:"), console);
         }
-        assertEquals(1, record.path("settings").path("defaultLogEvery").asInt());
         assertEquals(12345, record.path("settings").path("randomSeed").asLong());
         assertEquals(12345, record.path("seeds").path("mcmc").path("observed").asLong());
         assertEquals(

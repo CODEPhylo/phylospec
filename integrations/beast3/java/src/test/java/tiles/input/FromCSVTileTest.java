@@ -243,9 +243,9 @@ class FromCSVTileTest {
                 Tree tree ~ Coalescent(populationSize=100.0, taxa=taxa(alignment=data))
                 Alignment observed ~ PhyloCTMC(tree=tree, qMatrix=jc69()) observed as data
                 mcmc {
-                    Integer chainLength = 10
-                    Integer defaultLogEvery = 1
-                    Integer randomSeed = 42
+                    Sampler sampler = mcmc(chainLength=10)
+                    Logger fileLogger = fileLogger(file="model.log", logEvery=1)
+                    Logger treeLogger = treeLogger(file="model.trees", logEvery=1, tree=tree)
                 }
                 """);
         CliResult check = launch(callerDirectory, "check", source.toString());
@@ -253,7 +253,7 @@ class FromCSVTileTest {
         assertTrue(check.stdout().contains("Check passed"));
         assertFalse(Files.exists(callerDirectory.resolve("results")));
 
-        CliResult run = launch(callerDirectory, "run", source.toString(), "--out", "results");
+        CliResult run = launch(callerDirectory, "run", source.toString(), "--out", "results", "--seed", "42");
         assertEquals(0, run.exitCode(), run.stdout() + "\n" + run.stderr());
         Path results = callerDirectory.resolve("results");
         JsonNode record =

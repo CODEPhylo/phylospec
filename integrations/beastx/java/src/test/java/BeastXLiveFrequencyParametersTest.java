@@ -124,7 +124,7 @@ public class BeastXLiveFrequencyParametersTest {
                 Alignment alignment ~ PhyloCTMC(tree=tree, qMatrix=%s(baseFrequencies=pi)) observed as data
 
                 mcmc {
-                    Integer chainLength = 10
+                    Sampler sampler = mcmc(chainLength=10)
                     Logger fileLogger = fileLogger(logEvery=1, file="%s", parameters=[pi])
                 }
                 """.formatted(name, XmlTestSupport.unixPath(logPath));

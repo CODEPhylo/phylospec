@@ -88,9 +88,9 @@ class HkyYuleStateTest {
                         .map(Distribution::getID)
                         .collect(Collectors.toSet()));
         assertEquals("alignment_likelihood", model.likelihood().getID());
-        assertEquals(30, model.graph().chainLength);
-        assertEquals(1, model.graph().defaultLogEvery);
-        assertEquals(Long.valueOf(12345), model.graph().randomSeed);
+        assertEquals(30, model.graph().getSamplerSpec().chainLength());
+        assertEquals(1, model.graph().fileLoggerSpecs.getFirst().logEvery());
+        assertEquals(1, model.graph().treeLoggerSpecs.getFirst().logEvery());
 
         assertEquals(Math.exp(1.0), model.kappa().get());
         assertArrayEquals(new double[] {0.25, 0.25, 0.25, 0.25}, frequencies(model));

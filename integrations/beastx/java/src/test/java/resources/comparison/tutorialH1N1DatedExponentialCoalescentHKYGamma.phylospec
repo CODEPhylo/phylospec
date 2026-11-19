@@ -66,8 +66,7 @@ Alignment alignment ~ PhyloCTMC(
 ) observed as data
 
 mcmc {
-    Integer chainLength = 10000000
-    Integer randomSeed = 741852963
+    Sampler sampler = mcmc(chainLength=10000000)
 
     Logger fileLogger = fileLogger(
         logEvery=1000,
@@ -129,6 +128,6 @@ mcmc {
     Logger treeLogger = treeLogger(
         logEvery=1000,
         file="target/comparison/phylo-beastx-tutorial-h1n1-dated-exponential-coalescent-hky-gamma.trees",
-        trees=[tree]
+        tree=tree
     )
 }

@@ -195,19 +195,20 @@ class CauchyLocationBindingTest {
 
     @Test
     void shortChainEstimatesPositiveLocationForAnObservedValue(@TempDir Path directory) throws Exception {
+        Path prefix = directory.resolve("cauchy-location");
         String source = """
                 PositiveReal loc ~ Gamma(shape=2.0, rate=1.0)
                 Real y ~ Cauchy(location=loc, scale=0.5) observed as -0.4
 
                 mcmc {
-                    Integer chainLength = 200
-                    Integer defaultLogEvery = 10
-                    Integer randomSeed = 12345
+                    Sampler sampler = mcmc(chainLength=200)
+                    Logger fileLogger = fileLogger(file="%s.log", logEvery=10)
                 }
-                """;
+                """.formatted(prefix.toString().replace("\\", "\\\\"));
 
-        Path prefix = directory.resolve("cauchy-location");
-        new PhyloSpecRunner(source, List.of("beast2")).runPhyloSpec(prefix.toString());
+        PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(12345L);
+        runner.runPhyloSpec(prefix.toString());
 
         List<String> lines = Files.readAllLines(Path.of(prefix + ".log")).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))

@@ -60,10 +60,9 @@ class UnicodeIdentifiersTest {
                     qMatrix=hky(kappa=κ, baseFrequencies=π)
                 ) observed as data
                 mcmc {
-                    Integer chainLength = 30
-                    Integer defaultLogEvery = 1
-                    Integer randomSeed = 12345
-                    String outputPrefix = "unicode-hky"
+                    Sampler sampler = mcmc(chainLength=30)
+                    Logger fileLogger = fileLogger(file="unicode-hky.log", logEvery=1)
+                    Logger treeLogger = treeLogger(file="unicode-hky.trees", logEvery=1, tree=θ)
                 }
                 """.formatted(data);
     }

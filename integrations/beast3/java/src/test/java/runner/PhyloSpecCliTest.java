@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -122,6 +123,21 @@ public class PhyloSpecCliTest {
     }
 
     @Test
+    void parsesTheSeedForExportAndRun() {
+        assertEquals(
+                42L,
+                PhyloSpecCli.Options.parse(new String[] {"run", "model.phylospec", "--seed", "42"})
+                        .seed());
+        assertEquals(
+                7L,
+                PhyloSpecCli.Options.parse(
+                                new String[] {"export", "model.phylospec", "--xml", "model.xml", "--seed", "7"})
+                        .seed());
+        assertNull(PhyloSpecCli.Options.parse(new String[] {"run", "model.phylospec"})
+                .seed());
+    }
+
+    @Test
     void newCommandsPreserveProviderOrderAndAppendBaseOnlyWhenMissing() {
         for (String command : List.of("check", "run")) {
             assertEquals(
@@ -180,6 +196,10 @@ public class PhyloSpecCliTest {
                 new String[] {"check", "model.phylospec", "--engine"},
                 new String[] {"check", "model.phylospec", "--run-name", "analysis"},
                 new String[] {"run", "model.phylospec", "--run-name", " "},
+                new String[] {"check", "model.phylospec", "--seed", "42"},
+                new String[] {"run", "model.phylospec", "--seed"},
+                new String[] {"run", "model.phylospec", "--seed", "abc"},
+                new String[] {"run", "model.phylospec", "--seed", "-1"},
                 new String[] {"run", "model.phylospec", "--library", "beast2,beast2"},
                 new String[] {"run", "model.phylospec", "--library", "beast2,"},
                 new String[] {"check", "model.phylospec", "--unknown"},
@@ -223,7 +243,7 @@ public class PhyloSpecCliTest {
         Files.writeString(script, """
                 Real x ~ Normal(mean=0.0, sd=1.0)
                 mcmc {
-                    Integer chainLength = 19
+                    Sampler sampler = mcmc(chainLength=19)
                 }
                 """);
         Path output = directory.resolve("analysis.xml");
@@ -318,7 +338,7 @@ public class PhyloSpecCliTest {
         Files.writeString(source, """
                 Tree tree = fromNewick("(")
                 mcmc {
-                    Integer chainLength = 1
+                    Sampler sampler = mcmc(chainLength=1)
                 }
                 """);
         Path normalRun = directory.resolve("normal");
@@ -380,9 +400,7 @@ public class PhyloSpecCliTest {
                 QMatrix qMatrix = jc69()
                 Alignment alignment ~ PhyloCTMC(tree, qMatrix) observed as data
                 mcmc {
-                    Integer chainLength = 30
-                    Integer defaultLogEvery = 10
-                    Integer randomSeed = 42
+                    Sampler sampler = mcmc(chainLength=3000)
                 }
                 """);
         String newPrefix = work.resolve("new analysis/output/nested/new prefix").toString();
@@ -394,7 +412,9 @@ public class PhyloSpecCliTest {
                 "--out",
                 "new analysis",
                 "--run-name",
-                "nested/new prefix");
+                "nested/new prefix",
+                "--seed",
+                "42");
         assertEquals(0, result.exitCode(), result.stderr());
         assertTrue(result.stdout().contains("Run completed"));
         assertNativeOutputs(newPrefix);
@@ -407,7 +427,8 @@ public class PhyloSpecCliTest {
         assertTrue(backend.path("resourceNumber").isNull());
         assertTrue(result.stdout().contains(": Java (BEAGLE is not active)."));
 
-        CliResult legacy = launch(work, "--library", "beast2", "--run-name", legacyPrefix, source.toString());
+        CliResult legacy =
+                launch(work, "--library", "beast2", "--run-name", legacyPrefix, "--seed", "42", source.toString());
         assertEquals(0, legacy.exitCode(), legacy.stderr());
         assertNativeOutputs(legacyPrefix);
         assertEquals(
@@ -439,18 +460,18 @@ public class PhyloSpecCliTest {
     }
 
     @Test
-    void scriptPrefixAndExplicitLoggersShareTheManagedOutputRoot(@TempDir Path directory) throws Exception {
+    void runNameAndExplicitLoggersShareTheManagedOutputRoot(@TempDir Path directory) throws Exception {
         Path work = Files.createDirectory(directory.resolve("working directory"));
         Path source = writeModel(directory, """
-                String outputPrefix = "state/my analysis"
-                Logger trace = fileLogger(logEvery=10, file="traces/custom.log")
-                Logger trees = treeLogger(logEvery=10, file="trees/custom.trees", tree=tree)
+                Logger trace = fileLogger(logEvery=1000, file="traces/custom.log")
+                Logger trees = treeLogger(logEvery=1000, file="trees/custom.trees", tree=tree)
                 """);
         Path run = Files.createDirectory(directory.resolve("existing empty run"));
-        CliResult result = launch(work, "run", source.toString(), "--out", run.toString(), "--run-name", "ignored");
+        CliResult result =
+                launch(work, "run", source.toString(), "--out", run.toString(), "--run-name", "state/my analysis");
         assertEquals(0, result.exitCode(), result.stderr());
         assertTrace(run.resolve("output/traces/custom.log"));
-        assertTrue(Files.readString(run.resolve("output/trees/custom.trees")).contains("STATE_30"));
+        assertTrue(Files.readString(run.resolve("output/trees/custom.trees")).contains("STATE_3000"));
         assertTrue(Files.size(run.resolve("output/state/my analysis.state.xml")) > 0);
         assertTrue(result.stdout().contains("Trace/log: " + run.resolve("output/traces/custom.log")));
         assertTrue(result.stdout().contains("Trees: " + run.resolve("output/trees/custom.trees")));
@@ -481,16 +502,14 @@ public class PhyloSpecCliTest {
     @Test
     void managedRunRejectsUnsafeAndConflictingScriptOutputs(@TempDir Path directory) throws Exception {
         List<String> settings = List.of(
-                "String outputPrefix = \"../escape\"",
-                "String outputPrefix = \"" + directory.resolve("absolute prefix") + "\"",
-                "Logger trace = fileLogger(logEvery=10, file=\"../escape.log\")",
-                "Logger trace = fileLogger(logEvery=10, file=\"" + directory.resolve("absolute.log") + "\")",
-                "Logger trees = treeLogger(logEvery=10, file=\"\", tree=tree)",
-                "Logger trees = treeLogger(logEvery=10, file=\"$(tree).trees\", tree=tree)",
-                "Logger trace = fileLogger(logEvery=10, file=\"same\")\n"
-                        + "Logger trees = treeLogger(logEvery=10, file=\"nested/../same\", tree=tree)",
-                "Logger trace = fileLogger(logEvery=10, file=\"model with spaces.state.xml\")",
-                "Logger trace = fileLogger(logEvery=10, file=\"model with spaces.state.xml.new\")");
+                "Logger trace = fileLogger(logEvery=1000, file=\"../escape.log\")",
+                "Logger trace = fileLogger(logEvery=1000, file=\"" + directory.resolve("absolute.log") + "\")",
+                "Logger trees = treeLogger(logEvery=1000, file=\"\", tree=tree)",
+                "Logger trees = treeLogger(logEvery=1000, file=\"$(tree).trees\", tree=tree)",
+                "Logger trace = fileLogger(logEvery=1000, file=\"same\")\n"
+                        + "Logger trees = treeLogger(logEvery=1000, file=\"nested/../same\", tree=tree)",
+                "Logger trace = fileLogger(logEvery=1000, file=\"model with spaces.state.xml\")",
+                "Logger trace = fileLogger(logEvery=1000, file=\"model with spaces.state.xml.new\")");
         for (int i = 0; i < settings.size(); i++) {
             Path modelDirectory = Files.createDirectory(directory.resolve("case-" + i));
             Path source = writeModel(modelDirectory, settings.get(i));
@@ -592,7 +611,7 @@ public class PhyloSpecCliTest {
     void recordsTheActualSourceInputsConfigurationAndGeneratedOutputs(@TempDir Path directory) throws Exception {
         Path source = writeModel(directory, "");
         Path run = directory.resolve("recorded run");
-        CliResult result = launch(directory, "run", source.toString(), "--out", run.toString());
+        CliResult result = launch(directory, "run", source.toString(), "--out", run.toString(), "--seed", "42");
         assertEquals(0, result.exitCode(), result.stderr());
         JsonNode record = readRecord(run);
         assertEquals("succeeded", record.path("status").asText());
@@ -611,8 +630,7 @@ public class PhyloSpecCliTest {
                 input.path("path").asText());
         assertEquals(
                 sha256(directory.resolve("alignment.nex")), input.path("sha256").asText());
-        assertEquals(30, record.path("settings").path("chainLength").asLong());
-        assertEquals(10, record.path("settings").path("defaultLogEvery").asInt());
+        assertEquals(3000, record.path("settings").path("chainLength").asLong());
         assertEquals(42, record.path("settings").path("randomSeed").asLong());
         for (String phase : List.of("modelBuilding", "mcmc")) {
             assertEquals(42, record.path("seeds").path(phase).path("requested").asLong());
@@ -651,8 +669,6 @@ public class PhyloSpecCliTest {
     @Test
     void automaticallyChosenSeedCanReproduceTheRecordedShortChain(@TempDir Path directory) throws Exception {
         Path source = writeModel(directory, "");
-        String model = Files.readString(source).replace("Integer randomSeed = 42", "");
-        Files.writeString(source, model);
         Path first = directory.resolve("generated seed");
         CliResult generated = launch(directory, "run", source.toString(), "--out", first.toString());
         assertEquals(0, generated.exitCode(), generated.stderr());
@@ -662,9 +678,9 @@ public class PhyloSpecCliTest {
         assertTrue(seeds.path("modelBuilding").path("generated").asBoolean());
         assertTrue(seeds.path("mcmc").path("generated").asBoolean());
         assertEquals(seed, seeds.path("mcmc").path("requested").asLong());
-        Files.writeString(source, model.replace("mcmc {", "mcmc {\nInteger randomSeed = " + seed));
         Path repeated = directory.resolve("explicit seed");
-        CliResult replay = launch(directory, "run", source.toString(), "--out", repeated.toString());
+        CliResult replay = launch(
+                directory, "run", source.toString(), "--out", repeated.toString(), "--seed", Long.toString(seed));
         assertEquals(0, replay.exitCode(), replay.stderr());
         assertEquals(
                 traceLines(first.resolve("output/model with spaces.log")),
@@ -733,11 +749,7 @@ public class PhyloSpecCliTest {
 
     private static Path longModel(Path directory, int chainLength) throws Exception {
         Path source = writeModel(directory, "");
-        Files.writeString(
-                source,
-                Files.readString(source)
-                        .replace("chainLength = 30", "chainLength = " + chainLength)
-                        .replace("defaultLogEvery = 10", "defaultLogEvery = 10000"));
+        Files.writeString(source, Files.readString(source).replace("chainLength=3000", "chainLength=" + chainLength));
         return source;
     }
 
@@ -774,9 +786,7 @@ public class PhyloSpecCliTest {
                 QMatrix qMatrix = jc69()
                 Alignment alignment ~ PhyloCTMC(tree, qMatrix) observed as data
                 mcmc {
-                    Integer chainLength = 30
-                    Integer defaultLogEvery = 10
-                    Integer randomSeed = 42
+                    Sampler sampler = mcmc(chainLength=3000)
                     %s
                 }
                 """.formatted(settings));
@@ -785,7 +795,7 @@ public class PhyloSpecCliTest {
 
     private static void assertNativeOutputs(String prefix) throws Exception {
         assertTrace(Path.of(prefix + ".log"));
-        assertTrue(Files.readString(Path.of(prefix + ".trees")).contains("STATE_30"));
+        assertTrue(Files.readString(Path.of(prefix + ".trees")).contains("STATE_3000"));
         assertTrue(Files.size(Path.of(prefix + ".state.xml")) > 0);
     }
 
@@ -793,11 +803,11 @@ public class PhyloSpecCliTest {
         List<String> trace = Files.readAllLines(file).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))
                 .toList();
-        assertEquals(5, trace.size(), "Header and samples 0, 10, 20, 30");
+        assertEquals(5, trace.size(), "Header and samples 0, 1000, 2000, 3000");
         List<String> columns = List.of(trace.getFirst().trim().split("\\s+"));
         for (int sample = 1; sample < trace.size(); sample++) {
             String[] values = trace.get(sample).trim().split("\\s+");
-            assertEquals((sample - 1) * 10, Integer.parseInt(values[0]));
+            assertEquals((sample - 1) * 1000, Integer.parseInt(values[0]));
             for (String name : List.of("posterior", "prior", "likelihood")) {
                 assertTrue(columns.contains(name), columns.toString());
                 assertTrue(Double.isFinite(Double.parseDouble(values[columns.indexOf(name)])));

@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.phylospec.errors.Error;
 import org.phylospec.tiling.TileCatalog;
+import org.phylospec.tiling.mcmc.McmcSamplerSpec;
 
 class RunRecordTest {
     private static final ObjectMapper JSON = new ObjectMapper();
@@ -78,8 +79,7 @@ class RunRecordTest {
     void separatesExpectedOutputsFromPartialFilesOnFailure(@TempDir Path directory) throws Exception {
         RunRecord record = create(directory);
         BEASTState state = new BEASTState("sample", directory, directory.resolve("output"));
-        state.chainLength = 123;
-        state.defaultLogEvery = 10;
+        state.setSamplerSpec(new McmcSamplerSpec(123));
         state.randomSeed = 27L;
         Logger screen = new Logger();
         Logger file = new Logger();

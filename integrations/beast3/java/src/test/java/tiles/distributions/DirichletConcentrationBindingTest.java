@@ -373,13 +373,13 @@ class DirichletConcentrationBindingTest {
         Path prefix = directory.resolve("dirichlet-emc");
         String source = sharedModel("EMC") + """
                 mcmc {
-                    Integer chainLength = 200
-                    Integer randomSeed = 80303
-                    Integer defaultLogEvery = 1
-                    String outputPrefix = "%s"
+                    Sampler sampler = mcmc(chainLength=200)
+                    Logger fileLogger = fileLogger(file="%s.log", logEvery=1)
                 }
                 """.formatted(prefix.toString().replace("\\", "\\\\"));
-        new PhyloSpecRunner(source, List.of("beast2")).runPhyloSpec("dirichlet-emc");
+        PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(80303L);
+        runner.runPhyloSpec(prefix.toString());
         List<String> lines = Files.readAllLines(Path.of(prefix + ".log")).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))
                 .toList();

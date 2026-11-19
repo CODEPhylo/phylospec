@@ -175,13 +175,14 @@ public class BeastXLiveDistributionParametersTest {
                 Real x ~ Normal(mean=mu, sd=1.0)
 
                 mcmc {
-                    Integer chainLength = 1000000
-                    Integer randomSeed = 42
+                    Sampler sampler = mcmc(chainLength=1000000)
                     Logger fileLogger = fileLogger(logEvery=100, file="%s", parameters=[mu, x])
                 }
                 """.formatted(logPath.toString().replace("\\", "/"));
 
-        new PhyloSpecRunner(source).run(
+        PhyloSpecRunner runner = new PhyloSpecRunner(source);
+        runner.setSeed(42L);
+        runner.run(
                 RunnerOptions.builder("hierarchicalNormal").mode(RunMode.EXECUTE_MCMC).build()
         );
 

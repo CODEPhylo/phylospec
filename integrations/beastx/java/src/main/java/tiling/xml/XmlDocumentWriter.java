@@ -119,7 +119,7 @@ public class XmlDocumentWriter {
                 new ArrayList<>();
 
         attributes.add(new Attribute.Default<>(XMLParser.ID, XmlElement.attributeValue(state.runName + "_mcmc")));
-        attributes.add(new Attribute.Default<>("chainLength", state.chainLength));
+        attributes.add(new Attribute.Default<>("chainLength", state.getSamplerSpec().chainLength()));
         attributes.add(new Attribute.Default<>("autoOptimize", "true"));
 
         writer.writeOpenTag("mcmc", attributes);

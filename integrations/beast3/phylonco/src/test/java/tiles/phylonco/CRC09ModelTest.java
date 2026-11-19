@@ -391,8 +391,7 @@ class CRC09ModelTest {
         Files.writeString(source, model(explicit).formatted("six-cells.mpileup") + """
 
                 mcmc {
-                    Integer chainLength = 20000
-                    Integer defaultLogEvery = 1000
+                    Sampler sampler = mcmc(chainLength=20000)
                 }
                 """);
         data();
@@ -439,15 +438,15 @@ class CRC09ModelTest {
         Files.writeString(source, model(explicit).formatted("six-cells.mpileup") + """
 
                 mcmc {
-                    Integer chainLength = 6000
-                    Integer defaultLogEvery = 1000
-                    Integer randomSeed = 1
+                    Sampler sampler = mcmc(chainLength=6000)
                 }
                 """);
         data();
         System.setProperty("beast.debug", "true");
         try {
-            new PhyloSpecRunner(source, LIBRARIES).runPhyloSpec(this.directory.resolve("debug").toString());
+            PhyloSpecRunner runner = new PhyloSpecRunner(source, LIBRARIES);
+            runner.setSeed(1L);
+            runner.runPhyloSpec(this.directory.resolve("debug").toString());
         } finally {
             System.clearProperty("beast.debug");
         }

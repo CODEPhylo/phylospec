@@ -111,17 +111,19 @@ class BayesianSkylinePriorSamplingTest {
     /** Runs the model with a fixed seed and returns each logged column after a 10% burn-in. */
     private Map<String, double[]> sample(String model, int chainLength) throws Exception {
         String name = "prior" + (++this.runs);
+        String prefix = this.directory.resolve(name).toString();
         Path source = this.directory.resolve(name + ".phylospec");
-        Files.writeString(source, model + """
+        Files.writeString(
+                source, model + """
 
                 mcmc {
-                    Integer chainLength = %d
-                    Integer defaultLogEvery = %d
-                    Integer randomSeed = 1
+                    Sampler sampler = mcmc(chainLength=%d)
+                    Logger fileLogger = fileLogger(file="%s.log", logEvery=%d)
                 }
-                """.formatted(chainLength, chainLength / 10_000));
-        new PhyloSpecRunner(source, List.of("beast2"))
-                .runPhyloSpec(this.directory.resolve(name).toString());
+                """.formatted(chainLength, prefix.replace("\\", "\\\\"), chainLength / 10_000));
+        PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(1L);
+        runner.runPhyloSpec(prefix);
 
         List<String[]> rows = Files.readAllLines(this.directory.resolve(name + ".log")).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))

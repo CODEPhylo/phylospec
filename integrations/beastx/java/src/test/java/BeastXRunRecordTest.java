@@ -9,6 +9,9 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.phylospec.tiling.mcmc.FileLoggerSpec;
+import org.phylospec.tiling.mcmc.McmcSamplerSpec;
+import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import tiling.BeastXState;
 
 class BeastXRunRecordTest {
@@ -26,9 +29,9 @@ class BeastXRunRecordTest {
 
     @Test void confirmsTheNativeLengthAndBothLogsBeforeRecordingSuccess() throws IOException {
         BeastXState state = new BeastXState("analysis");
-        state.chainLength = 10;
-        state.addFileLoggerSpec(2, "./results/trace.log", List.of("posterior"));
-        state.addTreeLoggerSpec(2, "tree.trees", List.of("tree"));
+        state.setSamplerSpec(new McmcSamplerSpec(10));
+        state.addFileLoggerSpec(new FileLoggerSpec<>(2, "./results/trace.log", List.of("posterior"), null));
+        state.addTreeLoggerSpec(new TreeLoggerSpec<>(2, "tree.trees", "tree"));
         Path data = Files.writeString(directory.resolve("data.txt"), "abc");
         record.input(data);
         record.input(data);
@@ -64,7 +67,7 @@ class BeastXRunRecordTest {
         record.configure(state, xml, 101L);
         record.running();
         Files.writeString(xml, "<changed/>\n");
-        IOException failure = assertThrows(IOException.class, () -> record.succeeded(state.chainLength));
+        IOException failure = assertThrows(IOException.class, () -> record.succeeded(state.getSamplerSpec().chainLength()));
         record.failed(failure);
         JsonNode result = read();
         assertEquals("failed", result.path("status").asText());
@@ -75,7 +78,7 @@ class BeastXRunRecordTest {
     @Test void rejectsLoggerPathsOutsideOutput() throws IOException {
         for (String name : List.of("../run.json", "../analysis.xml", xml.toString(), ".//" + xml.getFileName())) {
             BeastXState state = new BeastXState("analysis");
-            state.addFileLoggerSpec(1, name, List.of());
+            state.addFileLoggerSpec(new FileLoggerSpec<>(1, name, List.of(), null));
             assertThrows(IOException.class, () -> record.configure(state, xml, 101L), name);
             assertEquals("<beast/>\n", Files.readString(xml));
         }
@@ -84,15 +87,15 @@ class BeastXRunRecordTest {
     @Test void existingOutputIsNeverOverwritten() throws IOException {
         Path existing = Files.writeString(output.resolve("existing.log"), "keep");
         BeastXState state = new BeastXState("analysis");
-        state.addFileLoggerSpec(1, "existing.log", List.of());
+        state.addFileLoggerSpec(new FileLoggerSpec<>(1, "existing.log", List.of(), null));
         assertThrows(IOException.class, () -> record.configure(state, xml, 101L));
         assertEquals("keep", Files.readString(existing));
     }
 
     @Test void duplicateLoggerPathsAreRejected() {
         BeastXState state = new BeastXState("analysis");
-        state.addFileLoggerSpec(1, "same.log", List.of());
-        state.addTreeLoggerSpec(1, "./same.log", List.of());
+        state.addFileLoggerSpec(new FileLoggerSpec<>(1, "same.log", List.of(), null));
+        state.addTreeLoggerSpec(new TreeLoggerSpec<>(1, "./same.log", "tree"));
         assertThrows(IOException.class, () -> record.configure(state, xml, 101L));
         assertFalse(Files.exists(output.resolve("same.log")));
     }

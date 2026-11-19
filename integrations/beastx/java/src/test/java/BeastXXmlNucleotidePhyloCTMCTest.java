@@ -65,8 +65,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -77,7 +76,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -252,8 +251,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 10000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=10000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -273,7 +271,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -486,8 +484,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                 ) observed as secondPartition
 
                 mcmc {
-                    Integer chainLength = 10000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=10000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -520,7 +517,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -674,8 +671,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 10000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=10000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -686,7 +682,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -787,8 +783,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 10000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=10000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -799,7 +794,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -899,8 +894,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 10000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=10000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -911,7 +905,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(

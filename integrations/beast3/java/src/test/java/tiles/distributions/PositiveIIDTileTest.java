@@ -268,16 +268,17 @@ class PositiveIIDTileTest {
 
     @Test
     void runsVectorPriorAndUpdatesRates() throws Exception {
+        Path prefix = directory.resolve("iid");
         String source = """
                 Vector<PositiveReal> rates ~ IID(base=LogNormal(mean=1.0,logSd=0.5),num=3)
                 mcmc {
-                  Integer chainLength=200
-                  Integer defaultLogEvery=10
-                  Integer randomSeed=12345
+                  Sampler sampler = mcmc(chainLength=200)
+                  Logger fileLogger = fileLogger(file="%s.log", logEvery=10)
                 }
-                """;
-        new PhyloSpecRunner(source, List.of("beast2"))
-                .runPhyloSpec(directory.resolve("iid").toString());
+                """.formatted(prefix.toString().replace("\\", "\\\\"));
+        PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(12345L);
+        runner.runPhyloSpec(prefix.toString());
         var rows = Files.readAllLines(directory.resolve("iid.log")).stream()
                 .filter(line -> line.matches("[0-9]+\\s+.*"))
                 .map(line -> line.split("\\s+"))

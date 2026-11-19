@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
+import org.phylospec.tiling.mcmc.McmcSamplerSpec;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 
@@ -23,8 +24,6 @@ public class BEASTState {
     private final OutputPaths outputPaths;
     private final boolean xmlExport;
     private BiConsumer<String, Path> inputObserver = (reference, path) -> {};
-    public long chainLength = 10_00_000;
-    public int defaultLogEvery = 1000;
     public String outputPrefix;
     public Long randomSeed;
     /** Optional adapter preparation of the initialized graph immediately before XML serialization. */
@@ -42,6 +41,7 @@ public class BEASTState {
 
     public final List<Operator> operators;
 
+    private McmcSamplerSpec samplerSpec;
     public final List<ScreenLoggerSpec<BEASTObject>> screenLoggerSpecs;
     public final List<FileLoggerSpec<BEASTObject>> fileLoggerSpecs;
     public final List<TreeLoggerSpec<Tree>> treeLoggerSpecs;
@@ -303,6 +303,20 @@ public class BEASTState {
 
         this.addBEASTObject(operator);
         this.operators.add(operator);
+    }
+
+    /**
+     * Sets the sampler of the analysis.
+     */
+    public void setSamplerSpec(McmcSamplerSpec samplerSpec) {
+        this.samplerSpec = samplerSpec;
+    }
+
+    /**
+     * Returns the sampler of the analysis. This is the default sampler if none has been set.
+     */
+    public McmcSamplerSpec getSamplerSpec() {
+        return this.samplerSpec != null ? this.samplerSpec : new McmcSamplerSpec();
     }
 
     /**

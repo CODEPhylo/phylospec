@@ -2,7 +2,7 @@
 Real x ~ Normal(mean=0.0, sd=1.0)
 
 mcmc {
-    Integer chainLength = 30
-    Integer defaultLogEvery = 10
-    Integer randomSeed = 42
+    Sampler sampler = mcmc(chainLength=30)
+    Logger screenLogger = screenLogger(logEvery=10)
+    Logger fileLogger = fileLogger(file="normal.log", logEvery=10)
 }

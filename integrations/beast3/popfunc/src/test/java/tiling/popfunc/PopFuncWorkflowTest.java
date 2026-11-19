@@ -86,7 +86,7 @@ public class PopFuncWorkflowTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 10
+                    Sampler sampler = mcmc(chainLength=10)
                 }
                 """.formatted(alignment.toString());
 
@@ -96,7 +96,7 @@ public class PopFuncWorkflowTest {
         assertEquals(5, state.stateNodes.size());
         assertEquals(5, state.priorDistributions.size());
         assertEquals(1, state.likelihoodDistributions.size());
-        assertEquals(10, state.chainLength);
+        assertEquals(10, state.getSamplerSpec().chainLength());
 
         Coalescent coalescent = state.priorDistributions.values().stream()
                 .filter(Coalescent.class::isInstance)
@@ -284,18 +284,16 @@ public class PopFuncWorkflowTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 10
-                    Integer defaultLogEvery = 1
-                    String outputPrefix = "%s"
-                    Integer randomSeed = 12345
+                    Sampler sampler = mcmc(chainLength=10)
+                    Logger fileLogger = fileLogger(file="%1$s.log", logEvery=1)
+                    Logger treeLogger = treeLogger(file="%1$s.trees", logEvery=1, tree)
                 }
                 """.formatted(outputPrefix);
 
         Path sourceFile = outputDirectory.resolve("fixed-gompertz.phylospec");
         Files.writeString(sourceFile, source);
-        String runName = outputDirectory.resolve("fixed-gompertz").toString();
         PhyloSpecCli.execute(new String[] {
-            "--library", "popfunc,beast2", "--run-name", runName, sourceFile.toString()
+            "--library", "popfunc,beast2", "--run-name", outputPrefix, "--seed", "12345", sourceFile.toString()
         });
 
         Path traceFile = Path.of(outputPrefix + ".log");
@@ -312,7 +310,7 @@ public class PopFuncWorkflowTest {
         Path secondSourceFile = outputDirectory.resolve("second-gompertz.phylospec");
         Files.writeString(secondSourceFile, source.replace(outputPrefix, secondPrefix));
         PhyloSpecCli.execute(new String[] {
-            "--library", "popfunc,beast2", secondSourceFile.toString()
+            "--library", "popfunc,beast2", "--run-name", secondPrefix, "--seed", "12345", secondSourceFile.toString()
         });
 
         List<List<String>> firstSamples = Files.readAllLines(traceFile).stream()
@@ -408,7 +406,7 @@ public class PopFuncWorkflowTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = %d
+                    Sampler sampler = mcmc(chainLength=%d)
                 }
                 """.formatted(alignment.toString(), chainLength);
     }
@@ -430,7 +428,7 @@ public class PopFuncWorkflowTest {
         state.setInput(posterior, posterior.pDistributions, List.of(prior, likelihood));
 
         MCMC mcmc = new MCMC();
-        state.setInput(mcmc, mcmc.chainLengthInput, state.chainLength);
+        state.setInput(mcmc, mcmc.chainLengthInput, state.getSamplerSpec().chainLength());
         state.setInput(mcmc, mcmc.startStateInput, beastState);
         state.setInput(mcmc, mcmc.posteriorInput, posterior);
         state.setInput(mcmc, mcmc.operatorsInput, state.operators);

@@ -316,16 +316,17 @@ class NonNegativeIntegerIIDTileTest {
     @ParameterizedTest
     @ValueSource(ints = {1, 3})
     void shortChainMovesIntegerCountsAndKeepsFiniteProbabilities(int size) throws Exception {
+        Path prefix = directory.resolve("integer-iid-" + size);
         String source = """
                 Vector<NonNegativeInteger> counts ~ IID(base=Poisson(rate=2.3),num=%d)
                 mcmc {
-                    Integer chainLength=200
-                    Integer defaultLogEvery=10
-                    Integer randomSeed=12345
+                    Sampler sampler = mcmc(chainLength=200)
+                    Logger fileLogger = fileLogger(file="%s.log", logEvery=10)
                 }
-                """.formatted(size);
-        Path prefix = directory.resolve("integer-iid-" + size);
-        new PhyloSpecRunner(source, List.of("beast2")).runPhyloSpec(prefix.toString());
+                """.formatted(size, prefix.toString().replace("\\", "\\\\"));
+        PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(12345L);
+        runner.runPhyloSpec(prefix.toString());
         var lines = Files.readAllLines(Path.of(prefix + ".log")).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))
                 .toList();

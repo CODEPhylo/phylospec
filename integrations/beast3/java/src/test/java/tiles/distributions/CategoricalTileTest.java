@@ -300,13 +300,13 @@ class CategoricalTileTest {
                 Simplex probabilities = [0.2, 0.3, 0.5]
                 PositiveInteger category ~ Categorical(probabilities=probabilities)
                 mcmc {
-                    Integer chainLength = 200
-                    Integer randomSeed = 61027
-                    Integer defaultLogEvery = 5
-                    String outputPrefix = "%s"
+                    Sampler sampler = mcmc(chainLength=200)
+                    Logger fileLogger = fileLogger(file="%s.log", logEvery=5)
                 }
                 """.formatted(prefix.toString().replace("\\", "\\\\"));
-        new PhyloSpecRunner(source, List.of("beast2")).runPhyloSpec("categorical-short-chain");
+        PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(61027L);
+        runner.runPhyloSpec(prefix.toString());
 
         List<String> lines = Files.readAllLines(Path.of(prefix + ".log")).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))

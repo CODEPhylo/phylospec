@@ -13,6 +13,7 @@ import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.TileLibrary;
+import org.phylospec.tiling.mcmc.McmcBlockValidator;
 import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.typeresolver.StochasticityResolver;
@@ -21,7 +22,6 @@ import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import org.phylospec.workspace.Workspace;
 import org.xml.sax.SAXException;
-import tiles.mcmc.RandomSeedTile;
 import tiling.BeastXModel;
 import tiling.BeastXState;
 import tiling.runner.RunMode;
@@ -56,6 +56,8 @@ public class PhyloSpecRunner implements ErrorEventListener {
 
     private final BeastXRunPipeline runPipeline;
 
+    private Long seed;
+
     /**
      * Creates a runner for the given PhyloSpec source string.
      */
@@ -68,6 +70,13 @@ public class PhyloSpecRunner implements ErrorEventListener {
         this.workspace = workspace;
         this.warningHandler = warningHandler;
         this.runPipeline = new BeastXRunPipeline();
+    }
+
+    /**
+     * Sets the random seed used for the MCMC. The seed is chosen at random if it is null.
+     */
+    public void setSeed(Long seed) {
+        this.seed = seed;
     }
 
     /* --- Static convenient methods for easy creation of a runner.  --- */
@@ -100,15 +109,17 @@ public class PhyloSpecRunner implements ErrorEventListener {
     static BeastXModel buildXmlExportModel(Path script, String defaultPrefix, Consumer<String> warningHandler,
                                            Consumer<Path> inputObserver)
             throws IOException {
-        return buildXmlExportModel(script, readSource(script), defaultPrefix, warningHandler, inputObserver, null);
+        return buildXmlExportModel(
+                script, readSource(script), defaultPrefix, warningHandler, inputObserver, null, null);
     }
 
     static BeastXModel buildXmlExportModel(Path script, String sourceText, String defaultPrefix,
                                            Consumer<String> warningHandler, Consumer<Path> inputObserver,
-                                           Consumer<Long> beforeModel) {
+                                           Long seed, Consumer<Long> beforeModel) {
         Path source = script.toAbsolutePath().normalize();
         PhyloSpecRunner runner = new PhyloSpecRunner(
                 sourceText, new Workspace(source.getParent()), warningHandler);
+        runner.setSeed(seed);
         BeastXState state = new BeastXState(defaultPrefix, source.getParent(), inputObserver);
         runner.tile(runner.parseAndResolve(), state, beforeModel);
         state.configureDefaultXmlLoggers(defaultPrefix);
@@ -435,14 +446,9 @@ public class PhyloSpecRunner implements ErrorEventListener {
     private BeastXState tile(ParsedPhyloSpec parsed, BeastXState state, Consumer<Long> beforeModel) {
         List<Tile<?, BeastXState>> tiles = matchTiles(parsed);
         try {
-            if (beforeModel != null) {
-                // The seed Tile accepts constant expressions and references. Apply it before any
-                // stochastic initializer; Tile.apply caches that result for the ordinary traversal.
-                for (var tile : tiles) {
-                    if (tile instanceof RandomSeedTile) tile.apply(state, new IdentityHashMap<>());
-                }
-                beforeModel.accept(state.randomSeed);
-            }
+            state.randomSeed = this.seed;
+            // the caller seeds the random number generator before any stochastic initializer runs
+            if (beforeModel != null) beforeModel.accept(this.seed);
             for (var tile : tiles) tile.apply(state, new IdentityHashMap<>());
             return state;
         } catch (TileApplicationError error) {
@@ -454,6 +460,7 @@ public class PhyloSpecRunner implements ErrorEventListener {
         EvaluateTiles<BeastXState> tiles = new EvaluateTiles<>(
                 TileLibrary.loadAll(BeastXState.class), parsed.variableResolver, parsed.stochasticityResolver);
         try {
+            McmcBlockValidator.validate(parsed.statements);
             return tiles.getBestTiling(parsed.statements);
         } catch (TileApplicationError error) {
             throw tilingFailure(parsed, error);

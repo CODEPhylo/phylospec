@@ -51,9 +51,7 @@ class GompertzStateTest {
         assertEquals(5, graph.stateNodes.size());
         assertEquals(5, graph.priorDistributions.size());
         assertEquals(1, graph.likelihoodDistributions.size());
-        assertEquals(30, graph.chainLength);
-        assertEquals(1, graph.defaultLogEvery);
-        assertEquals(Long.valueOf(12345), graph.randomSeed);
+        assertEquals(30, graph.getSamplerSpec().chainLength());
 
         assertSame(parameter(model, "initialPopulationSize"), model.population().N0Input.get());
         assertSame(parameter(model, "growthRate"), model.population().bInput.get());

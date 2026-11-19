@@ -7,4 +7,11 @@ import java.util.List;
 /// @param <T> the general type of loggable objects
 /// @param logEvery the sampling interval, i.e. a log line is written every {@code logEvery} states
 /// @param parameters the objects to log, or {@code null} to log every loggable object in the state
-public record ScreenLoggerSpec<T>(int logEvery, List<T> parameters) {}
+/// @param parameterNames the names used in the log for the parameters, or {@code null} to use their own names
+public record ScreenLoggerSpec<T>(int logEvery, List<T> parameters, List<String> parameterNames) implements LoggerSpec {
+
+    public ScreenLoggerSpec {
+        LoggerSpec.validateLogEvery(logEvery);
+        LoggerSpec.validateParameterNames(parameters, parameterNames);
+    }
+}

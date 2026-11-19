@@ -339,13 +339,13 @@ class TruncatedTileTest {
                 : "Real x ~ Truncated(base=Normal(mean=0.0,sd=1.0),lower=-1.0,upper=2.0)\n";
         String source = model + """
                 mcmc {
-                    Integer chainLength = 100
-                    Integer randomSeed = 72641
-                    Integer defaultLogEvery = 5
-                    String outputPrefix = "%s"
+                    Sampler sampler = mcmc(chainLength=100)
+                    Logger fileLogger = fileLogger(file="%s.log", logEvery=5)
                 }
                 """.formatted(prefix.toString().replace("\\", "\\\\"));
-        new PhyloSpecRunner(source, List.of("beast2")).runPhyloSpec("truncated-short-chain");
+        PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(72641L);
+        runner.runPhyloSpec(prefix.toString());
         List<String> lines = Files.readAllLines(Path.of(prefix + ".log")).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))
                 .toList();

@@ -31,7 +31,6 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import org.phylospec.ast.AstNode;
-import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
@@ -45,6 +44,7 @@ import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.TileCatalog;
 import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.mcmc.McmcBlockValidator;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
@@ -64,6 +64,7 @@ public class PhyloSpecRunner {
     private final Path sourceDirectory;
     private final Path sourceFile;
     private final List<LocalAdapterBundles.Bundle> adapterBundles;
+    private Long seed;
 
     /**
      * Constructs a runner for the given PhyloSpec source code.
@@ -101,6 +102,14 @@ public class PhyloSpecRunner {
         this.sourceDirectory = absoluteSource.getParent();
         this.sourceFile = absoluteSource;
         this.adapterBundles = List.copyOf(adapterBundles);
+    }
+
+    /**
+     * Sets the random seed used to build and run the model. Without a seed, managed runs choose
+     * one and all other runs leave the random number generator as it is.
+     */
+    public void setSeed(Long seed) {
+        this.seed = seed;
     }
 
     /**
@@ -180,6 +189,7 @@ public class PhyloSpecRunner {
                 new EvaluateTiles<>(catalog.getTiles(), variableResolver, stochasticityResolver);
         diagnostics.stage = PhyloSpecDiagnostic.Stage.MAPPING;
         try {
+            McmcBlockValidator.validate(statements);
             applyTiles.getBestTiling(statements);
         } catch (TileApplicationError error) {
             throw diagnostics.failure(error.toError(sourceRange(parser, error.getAstNode())), error);
@@ -221,9 +231,9 @@ public class PhyloSpecRunner {
         if (sourceFile != null) inputs.add(sourceFile);
         state.setInputObserver((reference, path) -> inputs.add(path));
         CheckedModel checked = check(warningHandler);
-        Long seed = declaredSeed(checked.statements);
         Randomizer.getSeed();
-        if (seed != null) Randomizer.setSeed(seed);
+        if (this.seed != null) Randomizer.setSeed(this.seed);
+        state.randomSeed = this.seed;
 
         MCMC mcmc = new MCMC();
         buildMcmc(checked, state, mcmc);
@@ -368,20 +378,19 @@ public class PhyloSpecRunner {
             throws IOException, ParserConfigurationException, SAXException {
         progress.accept("[2/4] Building and initializing the BEAST 3 model...");
         // Native inputs can initialize randomly during tile application, before the MCMC is built.
-        Long scriptSeed = declaredSeed(checked.statements);
-        Long constructionSeed = scriptSeed;
-        if (record == null) {
-            if (scriptSeed != null) Randomizer.setSeed(scriptSeed);
-        } else {
-            long seed = scriptSeed == null ? new SecureRandom().nextLong(1, Integer.MAX_VALUE) : scriptSeed;
-            constructionSeed = seed;
-            beastState.randomSeed = seed;
-            Randomizer.setSeed(seed);
-            record.seed("modelBuilding", seed, Randomizer.getSeed(), scriptSeed == null);
+        boolean seedIsGenerated = this.seed == null && record != null;
+        beastState.randomSeed =
+                seedIsGenerated ? Long.valueOf(new SecureRandom().nextLong(1, Integer.MAX_VALUE)) : this.seed;
+        if (beastState.randomSeed != null) {
+            Randomizer.setSeed(beastState.randomSeed);
+        }
+        if (record != null) {
+            record.seed("modelBuilding", beastState.randomSeed, Randomizer.getSeed(), seedIsGenerated);
         }
 
         MCMC mcmc = record == null ? new MCMC() : new ManagedMCMC(cancellationRequested);
         CompoundDistribution likelihood = buildMcmc(checked, beastState, mcmc);
+        long chainLength = beastState.getSamplerSpec().chainLength();
         List<Logger> loggers = mcmc.loggersInput.get();
         String stateFile = beastState.resolveOutputPath(beastState.outputPrefix + ".state.xml");
         beastState.prepareOutputFiles(loggers, stateFile);
@@ -399,11 +408,7 @@ public class PhyloSpecRunner {
         } else {
             ManagedMCMC managed = (ManagedMCMC) mcmc;
             record.configuration(beastState, loggers, stateFile);
-            record.seed(
-                    "mcmc",
-                    beastState.randomSeed,
-                    Randomizer.getSeed(),
-                    scriptSeed == null && Objects.equals(constructionSeed, beastState.randomSeed));
+            record.seed("mcmc", beastState.randomSeed, Randomizer.getSeed(), seedIsGenerated);
             try {
                 managed.checkCancellation();
                 beastState.initializeBEASTObjects();
@@ -421,12 +426,12 @@ public class PhyloSpecRunner {
                 }
                 managed.checkCancellation();
                 record.running();
-                progress.accept("[3/4] Running MCMC (chain length: " + beastState.chainLength + ")...");
+                progress.accept("[3/4] Running MCMC (chain length: " + chainLength + ")...");
                 managed.run();
                 managed.checkCancellation();
                 progress.accept("[4/4] Checking result files and final state...");
                 managed.verifyLogs();
-                verifyOutputs(loggers, Path.of(stateFile), beastState.chainLength);
+                verifyOutputs(loggers, Path.of(stateFile), chainLength);
             } catch (IOException
                     | ParserConfigurationException
                     | SAXException
@@ -486,7 +491,8 @@ public class PhyloSpecRunner {
 
         // create MCMC object
 
-        beastState.setInput(mcmc, mcmc.chainLengthInput, beastState.chainLength);
+        beastState.setInput(
+                mcmc, mcmc.chainLengthInput, beastState.getSamplerSpec().chainLength());
         beastState.setInput(mcmc, mcmc.startStateInput, state);
         beastState.setInput(mcmc, mcmc.posteriorInput, posterior);
 
@@ -501,22 +507,6 @@ public class PhyloSpecRunner {
         // Subsequent parameter/tree proposals retain the normal BEAST dirty traversal.
         for (Distribution distribution : state.likelihoodDistributions) distribution.calculateLogP();
         likelihood.calculateLogP();
-    }
-
-    /** Finds the same constant seed used by the existing construction and initialization stages. */
-    private static Long declaredSeed(List<Stmt> statements) {
-        Long seed = null;
-        for (Stmt statement : statements) {
-            if (statement instanceof Stmt.Assignment assignment
-                    && Stmt.Block.MCMC.equals(assignment.block)
-                    && assignment.name.equals("randomSeed")
-                    && assignment.expression instanceof Expr.Literal literal
-                    && literal.value instanceof Number number
-                    && number.longValue() >= 0) {
-                seed = number.longValue();
-            }
-        }
-        return seed;
     }
 
     static void verifyOutputs(List<Logger> loggers, Path stateFile, long chainLength) throws IOException {
