@@ -84,12 +84,13 @@ public class TypeUtils {
                 }
 
                 // Repeated occurrences of T inside a single interpretation (e.g. Map<T,T>)
-                // must still have a common type. Do not keep partial matches from this branch.
+                // must still have a common type, and a type parameter is never inferred as Any.
+                // Do not keep partial matches from this branch.
                 Map<String, ResolvedType> candidateParameters = new HashMap<>();
                 boolean compatible = true;
                 for (var entry : inferredParameters.entrySet()) {
                     ResolvedType commonType = getLowestCover(entry.getValue(), componentResolver);
-                    if (commonType == null) {
+                    if (commonType == null || mentionsAny(commonType)) {
                         compatible = false;
                         break;
                     }
@@ -140,6 +141,14 @@ public class TypeUtils {
         return new ResolvedGeneratorApplication(
                 ResolvedType.fromString(returnTypeName, parameterTypeSets, componentResolver),
                 possibleArgumentTypeSets);
+    }
+
+    /**
+     * Checks if the type is Any or has Any somewhere in its type parameters.
+     */
+    static boolean mentionsAny(ResolvedType type) {
+        if (type.getName().equals(ComponentResolver.ANY_TYPE_NAME)) return true;
+        return type.getParameterTypes().values().stream().anyMatch(TypeUtils::mentionsAny);
     }
 
     public record ResolvedGeneratorApplication(
@@ -353,6 +362,11 @@ public class TypeUtils {
             return true;
         }
 
+        if (isAny(requiredTypeName, componentResolver)) {
+            // Any accepts every type
+            return true;
+        }
+
         ParsedType parsedRequiredType = new ParsedType(requiredTypeName);
 
         if (!parsedRequiredType.isGeneric()) {
@@ -426,6 +440,15 @@ public class TypeUtils {
         }
 
         return true;
+    }
+
+    /**
+     * Checks if the type name refers to Any, which accepts every type in the type of a generator
+     * argument.
+     */
+    static boolean isAny(String typeName, ComponentResolver componentResolver) {
+        Type type = componentResolver.resolveType(typeName);
+        return type != null && type.getName().equals(ComponentResolver.ANY_TYPE_NAME);
     }
 
     public enum VisitorResult {

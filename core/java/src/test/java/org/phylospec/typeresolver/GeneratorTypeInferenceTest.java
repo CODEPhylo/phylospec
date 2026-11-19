@@ -117,6 +117,93 @@ class GeneratorTypeInferenceTest {
                         .collect(Collectors.toSet()));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"Real", "String", "Tree", "Vector<Real>", "Vector<Any>"})
+    void argumentOfTypeAnyAcceptsEveryType(String type) throws Exception {
+        ComponentResolver components = components();
+        Generator generator = generator("Boolean", argument("value", "Any"));
+
+        var result = TypeUtils.resolveGeneratedType(generator, Map.of("value", types(components, type)), components);
+
+        assertEquals(Set.of("phylospec.types.Boolean"), names(result.generatedTypeSet()));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Vector<Real>", "Vector<String>", "Vector<Any>", "Simplex", "Vector<Vector<Real>>"})
+    void argumentOfTypeVectorOfAnyAcceptsEveryList(String type) throws Exception {
+        ComponentResolver components = components();
+        Generator generator = generator("Boolean", argument("values", "Vector<Any>"));
+
+        var result = TypeUtils.resolveGeneratedType(generator, Map.of("values", types(components, type)), components);
+
+        assertEquals(Set.of("phylospec.types.Boolean"), names(result.generatedTypeSet()));
+    }
+
+    @Test
+    void argumentOfTypeVectorOfAnyRejectsScalars() throws Exception {
+        ComponentResolver components = components();
+        Generator generator = generator("Boolean", argument("values", "Vector<Any>"));
+
+        assertThrows(
+                TypeError.class,
+                () -> TypeUtils.resolveGeneratedType(
+                        generator, Map.of("values", types(components, "Real")), components));
+    }
+
+    @Test
+    void anyIsAcceptedAsNestedTypeParameterOfAnArgument() throws Exception {
+        ComponentResolver components = components();
+        Generator generator = generator("Boolean", argument("values", "Map<String,Vector<Any>>"));
+
+        var result = TypeUtils.resolveGeneratedType(
+                generator, Map.of("values", types(components, "Map<String,Simplex>")), components);
+        assertEquals(Set.of("phylospec.types.Boolean"), names(result.generatedTypeSet()));
+
+        assertThrows(
+                TypeError.class,
+                () -> TypeUtils.resolveGeneratedType(
+                        generator, Map.of("values", types(components, "Map<String,Real>")), components));
+    }
+
+    @Test
+    void typeParametersAreNeverInferredAsAny() throws Exception {
+        ComponentResolver components = components();
+        Generator generator = generator("Vector<T>", argument("values", "Vector<T>"));
+
+        assertThrows(
+                TypeError.class,
+                () -> TypeUtils.resolveGeneratedType(
+                        generator, Map.of("values", types(components, "Vector<Any>")), components));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Any", "Vector<Any>", "Map<String,Any>"})
+    void anyIsAcceptedInTheTypeOfAnArgument(String type) {
+        Generator generator = generator("Boolean", argument("value", type));
+
+        assertDoesNotThrow(() -> componentsWith(generator));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Any", "Vector<Any>"})
+    void anyIsRejectedInAGeneratedType(String type) {
+        Generator generator = generator(type, argument("value", "Real"));
+
+        assertThrows(IllegalArgumentException.class, () -> componentsWith(generator));
+    }
+
+    private static ComponentResolver componentsWith(Generator generator) throws Exception {
+        generator.setNamespace("phylospec.test");
+
+        var libraries = ComponentResolver.loadCoreComponentLibraries();
+        libraries.getFirst().getGenerators().add(generator);
+        return new ComponentResolver(libraries);
+    }
+
+    private static Set<String> names(ResolvedTypeSet typeSet) {
+        return typeSet.stream().map(ResolvedType::getName).collect(Collectors.toSet());
+    }
+
     private static ResolvedTypeSet resolveExpression(String source, ComponentResolver components) {
         Lexer lexer = new Lexer(source);
         lexer.registerEventListener(error -> fail(error.toStdOutString(source)));

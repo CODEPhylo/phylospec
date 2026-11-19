@@ -178,6 +178,13 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
 
             // it would not work even with a draw
 
+            boolean isListOfMixedTypes = resolvedExpressionTypeSet.stream().anyMatch(TypeUtils::mentionsAny);
+            String hint = isListOfMixedTypes
+                    ? "The elements of the list have no common type. Use elements of the same type."
+                    : "Change the type of the variable to `"
+                            + printType(resolvedExpressionTypeSet)
+                            + "`, or change what you assign to it.";
+
             throw new TypeError(
                     stmt,
                     "Expression of type `"
@@ -187,9 +194,7 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
                             + "` of type `"
                             + printType(resolvedVariableTypeSet)
                             + "`.",
-                    "Change the type of the variable to `"
-                            + printType(resolvedExpressionTypeSet)
-                            + "`, or change what you assign to it.");
+                    hint);
         }
 
         // the resolved type variables might be stripped of the type parameters
@@ -1001,6 +1006,14 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
 
         ResolvedTypeSet lcTypeSet = TypeUtils.getLowestCoverTypeSet(elementTypeSets, componentResolver);
 
+        // elements without a common type form a vector of Any
+
+        boolean allElementsAreTyped =
+                !elementTypeSets.isEmpty() && elementTypeSets.stream().noneMatch(ResolvedTypeSet::isEmpty);
+        if (lcTypeSet.isEmpty() && allElementsAreTyped) {
+            lcTypeSet = ResolvedType.fromString(ComponentResolver.ANY_TYPE_NAME, this.componentResolver);
+        }
+
         // build the Vector result type
 
         Type vectorComponent = componentResolver.resolveType("phylospec.types.Vector");
@@ -1169,6 +1182,12 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
     @Override
     public ResolvedTypeSet visitAtomicType(AstType.Atomic expr) {
         try {
+            if (TypeUtils.isAny(expr.name, this.componentResolver)) {
+                throw new TypeError(
+                        "The type `Any` cannot be used here.",
+                        "`Any` is only available in the types of function arguments. Use a specific type instead.");
+            }
+
             return remember(expr, ResolvedType.fromString(expr.name, componentResolver, true));
         } catch (TypeError e) {
             throw e.attachAstNode(expr);

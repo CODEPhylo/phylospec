@@ -1,6 +1,11 @@
 {"componentLibrary": {
     "types": [
         {
+            "name": "Any",
+            "namespace": "phylospec.types",
+            "description": "Value of any type. Only available in the types of function arguments."
+        },
+        {
             "name": "Boolean",
             "namespace": "phylospec.types",
             "description": "Logical value"

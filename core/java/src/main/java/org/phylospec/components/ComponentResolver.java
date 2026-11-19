@@ -15,6 +15,8 @@ import org.phylospec.typeresolver.TypeError;
  */
 public class ComponentResolver {
 
+    public static final String ANY_TYPE_NAME = "phylospec.types.Any";
+
     final List<ComponentLibrary> componentLibraries;
     final Set<String> knownNamespaces;
     private java.util.function.Function<String, String> unknownNamespaceHint;
@@ -150,6 +152,7 @@ public class ComponentResolver {
 
         this.checkTypeParameters();
         this.checkConstraints();
+        this.checkUsesOfAny();
     }
 
     /**
@@ -459,6 +462,33 @@ public class ComponentResolver {
     }
 
     /**
+     * Checks that Any is only used in the types of generator arguments, and not in generated types.
+     */
+    private void checkUsesOfAny() {
+        for (List<Generator> generators : knownGenerators.values()) {
+            for (Generator generator : generators) {
+                if (this.mentionsAny(new ParsedType(generator.getGeneratedType()))) {
+                    throw new IllegalArgumentException("Invalid generated type '"
+                            + generator.getGeneratedType()
+                            + "' of '"
+                            + generator.getName()
+                            + "'. Any can only be used in the types of arguments.");
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks if the type is Any or has Any somewhere in its type parameters.
+     */
+    private boolean mentionsAny(ParsedType type) {
+        Type resolvedType = this.resolveType(type.getTypeString());
+        if (resolvedType != null && resolvedType.getName().equals(ANY_TYPE_NAME)) return true;
+
+        return type.getTypeParameters().stream().anyMatch(this::mentionsAny);
+    }
+
+    /**
      * Returns the {@link Generator}s corresponding to the given name.
      * Returns an empty list if the generator has not been imported.
      */
@@ -566,11 +596,13 @@ public class ComponentResolver {
     }
 
     /**
-     * Returns the existing type name which is the closest to the given name.
+     * Returns the existing type name which is the closest to the given name. Any is never
+     * returned, as it is only available in the types of function arguments.
      */
     public String findClosestType(String typeName) {
         String unqualifiedName = new ParsedType(typeName).getAtomicTypeName();
         return getKnownTypes().values().stream()
+                .filter(x -> !x.getName().equals(ANY_TYPE_NAME))
                 .map(x -> new ParsedType(x.getName()).getAtomicTypeName())
                 .min(Comparator.comparingInt(x -> Utils.editDistance(x, unqualifiedName)))
                 .orElse("");

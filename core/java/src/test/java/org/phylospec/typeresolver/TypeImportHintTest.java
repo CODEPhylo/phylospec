@@ -34,6 +34,15 @@ class TypeImportHintTest {
     }
 
     @Test
+    void neverSuggestsAny() throws IOException {
+        var resolver = resolverWithSampleCounts("sample.types");
+
+        assertNotEquals("Any", resolver.findClosestType("Any"));
+        assertNotEquals("Any", resolver.findClosestType("Anny"));
+        assertNotEquals("Any", resolver.findClosestType("phylospec.types.Any"));
+    }
+
+    @Test
     void keepsSpellingHintsAndDoesNotSuggestImportsForQualifiedNames() throws IOException {
         var resolver = resolverWithSampleCounts("sample.types");
         var typo = assertThrows(TypeError.class, () -> ResolvedType.fromString("Intege", resolver));
