@@ -1,0 +1,34 @@
+// lists without a common element type are vectors of Any
+Boolean mixedEqual = [1.5, "text"] == [[1.0, 2.0], 3.0]
+
+// lists without a common element type cannot be assigned to variables
+Vector<Real> mixed = [1.5, "text"]
+
+// type parameters are never inferred as Any
+Integer mixedNum = num(vector=[1.5, "text"])
+
+// Any cannot be used as the type of a variable
+Any real = 1.5
+Vector<Any> vector = [1.0, 2.0]
+Any drawn ~ Normal(mean=0.0, sd=1.0)
+
+// EXPECT AST
+// (AS Boolean mixedEqual (== (AR 1.5 "text") (AR (AR 1.0 2.0) 3.0)))
+// (AS Vector<Real> mixed (AR 1.5 "text"))
+// (AS Integer mixedNum (CA num (AA vector (AR 1.5 "text"))))
+// (AS Any real 1.5)
+// (AS Vector<Any> vector (AR 1.0 2.0))
+// (DR Any drawn (CA Normal (AA mean 0.0) (AA sd 1.0)))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// Expression of type `Vector<Any>` cannot be assigned to variable `mixed` of type `Vector<Real>`. The elements of the list have no common type. Use elements of the same type.
+// Wrong argument type for function `num` and argument `vector`. You need to use a value of type 'Vector<T>'.
+// The type `Any` cannot be used here. `Any` is only available in the types of function arguments. Use a specific type instead.
+// The type `Any` cannot be used here. `Any` is only available in the types of function arguments. Use a specific type instead.
+// The type `Any` cannot be used here. `Any` is only available in the types of function arguments. Use a specific type instead.
+// EXPECT TYPE_ERRORS
+
+// EXPECT TYPES
+// Boolean
+// EXPECT TYPES
