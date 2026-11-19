@@ -326,7 +326,7 @@ public class Lexer {
 
         // we first try to scan the entire number
 
-        // a number could be an int or float, contain decimal separators ("10_000"),
+        // a number could be an int or float, contain digit separators ("10_000"),
         // or scientific notation ("10.3E-2")
 
         this.scanDigits();
@@ -365,6 +365,10 @@ public class Lexer {
             if (isFloat) {
                 double value = Double.parseDouble(digits);
                 if (Double.isInfinite(value)) throw new NumberFormatException();
+                if (value == 0.0 && this.hasNonZeroMantissa(digits)) {
+                    this.reportError("'" + text + "' is too close to zero to be represented.", "Try a larger number.");
+                    return;
+                }
                 this.addToken(TokenType.FLOAT, value);
             } else {
                 this.addToken(TokenType.INT, Integer.parseInt(digits));
@@ -410,6 +414,20 @@ public class Lexer {
         }
 
         return true;
+    }
+
+    /**
+     * Checks if the part before the exponent of the given number literal contains
+     * a non-zero digit, i.e. if the literal denotes a non-zero number.
+     */
+    private boolean hasNonZeroMantissa(String digits) {
+        for (int i = 0; i < digits.length(); i++) {
+            char c = digits.charAt(i);
+            if (c == 'e' || c == 'E') return false;
+            if ('1' <= c && c <= '9') return true;
+        }
+
+        return false;
     }
 
     private void comment() {
