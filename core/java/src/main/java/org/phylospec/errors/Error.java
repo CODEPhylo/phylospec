@@ -104,11 +104,6 @@ public final class Error extends Throwable {
                 .append(" ")
                 .append(isWarning ? description() : BOLD + description() + RESET);
 
-        // the lexer skips a leading byte order mark, so the ranges do not account for it
-        if (!source.isEmpty() && source.charAt(0) == 0xFEFF) {
-            source = source.substring(1);
-        }
-
         String[] lines = source.split("\n", -1);
         if (range != null && range.startLine >= 1 && range.startLine <= lines.length) {
             int lastLine = Math.min(range.endLine, lines.length);
