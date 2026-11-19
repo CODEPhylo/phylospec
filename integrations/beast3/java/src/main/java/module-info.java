@@ -1,5 +1,6 @@
 module org.phylospec.beast3 {
     requires transitive beast.base;
+    requires beast.labs;
     requires beast.pkgmgmt;
     requires java.xml;
     requires org.apache.commons.math4.legacy;

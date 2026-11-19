@@ -1,0 +1,21 @@
+Vector<PositiveInteger> lengths = [209, 210, 210]
+Vector<PositiveReal> weights = [1.5, 2.5, 3.5]
+Vector<PositiveReal> r ~ WeightedDirichlet(concentration=[1.0, 1.0, 1.0], weights=lengths, mean=1.0)
+Vector<PositiveReal> s ~ WeightedDirichlet(concentration=[2.0, 3.0, 4.0], weights=weights)
+
+// EXPECT AST
+// (AS Vector<PositiveInteger> lengths (AR 209 210 210))
+// (AS Vector<PositiveReal> weights (AR 1.5 2.5 3.5))
+// (DR Vector<PositiveReal> r (CA WeightedDirichlet (AA concentration (AR 1.0 1.0 1.0)) (AA weights lengths) (AA mean 1.0)))
+// (DR Vector<PositiveReal> s (CA WeightedDirichlet (AA concentration (AR 2.0 3.0 4.0)) (AA weights weights)))
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS
+
+// EXPECT TYPES
+// Vector<PositiveInteger;num=3>
+// Vector<PositiveReal;num=3>
+// Vector<PositiveReal;num=3>
+// Vector<PositiveReal;num=3>
+// EXPECT TYPES

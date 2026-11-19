@@ -1,0 +1,68 @@
+data {
+    Alignment D = fromNexus(
+        file="data/RSV2.nex",
+        date=parse(regex=".*s(\d+)$")
+    )
+
+    // LPhy: codon = D.charset(["3-629\3", "1-629\3", "2-629\3"])
+    // PhyloSpec makes the three applications of subset explicit.
+    Vector<PositiveInteger> codonPosition = [3, 1, 2]
+    Alignment codon[i] = subset(
+        alignment=D,
+        start=1,
+        end=629,
+        codonPosition=codonPosition[i]
+    ) for i in 1:3
+
+    PositiveInteger L[i] = numSites(codon[i]) for i in 1:3
+    Taxa taxa = taxa(D)
+}
+
+model {
+    // LPhy expresses these as distributions with replicates=3. In PhyloSpec,
+    // indexed statements explicitly create the three independent variables.
+    Simplex baseFrequencies[i] ~ Dirichlet(
+        concentration=[2.0, 2.0, 2.0, 2.0]
+    ) for i in 1:3
+
+    PositiveReal kappa[i] ~ LogNormal(
+        logMean=1.0,
+        logSd=0.5
+    ) for i in 1:3
+
+    // This is one joint three-dimensional random variable, not three IID draws.
+    // Canonical signature required by this script:
+    // WeightedDirichlet(concentration, weights, mean=1) -> Vector<PositiveReal>.
+    // Its site-count-weighted mean is constrained to one.
+    Vector<PositiveReal> relativeRate ~ WeightedDirichlet(
+        concentration=[1.0, 1.0, 1.0],
+        weights=L,
+        mean=1.0
+    )
+
+    Rate meanClockRate ~ LogNormal(logMean=-5.0, logSd=1.25)
+    PositiveReal populationSize ~ LogNormal(logMean=3.0, logSd=2.0)
+
+    Tree tree ~ Coalescent(
+        populationSize=populationSize,
+        taxa=taxa
+    )
+
+    QMatrix qMatrix[i] = hky(
+        kappa=kappa[i],
+        baseFrequencies=baseFrequencies[i]
+    ) for i in 1:3
+
+    Rate partitionClockRate[i] = meanClockRate * relativeRate[i] for i in 1:3
+
+    // LPhy implicitly vectorizes PhyloCTMC over codon, L, Q and r.
+    // PhyloSpec states that mapping explicitly with the shared tree and clock mean.
+    Alignment alignment[i] ~ PhyloCTMC(
+        tree=tree,
+        qMatrix=qMatrix[i],
+        branchRates~StrictClock(
+            clockRate=partitionClockRate[i],
+            tree=tree
+        )
+    ) observed as codon[i] for i in 1:3
+}

@@ -37,13 +37,13 @@ public class SiteModelTile extends GeneratorTile<Partial<SiteModel, Substitution
                 new RealScalarParam<>(0.0, UnitInterval.INSTANCE));
         this.numSitesInput.apply(beastState, indexVariables);
 
-        SiteModel partialSiteModel = new SiteModel();
-        beastState.setInput(partialSiteModel, partialSiteModel.shapeParameterInput, shape);
-        beastState.setInput(partialSiteModel, partialSiteModel.gammaCategoryCount, numCategories);
-        beastState.setInput(partialSiteModel, partialSiteModel.invarParameterInput, invariantProportion);
-
-        // we return a partial site model where the substitution model can be set later
-        return new Partial<>(partialSiteModel, (siteModel, substitutionModel) -> {
+        // Each likelihood owns its SiteModel while sharing the gamma and invariant parameters,
+        // so the SiteModel is only built when the substitution model is known.
+        return new Partial<>(null, (unused, substitutionModel) -> {
+            SiteModel siteModel = new SiteModel();
+            beastState.setInput(siteModel, siteModel.shapeParameterInput, shape);
+            beastState.setInput(siteModel, siteModel.gammaCategoryCount, numCategories);
+            beastState.setInput(siteModel, siteModel.invarParameterInput, invariantProportion);
             beastState.setInput(siteModel, siteModel.substModelInput, substitutionModel);
             return siteModel;
         });

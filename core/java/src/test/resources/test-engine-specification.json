@@ -52,6 +52,11 @@
                     "canBeStochastic": false,
                     "name": "numSites",
                     "required": false
+                },
+                {
+                    "canBeStochastic": true,
+                    "name": "rate",
+                    "required": false
                 }
             ]
         },

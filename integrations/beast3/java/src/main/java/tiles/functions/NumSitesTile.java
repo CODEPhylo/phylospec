@@ -21,6 +21,8 @@ public class NumSitesTile extends GeneratorTile<IntScalarParam<NonNegativeInt>, 
     public IntScalarParam<NonNegativeInt> applyTile(
             BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         DecoratedAlignment alignment = this.alignmentInput.apply(beastState, indexVariables);
+        // A filtered alignment computes its site count during native initialization.
+        beastState.initBEASTObject(alignment.alignment());
         return new IntScalarParam<>(alignment.alignment().getSiteCount(), NonNegativeInt.INSTANCE);
     }
 }

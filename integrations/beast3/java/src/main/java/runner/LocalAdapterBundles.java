@@ -25,7 +25,10 @@ final class LocalAdapterBundles implements AutoCloseable {
             "org/phylospec/tiling/TileLibrary.class",
             "runner/PhyloSpecRunner.class",
             "beast/base/core/BEASTObject.class",
-            "beast/pkgmgmt/BEASTClassLoader.class");
+            "beast/pkgmgmt/BEASTClassLoader.class",
+            // The BEAST 3 runtime supplies BEASTLabs and its required Nashorn engine.
+            "beastlabs/math/distributions/WeightedDirichlet.class",
+            "org/openjdk/nashorn/api/scripting/NashornScriptEngineFactory.class");
 
     record Jar(String path, String sha256, long size, String use) {}
 

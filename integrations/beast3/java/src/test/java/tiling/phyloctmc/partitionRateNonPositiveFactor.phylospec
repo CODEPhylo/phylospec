@@ -1,0 +1,23 @@
+Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+
+Tree tree ~ Yule(
+    birthRate=1.0, taxa=taxa(data)
+)
+
+Simplex partitionWeights ~ Dirichlet(concentration=[1.0, 1.0])
+
+Alignment first ~ PhyloCTMC(
+  tree, qMatrix=jc69(), rate=-2.0 * partitionWeights[1]
+) observed as data
+
+// EXPECTED_TILES
+// TILING_SUCCESS
+// EXPECTED_TILES
+
+// EXPECTED_APPLICATION_ERRORS
+// The factor -2.0 is not greater than zero. Use a positive constant, e.g. 3.0 * w[1] for three equal partitions.
+// EXPECTED_APPLICATION_ERRORS
+
+// EXPECTED BEAST STATE
+// NO_STATE
+// EXPECTED BEAST STATE

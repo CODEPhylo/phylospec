@@ -1,20 +1,28 @@
 package tiles.distributions;
 
+import beast.base.core.BEASTInterface;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.evolution.tree.Tree;
+import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.evolution.branchratemodel.Base;
 import beast.base.spec.evolution.branchratemodel.StrictClockModel;
 import beast.base.spec.evolution.likelihood.TreeLikelihood;
 import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.SimplexParam;
+import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
+import beastconfig.OperatorSelector;
 import beastconfig.ReportingTreeLikelihood;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.Partial;
 import org.phylospec.tiling.tiles.GeneratorTile;
+import tiling.PositivePartitionRate;
 import tiling.UnboundDistribution;
 
 public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, TreeLikelihood>, BEASTState> {
@@ -30,6 +38,8 @@ public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, 
     GeneratorTileInput<Base, BEASTState> branchRateModelInput = new GeneratorTileInput<>("branchRates", false);
     GeneratorTileInput<Partial<SiteModel, SubstitutionModel>, BEASTState> partialSiteRateModel =
             new GeneratorTileInput<>("siteRates", false);
+    GeneratorTileInput<RealScalar<? extends NonNegativeReal>, BEASTState> rateInput =
+            new GeneratorTileInput<>("rate", false);
 
     @Override
     public UnboundDistribution<Alignment, TreeLikelihood> applyTile(
@@ -39,6 +49,7 @@ public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, 
         Base branchRateModel = this.branchRateModelInput.apply(beastState, indexVariables);
         Partial<SiteModel, SubstitutionModel> partialSiteModel =
                 this.partialSiteRateModel.apply(beastState, indexVariables);
+        RealScalar<? extends NonNegativeReal> rate = this.rateInput.apply(beastState, indexVariables);
 
         // initialize clock model
 
@@ -58,6 +69,12 @@ public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, 
             beastState.setInput(siteModel, siteModel.substModelInput, substitutionModel);
         }
 
+        // the partition's relative rate: BEAST's per-site-model mutation rate
+
+        if (rate != null) {
+            setMutationRate(beastState, siteModel, rate);
+        }
+
         // initialize tree likelihood
 
         TreeLikelihood treeLikelihood = new ReportingTreeLikelihood();
@@ -67,5 +84,29 @@ public class PhyloCTMCTile extends GeneratorTile<UnboundDistribution<Alignment, 
 
         return new UnboundDistribution<>(
                 treeLikelihood, data -> beastState.setInput(treeLikelihood, treeLikelihood.dataInput, data));
+    }
+
+    private static void setMutationRate(
+            BEASTState beastState, SiteModel siteModel, RealScalar<? extends NonNegativeReal> rate) {
+        var positiveRate = new PositivePartitionRate();
+        beastState.setInput(positiveRate, positiveRate.rateInput, rate);
+        beastState.setInput(siteModel, siteModel.muParameterInput, positiveRate);
+
+        // a simplex that a partition rate is computed from acts as partition weights, however the rate is written
+        Set<SimplexParam> simplexes = new LinkedHashSet<>();
+        collectSimplexes(rate, simplexes);
+        for (SimplexParam simplex : simplexes) {
+            OperatorSelector.tuneForPartitionRates(beastState, simplex);
+        }
+    }
+
+    private static void collectSimplexes(Object node, Set<SimplexParam> simplexes) {
+        if (node instanceof SimplexParam simplex) {
+            simplexes.add(simplex);
+        } else if (node instanceof BEASTInterface beastObject) {
+            for (BEASTInterface input : beastObject.listActiveBEASTObjects()) {
+                collectSimplexes(input, simplexes);
+            }
+        }
     }
 }
