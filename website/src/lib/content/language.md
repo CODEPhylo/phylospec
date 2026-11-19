@@ -128,6 +128,17 @@ Real a = 10     // here, 10 is a Real
 Real b = log(5) // log takes a PositiveReal, so 5 is a PositiveReal
 ```
 
+Numbers can be written in scientific notation, and underscores can be used to group digits:
+
+```phylospec
+Real tolerance = 1e-10
+Rate clockRate = 3.0e-4
+Integer numSites = 100_000
+Real c = 100_000.2345
+```
+
+A number with an exponent is always a real number, even if it has no fractional part (`1e6` is not an integer).
+
 #### Types can be aliased
 
 One reason why PhyloSpec uses types is to make scripts more readable. One part of this is the use of aliases:

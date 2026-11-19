@@ -168,6 +168,89 @@ public class LexerTest {
     }
 
     @Test
+    public void testScientificNumberLiterals() {
+        String source = "1e-10 3.0e-4 2E+3 1e5 1.5e3Ma";
+
+        List<Error> errors = new ArrayList<>();
+        Lexer lexer = new Lexer(source);
+        lexer.registerEventListener(errors::add);
+        List<Token> tokens = lexer.scanTokens();
+
+        assertEquals(0, errors.size());
+        assertEquals(new Token(TokenType.FLOAT, "1e-10", 1e-10, 1, 0, 5), tokens.get(0));
+        assertEquals(new Token(TokenType.FLOAT, "3.0e-4", 3.0e-4, 1, 6, 12), tokens.get(1));
+        assertEquals(new Token(TokenType.FLOAT, "2E+3", 2000.0, 1, 13, 17), tokens.get(2));
+        assertEquals(new Token(TokenType.FLOAT, "1e5", 100000.0, 1, 18, 21), tokens.get(3));
+        assertEquals(new Token(TokenType.FLOAT, "1.5e3", 1500.0, 1, 22, 27), tokens.get(4));
+        assertEquals(new Token(TokenType.IDENTIFIER, "Ma", null, 1, 27, 29), tokens.get(5));
+        assertEquals(TokenType.EOF, tokens.get(6).type);
+    }
+
+    @Test
+    public void testIncompleteExponentIsNotPartOfNumber() {
+        String source = "2e 2e-";
+
+        Lexer lexer = new Lexer(source);
+        List<Token> tokens = lexer.scanTokens();
+
+        assertEquals(new Token(TokenType.INT, "2", 2, 1, 0, 1), tokens.get(0));
+        assertEquals(new Token(TokenType.IDENTIFIER, "e", null, 1, 1, 2), tokens.get(1));
+        assertEquals(new Token(TokenType.INT, "2", 2, 1, 3, 4), tokens.get(2));
+        assertEquals(new Token(TokenType.IDENTIFIER, "e", null, 1, 4, 5), tokens.get(3));
+        assertEquals(new Token(TokenType.MINUS, "-", null, 1, 5, 6), tokens.get(4));
+        assertEquals(TokenType.EOF, tokens.get(5).type);
+    }
+
+    @Test
+    public void testNumberLiteralsWithUnderscores() {
+        String source = "100_000 100_000.2345 1_0e1_0 1_000.000_1";
+
+        List<Error> errors = new ArrayList<>();
+        Lexer lexer = new Lexer(source);
+        lexer.registerEventListener(errors::add);
+        List<Token> tokens = lexer.scanTokens();
+
+        assertEquals(0, errors.size());
+        assertEquals(new Token(TokenType.INT, "100_000", 100000, 1, 0, 7), tokens.get(0));
+        assertEquals(new Token(TokenType.FLOAT, "100_000.2345", 100000.2345, 1, 8, 20), tokens.get(1));
+        assertEquals(new Token(TokenType.FLOAT, "1_0e1_0", 10e10, 1, 21, 28), tokens.get(2));
+        assertEquals(new Token(TokenType.FLOAT, "1_000.000_1", 1000.0001, 1, 29, 40), tokens.get(3));
+        assertEquals(TokenType.EOF, tokens.get(4).type);
+    }
+
+    @Test
+    public void testMisplacedUnderscoresInNumberLiterals() {
+        for (String source : List.of("100_", "1__0", "1e_5", "1_.5", "1.5_e3")) {
+            List<Error> errors = new ArrayList<>();
+            Lexer lexer = new Lexer(source);
+            lexer.registerEventListener(errors::add);
+            List<Token> tokens = lexer.scanTokens();
+
+            assertEquals(1, errors.size(), source);
+            assertEquals(
+                    "'" + source + "' is not a valid number.", errors.getFirst().description());
+            assertEquals(
+                    "Underscores can only be placed between digits.",
+                    errors.getFirst().hint());
+            assertEquals(new Range(1, 0, source.length()), errors.getFirst().range());
+            assertEquals(
+                    List.of(TokenType.EOF), tokens.stream().map(t -> t.type).toList(), source);
+        }
+    }
+
+    @Test
+    public void testTooLargeScientificNumberLiteral() {
+        List<Error> errors = new ArrayList<>();
+        Lexer lexer = new Lexer("1e999");
+        lexer.registerEventListener(errors::add);
+        lexer.scanTokens();
+
+        assertEquals(1, errors.size());
+        assertEquals("'1e999' is not a valid number.", errors.getFirst().description());
+        assertEquals("Try a smaller number.", errors.getFirst().hint());
+    }
+
+    @Test
     public void testStringLiterals() {
         String source = "\"Hallo this is a string\"\n\"This is a\nmultiline\r\nstring\"";
 
