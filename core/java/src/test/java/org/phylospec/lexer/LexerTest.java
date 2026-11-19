@@ -175,12 +175,24 @@ public class LexerTest {
         lexer.registerEventListener(errors::add);
         List<Token> tokens = lexer.scanTokens();
 
-        assertEquals(new Token(TokenType.IDENTIFIER, "Real", null, 1, 0, 4), tokens.get(0));
-        assertEquals(new Token(TokenType.IDENTIFIER, "κ", null, 1, 5, 6), tokens.get(1));
+        // the byte order mark still counts as a column, so the ranges index into the given source
+        assertEquals(new Token(TokenType.IDENTIFIER, "Real", null, 1, 1, 5), tokens.get(0));
+        assertEquals(new Token(TokenType.IDENTIFIER, "κ", null, 1, 6, 7), tokens.get(1));
 
         // only the leading byte order mark is skipped
         assertEquals(1, errors.size());
         assertEquals(new Range(2, 0, 1), errors.getFirst().range());
+    }
+
+    @Test
+    public void errorsAfterAByteOrderMarkHaveSourceColumns() {
+        List<Error> errors = new ArrayList<>();
+        Lexer lexer = new Lexer("\uFEFFReal x = ?");
+        lexer.registerEventListener(errors::add);
+        lexer.scanTokens();
+
+        assertEquals(1, errors.size());
+        assertEquals(new Range(1, 10, 11), errors.getFirst().range());
     }
 
     @Test
