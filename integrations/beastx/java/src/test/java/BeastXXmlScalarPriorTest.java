@@ -110,7 +110,7 @@ public class BeastXXmlScalarPriorTest {
                     .orElseThrow();
         }
 
-        assertEquals(List.of("state", "first", "second"), header);
+        assertEquals(List.of("state", "prior", "first", "second"), header);
     }
 
     @Test

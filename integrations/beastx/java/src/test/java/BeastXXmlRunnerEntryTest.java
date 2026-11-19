@@ -33,7 +33,7 @@ public class BeastXXmlRunnerEntryTest {
                 """);
         BeastXState state = PhyloSpecRunner.buildXmlExportModel(script, "exported", warning -> {}, path -> {}).beastState;
         assertEquals(
-                List.of(new ScreenLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, List.of("prior", "x"), null)),
+                List.of(new ScreenLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, null, null)),
                 state.screenLoggerSpecs);
         assertEquals(List.of(new FileLoggerSpec<>(7, "selected.log", List.of("x"), null)), state.fileLoggerSpecs);
         assertTrue(state.treeLoggerSpecs.isEmpty());

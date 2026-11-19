@@ -312,24 +312,11 @@ public class BeastXState {
     /** Fill only missing logger kinds on the freshly built export state, before XML planning. */
     public void configureDefaultXmlLoggers(String fallbackPrefix) {
         String prefix = outputPrefix == null ? fallbackPrefix : outputPrefix;
-        if (screenLoggerSpecs.isEmpty() || fileLoggerSpecs.isEmpty()) {
-            List<String> columns = new ArrayList<>();
-            boolean hasLikelihood = !likelihoodDistributions.isEmpty() || !observedTreeDistributions.isEmpty();
-            if (hasLikelihood) columns.add("posterior");
-            columns.add("prior");
-            if (hasLikelihood) columns.add("likelihood");
-            for (String tree : treeModelsByPhyloSpecName.keySet().stream().sorted().toList()) {
-                columns.add(tree + ".height");
-                columns.add(tree + ".treeLength");
-            }
-            columns.addAll(stateNodesByPhyloSpecName.keySet().stream().sorted().toList());
-            if (this.screenLoggerSpecs.isEmpty()) {
-                this.addScreenLoggerSpec(new ScreenLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, columns, null));
-            }
-            if (this.fileLoggerSpecs.isEmpty()) {
-                this.addFileLoggerSpec(
-                        new FileLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, prefix + ".log", columns, null));
-            }
+        if (this.screenLoggerSpecs.isEmpty()) {
+            this.addScreenLoggerSpec(new ScreenLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, null, null));
+        }
+        if (this.fileLoggerSpecs.isEmpty()) {
+            this.addFileLoggerSpec(new FileLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, prefix + ".log", null, null));
         }
         if (this.treeLoggerSpecs.isEmpty()) {
             this.treeLoggerSpecs.addAll(this.getDefaultTreeLoggerSpecs(prefix));
@@ -337,9 +324,41 @@ public class BeastXState {
     }
 
     /**
+     * Returns the names of the distributions every screen and file logger writes to the XML: the
+     * prior and, if the model has a likelihood, the posterior and the likelihood.
+     */
+    public List<String> getXmlLoggedDistributionNames() {
+        boolean hasLikelihood =
+                !this.likelihoodDistributions.isEmpty() || !this.observedTreeDistributions.isEmpty();
+
+        List<String> names = new ArrayList<>();
+        if (hasLikelihood) names.add("posterior");
+        names.add("prior");
+        if (hasLikelihood) names.add("likelihood");
+
+        return names;
+    }
+
+    /**
+     * Returns the names a screen or file logger without explicit parameters writes to the XML: the
+     * statistics of every tree and all sampled parameters.
+     */
+    public List<String> getXmlDefaultLoggedParameterNames() {
+        List<String> names = new ArrayList<>();
+
+        for (String tree : this.treeModelsByPhyloSpecName.keySet().stream().sorted().toList()) {
+            names.add(tree + ".height");
+            names.add(tree + ".treeLength");
+        }
+        names.addAll(this.stateNodesByPhyloSpecName.keySet().stream().sorted().toList());
+
+        return names;
+    }
+
+    /**
      * Returns the tree loggers used when the model declares none. Every tree is logged if at least
      * one tree is sampled. A single tree is logged to {@code <prefix>.trees}, several trees to
-     * {@code <prefix>.<tree>.trees} each.
+     * {@code <prefix>-<tree>.trees} each.
      */
     public List<TreeLoggerSpec<String>> getDefaultTreeLoggerSpecs(String prefix) {
         List<TreeLoggerSpec<String>> specs = new ArrayList<>();
@@ -349,7 +368,7 @@ public class BeastXState {
 
         List<String> trees = this.treeModelsByPhyloSpecName.keySet().stream().sorted().toList();
         for (String tree : trees) {
-            String fileName = trees.size() == 1 ? prefix + ".trees" : prefix + "." + tree + ".trees";
+            String fileName = trees.size() == 1 ? prefix + ".trees" : prefix + "-" + tree + ".trees";
             specs.add(new TreeLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, fileName, tree));
         }
 
