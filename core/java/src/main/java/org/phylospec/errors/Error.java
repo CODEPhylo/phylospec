@@ -129,10 +129,7 @@ public final class Error extends Throwable {
                         .append(INDENT)
                         .append(gutter)
                         .append(" | ")
-                        .append(this.getMarkerPadding(sourceLine, range.start))
-                        .append(markerColor)
-                        .append(this.getMarkers(sourceLine, range.start, range.end))
-                        .append(RESET);
+                        .append(this.getMarkerLine(sourceLine, range.start, range.end, markerColor, RESET));
             } else {
                 /* multiline range — show each line with carets beneath it */
                 text.append("\n");
@@ -164,10 +161,7 @@ public final class Error extends Throwable {
                         caretEnd = sourceLine.length();
                     }
 
-                    text.append(this.getMarkerPadding(sourceLine, caretStart))
-                            .append(markerColor)
-                            .append(this.getMarkers(sourceLine, caretStart, caretEnd))
-                            .append(RESET);
+                    text.append(this.getMarkerLine(sourceLine, caretStart, caretEnd, markerColor, RESET));
                 }
             }
         }
@@ -199,48 +193,35 @@ public final class Error extends Throwable {
     /* helper methods to align the markers with the source line */
 
     /**
-     * Returns the whitespace which moves the cursor beneath the given UTF-16 column of the source line.
-     * Tabs are copied from the source line so that the markers end up at the same tab stops.
+     * Returns the markers underlining the source line between the given UTF-16 columns, preceded by
+     * the whitespace which moves them beneath the marked text. At least one marker is returned.
      */
-    private String getMarkerPadding(String sourceLine, int column) {
-        StringBuilder padding = new StringBuilder();
+    private String getMarkerLine(String sourceLine, int start, int end, String markerColor, String resetColor) {
+        start = Math.min(start, sourceLine.length());
+        end = Math.max(start, Math.min(end, sourceLine.length()));
 
-        int end = Math.min(column, sourceLine.length());
-        for (int i = 0; i < end; ) {
-            int codePoint = sourceLine.codePointAt(i);
-            padding.append(codePoint == '\t' ? "\t" : " ".repeat(this.getDisplayWidth(codePoint)));
-            i += Character.charCount(codePoint);
-        }
+        String padding = this.mask(sourceLine.substring(0, start), " ");
+        String markers = this.mask(sourceLine.substring(start, end), "^");
 
-        // columns past the end of the line (e.g. the line break) take up one cell each
-        padding.append(" ".repeat(Math.max(0, column - sourceLine.length())));
-
-        return padding.toString();
+        return padding + markerColor + (markers.isBlank() ? "^" : markers) + resetColor;
     }
 
     /**
-     * Returns the markers underlining the source line between the given UTF-16 columns. At least one
-     * marker is returned.
+     * Returns the given text with every character replaced by the filler, repeated to match the
+     * number of terminal cells the character occupies. Tabs are kept so that the result reaches the
+     * same tab stops as the text.
      */
-    private String getMarkers(String sourceLine, int start, int end) {
-        int width = 0;
-
-        int clampedEnd = Math.min(end, sourceLine.length());
-        for (int i = start; i < clampedEnd; ) {
-            int codePoint = sourceLine.codePointAt(i);
-            width += this.getDisplayWidth(codePoint);
-            i += Character.charCount(codePoint);
-        }
-
-        // columns past the end of the line (e.g. the line break) take up one cell each
-        width += Math.max(0, end - Math.max(start, sourceLine.length()));
-
-        return "^".repeat(Math.max(1, width));
+    private String mask(String text, String filler) {
+        StringBuilder masked = new StringBuilder();
+        text.codePoints()
+                .forEach(codePoint ->
+                        masked.append(codePoint == '\t' ? "\t" : filler.repeat(this.getDisplayWidth(codePoint))));
+        return masked.toString();
     }
 
     /**
      * Returns the number of terminal cells the given code point occupies: zero for combining marks and
-     * invisible formatting characters, two for wide East Asian characters and emoji, and one otherwise.
+     * invisible formatting characters, two for East Asian scripts, and one otherwise.
      */
     private int getDisplayWidth(int codePoint) {
         int type = Character.getType(codePoint);
@@ -248,22 +229,9 @@ public final class Error extends Throwable {
             return 0;
         }
 
-        boolean isWide = (codePoint >= 0x1100 && codePoint <= 0x115F) // hangul jamo
-                || (codePoint >= 0x2E80 && codePoint <= 0x303E) // cjk radicals and punctuation
-                || (codePoint >= 0x3041 && codePoint <= 0x33FF) // kana and cjk compatibility
-                || (codePoint >= 0x3400 && codePoint <= 0x4DBF) // cjk extension a
-                || (codePoint >= 0x4E00 && codePoint <= 0x9FFF) // cjk unified ideographs
-                || (codePoint >= 0xA000 && codePoint <= 0xA4CF) // yi
-                || (codePoint >= 0xAC00 && codePoint <= 0xD7A3) // hangul syllables
-                || (codePoint >= 0xF900 && codePoint <= 0xFAFF) // cjk compatibility ideographs
-                || (codePoint >= 0xFE30 && codePoint <= 0xFE4F) // cjk compatibility forms
-                || (codePoint >= 0xFF00 && codePoint <= 0xFF60) // fullwidth forms
-                || (codePoint >= 0xFFE0 && codePoint <= 0xFFE6) // fullwidth signs
-                || (codePoint >= 0x1F300 && codePoint <= 0x1F64F) // pictographs and emoticons
-                || (codePoint >= 0x1F680 && codePoint <= 0x1F6FF) // transport and map symbols
-                || (codePoint >= 0x1F900 && codePoint <= 0x1F9FF) // supplemental pictographs
-                || (codePoint >= 0x20000 && codePoint <= 0x3FFFD); // cjk extensions b and beyond
-
-        return isWide ? 2 : 1;
+        return switch (Character.UnicodeScript.of(codePoint)) {
+            case HAN, HIRAGANA, KATAKANA, HANGUL -> 2;
+            default -> 1;
+        };
     }
 }
