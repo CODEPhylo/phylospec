@@ -245,12 +245,13 @@ class TaxonSpeciesTileTest {
                 Tree tree ~ Coalescent(populationSize=100.0, taxa=samples)
                 Alignment observed ~ PhyloCTMC(tree=tree, qMatrix=jc69()) observed as data
                 mcmc {
-                    Integer chainLength = 10
-                    Integer defaultLogEvery = 1
-                    Integer randomSeed = 42
+                    Sampler sampler = mcmc(chainLength=10)
+                    Logger fileLogger = fileLogger(file="species.log", logEvery=1)
+                    Logger treeLogger = treeLogger(file="species.trees", logEvery=1, tree=tree)
                 }
                 """.formatted(file));
         PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(42L);
         assertNotNull(runner.check());
         Path run = directory.resolve("run");
         runner.runManaged("species", run, warning -> {});

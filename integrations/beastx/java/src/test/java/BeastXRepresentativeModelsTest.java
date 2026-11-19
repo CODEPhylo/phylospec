@@ -1,4 +1,5 @@
 import org.junit.jupiter.api.Test;
+import org.phylospec.tiling.mcmc.McmcSamplerSpec;
 import tiling.BeastXModel;
 import tiling.summary.BeastXModelSummary;
 
@@ -126,7 +127,7 @@ public class BeastXRepresentativeModelsTest {
                 modelsWithOperators++;
             }
 
-            if (summary.chainLength != 1
+            if (summary.chainLength != McmcSamplerSpec.DEFAULT_CHAIN_LENGTH
                     || !summary.screenLoggers.isEmpty()
                     || !summary.fileLoggers.isEmpty()
                     || !summary.treeLoggers.isEmpty()) {
@@ -259,7 +260,7 @@ public class BeastXRepresentativeModelsTest {
         assertAnyContains(summary.operatorDetails, "ScaleOperator(parameter=turnover");
 
         assertEquals(
-                1,
+                McmcSamplerSpec.DEFAULT_CHAIN_LENGTH,
                 summary.chainLength
         );
 
@@ -358,7 +359,7 @@ public class BeastXRepresentativeModelsTest {
 
         assertEquals(
                 List.of(
-                        "treeLogger(logEvery=5000, file=target/partitionedGtrHkySiteClockMCMC.trees, trees=[tree])"
+                        "treeLogger(logEvery=5000, file=target/partitionedGtrHkySiteClockMCMC.trees, tree=tree)"
                 ),
                 summary.treeLoggers
         );

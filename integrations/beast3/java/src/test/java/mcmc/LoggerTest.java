@@ -3,10 +3,12 @@ package mcmc;
 import static org.junit.jupiter.api.Assertions.*;
 
 import beast.base.core.BEASTObject;
+import beast.base.core.Loggable;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Logger;
 import beastconfig.BEASTState;
+import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.*;
@@ -18,6 +20,10 @@ import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
+import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.mcmc.LoggerSpec;
+import org.phylospec.tiling.mcmc.McmcBlockValidator;
+import org.phylospec.tiling.mcmc.McmcSamplerSpec;
 import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
@@ -56,40 +62,87 @@ public class LoggerTest {
     }
 
     @Test
-    public void testDefaultLoggerSettingsCanBeConfigured() {
-        Built built = tile(MODEL + """
-                                mcmc {
-                                    Integer defaultLogEvery = 17
-                                    String outputPrefix = "configured/run"
-                                    Integer randomSeed = 42
-                                }
-                                """);
-
+    public void testDefaultLoggersUseTheRunNameAndTheDefaultInterval() {
+        Built built = tile(MODEL);
         List<Logger> loggers = buildLoggers(built);
 
-        assertEquals(17, built.state().defaultLogEvery);
-        assertEquals("configured/run", built.state().outputPrefix);
-        assertEquals(42L, built.state().randomSeed);
-        assertTrue(loggers.stream().allMatch(logger -> logger.everyInput.get() == 17));
-        assertEquals("configured/run.log", fileName(loggers.get(1)));
-        assertEquals("configured/run.trees", fileName(loggers.get(2)));
+        assertTrue(loggers.stream().allMatch(logger -> logger.everyInput.get() == LoggerSpec.DEFAULT_LOG_EVERY));
+        assertEquals("test.log", fileName(loggers.get(1)));
+        assertEquals("test.trees", fileName(loggers.get(2)));
     }
 
     @Test
-    public void testTreeLoggerWithoutTreeLogsAllLoggableTrees() {
+    public void testSamplerSetsTheChainLength() {
         Built built = tile(MODEL + """
                                 mcmc {
-                                    Logger logger = treeLogger(logEvery=500, file="trees.trees")
+                                    Sampler sampler = mcmc(chainLength=1234)
                                 }
                                 """);
 
-        // the tree is optional, so building must not fail and must fall back to every tree
-        List<Logger> loggers = buildLoggers(built);
-        Logger treeLogger = onlyTreeLogger(loggers);
+        assertEquals(1234, built.state().getSamplerSpec().chainLength());
+    }
 
-        assertEquals(500, treeLogger.everyInput.get());
-        assertEquals("trees.trees", fileName(treeLogger));
-        assertEquals(trees(built.state()), loggables(treeLogger));
+    @Test
+    public void testDefaultSamplerIsUsedWhenNoneIsGiven() {
+        assertEquals(
+                McmcSamplerSpec.DEFAULT_CHAIN_LENGTH,
+                tile(MODEL).state().getSamplerSpec().chainLength());
+        assertEquals(
+                McmcSamplerSpec.DEFAULT_CHAIN_LENGTH,
+                tile(MODEL + """
+                                mcmc {
+                                    Sampler sampler = mcmc()
+                                }
+                                """).state().getSamplerSpec().chainLength());
+    }
+
+    @Test
+    public void testSettingsOutsideOfSamplersAndLoggersAreRejected() {
+        TileApplicationError error = assertThrows(TileApplicationError.class, () -> tile(MODEL + """
+                                mcmc {
+                                    Integer chainLength = 100
+                                }
+                                """));
+
+        assertTrue(error.getMessage().contains("Only samplers and loggers"), error.getMessage());
+    }
+
+    @Test
+    public void testTreeLoggerNeedsATree() {
+        TileApplicationError error = assertThrows(TileApplicationError.class, () -> tile(MODEL + """
+                                mcmc {
+                                    Logger logger = treeLogger(logEvery=500, file="trees.trees")
+                                }
+                                """));
+
+        assertTrue(error.getMessage().contains("needs the argument `tree`"), error.getMessage());
+    }
+
+    @Test
+    public void testLoggersRejectNonPositiveIntervals() {
+        TileApplicationError error = assertThrows(TileApplicationError.class, () -> tile(MODEL + """
+                                mcmc {
+                                    Logger logger = screenLogger(logEvery=0)
+                                }
+                                """));
+
+        assertTrue(error.getMessage().contains("logging interval must be positive"), error.getMessage());
+    }
+
+    @Test
+    public void testLoggersUseTheDefaultIntervalWhenNoneIsGiven() {
+        Built built = tile(MODEL + """
+                                mcmc {
+                                    Logger screen = screenLogger()
+                                    Logger file = fileLogger(file="out.log")
+                                    Logger trees = treeLogger(file="trees.trees", tree)
+                                }
+                                """);
+
+        List<Logger> loggers = buildLoggers(built);
+
+        assertEquals(3, loggers.size());
+        assertTrue(loggers.stream().allMatch(logger -> logger.everyInput.get() == LoggerSpec.DEFAULT_LOG_EVERY));
     }
 
     @Test
@@ -106,20 +159,6 @@ public class LoggerTest {
         assertEquals(1, built.state().treeLoggerSpecs.size());
         assertEquals("trees.trees", fileName(treeLogger));
         assertEquals(trees(built.state()), loggables(treeLogger));
-    }
-
-    @Test
-    public void testTreeLoggerWithoutTreeFailsWhenTheModelHasMultipleTrees() {
-        Built built = tile(MODEL + """
-                                Tree otherTree ~ Yule(birthRate=birthRate, taxa=taxa(data))
-                                mcmc {
-                                    Logger logger = treeLogger(logEvery=500, file="trees.trees")
-                                }
-                                """);
-
-        // multiple trees in one tree-mode logger would produce an invalid NEXUS file
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> buildLoggers(built));
-        assertTrue(exception.getMessage().contains("more than one tree"));
     }
 
     @Test
@@ -179,6 +218,41 @@ public class LoggerTest {
     }
 
     @Test
+    public void testParameterNamesReplaceTheLoggedNames() {
+        Built built = tile(MODEL + """
+                                mcmc {
+                                    Logger logger = fileLogger(
+                                        file="out.log", parameters=[birthRate], parameterNames=["myBirthRate"]
+                                    )
+                                }
+                                """);
+
+        List<Logger> loggers = buildLoggers(built);
+        Logger fileLogger = loggers.stream()
+                .filter(l -> "out.log".equals(fileName(l)))
+                .findFirst()
+                .orElseThrow();
+        Loggable renamed =
+                assertInstanceOf(Loggable.class, loggables(fileLogger).get(3));
+
+        ByteArrayOutputStream header = new ByteArrayOutputStream();
+        renamed.init(new PrintStream(header));
+
+        assertEquals("myBirthRate", header.toString().trim());
+    }
+
+    @Test
+    public void testParameterNamesHaveToMatchTheParameters() {
+        TileApplicationError error = assertThrows(TileApplicationError.class, () -> tile(MODEL + """
+                                mcmc {
+                                    Logger logger = screenLogger(parameters=[birthRate], parameterNames=["a", "b"])
+                                }
+                                """));
+
+        assertTrue(error.getMessage().contains("1 parameters but 2 parameter names"), error.getMessage());
+    }
+
+    @Test
     public void testBuildLoggersIsIdempotent() {
         Built built = tile(MODEL);
 
@@ -201,6 +275,8 @@ public class LoggerTest {
 
         statements = new RemoveGroupings().transform(statements);
         statements = new EvaluateLiterals().transform(statements);
+
+        McmcBlockValidator.validate(statements);
 
         VariableResolver variableResolver = new VariableResolver(statements);
 

@@ -10,6 +10,11 @@ import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
 import dr.inference.model.Statistic;
 import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.mcmc.FileLoggerSpec;
+import org.phylospec.tiling.mcmc.LoggerSpec;
+import org.phylospec.tiling.mcmc.McmcSamplerSpec;
+import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
+import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import tiling.model.StartingTreeSpec;
 import tiling.params.BeastXParam;
 import tiling.xml.XmlPlan;
@@ -61,19 +66,19 @@ public class BeastXState {
     public final Map<TreeModel, List<Parameter>> treeStrictClockRateParameters;
     public final Map<TreeModel, RelaxedClockSpec> treeRelaxedClockModels;
 
-    // Logger configuration collected from MCMC logger tiles.
+    // Logger configuration collected from MCMC logger tiles. Logged parameters and trees are
+    // referred to by their PhyloSpec names.
     public final List<Logger> mcmcLoggers;
-    public final List<ScreenLoggerSpec> screenLoggerSpecs;
-    public final List<FileLoggerSpec> fileLoggerSpecs;
-    public final List<TreeLoggerSpec> treeLoggerSpecs;
+    public final List<ScreenLoggerSpec<String>> screenLoggerSpecs;
+    public final List<FileLoggerSpec<String>> fileLoggerSpecs;
+    public final List<TreeLoggerSpec<String>> treeLoggerSpecs;
 
     public final OperatorConfig operatorConfig;
     public final XmlPlan xmlPlan;
 
-    public long chainLength = 1;
+    private McmcSamplerSpec samplerSpec;
     public Long randomSeed = null;
     public String outputPrefix = null;
-    public long defaultLogEvery = 1;
 
     private final Set<String> ids;
 
@@ -295,6 +300,15 @@ public class BeastXState {
         return path;
     }
 
+    public void setSamplerSpec(McmcSamplerSpec samplerSpec) {
+        this.samplerSpec = samplerSpec;
+    }
+
+    /** Returns the declared sampler, or the default sampler if the model declares none. */
+    public McmcSamplerSpec getSamplerSpec() {
+        return this.samplerSpec != null ? this.samplerSpec : new McmcSamplerSpec();
+    }
+
     /** Fill only missing logger kinds on the freshly built export state, before XML planning. */
     public void configureDefaultXmlLoggers(String fallbackPrefix) {
         String prefix = outputPrefix == null ? fallbackPrefix : outputPrefix;
@@ -309,25 +323,60 @@ public class BeastXState {
                 columns.add(tree + ".treeLength");
             }
             columns.addAll(stateNodesByPhyloSpecName.keySet().stream().sorted().toList());
-            if (screenLoggerSpecs.isEmpty()) addScreenLoggerSpec(defaultLogEvery, columns);
-            if (fileLoggerSpecs.isEmpty()) addFileLoggerSpec(defaultLogEvery, prefix + ".log", columns);
+            if (this.screenLoggerSpecs.isEmpty()) {
+                this.addScreenLoggerSpec(new ScreenLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, columns, null));
+            }
+            if (this.fileLoggerSpecs.isEmpty()) {
+                this.addFileLoggerSpec(
+                        new FileLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, prefix + ".log", columns, null));
+            }
         }
-        if (treeLoggerSpecs.isEmpty() && !treePriorDistributions.isEmpty()) {
-            addTreeLoggerSpec(defaultLogEvery, prefix + ".trees",
-                    treeModelsByPhyloSpecName.keySet().stream().sorted().toList());
+        if (this.treeLoggerSpecs.isEmpty()) {
+            this.treeLoggerSpecs.addAll(this.getDefaultTreeLoggerSpecs(prefix));
         }
     }
 
-    public void addScreenLoggerSpec(long logEvery, List<String> parameterNames) {
-        this.screenLoggerSpecs.add(new ScreenLoggerSpec(logEvery, parameterNames));
+    /**
+     * Returns the tree loggers used when the model declares none. Every tree is logged if at least
+     * one tree is sampled. A single tree is logged to {@code <prefix>.trees}, several trees to
+     * {@code <prefix>.<tree>.trees} each.
+     */
+    public List<TreeLoggerSpec<String>> getDefaultTreeLoggerSpecs(String prefix) {
+        List<TreeLoggerSpec<String>> specs = new ArrayList<>();
+        if (this.treePriorDistributions.isEmpty()) {
+            return specs;
+        }
+
+        List<String> trees = this.treeModelsByPhyloSpecName.keySet().stream().sorted().toList();
+        for (String tree : trees) {
+            String fileName = trees.size() == 1 ? prefix + ".trees" : prefix + "." + tree + ".trees";
+            specs.add(new TreeLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, fileName, tree));
+        }
+
+        return specs;
     }
 
-    public void addFileLoggerSpec(long logEvery, String fileName, List<String> parameterNames) {
-        this.fileLoggerSpecs.add(new FileLoggerSpec(logEvery, fileName, parameterNames));
+    public void addScreenLoggerSpec(ScreenLoggerSpec<String> spec) {
+        this.screenLoggerSpecs.add(spec);
     }
 
-    public void addTreeLoggerSpec(long logEvery, String fileName, List<String> treeNames) {
-        this.treeLoggerSpecs.add(new TreeLoggerSpec(logEvery, fileName, treeNames));
+    public void addFileLoggerSpec(FileLoggerSpec<String> spec) {
+        this.fileLoggerSpecs.add(spec);
+    }
+
+    public void addTreeLoggerSpec(TreeLoggerSpec<String> spec) {
+        this.treeLoggerSpecs.add(spec);
+    }
+
+    /** Returns the PhyloSpec name under which the given tree is registered, or null if it is not. */
+    public String getPhyloSpecName(TreeModel treeModel) {
+        for (Map.Entry<String, TreeModel> entry : this.treeModelsByPhyloSpecName.entrySet()) {
+            if (entry.getValue() == treeModel) {
+                return entry.getKey();
+            }
+        }
+
+        return null;
     }
 
     // Complete BEAST X object bundle needed to represent a relaxed clock model.
@@ -433,14 +482,5 @@ public class BeastXState {
                     "treeRandomWalkNodeHeightSize"
             ).contains(settingName);
         }
-    }
-
-    public record ScreenLoggerSpec(long logEvery, List<String> parameterNames) {
-    }
-
-    public record FileLoggerSpec(long logEvery, String fileName, List<String> parameterNames) {
-    }
-
-    public record TreeLoggerSpec(long logEvery, String fileName, List<String> treeNames) {
     }
 }

@@ -45,7 +45,7 @@ model {
 }
 
 mcmc {
-    Integer chainLength = 100
+    Sampler sampler = mcmc(chainLength=100)
 }
 
 // EXPECT AST
@@ -60,7 +60,7 @@ mcmc {
 // (OA (DR Alignment molecular (CA PhyloCTMC (AA null tree) (AA qMatrix molecularQ) (AA null siteRates) (AA null branchRates))) molecularData)
 // (OA (DR Alignment traits (CA PhyloCTMC (AA null tree) (AA qMatrix traitQ) (AA null branchRates))) traitData)
 // (OB (AS Age rootAge (CA rootAge (AA null tree))) 1.7 yr 4 yr)
-// (AS Integer chainLength 100)
+// (AS Sampler sampler (CA mcmc (AA chainLength 100)))
 // EXPECT AST
 
 // EXPECT TYPE_ERRORS

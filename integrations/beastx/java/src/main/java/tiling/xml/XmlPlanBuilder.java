@@ -9,6 +9,8 @@ import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Parameter;
 import dr.math.distributions.DirichletDistribution;
 import tiling.BeastXModel;
+import org.phylospec.tiling.mcmc.FileLoggerSpec;
+import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import tiling.BeastXState;
 import tiling.xml.builders.BranchRateModelXmlBuilder;
 import tiling.xml.builders.CalibrationPriorXmlBuilder;
@@ -391,12 +393,12 @@ public class XmlPlanBuilder {
         Set<String> emittedStatisticIds =
                 new HashSet<>();
 
-        for (BeastXState.ScreenLoggerSpec spec : state.screenLoggerSpecs) {
-            addTreeStatistics(plan, state, spec.parameterNames(), emittedStatisticIds);
+        for (ScreenLoggerSpec<String> spec : state.screenLoggerSpecs) {
+            addTreeStatistics(plan, state, spec.parameters(), emittedStatisticIds);
         }
 
-        for (BeastXState.FileLoggerSpec spec : state.fileLoggerSpecs) {
-            addTreeStatistics(plan, state, spec.parameterNames(), emittedStatisticIds);
+        for (FileLoggerSpec<String> spec : state.fileLoggerSpecs) {
+            addTreeStatistics(plan, state, spec.parameters(), emittedStatisticIds);
         }
     }
 

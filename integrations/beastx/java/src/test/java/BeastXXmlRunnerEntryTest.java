@@ -3,6 +3,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.io.TempDir;
+import org.phylospec.tiling.mcmc.FileLoggerSpec;
+import org.phylospec.tiling.mcmc.LoggerSpec;
+import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import tiling.BeastXState;
 import tiling.runner.BeastXRunResult;
 import tiling.runner.XmlRunResult;
@@ -25,14 +28,14 @@ public class BeastXXmlRunnerEntryTest {
         Files.writeString(script, """
                 Real x ~ Normal(mean=0.0, sd=1.0)
                 mcmc {
-                    Integer defaultLogEvery = 3
-                    String outputPrefix = "userPrefix"
                     Logger fileLogger = fileLogger(logEvery=7, file="selected.log", parameters=[x])
                 }
                 """);
         BeastXState state = PhyloSpecRunner.buildXmlExportModel(script, "exported", warning -> {}, path -> {}).beastState;
-        assertEquals(List.of(new BeastXState.ScreenLoggerSpec(3, List.of("prior", "x"))), state.screenLoggerSpecs);
-        assertEquals(List.of(new BeastXState.FileLoggerSpec(7, "selected.log", List.of("x"))), state.fileLoggerSpecs);
+        assertEquals(
+                List.of(new ScreenLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, List.of("prior", "x"), null)),
+                state.screenLoggerSpecs);
+        assertEquals(List.of(new FileLoggerSpec<>(7, "selected.log", List.of("x"), null)), state.fileLoggerSpecs);
         assertTrue(state.treeLoggerSpecs.isEmpty());
     }
 
@@ -63,8 +66,7 @@ public class BeastXXmlRunnerEntryTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -101,8 +103,7 @@ public class BeastXXmlRunnerEntryTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -144,8 +145,7 @@ public class BeastXXmlRunnerEntryTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,

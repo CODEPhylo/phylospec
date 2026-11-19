@@ -43,6 +43,7 @@ final class InstalledBeastXRun {
         }
         args.addAll(List.of(
                 "-cp", lib.resolve("*").toString(), "BeastXRunTool", source.toString(), directory.toString(), prefix));
+        if (options.seed() != null) args.addAll(List.of("--seed", options.seed().toString()));
         if (options.debug()) args.add("--debug");
         ProcessBuilder builder =
                 new ProcessBuilder(args).directory(output.toFile()).redirectErrorStream(true);

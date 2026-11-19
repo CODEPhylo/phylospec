@@ -168,8 +168,7 @@ final class RunRecord {
     synchronized void configuration(BEASTState state, List<Logger> loggers, String stateFile) throws IOException {
         ObjectNode next = editable();
         ObjectNode settings = next.putObject("settings");
-        settings.put("chainLength", state.chainLength);
-        settings.put("defaultLogEvery", state.defaultLogEvery);
+        settings.put("chainLength", state.getSamplerSpec().chainLength());
         settings.put("randomSeed", state.randomSeed);
         settings.put("outputPrefix", relative(state.outputPrefix));
         ArrayNode loggerSettings = settings.putArray("loggers");

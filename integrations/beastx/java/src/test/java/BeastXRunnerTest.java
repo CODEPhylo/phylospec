@@ -5,8 +5,11 @@ import tiling.runner.RunnerOptions;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -80,8 +83,7 @@ public class BeastXRunnerTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -91,8 +93,12 @@ public class BeastXRunnerTest {
                 }
                 """.formatted(logPath.toString().replace("\\", "/"));
 
+        PhyloSpecRunner runner =
+                new PhyloSpecRunner(source);
+        runner.setSeed(1234L);
+
         BeastXRunResult result =
-                new PhyloSpecRunner(source)
+                runner
                         .run(
                                 RunnerOptions.builder("runnerFacadeExecution")
                                         .mode(RunMode.EXECUTE_MCMC)
@@ -114,5 +120,46 @@ public class BeastXRunnerTest {
                     "Expected runner facade execution log to contain a header and at least one sample."
             );
         }
+    }
+
+    @Test
+    public void sameSeedReproducesTheSampledValues() throws Exception {
+        Path outputDirectory =
+                Path.of("target", "runner-facade");
+
+        Files.createDirectories(outputDirectory);
+
+        List<List<String>> runs =
+                new ArrayList<>();
+
+        for (String run : List.of("first", "second")) {
+            Path logPath =
+                    outputDirectory.resolve("seeded-" + run + "-" + System.nanoTime() + ".log");
+
+            String source = """
+                    Real x ~ Normal(mean=0.0, sd=1.0)
+
+                    mcmc {
+                        Sampler sampler = mcmc(chainLength=50)
+                        Logger fileLogger = fileLogger(file="%s", logEvery=1, parameters=[x])
+                    }
+                    """.formatted(logPath.toString().replace("\\", "/"));
+
+            PhyloSpecRunner runner =
+                    new PhyloSpecRunner(source);
+            runner.setSeed(2468L);
+            runner.runMCMC("seededRun");
+
+            try (Stream<String> lines = Files.lines(logPath)) {
+                runs.add(lines.filter(line -> line.matches("\\d+\\s.*")).toList());
+            }
+        }
+
+        assertEquals(51, runs.getFirst().size());
+        assertTrue(
+                runs.getFirst().stream().map(line -> line.split("\\s+")[1]).distinct().count() > 1,
+                "Expected the chain to move."
+        );
+        assertEquals(runs.getFirst(), runs.getLast());
     }
 }

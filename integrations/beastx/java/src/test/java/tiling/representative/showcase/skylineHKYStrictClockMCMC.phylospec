@@ -44,10 +44,10 @@ Alignment alignment ~ PhyloCTMC(
 ) observed as data
 
 mcmc {
-    Integer chainLength = 50000
-    Integer randomSeed = 20260601
-    Integer defaultLogEvery = 5000
-    String outputPrefix = "target/showcase-runtime-smoke/skylineHKYStrictClockMCMC"
+    Sampler sampler = mcmc(chainLength=50000)
+    Logger screenLogger = screenLogger(logEvery=5000)
+    Logger fileLogger = fileLogger(file="target/showcase-runtime-smoke/skylineHKYStrictClockMCMC.log", logEvery=5000)
+    Logger treeLogger = treeLogger(file="target/showcase-runtime-smoke/skylineHKYStrictClockMCMC.trees", logEvery=5000, tree)
 }
 
 // EXPECTED_TILES

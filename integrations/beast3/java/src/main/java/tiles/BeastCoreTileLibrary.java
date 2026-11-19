@@ -181,10 +181,7 @@ public class BeastCoreTileLibrary extends TileLibrary<BEASTState> {
         tiles.add(new VectorBranchRatesErrorTile());
         tiles.add(new VectorSiteRatesErrorTile());
 
-        tiles.add(new ChainLengthTile());
-        tiles.add(new DefaultLogEveryTile());
-        tiles.add(new OutputPrefixTile());
-        tiles.add(new RandomSeedTile());
+        tiles.add(new McmcSamplerTile());
         tiles.add(new ScreenLoggerTile());
         tiles.add(new FileLoggerTile());
         tiles.add(new TreeLoggerTile());

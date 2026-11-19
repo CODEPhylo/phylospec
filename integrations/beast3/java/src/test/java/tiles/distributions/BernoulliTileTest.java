@@ -291,13 +291,13 @@ class BernoulliTileTest {
                 : "Boolean outcome ~ Bernoulli(p=0.3)\n";
         String source = model + """
                 mcmc {
-                    Integer chainLength = 200
-                    Integer randomSeed = 81629
-                    Integer defaultLogEvery = 5
-                    String outputPrefix = "%s"
+                    Sampler sampler = mcmc(chainLength=200)
+                    Logger fileLogger = fileLogger(file="%s.log", logEvery=5)
                 }
                 """.formatted(prefix.toString().replace("\\", "\\\\"));
-        new PhyloSpecRunner(source, List.of("beast2")).runPhyloSpec("bernoulli-short-chain");
+        PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(81629L);
+        runner.runPhyloSpec(prefix.toString());
         List<String> lines = Files.readAllLines(Path.of(prefix + ".log")).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))
                 .toList();

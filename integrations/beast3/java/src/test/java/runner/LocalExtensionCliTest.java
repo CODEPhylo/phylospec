@@ -36,9 +36,8 @@ class LocalExtensionCliTest {
             use fixture.distributions
             Real x ~ CustomNormal(mean=0.0, sd=1.0)
             mcmc {
-                Integer chainLength = 30
-                Integer defaultLogEvery = 10
-                Integer randomSeed = 42
+                Sampler sampler = mcmc(chainLength=30)
+                Logger fileLogger = fileLogger(file="custom.log", logEvery=10)
             }
             """;
 

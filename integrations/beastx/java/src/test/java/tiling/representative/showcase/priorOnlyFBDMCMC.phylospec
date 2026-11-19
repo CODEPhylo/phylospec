@@ -30,7 +30,7 @@ Tree tree ~ FossilizedBirthDeath(
 )
 
 mcmc {
-    Integer chainLength = 100
+    Sampler sampler = mcmc(chainLength=100)
 
     Logger screenLogger = screenLogger(
         logEvery=10,
@@ -46,7 +46,7 @@ mcmc {
     Logger treeLogger = treeLogger(
         logEvery=10,
         file="target/priorOnlyFBDMCMC.trees",
-        trees=[tree]
+        tree=tree
     )
 }
 

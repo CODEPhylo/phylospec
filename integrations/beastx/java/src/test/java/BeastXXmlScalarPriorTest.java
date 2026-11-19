@@ -3,8 +3,10 @@ import tiling.BeastXModel;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BeastXXmlScalarPriorTest {
@@ -27,8 +29,7 @@ public class BeastXXmlScalarPriorTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -63,6 +64,56 @@ public class BeastXXmlScalarPriorTest {
     }
 
     @Test
+    public void writesAndRunsXmlWithRenamedLogColumns() throws Exception {
+        Path xmlPath =
+                XmlTestSupport.xmlPath("renamedLogColumns");
+
+        Path logPath =
+                XmlTestSupport.logPath("renamedLogColumns");
+
+        XmlTestSupport.prepare(xmlPath, logPath);
+
+        String source =
+                """
+                Real x ~ Normal(mean=0.0, sd=1.0)
+                Real y ~ Normal(mean=0.0, sd=1.0)
+
+                mcmc {
+                    Sampler sampler = mcmc(chainLength=5)
+
+                    Logger fileLogger = fileLogger(
+                        file="%s",
+                        logEvery=1,
+                        parameters=[x, y],
+                        parameterNames=["first", "second"]
+                    )
+                }
+                """.formatted(XmlTestSupport.unixPath(logPath));
+
+        BeastXModel model =
+                XmlTestSupport.buildModel("xmlRenamedLogColumns", source);
+
+        String xml =
+                XmlTestSupport.writeXml(model, xmlPath);
+
+        XmlTestSupport.assertXmlContains(xml, "<column label=\"first\">");
+        XmlTestSupport.assertXmlContains(xml, "<column label=\"second\">");
+
+        XmlTestSupport.runXml(xmlPath);
+
+        List<String> header;
+        try (Stream<String> lines = Files.lines(logPath)) {
+            header = lines
+                    .filter(line -> line.startsWith("state"))
+                    .findFirst()
+                    .map(line -> List.of(line.trim().split("\\s+")))
+                    .orElseThrow();
+        }
+
+        assertEquals(List.of("state", "first", "second"), header);
+    }
+
+    @Test
     public void writesParsesAndRunsExponentialPriorMCMCXml() throws Exception {
         Path xmlPath =
                 XmlTestSupport.xmlPath("exponentialPriorMCMC");
@@ -79,8 +130,7 @@ public class BeastXXmlScalarPriorTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -125,8 +175,7 @@ public class BeastXXmlScalarPriorTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -173,8 +222,7 @@ public class BeastXXmlScalarPriorTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,

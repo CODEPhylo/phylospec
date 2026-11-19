@@ -47,8 +47,7 @@ Alignment alignment ~ PhyloCTMC(
 ) observed as data
 
 mcmc {
-    Integer chainLength = 5
-    Integer randomSeed = 1234
+    Sampler sampler = mcmc(chainLength=5)
 
     Logger fileLogger = fileLogger(
         logEvery=1,
@@ -59,6 +58,6 @@ mcmc {
     Logger treeLogger = treeLogger(
         logEvery=1,
         file="target/beastx-runs/skylineHKYStrictClockXmlRun/skylineHKYStrictClockXmlRun.trees",
-        trees=[tree]
+        tree=tree
     )
 }

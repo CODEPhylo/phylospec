@@ -14,8 +14,8 @@ model {
 }
 
 mcmc {
-    Integer chainLength = 1000
-    String logFile = "output.log"
+    Sampler sampler = mcmc(chainLength=1000)
+    Logger fileLogger = fileLogger(file="output.log")
 }
 
 revbayes {
@@ -28,8 +28,8 @@ revbayes {
 // (AS Real x 2.5)
 // (DR Real y (CA Normal (AA mean outside) (AA sd x)))
 // (OA (DR Real z (CA LogNormal (AA logMean 0.0) (AA logSd 1.0))) outside)
-// (AS Integer chainLength 1000)
-// (AS String logFile "output.log")
+// (AS Sampler sampler (CA mcmc (AA chainLength 1000)))
+// (AS Logger fileLogger (CA fileLogger (AA file "output.log")))
 // (AS Integer moves 5)
 // EXPECT AST
 

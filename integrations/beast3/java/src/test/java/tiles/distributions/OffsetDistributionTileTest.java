@@ -297,13 +297,13 @@ class OffsetDistributionTileTest {
                 : "Real x ~ Offset(base=Normal(mean=0.0, sd=1.0), offset=-0.1)\n";
         String source = model + """
                 mcmc {
-                    Integer chainLength = 100
-                    Integer randomSeed = 25191
-                    Integer defaultLogEvery = 5
-                    String outputPrefix = "%s"
+                    Sampler sampler = mcmc(chainLength=100)
+                    Logger fileLogger = fileLogger(file="%s.log", logEvery=5)
                 }
                 """.formatted(prefix.toString().replace("\\", "\\\\"));
-        new PhyloSpecRunner(source, List.of("beast2")).runPhyloSpec("offset-distribution-short-chain");
+        PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(25191L);
+        runner.runPhyloSpec(prefix.toString());
         List<String> lines = Files.readAllLines(Path.of(prefix + ".log")).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))
                 .toList();

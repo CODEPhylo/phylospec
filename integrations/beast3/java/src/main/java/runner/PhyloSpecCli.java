@@ -41,6 +41,7 @@ public final class PhyloSpecCli {
               --xml <file>           Export only: destination XML (default log prefix: XML file stem)
               --out <directory>      Run only: exact run directory (must be absent or empty)
               --run-name <prefix>    Run only: relative output prefix (default: script name)
+              --seed <n>             export/run: random seed (default: chosen at random)
               --debug                Show raw BEAST console output and failure stack traces
               -h, --help              Show this help
               --version              Show PhyloSpec and the default BEAST 3 runtime versions
@@ -56,7 +57,7 @@ public final class PhyloSpecCli {
             Legacy run requires --library and preserves its exact library order.
             New run writes to --out/output/, or beside the script in runs/<name>-<run-id>/output/.
             Relative --out paths use the command's working directory; input paths use the script directory.
-            Script outputPrefix overrides --run-name; explicit logger names are relative to output/.
+            Default log names start with --run-name; explicit logger names are relative to output/.
             Output paths must stay inside output/. Absolute script output paths are rejected.
             Managed runs save model.phylospec, run.json and console.log beside output/.
             BEAST X also saves the executed analysis.xml in the run directory.
@@ -143,6 +144,7 @@ public final class PhyloSpecCli {
             Options options, Path source, LocalAdapterBundles adapters, PrintStream out, PrintStream err)
             throws IOException, ParserConfigurationException, SAXException {
         PhyloSpecRunner runner = new PhyloSpecRunner(source, options.libraries(), adapters.bundles());
+        runner.setSeed(options.seed());
         Consumer<PhyloSpecDiagnostic> warningHandler = warning -> err.println(warning.format());
         if (options.command() == Command.CHECK) {
             try {
@@ -260,6 +262,7 @@ public final class PhyloSpecCli {
             String runName,
             Path outputDirectory,
             Path xmlFile,
+            Long seed,
             List<String> libraries,
             List<Path> adapterPaths,
             boolean help,
@@ -286,6 +289,7 @@ public final class PhyloSpecCli {
             String runName = null;
             Path outputDirectory = null;
             Path xmlFile = null;
+            Long seed = null;
             List<String> libraries = new ArrayList<>();
             List<Path> adapterPaths = new ArrayList<>();
             boolean help = false;
@@ -354,6 +358,7 @@ public final class PhyloSpecCli {
                         if (value.isBlank()) throw new IllegalArgumentException("--xml requires a non-blank file.");
                         xmlFile = Path.of(value);
                     }
+                    case "--seed" -> seed = parseSeed(requireValue(arguments, ++index, "--seed"));
                     default -> {
                         if (argument.startsWith("-")) {
                             throw new IllegalArgumentException("Unknown option: " + argument);
@@ -390,6 +395,9 @@ public final class PhyloSpecCli {
                 if (command != Command.RUN && outputDirectory != null) {
                     throw new IllegalArgumentException("--out is only supported for the run subcommand.");
                 }
+                if (command == Command.CHECK && seed != null) {
+                    throw new IllegalArgumentException("--seed is only supported for export and run.");
+                }
                 if (command == Command.LEGACY_RUN && !adapterPaths.isEmpty()) {
                     throw new IllegalArgumentException("--adapter-path is only supported for check/export/run.");
                 }
@@ -408,6 +416,7 @@ public final class PhyloSpecCli {
                     runName,
                     outputDirectory,
                     xmlFile,
+                    seed,
                     List.copyOf(libraries),
                     List.copyOf(adapterPaths),
                     help,
@@ -434,6 +443,16 @@ public final class PhyloSpecCli {
                 case EXPORT -> "export the analysis XML";
                 default -> "run the PhyloSpec model";
             };
+        }
+
+        private static long parseSeed(String value) {
+            try {
+                long seed = Long.parseLong(value);
+                if (seed >= 0) return seed;
+            } catch (NumberFormatException malformed) {
+                // reported below together with negative seeds
+            }
+            throw new IllegalArgumentException("--seed requires a non-negative integer.");
         }
 
         private static String requireValue(String[] arguments, int index, String option) {

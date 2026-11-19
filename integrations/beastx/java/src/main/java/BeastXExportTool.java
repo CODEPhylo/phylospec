@@ -22,23 +22,24 @@ public final class BeastXExportTool implements ToolProvider {
 
     @Override
     public int run(PrintWriter out, PrintWriter err, String... args) {
-        if (args.length < 2 || args.length > 3 || (args.length == 3 && !"--debug".equals(args[2]))) {
-            err.println("Expected a source file, an XML output file and optional --debug.");
+        BeastXToolOptions options = args.length < 2 ? null : BeastXToolOptions.parse(args, 2);
+        if (options == null) {
+            err.println("Expected a source file, an XML output file and optional --seed <n> and --debug.");
             return 2;
         }
         try {
             Path xmlFile = Path.of(args[1]).toAbsolutePath().normalize();
-            export(Path.of(args[0]), xmlFile, err::println);
+            export(Path.of(args[0]), xmlFile, options.seed(), err::println);
             out.println("Exported BEAST X analysis: " + xmlFile);
             return 0;
         } catch (Exception | LinkageError | ServiceConfigurationError failure) {
             err.println("Could not export " + args[0] + " with BEAST X: " + failure.getMessage());
-            if (args.length == 3) failure.printStackTrace(err);
+            if (options.debug()) failure.printStackTrace(err);
             return 1;
         }
     }
 
-    private static void export(Path source, Path target, Consumer<String> warnings) throws Exception {
+    private static void export(Path source, Path target, Long seed, Consumer<String> warnings) throws Exception {
         if (target.getFileName() == null || Files.isDirectory(target)) {
             throw new IOException("Expected an XML output file: " + target);
         }
@@ -47,7 +48,10 @@ public final class BeastXExportTool implements ToolProvider {
                 ? fileName.substring(0, fileName.length() - 4) : fileName;
         List<Path> inputs = new ArrayList<>();
         inputs.add(source);
-        BeastXModel model = PhyloSpecRunner.buildXmlExportModel(source, prefix, warnings, inputs::add);
+        BeastXModel model = PhyloSpecRunner.buildXmlExportModel(
+                source, Files.readString(source), prefix, warnings, inputs::add, seed, requested -> {
+                    if (requested != null) BeastXToolOptions.applySeed(requested);
+                });
         for (Path input : inputs) {
             if (samePath(target, input)) throw new IOException("XML output is a model input: " + input);
         }

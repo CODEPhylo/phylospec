@@ -14,20 +14,22 @@ public final class BeastXRunTool {
     private BeastXRunTool() {}
 
     public static void main(String[] args) {
-        if (args.length < 3 || args.length > 4 || (args.length == 4 && !"--debug".equals(args[3]))) {
-            System.err.println("Error: expected a script, a run directory, a run name and optional --debug.");
+        BeastXToolOptions options = args.length < 3 ? null : BeastXToolOptions.parse(args, 3);
+        if (options == null) {
+            System.err.println(
+                    "Error: expected a script, a run directory, a run name and optional --seed <n> and --debug.");
             System.exit(2);
         }
         try {
-            execute(Path.of(args[0]), Path.of(args[1]), args[2]);
+            execute(Path.of(args[0]), Path.of(args[1]), args[2], options.seed());
         } catch (Exception | LinkageError | ServiceConfigurationError failure) {
             System.err.println("Error: " + failure.getMessage());
-            if (args.length == 4) failure.printStackTrace(System.err);
+            if (options.debug()) failure.printStackTrace(System.err);
             System.exit(1);
         }
     }
 
-    private static void execute(Path script, Path runDir, String runName) throws Exception {
+    private static void execute(Path script, Path runDir, String runName, Long requestedSeed) throws Exception {
         if (!Files.isSameFile(Path.of("").toAbsolutePath(), runDir.resolve("output"))) {
             throw new IOException("Expected the BEAST X working directory to be " + runDir.resolve("output"));
         }
@@ -43,11 +45,9 @@ public final class BeastXRunTool {
                     warning -> {
                         System.err.println(warning);
                         record.warning(warning);
-                    }, record::input, requested -> {
-                        long seed = requested != null ? requested
-                                : ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE);
-                        if (seed == 0) throw new IllegalArgumentException("BEAST X requires a nonzero randomSeed.");
-                        MathUtils.setSeed(seed);
+                    }, record::input, requestedSeed, requested -> {
+                        BeastXToolOptions.applySeed(requested != null ? requested
+                                : ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE));
                         record.seed("modelBuilding", requested, MathUtils.getSeed());
                     });
             long seed = MathUtils.getSeed();
@@ -60,7 +60,7 @@ public final class BeastXRunTool {
             MathUtils.setSeed(seed);
             record.seed("mcmc", model.beastState.randomSeed, MathUtils.getSeed());
             MCMC mcmc = new XmlRunner().parse(xml);
-            if (mcmc.getChainLength() != model.beastState.chainLength) {
+            if (mcmc.getChainLength() != model.beastState.getSamplerSpec().chainLength()) {
                 throw new IOException("The saved XML has an unexpected chain length: " + mcmc.getChainLength());
             }
             record.running();

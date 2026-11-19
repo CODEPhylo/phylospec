@@ -271,12 +271,13 @@ class TaxonTileTest {
         Files.writeString(source, MANUAL + """
                 Tree inferred ~ Coalescent(populationSize=100.0, taxa=samples)
                 mcmc {
-                    Integer chainLength = 10
-                    Integer defaultLogEvery = 1
-                    Integer randomSeed = 42
+                    Sampler sampler = mcmc(chainLength=10)
+                    Logger fileLogger = fileLogger(file="taxon.log", logEvery=1)
+                    Logger treeLogger = treeLogger(file="taxon.trees", logEvery=1, tree=inferred)
                 }
                 """);
         PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(42L);
         assertNotNull(runner.check());
         Path run = directory.resolve("run");
         runner.runManaged("taxon", run, warning -> {});

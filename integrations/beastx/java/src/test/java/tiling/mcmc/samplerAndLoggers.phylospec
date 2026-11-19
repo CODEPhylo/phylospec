@@ -1,9 +1,9 @@
 PositiveReal x ~ LogNormal(logMean=0.0, logSd=1.0)
 
 mcmc {
-    Integer chainLength = 1000
-    Integer defaultLogEvery = 100
-    String outputPrefix = "target/output-prefix-smoke/run"
+    Sampler sampler = mcmc(chainLength=1000)
+    Logger screenLogger = screenLogger(logEvery=100)
+    Logger fileLogger = fileLogger(file="target/mcmc-block-smoke/run.log", logEvery=100)
 }
 
 // EXPECTED_TILES:

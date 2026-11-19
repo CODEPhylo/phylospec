@@ -65,7 +65,7 @@ class GompertzCliDistributionIT {
         Result completed = execute(working, List.of(
                 launcher.toString(), "run", source.toString(),
                 "--adapter-path", adapter.toString(), "--library", "popfunc",
-                "--out", "Gompertz results"));
+                "--out", "Gompertz results", "--seed", "12345"));
         assertEquals(0, completed.exitCode(), completed.details());
         assertTrue(completed.stdout().contains("Run completed"), completed.details());
         Path run = working.resolve("Gompertz results");
@@ -73,7 +73,6 @@ class GompertzCliDistributionIT {
         assertEquals("succeeded", record.path("status").asText(), record.toPrettyString());
         assertTrue(record.path("completionConfirmed").asBoolean());
         assertEquals(30, record.path("settings").path("chainLength").asLong());
-        assertEquals(1, record.path("settings").path("defaultLogEvery").asInt());
         assertEquals(12345, record.path("seeds").path("mcmc").path("observed").asLong());
         assertEquals(source.toString(), record.path("source").path("path").asText());
         assertEquals(source.getParent().toString(), record.path("source").path("inputBase").asText());
@@ -90,15 +89,15 @@ class GompertzCliDistributionIT {
         for (JsonNode output : record.path("expectedOutputs")) {
             assertTrue(Files.size(run.resolve(output.path("path").asText())) > 0, output.toPrettyString());
         }
-        assertTrace(run.resolve("output/analysis.log"));
-        String trees = Files.readString(run.resolve("output/analysis.trees"));
+        assertTrace(run.resolve("output/gompertz.log"));
+        String trees = Files.readString(run.resolve("output/gompertz.trees"));
         assertEquals(31, trees.lines().filter(line -> line.strip().startsWith("tree STATE_")).count());
         assertTrue(trees.contains("tree STATE_30"));
 
         var factory = DocumentBuilderFactory.newInstance();
         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         var elements = factory.newDocumentBuilder()
-                .parse(run.resolve("output/analysis.state.xml").toFile())
+                .parse(run.resolve("output/gompertz.state.xml").toFile())
                 .getElementsByTagName("*");
         var stateIds = new HashSet<String>();
         for (int index = 0; index < elements.getLength(); index++) {

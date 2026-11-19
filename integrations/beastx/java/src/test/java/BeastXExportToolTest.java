@@ -68,6 +68,25 @@ class BeastXExportToolTest {
     }
 
     @Test
+    void acceptsASeedAndRejectsMalformedOptions() throws Exception {
+        Path script = Files.writeString(directory.resolve("example.phylospec"), """
+                PositiveReal x ~ LogNormal(logMean=0.0, logSd=1.0)
+                """);
+        Path target = directory.resolve("analysis.xml");
+
+        assertEquals(0, export(script, target, "--seed", "7").code());
+        assertTrue(Files.size(target) > 0);
+
+        Result zero = export(script, target, "--seed", "0");
+        assertEquals(1, zero.code(), zero.error());
+        assertTrue(zero.error().contains("BEAST X requires a nonzero seed"), zero.error());
+
+        assertEquals(2, export(script, target, "--seed").code());
+        assertEquals(2, export(script, target, "--seed", "abc").code());
+        assertEquals(2, export(script, target, "--unknown").code());
+    }
+
+    @Test
     void failedNativeLoadPreservesThePreviousXml() throws Exception {
         Path previous = Files.writeString(directory.resolve("analysis.xml"), "previous export");
         // This is well-formed XML, but cannot be loaded as a native MCMC.
@@ -80,10 +99,12 @@ class BeastXExportToolTest {
 
     private record Result(int code, String error) {}
 
-    private static Result export(Path source, Path target) {
+    private static Result export(Path source, Path target, String... options) {
         StringWriter err = new StringWriter();
         ToolProvider tool = ToolProvider.findFirst("phylospec-beastx-export").orElseThrow();
-        int code = tool.run(new PrintWriter(new StringWriter()), new PrintWriter(err), source.toString(), target.toString());
+        List<String> args = new ArrayList<>(List.of(source.toString(), target.toString()));
+        args.addAll(List.of(options));
+        int code = tool.run(new PrintWriter(new StringWriter()), new PrintWriter(err), args.toArray(String[]::new));
         return new Result(code, err.toString());
     }
 }

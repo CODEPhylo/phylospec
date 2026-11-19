@@ -2,6 +2,8 @@ package tiling.runner;
 
 import dr.inference.mcmc.MCMC;
 import tiling.BeastXModel;
+import org.phylospec.tiling.mcmc.FileLoggerSpec;
+import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import tiling.BeastXState;
 
 import java.nio.file.Path;
@@ -65,7 +67,7 @@ public record BeastXRunResult(
         LinkedHashSet<Path> paths =
                 new LinkedHashSet<>();
 
-        for (BeastXState.FileLoggerSpec spec : this.beastState.fileLoggerSpecs) {
+        for (FileLoggerSpec<String> spec : this.beastState.fileLoggerSpecs) {
             paths.add(Path.of(spec.fileName()));
         }
 
@@ -83,16 +85,18 @@ public record BeastXRunResult(
         LinkedHashSet<Path> paths =
                 new LinkedHashSet<>();
 
-        for (BeastXState.TreeLoggerSpec spec : this.beastState.treeLoggerSpecs) {
+        for (TreeLoggerSpec<String> spec : this.beastState.treeLoggerSpecs) {
             paths.add(Path.of(spec.fileName()));
         }
 
         if (
                 this.beastState.outputPrefix != null
                         && this.beastState.treeLoggerSpecs.isEmpty()
-                        && !this.beastState.treePriorDistributions.isEmpty()
         ) {
-            paths.add(Path.of(this.beastState.outputPrefix + ".trees"));
+            for (TreeLoggerSpec<String> spec :
+                    this.beastState.getDefaultTreeLoggerSpecs(this.beastState.outputPrefix)) {
+                paths.add(Path.of(spec.fileName()));
+            }
         }
 
         return List.copyOf(paths);

@@ -6,7 +6,8 @@ and a fixed strict-clock rate of `0.01`. The four-taxon, 16-site alignment is
 synthetic. The model and data come from the existing PhyloSpec UI PopFunc example;
 only the input path changes so this example has its own data directory.
 
-The chain has 30 steps, seed `12345`, and logs every step. This checks execution
+The chain has 30 steps and logs every step; the command below fixes the seed to
+`12345`. This checks execution
 and output, not posterior convergence or the PopFunc paper's analyses. A short
 chain need not propose or accept an update to every parameter.
 
@@ -48,7 +49,7 @@ POPFUNC_DIR="/absolute/path/to/phylospec-adapter"
 
 "$PHYLOSPEC_DIR/bin/phylospec" run "$POPFUNC_DIR/examples/gompertz.phylospec" \
   --adapter-path "$POPFUNC_DIR" --library popfunc \
-  --out "$PWD/results/gompertz"
+  --out "$PWD/results/gompertz" --seed 12345
 ```
 
 These three choices have different jobs:
@@ -67,7 +68,7 @@ After rebuilding, extract into a fresh directory and restart the command.
 
 The script resolves `data/four-taxa.nex` beside itself. The result directory must
 be absent or empty. A successful run contains `model.phylospec`, `run.json`,
-`console.log`, and `output/analysis.log`, `analysis.trees`, `analysis.state.xml`.
+`console.log`, and `output/gompertz.log`, `gompertz.trees`, `gompertz.state.xml`.
 The trace includes all four population parameters, prior, likelihood, and
 posterior, with samples 0 through 30. `run.json` records the actual provider JARs,
 bundle hashes, input hash, settings, and completion status.

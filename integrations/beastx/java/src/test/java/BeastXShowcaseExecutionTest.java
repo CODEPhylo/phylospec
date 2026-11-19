@@ -79,7 +79,7 @@ public class BeastXShowcaseExecutionTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 5
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -90,7 +90,7 @@ public class BeastXShowcaseExecutionTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -140,13 +140,13 @@ public class BeastXShowcaseExecutionTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 20260601
-                    Integer defaultLogEvery = 1
-                    String outputPrefix = "%s"
+                    Sampler sampler = mcmc(chainLength=5)
+                    Logger fileLogger = fileLogger(file="%s", logEvery=1)
+                    Logger treeLogger = treeLogger(file="%s", logEvery=1, tree)
                 }
                 """.formatted(
-                        toPhyloSpecPath(outputPrefix)
+                        toPhyloSpecPath(logPath),
+                        toPhyloSpecPath(treePath)
                 );
 
         return executeModel(
@@ -174,6 +174,7 @@ public class BeastXShowcaseExecutionTest {
         try {
             PhyloSpecRunner runner =
                     new PhyloSpecRunner(source);
+            runner.setSeed(20260601L);
 
             MCMC mcmc =
                     runner.runMCMC(modelName);

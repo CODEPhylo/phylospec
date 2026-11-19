@@ -86,7 +86,7 @@ public class MCMCBuilder {
             return this.chainLengthOverride;
         }
 
-        return model.beastState.chainLength;
+        return model.beastState.getSamplerSpec().chainLength();
     }
 
     /**

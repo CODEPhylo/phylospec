@@ -190,8 +190,7 @@ public class BeastXXmlLiveDistributionParametersTest {
                 Real x ~ Normal(mean=mu, sd=1.0)
 
                 mcmc {
-                    Integer chainLength = 1000000
-                    Integer randomSeed = 42
+                    Sampler sampler = mcmc(chainLength=1000000)
                     Logger fileLogger = fileLogger(logEvery=100, file="%s", parameters=[mu, x])
                 }
                 """.formatted(XmlTestSupport.unixPath(logPath));
@@ -243,7 +242,7 @@ public class BeastXXmlLiveDistributionParametersTest {
         return source + """
 
                 mcmc {
-                    Integer chainLength = 10
+                    Sampler sampler = mcmc(chainLength=10)
                     Logger fileLogger = fileLogger(logEvery=1, file="%s", parameters=[%s])
                 }
                 """.formatted(XmlTestSupport.unixPath(logPath), loggedParameter);

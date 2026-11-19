@@ -50,9 +50,9 @@ Alignment alignment ~ PhyloCTMC(
 Age root = rootAge(tree) observed between [0.01, 3.0]
 
 mcmc {
-    Integer chainLength = 100000
+    Sampler sampler = mcmc(chainLength=100000)
     Logger treeLogger = treeLogger(
-        file="trees.trees", logEvery=1000
+        file="trees.trees", logEvery=1000, tree
     )
 }
 ```
