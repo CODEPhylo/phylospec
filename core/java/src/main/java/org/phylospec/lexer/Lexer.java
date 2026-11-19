@@ -44,8 +44,7 @@ public class Lexer {
      * @param source - the PhyloSpec script as a string.
      */
     public Lexer(String source) {
-        // a leading byte order mark is not part of the script
-        this.source = source.startsWith("\uFEFF") ? source.substring(1) : source;
+        this.source = source;
         this.eventListeners = new ArrayList<>();
     }
 
@@ -60,6 +59,9 @@ public class Lexer {
      * @return list of scanned tokens.
      */
     public List<Token> scanTokens() {
+        // a leading byte order mark is skipped, but still counts as a column of the first line
+        if (this.source.startsWith("\uFEFF")) this.current = 1;
+
         while (!isAtEnd()) {
             scanToken();
         }

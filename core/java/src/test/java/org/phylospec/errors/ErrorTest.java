@@ -39,8 +39,8 @@ class ErrorTest {
     }
 
     @Test
-    void leadingByteOrderMarkIsIgnored() {
-        assertEquals("     ^", this.getMarkerLine("\uFEFFReal κ = 1.0", new Range(1, 5, 6)));
+    void leadingByteOrderMarkTakesUpNoCell() {
+        assertEquals("     ^", this.getMarkerLine("\uFEFFReal κ = 1.0", new Range(1, 6, 7)));
     }
 
     @Test
