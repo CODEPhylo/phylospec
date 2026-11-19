@@ -46,18 +46,39 @@ class UnicodeIdentifiersTest {
     }
 
     @Test
-    void preservesDistinctSpellingsWithoutNormalization() throws Exception {
+    void canonicallyEquivalentSpellingsAreTheSameName() throws Exception {
         List<Stmt> statements = parse("""
-                Real μ = 1.0
-                Real µ = 2.0
-                Real é = 3.0
-                Real e\u0301 = 4.0
-                Real 𝛼 = 5.0
-                Real total = μ + µ + é + e\u0301 + 𝛼
+                Real \u00E9 = 3.0
+                Real total = e\u0301 + 1.0
+                String label = "${e\u0301}"
                 """);
         TypeResolver types = resolve(statements);
-        assertEquals(Set.of("μ", "µ", "é", "e\u0301", "𝛼", "total"), types.getVariableNames());
-        assertEquals(6, statements.size());
+        assertEquals(Set.of("\u00E9", "total", "label"), types.getVariableNames());
+
+        VariableResolver variables = new VariableResolver(statements);
+        Expr.Variable reference = (Expr.Variable) ((Expr.Binary) ((Stmt.Assignment) statements.get(1)).expression).left;
+        assertSame(statements.get(0), variables.resolveVariable(reference));
+    }
+
+    @Test
+    void canonicallyEquivalentDeclarationsAreDuplicates() throws Exception {
+        List<Stmt> statements = parse("Real \u00E9 = 1.0\nReal e\u0301 = 2.0\n");
+        TypeResolver types = new TypeResolver(new ComponentResolver(ComponentResolver.loadCoreComponentLibraries()));
+        statements.getFirst().accept(types);
+        assertThrows(TypeError.class, () -> statements.get(1).accept(types));
+    }
+
+    @Test
+    void compatibilityVariantsRemainDistinctNames() throws Exception {
+        List<Stmt> statements = parse("""
+                Real \u03BC = 1.0
+                Real \u00B5 = 2.0
+                Real \u03B1 = 3.0
+                Real \uD835\uDEFC = 4.0
+                Real total = \u03BC + \u00B5 + \u03B1 + \uD835\uDEFC
+                """);
+        TypeResolver types = resolve(statements);
+        assertEquals(Set.of("\u03BC", "\u00B5", "\u03B1", "\uD835\uDEFC", "total"), types.getVariableNames());
     }
 
     @Test
@@ -73,6 +94,32 @@ class UnicodeIdentifiersTest {
     void undefinedUnicodeReferencesRemainAnError() {
         TypeError error = assertThrows(TypeError.class, () -> resolve(parse("Real y = θ\n")));
         assertTrue(error.getMessage().contains("θ"));
+    }
+
+    @Test
+    void parsesScriptWithByteOrderMarkAndUnicodeObservation() {
+        List<Stmt> statements = parse("""
+                \uFEFFReal μ = 1.0
+                Real κ ~ Normal(mean=μ, sd=1.0) observed as μ
+                """);
+
+        assertEquals(2, statements.size());
+        assertEquals("μ", ((Stmt.Assignment) statements.get(0)).name);
+        Stmt.ObservedAs observed = (Stmt.ObservedAs) statements.get(1);
+        assertEquals("μ", ((Expr.Variable) observed.observedAs).variableName);
+    }
+
+    @Test
+    void observedAsDirectlyFollowedByAUnicodeLetterIsNotAnObservation() {
+        List<Error> errors = new ArrayList<>();
+        Lexer lexer = new Lexer("Real κ ~ Normal(mean=1.0, sd=1.0) observed asκ\n");
+        lexer.registerEventListener(errors::add);
+        Parser parser = new Parser(lexer.scanTokens());
+        parser.registerEventListener(errors::add);
+        List<Stmt> statements = parser.parse();
+
+        assertFalse(errors.isEmpty());
+        assertTrue(statements.stream().noneMatch(statement -> statement instanceof Stmt.ObservedAs));
     }
 
     @Test
