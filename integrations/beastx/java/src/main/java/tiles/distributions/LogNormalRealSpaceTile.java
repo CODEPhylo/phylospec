@@ -5,9 +5,9 @@ import dr.inference.distribution.LogNormalDistributionModel;
 import dr.inference.model.Parameter;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
-import org.phylospec.domain.Real;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
+import tiling.params.BeastXLogNormalMu;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
@@ -25,7 +25,7 @@ public class LogNormalRealSpaceTile extends GeneratorTile<
         return "LogNormal";
     }
 
-    GeneratorTileInput<RealScalar<Real>, BeastXState> meanInput =
+    GeneratorTileInput<RealScalar<PositiveReal>, BeastXState> meanInput =
             new GeneratorTileInput<>("mean");
 
     GeneratorTileInput<RealScalar<PositiveReal>, BeastXState> logSdInput =
@@ -36,7 +36,7 @@ public class LogNormalRealSpaceTile extends GeneratorTile<
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
-        RealScalar<Real> mean =
+        RealScalar<PositiveReal> mean =
                 this.meanInput.apply(beastState, indexVariables);
 
         RealScalar<PositiveReal> logSd =
@@ -48,12 +48,15 @@ public class LogNormalRealSpaceTile extends GeneratorTile<
         Parameter logSdParameter =
                 BeastXParameters.toParameter(logSd);
 
+        // PhyloSpec's mean is on the real scale and logSd on the log scale. BEAST X's real-space
+        // parameterization would read logSd as a real-space standard deviation, so we use
+        // (mu, sigma) on the log scale with mu = log(mean) - logSd^2 / 2 instead.
         LogNormalDistributionModel distributionModel =
                 new LogNormalDistributionModel(
-                        meanParameter,
+                        LogNormalDistributionModel.Parameterization.MU_SIGMA,
+                        new BeastXLogNormalMu(meanParameter, logSdParameter),
                         logSdParameter,
-                        0.0,
-                        true
+                        0.0
                 );
 
         DistributionLikelihood likelihood =

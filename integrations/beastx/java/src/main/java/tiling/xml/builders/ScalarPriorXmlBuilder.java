@@ -11,6 +11,7 @@ import dr.inference.distribution.UniformDistributionModel;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import tiling.BeastXState;
+import tiling.params.BeastXLogNormalMu;
 import tiling.xml.XmlElement;
 
 /**
@@ -76,8 +77,8 @@ public class ScalarPriorXmlBuilder {
      * in-memory model. Also used for relaxed-clock base distributions.
      *
      * <p>BEAST X parses {@code meanInRealSpace} with mean and stdev children through the same
-     * constructor the tiles use: "true" gives the real-space mean with a log-space sd, and
-     * "false" reads the two children as mu and sigma.</p>
+     * constructor the tiles use: "true" reads them as the real-space mean and standard deviation,
+     * and "false" reads them as mu and sigma on the log scale.</p>
      */
     public XmlElement logNormalDistributionModel(
             BeastXState state,
@@ -93,18 +94,21 @@ public class ScalarPriorXmlBuilder {
         Parameter scale =
                 meanInRealSpace ? distribution.getStdevParameter() : distribution.getSigmaParameter();
 
-        return XmlElement.element("logNormalDistributionModel")
-                .withId(id)
-                .withAttribute("meanInRealSpace", Boolean.toString(meanInRealSpace))
-                .withChild(
-                        distributionParameter(
+        XmlElement locationElement =
+                location instanceof BeastXLogNormalMu mu
+                        ? XmlElement.element("mean").withChild(logNormalMu(state, id + "_mean", mu))
+                        : distributionParameter(
                                 state,
                                 "mean",
                                 id + "_mean",
                                 location,
                                 meanInRealSpace ? distribution.getMean() : distribution.getMu()
-                        )
-                )
+                        );
+
+        return XmlElement.element("logNormalDistributionModel")
+                .withId(id)
+                .withAttribute("meanInRealSpace", Boolean.toString(meanInRealSpace))
+                .withChild(locationElement)
                 .withChild(
                         distributionParameter(
                                 state,
@@ -330,6 +334,43 @@ public class ScalarPriorXmlBuilder {
 
         return XmlElement.element(elementName)
                 .withChild(child);
+    }
+
+    /**
+     * Writes {@code mu = log(mean) - logSd^2 / 2} with BEAST X parameter elements, so that mu
+     * follows a sampled mean or logSd during the run. Fixed values are written inline.
+     */
+    private XmlElement logNormalMu(BeastXState state, String id, BeastXLogNormalMu mu) {
+        boolean sampledMean = state.stateNodes.containsKey(mu.getMean());
+        boolean sampledLogSd = state.stateNodes.containsKey(mu.getLogSd());
+
+        if (!sampledMean && !sampledLogSd) {
+            return inlineParameterDefinition(id, mu.getParameterValue(0));
+        }
+
+        XmlElement logMean =
+                sampledMean
+                        ? XmlElement.element("transformedParameter")
+                                .withId(id + "_logMean")
+                                .withChild(parameterReference(mu.getMean()))
+                                .withChild(XmlElement.element("transform").withAttribute("type", "log"))
+                        : inlineParameterDefinition(id + "_logMean", Math.log(mu.getMean().getParameterValue(0)));
+
+        double logSdValue = mu.getLogSd().getParameterValue(0);
+
+        XmlElement negativeHalfLogVariance =
+                sampledLogSd
+                        ? XmlElement.element("productParameter")
+                                .withId(id + "_negativeHalfLogVariance")
+                                .withChild(inlineParameterDefinition(id + "_negativeHalf", -0.5))
+                                .withChild(parameterReference(mu.getLogSd()))
+                                .withChild(parameterReference(mu.getLogSd()))
+                        : inlineParameterDefinition(id + "_negativeHalfLogVariance", -0.5 * logSdValue * logSdValue);
+
+        return XmlElement.element("sumParameter")
+                .withId(id)
+                .withChild(logMean)
+                .withChild(negativeHalfLogVariance);
     }
 
     private XmlElement parameterReference(Parameter parameter) {
