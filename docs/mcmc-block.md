@@ -2,7 +2,7 @@
 
 
 
-This document outlines the features of the MCMC block that are proposed to be part of the core components.
+This document outlines the features of the MCMC block that are shared by all engines, and the command line arguments that go with it.
 
 
 
@@ -44,13 +44,15 @@ mcmc {
 
 
 
-- *mcmc*: a simple MCMC sampler. Exactly one sampler per block. If none is given, *mcmc()* with its defaults is used. Other samplers can be added later as further functions returning a *Sampler*.
+- *mcmc*: a simple MCMC sampler. At most one sampler per block. If none is given, *mcmc()* with its defaults is used. Other samplers can be added later as further functions returning a *Sampler*.
   - *chainLength*: if not given, 10 million is used.
-- *screenLogger*, *fileLogger*: *parameters* is a list of the logged parameters.
+- *screenLogger*, *fileLogger*: always log the posterior, prior and likelihood.
+  - *parameters*: optional list of the logged parameters. If not given, all assigned parameters including inline assignments and tree statistics are logged.
   - *parameterNames*: optional list of names used in the log instead of the variable names. Must have the same length as *parameters*.
 - *fileLogger*, *treeLogger*: *file* is needed.
 - *treeLogger*: logs a single tree. tree is needed.
-- *General loggers with no parameters arg*: all assigned parameters including inline assignments and tree statistics, posterior, prior, likelihood are logged. Log_every defaults to 1000.
+- *logEvery*: defaults to 1000 for every logger.
+- *No loggers*: a missing kind of logger is added with its defaults. This gives a screen logger, a file logger writing to *&lt;run-name&gt;.log* and, if a tree is sampled, a tree logger writing to *&lt;run-name&gt;.trees*.
 
 *Change:*
 
@@ -81,7 +83,10 @@ Entries marked *new* are proposed, all others exist.
 | --------------------- | ------------------ | --------------------------------------------------- |
 | *--engine &lt;id&gt;* | check, export, run | Engine to use: beast3 (default) or beastx.          |
 | *--out &lt;dir&gt;*   | run                | Run directory. Must be absent or empty.             |
-| *--seed &lt;n&gt;*    | export, run        | Random seed. If not given, one is chosen uniformly. |
+| *--run-name &lt;prefix&gt;* | run          | Prefix of the default output files in the run directory. Defaults to the name of the model file. |
+| *--seed &lt;n&gt;*    | export, run        | Random seed. If not given, *run* chooses one uniformly and *export* sets none. |
+| *--library &lt;ids&gt;* | check, export, run | Tile libraries to use, in order of preference.    |
+| *--adapter-path &lt;dir&gt;* | check, export, run | Directory of an unpacked adapter to load. Can be repeated. |
 | *--debug*             | all                | Show raw engine output and stack traces.            |
 | *-h*, *--help*        |                    | Show the help.                                      |
 | *--version*           |                    | Show the versions.                                  |

@@ -12,6 +12,8 @@ import dr.inference.operators.RandomWalkOperator;
 import dr.inference.operators.ScaleOperator;
 import dr.inference.operators.UpDownOperator;
 import org.junit.jupiter.api.Test;
+import org.w3c.dom.Element;
+import org.xml.sax.InputSource;
 import org.phylospec.tiling.mcmc.LoggerSpec;
 import org.phylospec.tiling.mcmc.McmcSamplerSpec;
 import tiling.BeastXModel;
@@ -24,10 +26,12 @@ import tiling.summary.BeastXModelSummary;
 import tiling.xml.StateXmlGenerator;
 import tiling.BeastXState;
 
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -599,14 +603,129 @@ public class BeastXMCMCBuilderTest {
         MCLogger logger =
                 assertInstanceOf(MCLogger.class, new MCMCBuilder().buildLoggers(model).getFirst());
 
-        assertEquals(2, logger.getColumnCount());
-        assertEquals("first", logger.getColumnLabel(0));
-        assertEquals("second", logger.getColumnLabel(1));
+        assertEquals(
+                List.of("posterior", "prior", "likelihood", "first", "second"),
+                columnLabels(logger)
+        );
 
         String xml = new StateXmlGenerator().toXml(model);
 
         assertTrue(xml.contains("<column label=\"first\">"), xml);
         assertTrue(xml.contains("<column label=\"second\">"), xml);
+    }
+
+    @Test
+    public void loggersAlwaysLogThePosteriorPriorAndLikelihood() throws Exception {
+        String source = """
+            Real x ~ Normal(mean=0.0, sd=1.0)
+            Real y ~ Normal(mean=0.0, sd=1.0)
+
+            mcmc {
+                Logger fileLogger = fileLogger(
+                    file="target/test-fileLogger-distributions.log",
+                    parameters=[y, prior]
+                )
+            }
+            """;
+
+        BeastXModel model =
+                new PhyloSpecRunner(source).buildModel("test");
+
+        MCLogger logger =
+                assertInstanceOf(MCLogger.class, new MCMCBuilder().buildLoggers(model).getFirst());
+
+        assertEquals(List.of("posterior", "prior", "likelihood", "y"), columnLabels(logger));
+
+        assertEquals(
+                List.of("prior", "parameter:y"),
+                xmlLoggedReferences(new StateXmlGenerator().toXml(model))
+        );
+    }
+
+    @Test
+    public void loggerWithoutParametersLogsTreeStatisticsAndAllParameters() throws Exception {
+        String source = """
+            Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+            PositiveReal birthRate ~ LogNormal(logMean=0.0, logSd=1.0)
+            Real twiceTheBirthRate = 2.0 * birthRate
+
+            Tree tree ~ Yule(
+                birthRate=birthRate,
+                taxa=taxa(data)
+            )
+
+            mcmc {
+                Logger fileLogger = fileLogger(file="target/test-fileLogger-everything.log")
+            }
+            """;
+
+        BeastXModel model =
+                new PhyloSpecRunner(source).buildModel("test");
+
+        MCLogger logger =
+                assertInstanceOf(MCLogger.class, new MCMCBuilder().buildLoggers(model).getFirst());
+
+        List<String> labels = columnLabels(logger);
+
+        assertEquals(List.of("posterior", "prior", "likelihood"), labels.subList(0, 3));
+        assertTrue(
+                labels.containsAll(List.of("tree.height", "tree.treeLength", "birthRate", "twiceTheBirthRate")),
+                labels.toString()
+        );
+
+        assertEquals(
+                List.of(
+                        "prior",
+                        "treeHeightStatistic:tree.height",
+                        "treeLengthStatistic:tree.treeLength",
+                        "parameter:birthRate"
+                ),
+                xmlLoggedReferences(new StateXmlGenerator().toXml(model))
+        );
+    }
+
+    private static List<String> columnLabels(MCLogger logger) {
+        List<String> labels =
+                new ArrayList<>();
+
+        for (int i = 0; i < logger.getColumnCount(); i++) {
+            labels.add(logger.getColumnLabel(i));
+        }
+
+        return labels;
+    }
+
+    /**
+     * Returns what the file logger of the given XML logs, as {@code element:idref}. The prior is
+     * returned as {@code prior}.
+     */
+    private static List<String> xmlLoggedReferences(String xml) throws Exception {
+        var document = DocumentBuilderFactory.newInstance()
+                .newDocumentBuilder()
+                .parse(new InputSource(new StringReader(xml)));
+
+        var loggers = document.getElementsByTagName("log");
+
+        List<String> references =
+                new ArrayList<>();
+
+        for (int i = 0; i < loggers.getLength(); i++) {
+            Element logger = (Element) loggers.item(i);
+
+            if (!logger.hasAttribute("fileName")) {
+                continue;
+            }
+
+            var children = logger.getChildNodes();
+            for (int j = 0; j < children.getLength(); j++) {
+                if (children.item(j) instanceof Element child) {
+                    String idref = child.getAttribute("idref");
+                    references.add(child.getTagName().equals(idref) ? idref : child.getTagName() + ":" + idref);
+                }
+            }
+        }
+
+        return references;
     }
 
     @Test

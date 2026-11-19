@@ -21,7 +21,6 @@ import tiling.rpn.BeastXRPNStatistic;
 import tiling.xml.XmlElement;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -134,24 +133,46 @@ public class LoggerXmlBuilder {
                 .withChild(treeReference(treeModel));
     }
 
+    /**
+     * Returns the elements logged by a screen or file logger. The posterior, prior and likelihood
+     * are always logged first. Without parameters, the tree statistics and all sampled parameters
+     * are logged as well.
+     */
     private List<XmlElement> getLoggedElements(
             BeastXState state,
             List<String> parameterNames,
             List<String> labels
     ) {
-        if (parameterNames == null) {
-            return defaultLoggedElements(state);
-        }
+        List<String> distributionNames = state.getXmlLoggedDistributionNames();
 
         List<XmlElement> loggedElements =
                 new ArrayList<>();
 
+        for (String distributionName : distributionNames) {
+            loggedElements.add(getLoggedElement(state, distributionName));
+        }
+
+        if (parameterNames == null) {
+            parameterNames = state.getXmlDefaultLoggedParameterNames();
+        }
+
         for (int i = 0; i < parameterNames.size(); i++) {
-            XmlElement loggedElement = getLoggedElement(state, parameterNames.get(i));
-            loggedElements.add(labels != null ? labelElement(loggedElement, labels.get(i)) : loggedElement);
+            String parameterName = parameterNames.get(i);
+            XmlElement loggedElement = getLoggedElement(state, parameterName);
+
+            if (labels != null) {
+                loggedElements.add(labelElement(loggedElement, labels.get(i)));
+            } else if (!distributionNames.contains(getDistributionName(parameterName))) {
+                loggedElements.add(loggedElement);
+            }
         }
 
         return loggedElements;
+    }
+
+    /** Returns the name under which a distribution is always logged, resolving the alias of the posterior. */
+    private static String getDistributionName(String loggableName) {
+        return JOINT_LOG_NAME.equals(loggableName) ? POSTERIOR_LOG_NAME : loggableName;
     }
 
     private XmlElement getLoggedElement(BeastXState state, String parameterName) {
@@ -181,22 +202,6 @@ public class LoggerXmlBuilder {
         return XmlElement.element("column")
                 .withAttribute("label", label)
                 .withChild(loggedElement);
-    }
-
-    private List<XmlElement> defaultLoggedElements(BeastXState state) {
-        List<Parameter> parameters =
-                new ArrayList<>(state.stateNodes.keySet());
-
-        parameters.sort(Comparator.comparing(LoggerXmlBuilder::parameterId));
-
-        List<XmlElement> loggedElements =
-                new ArrayList<>();
-
-        for (Parameter parameter : parameters) {
-            loggedElements.add(parameterReference(parameter));
-        }
-
-        return loggedElements;
     }
 
     private XmlElement compoundLikelihoodReference(

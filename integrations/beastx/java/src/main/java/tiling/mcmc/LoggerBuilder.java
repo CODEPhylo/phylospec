@@ -167,16 +167,29 @@ public class LoggerBuilder {
             List<String> loggableNames,
             List<String> labels
     ) {
-        if (loggableNames == null) {
-            return getDefaultLoggedLoggables(model, beastState);
-        }
-
         List<Loggable> loggables =
                 new ArrayList<>();
 
+        // the posterior, prior and likelihood are always logged
+        if (model != null) {
+            loggables.add(model.posterior);
+            loggables.add(model.prior);
+            loggables.add(model.likelihood);
+        }
+
+        if (loggableNames == null) {
+            loggables.addAll(getDefaultLoggedLoggables(beastState));
+            return loggables;
+        }
+
         for (int i = 0; i < loggableNames.size(); i++) {
-            Loggable loggable = findLoggable(model, beastState, loggableNames.get(i));
-            loggables.add(labels != null ? labelLoggable(loggable, labels.get(i)) : loggable);
+            String loggableName = loggableNames.get(i);
+
+            if (labels != null) {
+                loggables.add(labelLoggable(findLoggable(model, beastState, loggableName), labels.get(i)));
+            } else if (model == null || !isModelLevelLoggable(loggableName)) {
+                loggables.add(findLoggable(model, beastState, loggableName));
+            }
         }
 
         return loggables;
@@ -196,18 +209,13 @@ public class LoggerBuilder {
         return () -> columns;
     }
 
-    private List<Loggable> getDefaultLoggedLoggables(
-            BeastXModel model,
-            BeastXState beastState
-    ) {
+    /**
+     * Returns what a logger without explicit parameters logs besides the posterior, prior and
+     * likelihood: the statistics of every tree, all sampled parameters and all deterministic values.
+     */
+    private List<Loggable> getDefaultLoggedLoggables(BeastXState beastState) {
         List<Loggable> loggables =
                 new ArrayList<>();
-
-        if (model != null) {
-            loggables.add(model.posterior);
-            loggables.add(model.prior);
-            loggables.add(model.likelihood);
-        }
 
         for (String treeName : beastState.treeModelsByPhyloSpecName.keySet()) {
             TreeModel treeModel =

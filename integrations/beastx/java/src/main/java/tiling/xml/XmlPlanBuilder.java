@@ -449,7 +449,7 @@ public class XmlPlanBuilder {
             Set<String> emittedStatisticIds
     ) {
         if (loggableNames == null) {
-            return;
+            loggableNames = state.getXmlDefaultLoggedParameterNames();
         }
 
         for (String loggableName : loggableNames) {
