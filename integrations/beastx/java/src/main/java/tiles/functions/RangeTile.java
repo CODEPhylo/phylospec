@@ -2,7 +2,6 @@ package tiles.functions;
 
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.Int;
-import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.types.IntScalar;
@@ -11,7 +10,6 @@ import tiling.params.BeastXIntVectorParam;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;
-import java.util.List;
 import java.util.Set;
 
 public class RangeTile extends GeneratorTile<IntVector<Int>, BeastXState> {
@@ -41,16 +39,8 @@ public class RangeTile extends GeneratorTile<IntVector<Int>, BeastXState> {
         int start = this.startInput.apply(beastState, indexVariables).get();
         int end = this.endInput.apply(beastState, indexVariables).get();
 
-        int num = Math.abs(end - start);
-
-        if (num == 0) {
-            throw new TileApplicationError(
-                    this.getRootNode(),
-                    "Empty range.",
-                    "You use a range with a length of 0. Specify a different start and end.",
-                    List.of("range(start=3, end=10)")
-            );
-        }
+        // Both start and end are included, so range(5, 5) is [5] and range(3, 1) is [3, 2, 1].
+        int num = Math.abs(end - start) + 1;
 
         int[] values = new int[num];
         int step = start < end ? 1 : -1;
