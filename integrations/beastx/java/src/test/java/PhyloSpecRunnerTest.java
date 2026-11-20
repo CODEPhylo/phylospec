@@ -219,7 +219,7 @@ public class PhyloSpecRunnerTest {
     @Test
     public void runnerErrorsAreReportedAsExceptions() throws Exception {
         String source =
-                readSource("src/test/java/tiling/functions/rangeEmpty.phylospec");
+                readSource("src/test/java/tiling/functions/linspaceInvalid.phylospec");
 
         PhyloSpecRunner runner =
                 new PhyloSpecRunner(source);

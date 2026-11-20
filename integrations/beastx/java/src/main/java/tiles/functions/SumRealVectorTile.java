@@ -43,10 +43,12 @@ public class SumRealVectorTile extends GeneratorTile<BeastXRPNCalculationResult,
         String sumId =
                 beastState.getAvailableID("sum");
 
+        // "elementwise" = true makes BEAST X add up the elements of the vector into one value.
+        // With false it returns the vector itself, and the RPN calculation only reads its first element.
         SumStatistic sumStatistic =
                 new SumStatistic(
                         sumId,
-                        false,
+                        true,
                         new double[0]
                 );
 

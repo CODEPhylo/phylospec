@@ -6,4 +6,5 @@ Age age = rootAge(tree)
 // EXPECTED_TILES
 
 // EXPECTED BEASTX STATE
+// CN: rootAge
 // EXPECTED BEASTX STATE
