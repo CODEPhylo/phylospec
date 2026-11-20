@@ -11,6 +11,7 @@ import dr.inference.distribution.UniformDistributionModel;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import tiling.BeastXState;
+import tiling.model.BeastXTruncatedLikelihood;
 import tiling.params.BeastXLogNormalMu;
 import tiling.xml.XmlElement;
 
@@ -36,40 +37,86 @@ public class ScalarPriorXmlBuilder {
             Parameter parameter,
             DistributionLikelihood likelihood
     ) {
-        Distribution distribution =
-                likelihood.getDistribution();
+        if (likelihood instanceof BeastXTruncatedLikelihood truncated) {
+            return truncatedPrior(state, parameter, truncated);
+        }
 
+        return prior(state, parameter, likelihood.getId(), likelihood.getDistribution());
+    }
+
+    private XmlElement prior(
+            BeastXState state,
+            Parameter parameter,
+            String priorId,
+            Distribution distribution
+    ) {
         if (distribution instanceof NormalDistributionModel normalDistribution) {
-            return normalPrior(state, parameter, likelihood, normalDistribution);
+            return normalPrior(state, parameter, priorId, normalDistribution);
         }
 
         if (distribution instanceof LogNormalDistributionModel logNormalDistribution) {
             return prior(
                     parameter,
-                    likelihood,
-                    logNormalDistributionModel(state, likelihood.getId() + "_distribution", logNormalDistribution)
+                    priorId,
+                    logNormalDistributionModel(state, priorId + "_distribution", logNormalDistribution)
             );
         }
 
         if (distribution instanceof GammaDistributionModel gammaDistribution) {
-            return gammaPrior(state, parameter, likelihood, gammaDistribution);
+            return gammaPrior(state, parameter, priorId, gammaDistribution);
         }
 
         if (distribution instanceof ExponentialDistributionModel exponentialDistribution) {
-            return exponentialPrior(parameter, likelihood, exponentialDistribution);
+            return exponentialPrior(parameter, priorId, exponentialDistribution);
         }
 
         if (distribution instanceof UniformDistributionModel uniformDistribution) {
-            return uniformPrior(state, parameter, likelihood, uniformDistribution);
+            return uniformPrior(state, parameter, priorId, uniformDistribution);
         }
 
         if (distribution instanceof BetaDistributionModel betaDistribution) {
-            return betaPrior(state, parameter, likelihood, betaDistribution);
+            return betaPrior(state, parameter, priorId, betaDistribution);
         }
 
         throw new UnsupportedOperationException(
                 "Only Normal, LogNormal, Gamma, Exponential, Uniform, and Beta scalar priors are supported."
         );
+    }
+
+    /**
+     * Writes the base prior inside a truncatedDistributionLikelihood, which divides its density
+     * by the probability of the base distribution between the bounds. A plain base prior would
+     * leave that out, and the bounds would only remain on the parameter.
+     */
+    private XmlElement truncatedPrior(
+            BeastXState state,
+            Parameter parameter,
+            BeastXTruncatedLikelihood truncated
+    ) {
+        String priorId =
+                truncated.getId();
+
+        XmlElement element =
+                XmlElement.element("truncatedDistributionLikelihood")
+                        .withId(priorId)
+                        .withChild(prior(state, parameter, priorId + "_base", truncated.getDistribution()));
+
+        // A missing low or high element means no bound on that side.
+        if (Double.isFinite(truncated.getLower())) {
+            element = element.withChild(
+                    XmlElement.element("low")
+                            .withChild(inlineParameterDefinition(priorId + "_low", truncated.getLower()))
+            );
+        }
+
+        if (Double.isFinite(truncated.getUpper())) {
+            element = element.withChild(
+                    XmlElement.element("high")
+                            .withChild(inlineParameterDefinition(priorId + "_high", truncated.getUpper()))
+            );
+        }
+
+        return element;
     }
 
     /**
@@ -123,15 +170,12 @@ public class ScalarPriorXmlBuilder {
     private XmlElement normalPrior(
             BeastXState state,
             Parameter parameter,
-            DistributionLikelihood likelihood,
+            String priorId,
             NormalDistributionModel distribution
     ) {
-        String priorId =
-                likelihood.getId();
-
         return prior(
                 parameter,
-                likelihood,
+                priorId,
                 XmlElement.element("normalDistributionModel")
                         .withId(priorId + "_distribution")
                         .withChild(
@@ -158,15 +202,12 @@ public class ScalarPriorXmlBuilder {
     private XmlElement gammaPrior(
             BeastXState state,
             Parameter parameter,
-            DistributionLikelihood likelihood,
+            String priorId,
             GammaDistributionModel distribution
     ) {
-        String priorId =
-                likelihood.getId();
-
         return prior(
                 parameter,
-                likelihood,
+                priorId,
                 XmlElement.element("gammaDistributionModel")
                         .withId(priorId + "_distribution")
                         .withAttribute("offset", "0.0")
@@ -193,16 +234,13 @@ public class ScalarPriorXmlBuilder {
 
     private XmlElement exponentialPrior(
             Parameter parameter,
-            DistributionLikelihood likelihood,
+            String priorId,
             ExponentialDistributionModel distribution
     ) {
-        String priorId =
-                likelihood.getId();
-
         // The Exponential tile only accepts fixed rates, so the mean is always written inline.
         return prior(
                 parameter,
-                likelihood,
+                priorId,
                 XmlElement.element("exponentialDistributionModel")
                         .withId(priorId + "_distribution")
                         .withAttribute("offset", "0.0")
@@ -221,15 +259,12 @@ public class ScalarPriorXmlBuilder {
     private XmlElement uniformPrior(
             BeastXState state,
             Parameter parameter,
-            DistributionLikelihood likelihood,
+            String priorId,
             UniformDistributionModel distribution
     ) {
-        String priorId =
-                likelihood.getId();
-
         return prior(
                 parameter,
-                likelihood,
+                priorId,
                 XmlElement.element("uniformDistributionModel")
                         .withId(priorId + "_distribution")
                         .withChild(
@@ -256,12 +291,9 @@ public class ScalarPriorXmlBuilder {
     private XmlElement betaPrior(
             BeastXState state,
             Parameter parameter,
-            DistributionLikelihood likelihood,
+            String priorId,
             BetaDistributionModel distribution
     ) {
-        String priorId =
-                likelihood.getId();
-
         Parameter alpha =
                 betaDistributionVariable(distribution, 0);
 
@@ -270,7 +302,7 @@ public class ScalarPriorXmlBuilder {
 
         return prior(
                 parameter,
-                likelihood,
+                priorId,
                 XmlElement.element("betaDistributionModel")
                         .withId(priorId + "_distribution")
                         .withChild(
@@ -296,11 +328,11 @@ public class ScalarPriorXmlBuilder {
 
     private XmlElement prior(
             Parameter parameter,
-            DistributionLikelihood likelihood,
+            String priorId,
             XmlElement distributionModel
     ) {
         return XmlElement.element("distributionLikelihood")
-                .withId(likelihood.getId())
+                .withId(priorId)
                 .withChild(
                         XmlElement.element("distribution")
                                 .withChild(distributionModel)
