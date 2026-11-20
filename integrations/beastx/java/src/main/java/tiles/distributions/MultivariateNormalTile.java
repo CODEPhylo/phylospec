@@ -2,6 +2,9 @@ package tiles.distributions;
 
 import dr.inference.distribution.MultivariateDistributionLikelihood;
 import dr.math.distributions.MultivariateNormalDistribution;
+import dr.math.matrixAlgebra.CholeskyDecomposition;
+import dr.math.matrixAlgebra.IllegalDimension;
+import dr.math.matrixAlgebra.SymmetricMatrix;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.Real;
 import org.phylospec.tiling.errors.TileApplicationError;
@@ -59,20 +62,13 @@ public class MultivariateNormalTile extends GeneratorTile<
 
         validateDimensions(meanValues, covarianceValues);
 
-        MultivariateNormalDistribution distribution;
-
-        try {
-            distribution =
-                    new MultivariateNormalDistribution(
-                            meanValues,
-                            covarianceValues
-                    );
-        } catch (RuntimeException exception) {
-            throw new TileApplicationError(
-                    "Cannot build MultivariateNormal distribution.",
-                    "Check that covariance is square, symmetric, and positive definite."
-            );
-        }
+        // BEAST X's MultivariateNormalDistribution takes the precision matrix (the inverse of the
+        // covariance), so the covariance is inverted first.
+        MultivariateNormalDistribution distribution =
+                new MultivariateNormalDistribution(
+                        meanValues,
+                        toPrecision(covarianceValues)
+                );
 
         MultivariateDistributionLikelihood likelihood =
                 new MultivariateDistributionLikelihood(distribution);
@@ -88,6 +84,25 @@ public class MultivariateNormalTile extends GeneratorTile<
                 defaultState,
                 state -> likelihood.addData(state.getParameter())
         );
+    }
+
+    private static double[][] toPrecision(double[][] covariance) {
+        boolean symmetricPositiveDefinite;
+
+        try {
+            symmetricPositiveDefinite = new CholeskyDecomposition(covariance).isSPD();
+        } catch (IllegalDimension exception) {
+            symmetricPositiveDefinite = false;
+        }
+
+        if (!symmetricPositiveDefinite) {
+            throw new TileApplicationError(
+                    "MultivariateNormal covariance must be symmetric and positive definite.",
+                    "Use a covariance such as [[1.0, 0.25], [0.25, 1.0]]."
+            );
+        }
+
+        return new SymmetricMatrix(covariance).inverse().toComponents();
     }
 
     private static double[][] toMatrix(List<?> rows) {
