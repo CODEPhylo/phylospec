@@ -2,6 +2,7 @@ package org.phylospec.lexer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -47,7 +48,7 @@ public class LexerTest {
     }
 
     @Test
-    public void unicodeIdentifiersPreserveSpellingAndUtf16Ranges() {
+    public void unicodeIdentifiersHaveUtf16Ranges() {
         List<String> names = List.of("π", "κ", "μ", "θ", "κ2", "mean_μ", "_θ", "α٢", "人口", "e\u0301", "𝛼");
         String source = String.join(" ", names);
         List<Error> errors = new ArrayList<>();
@@ -59,7 +60,9 @@ public class LexerTest {
         int offset = 0;
         for (int i = 0; i < names.size(); i++) {
             String name = names.get(i);
-            assertEquals(new Token(TokenType.IDENTIFIER, name, null, 1, offset, offset + name.length()), tokens.get(i));
+            String lexeme = Normalizer.normalize(name, Normalizer.Form.NFC);
+            assertEquals(
+                    new Token(TokenType.IDENTIFIER, lexeme, null, 1, offset, offset + name.length()), tokens.get(i));
             offset += name.length() + 1;
         }
         assertEquals(new Token(TokenType.EOF, "", null, 1, source.length(), source.length()), tokens.getLast());
@@ -100,6 +103,96 @@ public class LexerTest {
                 tokens.subList(0, 3).stream().map(token -> token.lexeme).toList());
         assertTrue(tokens.subList(0, 3).stream().allMatch(token -> token.type == TokenType.IDENTIFIER));
         assertEquals(TokenType.OBSERVED_AS, tokens.get(3).type);
+    }
+
+    @Test
+    public void identifiersAreNormalizedToNfc() {
+        // a decomposed "é" and the angstrom sign both have a different canonical (NFC) spelling
+        String source = "e\u0301 \u212B \u00E9";
+        List<Error> errors = new ArrayList<>();
+        Lexer lexer = new Lexer(source);
+        lexer.registerEventListener(errors::add);
+        List<Token> tokens = lexer.scanTokens();
+
+        assertTrue(errors.isEmpty(), errors.toString());
+        assertEquals(new Token(TokenType.IDENTIFIER, "\u00E9", null, 1, 0, 2), tokens.get(0));
+        assertEquals(new Token(TokenType.IDENTIFIER, "\u00C5", null, 1, 3, 4), tokens.get(1));
+        assertEquals(new Token(TokenType.IDENTIFIER, "\u00E9", null, 1, 5, 6), tokens.get(2));
+    }
+
+    @Test
+    public void compatibilityCharactersAreNotNormalized() {
+        // NFC keeps the micro sign and the mathematical alpha apart from the greek letters
+        List<Token> tokens = new Lexer("\u00B5 \u03BC \uD835\uDEFC").scanTokens();
+        assertEquals(
+                List.of("\u00B5", "\u03BC", "\uD835\uDEFC"),
+                tokens.subList(0, 3).stream().map(token -> token.lexeme).toList());
+    }
+
+    @Test
+    public void interpolatedNamesAreNormalizedButStringsAreNot() {
+        List<Token> tokens = new Lexer("\"e\u0301 ${e\u0301}\"").scanTokens();
+
+        assertEquals(TokenType.STRING_PART, tokens.get(0).type);
+        assertEquals("e\u0301 ", tokens.get(0).literal);
+        assertEquals(new Token(TokenType.IDENTIFIER, "\u00E9", null, 1, 6, 8), tokens.get(1));
+    }
+
+    @Test
+    public void observedKeywordsRequireAUnicodeWordBoundary() {
+        Lexer lexer = new Lexer("observed asκ observed asymptotic observed betweenness");
+        List<Error> errors = new ArrayList<>();
+        lexer.registerEventListener(errors::add);
+        List<Token> tokens = lexer.scanTokens();
+
+        assertTrue(errors.isEmpty(), errors.toString());
+        assertEquals(
+                List.of("observed", "asκ", "observed", "asymptotic", "observed", "betweenness"),
+                tokens.subList(0, 6).stream().map(token -> token.lexeme).toList());
+        assertTrue(tokens.subList(0, 6).stream().allMatch(token -> token.type == TokenType.IDENTIFIER));
+    }
+
+    @Test
+    public void observedKeywordsAreSeparatedBySpaceOrTabOnly() {
+        List<Token> tokens = new Lexer("observed\tas observed\tbetween").scanTokens();
+        assertEquals(new Token(TokenType.OBSERVED_AS, "observed\tas", null, 1, 0, 11), tokens.get(0));
+        assertEquals(new Token(TokenType.OBSERVED_BETWEEN, "observed\tbetween", null, 1, 12, 28), tokens.get(1));
+
+        List<Error> errors = new ArrayList<>();
+        Lexer lexer = new Lexer("observed\u00A0as");
+        lexer.registerEventListener(errors::add);
+        tokens = lexer.scanTokens();
+
+        assertEquals(new Token(TokenType.IDENTIFIER, "observed", null, 1, 0, 8), tokens.get(0));
+        assertEquals(1, errors.size());
+        assertEquals(new Range(1, 8, 9), errors.getFirst().range());
+    }
+
+    @Test
+    public void leadingByteOrderMarkIsIgnored() {
+        List<Error> errors = new ArrayList<>();
+        Lexer lexer = new Lexer("\uFEFFReal κ\n\uFEFF");
+        lexer.registerEventListener(errors::add);
+        List<Token> tokens = lexer.scanTokens();
+
+        // the byte order mark still counts as a column, so the ranges index into the given source
+        assertEquals(new Token(TokenType.IDENTIFIER, "Real", null, 1, 1, 5), tokens.get(0));
+        assertEquals(new Token(TokenType.IDENTIFIER, "κ", null, 1, 6, 7), tokens.get(1));
+
+        // only the leading byte order mark is skipped
+        assertEquals(1, errors.size());
+        assertEquals(new Range(2, 0, 1), errors.getFirst().range());
+    }
+
+    @Test
+    public void errorsAfterAByteOrderMarkHaveSourceColumns() {
+        List<Error> errors = new ArrayList<>();
+        Lexer lexer = new Lexer("\uFEFFReal x = ?");
+        lexer.registerEventListener(errors::add);
+        lexer.scanTokens();
+
+        assertEquals(1, errors.size());
+        assertEquals(new Range(1, 10, 11), errors.getFirst().range());
     }
 
     @Test

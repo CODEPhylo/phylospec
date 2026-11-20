@@ -124,10 +124,7 @@ public final class Error extends Throwable {
                         .append(INDENT)
                         .append(gutter)
                         .append(" | ")
-                        .append(" ".repeat(range.start))
-                        .append(markerColor)
-                        .append("^".repeat(Math.max(1, range.end - range.start)))
-                        .append(RESET);
+                        .append(this.getMarkerLine(sourceLine, range.start, range.end, markerColor, RESET));
             } else {
                 /* multiline range — show each line with carets beneath it */
                 text.append("\n");
@@ -144,25 +141,22 @@ public final class Error extends Throwable {
                             .append(gutter)
                             .append(" | ");
 
-                    int caretStart, caretLen;
+                    int caretStart, caretEnd;
                     if (lineNum == range.startLine) {
                         // first line: carets from range.start to end of line
                         caretStart = range.start;
-                        caretLen = Math.max(1, sourceLine.length() - range.start);
+                        caretEnd = sourceLine.length();
                     } else if (lineNum == range.endLine) {
                         // last line: carets from column 0 up to range.end
                         caretStart = 0;
-                        caretLen = Math.max(1, range.end);
+                        caretEnd = range.end;
                     } else {
                         // middle lines: carets under the whole line
                         caretStart = 0;
-                        caretLen = Math.max(1, sourceLine.length());
+                        caretEnd = sourceLine.length();
                     }
 
-                    text.append(" ".repeat(caretStart))
-                            .append(markerColor)
-                            .append("^".repeat(caretLen))
-                            .append(RESET);
+                    text.append(this.getMarkerLine(sourceLine, caretStart, caretEnd, markerColor, RESET));
                 }
             }
         }
@@ -189,5 +183,50 @@ public final class Error extends Throwable {
         text.append("\n\n");
 
         return text.toString();
+    }
+
+    /* helper methods to align the markers with the source line */
+
+    /**
+     * Returns the markers underlining the source line between the given UTF-16 columns, preceded by
+     * the whitespace which moves them beneath the marked text. At least one marker is returned.
+     */
+    private String getMarkerLine(String sourceLine, int start, int end, String markerColor, String resetColor) {
+        start = Math.min(start, sourceLine.length());
+        end = Math.max(start, Math.min(end, sourceLine.length()));
+
+        String padding = this.mask(sourceLine.substring(0, start), " ");
+        String markers = this.mask(sourceLine.substring(start, end), "^");
+
+        return padding + markerColor + (markers.isBlank() ? "^" : markers) + resetColor;
+    }
+
+    /**
+     * Returns the given text with every character replaced by the filler, repeated to match the
+     * number of terminal cells the character occupies. Tabs are kept so that the result reaches the
+     * same tab stops as the text.
+     */
+    private String mask(String text, String filler) {
+        StringBuilder masked = new StringBuilder();
+        text.codePoints()
+                .forEach(codePoint ->
+                        masked.append(codePoint == '\t' ? "\t" : filler.repeat(this.getDisplayWidth(codePoint))));
+        return masked.toString();
+    }
+
+    /**
+     * Returns the number of terminal cells the given code point occupies: zero for combining marks and
+     * invisible formatting characters, two for East Asian scripts, and one otherwise.
+     */
+    private int getDisplayWidth(int codePoint) {
+        int type = Character.getType(codePoint);
+        if (type == Character.NON_SPACING_MARK || type == Character.ENCLOSING_MARK || type == Character.FORMAT) {
+            return 0;
+        }
+
+        return switch (Character.UnicodeScript.of(codePoint)) {
+            case HAN, HIRAGANA, KATAKANA, HANGUL -> 2;
+            default -> 1;
+        };
     }
 }

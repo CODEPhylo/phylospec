@@ -1,5 +1,6 @@
 package org.phylospec.lexer;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -58,6 +59,9 @@ public class Lexer {
      * @return list of scanned tokens.
      */
     public List<Token> scanTokens() {
+        // a leading byte order mark is skipped, but still counts as a column of the first line
+        if (this.source.startsWith("\uFEFF")) this.current = 1;
+
         while (!isAtEnd()) {
             scanToken();
         }
@@ -297,17 +301,19 @@ public class Lexer {
     private void identifier() {
         while (isIdentifierPart(peekCodePoint())) advanceCodePoint();
 
-        String text = source.substring(start, current);
+        // names are compared in NFC, so that differently encoded but canonically equivalent
+        // spellings (e.g. a precomposed 'é' and 'e' followed by a combining accent) are the same name
+        String text = Normalizer.normalize(this.source.substring(this.start, this.current), Normalizer.Form.NFC);
 
         TokenType identifierType = keywords.get(text);
         if (identifierType == null) {
             // handle the special case for the two-word identifiers "observed as" and "observed
             // between"
             if (text.equals("observed")) {
-                if (peek(2).equals("as")) {
+                if (this.isFollowedByWord("as")) {
                     for (int i = 0; i <= 2; i++) advance();
                     identifierType = TokenType.OBSERVED_AS;
-                } else if (peek(7).equals("between")) {
+                } else if (this.isFollowedByWord("between")) {
                     for (int i = 0; i <= 7; i++) advance();
                     identifierType = TokenType.OBSERVED_BETWEEN;
                 } else {
@@ -318,7 +324,12 @@ public class Lexer {
             }
         }
 
-        addToken(identifierType);
+        if (identifierType == TokenType.IDENTIFIER) {
+            // the range still covers the original spelling in the source
+            this.addToken(identifierType, null, text);
+        } else {
+            addToken(identifierType);
+        }
     }
 
     private void number() {
@@ -414,10 +425,17 @@ public class Lexer {
     }
 
     /**
-     * Returns the next howMany current characters without advancing the cursor.
+     * Checks if the cursor is followed by a single space or tab and then the given word as a
+     * complete identifier, without advancing the cursor.
      */
-    private String peek(int howMany) {
-        return source.substring(current + 1, Math.min(current + howMany + 1, source.length()));
+    private boolean isFollowedByWord(String word) {
+        if (this.peek() != ' ' && this.peek() != '\t') return false;
+
+        int wordStart = this.current + 1;
+        int wordEnd = wordStart + word.length();
+        if (!this.source.startsWith(word, wordStart)) return false;
+
+        return wordEnd >= this.source.length() || !this.isIdentifierPart(this.source.codePointAt(wordEnd));
     }
 
     /**
@@ -452,9 +470,16 @@ public class Lexer {
      * Adds a new token with a corresponding literal.
      */
     private void addToken(TokenType type, Object literal) {
-        String text = source.substring(start, current);
+        this.addToken(type, literal, this.source.substring(this.start, this.current));
+    }
+
+    /**
+     * Adds a new token with a corresponding literal and the given lexeme, which may differ from
+     * the source text the token spans.
+     */
+    private void addToken(TokenType type, Object literal, String lexeme) {
         Range range = new Range(startLine, currentLine, start - startLineStart, current - currentLineStart);
-        tokens.add(new Token(type, text, literal, range));
+        tokens.add(new Token(type, lexeme, literal, range));
     }
 
     /**
