@@ -1,0 +1,46 @@
+<!--
+    Registers the BEAST classes defined by the PhyloSpec BEAST 3 integration, so BEAST's XMLParser
+    can create them when it loads an exported analysis. BEAST reads this file from the classpath,
+    which is how the packaged CLI runs. BeastServiceRegistrationTest checks that every such class
+    is listed here.
+-->
+<package name="PhyloSpec" version="0.0.1">
+    <service type="beast.base.core.BEASTInterface">
+        <provider classname="beastconfig.ReportingTreeLikelihood"/>
+        <provider classname="operators.IntScalarRandomWalkOperator"/>
+        <provider classname="operators.IntScalarUniformOperator"/>
+        <provider classname="tiling.BernoulliDistribution"/>
+        <provider classname="tiling.BinomialDistribution"/>
+        <provider classname="tiling.BirthDeathRateValue"/>
+        <provider classname="tiling.CategoricalDistribution"/>
+        <provider classname="tiling.ExpValue"/>
+        <provider classname="tiling.GeometricDistribution"/>
+        <provider classname="tiling.IntVectorFromScalars"/>
+        <provider classname="tiling.IntVectorSum"/>
+        <provider classname="tiling.LiveBirthDeathGernhard08Model"/>
+        <provider classname="tiling.LiveBirthDeathModel"/>
+        <provider classname="tiling.LiveDirichletDistribution"/>
+        <provider classname="tiling.LiveExponentialMarkovChainDistribution"/>
+        <provider classname="tiling.LiveOffsetDistribution"/>
+        <provider classname="tiling.LiveTruncatedDistribution"/>
+        <provider classname="tiling.LiveYuleModel"/>
+        <provider classname="tiling.LogValue"/>
+        <provider classname="tiling.MrcaAgeValue"/>
+        <provider classname="tiling.NormalMixtureDistribution"/>
+        <provider classname="tiling.OffsetValue"/>
+        <provider classname="tiling.PiecewiseConstantPopulation"/>
+        <provider classname="tiling.PositivePartitionRate"/>
+        <provider classname="tiling.PositiveScalarProduct"/>
+        <provider classname="tiling.RealVectorFromScalars"/>
+        <provider classname="tiling.RealVectorSum"/>
+        <provider classname="tiling.ReciprocalValue"/>
+        <provider classname="tiling.RootAgeValue"/>
+        <provider classname="tiling.ScaledScalar"/>
+        <provider classname="tiling.SkylineCoalescentModel"/>
+        <provider classname="tiling.SqrtValue"/>
+        <provider classname="tiling.UniformComposition"/>
+
+        <!-- A BEAST class that beast-base 2.8.0-beta7 does not register itself. -->
+        <provider classname="beast.base.spec.inference.parameter.VectorElement"/>
+    </service>
+</package>
