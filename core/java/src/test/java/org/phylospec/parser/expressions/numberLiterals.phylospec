@@ -1,0 +1,16 @@
+Real a = 1e-10
+Real b = 3.0e-4
+Integer c = 100_000
+Real d = 100_000.2345
+Age e = 1.5e3 Ma
+
+// EXPECT AST
+// (AS Real a 1.0E-10)
+// (AS Real b 3.0E-4)
+// (AS Integer c 100000)
+// (AS Real d 100000.2345)
+// (AS Age e 1500.0 Ma)
+// EXPECT AST
+
+// EXPECT TYPE_ERRORS
+// EXPECT TYPE_ERRORS

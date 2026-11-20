@@ -322,31 +322,112 @@ public class Lexer {
     }
 
     private void number() {
-        while (isDigit(peek())) advance();
+        boolean isFloat = false;
 
-        if (peek() == '.' && isDigit(peekNext())) {
+        // we first try to scan the entire number
+
+        // a number could be an int or float, contain digit separators ("10_000"),
+        // or scientific notation ("10.3E-2")
+
+        this.scanDigits();
+
+        if (this.peek() == '.' && this.isDigit(this.peekNext())) {
             // this number has a fractional part, it is thus a float
 
-            // Consume the "."
-            advance();
-
-            while (isDigit(peek())) advance();
-
-            try {
-                addToken(TokenType.FLOAT, Double.parseDouble(source.substring(start, current)));
-            } catch (NumberFormatException ignored) {
-                reportError(
-                        "'" + source.substring(start, current) + "' is not a valid number.", "Try a smaller number.");
-            }
-        } else {
-            // this number has no fractional part, it is thus an integer
-            try {
-                addToken(TokenType.INT, Integer.parseInt(source.substring(start, current)));
-            } catch (NumberFormatException e) {
-                reportError(
-                        "'" + source.substring(start, current) + "' is not a valid number.", "Try a smaller number.");
-            }
+            // consume the "."
+            this.advance();
+            this.scanDigits();
+            isFloat = true;
         }
+
+        if (this.isExponentStart()) {
+            // this number has an exponent, it is thus a float
+
+            // consume the "e" and the optional sign
+            this.advance();
+            if (this.peek() == '+' || this.peek() == '-') this.advance();
+            this.scanDigits();
+            isFloat = true;
+        }
+
+        String text = this.source.substring(this.start, this.current);
+
+        if (!this.hasValidUnderscores(text)) {
+            this.reportError("'" + text + "' is not a valid number.", "Underscores can only be placed between digits.");
+            return;
+        }
+
+        // we now take "text" and actually parse it into a number
+
+        String digits = text.replace("_", "");
+
+        try {
+            if (isFloat) {
+                double value = Double.parseDouble(digits);
+                if (Double.isInfinite(value)) throw new NumberFormatException();
+                if (value == 0.0 && this.hasNonZeroMantissa(digits)) {
+                    this.reportError("'" + text + "' is too close to zero to be represented.", "Try a larger number.");
+                    return;
+                }
+                this.addToken(TokenType.FLOAT, value);
+            } else {
+                this.addToken(TokenType.INT, Integer.parseInt(digits));
+            }
+        } catch (NumberFormatException e) {
+            this.reportError("'" + text + "' is not a valid number.", "Try a smaller number.");
+        }
+    }
+
+    /**
+     * Consumes a run of digits and underscores. Misplaced underscores are consumed as
+     * well, such that they can be reported as part of the number.
+     */
+    private void scanDigits() {
+        while (this.isDigit(this.peek()) || this.peek() == '_') this.advance();
+    }
+
+    /**
+     * Checks if the cursor points to the start of an exponent, i.e. an 'e' or 'E',
+     * followed by an optional sign and at least one digit. Underscores before the
+     * first digit are allowed here, such that they can be reported as misplaced.
+     */
+    private boolean isExponentStart() {
+        if (this.peek() != 'e' && this.peek() != 'E') return false;
+
+        int offset = 1;
+        if (this.peekAt(offset) == '+' || this.peekAt(offset) == '-') offset++;
+        while (this.peekAt(offset) == '_') offset++;
+
+        return this.isDigit(this.peekAt(offset));
+    }
+
+    /**
+     * Checks that every underscore in the given number literal is placed between two digits.
+     */
+    private boolean hasValidUnderscores(String text) {
+        for (int i = 0; i < text.length(); i++) {
+            if (text.charAt(i) != '_') continue;
+
+            boolean hasDigitBefore = 0 < i && this.isDigit(text.charAt(i - 1));
+            boolean hasDigitAfter = i + 1 < text.length() && this.isDigit(text.charAt(i + 1));
+            if (!hasDigitBefore || !hasDigitAfter) return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks if the part before the exponent of the given number literal contains
+     * a non-zero digit, i.e. if the literal denotes a non-zero number.
+     */
+    private boolean hasNonZeroMantissa(String digits) {
+        for (int i = 0; i < digits.length(); i++) {
+            char c = digits.charAt(i);
+            if (c == 'e' || c == 'E') return false;
+            if ('1' <= c && c <= '9') return true;
+        }
+
+        return false;
     }
 
     private void comment() {
@@ -411,6 +492,14 @@ public class Lexer {
     private char peekNext() {
         if (source.length() <= current + 1) return '\0';
         return source.charAt(current + 1);
+    }
+
+    /**
+     * Returns the character offset positions after the cursor without advancing the cursor.
+     */
+    private char peekAt(int offset) {
+        if (this.source.length() <= this.current + offset) return '\0';
+        return this.source.charAt(this.current + offset);
     }
 
     /**
