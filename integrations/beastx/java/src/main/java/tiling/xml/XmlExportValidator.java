@@ -114,7 +114,7 @@ public class XmlExportValidator {
 
         if (!scalarPriorXmlBuilder.supports(distribution)) {
             throw unsupported(
-                    "Only Normal, LogNormal, Gamma, Exponential, Uniform, and Beta independent distribution priors are supported."
+                    "This distribution prior is not supported in BEAST X XML. Categorical, and Offset with a base other than Gamma or Exponential, are not supported yet."
             );
         }
     }

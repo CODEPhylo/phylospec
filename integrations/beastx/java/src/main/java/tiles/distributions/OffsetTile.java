@@ -1,6 +1,7 @@
 package tiles.distributions;
 
 import dr.inference.distribution.DistributionLikelihood;
+import dr.inference.model.Parameter;
 import dr.math.UnivariateFunction;
 import dr.math.distributions.Distribution;
 import org.phylospec.ast.Expr;
@@ -67,11 +68,12 @@ public class OffsetTile extends GeneratorTile<
         DistributionLikelihood likelihood =
                 new DistributionLikelihood(offsetDistribution);
 
+        // BEAST X throws when the bounds of a parameter without bounds are read.
+        Parameter.Default defaultParameter = new Parameter.Default(base.stateNode.get() + offsetValue);
+        defaultParameter.addBounds(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+
         BeastXRealScalarParam<Real> defaultState =
-                new BeastXRealScalarParam<>(
-                        base.stateNode.get() + offsetValue,
-                        Real.INSTANCE
-                );
+                new BeastXRealScalarParam<>(defaultParameter, Real.INSTANCE);
 
         return new BoundDistribution<>(
                 likelihood,
@@ -80,10 +82,19 @@ public class OffsetTile extends GeneratorTile<
         );
     }
 
-    private static class OffsetDistribution implements Distribution {
+    /** The base distribution shifted by a fixed offset. Public so the XML export can read both. */
+    public static final class OffsetDistribution implements Distribution {
 
         private final Distribution base;
         private final double offset;
+
+        public Distribution getBase() {
+            return base;
+        }
+
+        public double getOffset() {
+            return offset;
+        }
 
         private OffsetDistribution(
                 Distribution base,

@@ -65,9 +65,14 @@ public class BernoulliTile extends GeneratorTile<
         return new Parameter.Default(scalar.get());
     }
 
-    private static final class BernoulliDistribution implements Distribution {
+    /** Bernoulli distribution on 0 and 1. Public so the XML export can read p. */
+    public static final class BernoulliDistribution implements Distribution {
 
         private final Parameter pParameter;
+
+        public Parameter getP() {
+            return pParameter;
+        }
 
         private BernoulliDistribution(Parameter pParameter) {
             this.pParameter = pParameter;

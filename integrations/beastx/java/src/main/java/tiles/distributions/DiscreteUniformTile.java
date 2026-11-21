@@ -48,7 +48,7 @@ public class DiscreteUniformTile extends GeneratorTile<
         }
 
         DiscreteUniformDistribution distribution =
-                new DiscreteUniformDistribution(lower.get(), upper.get());
+                new DiscreteUniform(lower.get(), upper.get());
 
         DistributionLikelihood likelihood =
                 new DistributionLikelihood(distribution);
@@ -69,5 +69,26 @@ public class DiscreteUniformTile extends GeneratorTile<
                 defaultState,
                 state -> likelihood.addData(state.getParameter())
         );
+    }
+
+    /** BEAST X's DiscreteUniformDistribution, keeping its bounds for the XML export. */
+    public static final class DiscreteUniform extends DiscreteUniformDistribution {
+
+        private final int lower;
+        private final int upper;
+
+        private DiscreteUniform(int lower, int upper) {
+            super(lower, upper);
+            this.lower = lower;
+            this.upper = upper;
+        }
+
+        public int getLower() {
+            return lower;
+        }
+
+        public int getUpper() {
+            return upper;
+        }
     }
 }

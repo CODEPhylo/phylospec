@@ -2,6 +2,7 @@ package tiles.distributions;
 
 import dr.inference.distribution.CauchyDistribution;
 import dr.inference.distribution.DistributionLikelihood;
+import dr.inference.model.Parameter;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.domain.Real;
@@ -50,18 +51,43 @@ public class CauchyTile extends GeneratorTile<
                 this.scaleInput.apply(beastState, indexVariables);
 
         CauchyDistribution distribution =
-                new CauchyDistribution(location.get(), scale.get());
+                new Cauchy(location.get(), scale.get());
 
         DistributionLikelihood likelihood =
                 new DistributionLikelihood(distribution);
 
+        // BEAST X throws when the bounds of a parameter without bounds are read.
+        Parameter.Default defaultParameter = new Parameter.Default(0.0);
+        defaultParameter.addBounds(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+
         BeastXRealScalarParam<Real> defaultState =
-                new BeastXRealScalarParam<>(0.0, Real.INSTANCE);
+                new BeastXRealScalarParam<>(defaultParameter, Real.INSTANCE);
 
         return new BoundDistribution<>(
                 likelihood,
                 defaultState,
                 state -> likelihood.addData(state.getParameter())
         );
+    }
+
+    /** BEAST X's CauchyDistribution, keeping its parameters for the XML export. */
+    public static final class Cauchy extends CauchyDistribution {
+
+        private final double location;
+        private final double scale;
+
+        private Cauchy(double location, double scale) {
+            super(location, scale);
+            this.location = location;
+            this.scale = scale;
+        }
+
+        public double getLocation() {
+            return location;
+        }
+
+        public double getScale() {
+            return scale;
+        }
     }
 }
