@@ -148,6 +148,20 @@ class CliDistributionIT {
         assertTrue(fileNames(workingDirectory).isEmpty(), "check must not write analysis files");
     }
 
+    @Test
+    void packagedBeast3ExportsLoadableHkyYule() throws Exception {
+        Path source = installation.resolve("examples/hky-yule.phylospec");
+        Path xml = workingDirectory.resolve("hky-yule-beast3.xml");
+
+        // export reloads the XML with BEAST and fails if any class in it is not registered
+        Result result = launch("export", source.toString(), "--xml", xml.toString());
+        assertEquals(0, result.exitCode(), result.details());
+
+        String content = Files.readString(xml);
+        assertTrue(content.contains("spec=\"tiling.LiveYuleModel\""), result.details());
+        assertTrue(content.contains("spec=\"tiling.LiveDirichletDistribution\""), result.details());
+    }
+
     private static void assertSuccessfulCheck(Result result, String engine, String library) {
         assertEquals(0, result.exitCode(), result.details());
         assertTrue(
