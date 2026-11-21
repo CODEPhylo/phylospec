@@ -2,10 +2,12 @@ import dr.inference.distribution.AbstractDistributionLikelihood;
 import dr.inference.distribution.LogNormalDistributionModel;
 import dr.inference.model.CompoundLikelihood;
 import dr.inference.model.Likelihood;
+import dr.inference.model.Model;
 import dr.inference.model.Parameter;
 import dr.util.Attribute;
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.special.Erf;
+import org.apache.commons.math.special.Gamma;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -23,6 +25,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -38,7 +41,7 @@ public class BeastXGeneratorCoverageTest {
     private static final double TOLERANCE = 1e-9;
 
     /** Values for named state nodes and the expected log density of {@code x} there. */
-    record State(Map<String, Double> values, double expectedLogDensity) {
+    record State(Map<String, double[]> values, double expectedLogDensity) {
     }
 
     record Row(String source, List<State> states) {
@@ -94,20 +97,215 @@ public class BeastXGeneratorCoverageTest {
                         Real x ~ Truncated(base=Normal(mean=1.0, sd=s), lower=0.0)
                         """,
                         state(Map.of("x", 0.5, "s", 0.5), truncatedNormal(0.5, 1.0, 0.5, 0.0, Double.POSITIVE_INFINITY)),
-                        state(Map.of("x", 0.5, "s", 2.0), truncatedNormal(0.5, 1.0, 2.0, 0.0, Double.POSITIVE_INFINITY)))
+                        state(Map.of("x", 0.5, "s", 2.0), truncatedNormal(0.5, 1.0, 2.0, 0.0, Double.POSITIVE_INFINITY))),
+
+                // continuous distributions
+                row("Normal, fixed",
+                        "Real x ~ Normal(mean=0.5, sd=2.0)",
+                        state(Map.of("x", 1.0), normal(1.0, 0.5, 2.0)),
+                        state(Map.of("x", -3.0), normal(-3.0, 0.5, 2.0))),
+                row("Normal, sampled mean and sd",
+                        """
+                        Real m ~ Normal(mean=0.0, sd=1.0)
+                        PositiveReal s ~ LogNormal(logMean=0.0, logSd=0.5)
+                        Real x ~ Normal(mean=m, sd=s)
+                        """,
+                        state(Map.of("x", 1.0, "m", 0.5, "s", 2.0), normal(1.0, 0.5, 2.0)),
+                        state(Map.of("x", 1.0, "m", -1.0, "s", 0.7), normal(1.0, -1.0, 0.7))),
+                row("Gamma, fixed",
+                        "PositiveReal x ~ Gamma(shape=2.0, rate=3.0)",
+                        state(Map.of("x", 0.5), gamma(0.5, 2.0, 3.0)),
+                        state(Map.of("x", 2.0), gamma(2.0, 2.0, 3.0))),
+                row("Gamma, sampled shape and rate",
+                        """
+                        PositiveReal a ~ LogNormal(logMean=0.0, logSd=0.5)
+                        PositiveReal b ~ LogNormal(logMean=0.0, logSd=0.5)
+                        PositiveReal x ~ Gamma(shape=a, rate=b)
+                        """,
+                        state(Map.of("x", 0.5, "a", 2.0, "b", 3.0), gamma(0.5, 2.0, 3.0)),
+                        state(Map.of("x", 0.5, "a", 0.7, "b", 1.5), gamma(0.5, 0.7, 1.5))),
+                row("Beta, fixed",
+                        "Probability x ~ Beta(alpha=2.0, beta=5.0)",
+                        state(Map.of("x", 0.3), beta(0.3, 2.0, 5.0)),
+                        state(Map.of("x", 0.8), beta(0.8, 2.0, 5.0))),
+                row("Beta, sampled alpha and beta",
+                        """
+                        PositiveReal a ~ LogNormal(logMean=0.0, logSd=0.5)
+                        PositiveReal b ~ LogNormal(logMean=0.0, logSd=0.5)
+                        Probability x ~ Beta(alpha=a, beta=b)
+                        """,
+                        state(Map.of("x", 0.3, "a", 2.0, "b", 5.0), beta(0.3, 2.0, 5.0)),
+                        state(Map.of("x", 0.3, "a", 0.5, "b", 1.5), beta(0.3, 0.5, 1.5))),
+                row("Uniform, fixed",
+                        "Real x ~ Uniform(lower=-1.0, upper=3.0)",
+                        state(Map.of("x", 0.0), -Math.log(4.0)),
+                        state(Map.of("x", 2.5), -Math.log(4.0))),
+                row("Uniform, sampled bounds",
+                        """
+                        Real l ~ Normal(mean=0.0, sd=1.0)
+                        Real u ~ Normal(mean=4.0, sd=1.0)
+                        Real x ~ Uniform(lower=l, upper=u)
+                        """,
+                        state(Map.of("x", 1.0, "l", 0.0, "u", 4.0), -Math.log(4.0)),
+                        state(Map.of("x", 1.0, "l", -1.0, "u", 2.0), -Math.log(3.0))),
+                row("Exponential, fixed",
+                        "PositiveReal x ~ Exponential(rate=2.0)",
+                        state(Map.of("x", 0.5), exponential(0.5, 2.0)),
+                        state(Map.of("x", 3.0), exponential(3.0, 2.0))),
+                row("Exponential, sampled rate",
+                        """
+                        PositiveReal r ~ LogNormal(logMean=0.0, logSd=0.5)
+                        PositiveReal x ~ Exponential(rate=r)
+                        """,
+                        state(Map.of("x", 0.5, "r", 2.0), exponential(0.5, 2.0)),
+                        state(Map.of("x", 0.5, "r", 0.4), exponential(0.5, 0.4))),
+
+                // vector-valued distributions
+                row("Dirichlet, fixed concentration",
+                        "Simplex x ~ Dirichlet(concentration=[2.0, 3.0, 4.0])",
+                        vectorState(Map.of("x", new double[]{0.2, 0.3, 0.5}), dirichlet(new double[]{0.2, 0.3, 0.5}, 2.0, 3.0, 4.0)),
+                        vectorState(Map.of("x", new double[]{0.6, 0.3, 0.1}), dirichlet(new double[]{0.6, 0.3, 0.1}, 2.0, 3.0, 4.0))),
+                row("Dirichlet, sampled concentration",
+                        """
+                        Vector<PositiveReal> a ~ IID(base=LogNormal(logMean=0.0, logSd=0.5), num=3)
+                        Simplex x ~ Dirichlet(concentration=a)
+                        """,
+                        vectorState(Map.of("x", new double[]{0.2, 0.3, 0.5}, "a", new double[]{2.0, 3.0, 4.0}),
+                                dirichlet(new double[]{0.2, 0.3, 0.5}, 2.0, 3.0, 4.0)),
+                        vectorState(Map.of("x", new double[]{0.2, 0.3, 0.5}, "a", new double[]{0.5, 1.0, 6.0}),
+                                dirichlet(new double[]{0.2, 0.3, 0.5}, 0.5, 1.0, 6.0))),
+                row("IID Normal, sampled base mean",
+                        """
+                        Real m ~ Normal(mean=0.0, sd=1.0)
+                        Vector<Real> x ~ IID(base=Normal(mean=m, sd=2.0), num=3)
+                        """,
+                        vectorState(Map.of("x", new double[]{1.0, -0.5, 2.0}, "m", new double[]{0.5}),
+                                normal(1.0, 0.5, 2.0) + normal(-0.5, 0.5, 2.0) + normal(2.0, 0.5, 2.0)),
+                        vectorState(Map.of("x", new double[]{1.0, -0.5, 2.0}, "m", new double[]{-1.0}),
+                                normal(1.0, -1.0, 2.0) + normal(-0.5, -1.0, 2.0) + normal(2.0, -1.0, 2.0))),
+                row("IID Gamma, fixed",
+                        "Vector<PositiveReal> x ~ IID(base=Gamma(shape=2.0, rate=3.0), num=2)",
+                        vectorState(Map.of("x", new double[]{0.5, 1.5}), gamma(0.5, 2.0, 3.0) + gamma(1.5, 2.0, 3.0)),
+                        vectorState(Map.of("x", new double[]{2.0, 0.1}), gamma(2.0, 2.0, 3.0) + gamma(0.1, 2.0, 3.0))),
+                row("IID Beta, sampled alpha",
+                        """
+                        PositiveReal a ~ LogNormal(logMean=0.0, logSd=0.5)
+                        Vector<Probability> x ~ IID(base=Beta(alpha=a, beta=2.0), num=2)
+                        """,
+                        vectorState(Map.of("x", new double[]{0.3, 0.8}, "a", new double[]{2.0}), beta(0.3, 2.0, 2.0) + beta(0.8, 2.0, 2.0)),
+                        vectorState(Map.of("x", new double[]{0.3, 0.8}, "a", new double[]{0.5}), beta(0.3, 0.5, 2.0) + beta(0.8, 0.5, 2.0))),
+
+                // Cauchy, Offset and discrete distributions
+                row("Cauchy, fixed",
+                        "Real x ~ Cauchy(location=1.0, scale=2.0)",
+                        state(Map.of("x", 0.0), cauchy(0.0, 1.0, 2.0)),
+                        state(Map.of("x", 4.0), cauchy(4.0, 1.0, 2.0))),
+                row("Offset Exponential, fixed",
+                        "Real x ~ Offset(base=Exponential(rate=2.0), offset=1.5)",
+                        state(Map.of("x", 2.0), exponential(0.5, 2.0)),
+                        state(Map.of("x", 4.0), exponential(2.5, 2.0))),
+                row("Poisson, fixed",
+                        "NonNegativeInteger x ~ Poisson(rate=2.5)",
+                        state(Map.of("x", 0.0), poisson(0, 2.5)),
+                        state(Map.of("x", 4.0), poisson(4, 2.5))),
+                row("Poisson, sampled rate",
+                        """
+                        PositiveReal r ~ LogNormal(logMean=0.0, logSd=0.5)
+                        NonNegativeInteger x ~ Poisson(rate=r)
+                        """,
+                        state(Map.of("x", 3.0, "r", 2.5), poisson(3, 2.5)),
+                        state(Map.of("x", 3.0, "r", 0.8), poisson(3, 0.8))),
+                row("Binomial, fixed",
+                        "NonNegativeInteger x ~ Binomial(numTrials=10, p=0.3)",
+                        state(Map.of("x", 0.0), binomial(0, 10, 0.3)),
+                        state(Map.of("x", 4.0), binomial(4, 10, 0.3))),
+                row("Binomial, sampled p",
+                        """
+                        Probability p ~ Beta(alpha=2.0, beta=2.0)
+                        NonNegativeInteger x ~ Binomial(numTrials=10, p=p)
+                        """,
+                        state(Map.of("x", 4.0, "p", 0.3), binomial(4, 10, 0.3)),
+                        state(Map.of("x", 4.0, "p", 0.75), binomial(4, 10, 0.75))),
+                row("Geometric, fixed",
+                        "NonNegativeInteger x ~ Geometric(p=0.3)",
+                        state(Map.of("x", 0.0), geometric(0, 0.3)),
+                        state(Map.of("x", 3.0), geometric(3, 0.3))),
+                row("Geometric, sampled p",
+                        """
+                        Probability p ~ Beta(alpha=2.0, beta=2.0)
+                        NonNegativeInteger x ~ Geometric(p=p)
+                        """,
+                        state(Map.of("x", 2.0, "p", 0.3), geometric(2, 0.3)),
+                        state(Map.of("x", 2.0, "p", 0.75), geometric(2, 0.75))),
+                row("Bernoulli, fixed",
+                        "Boolean x ~ Bernoulli(p=0.3)",
+                        state(Map.of("x", 1.0), Math.log(0.3)),
+                        state(Map.of("x", 0.0), Math.log(0.7))),
+                row("Bernoulli, sampled p",
+                        """
+                        Probability p ~ Beta(alpha=2.0, beta=2.0)
+                        Boolean x ~ Bernoulli(p=p)
+                        """,
+                        state(Map.of("x", 1.0, "p", 0.3), Math.log(0.3)),
+                        state(Map.of("x", 1.0, "p", 0.75), Math.log(0.75))),
+                row("DiscreteUniform, fixed (both bounds included)",
+                        "Integer x ~ DiscreteUniform(lower=2, upper=5)",
+                        state(Map.of("x", 2.0), -Math.log(4.0)),
+                        state(Map.of("x", 5.0), -Math.log(4.0))),
+                row("IID Poisson, sampled rate",
+                        """
+                        PositiveReal r ~ LogNormal(logMean=0.0, logSd=0.5)
+                        Vector<NonNegativeInteger> x ~ IID(base=Poisson(rate=r), num=3)
+                        """,
+                        vectorState(Map.of("x", new double[]{0, 2, 5}, "r", new double[]{2.5}), poisson(0, 2.5) + poisson(2, 2.5) + poisson(5, 2.5)),
+                        vectorState(Map.of("x", new double[]{0, 2, 5}, "r", new double[]{0.8}), poisson(0, 0.8) + poisson(2, 0.8) + poisson(5, 0.8))),
+                row("Offset Gamma, fixed",
+                        "Real x ~ Offset(base=Gamma(shape=2.0, rate=3.0), offset=-1.0)",
+                        state(Map.of("x", -0.5), gamma(0.5, 2.0, 3.0)),
+                        state(Map.of("x", 1.0), gamma(2.0, 2.0, 3.0))),
+                row("IID Binomial, sampled p",
+                        """
+                        Probability p ~ Beta(alpha=2.0, beta=2.0)
+                        Vector<NonNegativeInteger> x ~ IID(base=Binomial(numTrials=10, p=p), num=3)
+                        """,
+                        vectorState(Map.of("x", new double[]{0, 4, 10}, "p", new double[]{0.3}),
+                                binomial(0, 10, 0.3) + binomial(4, 10, 0.3) + binomial(10, 10, 0.3)),
+                        vectorState(Map.of("x", new double[]{0, 4, 10}, "p", new double[]{0.75}),
+                                binomial(0, 10, 0.75) + binomial(4, 10, 0.75) + binomial(10, 10, 0.75)))
         );
     }
 
+    /**
+     * Rows whose distributions BEAST X XML export does not support yet. They are checked in memory,
+     * and XML export must fail with an explicit error instead of writing a wrong model.
+     */
+    static Stream<Arguments> xmlUnsupportedRows() {
+        return Stream.of(
+                row("Categorical, fixed (categories start at 1)",
+                        "PositiveInteger x ~ Categorical(probabilities=[0.1, 0.2, 0.7])",
+                        state(Map.of("x", 1.0), Math.log(0.1)),
+                        state(Map.of("x", 3.0), Math.log(0.7))),
+                row("Offset Normal, fixed",
+                        "Real x ~ Offset(base=Normal(mean=0.0, sd=1.0), offset=1.5)",
+                        state(Map.of("x", 2.0), normal(0.5, 0.0, 1.0)),
+                        state(Map.of("x", 0.0), normal(-1.5, 0.0, 1.0)))
+        );
+    }
+
+    static Stream<Arguments> allRows() {
+        return Stream.concat(rows(), xmlUnsupportedRows());
+    }
+
     @ParameterizedTest(name = "{0}")
-    @MethodSource("rows")
+    @MethodSource("allRows")
     public void inMemoryDensityMatchesFormula(String name, Row row) throws Exception {
         BeastXState state = new PhyloSpecRunner(row.source()).buildState("coverage");
         Likelihood prior = state.priorDistributions.get(state.stateNodesByPhyloSpecName.get("x"));
 
         for (State fixedState : row.states()) {
-            fixedState.values().forEach((id, value) -> state.stateNodesByPhyloSpecName.get(id).setParameterValue(0, value));
+            fixedState.values().forEach((id, values) -> setValues(state.stateNodesByPhyloSpecName.get(id), values));
 
-            assertEquals(fixedState.expectedLogDensity(), logDensity(prior), TOLERANCE, name + " at " + fixedState.values());
+            assertEquals(fixedState.expectedLogDensity(), logDensity(prior), TOLERANCE, name + " at " + describe(fixedState));
         }
     }
 
@@ -118,10 +316,34 @@ public class BeastXGeneratorCoverageTest {
         Likelihood prior = priorOf(priors, "x");
 
         for (State fixedState : row.states()) {
-            fixedState.values().forEach((id, value) -> dataParameter(priors, id).setParameterValue(0, value));
+            fixedState.values().forEach((id, values) -> setValues(dataParameter(priors, id), values));
 
-            assertEquals(fixedState.expectedLogDensity(), logDensity(prior), TOLERANCE, name + " at " + fixedState.values());
+            assertEquals(fixedState.expectedLogDensity(), logDensity(prior), TOLERANCE, name + " at " + describe(fixedState));
         }
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("xmlUnsupportedRows")
+    public void xmlExportOfUnsupportedDistributionFails(String name, Row row) {
+        Exception error = assertThrows(Exception.class, () -> parseXmlPriors(name, row.source()));
+
+        assertTrue(error.getMessage().contains("supported"), name + ": " + error.getMessage());
+    }
+
+    /** StrictClock's clockRate is optional and defaults to 1. */
+    @Test
+    public void strictClockRateDefaultsToOne() throws Exception {
+        BeastXState state = new PhyloSpecRunner("""
+                Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+                Taxa taxa = taxa(data)
+                Tree tree ~ Yule(birthRate=1.0, taxa=taxa)
+                Vector<Rate> branchRates ~ StrictClock(tree=tree)
+                """).buildState("strictClock");
+
+        List<Parameter> clockRates = state.treeStrictClockRateParameters.values().iterator().next();
+
+        assertEquals(1, clockRates.size());
+        assertEquals(1.0, clockRates.get(0).getParameterValue(0), TOLERANCE);
     }
 
     /**
@@ -247,6 +469,48 @@ public class BeastXGeneratorCoverageTest {
         }
     }
 
+    private static double gamma(double x, double shape, double rate) {
+        return shape * Math.log(rate) - Gamma.logGamma(shape) + (shape - 1.0) * Math.log(x) - rate * x;
+    }
+
+    private static double beta(double x, double alpha, double beta) {
+        double logBeta = Gamma.logGamma(alpha) + Gamma.logGamma(beta) - Gamma.logGamma(alpha + beta);
+        return (alpha - 1.0) * Math.log(x) + (beta - 1.0) * Math.log(1.0 - x) - logBeta;
+    }
+
+    private static double exponential(double x, double rate) {
+        return Math.log(rate) - rate * x;
+    }
+
+    private static double cauchy(double x, double location, double scale) {
+        double z = (x - location) / scale;
+        return -Math.log(Math.PI * scale * (1.0 + z * z));
+    }
+
+    private static double poisson(int k, double rate) {
+        return k * Math.log(rate) - rate - Gamma.logGamma(k + 1.0);
+    }
+
+    private static double binomial(int k, int n, double p) {
+        double logChoose = Gamma.logGamma(n + 1.0) - Gamma.logGamma(k + 1.0) - Gamma.logGamma(n - k + 1.0);
+        return logChoose + k * Math.log(p) + (n - k) * Math.log(1.0 - p);
+    }
+
+    private static double dirichlet(double[] x, double... concentration) {
+        double sum = 0.0;
+        double logDensity = 0.0;
+        for (int i = 0; i < x.length; i++) {
+            sum += concentration[i];
+            logDensity += (concentration[i] - 1.0) * Math.log(x[i]) - Gamma.logGamma(concentration[i]);
+        }
+        return logDensity + Gamma.logGamma(sum);
+    }
+
+    /** Number of failures before the first success, as in the PhyloSpec reference. */
+    private static double geometric(int k, double p) {
+        return Math.log(p) + k * Math.log(1.0 - p);
+    }
+
     /** Normal restricted to [lower, upper]: the Normal density divided by the probability of that interval. */
     private static double truncatedNormal(double x, double mean, double sd, double lower, double upper) {
         return normal(x, mean, sd) - Math.log(normalCdf(upper, mean, sd) - normalCdf(lower, mean, sd));
@@ -259,7 +523,26 @@ public class BeastXGeneratorCoverageTest {
     }
 
     private static State state(Map<String, Double> values, double expectedLogDensity) {
+        Map<String, double[]> vectors = new java.util.TreeMap<>();
+        values.forEach((id, value) -> vectors.put(id, new double[]{value}));
+        return new State(vectors, expectedLogDensity);
+    }
+
+    /** A state for vector-valued nodes, such as a Dirichlet or IID draw. */
+    private static State vectorState(Map<String, double[]> values, double expectedLogDensity) {
         return new State(values, expectedLogDensity);
+    }
+
+    private static String describe(State state) {
+        StringBuilder text = new StringBuilder();
+        state.values().forEach((id, values) -> text.append(id).append('=').append(java.util.Arrays.toString(values)).append(' '));
+        return text.toString().trim();
+    }
+
+    private static void setValues(Parameter parameter, double[] values) {
+        for (int i = 0; i < values.length; i++) {
+            parameter.setParameterValue(i, values[i]);
+        }
     }
 
     private static double logDensity(Likelihood likelihood) {
@@ -300,18 +583,38 @@ public class BeastXGeneratorCoverageTest {
         }
     }
 
-    /** Finds the prior whose data is the parameter with the given id. */
-    private static AbstractDistributionLikelihood priorOf(List<Likelihood> leaves, String id) {
+    /**
+     * Finds the prior of the parameter with the given id: a distribution likelihood with it as data,
+     * or a likelihood with id {@code <id>_prior}, such as BEAST X's binomialLikelihood.
+     */
+    private static Likelihood priorOf(List<Likelihood> leaves, String id) {
         for (Likelihood likelihood : leaves) {
             if (likelihood instanceof AbstractDistributionLikelihood prior && dataOf(prior, id) != null) {
                 return prior;
             }
         }
+        for (Likelihood likelihood : leaves) {
+            if ((id + "_prior").equals(likelihood.getId())) {
+                return likelihood;
+            }
+        }
         throw new AssertionError("No prior on parameter " + id + " in the parsed XML.");
     }
 
+    /** Finds the parameter with the given id among the data and variables of the prior terms. */
     private static Parameter dataParameter(List<Likelihood> leaves, String id) {
-        return dataOf(priorOf(leaves, id), id);
+        for (Likelihood likelihood : leaves) {
+            if (likelihood instanceof AbstractDistributionLikelihood prior && dataOf(prior, id) != null) {
+                return dataOf(prior, id);
+            }
+            Model model = likelihood.getModel();
+            for (int i = 0; model != null && i < model.getVariableCount(); i++) {
+                if (model.getVariable(i) instanceof Parameter parameter && id.equals(parameter.getId())) {
+                    return parameter;
+                }
+            }
+        }
+        throw new AssertionError("No parameter " + id + " in the parsed XML.");
     }
 
     private static Parameter dataOf(AbstractDistributionLikelihood prior, String id) {
