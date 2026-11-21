@@ -613,115 +613,35 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
         XmlTestSupport.assertNonEmptyFile(treeLogPath, "exponential Coalescent PhyloCTMC tree log");
     }
 
+    /**
+     * logisticPopulationFunction follows the PhyloSpec definition (carrying capacity and inflection
+     * age), which BEAST X's logisticGrowth element does not describe, so XML export must fail.
+     */
     @Test
-    @Tag("beagle")
-    public void writesParsesAndRunsLogisticCoalescentPhyloCTMCXml() throws Exception {
+    public void rejectsLogisticCoalescentXml() {
         Path xmlPath =
                 XmlTestSupport.xmlPath("logisticCoalescentPhyloCTMC");
-
-        Path logPath =
-                XmlTestSupport.logPath("logisticCoalescentPhyloCTMC");
-
-        Path treeLogPath =
-                XmlTestSupport.treeLogPath("logisticCoalescentPhyloCTMC");
-
-        XmlTestSupport.prepare(xmlPath, logPath, treeLogPath);
 
         String source =
                 """
                 Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
-
                 Taxa taxa = taxa(data)
-
-                NonNegativeReal inflectionAge = 10.0
-
-                PositiveReal carryingCapacity = 10000.0
-
-                Real growthRate = 0.1
-
-                Rate clockRate ~ LogNormal(
-                    logMean=0.0,
-                    logSd=1.0
-                )
-
                 Tree tree ~ Coalescent(
-                    populationSize=logisticPopulationFunction(
-                        inflectionAge=inflectionAge,
-                        carryingCapacity=carryingCapacity,
-                        growthRate=growthRate
-                    ),
+                    populationSize=logisticPopulationFunction(inflectionAge=10.0, carryingCapacity=10000.0, growthRate=0.1),
                     taxa=taxa
                 )
 
-                Vector<Rate> branchRates ~ StrictClock(
-                    clockRate=clockRate,
-                    tree=tree
-                )
-
-                QMatrix q = jc69()
-
-                Alignment alignment ~ PhyloCTMC(
-                    tree=tree,
-                    qMatrix=q,
-                    branchRates=branchRates
-                ) observed as data
-
                 mcmc {
-                    Integer chainLength = 10000
-                    Integer randomSeed = 1234
-
-                    Logger fileLogger = fileLogger(
-                        logEvery=1,
-                        file="%s",
-                        parameters=[clockRate]
-                    )
-
-                    Logger treeLogger = treeLogger(
-                        logEvery=1,
-                        file="%s",
-                        trees=[tree]
-                    )
+                    Integer chainLength = 10
+                    Logger treeLogger = treeLogger(logEvery=1, file="%s", trees=[tree])
                 }
-                """.formatted(
-                        XmlTestSupport.unixPath(logPath),
-                        XmlTestSupport.unixPath(treeLogPath)
-                );
+                """.formatted(XmlTestSupport.unixPath(XmlTestSupport.treeLogPath("logisticCoalescentPhyloCTMC")));
 
-        String xml =
-                XmlTestSupport.buildAndWriteXml(
-                        "xmlLogisticCoalescentPhyloCTMC",
-                        source,
-                        xmlPath
-                );
+        Exception error = assertThrows(
+                Exception.class,
+                () -> XmlTestSupport.buildAndWriteXml("xmlLogisticCoalescentPhyloCTMC", source, xmlPath)
+        );
 
-        XmlTestSupport.assertXmlContains(xml, "<logisticGrowth id=\"tree_prior_model\"");
-        XmlTestSupport.assertXmlContains(xml, "<newick id=\"tree_startingTree\"");
-        XmlTestSupport.assertXmlContains(xml, "<newick idref=\"tree_startingTree\"/>");
-        XmlTestSupport.assertXmlDoesNotContain(xml, "<coalescentSimulator id=\"tree_startingTree\"");
-        XmlTestSupport.assertXmlContains(xml, "<populationSize>");
-        XmlTestSupport.assertXmlContains(xml, "<parameter id=\"tree_prior_populationSize\" value=\"10000.0\"");
-        XmlTestSupport.assertXmlContains(xml, "<growthRate>");
-        XmlTestSupport.assertXmlContains(xml, "<parameter id=\"tree_prior_growthRate\" value=\"0.1\"");
-        XmlTestSupport.assertXmlContains(xml, "<t50>");
-        XmlTestSupport.assertXmlContains(xml, "<parameter id=\"tree_prior_t50\" value=\"10.0\"");
-        XmlTestSupport.assertXmlContains(xml, "<coalescentLikelihood id=\"tree_prior\">");
-        XmlTestSupport.assertXmlContains(xml, "<logisticGrowth idref=\"tree_prior_model\"/>");
-        XmlTestSupport.assertXmlContains(xml, "<treeLikelihood id=\"alignment_likelihood\"");
-        XmlTestSupport.assertXmlContains(xml, "<log id=\"fileLogger");
-        XmlTestSupport.assertXmlContains(xml, "<logTree");
-
-        try {
-            XmlTestSupport.runXml(xmlPath);
-        } catch (RuntimeException exception) {
-            Assumptions.assumeFalse(
-                    XmlTestSupport.isMissingBeagleLibrary(exception),
-                    "Skipping logistic Coalescent PhyloCTMC XML run because BEAGLE native library is not available."
-            );
-
-            throw exception;
-        }
-
-        XmlTestSupport.assertNonEmptyFile(logPath, "logistic Coalescent PhyloCTMC parameter log");
-        XmlTestSupport.assertNonEmptyFile(treeLogPath, "logistic Coalescent PhyloCTMC tree log");
+        assertTrue(error.getMessage().contains("logisticPopulationFunction"), error.getMessage());
     }
 }

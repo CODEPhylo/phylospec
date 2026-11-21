@@ -20,7 +20,6 @@ Tree tree ~ FossilizedBirthDeath(
     turnover=turnover,
     serialSamplingRate=0.1,
     samplingProbability=0.8,
-    rootAge=5.0,
     taxa=taxa
 )
 

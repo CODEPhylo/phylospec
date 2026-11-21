@@ -13,6 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class BeastXSampledStructuralInputsTest {
 
+    private static final String PRIMATE_TAXA = """
+            Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+            Taxa taxa = taxa(data)
+            """;
+
     private static final String PRIMATE_TREE = """
             Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
             Taxa taxa = taxa(data)
@@ -85,6 +90,30 @@ public class BeastXSampledStructuralInputsTest {
                 """,
                 "upper",
                 "Truncated"
+        );
+    }
+
+    @Test
+    public void rejectsSampledSkylineChangeTimes() {
+        assertRejected(
+                PRIMATE_TAXA + """
+                Vector<PositiveReal> times ~ IID(base=Exponential(rate=1.0), num=1)
+                Tree tree ~ SkylineCoalescent(populationSizes=[1.0, 2.0], changeTimes=times, taxa=taxa)
+                """,
+                "changeTimes"
+        );
+    }
+
+    @Test
+    public void rejectsSampledCompoundChangeTimes() {
+        assertRejected(
+                """
+                Vector<PositiveReal> times ~ IID(base=Exponential(rate=1.0), num=1)
+                PopulationFunction a = constantPopulationFunction(populationSize=1.0)
+                PopulationFunction b = constantPopulationFunction(populationSize=2.0)
+                PopulationFunction f = compoundPopulationFunction(functions=[a, b], changeTimes=times)
+                """,
+                "changeTimes"
         );
     }
 

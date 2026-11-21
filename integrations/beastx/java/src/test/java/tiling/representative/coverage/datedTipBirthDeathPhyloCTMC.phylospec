@@ -18,7 +18,6 @@ Rate turnover ~ LogNormal(
 Tree tree ~ BirthDeath(
     diversificationRate=diversificationRate,
     turnover=turnover,
-    rootAge=5.0,
     taxa=taxa
 )
 

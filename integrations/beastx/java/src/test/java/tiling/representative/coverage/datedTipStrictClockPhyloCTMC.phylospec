@@ -7,7 +7,6 @@ Taxa taxa = taxa(data)
 
 Tree tree ~ Yule(
     birthRate=1.0,
-    rootAge=5.0,
     taxa=taxa
 )
 

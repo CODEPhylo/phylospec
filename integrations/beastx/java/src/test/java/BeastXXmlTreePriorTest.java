@@ -570,7 +570,6 @@ public class BeastXXmlTreePriorTest {
                     extinctionRate=extinctionRate,
                     serialSamplingRate=serialSamplingRate,
                     samplingProbability=0.9,
-                    rootAge=5.0,
                     taxa=taxa
                 )
 
