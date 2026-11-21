@@ -183,7 +183,8 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new ExpRPNTile.Real());
         tiles.add(new LogRPNTile.Rpn());
         tiles.add(new LogRPNTile.Real());
-        tiles.add(new SqrtRPNTile());
+        tiles.add(new SqrtRPNTile.Rpn());
+        tiles.add(new SqrtRPNTile.Real());
         tiles.add(new RPNAssignmentTile());
 
         // Input/accessor support
@@ -254,6 +255,8 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new MultivariateNormalTile());
         tiles.add(new IIDTile.RealIID());
         tiles.add(new IIDTile.PositiveRealIID());
+        tiles.add(new IIDTile.UnitIntervalIID());
+        tiles.add(new IIDTile.NonNegativeIntIID());
         tiles.add(new TruncatedTile());
         tiles.add(new OffsetTile());
 

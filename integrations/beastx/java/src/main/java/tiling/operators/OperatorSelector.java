@@ -110,7 +110,7 @@ public final class OperatorSelector {
             operators.add(parameterOperator(
                     OperatorSpec.Family.INTEGER_SWAP, parameter, weight, 1.0));
         }
-        if (hasFiniteBounds(parameter)) {
+        if (hasFiniteIntegerRange(parameter)) {
             operators.add(parameterOperator(
                     OperatorSpec.Family.INTEGER_UNIFORM, parameter, weight, 1.0));
         }
@@ -183,6 +183,23 @@ public final class OperatorSelector {
     private static boolean isInteger(TypeToken<?> type) {
         return type != null && (INT_SCALAR.isAssignableFrom(type)
                 || INT_VECTOR.isAssignableFrom(type));
+    }
+
+    /**
+     * A uniform integer proposal needs a real range. Integer domains without an upper limit use
+     * Integer.MAX_VALUE as their bound, which is treated as unbounded here.
+     */
+    private static boolean hasFiniteIntegerRange(Parameter parameter) {
+        if (!hasFiniteBounds(parameter)) {
+            return false;
+        }
+        Bounds<Double> bounds = parameter.getBounds();
+        for (int index = 0; index < parameter.getDimension(); index++) {
+            if (bounds.getUpperLimit(index) >= Integer.MAX_VALUE) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static boolean hasFiniteBounds(Parameter parameter) {

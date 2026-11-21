@@ -20,7 +20,7 @@ public class StrictClockTile extends GeneratorTile<StrictClockBranchRates, Beast
     }
 
     GeneratorTileInput<RealScalar<PositiveReal>, BeastXState> clockRateInput =
-            new GeneratorTileInput<>("clockRate");
+            new GeneratorTileInput<>("clockRate", false);
 
     GeneratorTileInput<TreeModel, BeastXState> treeInput =
             new GeneratorTileInput<>("tree");
@@ -36,8 +36,9 @@ public class StrictClockTile extends GeneratorTile<StrictClockBranchRates, Beast
         TreeModel tree =
                 this.treeInput.apply(beastState, indexVariables);
 
+        // clockRate is optional and defaults to 1, as in the PhyloSpec reference.
         Parameter clockRateParameter =
-                BeastXParameters.toParameter(clockRate);
+                clockRate == null ? new Parameter.Default(1.0) : BeastXParameters.toParameter(clockRate);
 
         beastState.addTreeStrictClockRateParameter(
                 tree,

@@ -10,6 +10,7 @@ import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import tiling.params.BeastXIntScalarParam;
 import tiling.BeastXState;
+import tiling.params.BeastXParameters;
 import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
@@ -24,7 +25,7 @@ public class PoissonTile extends GeneratorTile<
         return "Poisson";
     }
 
-    GeneratorTileInput<RealScalar<NonNegativeReal>, BeastXState> rateInput =
+    GeneratorTileInput<RealScalar<? extends NonNegativeReal>, BeastXState> rateInput =
             new GeneratorTileInput<>("rate");
 
     @Override
@@ -32,10 +33,10 @@ public class PoissonTile extends GeneratorTile<
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
-        RealScalar<NonNegativeReal> rate =
+        RealScalar<? extends NonNegativeReal> rate =
                 this.rateInput.apply(beastState, indexVariables);
 
-        Parameter meanParameter = new Parameter.Default(rate.get());
+        Parameter meanParameter = BeastXParameters.toParameter(rate);
 
         PoissonDistributionModel distributionModel =
                 new PoissonDistributionModel(meanParameter);
