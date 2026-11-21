@@ -29,8 +29,10 @@ public class AgeTaxonTile extends GeneratorTile<RealScalar<NonNegativeReal>, Bea
         Taxon taxon =
                 this.taxonInput.apply(beastState, indexVariables);
 
+        // PhyloSpec taxa store their age as a relative date. Taxon.getHeight() would measure it
+        // from the most recent date BEAST X has seen in this JVM instead.
         double age =
-                taxon.getHeight();
+                taxon.getDate() == null ? 0.0 : taxon.getDate().getTimeValue();
 
         if (age < 0.0) {
             throw new TileApplicationError(

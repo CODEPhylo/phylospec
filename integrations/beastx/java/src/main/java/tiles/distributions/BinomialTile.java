@@ -107,10 +107,19 @@ public class BinomialTile extends GeneratorTile<
         }
     }
 
-    private static final class BinomialCountDistribution implements Distribution {
+    /** Binomial count distribution. Public so the XML export can read numTrials and p. */
+    public static final class BinomialCountDistribution implements Distribution {
 
         private final int numTrials;
         private final Parameter pParameter;
+
+        public int getNumTrials() {
+            return numTrials;
+        }
+
+        public Parameter getP() {
+            return pParameter;
+        }
 
         private BinomialCountDistribution(
                 int numTrials,

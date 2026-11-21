@@ -87,9 +87,14 @@ public class GeometricTile extends GeneratorTile<
         }
     }
 
-    private static final class GeometricCountDistribution implements Distribution {
+    /** Number of failures before the first success. Public so the XML export can read p. */
+    public static final class GeometricCountDistribution implements Distribution {
 
         private final Parameter pParameter;
+
+        public Parameter getP() {
+            return pParameter;
+        }
 
         private GeometricCountDistribution(Parameter pParameter) {
             this.pParameter = pParameter;

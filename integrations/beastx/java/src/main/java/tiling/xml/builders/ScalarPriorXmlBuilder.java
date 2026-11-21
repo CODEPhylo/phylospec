@@ -7,11 +7,19 @@ import dr.inference.distribution.ExponentialDistributionModel;
 import dr.inference.distribution.GammaDistributionModel;
 import dr.inference.distribution.LogNormalDistributionModel;
 import dr.inference.distribution.NormalDistributionModel;
+import dr.inference.distribution.PoissonDistributionModel;
 import dr.inference.distribution.UniformDistributionModel;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
+import tiles.distributions.BernoulliTile;
+import tiles.distributions.BinomialTile;
+import tiles.distributions.CauchyTile;
+import tiles.distributions.DiscreteUniformTile;
+import tiles.distributions.GeometricTile;
+import tiles.distributions.OffsetTile;
 import tiling.BeastXState;
 import tiling.model.BeastXTruncatedLikelihood;
+import tiling.params.BeastXExponentialMean;
 import tiling.params.BeastXLogNormalMu;
 import tiling.xml.XmlElement;
 
@@ -24,12 +32,23 @@ import tiling.xml.XmlElement;
 public class ScalarPriorXmlBuilder {
 
     public boolean supports(Distribution distribution) {
+        if (distribution instanceof OffsetTile.OffsetDistribution offsetDistribution) {
+            return offsetDistribution.getBase() instanceof GammaDistributionModel
+                    || offsetDistribution.getBase() instanceof ExponentialDistributionModel;
+        }
+
         return distribution instanceof NormalDistributionModel
                 || distribution instanceof LogNormalDistributionModel
                 || distribution instanceof GammaDistributionModel
                 || distribution instanceof ExponentialDistributionModel
                 || distribution instanceof UniformDistributionModel
-                || distribution instanceof BetaDistributionModel;
+                || distribution instanceof BetaDistributionModel
+                || distribution instanceof CauchyTile.Cauchy
+                || distribution instanceof PoissonDistributionModel
+                || distribution instanceof BinomialTile.BinomialCountDistribution
+                || distribution instanceof BernoulliTile.BernoulliDistribution
+                || distribution instanceof GeometricTile.GeometricCountDistribution
+                || distribution instanceof DiscreteUniformTile.DiscreteUniform;
     }
 
     public XmlElement buildPrior(
@@ -63,11 +82,11 @@ public class ScalarPriorXmlBuilder {
         }
 
         if (distribution instanceof GammaDistributionModel gammaDistribution) {
-            return gammaPrior(state, parameter, priorId, gammaDistribution);
+            return gammaPrior(state, parameter, priorId, gammaDistribution, 0.0);
         }
 
         if (distribution instanceof ExponentialDistributionModel exponentialDistribution) {
-            return exponentialPrior(parameter, priorId, exponentialDistribution);
+            return exponentialPrior(state, parameter, priorId, exponentialDistribution, 0.0);
         }
 
         if (distribution instanceof UniformDistributionModel uniformDistribution) {
@@ -78,9 +97,139 @@ public class ScalarPriorXmlBuilder {
             return betaPrior(state, parameter, priorId, betaDistribution);
         }
 
+        // Offset shifts Gamma and Exponential through the offset attribute of their BEAST X models.
+        if (distribution instanceof OffsetTile.OffsetDistribution offsetDistribution) {
+            if (offsetDistribution.getBase() instanceof GammaDistributionModel gammaDistribution) {
+                return gammaPrior(state, parameter, priorId, gammaDistribution, offsetDistribution.getOffset());
+            }
+
+            if (offsetDistribution.getBase() instanceof ExponentialDistributionModel exponentialDistribution) {
+                return exponentialPrior(state, parameter, priorId, exponentialDistribution, offsetDistribution.getOffset());
+            }
+        }
+
+        if (distribution instanceof CauchyTile.Cauchy cauchy) {
+            return XmlElement.element("cauchyPrior")
+                    .withId(priorId)
+                    .withAttribute("median", format(cauchy.getLocation()))
+                    .withAttribute("scale", format(cauchy.getScale()))
+                    .withChild(parameterReference(parameter));
+        }
+
+        if (distribution instanceof DiscreteUniformTile.DiscreteUniform discreteUniform) {
+            return XmlElement.element("discreteUniformPrior")
+                    .withId(priorId)
+                    .withAttribute("lower", format(discreteUniform.getLower()))
+                    .withAttribute("upper", format(discreteUniform.getUpper()))
+                    .withChild(parameterReference(parameter));
+        }
+
+        if (distribution instanceof PoissonDistributionModel poisson) {
+            return prior(
+                    parameter,
+                    priorId,
+                    XmlElement.element("poissonDistributionModel")
+                            .withId(priorId + "_distribution")
+                            .withChild(
+                                    distributionParameter(
+                                            state,
+                                            "mean",
+                                            priorId + "_mean",
+                                            poisson.getLocationVariable(),
+                                            poisson.mean()
+                                    )
+                            )
+            );
+        }
+
+        if (distribution instanceof BinomialTile.BinomialCountDistribution binomial) {
+            return binomialPrior(state, parameter, priorId, binomial.getNumTrials(), binomial.getP());
+        }
+
+        // Bernoulli(p) is Binomial(1, p) on 0 and 1.
+        if (distribution instanceof BernoulliTile.BernoulliDistribution bernoulli) {
+            return binomialPrior(state, parameter, priorId, 1, bernoulli.getP());
+        }
+
+        if (distribution instanceof GeometricTile.GeometricCountDistribution geometric) {
+            return geometricPrior(state, parameter, priorId, geometric.getP());
+        }
+
         throw new UnsupportedOperationException(
-                "Only Normal, LogNormal, Gamma, Exponential, Uniform, and Beta scalar priors are supported."
+                "This scalar prior is not supported in BEAST X XML."
         );
+    }
+
+    /**
+     * Writes Binomial(numTrials, p) as BEAST X's binomialLikelihood, which includes the binomial
+     * coefficient. Every count gets its own number of trials, so IID counts are also covered.
+     */
+    private XmlElement binomialPrior(
+            BeastXState state,
+            Parameter parameter,
+            String priorId,
+            int numTrials,
+            Parameter p
+    ) {
+        StringBuilder trials = new StringBuilder();
+        for (int i = 0; i < parameter.getDimension(); i++) {
+            trials.append(i == 0 ? "" : " ").append(numTrials);
+        }
+
+        return XmlElement.element("binomialLikelihood")
+                .withId(priorId)
+                .withChild(
+                        XmlElement.element("trials")
+                                .withChild(
+                                        XmlElement.element("parameter")
+                                                .withId(priorId + "_trials")
+                                                .withAttribute("value", trials.toString())
+                                )
+                )
+                .withChild(XmlElement.element("counts").withChild(parameterReference(parameter)))
+                .withChild(distributionParameter(state, "proportion", priorId + "_proportion", p, p.getParameterValue(0)));
+    }
+
+    /**
+     * Writes Geometric(p), the number of failures before the first success, as a negative binomial
+     * with mean (1 - p) / p and alpha 1. A sampled p is written as p ^ -1 + (-1), so the mean
+     * follows p during the run.
+     */
+    private XmlElement geometricPrior(
+            BeastXState state,
+            Parameter parameter,
+            String priorId,
+            Parameter p
+    ) {
+        String meanId = priorId + "_mean";
+
+        XmlElement mean =
+                state.stateNodes.containsKey(p)
+                        ? XmlElement.element("sumParameter")
+                                .withId(meanId)
+                                .withChild(
+                                        XmlElement.element("transformedParameter")
+                                                .withId(meanId + "_inverseP")
+                                                .withChild(parameterReference(p))
+                                                .withChild(powerTransform(-1.0))
+                                )
+                                .withChild(inlineParameterDefinition(meanId + "_minusOne", -1.0))
+                        : inlineParameterDefinition(meanId, (1.0 - p.getParameterValue(0)) / p.getParameterValue(0));
+
+        return prior(
+                parameter,
+                priorId,
+                XmlElement.element("negativeBinomialDistributionModel")
+                        .withId(priorId + "_distribution")
+                        .withChild(XmlElement.element("mean").withChild(mean))
+                        .withChild(XmlElement.element("alpha").withChild(inlineParameterDefinition(priorId + "_alpha", 1.0)))
+        );
+    }
+
+    private static XmlElement powerTransform(double power) {
+        return XmlElement.element("powerTransform")
+                .withAttribute("power", Double.toString(power))
+                .withChild(XmlElement.element("transform").withAttribute("type", "power"));
     }
 
     /**
@@ -203,14 +352,15 @@ public class ScalarPriorXmlBuilder {
             BeastXState state,
             Parameter parameter,
             String priorId,
-            GammaDistributionModel distribution
+            GammaDistributionModel distribution,
+            double offset
     ) {
         return prior(
                 parameter,
                 priorId,
                 XmlElement.element("gammaDistributionModel")
                         .withId(priorId + "_distribution")
-                        .withAttribute("offset", "0.0")
+                        .withAttribute("offset", format(offset))
                         .withChild(
                                 distributionParameter(
                                         state,
@@ -233,27 +383,43 @@ public class ScalarPriorXmlBuilder {
     }
 
     private XmlElement exponentialPrior(
+            BeastXState state,
             Parameter parameter,
             String priorId,
-            ExponentialDistributionModel distribution
+            ExponentialDistributionModel distribution,
+            double offset
     ) {
-        // The Exponential tile only accepts fixed rates, so the mean is always written inline.
         return prior(
                 parameter,
                 priorId,
                 XmlElement.element("exponentialDistributionModel")
                         .withId(priorId + "_distribution")
-                        .withAttribute("offset", "0.0")
+                        .withAttribute("offset", format(offset))
                         .withChild(
                                 XmlElement.element("mean")
-                                        .withChild(
-                                                inlineParameterDefinition(
-                                                        priorId + "_mean",
-                                                        distribution.mean()
-                                                )
-                                        )
+                                        .withChild(exponentialMean(state, priorId + "_mean", distribution))
                         )
         );
+    }
+
+    /**
+     * Writes the mean {@code 1 / rate} as {@code rate ^ -1} when the rate is sampled, so that the
+     * mean follows the rate during the run. A fixed mean is written inline.
+     */
+    private XmlElement exponentialMean(
+            BeastXState state,
+            String id,
+            ExponentialDistributionModel distribution
+    ) {
+        if (distribution.getLocationVariable() instanceof BeastXExponentialMean mean
+                && state.stateNodes.containsKey(mean.getRate())) {
+            return XmlElement.element("transformedParameter")
+                    .withId(id)
+                    .withChild(parameterReference(mean.getRate()))
+                    .withChild(powerTransform(-1.0));
+        }
+
+        return inlineParameterDefinition(id, distribution.mean());
     }
 
     private XmlElement uniformPrior(

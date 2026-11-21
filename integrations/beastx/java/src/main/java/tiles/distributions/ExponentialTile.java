@@ -7,13 +7,13 @@ import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
-import org.phylospec.typeresolver.Stochasticity;
+import tiling.params.BeastXExponentialMean;
+import tiling.params.BeastXParameters;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
-import java.util.Set;
 
 public class ExponentialTile extends GeneratorTile<
         BoundDistribution<BeastXRealScalarParam<PositiveReal>, DistributionLikelihood>,
@@ -26,10 +26,7 @@ public class ExponentialTile extends GeneratorTile<
     }
 
     GeneratorTileInput<RealScalar<PositiveReal>, BeastXState> rateInput =
-            new GeneratorTileInput<>(
-                    "rate",
-                    Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
-            );
+            new GeneratorTileInput<>("rate");
 
     @Override
     public BoundDistribution<BeastXRealScalarParam<PositiveReal>, DistributionLikelihood> applyTile(
@@ -38,7 +35,8 @@ public class ExponentialTile extends GeneratorTile<
     ) {
         RealScalar<PositiveReal> rate = this.rateInput.apply(beastState, indexVariables);
 
-        Parameter mean = new Parameter.Default(1.0 / rate.get());
+        // BEAST X takes the mean, which follows the rate when the rate is sampled.
+        Parameter mean = new BeastXExponentialMean(BeastXParameters.toParameter(rate));
 
         ExponentialDistributionModel distributionModel =
                 new ExponentialDistributionModel(mean);
