@@ -9,6 +9,7 @@ import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
+import tiling.params.BeastXMkRate;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 
@@ -49,14 +50,15 @@ public class MkTile extends GeneratorTile<GeneralSubstitutionModel, BeastXState>
                         "mk",
                         TwoStates.INSTANCE,
                         frequencies,
-                        rateParameter,
+                        new BeastXMkRate(rateParameter),
                         -1
                 );
 
         /*
          * For the binary Mk case there is only one exchangeability parameter.
          * Keeping normalization off makes the PhyloSpec `rate` argument control
-         * the transition intensity instead of being normalized away.
+         * the transition intensity instead of being normalized away. BeastXMkRate
+         * doubles it, so the expected rate of change equals `rate` as in core.
          */
         model.setNormalization(false);
 
