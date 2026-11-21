@@ -56,7 +56,6 @@ public class BeastXXmlShowcasePhyloCTMCTest {
                     extinctionRate=extinctionRate,
                     serialSamplingRate=serialSamplingRate,
                     samplingProbability=0.9,
-                    rootAge=5.0,
                     taxa=taxa
                 )
 
@@ -196,7 +195,6 @@ public class BeastXXmlShowcasePhyloCTMCTest {
                     turnover=turnover,
                     serialSamplingRate=serialSamplingRate,
                     samplingProbability=0.9,
-                    rootAge=5.0,
                     taxa=taxa
                 )
 
@@ -338,7 +336,6 @@ public class BeastXXmlShowcasePhyloCTMCTest {
                     extinctionRate=extinctionRate,
                     serialSamplingRate=serialSamplingRate,
                     samplingProbability=0.9,
-                    rootAge=5.0,
                     taxa=taxa
                 )
 
@@ -484,7 +481,6 @@ public class BeastXXmlShowcasePhyloCTMCTest {
                     turnover=turnover,
                     serialSamplingRate=serialSamplingRate,
                     samplingProbability=0.8,
-                    rootAge=5.0,
                     taxa=taxa
                 )
 

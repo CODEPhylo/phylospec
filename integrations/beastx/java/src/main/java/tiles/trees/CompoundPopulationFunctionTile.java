@@ -5,11 +5,13 @@ import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.types.RealVector;
 import tiling.population.BeastXCompoundPopulationModel;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;
+import java.util.Set;
 import java.util.List;
 
 public class CompoundPopulationFunctionTile extends GeneratorTile<DemographicModel, BeastXState> {
@@ -22,8 +24,9 @@ public class CompoundPopulationFunctionTile extends GeneratorTile<DemographicMod
     GeneratorTileInput<List<DemographicModel>, BeastXState> functionsInput =
             new GeneratorTileInput<>("functions");
 
+    // The change times are copied once, so sampled change times would stay at their start values.
     GeneratorTileInput<RealVector<? extends PositiveReal>, BeastXState> changeTimesInput =
-            new GeneratorTileInput<>("changeTimes");
+            new GeneratorTileInput<>("changeTimes", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
     public DemographicModel applyTile(

@@ -1,8 +1,6 @@
 package tiles.trees;
 
-import dr.evolution.util.Units;
 import dr.evomodel.coalescent.demographicmodel.DemographicModel;
-import dr.evomodel.coalescent.demographicmodel.LogisticGrowthModel;
 import dr.inference.model.Parameter;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.NonNegativeReal;
@@ -12,6 +10,7 @@ import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
+import tiling.population.BeastXLogisticPopulationModel;
 
 import java.util.IdentityHashMap;
 
@@ -45,14 +44,11 @@ public class LogisticPopulationFunctionTile extends GeneratorTile<DemographicMod
         RealScalar<? extends Real> growthRate =
                 this.growthRateInput.apply(beastState, indexVariables);
 
-        return new LogisticGrowthModel(
+        return new BeastXLogisticPopulationModel(
                 "logisticPopulation",
                 toParameter(carryingCapacity),
                 toParameter(growthRate),
-                toParameter(inflectionAge),
-                0.5,
-                Units.Type.YEARS,
-                true
+                toParameter(inflectionAge)
         );
     }
 

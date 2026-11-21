@@ -5,7 +5,6 @@ import dr.evomodel.coalescent.CoalescentLikelihood;
 import dr.evomodel.coalescent.demographicmodel.ConstantPopulationModel;
 import dr.evomodel.coalescent.demographicmodel.DemographicModel;
 import dr.evomodel.coalescent.demographicmodel.ExponentialGrowthModel;
-import dr.evomodel.coalescent.demographicmodel.LogisticGrowthModel;
 import dr.evomodel.coalescent.demographicmodel.PiecewisePopulationModel;
 import dr.evomodel.speciation.BirthDeathGernhard08Model;
 import dr.evomodel.speciation.BirthDeathSerialSamplingModel;
@@ -16,6 +15,9 @@ import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import tiling.BeastXState;
+import tiling.params.BeastXBirthRate;
+import tiling.params.BeastXDeathRate;
+import tiling.params.BeastXDerivedScalarParameter;
 import tiling.xml.XmlElement;
 
 /**
@@ -66,14 +68,6 @@ public class TreePriorXmlBuilder {
                 );
             }
 
-            if (demographicModel instanceof LogisticGrowthModel logisticGrowthModel) {
-                return logisticGrowthModelDefinition(
-                        state,
-                        treePrior,
-                        logisticGrowthModel
-                );
-            }
-
             if (demographicModel instanceof PiecewisePopulationModel piecewisePopulationModel) {
                 return piecewisePopulationModelDefinition(
                         state,
@@ -82,7 +76,7 @@ public class TreePriorXmlBuilder {
                 );
             }
 
-            throw unsupported("Only constant, exponential, logistic, and piecewise Coalescent demographic models are supported.");
+            throw unsupported("Only constant, exponential, and piecewise Coalescent demographic models are supported.");
         }
 
         throw unsupported("Only SpeciationLikelihood and CoalescentLikelihood tree priors are supported.");
@@ -168,6 +162,85 @@ public class TreePriorXmlBuilder {
                 );
     }
 
+    /**
+     * For FossilizedBirthDeath(diversificationRate, turnover) with a sampled parameter, writes the
+     * birth rate diversificationRate * (1 + (-1 * turnover)) ^ -1, so the XML follows both parameters.
+     */
+    private XmlElement fossilizedBirthRate(BeastXState state, AbstractModelLikelihood treePrior, Parameter birthRate) {
+        String id = priorId(treePrior) + "_birthRate";
+
+        if (birthRate instanceof BeastXBirthRate derived && dependsOnStateNode(state, derived)) {
+            return XmlElement.element("birthRate")
+                    .withChild(
+                            XmlElement.element("productParameter")
+                                    .withId(id)
+                                    .withChild(rateParameter(state, derived.getDiversificationRate(), id + "_diversificationRate"))
+                                    .withChild(
+                                            XmlElement.element("transformedParameter")
+                                                    .withId(id + "_inverseOneMinusTurnover")
+                                                    .withChild(
+                                                            XmlElement.element("sumParameter")
+                                                                    .withId(id + "_oneMinusTurnover")
+                                                                    .withChild(inlineParameterDefinition(id + "_one", 1.0, null, null))
+                                                                    .withChild(
+                                                                            XmlElement.element("productParameter")
+                                                                                    .withId(id + "_minusTurnover")
+                                                                                    .withChild(inlineParameterDefinition(id + "_minusOne", -1.0, null, null))
+                                                                                    .withChild(rateParameter(state, derived.getTurnover(), id + "_turnover"))
+                                                                    )
+                                                    )
+                                                    .withChild(powerTransform(-1.0))
+                                    )
+                    );
+        }
+
+        return parameterElement(state, "birthRate", birthRate, id, birthRate.getParameterValue(0), 0.0, null);
+    }
+
+    /**
+     * For FossilizedBirthDeath(diversificationRate, turnover) with a sampled parameter, writes the
+     * death rate as the birth rate written just before times the turnover.
+     */
+    private XmlElement fossilizedDeathRate(BeastXState state, AbstractModelLikelihood treePrior, Parameter deathRate) {
+        String id = priorId(treePrior) + "_deathRate";
+
+        if (deathRate instanceof BeastXDeathRate derived && dependsOnStateNode(state, derived)) {
+            return XmlElement.element("deathRate")
+                    .withChild(
+                            XmlElement.element("productParameter")
+                                    .withId(id)
+                                    .withChild(XmlElement.ref("productParameter", priorId(treePrior) + "_birthRate"))
+                                    .withChild(rateParameter(state, derived.getTurnover(), id + "_turnover"))
+                    );
+        }
+
+        return parameterElement(state, "deathRate", deathRate, id, deathRate.getParameterValue(0), 0.0, null);
+    }
+
+    private static XmlElement powerTransform(double power) {
+        return XmlElement.element("powerTransform")
+                .withAttribute("power", Double.toString(power))
+                .withChild(XmlElement.element("transform").withAttribute("type", "power"));
+    }
+
+    /** A rate as a reference when it is sampled, and inline otherwise. */
+    private XmlElement rateParameter(BeastXState state, Parameter rate, String inlineId) {
+        return state.stateNodes.containsKey(rate)
+                ? parameterReference(rate)
+                : inlineParameterDefinition(inlineId, rate.getParameterValue(0), null, null);
+    }
+
+    /** Whether a derived parameter is computed, directly or not, from a sampled parameter. */
+    private static boolean dependsOnStateNode(BeastXState state, BeastXDerivedScalarParameter derived) {
+        for (Parameter dependency : derived.getDependencies()) {
+            if (state.stateNodes.containsKey(dependency)
+                    || dependency instanceof BeastXDerivedScalarParameter nested && dependsOnStateNode(state, nested)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private XmlElement fossilizedBirthDeathModelDefinition(
             BeastXState state,
             AbstractModelLikelihood treePrior,
@@ -193,28 +266,8 @@ public class TreePriorXmlBuilder {
                 .withAttribute("type", "LABELED")
                 .withAttribute("units", "years")
                 .withAttribute("hasFinalSample", "false")
-                .withChild(
-                        parameterElement(
-                                state,
-                                "birthRate",
-                                birthRate,
-                                priorId(treePrior) + "_birthRate",
-                                birthRate.getParameterValue(0),
-                                0.0,
-                                null
-                        )
-                )
-                .withChild(
-                        parameterElement(
-                                state,
-                                "deathRate",
-                                deathRate,
-                                priorId(treePrior) + "_deathRate",
-                                deathRate.getParameterValue(0),
-                                0.0,
-                                null
-                        )
-                )
+                .withChild(fossilizedBirthRate(state, treePrior, birthRate))
+                .withChild(fossilizedDeathRate(state, treePrior, deathRate))
                 .withChild(
                         parameterElement(
                                 state,
@@ -307,58 +360,6 @@ public class TreePriorXmlBuilder {
                                 priorId(treePrior) + "_growthRate",
                                 growthRate.getParameterValue(0),
                                 null,
-                                null
-                        )
-                );
-    }
-
-    private XmlElement logisticGrowthModelDefinition(
-            BeastXState state,
-            AbstractModelLikelihood treePrior,
-            LogisticGrowthModel logisticGrowthModel
-    ) {
-        Parameter carryingCapacity =
-                demographicVariable(logisticGrowthModel, 0, "carrying capacity");
-
-        Parameter growthRate =
-                demographicVariable(logisticGrowthModel, 1, "growth rate");
-
-        Parameter inflectionAge =
-                demographicVariable(logisticGrowthModel, 2, "inflection age");
-
-        return XmlElement.element("logisticGrowth")
-                .withId(treePriorModelId(treePrior))
-                .withAttribute("units", "years")
-                .withChild(
-                        parameterElement(
-                                state,
-                                "populationSize",
-                                carryingCapacity,
-                                priorId(treePrior) + "_populationSize",
-                                carryingCapacity.getParameterValue(0),
-                                0.0,
-                                null
-                        )
-                )
-                .withChild(
-                        parameterElement(
-                                state,
-                                "growthRate",
-                                growthRate,
-                                priorId(treePrior) + "_growthRate",
-                                growthRate.getParameterValue(0),
-                                null,
-                                null
-                        )
-                )
-                .withChild(
-                        parameterElement(
-                                state,
-                                "t50",
-                                inflectionAge,
-                                priorId(treePrior) + "_t50",
-                                inflectionAge.getParameterValue(0),
-                                0.0,
                                 null
                         )
                 );
@@ -469,15 +470,11 @@ public class TreePriorXmlBuilder {
             return "exponentialGrowth";
         }
 
-        if (demographicModel instanceof LogisticGrowthModel) {
-            return "logisticGrowth";
-        }
-
         if (demographicModel instanceof PiecewisePopulationModel) {
             return "piecewisePopulation";
         }
 
-        throw unsupported("Only constant, exponential, logistic, and piecewise Coalescent demographic models are supported.");
+        throw unsupported("Only constant, exponential, and piecewise Coalescent demographic models are supported.");
     }
 
     private XmlElement parameterElement(
@@ -489,6 +486,14 @@ public class TreePriorXmlBuilder {
             Double lower,
             Double upper
     ) {
+        // A value derived from sampled parameters would be frozen if it were written inline.
+        if (parameter instanceof BeastXDerivedScalarParameter derived && dependsOnStateNode(state, derived)) {
+            throw unsupported(
+                    "The " + elementName + " of this tree prior is computed from sampled values, which BEAST X XML "
+                            + "cannot express yet."
+            );
+        }
+
         XmlElement child;
 
         if (parameter != null && state.stateNodes.containsKey(parameter)) {

@@ -61,6 +61,8 @@ public class BirthDeathTile extends GeneratorTile<
         RealScalar<? extends NonNegativeReal> rootAge =
                 this.rootAgeInput.apply(beastState, indexVariables);
 
+        UnsupportedRootAge.reject(this.getRootNode(), rootAge, "BirthDeath");
+
         Taxa taxa =
                 this.taxaInput.apply(beastState, indexVariables);
 

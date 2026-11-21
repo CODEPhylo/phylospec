@@ -13,7 +13,8 @@ import org.phylospec.domain.UnitInterval;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
-import tiling.params.BeastXDerivedScalarParameter;
+import tiling.params.BeastXBirthRate;
+import tiling.params.BeastXDeathRate;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
@@ -81,6 +82,8 @@ public class FossilizedBirthDeathTile extends GeneratorTile<
         RealScalar<? extends NonNegativeReal> rootAge =
                 this.rootAgeInput.apply(beastState, indexVariables);
 
+        UnsupportedRootAge.reject(this.getRootNode(), rootAge, "FossilizedBirthDeath");
+
         Taxa taxa =
                 this.taxaInput.apply(beastState, indexVariables);
 
@@ -139,39 +142,10 @@ public class FossilizedBirthDeathTile extends GeneratorTile<
             validateTurnover(turnoverParameter.getParameterValue(0));
 
             birthRateParameter =
-                    new BeastXDerivedScalarParameter(
-                            "fossilizedBirthDeath.birthRate",
-                            () -> {
-                                double turnoverValue =
-                                        turnoverParameter.getParameterValue(0);
-
-                                validateTurnover(turnoverValue);
-
-                                return diversificationRateParameter.getParameterValue(0)
-                                        / (1.0 - turnoverValue);
-                            },
-                            diversificationRateParameter,
-                            turnoverParameter
-                    );
+                    new BeastXBirthRate(diversificationRateParameter, turnoverParameter);
 
             deathRateParameter =
-                    new BeastXDerivedScalarParameter(
-                            "fossilizedBirthDeath.deathRate",
-                            () -> {
-                                double turnoverValue =
-                                        turnoverParameter.getParameterValue(0);
-
-                                validateTurnover(turnoverValue);
-
-                                double birthRate =
-                                        diversificationRateParameter.getParameterValue(0)
-                                                / (1.0 - turnoverValue);
-
-                                return birthRate * turnoverValue;
-                            },
-                            diversificationRateParameter,
-                            turnoverParameter
-                    );
+                    new BeastXDeathRate(diversificationRateParameter, turnoverParameter);
         } else {
             throw new TileApplicationError(
                     this.getRootNode(),

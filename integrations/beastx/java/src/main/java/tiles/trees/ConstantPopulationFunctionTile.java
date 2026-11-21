@@ -2,6 +2,7 @@ package tiles.trees;
 
 import dr.evolution.util.Units;
 import dr.evomodel.coalescent.demographicmodel.ConstantPopulationModel;
+import dr.evomodel.coalescent.demographicmodel.DemographicModel;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
@@ -11,7 +12,7 @@ import tiling.params.BeastXParameters;
 
 import java.util.IdentityHashMap;
 
-public class ConstantPopulationFunctionTile extends GeneratorTile<ConstantPopulationModel, BeastXState> {
+public class ConstantPopulationFunctionTile extends GeneratorTile<DemographicModel, BeastXState> {
 
     @Override
     public String getPhyloSpecGeneratorName() {
@@ -22,7 +23,7 @@ public class ConstantPopulationFunctionTile extends GeneratorTile<ConstantPopula
             new GeneratorTileInput<>("populationSize");
 
     @Override
-    public ConstantPopulationModel applyTile(
+    public DemographicModel applyTile(
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {

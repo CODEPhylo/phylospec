@@ -6,7 +6,6 @@ import dr.evomodel.coalescent.CoalescentLikelihood;
 import dr.evomodel.coalescent.demographicmodel.ConstantPopulationModel;
 import dr.evomodel.coalescent.demographicmodel.DemographicModel;
 import dr.evomodel.coalescent.demographicmodel.ExponentialGrowthModel;
-import dr.evomodel.coalescent.demographicmodel.LogisticGrowthModel;
 import dr.evomodel.coalescent.demographicmodel.PiecewisePopulationModel;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.model.AbstractModelLikelihood;
@@ -254,16 +253,12 @@ public class TreeModelXmlBuilder {
             return "exponentialGrowth";
         }
 
-        if (demographicModel instanceof LogisticGrowthModel) {
-            return "logisticGrowth";
-        }
-
         if (demographicModel instanceof PiecewisePopulationModel) {
             return "piecewisePopulation";
         }
 
         throw new IllegalArgumentException(
-                "Only constant, exponential, logistic, and piecewise coalescent starting-tree simulators are supported."
+                "Only constant, exponential, and piecewise coalescent starting-tree simulators are supported."
         );
     }
 
