@@ -48,6 +48,8 @@ public class YuleTile extends GeneratorTile<
         RealScalar<? extends NonNegativeReal> rootAge =
                 this.rootAgeInput.apply(beastState, indexVariables);
 
+        UnsupportedRootAge.reject(this.getRootNode(), rootAge, "Yule");
+
         Taxa taxa =
                 this.taxaInput.apply(beastState, indexVariables);
 

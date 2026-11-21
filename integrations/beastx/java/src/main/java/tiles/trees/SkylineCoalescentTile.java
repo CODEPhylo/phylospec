@@ -12,12 +12,14 @@ import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.types.RealVector;
 import tiling.params.BeastXRealVectorParam;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
+import java.util.Set;
 import java.util.List;
 
 public class SkylineCoalescentTile extends GeneratorTile<
@@ -33,8 +35,9 @@ public class SkylineCoalescentTile extends GeneratorTile<
     GeneratorTileInput<RealVector<? extends PositiveReal>, BeastXState> populationSizesInput =
             new GeneratorTileInput<>("populationSizes");
 
+    // The change times set the epoch widths once, so sampled change times would stay at their start values.
     GeneratorTileInput<RealVector<? extends PositiveReal>, BeastXState> changeTimesInput =
-            new GeneratorTileInput<>("changeTimes");
+            new GeneratorTileInput<>("changeTimes", Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     GeneratorTileInput<Taxa, BeastXState> taxaInput =
             new GeneratorTileInput<>("taxa");

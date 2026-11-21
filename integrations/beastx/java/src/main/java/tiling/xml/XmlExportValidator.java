@@ -4,7 +4,6 @@ import dr.evomodel.coalescent.CoalescentLikelihood;
 import dr.evomodel.coalescent.demographicmodel.ConstantPopulationModel;
 import dr.evomodel.coalescent.demographicmodel.DemographicModel;
 import dr.evomodel.coalescent.demographicmodel.ExponentialGrowthModel;
-import dr.evomodel.coalescent.demographicmodel.LogisticGrowthModel;
 import dr.evomodel.coalescent.demographicmodel.PiecewisePopulationModel;
 import dr.evomodel.speciation.BirthDeathGernhard08Model;
 import dr.evomodel.speciation.BirthDeathSerialSamplingModel;
@@ -190,14 +189,14 @@ public class XmlExportValidator {
         if (
                 demographicModel instanceof ConstantPopulationModel
                         || demographicModel instanceof ExponentialGrowthModel
-                        || demographicModel instanceof LogisticGrowthModel
                         || demographicModel instanceof PiecewisePopulationModel
         ) {
             return;
         }
 
         throw unsupported(
-                "Only constant-population, exponential-growth, logistic-growth, and piecewise-population Coalescent tree priors are supported."
+                "Only constant-population, exponential-growth, and piecewise-population Coalescent tree priors are supported. "
+                        + "logisticPopulationFunction follows the PhyloSpec definition, which has no BEAST X XML element yet."
         );
     }
 

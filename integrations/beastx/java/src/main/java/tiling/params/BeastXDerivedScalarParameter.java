@@ -5,6 +5,7 @@ import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import dr.inference.model.VariableListener;
 
+import java.util.List;
 import java.util.function.DoubleSupplier;
 
 /**
@@ -14,6 +15,7 @@ public class BeastXDerivedScalarParameter extends Parameter.Abstract implements 
 
     private final String id;
     private final DoubleSupplier valueSupplier;
+    private final List<Parameter> dependencies;
     private Bounds<Double> bounds =
             new Parameter.DefaultBounds(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 1);
 
@@ -25,10 +27,16 @@ public class BeastXDerivedScalarParameter extends Parameter.Abstract implements 
         super(id);
         this.id = id;
         this.valueSupplier = valueSupplier;
+        this.dependencies = List.of(dependencies);
 
         for (Parameter dependency : dependencies) {
             dependency.addParameterListener(this);
         }
+    }
+
+    /** The parameters this value is computed from. */
+    public List<Parameter> getDependencies() {
+        return this.dependencies;
     }
 
     @Override
