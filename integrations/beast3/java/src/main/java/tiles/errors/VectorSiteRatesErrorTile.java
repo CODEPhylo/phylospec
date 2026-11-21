@@ -9,8 +9,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.errors.TileApplicationError;
-import org.phylospec.tiling.tiles.TemplateTile;
-import org.phylospec.tiling.tiles.TilePriority;
+import org.phylospec.tiling.tiles.ErrorTile;
 import tiling.UnboundDistribution;
 
 /**
@@ -18,7 +17,7 @@ import tiling.UnboundDistribution;
  * not supported by BEAST.
  * Thus, this tile throws an error when it is applied successfully.
  */
-public class VectorSiteRatesErrorTile extends TemplateTile<UnboundDistribution<Alignment, TreeLikelihood>, BEASTState> {
+public class VectorSiteRatesErrorTile extends ErrorTile<UnboundDistribution<Alignment, TreeLikelihood>, BEASTState> {
 
     @Override
     protected String getPhyloSpecTemplate() {
@@ -62,10 +61,5 @@ public class VectorSiteRatesErrorTile extends TemplateTile<UnboundDistribution<A
                 "Use 'DiscreteGammaInv' to specify varying site rates, or don't specify any site rates for constant rates.",
                 List.of(
                         "Vector<Rate> siteRates ~ DiscreteGammaInv(shape=1.0, numCategories=4, invariantProportion=0.1, numSites=numSites(data))"));
-    }
-
-    @Override
-    public TilePriority getPriority() {
-        return TilePriority.ERROR;
     }
 }

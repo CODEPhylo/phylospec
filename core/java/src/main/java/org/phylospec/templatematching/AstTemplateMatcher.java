@@ -23,6 +23,7 @@ import org.phylospec.typeresolver.VariableResolver;
 public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
 
     private final AstNode templateRoot;
+    private final List<AstNode> templateNodes;
     private Stmt.Block templateBlock = Stmt.Block.NO_BLOCK;
     private final VariableResolver templateVariableResolver;
 
@@ -68,6 +69,7 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
         // initialize the template variables
 
         this.templateRoot = statements.getLast();
+        this.templateNodes = statements;
         this.templateVariableResolver = new VariableResolver(statements);
         this.templateVariableMap = new HashMap<>();
     }
@@ -93,6 +95,41 @@ public class AstTemplateMatcher implements AstVisitor<Void, Void, Void> {
             return this.templateVariableMap;
         } catch (MatchingError error) {
             return null;
+        }
+    }
+
+    /**
+     * Returns the block the statements of the template belong to.
+     */
+    public Stmt.Block getBlock() {
+        return this.templateBlock;
+    }
+
+    /**
+     * Returns all calls in the template, in the order they appear. This includes the calls in all statements
+     * of the template and the calls nested in the arguments of other calls. Decorators are not included.
+     */
+    public List<Expr.Call> getCalls() {
+        CallCollector collector = new CallCollector();
+
+        for (AstNode node : this.templateNodes) {
+            switch (node) {
+                case Stmt stmt -> stmt.accept(collector);
+                case Expr expr -> expr.accept(collector);
+                default -> {}
+            }
+        }
+
+        return collector.calls;
+    }
+
+    private static class CallCollector implements AstVisitor<Void, Void, Void> {
+        private final List<Expr.Call> calls = new ArrayList<>();
+
+        @Override
+        public Void visitCall(Expr.Call expr) {
+            this.calls.add(expr);
+            return AstVisitor.super.visitCall(expr);
         }
     }
 

@@ -7,6 +7,8 @@ import org.phylospec.annotations.PhyloSpec;
 import org.phylospec.ast.ArgumentResolutionError;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
+import org.phylospec.components.Argument__1;
+import org.phylospec.components.Generator__1;
 import org.phylospec.tiling.GeneratorTileMappingDescriptor;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.typeresolver.Stochasticity;
@@ -51,6 +53,31 @@ public abstract class GeneratorTile<T, S> extends Tile<T, S> implements Candidat
                 this.getMappingRole(),
                 this.getTypeToken(),
                 inputs);
+    }
+
+    /**
+     * Returns the engine-specification entry of this tile's generator. The namespace is only set if the tile
+     * specifies one.
+     */
+    @Override
+    public List<Generator__1> getGeneratorPatterns() {
+        GeneratorTileMappingDescriptor descriptor = this.getMappingDescriptor();
+
+        Generator__1 generator = new Generator__1();
+        generator.setName(descriptor.componentName());
+        descriptor.namespace().ifPresent(generator::setNamespace);
+
+        List<Argument__1> arguments = new ArrayList<>();
+        for (GeneratorTileMappingDescriptor.Input input : descriptor.inputs()) {
+            Argument__1 argument = new Argument__1();
+            argument.setName(input.name());
+            argument.setRequired(input.required());
+            argument.setCanBeStochastic(input.acceptedStochasticities().contains(Stochasticity.STOCHASTIC));
+            arguments.add(argument);
+        }
+        generator.setArguments(arguments);
+
+        return List.of(generator);
     }
 
     /** Annotation-driven tiles override this to expose their component category. */

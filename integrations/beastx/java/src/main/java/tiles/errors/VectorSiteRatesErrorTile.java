@@ -6,8 +6,7 @@ import dr.evomodel.substmodel.SubstitutionModel;
 import dr.evomodel.tree.TreeModel;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.errors.TileApplicationError;
-import org.phylospec.tiling.tiles.TemplateTile;
-import org.phylospec.tiling.tiles.TilePriority;
+import org.phylospec.tiling.tiles.ErrorTile;
 import org.phylospec.types.RealVector;
 import tiling.BeastXState;
 import tiling.model.UnboundDistribution;
@@ -15,7 +14,7 @@ import tiling.model.UnboundDistribution;
 import java.util.IdentityHashMap;
 import java.util.List;
 
-public class VectorSiteRatesErrorTile extends TemplateTile<UnboundDistribution<Alignment>, BeastXState> {
+public class VectorSiteRatesErrorTile extends ErrorTile<UnboundDistribution<Alignment>, BeastXState> {
 
     @Override
     protected String getPhyloSpecTemplate() {
@@ -74,10 +73,5 @@ public class VectorSiteRatesErrorTile extends TemplateTile<UnboundDistribution<A
                 "Use DiscreteGammaInv(...) for site-rate heterogeneity, or omit siteRates for constant site rates.",
                 List.of("Vector<Rate> siteRates ~ DiscreteGammaInv(shape=1.0, numCategories=4, invariantProportion=0.1, numSites=numSites(data))")
         );
-    }
-
-    @Override
-    public TilePriority getPriority() {
-        return TilePriority.ERROR;
     }
 }

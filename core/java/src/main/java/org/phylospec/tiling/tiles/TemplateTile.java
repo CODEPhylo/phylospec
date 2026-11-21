@@ -3,6 +3,10 @@ package org.phylospec.tiling.tiles;
 import java.lang.reflect.Field;
 import java.util.*;
 import org.phylospec.ast.AstNode;
+import org.phylospec.ast.Expr;
+import org.phylospec.ast.Stmt;
+import org.phylospec.components.Argument__1;
+import org.phylospec.components.Generator__1;
 import org.phylospec.templatematching.AstTemplateMatcher;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.typeresolver.Stochasticity;
@@ -32,18 +36,10 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
             VariableResolver variableResolver,
             StochasticityResolver stochasticityResolver)
             throws FailedTilingAttempt {
-        if (this.astTemplateMatchers == null) {
-            this.astTemplateMatchers = new ArrayList<>();
-
-            for (String template : this.getPhyloSpecTemplates()) {
-                this.astTemplateMatchers.add(new AstTemplateMatcher(template));
-            }
-        }
-
         // try to match any of the templates
 
         Map<String, AstNode> matchedTemplateVariables = null;
-        for (AstTemplateMatcher templateMatcher : this.astTemplateMatchers) {
+        for (AstTemplateMatcher templateMatcher : this.getAstTemplateMatchers()) {
             matchedTemplateVariables = templateMatcher.match(node, variableResolver);
 
             if (matchedTemplateVariables != null) break;
@@ -98,6 +94,72 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
 
         // for each combination, create a freshly wired up tile
         return this.getWiredUpTiles(usedInputs, compatibleInputTiles, node);
+    }
+
+    private List<AstTemplateMatcher> getAstTemplateMatchers() {
+        if (this.astTemplateMatchers == null) {
+            this.astTemplateMatchers = new ArrayList<>();
+
+            for (String template : this.getPhyloSpecTemplates()) {
+                this.astTemplateMatchers.add(new AstTemplateMatcher(template));
+            }
+        }
+
+        return this.astTemplateMatchers;
+    }
+
+    /**
+     * Returns the engine-specification entry for every call in the templates. A tile whose template spans
+     * multiple statements handles all the generators called in these statements. Templates in the mcmc block
+     * are skipped, as they configure the engine and their calls are no generators of the component library.
+     */
+    @Override
+    public List<Generator__1> getGeneratorPatterns() {
+        List<Generator__1> generators = new ArrayList<>();
+
+        for (AstTemplateMatcher templateMatcher : this.getAstTemplateMatchers()) {
+            if (templateMatcher.getBlock() instanceof Stmt.Block.Mcmc) continue;
+
+            for (Expr.Call templateCall : templateMatcher.getCalls()) {
+                generators.add(this.getGeneratorPattern(templateCall));
+            }
+        }
+
+        return generators;
+    }
+
+    private Generator__1 getGeneratorPattern(Expr.Call templateCall) {
+        Generator__1 generator = new Generator__1();
+        generator.setName(templateCall.functionName);
+
+        List<Argument__1> arguments = new ArrayList<>();
+        for (Expr.Argument templateArgument : templateCall.arguments) {
+            Argument__1 argument = new Argument__1();
+            argument.setName(templateArgument.name);
+            argument.setRequired(!(templateArgument.expression instanceof Expr.OptionalTemplateVariable));
+            argument.setCanBeStochastic(this.canBeStochastic(templateArgument.expression));
+            arguments.add(argument);
+        }
+        generator.setArguments(arguments);
+
+        return generator;
+    }
+
+    /**
+     * Returns whether the tile input of the template variable accepts stochastic values. We are optimistic if
+     * the expression is no template variable or has no corresponding input.
+     */
+    private boolean canBeStochastic(Expr expression) {
+        String variableName =
+                switch (expression) {
+                    case Expr.TemplateVariable variable -> variable.variableName;
+                    case Expr.OptionalTemplateVariable variable -> variable.variableName;
+                    default -> null;
+                };
+
+        return this.getTileInputs().stream()
+                .filter(input -> input.getKey().equals(variableName))
+                .allMatch(input -> input.getAcceptedStochasticities().contains(Stochasticity.STOCHASTIC));
     }
 
     @Override

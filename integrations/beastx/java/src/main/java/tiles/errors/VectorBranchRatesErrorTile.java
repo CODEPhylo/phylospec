@@ -7,8 +7,7 @@ import dr.evomodel.tree.TreeModel;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.Partial;
 import org.phylospec.tiling.errors.TileApplicationError;
-import org.phylospec.tiling.tiles.TemplateTile;
-import org.phylospec.tiling.tiles.TilePriority;
+import org.phylospec.tiling.tiles.ErrorTile;
 import org.phylospec.types.RealVector;
 import tiling.BeastXState;
 import tiling.model.UnboundDistribution;
@@ -16,7 +15,7 @@ import tiling.model.UnboundDistribution;
 import java.util.IdentityHashMap;
 import java.util.List;
 
-public class VectorBranchRatesErrorTile extends TemplateTile<UnboundDistribution<Alignment>, BeastXState> {
+public class VectorBranchRatesErrorTile extends ErrorTile<UnboundDistribution<Alignment>, BeastXState> {
 
     @Override
     protected String getPhyloSpecTemplate() {
@@ -75,10 +74,5 @@ public class VectorBranchRatesErrorTile extends TemplateTile<UnboundDistribution
                 "Use StrictClock(...) or RelaxedClock(...) for branch-rate models.",
                 List.of("Vector<Rate> branchRates ~ StrictClock(rate=1.0)")
         );
-    }
-
-    @Override
-    public TilePriority getPriority() {
-        return TilePriority.ERROR;
     }
 }
