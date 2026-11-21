@@ -77,6 +77,18 @@ public class BeastXSampledStructuralInputsTest {
     }
 
     @Test
+    public void rejectsSampledTruncationBound() {
+        assertRejected(
+                """
+                PositiveReal b ~ LogNormal(logMean=1.0, logSd=0.5)
+                Real x ~ Truncated(base=Normal(mean=0.0, sd=1.0), lower=0.0, upper=b)
+                """,
+                "upper",
+                "Truncated"
+        );
+    }
+
+    @Test
     public void rejectsSampledNumberOfRateCategories() {
         assertRejected(
                 PRIMATE_TREE + """

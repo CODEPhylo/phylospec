@@ -4,6 +4,8 @@ import dr.inference.model.CompoundLikelihood;
 import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
 import dr.util.Attribute;
+import org.apache.commons.math.MathException;
+import org.apache.commons.math.special.Erf;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -74,7 +76,25 @@ public class BeastXGeneratorCoverageTest {
                         PositiveReal x ~ LogNormal(mean=m, logSd=s)
                         """,
                         state(Map.of("x", 1.5, "m", 2.0, "s", 0.5), logNormalWithMean(1.5, 2.0, 0.5)),
-                        state(Map.of("x", 1.5, "m", 3.5, "s", 1.2), logNormalWithMean(1.5, 3.5, 1.2)))
+                        state(Map.of("x", 1.5, "m", 3.5, "s", 1.2), logNormalWithMean(1.5, 3.5, 1.2))),
+                row("Truncated Normal, fixed",
+                        "Real x ~ Truncated(base=Normal(mean=0.5, sd=1.0), lower=0.0, upper=2.0)",
+                        state(Map.of("x", 1.0), truncatedNormal(1.0, 0.5, 1.0, 0.0, 2.0)),
+                        state(Map.of("x", 0.2), truncatedNormal(0.2, 0.5, 1.0, 0.0, 2.0))),
+                row("Truncated Normal, sampled base mean",
+                        """
+                        Real m ~ Normal(mean=0.0, sd=1.0)
+                        Real x ~ Truncated(base=Normal(mean=m, sd=1.0), lower=0.0, upper=2.0)
+                        """,
+                        state(Map.of("x", 1.0, "m", 0.5), truncatedNormal(1.0, 0.5, 1.0, 0.0, 2.0)),
+                        state(Map.of("x", 1.0, "m", -1.5), truncatedNormal(1.0, -1.5, 1.0, 0.0, 2.0))),
+                row("Truncated Normal, lower bound only, sampled base sd",
+                        """
+                        PositiveReal s ~ LogNormal(logMean=0.0, logSd=0.5)
+                        Real x ~ Truncated(base=Normal(mean=1.0, sd=s), lower=0.0)
+                        """,
+                        state(Map.of("x", 0.5, "s", 0.5), truncatedNormal(0.5, 1.0, 0.5, 0.0, Double.POSITIVE_INFINITY)),
+                        state(Map.of("x", 0.5, "s", 2.0), truncatedNormal(0.5, 1.0, 2.0, 0.0, Double.POSITIVE_INFINITY)))
         );
     }
 
@@ -209,6 +229,27 @@ public class BeastXGeneratorCoverageTest {
     /** LogNormal with a real-space mean and a log-space standard deviation. */
     private static double logNormalWithMean(double x, double mean, double logSd) {
         return logNormal(x, Math.log(mean) - 0.5 * logSd * logSd, logSd);
+    }
+
+    private static double normal(double x, double mean, double sd) {
+        double z = (x - mean) / sd;
+        return -Math.log(sd * Math.sqrt(2.0 * Math.PI)) - 0.5 * z * z;
+    }
+
+    private static double normalCdf(double x, double mean, double sd) {
+        if (x == Double.POSITIVE_INFINITY) {
+            return 1.0;
+        }
+        try {
+            return 0.5 * (1.0 + Erf.erf((x - mean) / (sd * Math.sqrt(2.0))));
+        } catch (MathException exception) {
+            throw new IllegalStateException(exception);
+        }
+    }
+
+    /** Normal restricted to [lower, upper]: the Normal density divided by the probability of that interval. */
+    private static double truncatedNormal(double x, double mean, double sd, double lower, double upper) {
+        return normal(x, mean, sd) - Math.log(normalCdf(upper, mean, sd) - normalCdf(lower, mean, sd));
     }
 
     /* helpers */

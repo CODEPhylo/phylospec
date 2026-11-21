@@ -2,20 +2,22 @@ package tiles.distributions;
 
 import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.model.Parameter;
-import dr.inference.model.TruncatedDistributionLikelihood;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.Real;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.types.RealScalar;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
+import tiling.model.BeastXTruncatedLikelihood;
 import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
+import java.util.Set;
 
 public class TruncatedTile extends GeneratorTile<
-        BoundDistribution<BeastXRealScalarParam<Real>, TruncatedDistributionLikelihood>,
+        BoundDistribution<BeastXRealScalarParam<Real>, BeastXTruncatedLikelihood>,
         BeastXState
         > {
 
@@ -31,13 +33,13 @@ public class TruncatedTile extends GeneratorTile<
             new GeneratorTileInput<>("base");
 
     GeneratorTileInput<RealScalar<? extends Real>, BeastXState> lowerInput =
-            new GeneratorTileInput<>("lower", false);
+            new GeneratorTileInput<>("lower", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     GeneratorTileInput<RealScalar<? extends Real>, BeastXState> upperInput =
-            new GeneratorTileInput<>("upper", false);
+            new GeneratorTileInput<>("upper", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
-    public BoundDistribution<BeastXRealScalarParam<Real>, TruncatedDistributionLikelihood> applyTile(
+    public BoundDistribution<BeastXRealScalarParam<Real>, BeastXTruncatedLikelihood> applyTile(
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
@@ -65,11 +67,11 @@ public class TruncatedTile extends GeneratorTile<
             );
         }
 
-        TruncatedDistributionLikelihood likelihood =
-                new TruncatedDistributionLikelihood(
+        BeastXTruncatedLikelihood likelihood =
+                new BeastXTruncatedLikelihood(
                         base.distribution,
-                        new Parameter.Default(lowerValue),
-                        new Parameter.Default(upperValue)
+                        lowerValue,
+                        upperValue
                 );
 
         double initialValue =
@@ -106,7 +108,8 @@ public class TruncatedTile extends GeneratorTile<
             double lower,
             double upper
     ) {
-        if (candidate >= lower && candidate <= upper) {
+        // BEAST X gives a value on a bound zero density, so the start must be strictly inside.
+        if (candidate > lower && candidate < upper) {
             return candidate;
         }
 
