@@ -13,12 +13,15 @@ import dr.evomodel.substmodel.codon.GY94CodonModel;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.model.Parameter;
 import org.phylospec.ast.Expr;
+import org.phylospec.domain.NonNegativeReal;
 import org.phylospec.tiling.Partial;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
+import org.phylospec.types.RealScalar;
 import tiling.BeastXState;
 import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
 import tiling.model.UnboundDistribution;
+import tiling.params.BeastXRealScalarParam;
 
 import java.util.IdentityHashMap;
 
@@ -41,8 +44,11 @@ public class PhyloCTMCTile extends GeneratorTile<
     GeneratorTileInput<BranchRateModel, BeastXState> branchRateModelInput =
             new GeneratorTileInput<>("branchRates", false);
 
-    GeneratorTileInput<Partial<GammaSiteRateModel, SubstitutionModel>, BeastXState> siteRateModelInput =
+    GeneratorTileInput<Partial<GammaSiteRateModel, Parameter>, BeastXState> siteRateModelInput =
             new GeneratorTileInput<>("siteRates", false);
+
+    GeneratorTileInput<RealScalar<? extends NonNegativeReal>, BeastXState> rateInput =
+            new GeneratorTileInput<>("rate", false);
 
     @Override
     public UnboundDistribution<Alignment> applyTile(
@@ -58,16 +64,26 @@ public class PhyloCTMCTile extends GeneratorTile<
         BranchRateModel branchRateModel =
                 this.branchRateModelInput.apply(beastState, indexVariables);
 
-        Partial<GammaSiteRateModel, SubstitutionModel> partialSiteRateModel =
+        Partial<GammaSiteRateModel, Parameter> partialSiteRateModel =
                 this.siteRateModelInput.apply(beastState, indexVariables);
 
-        GammaSiteRateModel siteRateModel;
-        if (partialSiteRateModel != null) {
-            siteRateModel = partialSiteRateModel.complete(substitutionModel);
-        } else {
-            siteRateModel = new GammaSiteRateModel("siteRateModel");
-            siteRateModel.setSubstitutionModel(substitutionModel);
-        }
+        RealScalar<? extends NonNegativeReal> rate =
+                this.rateInput.apply(beastState, indexVariables);
+
+        // The partition rate multiplies every branch rate. BEAST X applies it as the
+        // relative rate of the site model, which scales all site rates equally.
+        Parameter relativeRateParameter =
+                rate == null
+                        ? new Parameter.Default(1.0)
+                        : toParameter(rate);
+
+        GammaSiteRateModel siteRateModel =
+                partialSiteRateModel != null
+                        ? partialSiteRateModel.complete(relativeRateParameter)
+                        // Same as new GammaSiteRateModel(name), plus the relative rate.
+                        : new GammaSiteRateModel("siteRateModel", relativeRateParameter, 1.0, null, 0, null);
+
+        siteRateModel.setSubstitutionModel(substitutionModel);
 
         HomogeneousBranchModel branchModel =
                 new HomogeneousBranchModel(substitutionModel);
@@ -99,6 +115,14 @@ public class PhyloCTMCTile extends GeneratorTile<
 
             beastState.addLikelihoodDistribution(likelihoodSpec, id);
         });
+    }
+
+    private static Parameter toParameter(RealScalar<? extends NonNegativeReal> scalar) {
+        if (scalar instanceof BeastXRealScalarParam<?> beastXScalar) {
+            return beastXScalar.getParameter();
+        }
+
+        return new Parameter.Default(scalar.get());
     }
 
     private Alignment observedAlignmentForSubstitutionModel(
