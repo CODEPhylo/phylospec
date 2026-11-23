@@ -41,6 +41,35 @@ public class TreeModelXmlBuilder {
         );
     }
 
+    /**
+     * Writes a fixed tree, such as Tree tree = fromNewick(...), that has no prior. Its node heights
+     * come from the Newick branch lengths (usingHeights): without it, BEAST X would move every tip
+     * to height 0 and change the branch lengths of a non-ultrametric tree.
+     */
+    public void addFixedTreeDefinitions(
+            XmlPlan plan,
+            BeastXState state,
+            TreeModel treeModel,
+            Set<String> emittedTaxonIds
+    ) {
+        addTaxonDefinitions(plan, treeModel, emittedTaxonIds);
+
+        plan.add(
+                XmlPlan.Section.STARTING_TREES,
+                XmlElement.element("newick")
+                        .withId(startingTreeId(treeModel))
+                        .withAttribute("units", "years")
+                        .withAttribute("usingDates", "false")
+                        .withAttribute("usingHeights", "true")
+                        .withText(ensureTrailingSemicolon(treeModel.getNewick()))
+        );
+
+        plan.add(
+                XmlPlan.Section.TREE_MODELS,
+                treeModelDefinition(state, treeModel, null)
+        );
+    }
+
     private void addTaxonDefinitions(
             XmlPlan plan,
             TreeModel treeModel,
