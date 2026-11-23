@@ -1,7 +1,6 @@
 package tiles.sitemodels;
 
 import dr.evomodel.siteratemodel.GammaSiteRateModel;
-import dr.evomodel.substmodel.SubstitutionModel;
 import dr.inference.model.Parameter;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.NonNegativeInt;
@@ -20,7 +19,7 @@ import java.util.IdentityHashMap;
 import java.util.Set;
 
 public class SiteModelTile extends GeneratorTile<
-        Partial<GammaSiteRateModel, SubstitutionModel>,
+        Partial<GammaSiteRateModel, Parameter>,
         BeastXState
         > {
 
@@ -43,7 +42,7 @@ public class SiteModelTile extends GeneratorTile<
             new GeneratorTileInput<>("numSites");
 
     @Override
-    public Partial<GammaSiteRateModel, SubstitutionModel> applyTile(
+    public Partial<GammaSiteRateModel, Parameter> applyTile(
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
@@ -58,9 +57,6 @@ public class SiteModelTile extends GeneratorTile<
 
         this.numSitesInput.apply(beastState, indexVariables);
 
-        Parameter relativeRateParameter =
-                new Parameter.Default(1.0);
-
         Parameter shapeParameter =
                 toParameter(shape);
 
@@ -69,22 +65,18 @@ public class SiteModelTile extends GeneratorTile<
                         ? null
                         : toParameter(invariantProportion);
 
-        GammaSiteRateModel siteRateModel =
-                new GammaSiteRateModel(
+        // PhyloCTMC completes the site model with its partition rate, which BEAST X
+        // only registers as a model variable when it is passed to the constructor.
+        return new Partial<>(
+                null,
+                (unused, relativeRateParameter) -> new GammaSiteRateModel(
                         "siteRateModel",
                         relativeRateParameter,
                         1.0,
                         shapeParameter,
                         numCategories.get(),
                         invariantProportionParameter
-                );
-
-        return new Partial<>(
-                siteRateModel,
-                (partialSiteRateModel, substitutionModel) -> {
-                    partialSiteRateModel.setSubstitutionModel(substitutionModel);
-                    return partialSiteRateModel;
-                }
+                )
         );
     }
 

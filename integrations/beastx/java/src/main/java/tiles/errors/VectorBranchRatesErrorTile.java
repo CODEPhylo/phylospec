@@ -4,6 +4,7 @@ import dr.evolution.alignment.Alignment;
 import dr.evomodel.siteratemodel.GammaSiteRateModel;
 import dr.evomodel.substmodel.SubstitutionModel;
 import dr.evomodel.tree.TreeModel;
+import dr.inference.model.Parameter;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.Partial;
 import org.phylospec.tiling.errors.TileApplicationError;
@@ -61,7 +62,7 @@ public class VectorBranchRatesErrorTile extends TemplateTile<UnboundDistribution
     TemplateTileInput<RealVector<?>, BeastXState> branchRatesInput =
             new TemplateTileInput<>("$branchRates");
 
-    TemplateTileInput<? extends Partial<GammaSiteRateModel, SubstitutionModel>, BeastXState> siteRatesInput =
+    TemplateTileInput<? extends Partial<GammaSiteRateModel, Parameter>, BeastXState> siteRatesInput =
             new TemplateTileInput<>("$$siteRates", false);
 
     @Override
