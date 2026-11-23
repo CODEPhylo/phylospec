@@ -36,17 +36,6 @@ public class McmcBlockValidator {
             "treeLogger",
             List.of(new Parameter("file", true), new Parameter("tree", true), new Parameter("logEvery", false)));
 
-    /// Settings which are not part of the mcmc block, mapped to a hint on where they belong.
-    private static final Map<String, String> MISPLACED_SETTINGS = Map.of(
-            "chainLength",
-            "Declare a sampler instead, for example `Sampler sampler = mcmc(chainLength=1000000)`.",
-            "defaultLogEvery",
-            "Set the interval of each logger instead, for example `Logger screenLogger = screenLogger(logEvery=1000)`.",
-            "randomSeed",
-            "Set the seed on the command line with `--seed`.",
-            "outputPrefix",
-            "Set the output location on the command line with `--out` and `--run-name`.");
-
     /**
      * Validates all statements of the mcmc block among the given statements.
      * @throws TileApplicationError if the block is not valid
@@ -83,13 +72,11 @@ public class McmcBlockValidator {
             return call;
         }
 
-        String hint = "Declare a sampler with `mcmc` or a logger with `screenLogger`, `fileLogger` or `treeLogger`."
-                + " Settings of a single engine belong in the block of that engine.";
-        if (statement instanceof Stmt.Assignment assignment && MISPLACED_SETTINGS.containsKey(assignment.name)) {
-            hint = MISPLACED_SETTINGS.get(assignment.name);
-        }
-
-        throw new TileApplicationError(statement, "Only samplers and loggers can be declared in the mcmc block.", hint);
+        throw new TileApplicationError(
+                statement,
+                "Only samplers and loggers can be declared in the mcmc block.",
+                "Declare a sampler with `mcmc` or a logger with `screenLogger`, `fileLogger` or `treeLogger`."
+                        + " Settings of a single engine belong in the block of that engine.");
     }
 
     /**

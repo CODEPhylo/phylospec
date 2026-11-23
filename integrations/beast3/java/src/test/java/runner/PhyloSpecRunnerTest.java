@@ -94,7 +94,7 @@ class PhyloSpecRunnerTest {
 
         assertDiagnostic(failure, PhyloSpecDiagnostic.Stage.MAPPING);
         assertTrue(failure.diagnostic().error().description().contains("Only samplers and loggers"));
-        assertTrue(failure.diagnostic().error().hint().contains("mcmc(chainLength="));
+        assertTrue(failure.diagnostic().error().hint().contains("Declare a sampler"));
     }
 
     @Test

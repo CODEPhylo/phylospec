@@ -54,10 +54,10 @@ public class McmcBlockValidatorTest {
 
     @Test
     public void rejectsSettingsThatAreNotPartOfTheBlock() {
-        assertFails("mcmc {\nInteger chainLength = 1000\n}", "Only samplers and loggers", "mcmc(chainLength=");
-        assertFails("mcmc {\nInteger defaultLogEvery = 10\n}", "Only samplers and loggers", "logEvery");
-        assertFails("mcmc {\nInteger randomSeed = 42\n}", "Only samplers and loggers", "--seed");
-        assertFails("mcmc {\nString outputPrefix = \"run\"\n}", "Only samplers and loggers", "--out");
+        assertFails("mcmc {\nInteger chainLength = 1000\n}", "Only samplers and loggers", "Declare a sampler");
+        assertFails("mcmc {\nInteger defaultLogEvery = 10\n}", "Only samplers and loggers", "Declare a sampler");
+        assertFails("mcmc {\nInteger randomSeed = 42\n}", "Only samplers and loggers", "Declare a sampler");
+        assertFails("mcmc {\nString outputPrefix = \"run\"\n}", "Only samplers and loggers", "Declare a sampler");
         assertFails("mcmc {\nReal treeScaleWeight = 2.0\n}", "Only samplers and loggers", "block of that engine");
         assertFails("mcmc {\nReal x ~ Normal(mean=0.0, sd=1.0)\n}", "Only samplers and loggers", "Declare a sampler");
         assertFails("mcmc {\nReal x = log(2.0)\n}", "Only samplers and loggers", "Declare a sampler");
