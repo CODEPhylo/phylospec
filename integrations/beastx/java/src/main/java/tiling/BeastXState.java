@@ -13,6 +13,7 @@ import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.LoggerSpec;
 import org.phylospec.tiling.mcmc.McmcSamplerSpec;
+import org.phylospec.tiling.mcmc.RunOutputs;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import tiling.model.StartingTreeSpec;
@@ -336,6 +337,11 @@ public class BeastXState {
         return this.samplerSpec != null ? this.samplerSpec : new McmcSamplerSpec();
     }
 
+    /** Returns the prefix of the default output files. */
+    public String getOutputPrefix() {
+        return this.outputPrefix != null ? this.outputPrefix : this.runName;
+    }
+
     /** Fill only missing logger kinds on the freshly built export state, before XML planning. */
     public void configureDefaultXmlLoggers(String fallbackPrefix) {
         String prefix = outputPrefix == null ? fallbackPrefix : outputPrefix;
@@ -343,7 +349,7 @@ public class BeastXState {
             this.addScreenLoggerSpec(new ScreenLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, null, null));
         }
         if (this.fileLoggerSpecs.isEmpty()) {
-            this.addFileLoggerSpec(new FileLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, prefix + ".log", null, null));
+            this.addFileLoggerSpec(new FileLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, RunOutputs.getLogFile(prefix), null, null));
         }
         if (this.treeLoggerSpecs.isEmpty()) {
             this.treeLoggerSpecs.addAll(this.getDefaultTreeLoggerSpecs(prefix));
@@ -413,7 +419,7 @@ public class BeastXState {
 
         List<String> trees = this.treeModelsByPhyloSpecName.keySet().stream().sorted().toList();
         for (String tree : trees) {
-            String fileName = trees.size() == 1 ? prefix + ".trees" : prefix + "-" + tree + ".trees";
+            String fileName = trees.size() == 1 ? RunOutputs.getTreeFile(prefix) : RunOutputs.getTreeFile(prefix, tree);
             specs.add(new TreeLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, fileName, tree));
         }
 

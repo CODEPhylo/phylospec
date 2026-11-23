@@ -251,14 +251,12 @@ class FromCSVTileTest {
         CliResult check = launch(callerDirectory, "check", source.toString());
         assertEquals(0, check.exitCode(), check.stdout() + "\n" + check.stderr());
         assertTrue(check.stdout().contains("Check passed"));
-        assertFalse(Files.exists(source.resolveSibling("runs")));
+        assertFalse(Files.exists(
+                callerDirectory.resolve(source.getFileName().toString().replace(".phylospec", ".run"))));
 
         CliResult run = launch(callerDirectory, "run", source.toString(), "--seed", "42");
         assertEquals(0, run.exitCode(), run.stdout() + "\n" + run.stderr());
-        Path results;
-        try (var runs = Files.list(source.resolveSibling("runs"))) {
-            results = runs.findFirst().orElseThrow();
-        }
+        Path results = callerDirectory.resolve(source.getFileName().toString().replace(".phylospec", ".run"));
         JsonNode record =
                 new ObjectMapper().readTree(results.resolve("run.json").toFile());
         assertEquals("succeeded", record.path("status").asText(), record.toPrettyString());

@@ -68,10 +68,7 @@ class GompertzCliDistributionIT {
                 "--seed", "12345"));
         assertEquals(0, completed.exitCode(), completed.details());
         assertTrue(completed.stdout().contains("Run completed"), completed.details());
-        Path run;
-        try (var runs = Files.list(source.resolveSibling("runs"))) {
-            run = runs.findFirst().orElseThrow();
-        }
+        Path run = working.resolve("gompertz.run");
         JsonNode record = JSON.readTree(run.resolve("run.json").toFile());
         assertEquals("succeeded", record.path("status").asText(), record.toPrettyString());
         assertTrue(record.path("completionConfirmed").asBoolean());
@@ -127,9 +124,7 @@ class GompertzCliDistributionIT {
         for (JsonNode jar : bundle.path("jars")) {
             assertEquals(hash(Path.of(jar.path("path").asText())), jar.path("sha256").asText());
         }
-        Map<Path, String> after = hashes(adapter);
-        after.keySet().removeIf(path -> path.startsWith("examples/runs"));
-        assertEquals(before, after, "run must only add its record beside the example");
+        assertEquals(before, hashes(adapter), "run must write only to the working directory");
     }
 
     private static void assertTrace(Path trace) throws Exception {

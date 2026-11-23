@@ -68,7 +68,7 @@ After rebuilding, extract into a fresh directory and restart the command.
 
 The script resolves `data/four-taxa.nex` beside itself. A successful run writes
 `gompertz.log`, `gompertz.trees` and `gompertz.state.xml` to the working directory,
-and saves `model.phylospec`, `run.json` and `console.log` in `runs/` beside the script.
+and saves `model.phylospec`, `run.json` and `console.log` next to them in `gompertz.run/`.
 The trace includes all four population parameters, prior, likelihood, and
 posterior, with samples 0 through 30. `run.json` records the actual provider JARs,
 bundle hashes, input hash, settings, and completion status.

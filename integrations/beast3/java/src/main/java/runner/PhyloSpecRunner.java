@@ -6,7 +6,6 @@ import beast.base.parser.XMLParserException;
 import beast.base.parser.XMLProducer;
 import beast.base.util.Randomizer;
 import beastconfig.BEASTState;
-import beastconfig.OutputPaths;
 import beastconfig.ReportingTreeLikelihood;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -44,6 +43,7 @@ import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.TileCatalog;
 import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.mcmc.RunOutputs;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
@@ -282,11 +282,11 @@ public class PhyloSpecRunner {
         String checking = "[1/4] Checking syntax, static types and BEAST 3 mappings...";
         progress.accept(checking);
         CheckedModel checked = check(warningHandler);
-        OutputPaths.checkRuntimeOverrides();
+        RunOutputs.checkRuntimeOverrides();
         Path outputDirectory = Path.of("").toAbsolutePath();
         // reject an invalid prefix before claiming a directory
-        new OutputPaths(outputDirectory).resolve(runName);
-        OutputPaths.createRunDirectory(runDirectory);
+        new RunOutputs(outputDirectory).resolve(runName);
+        RunOutputs.claimRecordDirectory(runDirectory);
         RunRecord record =
                 RunRecord.create(runDirectory, source, sourceFile, sourceDirectory, checked.catalog, adapterBundles);
         AtomicBoolean cancellationRequested = new AtomicBoolean();
@@ -393,7 +393,7 @@ public class PhyloSpecRunner {
         List<Logger> loggers = mcmc.loggersInput.get();
         String declaredStateFile = beastState.getSamplerSpec().stateFile();
         String stateFile = beastState.resolveOutputPath(
-                declaredStateFile != null ? declaredStateFile : beastState.outputPrefix + ".state.xml");
+                declaredStateFile != null ? declaredStateFile : RunOutputs.getStateFile(beastState.outputPrefix));
         beastState.prepareOutputFiles(loggers, stateFile);
         mcmc.setStateFile(stateFile, false);
 

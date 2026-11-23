@@ -4,6 +4,7 @@ import dr.evomodel.tree.TreeModel;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.mcmc.LoggerSpec;
+import org.phylospec.tiling.mcmc.RunOutputs;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.typeresolver.Stochasticity;
@@ -37,7 +38,7 @@ public class TreeLoggerTile extends TemplateTile<Void, BeastXState> {
     @Override
     protected Void applyTile(BeastXState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         String fileName = this.fileNameInput.apply(beastState, indexVariables);
-        if (fileName == null) fileName = (beastState.outputPrefix != null ? beastState.outputPrefix : beastState.runName) + ".trees";
+        if (fileName == null) fileName = RunOutputs.getTreeFile(beastState.getOutputPrefix());
         TreeModel tree = this.treeInput.apply(beastState, indexVariables);
         Integer logEvery = this.logEveryInput.apply(beastState, indexVariables);
 

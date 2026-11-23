@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.LoggerSpec;
+import org.phylospec.tiling.mcmc.RunOutputs;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import tiling.RenamedLoggable;
@@ -33,16 +34,20 @@ public class LoggerSelector {
         }
         if (beastState.fileLoggerSpecs.isEmpty()) {
             beastState.addFileLoggerSpec(new FileLoggerSpec<>(
-                    LoggerSpec.DEFAULT_LOG_EVERY, beastState.outputPrefix + ".log", loggableObjects, null));
+                    LoggerSpec.DEFAULT_LOG_EVERY,
+                    RunOutputs.getLogFile(beastState.outputPrefix),
+                    loggableObjects,
+                    null));
         }
 
         List<Tree> loggableTrees = getLoggableTrees(beastState);
 
         if (!loggableTrees.isEmpty() && beastState.treeLoggerSpecs.isEmpty()) {
             for (Tree tree : loggableTrees) {
-                String name = loggableTrees.size() == 1 ? "" : "-" + tree.getID();
-                beastState.addTreeLoggerSpec(new TreeLoggerSpec<>(
-                        LoggerSpec.DEFAULT_LOG_EVERY, beastState.outputPrefix + name + ".trees", tree));
+                String fileName = loggableTrees.size() == 1
+                        ? RunOutputs.getTreeFile(beastState.outputPrefix)
+                        : RunOutputs.getTreeFile(beastState.outputPrefix, tree.getID());
+                beastState.addTreeLoggerSpec(new TreeLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, fileName, tree));
             }
         }
     }

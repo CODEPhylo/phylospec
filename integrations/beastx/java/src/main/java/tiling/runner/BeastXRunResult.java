@@ -3,6 +3,7 @@ package tiling.runner;
 import dr.inference.mcmc.MCMC;
 import tiling.BeastXModel;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
+import org.phylospec.tiling.mcmc.RunOutputs;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import tiling.BeastXState;
 
@@ -75,7 +76,7 @@ public record BeastXRunResult(
                 this.beastState.outputPrefix != null
                         && this.beastState.fileLoggerSpecs.isEmpty()
         ) {
-            paths.add(Path.of(this.beastState.outputPrefix + ".log"));
+            paths.add(Path.of(RunOutputs.getLogFile(this.beastState.outputPrefix)));
         }
 
         return List.copyOf(paths);

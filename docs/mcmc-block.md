@@ -81,7 +81,7 @@ Entries marked *new* are proposed, all others exist.
 | Option                | Commands           | Purpose                                             |
 | --------------------- | ------------------ | --------------------------------------------------- |
 | *--engine &lt;id&gt;* | check, export, run | Engine to use: beast3 (default) or beastx.          |
-| *--run-name &lt;prefix&gt;* | run          | Prefix of the default output files in the run directory. Defaults to the name of the model file. |
+| *--run-name &lt;name&gt;* | run                | Name of the output files and the run record. Defaults to the name of the model file. |
 | *--seed &lt;n&gt;*    | export, run        | Random seed. If not given, *run* chooses one uniformly and *export* sets none. |
 | *--library &lt;ids&gt;* | check, export, run | Tile libraries to use, in order of preference.    |
 | *--adapter-path &lt;dir&gt;* | check, export, run | Directory of an unpacked adapter to load. Can be repeated. |
@@ -90,6 +90,6 @@ Entries marked *new* are proposed, all others exist.
 | *--version*           |                    | Show the versions.                                  |
 
 
-*Outputs*: logs, trees and state files are written to the working folder. A run record (*run.json*, *console.log* and a copy of the model) is saved beside the model in *runs/&lt;name&gt;-&lt;run-id&gt;/*. Existing outputs are never overwritten.
+*Outputs*: logs, trees and state files are written to the working folder, with the run record next to them in *&lt;name&gt;.run/*. See [Output Files](output-files.md).
 
 *Replicates*: run the same model multiple times with different *--seed* and *--run-name* values.

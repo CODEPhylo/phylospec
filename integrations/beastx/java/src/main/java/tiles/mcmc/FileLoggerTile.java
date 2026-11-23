@@ -3,6 +3,7 @@ package tiles.mcmc;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.LoggerSpec;
+import org.phylospec.tiling.mcmc.RunOutputs;
 import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.tiling.tiles.TileInput;
 import org.phylospec.typeresolver.Stochasticity;
@@ -41,7 +42,7 @@ public class FileLoggerTile extends TemplateTile<Void, BeastXState> {
     @Override
     protected Void applyTile(BeastXState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         String fileName = this.fileNameInput.apply(beastState, indexVariables);
-        if (fileName == null) fileName = (beastState.outputPrefix != null ? beastState.outputPrefix : beastState.runName) + ".log";
+        if (fileName == null) fileName = RunOutputs.getLogFile(beastState.getOutputPrefix());
         Integer logEvery = this.logEveryInput.apply(beastState, indexVariables);
         LoggerParameterNames parameters = this.parametersInput.apply(beastState, indexVariables);
         List<String> parameterNames = this.parameterNamesInput.apply(beastState, indexVariables);

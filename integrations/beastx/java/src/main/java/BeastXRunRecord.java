@@ -16,6 +16,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HexFormat;
+import org.phylospec.tiling.mcmc.RunOutputs;
 import tiling.BeastXState;
 
 /** Journal for the isolated BEAST X process. All result paths are relative to the managed run. */
@@ -88,14 +89,17 @@ final class BeastXRunRecord {
                 .put("sha256", sha256(publishedXml));
         ObjectNode settings = data.putObject("settings").put("chainLength", state.getSamplerSpec().chainLength())
                 .put("randomSeed", effectiveSeed)
-                .put("outputPrefix", state.outputPrefix == null ? state.runName : state.outputPrefix);
+                .put("runName", state.runName);
         ArrayNode loggers = settings.putArray("loggers");
         for (var spec : state.screenLoggerSpecs) {
             loggers.addObject().put("kind", "screen").put("logEvery", spec.logEvery()).putNull("path");
         }
+        var files = new ArrayList<String>();
+        for (var spec : state.fileLoggerSpecs) files.add(spec.fileName());
+        for (var spec : state.treeLoggerSpecs) files.add(spec.fileName());
+        new RunOutputs(Path.of("")).prepare(files, null);
         for (var spec : state.fileLoggerSpecs) addLogger(loggers, "log", spec.fileName(), spec.logEvery());
         for (var spec : state.treeLoggerSpecs) addLogger(loggers, "tree", spec.fileName(), spec.logEvery());
-        prepareLoggerFiles();
         save();
     }
 
@@ -105,25 +109,9 @@ final class BeastXRunRecord {
     }
 
     private void addLogger(ArrayNode loggers, String kind, String name, long every) throws IOException {
-        if (name == null || name.isBlank()) throw new IOException("An output filename is required.");
-        Path file = Path.of(name).toAbsolutePath().normalize();
         ObjectNode logger = loggers.addObject().put("kind", kind).put("logEvery", every)
-                .put("path", file.toString());
+                .put("path", RunOutputs.getRecordPath(directory, Path.of(name)));
         data.withArray("expectedOutputs").add(logger.deepCopy());
-    }
-
-    /** Probe the native filesystem, including case-insensitive aliases, before any native logger can overwrite a file. */
-    private void prepareLoggerFiles() throws IOException {
-        var probes = new ArrayList<Path>();
-        try {
-            for (var entry : data.withArray("expectedOutputs")) {
-                Path file = directory.resolve(entry.path("path").asText());
-                Files.createDirectories(file.getParent());
-                probes.add(Files.createFile(file));
-            }
-        } finally {
-            for (Path probe : probes) Files.delete(probe);
-        }
     }
 
     void succeeded(long completedStates) throws IOException {
@@ -133,7 +121,7 @@ final class BeastXRunRecord {
             throw new IOException("BEAST X stopped after " + completedStates + " of " + expected + " steps.");
         }
         for (var entry : data.withArray("expectedOutputs")) {
-            Path log = directory.resolve(entry.path("path").asText());
+            Path log = directory.resolve(entry.path("path").asText()).normalize();
             if (!Files.isRegularFile(log, LinkOption.NOFOLLOW_LINKS) || Files.size(log) == 0) {
                 throw new IOException("BEAST X did not produce the expected log: " + log);
             }
@@ -153,9 +141,10 @@ final class BeastXRunRecord {
     private void finish(String status) throws IOException {
         ArrayNode generated = data.putArray("generatedOutputs");
         for (var entry : data.withArray("expectedOutputs")) {
-            Path file = Path.of(entry.path("path").asText());
+            String path = entry.path("path").asText();
+            Path file = directory.resolve(path).normalize();
             if (Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
-                generated.addObject().put("path", file.toString()).put("size", Files.size(file));
+                generated.addObject().put("path", path).put("size", Files.size(file));
             }
         }
         data.put("status", status).put("endedAt", Instant.now().toString()).put("completionConfirmed", true);

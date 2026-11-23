@@ -9,6 +9,7 @@ import java.util.function.BiConsumer;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.McmcSamplerSpec;
+import org.phylospec.tiling.mcmc.RunOutputs;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 
@@ -21,7 +22,7 @@ public class BEASTState {
 
     public final String runName;
     private final Path sourceDirectory;
-    private final OutputPaths outputPaths;
+    private final RunOutputs outputPaths;
     private final boolean xmlExport;
     private BiConsumer<String, Path> inputObserver = (reference, path) -> {};
     public String outputPrefix;
@@ -80,7 +81,7 @@ public class BEASTState {
     private BEASTState(String runName, Path sourceDirectory, Path outputDirectory, boolean xmlExport) {
         this.runName = runName;
         this.xmlExport = xmlExport;
-        this.outputPaths = outputDirectory == null ? null : new OutputPaths(outputDirectory);
+        this.outputPaths = outputDirectory == null ? null : new RunOutputs(outputDirectory);
         this.outputPrefix = resolveOutputPath(runName);
         this.sourceDirectory = Objects.requireNonNull(sourceDirectory, "sourceDirectory")
                 .toAbsolutePath()

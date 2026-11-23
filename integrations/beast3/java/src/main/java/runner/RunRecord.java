@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
 import org.phylospec.tiling.TileCatalog;
+import org.phylospec.tiling.mcmc.RunOutputs;
 
 /** Persistent journal for one managed run. It records observations, not scientific validity. */
 final class RunRecord {
@@ -170,7 +171,7 @@ final class RunRecord {
         ObjectNode settings = next.putObject("settings");
         settings.put("chainLength", state.getSamplerSpec().chainLength());
         settings.put("randomSeed", state.randomSeed);
-        settings.put("outputPrefix", absolute(state.outputPrefix));
+        settings.put("runName", state.runName);
         ArrayNode loggerSettings = settings.putArray("loggers");
         ArrayNode outputs = next.putArray("expectedOutputs");
         for (Logger logger : loggers) {
@@ -181,10 +182,10 @@ final class RunRecord {
             ObjectNode entry = loggerSettings.addObject();
             entry.put("kind", kind);
             entry.put("logEvery", logger.everyInput.get());
-            entry.put("path", kind.equals("screen") ? null : absolute(name));
+            entry.put("path", kind.equals("screen") ? null : this.getRecordPath(name));
             if (!kind.equals("screen")) outputs.add(entry.deepCopy());
         }
-        outputs.addObject().put("kind", "state").put("path", absolute(stateFile));
+        outputs.addObject().put("kind", "state").put("path", this.getRecordPath(stateFile));
         save(next);
     }
 
@@ -243,7 +244,7 @@ final class RunRecord {
         for (var entry : data.withArray("expectedOutputs")) {
             outputs.add(new OutputFile(
                     entry.path("kind").asText(),
-                    directory.resolve(entry.path("path").asText())));
+                    directory.resolve(entry.path("path").asText()).normalize()));
         }
         return List.copyOf(outputs);
     }
@@ -281,15 +282,16 @@ final class RunRecord {
     private void collectOutputs(ObjectNode next) throws IOException {
         ArrayNode outputs = next.putArray("generatedOutputs");
         for (var entry : next.withArray("expectedOutputs")) {
-            Path file = Path.of(entry.path("path").asText());
+            String path = entry.path("path").asText();
+            Path file = this.directory.resolve(path).normalize();
             if (Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
-                outputs.addObject().put("path", file.toString()).put("size", Files.size(file));
+                outputs.addObject().put("path", path).put("size", Files.size(file));
             }
         }
     }
 
-    private static String absolute(String file) {
-        return Path.of(file).toAbsolutePath().normalize().toString();
+    private String getRecordPath(String file) {
+        return RunOutputs.getRecordPath(this.directory, Path.of(file));
     }
 
     /** Publish a complete JSON document before accepting the corresponding in-memory transition. */

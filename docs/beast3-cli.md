@@ -108,11 +108,11 @@ after its check passes:
 mkdir -p "$PHYLOSPEC_PROJECT/results/run-01"
 cd "$PHYLOSPEC_PROJECT/results/run-01"
 "$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_PROJECT/hky-yule.phylospec"
-PHYLOSPEC_RUN="$(ls -td "$PHYLOSPEC_PROJECT"/runs/hky-yule-* | head -n 1)"
+PHYLOSPEC_RUN="$PWD/hky-yule.run"
 ```
 
 Logs, trees and the state file are written to the working directory. The run record
-is saved in `runs/` beside the script.
+is saved next to them in `hky-yule.run/`.
 
 To run the same 30-step script with BEAST X, use a separate working directory.
 The input alignment is still resolved relative to the script. The Apple Silicon CPU
@@ -184,12 +184,12 @@ base `PhyloCTMC` mapping, not arbitrary likelihoods supplied by external adapter
 
 | File | What it contains |
 | --- | --- |
-| `hky-yule.log` (working directory) | Tab-separated samples: posterior, prior, likelihood, `kappa`, tree summaries, and four base frequencies. |
-| `hky-yule.trees` (working directory) | Sampled trees in NEXUS format. |
-| `hky-yule.state.xml` (working directory) | Final MCMC state. The CLI does not yet provide a resume command. |
-| `run.json` (run record) | Run status, effective settings, seed, input references, output paths, and actual base `PhyloCTMC` likelihood backends. |
-| `console.log` (run record) | Java/BEAST console output, including original diagnostic messages and failure details. |
-| `model.phylospec` (run record) | Snapshot of the script actually used. Input data are not copied into the result directory. |
+| `hky-yule.log` | Tab-separated samples: posterior, prior, likelihood, `kappa`, tree summaries, and four base frequencies. |
+| `hky-yule.trees` | Sampled trees in NEXUS format. |
+| `hky-yule.state.xml` | Final MCMC state. The CLI does not yet provide a resume command. |
+| `hky-yule.run/run.json` | Run status, effective settings, seed, input references, output paths, and actual base `PhyloCTMC` likelihood backends. |
+| `hky-yule.run/console.log` | Java/BEAST console output, including original diagnostic messages and failure details. |
+| `hky-yule.run/model.phylospec` | Snapshot of the script actually used. Input data are not copied into the run record. |
 
 To inspect the diagnostic log:
 
@@ -203,7 +203,8 @@ provide enough samples for scientific conclusions. Chain length, logging interva
 and seed are set by the script and the command line.
 
 To run again, use a new working directory or `--run-name`. Existing results are never
-overwritten:
+overwritten, and a successful run reserves its name. A failed run that wrote no outputs
+can simply be run again:
 
 ```sh
 "$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_PROJECT/hky-yule.phylospec" --run-name run-02
@@ -270,7 +271,7 @@ When local adapter bundles are supplied, `runtime.adapterBundles` records their
 paths, JAR hashes, sizes, and whether each JAR was added or skipped. This inventory
 is recorded before execution; it is not a list of every class used. Selected
 providers and their actual code sources are recorded separately under `libraries`.
-Bundle files are not copied into the result directory.
+Bundle files are not copied into the run record.
 
 Status normally progresses through `preparing` and `running` to `succeeded`,
 `failed`, or `cancelled`. After abrupt termination, the record can remain
@@ -284,14 +285,11 @@ Put a script wherever convenient. Relative input filenames resolve from the
 **script's directory**, regardless of the terminal's working directory. For example,
 `fromNexus("data/alignment.nex")` looks for a `data/` directory beside the script.
 
-Each run record is saved in a new directory beside the script at
-`runs/<script-name>-<unique-id>/`.
-
-Logs, trees and state files go to the terminal's working directory. They are named
-after the run, which is the script's filename without `.phylospec` unless `--run-name`
-is given. A logger's `file` and the sampler's `stateFile` can set another relative or
-absolute path. Existing files are never overwritten, and conflicting output filenames
-are rejected.
+Logs, trees and state files go to the terminal's working directory and are named after
+the run. The run name is the script's filename without `.phylospec` unless `--run-name`
+is given, and it cannot contain a path. The record is saved next to them in
+`<run-name>.run/`. A logger's `file` and the sampler's `stateFile` can set another relative
+or absolute path. See [Output Files](output-files.md).
 
 | Option | Meaning |
 | --- | --- |
@@ -299,7 +297,7 @@ are rejected.
 | `--library <id[,id...]>` | Select BEAST 3 tile libraries in preference order. BEAST X uses its base library, `beastX`. |
 | `--adapter-path <directory>` | Load an unpacked local BEAST 3 adapter bundle for `check`, `export` or `run`. Repeat for additional bundles. |
 | `--xml <file>` | Destination for `export`. The XML contains the model and its MCMC configuration. The filename stem supplies the default log prefix. |
-| `--run-name <prefix>` | For `run`: relative prefix of the default log, tree and state files. |
+| `--run-name <name>` | For `run`: name of the output files and of the `<name>.run/` record. Cannot contain a path. |
 | `--debug` | Show raw BEAST console output and failure stack traces in the terminal. |
 | `-h`, `--help` | Show commands and options. |
 | `--version` | Show PhyloSpec and loaded BEAST runtime versions. |
@@ -374,7 +372,7 @@ In a source checkout, it is at `integrations/beast3/popfunc/examples/README.md`.
 Syntax, type, and mapping diagnostics report the stage and source position when
 available. Warnings remain visible even when checking succeeds. A failed run reports
 the error and, when available, paths to its run record and console log; it does not
-print `Run completed`. Failures before a run directory is prepared may have no
+print `Run completed`. Failures before the run record is created may have no
 `run.json`.
 
 The terminal omits BEAST's routine object-wrapping diagnostics. If optional BEAGLE
@@ -567,7 +565,7 @@ java --enable-native-access=ALL-UNNAMED -Djava.only=true \
 
 Without a subcommand, `--library` is required and its exact order is retained.
 This mode keeps the earlier output-prefix and script-output behavior; it does not
-create a managed result directory, script snapshot, run record, or console log.
+create a script snapshot, run record, or console log.
 Use `run` for the result management described
 in this guide. `--adapter-path` is supported by the `check`, `export` and `run`
 subcommands.

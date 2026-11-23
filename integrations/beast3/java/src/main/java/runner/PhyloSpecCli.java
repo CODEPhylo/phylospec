@@ -10,12 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.ServiceConfigurationError;
-import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
 import javax.xml.parsers.ParserConfigurationException;
 import org.phylospec.errors.Error;
 import org.phylospec.tiling.errors.WrappedTileApplicationError;
+import org.phylospec.tiling.mcmc.RunOutputs;
 import org.xml.sax.SAXException;
 
 /** Command-line entry point for checking scripts, exporting analysis XML and running managed analyses. */
@@ -39,7 +39,7 @@ public final class PhyloSpecCli {
               --library <id[,id...]>  Tile libraries in preference order
               --adapter-path <dir>   check/export/run: unpacked local adapter bundle (repeatable)
               --xml <file>           Export only: destination XML (default log prefix: XML file stem)
-              --run-name <prefix>    Run only: relative output prefix (default: script name)
+              --run-name <name>      Run only: name of the output files (default: script name)
               --seed <n>             export/run: random seed (default: chosen at random)
               --debug                Show raw BEAST console output and failure stack traces
               -h, --help              Show this help
@@ -55,9 +55,8 @@ public final class PhyloSpecCli {
             Bundles are local executable Java code. No packages are downloaded or installed.
             Legacy run requires --library and preserves its exact library order.
             Logs, trees and state files are written to the working directory. Input paths use the script directory.
-            Default output names start with --run-name. Logger files can be relative or absolute paths.
-            Run records (model.phylospec, run.json, console.log) are saved beside the script in runs/<name>-<run-id>/.
-            BEAST X also saves the executed analysis.xml in the run directory.
+            The run record (run.json, console.log, model.phylospec) is saved next to them in <name>.run/.
+            BEAST X also saves the executed analysis.xml in the run record.
             A nonterminal or unconfirmed run.json does not confirm that a process is still running.
             Legacy run retains its existing --run-name path and script output behavior.
             """;
@@ -173,7 +172,6 @@ public final class PhyloSpecCli {
                 record = runner.runManaged(runName, runDirectory, warningHandler, out::println, options.debug());
             } finally {
                 if (Files.isRegularFile(runDirectory.resolve("run.json"))) {
-                    out.println("Results directory: " + runDirectory);
                     out.println("Run record: " + runDirectory.resolve("run.json"));
                     if (Files.isRegularFile(runDirectory.resolve("console.log"))) {
                         out.println("BEAST console log: " + runDirectory.resolve("console.log"));
@@ -378,6 +376,9 @@ public final class PhyloSpecCli {
                 if (command == Command.EXPORT && xmlFile == null) {
                     throw new IllegalArgumentException("The export subcommand requires --xml <file>.");
                 }
+                if (command == Command.RUN && runName != null) {
+                    RunOutputs.validateRunName(runName);
+                }
                 if (command != Command.EXPORT && xmlFile != null) {
                     throw new IllegalArgumentException("--xml is only supported for the export subcommand.");
                 }
@@ -410,9 +411,7 @@ public final class PhyloSpecCli {
         }
 
         Path runDirectory(Path source) {
-            return source.getParent()
-                    .resolve("runs")
-                    .resolve(withoutExtension(source).getFileName() + "-" + UUID.randomUUID());
+            return new RunOutputs(Path.of("")).getRecordDirectory(this.outputPrefix(source));
         }
 
         String outputPrefix(Path source) {
