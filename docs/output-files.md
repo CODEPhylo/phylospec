@@ -24,7 +24,24 @@ The run name is the script name without its extension, or the value of *--run-na
 | Final state (BEAST 3 only)   | *&lt;name&gt;.state.xml*                                         | *stateFile* of *mcmc*       |
 | Run record                   | *&lt;name&gt;.run/*                                              | always follows the run name |
 
-*file* and *stateFile* can be relative to the working directory or absolute. Input files are always relative to the script.
+Input files are always relative to the script.
+
+## Paths in the model
+
+*file* and *stateFile* can be a file name or a path. Relative paths use the working directory, not the folder of the script. For a run in */work* named *hky*:
+
+| In the model                 | Written to            | Path in *run.json*   |
+|------------------------------|-----------------------|----------------------|
+| *file="trace.log"*           | */work/trace.log*     | *../trace.log*       |
+| *file="logs/trace.log"*      | */work/logs/trace.log* | *../logs/trace.log* |
+| *file="../trace.log"*        | */trace.log*          | */trace.log*         |
+| *file="/data/trace.log"*     | */data/trace.log*     | */data/trace.log*    |
+
+- Missing folders are created.
+- A name set in the model does not change with the run name. Running the model again with another *--run-name* is refused because the file already exists. Omit *file* to get a new file for each run name.
+- Only the named file moves. All other outputs keep their default names, and the record stays in *hky.run/* in the working directory.
+- A run is refused if two outputs use the same file, if an output is also used as a folder, if a parent of the path is a file, or if the path passes through a symbolic link inside the working directory.
+- BEAST file name templates such as *$(tree)* are not supported.
 
 ## Rules
 
