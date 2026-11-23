@@ -71,10 +71,11 @@ public class GY94Tile extends GeneratorTile<GY94CodonModel, BeastXState> {
         FrequencyModel frequencyModel =
                 new FrequencyModel(codons, BeastXParameters.toParameter(baseFrequencies));
 
+        // BEAST X's constructor takes omega before kappa: GY94CodonModel(codons, omega, kappa, frequencies).
         return new GY94CodonModel(
                 codons,
-                toParameter(kappa),
                 toParameter(omega),
+                toParameter(kappa),
                 frequencyModel
         );
     }

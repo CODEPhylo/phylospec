@@ -15,6 +15,7 @@ import dr.evomodel.substmodel.nucleotide.HKY;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import dr.inference.model.VectorSliceParameter;
+import tiling.params.BeastXMkRate;
 import tiling.xml.XmlElement;
 
 import java.util.ArrayList;
@@ -232,13 +233,27 @@ public class SubstitutionModelXmlBuilder {
                 )
                 .withChild(
                         XmlElement.element("rates")
-                                .withChild(
-                                        parameterOrInlineDefinition(
-                                                substitutionModelId + "_rates",
-                                                ratesParameter
-                                        )
-                                )
+                                .withChild(ratesDefinition(substitutionModelId + "_rates", ratesParameter))
                 );
+    }
+
+    /**
+     * The Mk exchangeability is 2 * rate (see BeastXMkRate), written as a product so that it
+     * follows a sampled rate. Other rates are written as before.
+     */
+    private XmlElement ratesDefinition(String id, Parameter ratesParameter) {
+        if (ratesParameter instanceof BeastXMkRate mkRate) {
+            return XmlElement.element("productParameter")
+                    .withId(id)
+                    .withChild(
+                            XmlElement.element("parameter")
+                                    .withId(id + "_two")
+                                    .withAttribute("value", format(2.0))
+                    )
+                    .withChild(parameterOrInlineDefinition(id + "_rate", mkRate.getRate()));
+        }
+
+        return parameterOrInlineDefinition(id, ratesParameter);
     }
 
     private List<XmlElement> buildGY94CodonModel(
@@ -393,9 +408,13 @@ public class SubstitutionModelXmlBuilder {
             String substitutionModelId,
             String frequencyModelId
     ) {
+        // BEAST X's EmpiricalAminoAcidModelParser reads the <frequencies> child only when a
+        // "frequencies" attribute is also present (it checks hasAttribute, not the child). Without it,
+        // the given frequencies are ignored and the model's empirical frequencies are used.
         return XmlElement.element("aminoAcidModel")
                 .withId(substitutionModelId)
                 .withAttribute("type", aminoAcidModelType(aminoAcidModel))
+                .withAttribute("frequencies", "true")
                 .withChild(
                         XmlElement.element("frequencies")
                                 .withChild(
