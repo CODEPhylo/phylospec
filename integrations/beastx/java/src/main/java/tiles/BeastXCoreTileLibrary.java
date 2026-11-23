@@ -13,6 +13,7 @@ import tiles.misc.DrawnArgumentTile;
 import tiles.misc.ListVectorTile;
 import tiles.misc.IndexVariableTile;
 import tiles.misc.IndexedTile;
+import tiles.misc.StringMapIndexTile;
 import tiles.misc.IndexedStatementTile;
 
 import tiles.input.FromNexusTile;
@@ -68,6 +69,8 @@ import tiles.functions.NumBranchesTile;
 import tiles.functions.RootAgeTile;
 import tiles.functions.TaxonTile;
 import tiles.functions.AgeTaxonTile;
+import tiles.functions.TaxonNameTile;
+import tiles.functions.TaxonSpeciesTile;
 import tiles.functions.AgeNodeTreeTile;
 import tiles.functions.MRCATile;
 import tiles.functions.TreeTaxaTile;
@@ -170,6 +173,7 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new tiles.misc.RangeTile());
         tiles.add(new IndexVariableTile());
         tiles.add(new IndexedTile());
+        tiles.add(new StringMapIndexTile());
         tiles.add(new IndexedStatementTile());
 
         // RPN deterministic calculations
@@ -218,6 +222,8 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new LinSpaceTile());
         tiles.add(new TaxonTile());
         tiles.add(new AgeTaxonTile());
+        tiles.add(new TaxonNameTile());
+        tiles.add(new TaxonSpeciesTile());
         tiles.add(new AgeNodeTreeTile());
         tiles.add(new MRCATile());
         tiles.add(new AlignmentTaxaTile());
