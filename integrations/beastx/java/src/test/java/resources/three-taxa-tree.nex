@@ -1,0 +1,4 @@
+#NEXUS
+BEGIN TREES;
+  TREE fixed = ((A:0.1,B:0.2):0.05,C:0.3);
+END;
