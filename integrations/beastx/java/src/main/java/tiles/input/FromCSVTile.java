@@ -1,15 +1,18 @@
 package tiles.input;
 
 import org.phylospec.ast.Expr;
+import org.phylospec.parser.CsvParser;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.typeresolver.Stochasticity;
 import tiling.BeastXState;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -68,32 +71,34 @@ public class FromCSVTile extends GeneratorTile<List<Map<String, String>>, BeastX
         List<String> providedHeaders =
                 this.headersInput.apply(beastState, indexVariables);
 
-        List<String> lines =
-                readLines(beastState.resolveInput(file));
-
-        if (lines.isEmpty()) {
-            throw new TileApplicationError(
-                    this.getRootNode(),
-                    "CSV file is empty.",
-                    "Use a CSV/TSV file with at least one header row and one data row.",
-                    List.of("fromCSV(file=\"src/test/java/resources/metadata.csv\")")
-            );
-        }
+        // Core's CSV parser, as in BEAST 3: quoted fields may contain the delimiter, doubled
+        // quotes or line breaks, and values are kept untrimmed.
+        List<List<String>> records =
+                readRecords(beastState.resolveInput(file), delimiter);
 
         List<String> headers;
-        int firstDataLineIndex;
+        int firstDataRecord;
 
         if (providedHeaders == null) {
-            headers =
-                    parseLine(lines.getFirst(), delimiter);
+            if (records.isEmpty()) {
+                throw new TileApplicationError(
+                        this.getRootNode(),
+                        "CSV file is empty.",
+                        "Use a CSV/TSV file with a header row, or give the headers argument.",
+                        List.of("fromCSV(file=\"src/test/java/resources/metadata.csv\")")
+                );
+            }
 
-            firstDataLineIndex =
+            headers =
+                    records.getFirst();
+
+            firstDataRecord =
                     1;
         } else {
             headers =
                     providedHeaders;
 
-            firstDataLineIndex =
+            firstDataRecord =
                     0;
         }
 
@@ -102,22 +107,15 @@ public class FromCSVTile extends GeneratorTile<List<Map<String, String>>, BeastX
         List<Map<String, String>> rows =
                 new ArrayList<>();
 
-        for (int i = firstDataLineIndex; i < lines.size(); i++) {
-            String line =
-                    lines.get(i);
-
-            if (line.isBlank()) {
-                continue;
-            }
-
+        for (int i = firstDataRecord; i < records.size(); i++) {
             List<String> values =
-                    parseLine(line, delimiter);
+                    records.get(i);
 
             if (values.size() != headers.size()) {
                 throw new TileApplicationError(
                         this.getRootNode(),
                         "CSV row has the wrong number of columns.",
-                        "Expected " + headers.size() + " columns but found " + values.size() + " on line " + (i + 1) + ".",
+                        "Expected " + headers.size() + " columns but found " + values.size() + " in record " + (i + 1) + ".",
                         List.of("Check that the delimiter argument matches the file format.")
                 );
             }
@@ -138,13 +136,18 @@ public class FromCSVTile extends GeneratorTile<List<Map<String, String>>, BeastX
         return rows;
     }
 
-    private static List<String> readLines(Path file) {
+    private static List<List<String>> readRecords(Path file, String delimiter) {
         try {
-            return Files.readAllLines(file);
+            return CsvParser.parse(Files.readString(file, StandardCharsets.UTF_8), delimiter);
         } catch (IOException e) {
             throw new TileApplicationError(
                     "Could not read CSV file.",
                     "'" + file + "' could not be read."
+            );
+        } catch (IllegalArgumentException e) {
+            throw new TileApplicationError(
+                    "Invalid CSV file.",
+                    "'" + file + "': " + e.getMessage()
             );
         }
     }
@@ -157,6 +160,9 @@ public class FromCSVTile extends GeneratorTile<List<Map<String, String>>, BeastX
             );
         }
 
+        Set<String> names =
+                new HashSet<>();
+
         for (String header : headers) {
             if (header == null || header.isBlank()) {
                 throw new TileApplicationError(
@@ -164,20 +170,13 @@ public class FromCSVTile extends GeneratorTile<List<Map<String, String>>, BeastX
                         "Use non-empty column names."
                 );
             }
+
+            if (!names.add(header)) {
+                throw new TileApplicationError(
+                        "CSV header '" + header + "' appears twice in '" + file + "'.",
+                        "Use distinct column names."
+                );
+            }
         }
-    }
-
-    private static List<String> parseLine(String line, String delimiter) {
-        String[] parts =
-                line.split(java.util.regex.Pattern.quote(delimiter), -1);
-
-        List<String> values =
-                new ArrayList<>();
-
-        for (String part : parts) {
-            values.add(part.trim());
-        }
-
-        return values;
     }
 }

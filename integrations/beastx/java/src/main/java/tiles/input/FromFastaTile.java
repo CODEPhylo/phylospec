@@ -30,19 +30,33 @@ public class FromFastaTile extends GeneratorTile<Alignment, BeastXState> {
                     Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
             );
 
+    GeneratorTileInput<ParserTile.Parser, BeastXState> ageInput =
+            new GeneratorTileInput<>("age", false);
+
+    GeneratorTileInput<ParserTile.Parser, BeastXState> dateInput =
+            new GeneratorTileInput<>("date", false);
+
+    GeneratorTileInput<ParserTile.Parser, BeastXState> speciesNameInput =
+            new GeneratorTileInput<>("speciesName", false);
+
     @Override
     public Alignment applyTile(
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
         String path = this.fileInput.apply(beastState, indexVariables);
+        ParserTile.Parser ageParser = this.ageInput.apply(beastState, indexVariables);
+        ParserTile.Parser dateParser = this.dateInput.apply(beastState, indexVariables);
+        ParserTile.Parser speciesNameParser = this.speciesNameInput.apply(beastState, indexVariables);
         File file = beastState.resolveInput(path).toFile();
 
         try (FileReader reader = new FileReader(file)) {
             FastaImporter importer =
                     new FastaImporter(reader, Nucleotides.INSTANCE);
 
-            return importer.importAlignment();
+            Alignment alignment = importer.importAlignment();
+            TaxonMetadata.apply(alignment, ageParser, dateParser, speciesNameParser, "fromFasta");
+            return alignment;
         } catch (FileNotFoundException e) {
             throw new TileApplicationError(
                     "File not found.",

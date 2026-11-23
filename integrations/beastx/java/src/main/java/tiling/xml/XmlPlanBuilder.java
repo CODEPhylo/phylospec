@@ -6,10 +6,12 @@ import dr.inference.distribution.DirichletDistributionModel;
 import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.distribution.MultivariateDistributionLikelihood;
 import dr.inference.model.AbstractModelLikelihood;
+import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
 import dr.math.distributions.DirichletDistribution;
 import tiling.BeastXModel;
 import tiling.BeastXState;
+import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
 import tiling.xml.builders.BranchRateModelXmlBuilder;
 import tiling.xml.builders.CalibrationPriorXmlBuilder;
 import tiling.xml.builders.DirichletPriorXmlBuilder;
@@ -196,6 +198,21 @@ public class XmlPlanBuilder {
                     XmlPlan.Section.TREE_PRIOR_MODELS,
                     treePriorModelDefinition(state, entry.getValue())
             );
+        }
+
+        // A fixed tree, such as Tree tree = fromNewick(...), has neither a prior nor an
+        // observation, but a PhyloCTMC can still use it. Without a prior it gets no
+        // operators, so it stays fixed.
+        for (Likelihood likelihood : state.likelihoodDistributions) {
+            if (likelihood instanceof BeastXPhyloCTMCLikelihoodSpec spec
+                    && emittedTreeModels.add(spec.getTreeModel())) {
+                treeModelXmlBuilder.addFixedTreeDefinitions(
+                        plan,
+                        state,
+                        spec.getTreeModel(),
+                        emittedTaxonIds
+                );
+            }
         }
     }
 

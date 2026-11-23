@@ -14,7 +14,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import tiling.runner.XmlRunnerOptions;
 
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
@@ -50,7 +49,7 @@ class BeastXLikelihoodCoverageTest {
             Tree tree ~ Yule(birthRate=1.0, taxa=taxa)
             """;
 
-    private static final double[][] ONE_CATEGORY = {{1.0}, {1.0}};
+    private static final double[][] ONE_CATEGORY = JukesCantorPruning.ONE_CATEGORY;
 
     static Stream<Arguments> rows() {
         return Stream.of(
@@ -118,45 +117,8 @@ class BeastXLikelihoodCoverageTest {
         }
     }
 
-    /** JC69 log-likelihood of the sequences on the tree, by Felsenstein pruning. */
     private static double jc69(TreeModel tree, ToDoubleFunction<NodeRef> branchRate, double[][] siteCategories) {
-        double[] rates = siteCategories[0];
-        double[] weights = siteCategories[1];
-        double logLikelihood = 0.0;
-        for (int site = 0; site < SEQUENCES.get("A").length(); site++) {
-            double siteLikelihood = 0.0;
-            for (int category = 0; category < rates.length; category++) {
-                double[] partials = partials(tree, tree.getRoot(), site, rates[category], branchRate);
-                siteLikelihood += weights[category] * 0.25 * Arrays.stream(partials).sum();
-            }
-            logLikelihood += Math.log(siteLikelihood);
-        }
-        return logLikelihood;
-    }
-
-    private static double[] partials(TreeModel tree, NodeRef node, int site, double siteRate,
-                                     ToDoubleFunction<NodeRef> branchRate) {
-        double[] partials = new double[4];
-        if (tree.isExternal(node)) {
-            char state = SEQUENCES.get(tree.getNodeTaxon(node).getId()).charAt(site);
-            partials["ACGT".indexOf(state)] = 1.0;
-            return partials;
-        }
-        Arrays.fill(partials, 1.0);
-        for (int i = 0; i < tree.getChildCount(node); i++) {
-            NodeRef child = tree.getChild(node, i);
-            double[] below = partials(tree, child, site, siteRate, branchRate);
-            double distance = tree.getBranchLength(child) * branchRate.applyAsDouble(child) * siteRate;
-            double decay = Math.exp(-4.0 * distance / 3.0);
-            for (int from = 0; from < 4; from++) {
-                double sum = 0.0;
-                for (int to = 0; to < 4; to++) {
-                    sum += (from == to ? 0.25 + 0.75 * decay : 0.25 - 0.25 * decay) * below[to];
-                }
-                partials[from] *= sum;
-            }
-        }
-        return partials;
+        return JukesCantorPruning.logLikelihood(tree, SEQUENCES, branchRate, siteCategories);
     }
 
     /**
