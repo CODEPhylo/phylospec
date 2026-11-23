@@ -30,8 +30,8 @@ class BeastXRunRecordTest {
     @Test void confirmsTheNativeLengthAndBothLogsBeforeRecordingSuccess() throws IOException {
         BeastXState state = new BeastXState("analysis");
         state.setSamplerSpec(new McmcSamplerSpec(10));
-        state.addFileLoggerSpec(new FileLoggerSpec<>(2, "./results/trace.log", List.of("posterior"), null));
-        state.addTreeLoggerSpec(new TreeLoggerSpec<>(2, "tree.trees", "tree"));
+        state.addFileLoggerSpec(new FileLoggerSpec<>(2, output.resolve("results/trace.log").toString(), List.of("posterior"), null));
+        state.addTreeLoggerSpec(new TreeLoggerSpec<>(2, output.resolve("tree.trees").toString(), "tree"));
         Path data = Files.writeString(directory.resolve("data.txt"), "abc");
         record.input(data);
         record.input(data);
@@ -75,8 +75,8 @@ class BeastXRunRecordTest {
         assertTrue(result.at("/error/message").asText().contains("XML"));
     }
 
-    @Test void rejectsLoggerPathsOutsideOutput() throws IOException {
-        for (String name : List.of("../run.json", "../analysis.xml", xml.toString(), ".//" + xml.getFileName())) {
+    @Test void loggersCannotOverwriteTheRunRecord() throws IOException {
+        for (String name : List.of(directory.resolve("run.json").toString(), xml.toString())) {
             BeastXState state = new BeastXState("analysis");
             state.addFileLoggerSpec(new FileLoggerSpec<>(1, name, List.of(), null));
             assertThrows(IOException.class, () -> record.configure(state, xml, 101L), name);
@@ -87,15 +87,15 @@ class BeastXRunRecordTest {
     @Test void existingOutputIsNeverOverwritten() throws IOException {
         Path existing = Files.writeString(output.resolve("existing.log"), "keep");
         BeastXState state = new BeastXState("analysis");
-        state.addFileLoggerSpec(new FileLoggerSpec<>(1, "existing.log", List.of(), null));
+        state.addFileLoggerSpec(new FileLoggerSpec<>(1, existing.toString(), List.of(), null));
         assertThrows(IOException.class, () -> record.configure(state, xml, 101L));
         assertEquals("keep", Files.readString(existing));
     }
 
     @Test void duplicateLoggerPathsAreRejected() {
         BeastXState state = new BeastXState("analysis");
-        state.addFileLoggerSpec(new FileLoggerSpec<>(1, "same.log", List.of(), null));
-        state.addTreeLoggerSpec(new TreeLoggerSpec<>(1, "./same.log", "tree"));
+        state.addFileLoggerSpec(new FileLoggerSpec<>(1, output.resolve("same.log").toString(), List.of(), null));
+        state.addTreeLoggerSpec(new TreeLoggerSpec<>(1, output.resolve("nested/../same.log").toString(), "tree"));
         assertThrows(IOException.class, () -> record.configure(state, xml, 101L));
         assertFalse(Files.exists(output.resolve("same.log")));
     }

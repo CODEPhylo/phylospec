@@ -39,7 +39,6 @@ public final class PhyloSpecCli {
               --library <id[,id...]>  Tile libraries in preference order
               --adapter-path <dir>   check/export/run: unpacked local adapter bundle (repeatable)
               --xml <file>           Export only: destination XML (default log prefix: XML file stem)
-              --out <directory>      Run only: exact run directory (must be absent or empty)
               --run-name <prefix>    Run only: relative output prefix (default: script name)
               --seed <n>             export/run: random seed (default: chosen at random)
               --debug                Show raw BEAST console output and failure stack traces
@@ -55,14 +54,12 @@ public final class PhyloSpecCli {
             The host PhyloSpec/BEAST runtime is retained; bundle copies do not replace it.
             Bundles are local executable Java code. No packages are downloaded or installed.
             Legacy run requires --library and preserves its exact library order.
-            New run writes to --out/output/, or beside the script in runs/<name>-<run-id>/output/.
-            Relative --out paths use the command's working directory; input paths use the script directory.
-            Default log names start with --run-name; explicit logger names are relative to output/.
-            Output paths must stay inside output/. Absolute script output paths are rejected.
-            Managed runs save model.phylospec, run.json and console.log beside output/.
+            Logs, trees and state files are written to the working directory. Input paths use the script directory.
+            Default output names start with --run-name. Logger files can be relative or absolute paths.
+            Run records (model.phylospec, run.json, console.log) are saved beside the script in runs/<name>-<run-id>/.
             BEAST X also saves the executed analysis.xml in the run directory.
             A nonterminal or unconfirmed run.json does not confirm that a process is still running.
-            Legacy run retains its existing --run-name path and script output behavior; --out is unavailable.
+            Legacy run retains its existing --run-name path and script output behavior.
             """;
     private static final String BASE_LIBRARY = "beast2";
 
@@ -260,7 +257,6 @@ public final class PhyloSpecCli {
             String engine,
             Path source,
             String runName,
-            Path outputDirectory,
             Path xmlFile,
             Long seed,
             List<String> libraries,
@@ -287,7 +283,6 @@ public final class PhyloSpecCli {
             String selectedEngine = null;
             Path source = null;
             String runName = null;
-            Path outputDirectory = null;
             Path xmlFile = null;
             Long seed = null;
             List<String> libraries = new ArrayList<>();
@@ -347,12 +342,6 @@ public final class PhyloSpecCli {
                             throw new IllegalArgumentException("--adapter-path requires a non-blank directory.");
                         adapterPaths.add(Path.of(value));
                     }
-                    case "--out" -> {
-                        String value = requireValue(arguments, ++index, "--out");
-                        if (value.isBlank())
-                            throw new IllegalArgumentException("--out requires a non-blank directory.");
-                        outputDirectory = Path.of(value);
-                    }
                     case "--xml" -> {
                         String value = requireValue(arguments, ++index, "--xml");
                         if (value.isBlank()) throw new IllegalArgumentException("--xml requires a non-blank file.");
@@ -392,9 +381,6 @@ public final class PhyloSpecCli {
                 if (command != Command.EXPORT && xmlFile != null) {
                     throw new IllegalArgumentException("--xml is only supported for the export subcommand.");
                 }
-                if (command != Command.RUN && outputDirectory != null) {
-                    throw new IllegalArgumentException("--out is only supported for the run subcommand.");
-                }
                 if (command == Command.CHECK && seed != null) {
                     throw new IllegalArgumentException("--seed is only supported for export and run.");
                 }
@@ -414,7 +400,6 @@ public final class PhyloSpecCli {
                     engine,
                     source,
                     runName,
-                    outputDirectory,
                     xmlFile,
                     seed,
                     List.copyOf(libraries),
@@ -425,11 +410,9 @@ public final class PhyloSpecCli {
         }
 
         Path runDirectory(Path source) {
-            return outputDirectory == null
-                    ? source.getParent()
-                            .resolve("runs")
-                            .resolve(withoutExtension(source).getFileName() + "-" + UUID.randomUUID())
-                    : outputDirectory.toAbsolutePath().normalize();
+            return source.getParent()
+                    .resolve("runs")
+                    .resolve(withoutExtension(source).getFileName() + "-" + UUID.randomUUID());
         }
 
         String outputPrefix(Path source) {

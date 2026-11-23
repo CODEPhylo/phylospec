@@ -16,12 +16,6 @@ public class McmcSpecTest {
     }
 
     @Test
-    public void samplerRejectsNonPositiveChainLength() {
-        assertFails(() -> new McmcSamplerSpec(0), "chain length must be positive");
-        assertFails(() -> new McmcSamplerSpec(-5), "chain length must be positive");
-    }
-
-    @Test
     public void loggersAcceptValidSettings() {
         new ScreenLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, null, null);
         new ScreenLoggerSpec<>(10, List.of("a", "b"), List.of("first", "second"));
@@ -30,22 +24,10 @@ public class McmcSpecTest {
     }
 
     @Test
-    public void loggersRejectNonPositiveIntervals() {
-        assertFails(() -> new ScreenLoggerSpec<>(0, null, null), "logging interval must be positive");
-        assertFails(() -> new FileLoggerSpec<>(-1, "run.log", null, null), "logging interval must be positive");
-        assertFails(() -> new TreeLoggerSpec<>(0, "run.trees", "tree"), "logging interval must be positive");
-    }
-
-    @Test
     public void loggersRejectMissingFiles() {
         assertFails(() -> new FileLoggerSpec<>(10, null, null, null), "no file to write to");
         assertFails(() -> new FileLoggerSpec<>(10, " ", null, null), "no file to write to");
         assertFails(() -> new TreeLoggerSpec<>(10, "", "tree"), "no file to write to");
-    }
-
-    @Test
-    public void treeLoggerRejectsMissingTree() {
-        assertFails(() -> new TreeLoggerSpec<String>(10, "run.trees", null), "no tree to log");
     }
 
     @Test

@@ -26,6 +26,6 @@ model {
 mcmc {
     Sampler sampler = mcmc(chainLength=30)
     Logger screenLogger = screenLogger(logEvery=1)
-    Logger fileLogger = fileLogger(file="gompertz.log", logEvery=1)
-    Logger treeLogger = treeLogger(file="gompertz.trees", logEvery=1, tree)
+    Logger fileLogger = fileLogger(logEvery=1)
+    Logger treeLogger = treeLogger(logEvery=1, tree)
 }

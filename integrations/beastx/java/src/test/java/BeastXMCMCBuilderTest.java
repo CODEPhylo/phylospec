@@ -346,7 +346,7 @@ public class BeastXMCMCBuilderTest {
                 Logger fileLogger = fileLogger(
                     logEvery=1000,
                     file="target/test-fileLogger-selected.log",
-                    parameters=[x, "x_prior"]
+                    parameters=[x]
                 )
             }
             """;
@@ -363,9 +363,8 @@ public class BeastXMCMCBuilderTest {
                 assertInstanceOf(MCLogger.class, loggers.getFirst());
 
         assertEquals(1000, logger.getLogEvery());
-        assertEquals(2, logger.getColumnCount());
+        assertEquals(1, logger.getColumnCount());
         assertEquals("x", logger.getColumnLabel(0));
-        assertEquals("x_prior", logger.getColumnLabel(1));
     }
 
     @Test
@@ -428,43 +427,6 @@ public class BeastXMCMCBuilderTest {
     }
 
     @Test
-    public void buildsFileLoggerForSelectedTreeStatistics() throws Exception {
-        String source = """
-            Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
-            Taxa taxa = taxa(data)
-
-            Tree tree ~ Yule(
-                birthRate=1.0,
-                taxa=taxa
-            )
-
-            mcmc {
-                Logger fileLogger = fileLogger(
-                    logEvery=1000,
-                    file="target/test-fileLogger-tree-statistics.log",
-                    parameters=["tree.height", "tree.treeLength"]
-                )
-            }
-            """;
-
-        PhyloSpecRunner runner = new PhyloSpecRunner(source);
-        BeastXState state = runner.buildState("test");
-
-        List<Logger> loggers =
-                new MCMCBuilder().buildLoggers(state);
-
-        assertEquals(1, loggers.size());
-
-        MCLogger logger =
-                assertInstanceOf(MCLogger.class, loggers.getFirst());
-
-        assertEquals(1000, logger.getLogEvery());
-        assertEquals(2, logger.getColumnCount());
-        assertEquals("tree.height", logger.getColumnLabel(0));
-        assertEquals("tree.treeLength", logger.getColumnLabel(1));
-    }
-
-    @Test
     public void buildsFileLoggerForSelectedCalculationNode() throws Exception {
         String source = """
         PositiveReal x ~ LogNormal(logMean=0.0, logSd=1.0)
@@ -507,30 +469,32 @@ public class BeastXMCMCBuilderTest {
     }
 
     @Test
-    public void rejectsSettingsThatAreNoLongerPartOfTheMCMCBlock() throws Exception {
-        for (String setting : List.of(
-                "Integer chainLength = 10",
-                "Integer randomSeed = 12345",
-                "Integer defaultLogEvery = 10",
-                "String outputPrefix = \"run\"",
-                "Real parameterScaleFactor = 0.5")) {
-            String source = """
+    public void loggedValuesOfDifferentTypesCanBeCombined() throws Exception {
+        new PhyloSpecRunner("""
                 Real x ~ Normal(mean=0.0, sd=1.0)
+                Simplex y ~ Dirichlet(repeat(value=2.0, num=3))
 
                 mcmc {
-                    %s
+                    Logger logger = screenLogger(parameters=[x, y])
                 }
-                """.formatted(setting);
+                """).buildMCMC("test", 10);
+    }
 
-            PhyloSpecRunnerException exception = assertThrows(
-                    PhyloSpecRunnerException.class,
-                    () -> new PhyloSpecRunner(source).buildState("test"),
-                    setting
-            );
+    @Test
+    public void loggedValuesWhichCannotBeLoggedAreRejected() {
+        for (String parameter : List.of("label", "\"x\"")) {
+            String source = """
+                    Real x ~ Normal(mean=0.0, sd=1.0)
+                    String label = "label"
 
-            assertTrue(
-                    exception.getMessage().contains("Only samplers and loggers can be declared in the mcmc block"),
-                    exception.getMessage()
+                    mcmc {
+                        Logger logger = screenLogger(parameters=[%s])
+                    }
+                    """.formatted(parameter);
+            assertThrows(
+                    Exception.class,
+                    () -> new PhyloSpecRunner(source).buildMCMC("test", 10),
+                    parameter
             );
         }
     }
@@ -577,7 +541,7 @@ public class BeastXMCMCBuilderTest {
         );
 
         assertTrue(
-                exception.getMessage().contains("The logging interval must be positive"),
+                exception.getMessage().contains("Wrong argument type"),
                 exception.getMessage()
         );
     }
@@ -623,7 +587,7 @@ public class BeastXMCMCBuilderTest {
             mcmc {
                 Logger fileLogger = fileLogger(
                     file="target/test-fileLogger-distributions.log",
-                    parameters=[y, prior]
+                    parameters=[y]
                 )
             }
             """;
@@ -985,7 +949,7 @@ public class BeastXMCMCBuilderTest {
                 Logger fileLogger = fileLogger(
                     logEvery=5,
                     file="%s",
-                    parameters=[posterior, prior, likelihood, x, "x_prior"]
+                    parameters=[x]
                 )
             }
             """.formatted(explicitLogPath.toString().replace("\\", "\\\\"));

@@ -4,5 +4,5 @@ Real x ~ Normal(mean=0.0, sd=1.0)
 mcmc {
     Sampler sampler = mcmc(chainLength=30)
     Logger screenLogger = screenLogger(logEvery=10)
-    Logger fileLogger = fileLogger(file="normal.log", logEvery=10)
+    Logger fileLogger = fileLogger(logEvery=10)
 }

@@ -49,7 +49,7 @@ POPFUNC_DIR="/absolute/path/to/phylospec-adapter"
 
 "$PHYLOSPEC_DIR/bin/phylospec" run "$POPFUNC_DIR/examples/gompertz.phylospec" \
   --adapter-path "$POPFUNC_DIR" --library popfunc \
-  --out "$PWD/results/gompertz" --seed 12345
+  --seed 12345
 ```
 
 These three choices have different jobs:
@@ -66,9 +66,9 @@ checks syntax, static types, and available mappings; native model construction
 and MCMC happen during `run`. Repeat both adapter/library options for `run`.
 After rebuilding, extract into a fresh directory and restart the command.
 
-The script resolves `data/four-taxa.nex` beside itself. The result directory must
-be absent or empty. A successful run contains `model.phylospec`, `run.json`,
-`console.log`, and `output/gompertz.log`, `gompertz.trees`, `gompertz.state.xml`.
+The script resolves `data/four-taxa.nex` beside itself. A successful run writes
+`gompertz.log`, `gompertz.trees` and `gompertz.state.xml` to the working directory,
+and saves `model.phylospec`, `run.json` and `console.log` in `runs/` beside the script.
 The trace includes all four population parameters, prior, likelihood, and
 posterior, with samples 0 through 30. `run.json` records the actual provider JARs,
 bundle hashes, input hash, settings, and completion status.
@@ -343,7 +343,7 @@ POPFUNC_DIR="$PHYLOSPEC_INSTALL/popfunc/phylospec-adapter"
 Archive names follow the PhyloSpec Maven project version. Use the `check`/`run`
 commands in [Run the packaged example](#run-the-packaged-example) with these two
 variables, omitting that section's placeholder assignments. Choose an unused
-`--out` directory for each run. Keep the example script beside its `data/`
+`--run-name` for each run in the same working directory. Keep the example script beside its `data/`
 directory if copying it into a separate project.
 
 The adapter ZIP contains the adapter JAR, the native PopFunc JAR, runtime

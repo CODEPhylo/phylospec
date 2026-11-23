@@ -13,7 +13,6 @@ import org.phylospec.lexer.Token;
 import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.TileLibrary;
-import org.phylospec.tiling.mcmc.McmcBlockValidator;
 import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.typeresolver.StochasticityResolver;
@@ -460,7 +459,6 @@ public class PhyloSpecRunner implements ErrorEventListener {
         EvaluateTiles<BeastXState> tiles = new EvaluateTiles<>(
                 TileLibrary.loadAll(BeastXState.class), parsed.variableResolver, parsed.stochasticityResolver);
         try {
-            McmcBlockValidator.validate(parsed.statements);
             return tiles.getBestTiling(parsed.statements);
         } catch (TileApplicationError error) {
             throw tilingFailure(parsed, error);

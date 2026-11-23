@@ -81,7 +81,7 @@ public class BEASTState {
         this.runName = runName;
         this.xmlExport = xmlExport;
         this.outputPaths = outputDirectory == null ? null : new OutputPaths(outputDirectory);
-        this.outputPrefix = resolveUserOutputPath(runName);
+        this.outputPrefix = resolveOutputPath(runName);
         this.sourceDirectory = Objects.requireNonNull(sourceDirectory, "sourceDirectory")
                 .toAbsolutePath()
                 .normalize();
@@ -113,12 +113,7 @@ public class BEASTState {
         this.inputObserver = Objects.requireNonNull(inputObserver, "inputObserver");
     }
 
-    /** Resolves a name declared by the user, preserving the old policy for unmanaged callers. */
-    public String resolveUserOutputPath(String path) {
-        return outputPaths == null ? path : outputPaths.resolveUserPath(path);
-    }
-
-    /** Resolves output names, including already resolved names contributed by packages. */
+    /** Resolves output names against the working directory of a managed run. */
     public String resolveOutputPath(String path) {
         return outputPaths == null ? path : outputPaths.resolve(path);
     }

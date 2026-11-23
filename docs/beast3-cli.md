@@ -105,25 +105,29 @@ The success message identifies the selected engine. To run the BEAST 3 analysis
 after its check passes:
 
 ```sh
-PHYLOSPEC_RUN="$PHYLOSPEC_PROJECT/results/run-01"
-"$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_PROJECT/hky-yule.phylospec" \
-  --out "$PHYLOSPEC_RUN"
+mkdir -p "$PHYLOSPEC_PROJECT/results/run-01"
+cd "$PHYLOSPEC_PROJECT/results/run-01"
+"$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_PROJECT/hky-yule.phylospec"
+PHYLOSPEC_RUN="$(ls -td "$PHYLOSPEC_PROJECT"/runs/hky-yule-* | head -n 1)"
 ```
 
-To run the same 30-step script with BEAST X, choose a separate result directory.
+Logs, trees and the state file are written to the working directory. The run record
+is saved in `runs/` beside the script.
+
+To run the same 30-step script with BEAST X, use a separate working directory.
 The input alignment is still resolved relative to the script. The Apple Silicon CPU
 ZIP includes the required BEAGLE runtime. For the generic ZIP, configure BEAGLE
 as described under **Export a native analysis XML**.
 
 ```sh
-PHYLOSPEC_X_RUN="$PHYLOSPEC_PROJECT/results/run-beastx-01"
-"$PHYLOSPEC_DIR/bin/phylospec" run --engine beastx "$PHYLOSPEC_PROJECT/hky-yule.phylospec" \
-  --out "$PHYLOSPEC_X_RUN"
-head -n 5 "$PHYLOSPEC_X_RUN/output/hky-yule.log"
-tail -n 2 "$PHYLOSPEC_X_RUN/output/hky-yule.trees"
+mkdir -p "$PHYLOSPEC_PROJECT/results/run-beastx-01"
+cd "$PHYLOSPEC_PROJECT/results/run-beastx-01"
+"$PHYLOSPEC_DIR/bin/phylospec" run --engine beastx "$PHYLOSPEC_PROJECT/hky-yule.phylospec"
+head -n 5 hky-yule.log
+tail -n 2 hky-yule.trees
 ```
 
-BEAST X loads the saved `analysis.xml` and runs it in `output/`. The trace header
+BEAST X loads the saved `analysis.xml` and writes its logs to the working directory. The trace header
 reports the script's seed (`12345`). For this example, look for state 30 in the
 trace and `tree STATE_30` in the tree log. The BEAST X `run.json` records the
 XML's SHA-256 digest, the effective seed and the result files. When rerunning
@@ -152,10 +156,11 @@ and failure stack traces to the terminal.
 ### 4. View the results
 
 ```sh
-ls -lh "$PHYLOSPEC_RUN" "$PHYLOSPEC_RUN/output"
+cd "$PHYLOSPEC_PROJECT/results/run-01"
+ls -lh . "$PHYLOSPEC_RUN"
 head -n 12 "$PHYLOSPEC_RUN/run.json"
-head -n 6 "$PHYLOSPEC_RUN/output/hky-yule.log"
-tail -n 3 "$PHYLOSPEC_RUN/output/hky-yule.log"
+head -n 6 hky-yule.log
+tail -n 3 hky-yule.log
 ```
 
 For the default BEAST 3 run, a successful `run.json` has `"status" : "succeeded"` and
@@ -177,14 +182,14 @@ This records the backend that initialized. Native library files, `--version`, an
 a successful `check` alone do not confirm its activation. The reporting covers the
 base `PhyloCTMC` mapping, not arbitrary likelihoods supplied by external adapters.
 
-| File inside `results/run-01/` | What it contains |
+| File | What it contains |
 | --- | --- |
-| `output/hky-yule.log` | Tab-separated samples: posterior, prior, likelihood, `kappa`, tree summaries, and four base frequencies. |
-| `output/hky-yule.trees` | Sampled trees in NEXUS format. |
-| `output/hky-yule.state.xml` | Final MCMC state. The CLI does not yet provide a resume command. |
-| `run.json` | Run status, effective settings, seed, input references, output paths, and actual base `PhyloCTMC` likelihood backends. |
-| `console.log` | Java/BEAST console output, including original diagnostic messages and failure details. |
-| `model.phylospec` | Snapshot of the script actually used. Input data are not copied into the result directory. |
+| `hky-yule.log` (working directory) | Tab-separated samples: posterior, prior, likelihood, `kappa`, tree summaries, and four base frequencies. |
+| `hky-yule.trees` (working directory) | Sampled trees in NEXUS format. |
+| `hky-yule.state.xml` (working directory) | Final MCMC state. The CLI does not yet provide a resume command. |
+| `run.json` (run record) | Run status, effective settings, seed, input references, output paths, and actual base `PhyloCTMC` likelihood backends. |
+| `console.log` (run record) | Java/BEAST console output, including original diagnostic messages and failure details. |
+| `model.phylospec` (run record) | Snapshot of the script actually used. Input data are not copied into the result directory. |
 
 To inspect the diagnostic log:
 
@@ -195,19 +200,18 @@ tail -n 30 "$PHYLOSPEC_RUN/console.log"
 The example runs **30 MCMC steps with seed 12345 and logs every step**. This verifies
 the setup and produces inspectable results; it does not establish convergence or
 provide enough samples for scientific conclusions. Chain length, logging interval,
-seed, and the `hky-yule` output prefix are in the script's `mcmc` block.
+and seed are set by the script and the command line.
 
-To run again, choose a new result directory. Existing results are never overwritten:
+To run again, use a new working directory or `--run-name`. Existing results are never
+overwritten:
 
 ```sh
-PHYLOSPEC_RUN="$PHYLOSPEC_PROJECT/results/run-02"
-"$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_PROJECT/hky-yule.phylospec" \
-  --out "$PHYLOSPEC_RUN"
+"$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_PROJECT/hky-yule.phylospec" --run-name run-02
 ```
 
-Use another unused name for later runs. In a new terminal session, set
-`PHYLOSPEC_DIR` and `PHYLOSPEC_PROJECT` to the printed installation and analysis
-paths, then set `PHYLOSPEC_RUN` to the result directory you want to inspect.
+In a new terminal session, set `PHYLOSPEC_DIR` and `PHYLOSPEC_PROJECT` to the printed
+installation and analysis paths, then set `PHYLOSPEC_RUN` to the run record you want
+to inspect.
 
 ### What this example models
 
@@ -237,8 +241,7 @@ same installation:
 
 ```sh
 "$PHYLOSPEC_DIR/bin/phylospec" check "$PHYLOSPEC_DIR/examples/jc69-coalescent.phylospec"
-"$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_DIR/examples/jc69-coalescent.phylospec" \
-  --out "$PHYLOSPEC_PROJECT/results/jc69-demo"
+"$PHYLOSPEC_DIR/bin/phylospec" run "$PHYLOSPEC_DIR/examples/jc69-coalescent.phylospec"
 ```
 
 The Windows launcher is supplied in the generic ZIP; Windows execution needs its
@@ -252,7 +255,7 @@ set "PHYLOSPEC_PROJECT=C:\path\my-hky-analysis"
 "%PHYLOSPEC_DIR%\bin\phylospec.cmd" --version
 "%PHYLOSPEC_DIR%\bin\phylospec.cmd" --help
 "%PHYLOSPEC_DIR%\bin\phylospec.cmd" check "%PHYLOSPEC_PROJECT%\hky-yule.phylospec"
-"%PHYLOSPEC_DIR%\bin\phylospec.cmd" run "%PHYLOSPEC_PROJECT%\hky-yule.phylospec" --out "%PHYLOSPEC_PROJECT%\results\run-01"
+"%PHYLOSPEC_DIR%\bin\phylospec.cmd" run "%PHYLOSPEC_PROJECT%\hky-yule.phylospec"
 ```
 
 ## Run records and completion
@@ -281,16 +284,14 @@ Put a script wherever convenient. Relative input filenames resolve from the
 **script's directory**, regardless of the terminal's working directory. For example,
 `fromNexus("data/alignment.nex")` looks for a `data/` directory beside the script.
 
-`--out` names the exact run directory. A relative value resolves from the terminal's
-working directory. The directory must be absent or empty; an existing result is
-never overwritten. Without `--out`, a unique directory is created beside the script
-at `runs/<script-name>-<unique-id>/`.
+Each run record is saved in a new directory beside the script at
+`runs/<script-name>-<unique-id>/`.
 
-`--run-name` changes the output prefix within `output/`; the default is the script's
-filename without `.phylospec`. A script `outputPrefix` overrides it. Explicit logger
-filenames also resolve inside `output/`. Absolute output paths, paths escaping this
-directory, and conflicting output filenames are rejected. To repeat the example,
-choose a new `--out` directory, such as `results/run-02`.
+Logs, trees and state files go to the terminal's working directory. They are named
+after the run, which is the script's filename without `.phylospec` unless `--run-name`
+is given. A logger's `file` and the sampler's `stateFile` can set another relative or
+absolute path. Existing files are never overwritten, and conflicting output filenames
+are rejected.
 
 | Option | Meaning |
 | --- | --- |
@@ -298,8 +299,7 @@ choose a new `--out` directory, such as `results/run-02`.
 | `--library <id[,id...]>` | Select BEAST 3 tile libraries in preference order. BEAST X uses its base library, `beastX`. |
 | `--adapter-path <directory>` | Load an unpacked local BEAST 3 adapter bundle for `check`, `export` or `run`. Repeat for additional bundles. |
 | `--xml <file>` | Destination for `export`. The XML contains the model and its MCMC configuration. The filename stem supplies the default log prefix. |
-| `--out <directory>` | For `run`: exact directory for this run's record, logs, and outputs. |
-| `--run-name <prefix>` | For `run`: relative output prefix, unless the script sets `outputPrefix`. |
+| `--run-name <prefix>` | For `run`: relative prefix of the default log, tree and state files. |
 | `--debug` | Show raw BEAST console output and failure stack traces in the terminal. |
 | `-h`, `--help` | Show commands and options. |
 | `--version` | Show PhyloSpec and loaded BEAST runtime versions. |
@@ -349,8 +349,7 @@ PopFunc bundle and a script using its supported generators:
 "$PHYLOSPEC_DIR/bin/phylospec" check /path/to/popfunc-model.phylospec \
   --adapter-path /path/to/phylospec-adapter --library popfunc
 "$PHYLOSPEC_DIR/bin/phylospec" run /path/to/popfunc-model.phylospec \
-  --adapter-path /path/to/phylospec-adapter --library popfunc \
-  --out "$PWD/results/popfunc-demo"
+  --adapter-path /path/to/phylospec-adapter --library popfunc
 ```
 
 `--adapter-path` locates the bundle; `--library` selects its adapter ID. Supplying a
@@ -569,6 +568,6 @@ java --enable-native-access=ALL-UNNAMED -Djava.only=true \
 Without a subcommand, `--library` is required and its exact order is retained.
 This mode keeps the earlier output-prefix and script-output behavior; it does not
 create a managed result directory, script snapshot, run record, or console log.
-`--out` is unavailable in this mode. Use `run` for the result management described
+Use `run` for the result management described
 in this guide. `--adapter-path` is supported by the `check`, `export` and `run`
 subcommands.

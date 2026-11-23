@@ -11,7 +11,6 @@ import java.util.List;
 public record ScreenLoggerSpec<T>(int logEvery, List<T> parameters, List<String> parameterNames) implements LoggerSpec {
 
     public ScreenLoggerSpec {
-        LoggerSpec.validateLogEvery(logEvery);
         LoggerSpec.validateParameterNames(parameters, parameterNames);
     }
 }

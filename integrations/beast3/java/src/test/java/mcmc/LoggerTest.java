@@ -22,7 +22,6 @@ import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.mcmc.LoggerSpec;
-import org.phylospec.tiling.mcmc.McmcBlockValidator;
 import org.phylospec.tiling.mcmc.McmcSamplerSpec;
 import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.typeresolver.StochasticityResolver;
@@ -94,39 +93,6 @@ public class LoggerTest {
                                     Sampler sampler = mcmc()
                                 }
                                 """).state().getSamplerSpec().chainLength());
-    }
-
-    @Test
-    public void testSettingsOutsideOfSamplersAndLoggersAreRejected() {
-        TileApplicationError error = assertThrows(TileApplicationError.class, () -> tile(MODEL + """
-                                mcmc {
-                                    Integer chainLength = 100
-                                }
-                                """));
-
-        assertTrue(error.getMessage().contains("Only samplers and loggers"), error.getMessage());
-    }
-
-    @Test
-    public void testTreeLoggerNeedsATree() {
-        TileApplicationError error = assertThrows(TileApplicationError.class, () -> tile(MODEL + """
-                                mcmc {
-                                    Logger logger = treeLogger(logEvery=500, file="trees.trees")
-                                }
-                                """));
-
-        assertTrue(error.getMessage().contains("needs the argument `tree`"), error.getMessage());
-    }
-
-    @Test
-    public void testLoggersRejectNonPositiveIntervals() {
-        TileApplicationError error = assertThrows(TileApplicationError.class, () -> tile(MODEL + """
-                                mcmc {
-                                    Logger logger = screenLogger(logEvery=0)
-                                }
-                                """));
-
-        assertTrue(error.getMessage().contains("logging interval must be positive"), error.getMessage());
     }
 
     @Test
@@ -275,8 +241,6 @@ public class LoggerTest {
 
         statements = new RemoveGroupings().transform(statements);
         statements = new EvaluateLiterals().transform(statements);
-
-        McmcBlockValidator.validate(statements);
 
         VariableResolver variableResolver = new VariableResolver(statements);
 

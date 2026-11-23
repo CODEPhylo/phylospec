@@ -12,7 +12,17 @@ import java.util.Map;
 import javax.annotation.processing.Generated;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"name", "type", "required", "recommended", "default", "dimension", "description", "uiHints"})
+@JsonPropertyOrder({
+    "name",
+    "type",
+    "required",
+    "untyped",
+    "recommended",
+    "default",
+    "dimension",
+    "description",
+    "uiHints"
+})
 @Generated("jsonschema2pojo")
 public class Argument {
 
@@ -33,6 +43,13 @@ public class Argument {
 
     @JsonProperty("required")
     private Boolean required;
+    /**
+     * Indicates that the type checker accepts any value for this argument
+     *
+     */
+    @JsonProperty("untyped")
+    @JsonPropertyDescription("Indicates that the type checker accepts any value for this argument")
+    private Boolean untyped;
     /**
      * Indicates that this argument is recommended but not required
      *
@@ -121,6 +138,24 @@ public class Argument {
     @JsonProperty("required")
     public void setRequired(Boolean required) {
         this.required = required;
+    }
+
+    /**
+     * Indicates that the type checker accepts any value for this argument
+     *
+     */
+    @JsonProperty("untyped")
+    public Boolean getUntyped() {
+        return untyped;
+    }
+
+    /**
+     * Indicates that the type checker accepts any value for this argument
+     *
+     */
+    @JsonProperty("untyped")
+    public void setUntyped(Boolean untyped) {
+        this.untyped = untyped;
     }
 
     /**
@@ -242,6 +277,10 @@ public class Argument {
         sb.append('=');
         sb.append(((this.required == null) ? "<null>" : this.required));
         sb.append(',');
+        sb.append("untyped");
+        sb.append('=');
+        sb.append(((this.untyped == null) ? "<null>" : this.untyped));
+        sb.append(',');
         sb.append("recommended");
         sb.append('=');
         sb.append(((this.recommended == null) ? "<null>" : this.recommended));
@@ -280,6 +319,7 @@ public class Argument {
         result = ((result * 31) + ((this._default == null) ? 0 : this._default.hashCode()));
         result = ((result * 31) + ((this.uiHints == null) ? 0 : this.uiHints.hashCode()));
         result = ((result * 31) + ((this.name == null) ? 0 : this.name.hashCode()));
+        result = ((result * 31) + ((this.untyped == null) ? 0 : this.untyped.hashCode()));
         result = ((result * 31) + ((this.description == null) ? 0 : this.description.hashCode()));
         result = ((result * 31) + ((this.additionalProperties == null) ? 0 : this.additionalProperties.hashCode()));
         result = ((result * 31) + ((this.type == null) ? 0 : this.type.hashCode()));
@@ -298,17 +338,20 @@ public class Argument {
             return false;
         }
         Argument rhs = ((Argument) other);
-        return ((((((((((this._default == rhs._default)
-                                                                                || ((this._default != null)
-                                                                                        && this._default.equals(
-                                                                                                rhs._default)))
-                                                                        && ((this.uiHints == rhs.uiHints)
-                                                                                || ((this.uiHints != null)
-                                                                                        && this.uiHints.equals(
-                                                                                                rhs.uiHints))))
-                                                                && ((this.name == rhs.name)
-                                                                        || ((this.name != null)
-                                                                                && this.name.equals(rhs.name))))
+        return (((((((((((this._default == rhs._default)
+                                                                                        || ((this._default != null)
+                                                                                                && this._default.equals(
+                                                                                                        rhs._default)))
+                                                                                && ((this.uiHints == rhs.uiHints)
+                                                                                        || ((this.uiHints != null)
+                                                                                                && this.uiHints.equals(
+                                                                                                        rhs.uiHints))))
+                                                                        && ((this.name == rhs.name)
+                                                                                || ((this.name != null)
+                                                                                        && this.name.equals(rhs.name))))
+                                                                && ((this.untyped == rhs.untyped)
+                                                                        || ((this.untyped != null)
+                                                                                && this.untyped.equals(rhs.untyped))))
                                                         && ((this.description == rhs.description)
                                                                 || ((this.description != null)
                                                                         && this.description.equals(rhs.description))))

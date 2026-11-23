@@ -68,6 +68,12 @@ public class TypeUtils {
             ResolvedTypeSet resolvedArgumentTypeSet = resolvedArgumentTypeSets.get(parameterName);
             if (resolvedArgumentTypeSet == null) continue;
 
+            // untyped arguments accept any value
+            if (Boolean.TRUE.equals(parameter.getUntyped())) {
+                possibleArgumentTypeSets.put(parameterName, resolvedArgumentTypeSet);
+                continue;
+            }
+
             // Types within one argument's typeset are alternative interpretations, not
             // simultaneous constraints. In particular, an integer literal may also be real.
             Map<String, ResolvedTypeSet> parameterAlternatives = new HashMap<>();

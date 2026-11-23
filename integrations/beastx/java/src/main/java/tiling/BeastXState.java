@@ -383,6 +383,24 @@ public class BeastXState {
     }
 
     /**
+     * Returns the given logged names with every tree replaced by the names of its statistics.
+     */
+    public List<String> expandLoggedTrees(List<String> names) {
+        List<String> expandedNames = new ArrayList<>();
+
+        for (String name : names) {
+            if (this.treeModelsByPhyloSpecName.containsKey(name)) {
+                expandedNames.add(name + ".height");
+                expandedNames.add(name + ".treeLength");
+            } else {
+                expandedNames.add(name);
+            }
+        }
+
+        return expandedNames;
+    }
+
+    /**
      * Returns the tree loggers used when the model declares none. Every tree is logged if at least
      * one tree is sampled. A single tree is logged to {@code <prefix>.trees}, several trees to
      * {@code <prefix>-<tree>.trees} each.

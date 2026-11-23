@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 
-/** Runs the isolated engine with its native loggers' working directory set to output/. */
+/** Runs the isolated engine in the working directory of the command. */
 final class InstalledBeastXRun {
     private InstalledBeastXRun() {}
 
@@ -24,9 +24,9 @@ final class InstalledBeastXRun {
         OutputPaths.checkRuntimeOverrides();
         Path directory = options.runDirectory(source);
         String prefix = options.outputPrefix(source);
-        new OutputPaths(directory.resolve("output")).resolveUserPath(prefix);
+        new OutputPaths(Path.of("").toAbsolutePath()).resolve(prefix);
         Path lib = InstalledEngineTool.runtimeLib("beastx", "run");
-        Path output = OutputPaths.createRunDirectory(directory);
+        OutputPaths.createRunDirectory(directory);
         Path console = directory.resolve("console.log");
         Path record = directory.resolve("run.json");
         out.println("Results directory: " + directory);
@@ -45,8 +45,7 @@ final class InstalledBeastXRun {
                 "-cp", lib.resolve("*").toString(), "BeastXRunTool", source.toString(), directory.toString(), prefix));
         if (options.seed() != null) args.addAll(List.of("--seed", options.seed().toString()));
         if (options.debug()) args.add("--debug");
-        ProcessBuilder builder =
-                new ProcessBuilder(args).directory(output.toFile()).redirectErrorStream(true);
+        ProcessBuilder builder = new ProcessBuilder(args).redirectErrorStream(true);
         if (!options.debug()) builder.redirectOutput(console.toFile());
         int exit = execute(builder, console, options.debug(), out);
 

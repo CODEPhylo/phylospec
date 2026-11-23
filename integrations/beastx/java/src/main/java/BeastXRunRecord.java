@@ -106,30 +106,18 @@ final class BeastXRunRecord {
 
     private void addLogger(ArrayNode loggers, String kind, String name, long every) throws IOException {
         if (name == null || name.isBlank()) throw new IOException("An output filename is required.");
-        // FileHelpers strips the leading "./" before interpreting the filename.
-        Path relative = Path.of(name.startsWith("./") ? name.substring(2) : name);
-        if (relative.isAbsolute() || relative.normalize().toString().isEmpty()) {
-            throw new IOException("Use a relative logger filename inside output/: " + name);
-        }
-        for (Path segment : relative) {
-            if (segment.toString().equals("..")) throw new IOException("Logger path contains a parent directory: " + name);
-        }
-        Path file = directory.resolve("output").resolve(relative).normalize();
+        Path file = Path.of(name).toAbsolutePath().normalize();
         ObjectNode logger = loggers.addObject().put("kind", kind).put("logEvery", every)
-                .put("path", directory.relativize(file).toString());
+                .put("path", file.toString());
         data.withArray("expectedOutputs").add(logger.deepCopy());
     }
 
     /** Probe the native filesystem, including case-insensitive aliases, before any native logger can overwrite a file. */
     private void prepareLoggerFiles() throws IOException {
-        Path output = directory.resolve("output");
         var probes = new ArrayList<Path>();
         try {
             for (var entry : data.withArray("expectedOutputs")) {
                 Path file = directory.resolve(entry.path("path").asText());
-                for (Path parent = file.getParent(); parent.startsWith(output); parent = parent.getParent()) {
-                    if (Files.isSymbolicLink(parent)) throw new IOException("Logger path traverses a symbolic link: " + parent);
-                }
                 Files.createDirectories(file.getParent());
                 probes.add(Files.createFile(file));
             }
@@ -164,9 +152,10 @@ final class BeastXRunRecord {
 
     private void finish(String status) throws IOException {
         ArrayNode generated = data.putArray("generatedOutputs");
-        try (var files = Files.walk(directory.resolve("output"))) {
-            for (Path file : files.filter(p -> Files.isRegularFile(p, LinkOption.NOFOLLOW_LINKS)).sorted().toList()) {
-                generated.addObject().put("path", directory.relativize(file).toString()).put("size", Files.size(file));
+        for (var entry : data.withArray("expectedOutputs")) {
+            Path file = Path.of(entry.path("path").asText());
+            if (Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
+                generated.addObject().put("path", file.toString()).put("size", Files.size(file));
             }
         }
         data.put("status", status).put("endedAt", Instant.now().toString()).put("completionConfirmed", true);

@@ -17,7 +17,8 @@ public class McmcSamplerTile extends TemplateTile<Void, BEASTState> {
         return """
                 mcmc {
                     Sampler sampler = mcmc(
-                        chainLength=$$chainLength
+                        chainLength=$$chainLength,
+                        stateFile=$$stateFile
                     )
                 }""";
     }
@@ -25,11 +26,18 @@ public class McmcSamplerTile extends TemplateTile<Void, BEASTState> {
     public TemplateTileInput<Integer, BEASTState> chainLengthInput =
             new TemplateTileInput<>("$$chainLength", false, Set.of(Stochasticity.CONSTANT));
 
+    public TemplateTileInput<String, BEASTState> stateFileInput =
+            new TemplateTileInput<>("$$stateFile", false, Set.of(Stochasticity.CONSTANT));
+
     @Override
     protected Void applyTile(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Integer chainLength = this.chainLengthInput.apply(state, indexVariables);
 
-        state.setSamplerSpec(chainLength != null ? new McmcSamplerSpec(chainLength) : new McmcSamplerSpec());
+        String stateFile = this.stateFileInput.apply(state, indexVariables);
+
+        state.setSamplerSpec(new McmcSamplerSpec(
+                chainLength != null ? chainLength : McmcSamplerSpec.DEFAULT_CHAIN_LENGTH,
+                stateFile != null ? state.resolveOutputPath(stateFile) : null));
 
         return null;
     }

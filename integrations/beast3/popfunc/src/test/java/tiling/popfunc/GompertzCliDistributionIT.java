@@ -65,10 +65,13 @@ class GompertzCliDistributionIT {
         Result completed = execute(working, List.of(
                 launcher.toString(), "run", source.toString(),
                 "--adapter-path", adapter.toString(), "--library", "popfunc",
-                "--out", "Gompertz results", "--seed", "12345"));
+                "--seed", "12345"));
         assertEquals(0, completed.exitCode(), completed.details());
         assertTrue(completed.stdout().contains("Run completed"), completed.details());
-        Path run = working.resolve("Gompertz results");
+        Path run;
+        try (var runs = Files.list(source.resolveSibling("runs"))) {
+            run = runs.findFirst().orElseThrow();
+        }
         JsonNode record = JSON.readTree(run.resolve("run.json").toFile());
         assertEquals("succeeded", record.path("status").asText(), record.toPrettyString());
         assertTrue(record.path("completionConfirmed").asBoolean());
@@ -89,15 +92,15 @@ class GompertzCliDistributionIT {
         for (JsonNode output : record.path("expectedOutputs")) {
             assertTrue(Files.size(run.resolve(output.path("path").asText())) > 0, output.toPrettyString());
         }
-        assertTrace(run.resolve("output/gompertz.log"));
-        String trees = Files.readString(run.resolve("output/gompertz.trees"));
+        assertTrace(working.resolve("gompertz.log"));
+        String trees = Files.readString(working.resolve("gompertz.trees"));
         assertEquals(31, trees.lines().filter(line -> line.strip().startsWith("tree STATE_")).count());
         assertTrue(trees.contains("tree STATE_30"));
 
         var factory = DocumentBuilderFactory.newInstance();
         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         var elements = factory.newDocumentBuilder()
-                .parse(run.resolve("output/gompertz.state.xml").toFile())
+                .parse(working.resolve("gompertz.state.xml").toFile())
                 .getElementsByTagName("*");
         var stateIds = new HashSet<String>();
         for (int index = 0; index < elements.getLength(); index++) {
@@ -124,7 +127,9 @@ class GompertzCliDistributionIT {
         for (JsonNode jar : bundle.path("jars")) {
             assertEquals(hash(Path.of(jar.path("path").asText())), jar.path("sha256").asText());
         }
-        assertEquals(before, hashes(adapter), "run must write only to the selected results directory");
+        Map<Path, String> after = hashes(adapter);
+        after.keySet().removeIf(path -> path.startsWith("examples/runs"));
+        assertEquals(before, after, "run must only add its record beside the example");
     }
 
     private static void assertTrace(Path trace) throws Exception {

@@ -2,7 +2,6 @@ package tiles.mcmc;
 
 import beast.base.core.BEASTObject;
 import beastconfig.BEASTState;
-import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
@@ -10,6 +9,7 @@ import org.phylospec.ast.Expr;
 import org.phylospec.tiling.mcmc.LoggerSpec;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.tiles.TemplateTile;
+import org.phylospec.tiling.tiles.TileInput;
 import org.phylospec.typeresolver.Stochasticity;
 
 /// Matches a `screenLogger(...)` declaration in the `mcmc` block and registers a
@@ -30,20 +30,18 @@ public class ScreenLoggerTile extends TemplateTile<Void, BEASTState> {
 
     public TemplateTileInput<Integer, BEASTState> logEveryInput =
             new TemplateTileInput<>("$$logEvery", false, Set.of(Stochasticity.CONSTANT));
-    public TemplateTileInput<List<? extends BEASTObject>, BEASTState> parametersInput =
-            new TemplateTileInput<>("$$parameters", false);
+    public TileInput<List<BEASTObject>, BEASTState> parametersInput = new LoggerParametersInput("$$parameters");
     public TemplateTileInput<List<String>, BEASTState> parameterNamesInput =
             new TemplateTileInput<>("$$parameterNames", false, Set.of(Stochasticity.CONSTANT));
 
     @Override
     protected Void applyTile(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Integer logEvery = this.logEveryInput.apply(state, indexVariables);
-        List<? extends BEASTObject> parameters = this.parametersInput.apply(state, indexVariables);
+        List<BEASTObject> parameters = this.parametersInput.apply(state, indexVariables);
         List<String> parameterNames = this.parameterNamesInput.apply(state, indexVariables);
 
-        List<BEASTObject> generalParameters = parameters != null ? new ArrayList<>(parameters) : null;
         state.addScreenLoggerSpec(new ScreenLoggerSpec<>(
-                logEvery != null ? logEvery : LoggerSpec.DEFAULT_LOG_EVERY, generalParameters, parameterNames));
+                logEvery != null ? logEvery : LoggerSpec.DEFAULT_LOG_EVERY, parameters, parameterNames));
 
         return null;
     }

@@ -82,19 +82,28 @@ class PhyloSpecRunnerTest {
     }
 
     @Test
-    void checkRejectsSettingsThatAreNoLongerPartOfTheMcmcBlock() {
-        String source = """
+    void loggedValuesOfDifferentTypesCanBeCombined() throws Exception {
+        runner("""
                 Real x ~ Normal(mean=0.0, sd=1.0)
+                Simplex y ~ Dirichlet(repeat(value=2.0, num=3))
                 mcmc {
-                    Integer chainLength = 10
+                    Logger logger = screenLogger(parameters=[x, y])
                 }
-                """;
-        PhyloSpecException failure =
-                assertThrows(PhyloSpecException.class, () -> runner(source).check());
+                """).check();
+    }
 
-        assertDiagnostic(failure, PhyloSpecDiagnostic.Stage.MAPPING);
-        assertTrue(failure.diagnostic().error().description().contains("Only samplers and loggers"));
-        assertTrue(failure.diagnostic().error().hint().contains("Declare a sampler"));
+    @Test
+    void loggedValuesWhichCannotBeLoggedAreRejected() {
+        for (String parameter : List.of("label", "\"x\"")) {
+            String source = """
+                    Real x ~ Normal(mean=0.0, sd=1.0)
+                    String label = "label"
+                    mcmc {
+                        Logger logger = screenLogger(parameters=[%s])
+                    }
+                    """.formatted(parameter);
+            assertThrows(PhyloSpecException.class, () -> runner(source).check(), parameter);
+        }
     }
 
     @Test

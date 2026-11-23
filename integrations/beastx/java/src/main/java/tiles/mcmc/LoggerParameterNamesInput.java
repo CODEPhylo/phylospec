@@ -56,30 +56,20 @@ public class LoggerParameterNamesInput extends TileInput<LoggerParameterNames, B
         List<Set<Tile<?, BeastXState>>> allPossibleInputTiles = new ArrayList<>();
 
         for (Expr element : array.elements) {
-            if (element instanceof Expr.Variable variable) {
-                names.add(variable.variableName);
-
-                if (!isModelLevelLoggable(variable.variableName)) {
-                    Set<Tile<?, BeastXState>> tiles = possibleInputTiles.get(variable);
-
-                    if (tiles == null || tiles.isEmpty()) {
-                        throw new FailedTilingAttempt.RejectedCascade(variable);
-                    }
-
-                    allPossibleInputTiles.add(tiles);
-                }
-
-                continue;
+            if (!(element instanceof Expr.Variable variable)) {
+                throw new FailedTilingAttempt.RejectedBoundary(
+                        "BEAST X logger parameters must be variables."
+                );
             }
 
-            if (element instanceof Expr.Literal literal && literal.value instanceof String string) {
-                names.add(string);
-                continue;
+            names.add(variable.variableName);
+
+            Set<Tile<?, BeastXState>> tiles = possibleInputTiles.get(variable);
+            if (tiles == null || tiles.isEmpty()) {
+                throw new FailedTilingAttempt.RejectedCascade(variable);
             }
 
-            throw new FailedTilingAttempt.RejectedBoundary(
-                    "BEAST X logger parameters must be variable names or string loggable names."
-            );
+            allPossibleInputTiles.add(tiles);
         }
 
         if (allPossibleInputTiles.isEmpty()) {
@@ -113,12 +103,6 @@ public class LoggerParameterNamesInput extends TileInput<LoggerParameterNames, B
         );
 
         return tiles;
-    }
-
-    private static boolean isModelLevelLoggable(String name) {
-        return name.equals("posterior")
-                || name.equals("prior")
-                || name.equals("likelihood");
     }
 
     @Override

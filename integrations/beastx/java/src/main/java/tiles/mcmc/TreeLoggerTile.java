@@ -21,7 +21,7 @@ public class TreeLoggerTile extends TemplateTile<Void, BeastXState> {
         return """
                 mcmc {
                     Logger treeLogger = treeLogger(
-                        file=$fileName,
+                        file=$$fileName,
                         tree=$tree,
                         logEvery=$$logEvery
                     )
@@ -29,7 +29,7 @@ public class TreeLoggerTile extends TemplateTile<Void, BeastXState> {
     }
 
     public TemplateTileInput<String, BeastXState> fileNameInput =
-            new TemplateTileInput<>("$fileName", Set.of(Stochasticity.CONSTANT));
+            new TemplateTileInput<>("$$fileName", false, Set.of(Stochasticity.CONSTANT));
     public TemplateTileInput<TreeModel, BeastXState> treeInput = new TemplateTileInput<>("$tree");
     public TemplateTileInput<Integer, BeastXState> logEveryInput =
             new TemplateTileInput<>("$$logEvery", false, Set.of(Stochasticity.CONSTANT));
@@ -37,6 +37,7 @@ public class TreeLoggerTile extends TemplateTile<Void, BeastXState> {
     @Override
     protected Void applyTile(BeastXState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         String fileName = this.fileNameInput.apply(beastState, indexVariables);
+        if (fileName == null) fileName = (beastState.outputPrefix != null ? beastState.outputPrefix : beastState.runName) + ".trees";
         TreeModel tree = this.treeInput.apply(beastState, indexVariables);
         Integer logEvery = this.logEveryInput.apply(beastState, indexVariables);
 

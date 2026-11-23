@@ -251,11 +251,14 @@ class FromCSVTileTest {
         CliResult check = launch(callerDirectory, "check", source.toString());
         assertEquals(0, check.exitCode(), check.stdout() + "\n" + check.stderr());
         assertTrue(check.stdout().contains("Check passed"));
-        assertFalse(Files.exists(callerDirectory.resolve("results")));
+        assertFalse(Files.exists(source.resolveSibling("runs")));
 
-        CliResult run = launch(callerDirectory, "run", source.toString(), "--out", "results", "--seed", "42");
+        CliResult run = launch(callerDirectory, "run", source.toString(), "--seed", "42");
         assertEquals(0, run.exitCode(), run.stdout() + "\n" + run.stderr());
-        Path results = callerDirectory.resolve("results");
+        Path results;
+        try (var runs = Files.list(source.resolveSibling("runs"))) {
+            results = runs.findFirst().orElseThrow();
+        }
         JsonNode record =
                 new ObjectMapper().readTree(results.resolve("run.json").toFile());
         assertEquals("succeeded", record.path("status").asText(), record.toPrettyString());
@@ -266,7 +269,7 @@ class FromCSVTileTest {
             recordedHashes.put(input.path("path").asText(), input.path("sha256").asText());
         }
         assertEquals(Map.of(csv.toString(), hash(csv), fasta.toString(), hash(fasta)), recordedHashes);
-        List<String> trace = Files.readAllLines(results.resolve("output/model.log")).stream()
+        List<String> trace = Files.readAllLines(callerDirectory.resolve("model.log")).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))
                 .toList();
         assertEquals(12, trace.size(), "Header and samples 0 through 10");
@@ -279,8 +282,8 @@ class FromCSVTileTest {
                 assertTrue(Double.isFinite(Double.parseDouble(values[columns.indexOf(name)])));
             }
         }
-        assertTrue(Files.readString(results.resolve("output/model.trees")).contains("STATE_10"));
-        assertTrue(Files.size(results.resolve("output/model.state.xml")) > 0);
+        assertTrue(Files.readString(callerDirectory.resolve("model.trees")).contains("STATE_10"));
+        assertTrue(Files.size(callerDirectory.resolve("model.state.xml")) > 0);
     }
 
     private Path write(String contents) throws Exception {

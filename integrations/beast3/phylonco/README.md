@@ -100,7 +100,7 @@ PHYLOSPEC="$HOME/phylospec-cli/phylospec-beast3-0.0.1-SNAPSHOT/bin/phylospec"
 ADAPTER="$PWD/integrations/beast3/phylonco/target/phylospec-adapter"
 cd integrations/beast3/phylonco/examples
 "$PHYLOSPEC" check CRC09.phylospec --adapter-path "$ADAPTER" --library phylonco
-"$PHYLOSPEC" run CRC09.phylospec --adapter-path "$ADAPTER" --library phylonco --out "$PWD/results/crc09"
+"$PHYLOSPEC" run CRC09.phylospec --adapter-path "$ADAPTER" --library phylonco
 ```
 
 `CRC09-explicit.phylospec` runs the same way. Without `--adapter-path`, `use phylonco` fails

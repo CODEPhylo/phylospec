@@ -1,7 +1,6 @@
 import dr.inference.mcmc.MCMC;
 import dr.math.MathUtils;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ServiceConfigurationError;
 import java.util.concurrent.ThreadLocalRandom;
@@ -9,7 +8,7 @@ import tiling.BeastXModel;
 import tiling.xml.StateXmlGenerator;
 import tiling.xml.XmlRunner;
 
-/** Worker entry point. The public CLI launches this JVM in the run's output directory. */
+/** Worker entry point. The public CLI launches this JVM in the working directory of the command. */
 public final class BeastXRunTool {
     private BeastXRunTool() {}
 
@@ -30,9 +29,6 @@ public final class BeastXRunTool {
     }
 
     private static void execute(Path script, Path runDir, String runName, Long requestedSeed) throws Exception {
-        if (!Files.isSameFile(Path.of("").toAbsolutePath(), runDir.resolve("output"))) {
-            throw new IOException("Expected the BEAST X working directory to be " + runDir.resolve("output"));
-        }
         BeastXRunRecord record = BeastXRunRecord.create(runDir, script);
         try {
             // A managed run owns its destinations. Native command-line filename overrides also

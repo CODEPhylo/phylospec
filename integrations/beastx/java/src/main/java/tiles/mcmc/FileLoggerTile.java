@@ -21,7 +21,7 @@ public class FileLoggerTile extends TemplateTile<Void, BeastXState> {
         return """
                 mcmc {
                     Logger fileLogger = fileLogger(
-                        file=$fileName,
+                        file=$$fileName,
                         logEvery=$$logEvery,
                         parameters=$$parameters,
                         parameterNames=$$parameterNames
@@ -30,7 +30,7 @@ public class FileLoggerTile extends TemplateTile<Void, BeastXState> {
     }
 
     public TemplateTileInput<String, BeastXState> fileNameInput =
-            new TemplateTileInput<>("$fileName", Set.of(Stochasticity.CONSTANT));
+            new TemplateTileInput<>("$$fileName", false, Set.of(Stochasticity.CONSTANT));
     public TemplateTileInput<Integer, BeastXState> logEveryInput =
             new TemplateTileInput<>("$$logEvery", false, Set.of(Stochasticity.CONSTANT));
     public TileInput<LoggerParameterNames, BeastXState> parametersInput =
@@ -41,6 +41,7 @@ public class FileLoggerTile extends TemplateTile<Void, BeastXState> {
     @Override
     protected Void applyTile(BeastXState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         String fileName = this.fileNameInput.apply(beastState, indexVariables);
+        if (fileName == null) fileName = (beastState.outputPrefix != null ? beastState.outputPrefix : beastState.runName) + ".log";
         Integer logEvery = this.logEveryInput.apply(beastState, indexVariables);
         LoggerParameterNames parameters = this.parametersInput.apply(beastState, indexVariables);
         List<String> parameterNames = this.parameterNamesInput.apply(beastState, indexVariables);

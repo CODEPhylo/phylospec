@@ -8,7 +8,6 @@ import dr.inference.loggers.Logger;
 import dr.inference.loggers.MCLogger;
 import dr.inference.loggers.NumberColumn;
 import dr.inference.loggers.TabDelimitedFormatter;
-import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
 import dr.inference.model.Statistic;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
@@ -185,11 +184,8 @@ public class LoggerBuilder {
         for (int i = 0; i < loggableNames.size(); i++) {
             String loggableName = loggableNames.get(i);
 
-            if (labels != null) {
-                loggables.add(labelLoggable(findLoggable(model, beastState, loggableName), labels.get(i)));
-            } else if (model == null || !isModelLevelLoggable(loggableName)) {
-                loggables.add(findLoggable(model, beastState, loggableName));
-            }
+            Loggable loggable = findLoggable(beastState, loggableName);
+            loggables.add(labels != null ? labelLoggable(loggable, labels.get(i)) : loggable);
         }
 
         return loggables;
@@ -230,39 +226,12 @@ public class LoggerBuilder {
         return loggables;
     }
 
-    private Loggable findLoggable(
-            BeastXModel model,
-            BeastXState beastState,
-            String loggableName
-    ) {
-        if (model != null) {
-            switch (loggableName) {
-                case "posterior" -> {
-                    return model.posterior;
-                }
-                case "prior" -> {
-                    return model.prior;
-                }
-                case "likelihood" -> {
-                    return model.likelihood;
-                }
-                default -> {
-                }
-            }
-        }
+    private Loggable findLoggable(BeastXState beastState, String loggableName) {
+        TreeModel treeModel =
+                beastState.treeModelsByPhyloSpecName.get(loggableName);
 
-        if (model == null && isModelLevelLoggable(loggableName)) {
-            throw new IllegalArgumentException(
-                    "Model-level loggable '" + loggableName + "' requires a BeastXModel. " +
-                            "Use buildLoggers(BeastXModel) or buildMCMC(BeastXModel)."
-            );
-        }
-
-        Loggable treeStatistic =
-                findTreeStatisticLoggable(beastState, loggableName);
-
-        if (treeStatistic != null) {
-            return treeStatistic;
+        if (treeModel != null) {
+            return TreeStatisticsLoggable.all(treeModel, loggableName);
         }
 
         Parameter parameter =
@@ -303,90 +272,9 @@ public class LoggerBuilder {
             }
         }
 
-        Loggable likelihoodComponent =
-                findLikelihoodComponent(beastState, loggableName);
-
-        if (likelihoodComponent != null) {
-            return likelihoodComponent;
-        }
-
         throw new IllegalArgumentException(
                 "No BEAST X loggable named '" + loggableName + "' exists for logger."
         );
-    }
-
-    private Loggable findLikelihoodComponent(
-            BeastXState beastState,
-            String loggableName
-    ) {
-        for (Likelihood candidate : beastState.priorDistributions.values()) {
-            if (loggableName.equals(candidate.getId())) {
-                return candidate;
-            }
-        }
-
-        for (Likelihood candidate : beastState.treePriorDistributions.values()) {
-            if (loggableName.equals(candidate.getId())) {
-                return candidate;
-            }
-        }
-
-        for (Likelihood candidate : beastState.observedTreeDistributions.values()) {
-            if (loggableName.equals(candidate.getId())) {
-                return candidate;
-            }
-        }
-
-        for (Likelihood candidate : beastState.calibrationPriorDistributions) {
-            if (loggableName.equals(candidate.getId())) {
-                return candidate;
-            }
-        }
-
-        for (Likelihood candidate : beastState.likelihoodDistributions) {
-            if (loggableName.equals(candidate.getId())) {
-                return candidate;
-            }
-        }
-
-        return null;
-    }
-
-    private Loggable findTreeStatisticLoggable(
-            BeastXState beastState,
-            String loggableName
-    ) {
-        if (loggableName.endsWith(".height")) {
-            String treeName =
-                    loggableName.substring(0, loggableName.length() - ".height".length());
-
-            TreeModel treeModel =
-                    beastState.treeModelsByPhyloSpecName.get(treeName);
-
-            if (treeModel != null) {
-                return TreeStatisticsLoggable.height(treeModel, treeName);
-            }
-        }
-
-        if (loggableName.endsWith(".treeLength")) {
-            String treeName =
-                    loggableName.substring(0, loggableName.length() - ".treeLength".length());
-
-            TreeModel treeModel =
-                    beastState.treeModelsByPhyloSpecName.get(treeName);
-
-            if (treeModel != null) {
-                return TreeStatisticsLoggable.treeLength(treeModel, treeName);
-            }
-        }
-
-        return null;
-    }
-
-    private static boolean isModelLevelLoggable(String loggableName) {
-        return loggableName.equals("posterior")
-                || loggableName.equals("prior")
-                || loggableName.equals("likelihood");
     }
 
     private TreeModel findTreeModel(BeastXState beastState, String treeName) {

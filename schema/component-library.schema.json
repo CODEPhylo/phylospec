@@ -189,6 +189,10 @@
         "required": {
           "type": "boolean"
         },
+        "untyped": {
+          "type": "boolean",
+          "description": "Indicates that the type checker accepts any value for this argument"
+        },
         "recommended": {
           "type": "boolean",
           "description": "Indicates that this argument is recommended but not required"

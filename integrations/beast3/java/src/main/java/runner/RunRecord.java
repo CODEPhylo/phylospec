@@ -170,7 +170,7 @@ final class RunRecord {
         ObjectNode settings = next.putObject("settings");
         settings.put("chainLength", state.getSamplerSpec().chainLength());
         settings.put("randomSeed", state.randomSeed);
-        settings.put("outputPrefix", relative(state.outputPrefix));
+        settings.put("outputPrefix", absolute(state.outputPrefix));
         ArrayNode loggerSettings = settings.putArray("loggers");
         ArrayNode outputs = next.putArray("expectedOutputs");
         for (Logger logger : loggers) {
@@ -181,10 +181,10 @@ final class RunRecord {
             ObjectNode entry = loggerSettings.addObject();
             entry.put("kind", kind);
             entry.put("logEvery", logger.everyInput.get());
-            entry.put("path", kind.equals("screen") ? null : relative(name));
+            entry.put("path", kind.equals("screen") ? null : absolute(name));
             if (!kind.equals("screen")) outputs.add(entry.deepCopy());
         }
-        outputs.addObject().put("kind", "state").put("path", relative(stateFile));
+        outputs.addObject().put("kind", "state").put("path", absolute(stateFile));
         save(next);
     }
 
@@ -280,19 +280,16 @@ final class RunRecord {
 
     private void collectOutputs(ObjectNode next) throws IOException {
         ArrayNode outputs = next.putArray("generatedOutputs");
-        Path root = directory.resolve("output");
-        if (!Files.exists(root)) return;
-        try (var files = Files.walk(root)) {
-            for (Path file : files.filter(path -> Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS))
-                    .sorted()
-                    .toList()) {
-                outputs.addObject().put("path", relative(file.toString())).put("size", Files.size(file));
+        for (var entry : next.withArray("expectedOutputs")) {
+            Path file = Path.of(entry.path("path").asText());
+            if (Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
+                outputs.addObject().put("path", file.toString()).put("size", Files.size(file));
             }
         }
     }
 
-    private String relative(String file) {
-        return directory.relativize(Path.of(file).toAbsolutePath().normalize()).toString();
+    private static String absolute(String file) {
+        return Path.of(file).toAbsolutePath().normalize().toString();
     }
 
     /** Publish a complete JSON document before accepting the corresponding in-memory transition. */

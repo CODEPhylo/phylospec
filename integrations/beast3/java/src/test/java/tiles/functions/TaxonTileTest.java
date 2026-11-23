@@ -272,15 +272,15 @@ class TaxonTileTest {
                 Tree inferred ~ Coalescent(populationSize=100.0, taxa=samples)
                 mcmc {
                     Sampler sampler = mcmc(chainLength=10)
-                    Logger fileLogger = fileLogger(file="taxon.log", logEvery=1)
-                    Logger treeLogger = treeLogger(file="taxon.trees", logEvery=1, tree=inferred)
+                    Logger fileLogger = fileLogger(logEvery=1)
+                    Logger treeLogger = treeLogger(logEvery=1, tree=inferred)
                 }
                 """);
         PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
         runner.setSeed(42L);
         assertNotNull(runner.check());
         Path run = directory.resolve("run");
-        runner.runManaged("taxon", run, warning -> {});
+        runner.runManaged(run.resolve("output/taxon").toString(), run, warning -> {});
         var record = new ObjectMapper().readTree(run.resolve("run.json").toFile());
         assertEquals("succeeded", record.path("status").asText());
         assertTrue(record.path("completionConfirmed").asBoolean());

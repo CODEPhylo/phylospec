@@ -194,6 +194,16 @@
             "name": "Parser",
             "namespace": "phylospec.types",
             "description": "Description of how to parse a value from a string"
+        },
+        {
+            "name": "Sampler",
+            "namespace": "phylospec.types",
+            "description": "An algorithm sampling from the posterior"
+        },
+        {
+            "name": "Logger",
+            "namespace": "phylospec.types",
+            "description": "Writes sampled values to the screen or a file"
         }
     ],
     "name": "PhyloSpec Core",
@@ -2520,6 +2530,112 @@
                     "description": "The change times",
                     "type": "Vector<PositiveReal>",
                     "required": true
+                }
+            ]
+        },
+        {
+            "generatedType": "Sampler",
+            "name": "mcmc",
+            "namespace": "phylospec.functions.mcmc",
+            "description": "Simple MCMC sampler",
+            "arguments": [
+                {
+                    "name": "chainLength",
+                    "description": "Number of states of the chain",
+                    "type": "PositiveInteger",
+                    "required": false
+                },
+                {
+                    "name": "stateFile",
+                    "description": "Path of the file storing the final state of the chain",
+                    "type": "String",
+                    "required": false
+                }
+            ]
+        },
+        {
+            "generatedType": "Logger",
+            "name": "screenLogger",
+            "namespace": "phylospec.functions.mcmc",
+            "description": "Logs values to the screen",
+            "arguments": [
+                {
+                    "name": "logEvery",
+                    "description": "Number of states between two log entries",
+                    "type": "PositiveInteger",
+                    "required": false
+                },
+                {
+                    "name": "parameters",
+                    "untyped": true,
+                    "description": "Logged parameters. All assigned parameters are logged if not given",
+                    "type": "Vector",
+                    "required": false
+                },
+                {
+                    "name": "parameterNames",
+                    "description": "Names used in the log instead of the variable names",
+                    "type": "Vector<String>",
+                    "required": false
+                }
+            ]
+        },
+        {
+            "generatedType": "Logger",
+            "name": "fileLogger",
+            "namespace": "phylospec.functions.mcmc",
+            "description": "Logs values to a file",
+            "arguments": [
+                {
+                    "name": "file",
+                    "description": "Path of the log file. Defaults to <run-name>.log in the working folder",
+                    "type": "String",
+                    "required": false
+                },
+                {
+                    "name": "logEvery",
+                    "description": "Number of states between two log entries",
+                    "type": "PositiveInteger",
+                    "required": false
+                },
+                {
+                    "name": "parameters",
+                    "untyped": true,
+                    "description": "Logged parameters. All assigned parameters are logged if not given",
+                    "type": "Vector",
+                    "required": false
+                },
+                {
+                    "name": "parameterNames",
+                    "description": "Names used in the log instead of the variable names",
+                    "type": "Vector<String>",
+                    "required": false
+                }
+            ]
+        },
+        {
+            "generatedType": "Logger",
+            "name": "treeLogger",
+            "namespace": "phylospec.functions.mcmc",
+            "description": "Logs a tree to a file",
+            "arguments": [
+                {
+                    "name": "file",
+                    "description": "Path of the tree file. Defaults to <run-name>.trees in the working folder",
+                    "type": "String",
+                    "required": false
+                },
+                {
+                    "name": "tree",
+                    "description": "Logged tree",
+                    "type": "Tree",
+                    "required": true
+                },
+                {
+                    "name": "logEvery",
+                    "description": "Number of states between two log entries",
+                    "type": "PositiveInteger",
+                    "required": false
                 }
             ]
         }

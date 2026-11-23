@@ -21,6 +21,6 @@ Alignment alignment ~ PhyloCTMC(
 mcmc {
     Sampler sampler = mcmc(chainLength=30)
     Logger screenLogger = screenLogger(logEvery=1)
-    Logger fileLogger = fileLogger(file="hky-yule.log", logEvery=1)
-    Logger treeLogger = treeLogger(file="hky-yule.trees", logEvery=1, tree)
+    Logger fileLogger = fileLogger(logEvery=1)
+    Logger treeLogger = treeLogger(logEvery=1, tree)
 }

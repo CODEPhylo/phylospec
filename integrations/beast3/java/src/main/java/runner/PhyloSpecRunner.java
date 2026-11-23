@@ -44,7 +44,6 @@ import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.TileCatalog;
 import org.phylospec.tiling.errors.TileApplicationError;
-import org.phylospec.tiling.mcmc.McmcBlockValidator;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
@@ -189,7 +188,6 @@ public class PhyloSpecRunner {
                 new EvaluateTiles<>(catalog.getTiles(), variableResolver, stochasticityResolver);
         diagnostics.stage = PhyloSpecDiagnostic.Stage.MAPPING;
         try {
-            McmcBlockValidator.validate(statements);
             applyTiles.getBestTiling(statements);
         } catch (TileApplicationError error) {
             throw diagnostics.failure(error.toError(sourceRange(parser, error.getAstNode())), error);
@@ -285,9 +283,10 @@ public class PhyloSpecRunner {
         progress.accept(checking);
         CheckedModel checked = check(warningHandler);
         OutputPaths.checkRuntimeOverrides();
-        // Reject an invalid CLI prefix before claiming a directory.
-        new OutputPaths(runDirectory.resolve("output")).resolveUserPath(runName);
-        Path outputDirectory = OutputPaths.createRunDirectory(runDirectory);
+        Path outputDirectory = Path.of("").toAbsolutePath();
+        // reject an invalid prefix before claiming a directory
+        new OutputPaths(outputDirectory).resolve(runName);
+        OutputPaths.createRunDirectory(runDirectory);
         RunRecord record =
                 RunRecord.create(runDirectory, source, sourceFile, sourceDirectory, checked.catalog, adapterBundles);
         AtomicBoolean cancellationRequested = new AtomicBoolean();
@@ -392,7 +391,9 @@ public class PhyloSpecRunner {
         CompoundDistribution likelihood = buildMcmc(checked, beastState, mcmc);
         long chainLength = beastState.getSamplerSpec().chainLength();
         List<Logger> loggers = mcmc.loggersInput.get();
-        String stateFile = beastState.resolveOutputPath(beastState.outputPrefix + ".state.xml");
+        String declaredStateFile = beastState.getSamplerSpec().stateFile();
+        String stateFile = beastState.resolveOutputPath(
+                declaredStateFile != null ? declaredStateFile : beastState.outputPrefix + ".state.xml");
         beastState.prepareOutputFiles(loggers, stateFile);
         mcmc.setStateFile(stateFile, false);
 

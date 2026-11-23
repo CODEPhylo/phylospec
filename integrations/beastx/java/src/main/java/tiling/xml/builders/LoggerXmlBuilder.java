@@ -158,6 +158,13 @@ public class LoggerXmlBuilder {
 
         for (int i = 0; i < parameterNames.size(); i++) {
             String parameterName = parameterNames.get(i);
+
+            if (state.treeModelsByPhyloSpecName.containsKey(parameterName)) {
+                String label = labels != null ? labels.get(i) : null;
+                loggedElements.addAll(getLoggedTreeStatistics(state, parameterName, label));
+                continue;
+            }
+
             XmlElement loggedElement = getLoggedElement(state, parameterName);
 
             if (labels != null) {
@@ -168,6 +175,18 @@ public class LoggerXmlBuilder {
         }
 
         return loggedElements;
+    }
+
+    /**
+     * Returns the statistics logged for a tree. Like the columns of a labelled loggable, they are
+     * numbered starting at 1 if a label is given.
+     */
+    private List<XmlElement> getLoggedTreeStatistics(BeastXState state, String treeName, String label) {
+        XmlElement height = getLoggedElement(state, treeName + ".height");
+        XmlElement treeLength = getLoggedElement(state, treeName + ".treeLength");
+
+        if (label == null) return List.of(height, treeLength);
+        return List.of(labelElement(height, label + 1), labelElement(treeLength, label + 2));
     }
 
     /** Returns the name under which a distribution is always logged, resolving the alias of the posterior. */

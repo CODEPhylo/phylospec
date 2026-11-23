@@ -16,7 +16,7 @@ The model file describes the analysis, the command line one execution of it. A s
 | *data* / *model* blocks | What defines the posterior.                                                    |
 | *mcmc* block            | How it is sampled and what is logged, for every engine.                        |
 | Engine block            | Sampling settings of a single engine (e.g. operators).                         |
-| Command line            | What leaves the result statistically equivalent (e.g. seed, output directory). |
+| Command line            | What leaves the result statistically equivalent (e.g. seed, run name).         |
 
 
 Everything set on the command line is recorded with the run, so the model file and the run record reproduce it.
@@ -46,22 +46,21 @@ mcmc {
 
 - *mcmc*: a simple MCMC sampler. At most one sampler per block. If none is given, *mcmc()* with its defaults is used. Other samplers can be added later as further functions returning a *Sampler*.
   - *chainLength*: if not given, 10 million is used.
+  - *stateFile*: optional path of the file storing the final state. If not given, *&lt;run-name&gt;.state.xml* in the working folder is used. BEAST X does not support it.
 - *screenLogger*, *fileLogger*: always log the posterior, prior and likelihood.
-  - *parameters*: optional list of the logged parameters. If not given, all assigned parameters including inline assignments and tree statistics are logged.
+  - *parameters*: optional list of the logged parameters, which can have different types. It is not type-checked, and the engine rejects values it cannot log. If not given, all assigned parameters including inline assignments and tree statistics are logged.
   - *parameterNames*: optional list of names used in the log instead of the variable names. Must have the same length as *parameters*.
-- *fileLogger*, *treeLogger*: *file* is needed.
+- *fileLogger*, *treeLogger*: *file* is optional. It defaults to *&lt;run-name&gt;.log* or *&lt;run-name&gt;.trees* in the working folder. Relative paths use the working folder, and absolute paths can write elsewhere.
 - *treeLogger*: logs a single tree. tree is needed.
 - *logEvery*: defaults to 1000 for every logger.
 - *No loggers*: a missing kind of logger is added with its defaults. This gives a screen logger, a file logger writing to *&lt;run-name&gt;.log* and, if a tree is sampled, a tree logger writing to *&lt;run-name&gt;.trees*.
 
 *Change:*
 
-The MCMC block is not type-checked. Its functions are not core components, and the type checker skips the block. Instead, every engine validates the block with the same engine-agnostic code:
+The MCMC block is type-checked like the rest of the model. *Sampler* and *Logger* are core types, and *mcmc*, *screenLogger*, *fileLogger* and *treeLogger* are core components.
 
-- A block validator runs before the engine maps the model. It checks that the block only declares samplers and loggers, that every argument is known, that the needed arguments are given, and that there is at most one sampler.
-- The sampler and the loggers are collected in specs shared by all engines. The specs check the values: *chainLength* and *logEvery* are positive, *file* is not empty, and *parameterNames* has the same length as *parameters*.
-
-The settings *chainLength*, *defaultLogEvery*, *randomSeed* and *outputPrefix* are no longer part of the block. Using them is an error that points to the replacement.
+- The type checker treats its statements like any other statement: every argument must be known and have the right type. Only the logged *parameters* are exempt.
+- The sampler and the loggers are collected in specs shared by all engines. The specs only check what types cannot express: *file* is not blank, and *parameterNames* has the same length as *parameters*.
 
 Everything else (e.g. operator settings) should be in a specific engine block (e.g. "beastX").
 
@@ -82,7 +81,6 @@ Entries marked *new* are proposed, all others exist.
 | Option                | Commands           | Purpose                                             |
 | --------------------- | ------------------ | --------------------------------------------------- |
 | *--engine &lt;id&gt;* | check, export, run | Engine to use: beast3 (default) or beastx.          |
-| *--out &lt;dir&gt;*   | run                | Run directory. Must be absent or empty.             |
 | *--run-name &lt;prefix&gt;* | run          | Prefix of the default output files in the run directory. Defaults to the name of the model file. |
 | *--seed &lt;n&gt;*    | export, run        | Random seed. If not given, *run* chooses one uniformly and *export* sets none. |
 | *--library &lt;ids&gt;* | check, export, run | Tile libraries to use, in order of preference.    |
@@ -92,4 +90,6 @@ Entries marked *new* are proposed, all others exist.
 | *--version*           |                    | Show the versions.                                  |
 
 
-*Replicates*: run the same model multiple times with different *--seed* and *--out* values.
+*Outputs*: logs, trees and state files are written to the working folder. A run record (*run.json*, *console.log* and a copy of the model) is saved beside the model in *runs/&lt;name&gt;-&lt;run-id&gt;/*. Existing outputs are never overwritten.
+
+*Replicates*: run the same model multiple times with different *--seed* and *--run-name* values.

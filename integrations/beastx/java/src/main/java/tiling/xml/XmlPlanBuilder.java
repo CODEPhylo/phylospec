@@ -452,7 +452,7 @@ public class XmlPlanBuilder {
             loggableNames = state.getXmlDefaultLoggedParameterNames();
         }
 
-        for (String loggableName : loggableNames) {
+        for (String loggableName : state.expandLoggedTrees(loggableNames)) {
             // A value computed from other values, such as Real s = sum(vector=v).
             if (state.calculationNodesByPhyloSpecName.get(loggableName) instanceof BeastXRPNStatistic rpn) {
                 plan.addAll(

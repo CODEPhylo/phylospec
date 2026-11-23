@@ -13,42 +13,21 @@ import java.util.Set;
 public final class OutputPaths {
     private final Path directory;
 
-    public OutputPaths(Path outputDirectory) {
-        this.directory = outputDirectory.toAbsolutePath().normalize();
+    public OutputPaths(Path workingDirectory) {
+        this.directory = workingDirectory.toAbsolutePath().normalize();
     }
 
-    /** Claims an empty run directory by atomically creating its output child. */
+    /** Claims a new directory for the record of a run. */
     public static Path createRunDirectory(Path requested) throws IOException {
         Path runDirectory = requested.toAbsolutePath().normalize();
-        if (Files.isSymbolicLink(runDirectory)) {
-            throw new IOException("Run directory must not be a symbolic link: " + runDirectory);
-        }
-        Files.createDirectories(runDirectory);
-        try (var entries = Files.list(runDirectory)) {
-            if (entries.findAny().isPresent()) {
-                throw new IOException("Run directory is not empty; choose a new --out directory: " + runDirectory);
-            }
-        }
-        // Concurrent runs cannot both claim this directory. Never reuse an existing output/.
-        return Files.createDirectory(runDirectory.resolve("output"));
+        Files.createDirectories(runDirectory.getParent());
+        return Files.createDirectory(runDirectory);
     }
 
-    /** Script-supplied names must be relative, even when an absolute name is inside output/. */
-    public String resolveUserPath(String name) {
-        validateName(name);
-        if (Path.of(name).isAbsolute()) {
-            throw new IllegalArgumentException("Output paths in a managed run must be relative: " + name);
-        }
-        return resolve(name);
-    }
-
-    /** Also accepts resolved paths produced by default loggers or package configureState hooks. */
+    /** Resolves an output name against the working directory. Absolute names are kept. */
     public String resolve(String name) {
         validateName(name);
         Path path = directory.resolve(name).normalize();
-        if (!path.startsWith(directory) || path.equals(directory)) {
-            throw new IllegalArgumentException("Output path must stay inside " + directory + ": " + name);
-        }
         if (path.toString().contains("$(tree)")) {
             throw new IllegalArgumentException(
                     "BEAST filename templates are not supported in managed output paths: " + name);
@@ -66,8 +45,8 @@ public final class OutputPaths {
     public static void checkRuntimeOverrides() {
         for (String property : List.of("file.name.prefix", "state.file.name")) {
             if (System.getProperty(property) != null) {
-                throw new IllegalArgumentException(
-                        "Managed runs do not support -D" + property + "; use --out and script output names instead.");
+                throw new IllegalArgumentException("Managed runs do not support -D" + property
+                        + "; use --run-name and script output names instead.");
             }
         }
     }

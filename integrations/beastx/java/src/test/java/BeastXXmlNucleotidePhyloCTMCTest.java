@@ -490,19 +490,11 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                         logEvery=1,
                         file="%s",
                         parameters=[
+                            tree,
                             birthRate,
                             clockRate,
                             firstShape,
                             secondShape,
-                            posterior,
-                            prior,
-                            likelihood,
-                            "birthRate_prior",
-                            "clockRate_prior",
-                            "tree_prior",
-                            "firstAlignment_likelihood",
-                            "tree.height",
-                            "tree.treeLength",
                             firstRateAC,
                             firstRateAG,
                             firstRateAT,
@@ -566,10 +558,6 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
         assertTrue(xml.contains("<joint idref=\"joint\""), xml);
         assertTrue(xml.contains("<prior idref=\"prior\""), xml);
         assertTrue(xml.contains("<likelihood idref=\"likelihood\""), xml);
-        assertTrue(xml.contains("<distributionLikelihood idref=\"birthRate_prior\""), xml);
-        assertTrue(xml.contains("<distributionLikelihood idref=\"clockRate_prior\""), xml);
-        assertTrue(xml.contains("<speciationLikelihood idref=\"tree_prior\""), xml);
-        assertTrue(xml.contains("<treeLikelihood idref=\"firstAlignment_likelihood\""), xml);
         assertTrue(xml.contains("<treeHeightStatistic idref=\"tree.height\""), xml);
         assertTrue(xml.contains("<treeLengthStatistic idref=\"tree.treeLength\""), xml);
 

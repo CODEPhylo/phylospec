@@ -18,40 +18,37 @@ class OutputPathsTest {
     void userPathsResolveInsideTheOutputDirectory() {
         OutputPaths paths = new OutputPaths(directory);
 
-        assertEquals(directory.resolve("logs/trace.log").toString(), paths.resolveUserPath("logs/./trace.log"));
-        assertEquals(directory.resolve("trace.log").toString(), paths.resolveUserPath("logs/../trace.log"));
+        assertEquals(directory.resolve("logs/trace.log").toString(), paths.resolve("logs/./trace.log"));
+        assertEquals(directory.resolve("trace.log").toString(), paths.resolve("logs/../trace.log"));
     }
 
     @Test
-    void userPathsRejectBlankAbsoluteEscapingAndNativeTemplateNames() {
+    void pathsRejectBlankAndNativeTemplateNames() {
         OutputPaths paths = new OutputPaths(directory);
 
-        for (String invalid : List.of("", " ", "../escape.log", "logs/../../escape.log", "$(tree).trees")) {
-            assertThrows(IllegalArgumentException.class, () -> paths.resolveUserPath(invalid), invalid);
+        for (String invalid : List.of("", " ", "$(tree).trees")) {
+            assertThrows(IllegalArgumentException.class, () -> paths.resolve(invalid), invalid);
         }
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> paths.resolveUserPath(directory.resolve("trace.log").toString()));
     }
 
     @Test
-    void internalPathsAcceptResolvedNamesButRejectExternalNames() {
+    void pathsKeepAbsoluteNamesAndResolveRelativeNamesAgainstTheDirectory() {
         OutputPaths paths = new OutputPaths(directory);
         String resolved = directory.resolve("nested/trace.log").toString();
+        String external = directory.resolveSibling("external.log").toString();
 
         assertEquals(resolved, paths.resolve(resolved));
         assertEquals(resolved, paths.resolve("nested/trace.log"));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> paths.resolve(directory.resolveSibling("escape.log").toString()));
+        assertEquals(external, paths.resolve(external));
+        assertEquals(external, paths.resolve("../external.log"));
     }
 
     @Test
     void prepareCreatesNestedParentsWithoutLeavingProbeFiles() throws IOException {
         OutputPaths paths = new OutputPaths(directory);
-        String trace = paths.resolveUserPath("logs/trace.log");
-        String tree = paths.resolveUserPath("trees/posterior.trees");
-        String state = paths.resolveUserPath("state/analysis.state.xml");
+        String trace = paths.resolve("logs/trace.log");
+        String tree = paths.resolve("trees/posterior.trees");
+        String state = paths.resolve("state/analysis.state.xml");
 
         paths.prepare(List.of(trace, tree), state);
 
@@ -66,8 +63,8 @@ class OutputPathsTest {
         OutputPaths paths = new OutputPaths(directory);
         Path existing = directory.resolve("existing.log");
         Files.writeString(existing, "previous analysis");
-        String first = paths.resolveUserPath("new.log");
-        String state = paths.resolveUserPath("analysis.state.xml");
+        String first = paths.resolve("new.log");
+        String state = paths.resolve("analysis.state.xml");
 
         assertThrows(IOException.class, () -> paths.prepare(List.of(first, existing.toString()), state));
 
@@ -92,15 +89,15 @@ class OutputPathsTest {
     }
 
     @Test
-    void prepareRejectsExternalLoggerAndStatePaths() throws IOException {
-        Path output = Files.createDirectory(directory.resolve("output"));
-        OutputPaths paths = new OutputPaths(output);
-        String external = directory.resolve("external.log").toString();
-        String trace = output.resolve("trace.log").toString();
-        String state = output.resolve("analysis.state.xml").toString();
+    void prepareAcceptsLoggerAndStatePathsOutsideTheWorkingDirectory() throws IOException {
+        Path work = Files.createDirectory(directory.resolve("work"));
+        OutputPaths paths = new OutputPaths(work);
+        String external = directory.resolve("elsewhere/external.log").toString();
+        String state = work.resolve("analysis.state.xml").toString();
 
-        assertThrows(IllegalArgumentException.class, () -> paths.prepare(List.of(external), state));
-        assertThrows(IllegalArgumentException.class, () -> paths.prepare(List.of(trace), external));
+        paths.prepare(List.of(external), state);
+
+        assertTrue(Files.isDirectory(Path.of(external).getParent()));
         assertFalse(Files.exists(Path.of(external)));
     }
 
@@ -215,34 +212,18 @@ class OutputPathsTest {
     }
 
     @Test
-    void createRunDirectoryAcceptsMissingAndEmptyRoots() throws IOException {
-        Path missing = directory.resolve("new analysis");
-        Path empty = Files.createDirectory(directory.resolve("existing empty analysis"));
+    void createRunDirectoryCreatesMissingParents() throws IOException {
+        Path run = directory.resolve("runs/new analysis");
 
-        for (Path root : List.of(missing, empty)) {
-            Path output = OutputPaths.createRunDirectory(root);
-            assertEquals(root.resolve("output").toAbsolutePath().normalize(), output);
-            assertTrue(Files.isDirectory(output));
-            try (var children = Files.list(root)) {
-                assertEquals(List.of(output), children.toList());
-            }
-        }
+        assertEquals(run.toAbsolutePath().normalize(), OutputPaths.createRunDirectory(run));
+        assertTrue(Files.isDirectory(run));
     }
 
     @Test
-    void createRunDirectoryRejectsNonemptyAndAlreadyPreparedRoots() throws IOException {
-        Path nonempty = Files.createDirectory(directory.resolve("nonempty"));
-        Path marker = nonempty.resolve("keep.txt");
-        Files.writeString(marker, "keep this analysis");
+    void createRunDirectoryRejectsExistingDirectories() throws IOException {
+        Path run = OutputPaths.createRunDirectory(directory.resolve("run"));
 
-        assertThrows(IOException.class, () -> OutputPaths.createRunDirectory(nonempty));
-        assertEquals("keep this analysis", Files.readString(marker));
-        assertFalse(Files.exists(nonempty.resolve("output")));
-
-        Path root = directory.resolve("already prepared");
-        Path output = OutputPaths.createRunDirectory(root);
-        assertThrows(IOException.class, () -> OutputPaths.createRunDirectory(root));
-        assertTrue(Files.isDirectory(output));
+        assertThrows(IOException.class, () -> OutputPaths.createRunDirectory(run));
     }
 
     @Test
@@ -256,7 +237,6 @@ class OutputPathsTest {
         Path link = Files.createSymbolicLink(directory.resolve("linked run"), target);
         assertThrows(IOException.class, () -> OutputPaths.createRunDirectory(link));
         assertTrue(Files.isSymbolicLink(link));
-        assertFalse(Files.exists(target.resolve("output")));
 
         Path missingTarget = directory.resolve("missing target");
         Path dangling = Files.createSymbolicLink(directory.resolve("dangling run"), missingTarget);

@@ -13,7 +13,6 @@ public record FileLoggerSpec<T>(int logEvery, String fileName, List<T> parameter
         implements LoggerSpec {
 
     public FileLoggerSpec {
-        LoggerSpec.validateLogEvery(logEvery);
         LoggerSpec.validateFileName(fileName);
         LoggerSpec.validateParameterNames(parameters, parameterNames);
     }

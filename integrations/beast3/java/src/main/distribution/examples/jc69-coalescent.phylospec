@@ -8,6 +8,6 @@ Alignment alignment ~ PhyloCTMC(tree, qMatrix) observed as data
 mcmc {
     Sampler sampler = mcmc(chainLength=30)
     Logger screenLogger = screenLogger(logEvery=10)
-    Logger fileLogger = fileLogger(file="jc69-coalescent.log", logEvery=10)
-    Logger treeLogger = treeLogger(file="jc69-coalescent.trees", logEvery=10, tree)
+    Logger fileLogger = fileLogger(logEvery=10)
+    Logger treeLogger = treeLogger(logEvery=10, tree)
 }

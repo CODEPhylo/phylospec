@@ -11,14 +11,7 @@ public interface LoggerSpec {
     /// Returns the sampling interval, i.e. something is logged every {@code logEvery} states.
     int logEvery();
 
-    /* validation shared by the logger specs */
-
-    static void validateLogEvery(int logEvery) {
-        if (logEvery <= 0) {
-            throw new TileApplicationError(
-                    "The logging interval must be positive.", "Use a positive integer, for example logEvery=1000.");
-        }
-    }
+    /* validation of the values which the types cannot express */
 
     static void validateFileName(String fileName) {
         if (fileName == null || fileName.isBlank()) {

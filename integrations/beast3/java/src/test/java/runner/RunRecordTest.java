@@ -107,11 +107,11 @@ class RunRecordTest {
         assertEquals(3, data.path("expectedOutputs").size());
         assertEquals(7, data.path("expectedOutputs").get(0).path("logEvery").asInt());
         assertEquals(
-                "output/sample.state.xml",
+                directory.resolve("output/sample.state.xml").toString(),
                 data.path("expectedOutputs").get(2).path("path").asText());
         assertEquals(1, data.path("generatedOutputs").size());
         assertEquals(
-                "output/custom.log",
+                directory.resolve("output/custom.log").toString(),
                 data.path("generatedOutputs").get(0).path("path").asText());
         assertEquals(7, data.path("generatedOutputs").get(0).path("size").asLong());
     }

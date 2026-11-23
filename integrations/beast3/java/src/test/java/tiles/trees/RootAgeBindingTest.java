@@ -238,13 +238,13 @@ class RootAgeBindingTest {
                 + """
                 mcmc {
                     Sampler sampler = mcmc(chainLength=200)
-                    Logger fileLogger = fileLogger(file="root-age.log", logEvery=1)
+                    Logger fileLogger = fileLogger(logEvery=1)
                 }
                 """;
         Path runDirectory = directory.resolve("root-age-run-" + family);
         PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
         runner.setSeed(41235L);
-        runner.runManaged("root-age", runDirectory, warning -> {});
+        runner.runManaged(runDirectory.resolve("output/root-age").toString(), runDirectory, warning -> {});
         List<String> lines = Files.readAllLines(runDirectory.resolve("output/root-age.log")).stream()
                 .filter(line -> !line.startsWith("#") && !line.isBlank())
                 .toList();
@@ -273,14 +273,14 @@ class RootAgeBindingTest {
         String source = TAXA + "Tree tree ~ " + generator(family, "5.0") + "\n" + """
                 mcmc {
                     Sampler sampler = mcmc(chainLength=100)
-                    Logger fileLogger = fileLogger(file="fixed-root.log", logEvery=1)
-                    Logger treeLogger = treeLogger(file="fixed-root.trees", logEvery=1, tree)
+                    Logger fileLogger = fileLogger(logEvery=1)
+                    Logger treeLogger = treeLogger(logEvery=1, tree)
                 }
                 """;
         Path runDirectory = directory.resolve("fixed-root-" + family);
         PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
         runner.setSeed(41235L);
-        runner.runManaged("fixed-root", runDirectory, warning -> {});
+        runner.runManaged(runDirectory.resolve("output/fixed-root").toString(), runDirectory, warning -> {});
         List<String> lines = Files.readAllLines(runDirectory.resolve("output/fixed-root.log")).stream()
                 .filter(line -> !line.startsWith("#") && !line.isBlank())
                 .toList();
@@ -320,14 +320,14 @@ class RootAgeBindingTest {
                 + """
                 mcmc {
                     Sampler sampler = mcmc(chainLength=20)
-                    Logger fileLogger = fileLogger(file="observed.log", logEvery=1)
+                    Logger fileLogger = fileLogger(logEvery=1)
                 }
                 """;
         Path runDirectory = directory.resolve("constant-observation-" + family);
         // Exercise the real runner from source, with no test-harness initialization of its graph.
         PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
         runner.setSeed(41235L);
-        runner.runManaged("observed", runDirectory, warning -> {});
+        runner.runManaged(runDirectory.resolve("output/observed").toString(), runDirectory, warning -> {});
         List<String> lines = Files.readAllLines(runDirectory.resolve("output/observed.log")).stream()
                 .filter(line -> !line.startsWith("#") && !line.isBlank())
                 .toList();
