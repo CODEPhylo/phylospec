@@ -78,20 +78,7 @@ public class BranchRateModelXmlBuilder {
             BeastXState.RelaxedClockSpec spec,
             String id
     ) {
-        // Match the direct Java path: normalize using the native model that
-        // invalidates and restores its factor on tree and category changes.
-        return XmlElement.element("scaledByTreeTimeBranchRates")
-                .withId(id)
-                .withChild(treeReference(treeModel))
-                .withChild(buildRawRelaxedClockBranchRates(state, treeModel, spec, id + "_raw"));
-    }
-
-    private XmlElement buildRawRelaxedClockBranchRates(
-            BeastXState state,
-            TreeModel treeModel,
-            BeastXState.RelaxedClockSpec spec,
-            String id
-    ) {
+        // Not normalized on the tree, as in the direct Java path and BEAST 3.
         return XmlElement.element("discretizedBranchRates")
                 .withId(id)
                 .withAttribute("overSampling", "1")

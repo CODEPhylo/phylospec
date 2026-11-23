@@ -13,14 +13,19 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class BeastXRelaxedClockNormalizationTest {
+/**
+ * Relaxed-clock branch rates of BEAST X: each rate is clockRate times the base quantile of the branch's
+ * category, without rescaling on the tree (as in BEAST 3). Proposals update the rates and a rejected
+ * proposal restores them.
+ */
+class BeastXRelaxedClockRatesTest {
     private static final double TOLERANCE = 1e-12;
 
     @TempDir
     Path directory;
 
     @Test
-    void categoryProposalsUpdateAllNormalizedRatesAndRestoreAcceptedState() throws Exception {
+    void categoryProposalsUpdateOnlyThatBranchAndRestoreAcceptedState() throws Exception {
         Fixture fixture = fixture();
         for (boolean accept : new boolean[]{true, false}) {
             double[] before = assertRatesMatchFormula(fixture);
@@ -28,8 +33,11 @@ class BeastXRelaxedClockNormalizationTest {
             fixture.rates().storeModelState();
             fixture.categories().setParameterValue(0, (categoryBefore + 1) % fixture.categories().getDimension());
             double[] proposed = assertRatesMatchFormula(fixture);
-            assertNotEquals(before[1], proposed[1], TOLERANCE,
-                    "Changing one category must update the normalization of other branches too");
+            assertNotEquals(before[0], proposed[0], TOLERANCE);
+            for (int index = 1; index < before.length; index++) {
+                assertEquals(before[index], proposed[index], TOLERANCE,
+                        "Without normalization, other branches keep their rates");
+            }
             complete(fixture, accept);
             assertArrayEquals(accept ? proposed : before, assertRatesMatchFormula(fixture), TOLERANCE);
             assertEquals(accept ? (categoryBefore + 1) % fixture.categories().getDimension() : categoryBefore,
@@ -38,7 +46,7 @@ class BeastXRelaxedClockNormalizationTest {
     }
 
     @Test
-    void treeHeightProposalsRefreshNormalizationAndRestoreAcceptedState() throws Exception {
+    void treeHeightProposalsKeepRatesAndRestoreAcceptedState() throws Exception {
         Fixture fixture = fixture();
         for (boolean accept : new boolean[]{true, false}) {
             double[] before = assertRatesMatchFormula(fixture);
@@ -46,7 +54,7 @@ class BeastXRelaxedClockNormalizationTest {
             fixture.rates().storeModelState();
             fixture.tree().setNodeHeight(fixture.tree().getRoot(), heightBefore + 0.7);
             double[] proposed = assertRatesMatchFormula(fixture);
-            assertNotEquals(before[0], proposed[0], TOLERANCE);
+            assertArrayEquals(before, proposed, TOLERANCE, "Without normalization, branch times do not change rates");
             complete(fixture, accept);
             assertArrayEquals(accept ? proposed : before, assertRatesMatchFormula(fixture), TOLERANCE);
             assertEquals(accept ? heightBefore + 0.7 : heightBefore,
@@ -76,7 +84,7 @@ class BeastXRelaxedClockNormalizationTest {
     }
 
     @Test
-    void clockRateScalesTheNormalizedMeanAndRestoresAcceptedState() throws Exception {
+    void clockRateScalesAllRatesAndRestoresAcceptedState() throws Exception {
         Fixture fixture = fixture();
         for (boolean accept : new boolean[]{true, false}) {
             double[] before = assertRatesMatchFormula(fixture);
@@ -94,7 +102,7 @@ class BeastXRelaxedClockNormalizationTest {
     }
 
     @Test
-    void topologyProposalsRefreshNormalizationAndRestoreAcceptedState() throws Exception {
+    void topologyProposalsKeepRatesAndRestoreAcceptedState() throws Exception {
         Fixture fixture = fixture();
         int aNumber = fixture.tree().getExternalNode(0).getNumber();
         int cNumber = fixture.tree().getExternalNode(2).getNumber();
@@ -117,7 +125,7 @@ class BeastXRelaxedClockNormalizationTest {
             assertEquals(parentC.getNumber(), proposedTopology[aNumber]);
             assertEquals(parentA.getNumber(), proposedTopology[cNumber]);
             double[] proposed = assertRatesMatchFormula(fixture);
-            assertNotEquals(before[0], proposed[0], TOLERANCE);
+            assertArrayEquals(before, proposed, TOLERANCE, "Categories belong to nodes, so a swap keeps the rates");
             complete(fixture, accept);
             assertArrayEquals(accept ? proposed : before, assertRatesMatchFormula(fixture), TOLERANCE);
             // DefaultTreeModel restores by swapping node buffers. Check logical nodes,
@@ -170,7 +178,7 @@ class BeastXRelaxedClockNormalizationTest {
                 )
                 Alignment alignment ~ PhyloCTMC(tree=tree, qMatrix=jc69(), branchRates=rates) observed as data
                 """.formatted(unixPath(alignmentFile), unixPath(treeFile));
-        BeastXState state = new PhyloSpecRunner(source).buildState("normalized-clock");
+        BeastXState state = new PhyloSpecRunner(source).buildState("relaxed-clock-rates");
         BeastXState.RelaxedClockSpec clock = state.treeRelaxedClockModels.values().iterator().next();
         BeastXPhyloCTMCLikelihoodSpec likelihood = assertInstanceOf(
                 BeastXPhyloCTMCLikelihoodSpec.class, state.likelihoodDistributions.getFirst());
@@ -189,33 +197,18 @@ class BeastXRelaxedClockNormalizationTest {
 
     private static double[] assertRatesMatchFormula(Fixture fixture) {
         int count = fixture.tree().getNodeCount() - 1;
-        double[] raw = new double[count];
-        double time = 0.0;
-        double substitutions = 0.0;
         int rootNumber = fixture.tree().getRoot().getNumber();
+        double clockRate = fixture.clockRate().getParameterValue(0);
+        double[] actual = new double[count];
         for (int i = 0; i < fixture.tree().getNodeCount(); i++) {
             NodeRef node = fixture.tree().getNode(i);
             if (fixture.tree().isRoot(node)) continue;
             int index = i < rootNumber ? i : i - 1;
             double category = fixture.categories().getParameterValue(index);
-            raw[index] = fixture.distribution().quantile((category + 0.5) / count);
-            double length = fixture.tree().getBranchLength(node);
-            time += length;
-            substitutions += length * raw[index];
-        }
-        double clockRate = fixture.clockRate().getParameterValue(0);
-        double[] actual = new double[count];
-        double weighted = 0.0;
-        for (int i = 0; i < fixture.tree().getNodeCount(); i++) {
-            NodeRef node = fixture.tree().getNode(i);
-            if (fixture.tree().isRoot(node)) continue;
-            int index = i < rootNumber ? i : i - 1;
+            double expected = clockRate * fixture.distribution().quantile((category + 0.5) / count);
             actual[index] = fixture.rates().getBranchRate(fixture.tree(), node);
-            assertEquals(clockRate * raw[index] * time / substitutions, actual[index], TOLERANCE,
-                    "Incorrect normalized rate at node " + i);
-            weighted += fixture.tree().getBranchLength(node) * actual[index];
+            assertEquals(expected, actual[index], TOLERANCE, "Incorrect rate at node " + i);
         }
-        assertEquals(clockRate, weighted / time, TOLERANCE);
         return actual;
     }
 
