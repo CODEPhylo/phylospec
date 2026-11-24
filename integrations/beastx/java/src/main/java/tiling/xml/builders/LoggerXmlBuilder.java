@@ -2,6 +2,8 @@ package tiling.xml.builders;
 
 import dr.evomodel.coalescent.CoalescentLikelihood;
 import dr.evomodel.speciation.SpeciationLikelihood;
+import dr.evomodel.tree.TMRCAStatistic;
+import dr.evomodel.tree.TreeHeightStatistic;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.distribution.AbstractDistributionLikelihood;
 import dr.inference.distribution.DistributionLikelihood;
@@ -9,6 +11,7 @@ import dr.inference.distribution.MultivariateDistributionLikelihood;
 import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
+import dr.inference.model.Statistic;
 import tiling.BeastXState;
 import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
 import tiling.xml.XmlElement;
@@ -296,6 +299,18 @@ public class LoggerXmlBuilder {
             if (state.treeModelsByPhyloSpecName.containsKey(treeName)) {
                 return XmlElement.ref("treeLengthStatistic", loggableName);
             }
+        }
+
+        // Defined by XmlPlanBuilder in the statistics section under the PhyloSpec name.
+        Statistic statistic =
+                state.calculationNodesByPhyloSpecName.get(loggableName);
+
+        if (statistic instanceof TreeHeightStatistic) {
+            return XmlElement.ref("treeHeightStatistic", loggableName);
+        }
+
+        if (statistic instanceof TMRCAStatistic) {
+            return XmlElement.ref("tmrcaStatistic", loggableName);
         }
 
         return null;

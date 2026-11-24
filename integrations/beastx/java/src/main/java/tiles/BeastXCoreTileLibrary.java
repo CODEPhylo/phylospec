@@ -14,6 +14,8 @@ import tiles.misc.ListVectorTile;
 import tiles.misc.IndexVariableTile;
 import tiles.misc.IndexedTile;
 import tiles.misc.StringMapIndexTile;
+import tiles.misc.TaxaIndexTile;
+import tiles.misc.TaxonListTile;
 import tiles.misc.IndexedStatementTile;
 
 import tiles.input.FromNexusTile;
@@ -170,10 +172,12 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new AssignedArgumentTile());
         tiles.add(new DrawnArgumentTile());
         tiles.add(new ListVectorTile());
+        tiles.add(new TaxonListTile());
         tiles.add(new tiles.misc.RangeTile());
         tiles.add(new IndexVariableTile());
         tiles.add(new IndexedTile());
         tiles.add(new StringMapIndexTile());
+        tiles.add(new TaxaIndexTile());
         tiles.add(new IndexedStatementTile());
 
         // RPN deterministic calculations

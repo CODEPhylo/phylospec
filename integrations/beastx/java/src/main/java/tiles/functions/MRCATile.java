@@ -1,8 +1,5 @@
 package tiles.functions;
 
-import dr.evolution.tree.TreeUtils;
-import dr.evolution.util.Taxa;
-import dr.evolution.util.Taxon;
 import dr.evomodel.tree.TMRCAStatistic;
 import dr.evomodel.tree.TreeModel;
 import org.phylospec.ast.Expr;
@@ -41,34 +38,13 @@ public class MRCATile extends GeneratorTile<RealScalar<NonNegativeReal>, BeastXS
         TreeModel tree =
                 this.treeInput.apply(beastState, indexVariables);
 
-        if (clade.isEmpty()) {
-            throw new TileApplicationError(
-                    this.getRootNode(),
-                    "MRCA requires at least one taxon name.",
-                    "Provide a non-empty clade.",
-                    List.of("Age a = mrca(clade=[\"taxon1\", \"taxon2\"], tree=tree)")
-            );
-        }
-
-        TMRCAStatistic statistic;
-
-        try {
-            statistic =
-                    new TMRCAStatistic(
-                            "mrcaAge",
-                            tree,
-                            toTaxa(clade),
-                            false,
-                            false
-                    );
-        } catch (TreeUtils.MissingTaxonException exception) {
-            throw new TileApplicationError(
-                    this.getRootNode(),
-                    "Could not find one or more MRCA taxa in the tree.",
-                    "Use taxon names or species names that exist in the tree.",
-                    List.of("Age a = mrca(clade=[\"taxon1\", \"taxon2\"], tree=tree)")
-            );
-        }
+        TMRCAStatistic statistic =
+                CladeTaxa.mrcaStatistic(
+                        this.getRootNode(),
+                        tree,
+                        clade,
+                        "Age a = mrca(clade=[\"taxon1\", \"taxon2\"], tree=tree)"
+                );
 
         statistic.setId(
                 beastState.getAvailableID(
@@ -95,16 +71,5 @@ public class MRCATile extends GeneratorTile<RealScalar<NonNegativeReal>, BeastXS
                 statistic,
                 NonNegativeReal.INSTANCE
         );
-    }
-
-    private static Taxa toTaxa(List<String> taxonNames) {
-        Taxa taxa =
-                new Taxa();
-
-        for (String taxonName : taxonNames) {
-            taxa.addTaxon(new Taxon(taxonName));
-        }
-
-        return taxa;
     }
 }

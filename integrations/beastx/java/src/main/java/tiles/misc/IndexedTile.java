@@ -1,5 +1,6 @@
 package tiles.misc;
 
+import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.Int;
 import org.phylospec.tiling.TypeToken;
@@ -40,34 +41,39 @@ public class IndexedTile extends AstNodeTile<Object, Expr.Index, BeastXState> {
         int index =
                 this.firstIndexInput.apply(beastState, indexVariables).get();
 
+        checkIndex(this.getRootNode(), index, vector.size());
+
+        return vector.get(index - 1);
+    }
+
+    /** Checks a one-based index against the number of elements, with PhyloSpec's error messages. */
+    static void checkIndex(AstNode node, int index, int size) {
         if (index == 0) {
             throw new TileApplicationError(
-                    this.getRootNode(),
+                    node,
                     "Index " + index + " is smaller than 1.",
-                    "PhyloSpec uses 1-based indexing. Use an index between 1 and " + vector.size() + ".",
+                    "PhyloSpec uses 1-based indexing. Use an index between 1 and " + size + ".",
                     List.of("values[1]")
             );
         }
 
         if (index < 0) {
             throw new TileApplicationError(
-                    this.getRootNode(),
+                    node,
                     "Index " + index + " is smaller than 1.",
-                    "Use an index between 1 and " + vector.size() + ".",
+                    "Use an index between 1 and " + size + ".",
                     List.of("values[1]")
             );
         }
 
-        if (vector.size() < index) {
+        if (size < index) {
             throw new TileApplicationError(
-                    this.getRootNode(),
+                    node,
                     "Index " + index + " is greater than the number of elements.",
-                    "Use an index between 1 and " + vector.size() + ".",
-                    List.of("values[" + vector.size() + "]")
+                    "Use an index between 1 and " + size + ".",
+                    List.of("values[" + size + "]")
             );
         }
-
-        return vector.get(index - 1);
     }
 
     @Override

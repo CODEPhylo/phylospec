@@ -1,7 +1,5 @@
 package tiles.observations;
 
-import dr.evolution.util.Taxa;
-import dr.evolution.util.Taxon;
 import dr.evomodel.tree.TMRCAStatistic;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.distribution.DistributionLikelihood;
@@ -13,6 +11,7 @@ import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.types.RealScalar;
 import org.phylospec.typeresolver.Stochasticity;
+import tiles.functions.CladeTaxa;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
 
@@ -93,25 +92,13 @@ public class MRCAObservedBetweenTile extends TemplateTile<RealScalar<NonNegative
         DistributionLikelihood calibrationPrior =
                 new DistributionLikelihood(distributionModel);
 
-        TMRCAStatistic mrcaStatistic;
-
-        try {
-            mrcaStatistic =
-                    new TMRCAStatistic(
-                            "mrcaAge",
-                            tree,
-                            toTaxa(clade),
-                            false,
-                            false
-                    );
-        } catch (Exception exception) {
-            throw new TileApplicationError(
-                    this.getRootNode(),
-                    "Could not create an MRCA age statistic for the clade.",
-                    "Use taxon names that exist in the tree.",
-                    List.of("Age h = mrca(clade=[\"Homo_sapiens\", \"Pan\"], tree=tree) observed between [1.0, 10.0]")
-            );
-        }
+        TMRCAStatistic mrcaStatistic =
+                CladeTaxa.mrcaStatistic(
+                        this.getRootNode(),
+                        tree,
+                        clade,
+                        "Age h = mrca(clade=[\"Homo_sapiens\", \"Pan\"], tree=tree) observed between [1.0, 10.0]"
+                );
 
         calibrationPrior.addData(mrcaStatistic);
 
@@ -124,16 +111,5 @@ public class MRCAObservedBetweenTile extends TemplateTile<RealScalar<NonNegative
                 mrcaStatistic.getStatisticValue(0),
                 NonNegativeReal.INSTANCE
         );
-    }
-
-    private static Taxa toTaxa(List<String> taxonNames) {
-        Taxa taxa =
-                new Taxa();
-
-        for (String taxonName : taxonNames) {
-            taxa.addTaxon(new Taxon(taxonName));
-        }
-
-        return taxa;
     }
 }
