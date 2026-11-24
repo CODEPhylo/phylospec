@@ -17,6 +17,7 @@ import tiling.xml.XmlPlan;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -157,6 +158,26 @@ public class BeastXState {
         statistic.setId(this.getAvailableID(id));
         this.calculationNodes.put(statistic, typeToken);
         this.calculationNodesByPhyloSpecName.put(id, statistic);
+    }
+
+    /**
+     * Sampled parameters whose prior is not a BEAST X model, such as a custom Distribution or a
+     * truncated likelihood. BEAST X restores the value after a rejected proposal only for
+     * parameters registered with a model, so the MCMC (in memory and in XML) registers these
+     * through a dummy likelihood, which adds 0 to the posterior.
+     */
+    public List<Parameter> sampledParametersWithoutPriorModel() {
+        List<Parameter> parameters = new ArrayList<>();
+
+        for (Map.Entry<Parameter, AbstractDistributionLikelihood> entry : this.priorDistributions.entrySet()) {
+            if (this.stateNodes.containsKey(entry.getKey()) && entry.getValue().getModel() == null) {
+                parameters.add(entry.getKey());
+            }
+        }
+
+        parameters.sort(Comparator.comparing(Parameter::getId));
+
+        return parameters;
     }
 
     // Associates a parameter state node with its prior distribution.
