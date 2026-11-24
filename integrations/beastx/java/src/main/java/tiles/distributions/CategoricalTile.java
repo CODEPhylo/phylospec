@@ -127,7 +127,8 @@ public class CategoricalTile extends GeneratorTile<
         return bestCategory;
     }
 
-    private static final class CategoricalDistribution implements Distribution {
+    /** Categorical distribution on 1..K. Public so the XML export can name it in its error. */
+    public static final class CategoricalDistribution implements Distribution {
 
         private final Parameter probabilities;
 
