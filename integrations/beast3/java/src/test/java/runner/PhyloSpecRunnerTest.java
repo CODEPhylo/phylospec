@@ -82,6 +82,21 @@ class PhyloSpecRunnerTest {
     }
 
     @Test
+    void formerMcmcSettingsPointToTheSampler() {
+        String source = """
+                Real x ~ Normal(mean=0.0, sd=1.0)
+                mcmc {
+                    Integer chainLength = 5
+                }
+                """;
+        PhyloSpecException failure =
+                assertThrows(PhyloSpecException.class, () -> runner(source).check());
+
+        assertDiagnostic(failure, PhyloSpecDiagnostic.Stage.MAPPING);
+        assertTrue(failure.diagnostic().error().hint().contains("mcmc(chainLength=5)"));
+    }
+
+    @Test
     void loggedValuesOfDifferentTypesCanBeCombined() throws Exception {
         runner("""
                 Real x ~ Normal(mean=0.0, sd=1.0)

@@ -31,7 +31,7 @@ public class FileLoggerTile extends TemplateTile<Void, BEASTState> {
     }
 
     public TemplateTileInput<String, BEASTState> fileNameInput =
-            new TemplateTileInput<>("$$fileName", false, Set.of(Stochasticity.CONSTANT));
+            new TemplateTileInput<>("$$fileName", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
     public TemplateTileInput<Integer, BEASTState> logEveryInput =
             new TemplateTileInput<>("$$logEvery", false, Set.of(Stochasticity.CONSTANT));
     public TileInput<List<BEASTObject>, BEASTState> parametersInput = new LoggerParametersInput("$$parameters");

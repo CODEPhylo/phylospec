@@ -64,6 +64,7 @@ public class PhyloSpecRunner {
     private final Path sourceFile;
     private final List<LocalAdapterBundles.Bundle> adapterBundles;
     private Long seed;
+    private boolean overwrite;
 
     /**
      * Constructs a runner for the given PhyloSpec source code.
@@ -109,6 +110,11 @@ public class PhyloSpecRunner {
      */
     public void setSeed(Long seed) {
         this.seed = seed;
+    }
+
+    /** Sets whether managed runs replace existing output files and run records. */
+    public void setOverwrite(boolean overwrite) {
+        this.overwrite = overwrite;
     }
 
     /**
@@ -286,7 +292,7 @@ public class PhyloSpecRunner {
         Path outputDirectory = Path.of("").toAbsolutePath();
         // reject an invalid prefix before claiming a directory
         new RunOutputs(outputDirectory).resolve(runName);
-        RunOutputs.claimRecordDirectory(runDirectory);
+        RunOutputs.claimRecordDirectory(runDirectory, this.overwrite);
         RunRecord record =
                 RunRecord.create(runDirectory, source, sourceFile, sourceDirectory, checked.catalog, adapterBundles);
         AtomicBoolean cancellationRequested = new AtomicBoolean();
@@ -316,7 +322,8 @@ public class PhyloSpecRunner {
                 };
                 record.warnings(checked.warnings);
                 checked.warnings.forEach(warning -> console.log().println(warning.format()));
-                BEASTState state = new BEASTState(runName, sourceDirectory, outputDirectory);
+                BEASTState state =
+                        new BEASTState(runName, sourceDirectory, new RunOutputs(outputDirectory, this.overwrite));
                 state.setInputObserver((reference, path) -> {
                     try {
                         record.input(reference, path);

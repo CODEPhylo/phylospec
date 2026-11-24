@@ -25,7 +25,7 @@ final class InstalledBeastXRun {
         Path directory = options.runDirectory(source);
         String prefix = options.outputPrefix(source);
         Path lib = InstalledEngineTool.runtimeLib("beastx", "run");
-        RunOutputs.claimRecordDirectory(directory);
+        RunOutputs.claimRecordDirectory(directory, options.overwrite());
         Path console = directory.resolve("console.log");
         Path record = directory.resolve("run.json");
         out.println("Saving analysis.xml and running BEAST X. Console log: " + console);
@@ -42,6 +42,7 @@ final class InstalledBeastXRun {
         args.addAll(List.of(
                 "-cp", lib.resolve("*").toString(), "BeastXRunTool", source.toString(), directory.toString(), prefix));
         if (options.seed() != null) args.addAll(List.of("--seed", options.seed().toString()));
+        if (options.overwrite()) args.add("--overwrite");
         if (options.debug()) args.add("--debug");
         ProcessBuilder builder = new ProcessBuilder(args).redirectErrorStream(true);
         if (!options.debug()) builder.redirectOutput(console.toFile());

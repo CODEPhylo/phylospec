@@ -16,11 +16,11 @@ public final class BeastXRunTool {
         BeastXToolOptions options = args.length < 3 ? null : BeastXToolOptions.parse(args, 3);
         if (options == null) {
             System.err.println(
-                    "Error: expected a script, a run directory, a run name and optional --seed <n> and --debug.");
+                    "Error: expected a script, a run directory, a run name and optional --seed <n>, --overwrite and --debug.");
             System.exit(2);
         }
         try {
-            execute(Path.of(args[0]), Path.of(args[1]), args[2], options.seed());
+            execute(Path.of(args[0]), Path.of(args[1]), args[2], options.seed(), options.overwrite());
         } catch (Exception | LinkageError | ServiceConfigurationError failure) {
             System.err.println("Error: " + failure.getMessage());
             if (options.debug()) failure.printStackTrace(System.err);
@@ -28,7 +28,8 @@ public final class BeastXRunTool {
         }
     }
 
-    private static void execute(Path script, Path runDir, String runName, Long requestedSeed) throws Exception {
+    private static void execute(Path script, Path runDir, String runName, Long requestedSeed, boolean overwrite)
+            throws Exception {
         BeastXRunRecord record = BeastXRunRecord.create(runDir, script);
         try {
             // A managed run owns its destinations. Native command-line filename overrides also
@@ -49,7 +50,7 @@ public final class BeastXRunTool {
             long seed = MathUtils.getSeed();
             Path xml = runDir.resolve("analysis.xml");
             BeastXExportTool.publish(new StateXmlGenerator().toXml(model), xml, false);
-            record.configure(model.beastState, xml, seed);
+            record.configure(model.beastState, xml, seed, overwrite);
 
             // Parsing may itself initialize a tree. Seed before loading the saved XML, so that
             // replay with this XML and seed uses the same native stream from initialization onward.

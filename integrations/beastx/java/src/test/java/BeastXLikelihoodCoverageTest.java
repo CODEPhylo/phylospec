@@ -188,7 +188,7 @@ class BeastXLikelihoodCoverageTest {
             return new PhyloSpecRunner(source + """
 
                     mcmc {
-                        Integer chainLength = 1
+                        Sampler sampler = mcmc(chainLength=1)
                         Logger treeLogger = treeLogger(logEvery=1, file="%s", trees=[tree])
                     }
                     """.formatted(XmlTestSupport.unixPath(treeLogPath)))

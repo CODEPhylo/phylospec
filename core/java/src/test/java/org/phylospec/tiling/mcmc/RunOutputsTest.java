@@ -227,6 +227,61 @@ class RunOutputsTest {
     }
 
     @Test
+    void createRunDirectoryReplacesTheRecordOfAFailedRun() throws IOException {
+        Path run = this.createFailedRecord();
+
+        assertEquals(run.toAbsolutePath().normalize(), RunOutputs.claimRecordDirectory(run));
+        assertFalse(Files.exists(run.resolve("run.json")));
+        assertFalse(Files.exists(run.resolve("console.log")));
+    }
+
+    @Test
+    void createRunDirectoryKeepsTheRecordOfAFailedRunIfTheCleanupFails() throws IOException {
+        Path run = this.createFailedRecord();
+        Files.writeString(run.resolve("notes.txt"), "keep this file");
+
+        assertThrows(IOException.class, () -> RunOutputs.claimRecordDirectory(run));
+        assertTrue(Files.exists(run.resolve("run.json")));
+        assertTrue(Files.exists(run.resolve("console.log")));
+        assertTrue(Files.exists(run.resolve("model.phylospec")));
+    }
+
+    @Test
+    void createRunDirectoryReplacesAnyEarlierRecordWithOverwrite() throws IOException {
+        Path run = RunOutputs.claimRecordDirectory(directory.resolve("run"));
+        Files.writeString(run.resolve("run.json"), "{\"status\": \"succeeded\"}");
+
+        assertThrows(IOException.class, () -> RunOutputs.claimRecordDirectory(run));
+        assertEquals(run.toAbsolutePath().normalize(), RunOutputs.claimRecordDirectory(run, true));
+        assertFalse(Files.exists(run.resolve("run.json")));
+    }
+
+    @Test
+    void prepareReplacesExistingOutputsWithOverwrite() throws IOException {
+        Path trace = Files.writeString(directory.resolve("trace.log"), "outdated");
+
+        assertThrows(IOException.class, () -> new RunOutputs(directory).prepare(List.of("trace.log"), null));
+        new RunOutputs(directory, true).prepare(List.of("trace.log"), null);
+        assertFalse(Files.exists(trace));
+    }
+
+    @Test
+    void prepareNeverReplacesDirectories() throws IOException {
+        Path folder = Files.createDirectory(directory.resolve("trace.log"));
+
+        assertThrows(IOException.class, () -> new RunOutputs(directory, true).prepare(List.of("trace.log"), null));
+        assertTrue(Files.isDirectory(folder));
+    }
+
+    private Path createFailedRecord() throws IOException {
+        Path run = Files.createDirectory(directory.resolve("run"));
+        Files.writeString(run.resolve("run.json"), "{\"status\": \"failed\", \"generatedOutputs\": []}");
+        Files.writeString(run.resolve("console.log"), "failure");
+        Files.writeString(run.resolve("model.phylospec"), "mcmc {}");
+        return run;
+    }
+
+    @Test
     void createRunDirectoryRejectsFilesAndSymbolicLinks() throws IOException {
         Path file = directory.resolve("file");
         Files.writeString(file, "keep this file");

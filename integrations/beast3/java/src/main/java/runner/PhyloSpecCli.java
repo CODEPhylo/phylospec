@@ -41,6 +41,7 @@ public final class PhyloSpecCli {
               --xml <file>           Export only: destination XML (default log prefix: XML file stem)
               --run-name <name>      Run only: name of the output files (default: script name)
               --seed <n>             export/run: random seed (default: chosen at random)
+              --overwrite            Run only: replace existing output files and the run record
               --debug                Show raw BEAST console output and failure stack traces
               -h, --help              Show this help
               --version              Show PhyloSpec and the default BEAST 3 runtime versions
@@ -55,6 +56,7 @@ public final class PhyloSpecCli {
             Bundles are local executable Java code. No packages are downloaded or installed.
             Legacy run requires --library and preserves its exact library order.
             Logs, trees and state files are written to the working directory. Input paths use the script directory.
+            Existing outputs are never replaced without --overwrite.
             The run record (run.json, console.log, model.phylospec) is saved next to them in <name>.run/.
             BEAST X also saves the executed analysis.xml in the run record.
             A nonterminal or unconfirmed run.json does not confirm that a process is still running.
@@ -141,6 +143,7 @@ public final class PhyloSpecCli {
             throws IOException, ParserConfigurationException, SAXException {
         PhyloSpecRunner runner = new PhyloSpecRunner(source, options.libraries(), adapters.bundles());
         runner.setSeed(options.seed());
+        runner.setOverwrite(options.overwrite());
         Consumer<PhyloSpecDiagnostic> warningHandler = warning -> err.println(warning.format());
         if (options.command() == Command.CHECK) {
             try {
@@ -259,6 +262,7 @@ public final class PhyloSpecCli {
             Long seed,
             List<String> libraries,
             List<Path> adapterPaths,
+            boolean overwrite,
             boolean help,
             boolean version,
             boolean debug) {
@@ -288,6 +292,7 @@ public final class PhyloSpecCli {
             boolean help = false;
             boolean version = false;
             boolean debug = false;
+            boolean overwrite = false;
             boolean fileNamesOnly = false;
 
             for (int index = firstOption; index < arguments.length; index++) {
@@ -302,6 +307,7 @@ public final class PhyloSpecCli {
                     case "-h", "--help" -> help = true;
                     case "--version" -> version = true;
                     case "--debug" -> debug = true;
+                    case "--overwrite" -> overwrite = true;
                     case "--" -> fileNamesOnly = true;
                     case "--engine" -> {
                         String engine = requireValue(arguments, ++index, "--engine");
@@ -382,6 +388,9 @@ public final class PhyloSpecCli {
                 if (command != Command.EXPORT && xmlFile != null) {
                     throw new IllegalArgumentException("--xml is only supported for the export subcommand.");
                 }
+                if (command != Command.RUN && overwrite) {
+                    throw new IllegalArgumentException("--overwrite is only supported for run.");
+                }
                 if (command == Command.CHECK && seed != null) {
                     throw new IllegalArgumentException("--seed is only supported for export and run.");
                 }
@@ -405,6 +414,7 @@ public final class PhyloSpecCli {
                     seed,
                     List.copyOf(libraries),
                     List.copyOf(adapterPaths),
+                    overwrite,
                     help,
                     version,
                     debug);

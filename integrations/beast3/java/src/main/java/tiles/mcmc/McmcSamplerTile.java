@@ -27,7 +27,7 @@ public class McmcSamplerTile extends TemplateTile<Void, BEASTState> {
             new TemplateTileInput<>("$$chainLength", false, Set.of(Stochasticity.CONSTANT));
 
     public TemplateTileInput<String, BEASTState> stateFileInput =
-            new TemplateTileInput<>("$$stateFile", false, Set.of(Stochasticity.CONSTANT));
+            new TemplateTileInput<>("$$stateFile", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     @Override
     protected Void applyTile(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {

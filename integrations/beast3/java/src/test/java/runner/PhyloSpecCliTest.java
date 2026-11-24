@@ -22,6 +22,7 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -454,6 +455,43 @@ public class PhyloSpecCliTest {
     }
 
     @Test
+    void overwriteReplacesTheOutputsAndRecordOfAnEarlierRun(@TempDir Path directory) throws Exception {
+        Path source = writeModel(directory, "");
+        assertEquals(0, launch(directory, "run", source.toString()).exitCode());
+        Files.writeString(directory.resolve("model with spaces.log"), "outdated");
+
+        CliResult repeated = launch(directory, "run", source.toString(), "--overwrite");
+
+        assertEquals(0, repeated.exitCode(), repeated.stderr());
+        assertNativeOutputs(directory.resolve("model with spaces").toString());
+        assertEquals(
+                "succeeded", readRecord(getOnlyRun(directory)).path("status").asText());
+    }
+
+    @Test
+    void overwriteIsOnlySupportedForRun(@TempDir Path directory) throws Exception {
+        CliResult result = invoke("check", directory.resolve("model.phylospec").toString(), "--overwrite");
+
+        assertEquals(2, result.exitCode());
+        assertTrue(result.stderr().contains("--overwrite is only supported for run."), result.stderr());
+    }
+
+    @Test
+    void outputPathsCanUseEnvironmentVariables(@TempDir Path directory) throws Exception {
+        Path source = writeModel(directory, """
+                Logger trace = fileLogger(file=env("TRACE_FILE"), logEvery=1000)
+                """);
+
+        CliResult result =
+                launchWithEnvironment(directory, Map.of("TRACE_FILE", "logs/custom.log"), "run", source.toString());
+
+        assertEquals(0, result.exitCode(), result.stderr());
+        assertTrace(directory.resolve("logs/custom.log"));
+        JsonNode outputs = readRecord(getOnlyRun(directory)).path("generatedOutputs");
+        assertTrue(outputs.toString().contains("\"../logs/custom.log\""), outputs.toString());
+    }
+
+    @Test
     void aFailedRunWithoutOutputsCanBeRepeated(@TempDir Path directory) throws Exception {
         Path source = writeModel(directory, "");
         Path alignment = directory.resolve("alignment.nex");
@@ -866,7 +904,18 @@ public class PhyloSpecCliTest {
 
     private static CliResult launchWithJvmOptions(Path directory, List<String> jvmOptions, String... arguments)
             throws Exception {
-        try (RunningCli child = start(directory, jvmOptions, arguments)) {
+        return launch(directory, jvmOptions, Map.of(), arguments);
+    }
+
+    private static CliResult launchWithEnvironment(Path directory, Map<String, String> environment, String... arguments)
+            throws Exception {
+        return launch(directory, List.of(), environment, arguments);
+    }
+
+    private static CliResult launch(
+            Path directory, List<String> jvmOptions, Map<String, String> environment, String... arguments)
+            throws Exception {
+        try (RunningCli child = start(directory, jvmOptions, environment, arguments)) {
             assertTrue(child.process().waitFor(30, TimeUnit.SECONDS), "CLI timed out: " + String.join(" ", arguments));
             return new CliResult(
                     child.process().exitValue(), Files.readString(child.stdout()), Files.readString(child.stderr()));
@@ -884,6 +933,12 @@ public class PhyloSpecCliTest {
     }
 
     private static RunningCli start(Path directory, List<String> jvmOptions, String... arguments) throws Exception {
+        return start(directory, jvmOptions, Map.of(), arguments);
+    }
+
+    private static RunningCli start(
+            Path directory, List<String> jvmOptions, Map<String, String> environment, String... arguments)
+            throws Exception {
         Path stdout = Files.createTempFile(directory, "cli-stdout-", ".txt");
         Path stderr = Files.createTempFile(directory, "cli-stderr-", ".txt");
         String classpath = System.getProperty("surefire.test.class.path", System.getProperty("java.class.path"));
@@ -892,8 +947,9 @@ public class PhyloSpecCliTest {
         command.addAll(jvmOptions);
         command.addAll(List.of("-Djava.only=true", "-cp", classpath, "runner.PhyloSpecCli"));
         command.addAll(List.of(arguments));
-        Process process = new ProcessBuilder(command)
-                .directory(directory.toFile())
+        ProcessBuilder builder = new ProcessBuilder(command);
+        builder.environment().putAll(environment);
+        Process process = builder.directory(directory.toFile())
                 .redirectOutput(stdout.toFile())
                 .redirectError(stderr.toFile())
                 .start();

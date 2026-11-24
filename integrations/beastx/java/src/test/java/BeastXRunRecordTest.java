@@ -37,7 +37,7 @@ class BeastXRunRecordTest {
         record.input(data);
         record.seed("modelBuilding", null, 101L);
         record.seed("mcmc", null, 101L);
-        record.configure(state, xml, 101L);
+        record.configure(state, xml, 101L, false);
         JsonNode prepared = read();
         assertEquals("preparing", prepared.path("status").asText());
         assertFalse(prepared.has("mcmcStartedAt"));
@@ -64,7 +64,7 @@ class BeastXRunRecordTest {
 
     @Test void alteredAnalysisCannotBeReportedAsSuccessful() throws IOException {
         BeastXState state = new BeastXState("analysis");
-        record.configure(state, xml, 101L);
+        record.configure(state, xml, 101L, false);
         record.running();
         Files.writeString(xml, "<changed/>\n");
         IOException failure = assertThrows(IOException.class, () -> record.succeeded(state.getSamplerSpec().chainLength()));
@@ -79,7 +79,7 @@ class BeastXRunRecordTest {
         for (String name : List.of(directory.resolve("run.json").toString(), xml.toString())) {
             BeastXState state = new BeastXState("analysis");
             state.addFileLoggerSpec(new FileLoggerSpec<>(1, name, List.of(), null));
-            assertThrows(IOException.class, () -> record.configure(state, xml, 101L), name);
+            assertThrows(IOException.class, () -> record.configure(state, xml, 101L, false), name);
             assertEquals("<beast/>\n", Files.readString(xml));
         }
     }
@@ -88,7 +88,7 @@ class BeastXRunRecordTest {
         Path existing = Files.writeString(output.resolve("existing.log"), "keep");
         BeastXState state = new BeastXState("analysis");
         state.addFileLoggerSpec(new FileLoggerSpec<>(1, existing.toString(), List.of(), null));
-        assertThrows(IOException.class, () -> record.configure(state, xml, 101L));
+        assertThrows(IOException.class, () -> record.configure(state, xml, 101L, false));
         assertEquals("keep", Files.readString(existing));
     }
 
@@ -96,7 +96,7 @@ class BeastXRunRecordTest {
         BeastXState state = new BeastXState("analysis");
         state.addFileLoggerSpec(new FileLoggerSpec<>(1, output.resolve("same.log").toString(), List.of(), null));
         state.addTreeLoggerSpec(new TreeLoggerSpec<>(1, output.resolve("nested/../same.log").toString(), "tree"));
-        assertThrows(IllegalArgumentException.class, () -> record.configure(state, xml, 101L));
+        assertThrows(IllegalArgumentException.class, () -> record.configure(state, xml, 101L, false));
         assertFalse(Files.exists(output.resolve("same.log")));
     }
 

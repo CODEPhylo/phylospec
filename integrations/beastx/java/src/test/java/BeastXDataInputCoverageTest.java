@@ -279,7 +279,7 @@ class BeastXDataInputCoverageTest {
                     PositiveReal z ~ Exponential(rate=1.0)
 
                     mcmc {
-                        Integer chainLength = 1
+                        Sampler sampler = mcmc(chainLength=1)
                         Logger fileLogger = fileLogger(logEvery=1, file="%s", parameters=[z])
                     }
                     """.formatted(XmlTestSupport.unixPath(logPath)))

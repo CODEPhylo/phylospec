@@ -6,6 +6,7 @@ import org.phylospec.ast.*;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
 import org.phylospec.tiling.errors.PrunedTilingException;
 import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.mcmc.McmcBlockValidator;
 import org.phylospec.tiling.tiles.CandidateTile;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.tiling.tiles.Tile;
@@ -85,6 +86,8 @@ public class EvaluateTiles<S> implements AstVisitor<Void, Void, Void> {
      * @return one best tile per unconsumed statement, in source order
      */
     public List<Tile<?, S>> getBestTiling(List<Stmt> statements) {
+        McmcBlockValidator.validate(statements);
+
         try {
             return CandidateTile.runWithMaxWiredUpTiles(() -> this.computeBestTiling(statements));
         } catch (TileApplicationError | PrunedTilingException lightestTilesError) {

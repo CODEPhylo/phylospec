@@ -202,8 +202,8 @@ the setup and produces inspectable results; it does not establish convergence or
 provide enough samples for scientific conclusions. Chain length, logging interval,
 and seed are set by the script and the command line.
 
-To run again, use a new working directory or `--run-name`. Existing results are never
-overwritten, and a successful run reserves its name. A failed run that wrote no outputs
+To run again, use a new working directory or `--run-name`. Existing results are only
+overwritten with `--overwrite`, and a successful run reserves its name. A failed run that wrote no outputs
 can simply be run again:
 
 ```sh

@@ -62,12 +62,17 @@ public class BEASTState {
      * PhyloSpec source file.
      */
     public BEASTState(String runName, Path sourceDirectory) {
-        this(runName, sourceDirectory, null);
+        this(runName, sourceDirectory, (RunOutputs) null);
     }
 
     /** Creates a managed state when outputDirectory is supplied; null preserves legacy behavior. */
     public BEASTState(String runName, Path sourceDirectory, Path outputDirectory) {
-        this(runName, sourceDirectory, outputDirectory, false);
+        this(runName, sourceDirectory, outputDirectory == null ? null : new RunOutputs(outputDirectory));
+    }
+
+    /** Creates a managed state writing to the given outputs; null preserves legacy behavior. */
+    public BEASTState(String runName, Path sourceDirectory, RunOutputs outputPaths) {
+        this(runName, sourceDirectory, outputPaths, false);
     }
 
     public static BEASTState forXmlExport(String runName, Path sourceDirectory) {
@@ -78,10 +83,10 @@ public class BEASTState {
         return xmlExport;
     }
 
-    private BEASTState(String runName, Path sourceDirectory, Path outputDirectory, boolean xmlExport) {
+    private BEASTState(String runName, Path sourceDirectory, RunOutputs outputPaths, boolean xmlExport) {
         this.runName = runName;
         this.xmlExport = xmlExport;
-        this.outputPaths = outputDirectory == null ? null : new RunOutputs(outputDirectory);
+        this.outputPaths = outputPaths;
         this.outputPrefix = resolveOutputPath(runName);
         this.sourceDirectory = Objects.requireNonNull(sourceDirectory, "sourceDirectory")
                 .toAbsolutePath()

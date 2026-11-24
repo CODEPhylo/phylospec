@@ -84,7 +84,7 @@ final class BeastXRunRecord {
         }
     }
 
-    void configure(BeastXState state, Path publishedXml, long effectiveSeed) throws IOException {
+    void configure(BeastXState state, Path publishedXml, long effectiveSeed, boolean overwrite) throws IOException {
         data.putObject("xml").put("path", directory.relativize(publishedXml.toAbsolutePath().normalize()).toString())
                 .put("sha256", sha256(publishedXml));
         ObjectNode settings = data.putObject("settings").put("chainLength", state.getSamplerSpec().chainLength())
@@ -97,7 +97,7 @@ final class BeastXRunRecord {
         var files = new ArrayList<String>();
         for (var spec : state.fileLoggerSpecs) files.add(spec.fileName());
         for (var spec : state.treeLoggerSpecs) files.add(spec.fileName());
-        new RunOutputs(Path.of("")).prepare(files, null);
+        new RunOutputs(Path.of(""), overwrite).prepare(files, null);
         for (var spec : state.fileLoggerSpecs) addLogger(loggers, "log", spec.fileName(), spec.logEvery());
         for (var spec : state.treeLoggerSpecs) addLogger(loggers, "tree", spec.fileName(), spec.logEvery());
         save();

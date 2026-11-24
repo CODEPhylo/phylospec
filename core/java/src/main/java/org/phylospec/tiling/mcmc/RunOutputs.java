@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /// Defines where a managed run writes its files. Results are named after the run and live in the
 /// working directory, next to a {@code <name>.run} folder holding the record of the run.
@@ -21,9 +22,16 @@ public final class RunOutputs {
             List.of("run.json", "console.log", "model.phylospec", "analysis.xml");
 
     private final Path workingDirectory;
+    private final boolean overwrite;
 
     public RunOutputs(Path workingDirectory) {
+        this(workingDirectory, false);
+    }
+
+    /** Creates the outputs of a run. With overwrite, existing output files are replaced. */
+    public RunOutputs(Path workingDirectory, boolean overwrite) {
         this.workingDirectory = workingDirectory.toAbsolutePath().normalize();
+        this.overwrite = overwrite;
     }
 
     /* default file names */
@@ -63,15 +71,20 @@ public final class RunOutputs {
 
     /* run record */
 
+    public static Path claimRecordDirectory(Path requested) throws IOException {
+        return claimRecordDirectory(requested, false);
+    }
+
     /**
      * Claims the record folder of a run. The folder of an earlier failed run that wrote no outputs is
-     * replaced, every other existing folder is refused.
+     * replaced. Every other existing folder is refused, unless overwrite is set.
      */
-    public static Path claimRecordDirectory(Path requested) throws IOException {
+    public static Path claimRecordDirectory(Path requested, boolean overwrite) throws IOException {
         Path directory = requested.toAbsolutePath().normalize();
         Files.createDirectories(directory.getParent());
 
-        if (isFailedRunWithoutOutputs(directory)) {
+        boolean isRecord = Files.isDirectory(directory, LinkOption.NOFOLLOW_LINKS);
+        if (isRecord && (overwrite || isFailedRunWithoutOutputs(directory))) {
             deleteRecord(directory);
         }
 
@@ -79,7 +92,8 @@ public final class RunOutputs {
             return Files.createDirectory(directory);
         } catch (FileAlreadyExistsException existing) {
             throw new IOException(
-                    "A run with this name already exists: " + directory + ". Use another run name or remove it.",
+                    "A run with this name already exists: " + directory
+                            + ". Use another run name, remove it or pass --overwrite.",
                     existing);
         }
     }
@@ -97,11 +111,33 @@ public final class RunOutputs {
         }
     }
 
+    /**
+     * Deletes the record of an earlier run. The folder is left untouched if it holds anything else
+     * than record files, and run.json and console.log are deleted last so that they are kept if the
+     * cleanup fails.
+     */
     private static void deleteRecord(Path directory) throws IOException {
-        for (String file : RECORD_FILES) {
-            Files.deleteIfExists(directory.resolve(file));
+        try (Stream<Path> files = Files.list(directory)) {
+            for (Path file : files.toList()) {
+                if (!RECORD_FILES.contains(file.getFileName().toString())
+                        || !Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
+                    throw new IOException("The record of the earlier run contains an unexpected file: " + file
+                            + ". Use another run name or remove " + directory + ".");
+                }
+            }
         }
-        Files.delete(directory);
+
+        try {
+            for (String file : RECORD_FILES.reversed()) {
+                Files.deleteIfExists(directory.resolve(file));
+            }
+            Files.delete(directory);
+        } catch (IOException error) {
+            throw new IOException(
+                    "Could not remove the record of the earlier run: " + directory
+                            + ". Use another run name or remove it.",
+                    error);
+        }
     }
 
     /**
@@ -144,7 +180,8 @@ public final class RunOutputs {
 
     /**
      * Validates every destination before any file is opened. The state file is optional and also
-     * reserves its temporary file.
+     * reserves its temporary file. With overwrite, existing output files are deleted once all
+     * destinations are valid.
      */
     public void prepare(List<String> loggerFiles, String stateFile) throws IOException {
         checkRuntimeOverrides();
@@ -163,12 +200,24 @@ public final class RunOutputs {
                 }
             }
             this.checkParents(path.getParent());
-            if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
-                throw new IOException("Output already exists; refusing to overwrite: " + path);
-            }
+            this.checkExistingOutput(path);
         }
 
+        if (this.overwrite) {
+            for (Path path : destinations) Files.deleteIfExists(path);
+        }
         this.probeDestinations(destinations);
+    }
+
+    private void checkExistingOutput(Path path) throws IOException {
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) return;
+
+        if (!this.overwrite) {
+            throw new IOException("Output already exists: " + path + ". Pass --overwrite to replace it.");
+        }
+        if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
+            throw new IOException("Output is a directory; refusing to overwrite it: " + path);
+        }
     }
 
     private void addDestination(Set<Path> destinations, String name) {

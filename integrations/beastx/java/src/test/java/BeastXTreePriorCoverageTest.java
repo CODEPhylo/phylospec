@@ -566,7 +566,7 @@ public class BeastXTreePriorCoverageTest {
         Likelihood posterior = new PhyloSpecRunner(TAXA + prefix + "Tree tree ~ " + prior + "\n" + """
 
                 mcmc {
-                    Integer chainLength = 1
+                    Sampler sampler = mcmc(chainLength=1)
                     Logger treeLogger = treeLogger(logEvery=1, file="%s", trees=[tree])
                 }
                 """.formatted(XmlTestSupport.unixPath(treeLogPath)))
