@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.RemoveGroupings;
@@ -22,6 +23,7 @@ import tiles.BeastXCoreTileLibrary;
 import tiling.BeastXState;
 import tiling.runner.XmlRunnerOptions;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -137,7 +139,10 @@ public class BeastXTreePriorCoverageTest {
                 Arguments.of("BirthDeath, turnover 0.5", "BirthDeath(diversificationRate=1.0, turnover=0.5, taxa=taxa)", 1.0, 40.0),
                 Arguments.of("BirthDeath, turnover 0.2", "BirthDeath(diversificationRate=2.0, turnover=0.2, taxa=taxa)", 1.0, 20.0),
                 Arguments.of("BirthDeath, sampling probability 0.3",
-                        "BirthDeath(diversificationRate=1.0, turnover=0.5, samplingProbability=0.3, taxa=taxa)", 1.0, 40.0)
+                        "BirthDeath(diversificationRate=1.0, turnover=0.5, samplingProbability=0.3, taxa=taxa)", 1.0, 40.0),
+                Arguments.of("BirthDeath rates 2 and 1", "BirthDeath(birthRate=2.0, deathRate=1.0, taxa=taxa)", 1.0, 40.0),
+                Arguments.of("BirthDeath rates, sampling probability 0.3",
+                        "BirthDeath(birthRate=3.0, deathRate=0.5, samplingProbability=0.3, taxa=taxa)", 1.0, 20.0)
         );
     }
 
@@ -153,6 +158,169 @@ public class BeastXTreePriorCoverageTest {
     public void xmlSpeciationDensityDoesNotDependOnRates(String name, String prior, double expected, double maxAge)
             throws Exception {
         assertEquals(expected, integralOverTrees(fromXml(name, "", prior), maxAge), 0.01, name);
+    }
+
+    // root age
+
+    /**
+     * With rootAge, the density is conditioned on the root: with the root fixed, it integrates over the
+     * inner node and the three topologies to the same value for every rate and every root age (1 for
+     * LABELED BirthDeath, 3 for UNSCALED Yule, which leaves out the topology factor).
+     */
+    static Stream<Arguments> rootConditionedRows() {
+        return Stream.of(
+                Arguments.of("Yule, rootAge 1", "Yule(birthRate=0.5, rootAge=1.0, taxa=taxa)", 3.0, 1.0),
+                Arguments.of("Yule, rootAge 4", "Yule(birthRate=3.0, rootAge=4.0, taxa=taxa)", 3.0, 4.0),
+                Arguments.of("BirthDeath, rootAge 2",
+                        "BirthDeath(diversificationRate=1.0, turnover=0.5, rootAge=2.0, taxa=taxa)", 1.0, 2.0),
+                Arguments.of("BirthDeath rates, rootAge 3",
+                        "BirthDeath(birthRate=2.0, deathRate=1.0, rootAge=3.0, taxa=taxa)", 1.0, 3.0)
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("rootConditionedRows")
+    public void inMemoryRootConditionedDensityIsNormalized(String name, String prior, double expected, double rootAge)
+            throws Exception {
+        assertEquals(expected, integralOverInnerAge(inMemory("", prior), rootAge), 1e-4, name);
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("rootConditionedRows")
+    public void xmlRootConditionedDensityIsNormalized(String name, String prior, double expected, double rootAge)
+            throws Exception {
+        assertEquals(expected, integralOverInnerAge(fromXml(name, "", prior), rootAge), 1e-4, name);
+    }
+
+    /** With rootAge, the root stays at that age during MCMC while the inner node moves. */
+    @Test
+    public void rootStaysAtRootAgeDuringMcmc() throws Exception {
+        String source = TAXA + """
+                PositiveReal lambda ~ LogNormal(logMean=0.0, logSd=0.5)
+                Tree tree ~ Yule(birthRate=lambda, rootAge=4.0, taxa=taxa)
+                """;
+        for (boolean viaXml : new boolean[]{false, true}) {
+            String fileName = viaXml ? "tree-prior-root-age-xml" : "tree-prior-root-age-memory";
+            Path xmlPath = XmlTestSupport.xmlPath(fileName);
+            Path treeLogPath = XmlTestSupport.treeLogPath(fileName);
+            XmlTestSupport.prepare(xmlPath, treeLogPath);
+            String run = source + """
+
+                    mcmc {
+                        Integer chainLength = 2000
+                        Logger treeLogger = treeLogger(logEvery=500, file="%s", trees=[tree])
+                    }
+                    """.formatted(XmlTestSupport.unixPath(treeLogPath));
+
+            Model model = viaXml
+                    ? new PhyloSpecRunner(run)
+                            .executeXmlRun(XmlRunnerOptions.builder("treePrior", xmlPath).execute(true).build())
+                            .mcmc().getLikelihood().getModel()
+                    : new PhyloSpecRunner(run).runMCMC("treePrior").getLikelihood().getModel();
+
+            TreeModel tree = findTree(model);
+            assertEquals(4.0, tree.getNodeHeight(tree.getRoot()), 0.0, fileName + " root");
+            NodeRef inner = tree.getInternalNode(0) == tree.getRoot() ? tree.getInternalNode(1) : tree.getInternalNode(0);
+            // The starting tree puts the inner node half-way; 2000 steps move it.
+            assertTrue(Math.abs(tree.getNodeHeight(inner) - 2.0) > 1e-9, fileName + " inner node did not move");
+        }
+    }
+
+    /** BirthDeath(birthRate, deathRate) equals BirthDeath(birthRate - deathRate, deathRate / birthRate). */
+    @Test
+    public void birthDeathRatesFollowSampledRates() throws Exception {
+        String prefix = """
+                PositiveReal b ~ LogNormal(logMean=1.0, logSd=0.1)
+                PositiveReal d ~ LogNormal(logMean=0.0, logSd=0.1)
+                """;
+        String prior = "BirthDeath(birthRate=b, deathRate=d, taxa=taxa)";
+        for (ThreeTaxonPrior rates : List.of(inMemory(prefix, prior), fromXml("BirthDeath rates", prefix, prior))) {
+            for (double[] values : new double[][]{{Math.E, 1.0}, {2.5, 0.4}}) {
+                rates.set("b", values[0]);
+                rates.set("d", values[1]);
+                ThreeTaxonPrior reference = inMemory("", "BirthDeath(diversificationRate=" + (values[0] - values[1])
+                        + ", turnover=" + (values[1] / values[0]) + ", taxa=taxa)");
+                for (double[] ages : AGES) {
+                    assertEquals(reference.logDensity(ages[0], ages[1]), rates.logDensity(ages[0], ages[1]), 1e-9,
+                            "b=" + values[0] + ", d=" + values[1]);
+                }
+            }
+        }
+    }
+
+    static Stream<Arguments> unsupportedRootAgeAndRates() {
+        return Stream.of(
+                Arguments.of("Taxa dated = [taxon(name=\"A\"), taxon(name=\"B\", age=1.0), taxon(name=\"C\")]\n"
+                        + "Tree tree ~ Yule(birthRate=1.0, rootAge=4.0, taxa=dated)\n", "contemporaneous"),
+                Arguments.of(TAXA + "Tree tree ~ BirthDeath(diversificationRate=1.0, turnover=0.5, "
+                        + "samplingProbability=0.5, rootAge=4.0, taxa=taxa)\n", "samplingProbability"),
+                Arguments.of(TAXA + "Tree tree ~ BirthDeath(birthRate=1.0, deathRate=2.0, taxa=taxa)\n",
+                        "birthRate > deathRate"),
+                Arguments.of(TAXA + "Tree tree ~ Yule(birthRate=1.5, rootAge=3.0, taxa=taxa) observed as source\n",
+                        "root at rootAge")
+        );
+    }
+
+    /**
+     * As in BEAST 3, rootAge also applies to an observed tree whose root is at rootAge (the observed
+     * tree is not rescaled): its density equals the sampled tree's at the same node ages.
+     */
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {
+            "Yule(birthRate=1.5, rootAge=2.0, taxa=taxa)",
+            "BirthDeath(birthRate=3.0, deathRate=1.0, rootAge=2.0, taxa=taxa)"
+    })
+    public void observedTreeWithRootAge(String prior) throws Exception {
+        double sampled = inMemory("", prior).logDensity(2.0, 1.0);
+        String source = TAXA + "Tree tree ~ " + prior + " observed as source\n";
+
+        Likelihood inMemory = (Likelihood) new PhyloSpecRunner(source).buildState("treePrior")
+                .observedTreeDistributions.values().iterator().next();
+        assertEquals(sampled, inMemory.getLogLikelihood(), 1e-9);
+
+        Path xmlPath = XmlTestSupport.xmlPath("tree-prior-observed-root-age");
+        XmlTestSupport.prepare(xmlPath);
+        Likelihood posterior = new PhyloSpecRunner("PositiveReal z ~ LogNormal(logMean=0.0, logSd=1.0)\n" + source + """
+
+                mcmc {
+                    Integer chainLength = 1
+                    Logger screenLogger = screenLogger(logEvery=1, parameters=[z])
+                }
+                """)
+                .buildXmlRun(XmlRunnerOptions.builder("treePrior", xmlPath).build())
+                .mcmc()
+                .getLikelihood();
+        assertTrue(Files.readString(xmlPath).contains("conditionalOnRoot=\"true\""));
+
+        List<Likelihood> leaves = new ArrayList<>();
+        collectLeaves(posterior, leaves);
+        Likelihood fromXml = leaves.stream()
+                .filter(leaf -> "tree_likelihood".equals(leaf.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("No tree_likelihood in the parsed XML."));
+        assertEquals(sampled, fromXml.getLogLikelihood(), 1e-9);
+    }
+
+    /**
+     * As in BEAST 3: rootAge needs contemporaneous taxa and an observed tree whose root is at
+     * rootAge, and BirthDeath needs birthRate > deathRate.
+     */
+    @ParameterizedTest
+    @MethodSource("unsupportedRootAgeAndRates")
+    public void unsupportedRootAgeAndRatesFailExplicitly(String source, String expected) {
+        Exception error = assertThrows(Exception.class, () -> new PhyloSpecRunner(source).buildState("treePrior"));
+        assertTrue(error.getMessage().contains(expected), error.getMessage());
+    }
+
+    /** Integral of the density over the inner node age and the three labelled topologies, root at rootAge. */
+    private static double integralOverInnerAge(ThreeTaxonPrior prior, double rootAge) {
+        int steps = 2000;
+        double width = rootAge / steps;
+        double sum = 0.0;
+        for (int j = 0; j < steps; j++) {
+            sum += Math.exp(prior.logDensity(rootAge, (j + 0.5) * width));
+        }
+        return 3.0 * sum * width;
     }
 
     /**
