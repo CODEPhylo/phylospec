@@ -2,9 +2,11 @@ package tiling.mcmc;
 
 import dr.evomodel.tree.TreeLogger;
 import dr.evomodel.tree.TreeModel;
+import dr.inference.loggers.LogColumn;
 import dr.inference.loggers.Loggable;
 import dr.inference.loggers.Logger;
 import dr.inference.loggers.MCLogger;
+import dr.inference.loggers.NumberColumn;
 import dr.inference.loggers.TabDelimitedFormatter;
 import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
@@ -276,6 +278,18 @@ public class LoggerBuilder {
 
         Statistic statistic =
                 beastState.calculationNodesByPhyloSpecName.get(loggableName);
+
+        if (statistic != null && statistic.getDimension() == 1) {
+            // Log it under the PhyloSpec name, as the XML logger does, not the statistic's own name.
+            return () -> new LogColumn[]{
+                    new NumberColumn(loggableName) {
+                        @Override
+                        public double getDoubleValue() {
+                            return statistic.getStatisticValue(0);
+                        }
+                    }
+            };
+        }
 
         if (statistic != null) {
             return statistic;

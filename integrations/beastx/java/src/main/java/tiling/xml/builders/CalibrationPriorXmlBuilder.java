@@ -45,10 +45,15 @@ public class CalibrationPriorXmlBuilder {
         TMRCAStatistic statistic =
                 calibrationStatistic(calibrationPrior);
 
+        return tmrcaStatistic(statisticId(statistic), statistic.getStatisticName(), statistic);
+    }
+
+    /** A tmrcaStatistic element, also used to log mrca(...) and age(node, tree) values. */
+    public XmlElement tmrcaStatistic(String id, String name, TMRCAStatistic statistic) {
         XmlElement element =
                 XmlElement.element("tmrcaStatistic")
-                        .withId(statisticId(statistic))
-                        .withAttribute("name", statistic.getStatisticName())
+                        .withId(id)
+                        .withAttribute("name", name)
                         .withAttribute("absolute", "false")
                         .withChild(treeReference((TreeModel) statistic.getTree()));
 
@@ -61,7 +66,7 @@ public class CalibrationPriorXmlBuilder {
 
         XmlElement taxa =
                 XmlElement.element("taxa")
-                        .withId(statisticId(statistic) + "_taxa");
+                        .withId(id + "_taxa");
 
         List<String> taxonIds =
                 new ArrayList<>(leafSet);

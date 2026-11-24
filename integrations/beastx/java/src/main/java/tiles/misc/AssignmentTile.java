@@ -6,6 +6,7 @@ import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.tiles.AstNodeTile;
 import org.phylospec.tiling.tiles.TilePriority;
 import tiling.BeastXState;
+import tiling.params.BeastXStatisticRealScalar;
 
 import java.util.IdentityHashMap;
 
@@ -17,7 +18,16 @@ public class AssignmentTile extends AstNodeTile<Object, Stmt.Assignment, BeastXS
 
     @Override
     public Object applyTile(BeastXState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        return this.expressionInput.apply(beastState, indexVariables);
+        Object value =
+                this.expressionInput.apply(beastState, indexVariables);
+
+        // A live value such as Age h = mrca(...) can be logged by its PhyloSpec name.
+        if (value instanceof BeastXStatisticRealScalar<?> statistic
+                && this.getRootNode() instanceof Stmt.Assignment assignment) {
+            beastState.calculationNodesByPhyloSpecName.putIfAbsent(assignment.name, statistic.getStatistic());
+        }
+
+        return value;
     }
 
     @Override

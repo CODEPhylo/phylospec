@@ -1,5 +1,7 @@
 package tiling.xml;
 
+import dr.evomodel.tree.TMRCAStatistic;
+import dr.evomodel.tree.TreeHeightStatistic;
 import dr.evomodel.tree.TreeModel;
 import dr.inference.distribution.AbstractDistributionLikelihood;
 import dr.inference.distribution.DirichletDistributionModel;
@@ -8,6 +10,7 @@ import dr.inference.distribution.MultivariateDistributionLikelihood;
 import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
+import dr.inference.model.Statistic;
 import dr.math.distributions.DirichletDistribution;
 import tiling.BeastXModel;
 import tiling.BeastXState;
@@ -484,6 +487,21 @@ public class XmlPlanBuilder {
                     .withId(loggableName)
                     .withAttribute("name", loggableName)
                     .withChild(XmlElement.ref("treeModel", treeId(treeModel)));
+        }
+
+        // Live values assigned to a PhyloSpec name: rootAge(tree), mrca(...) and age(node, tree).
+        Statistic statistic =
+                state.calculationNodesByPhyloSpecName.get(loggableName);
+
+        if (statistic instanceof TreeHeightStatistic heightStatistic) {
+            return XmlElement.element("treeHeightStatistic")
+                    .withId(loggableName)
+                    .withAttribute("name", loggableName)
+                    .withChild(XmlElement.ref("treeModel", treeId((TreeModel) heightStatistic.getTree())));
+        }
+
+        if (statistic instanceof TMRCAStatistic mrcaStatistic) {
+            return calibrationPriorXmlBuilder.tmrcaStatistic(loggableName, loggableName, mrcaStatistic);
         }
 
         return null;
