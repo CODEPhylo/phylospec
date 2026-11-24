@@ -50,9 +50,23 @@ final class InitialTreeBuilder {
             );
         }
 
-        root.setHeight(rootHeight);
+        // The internal heights are 1, 2, ... above the tips; scale them so that the root is at
+        // rootAge. Setting only the root could put it below its children.
+        scaleInternalHeights(root, rootHeight / root.getHeight());
 
         return new SimpleTree(root);
+    }
+
+    private static void scaleInternalHeights(SimpleNode node, double factor) {
+        if (node.isExternal()) {
+            return;
+        }
+
+        node.setHeight(node.getHeight() * factor);
+
+        for (int i = 0; i < node.getChildCount(); i++) {
+            scaleInternalHeights(node.getChild(i), factor);
+        }
     }
 
     private static SimpleNode buildBalancedSubtree(

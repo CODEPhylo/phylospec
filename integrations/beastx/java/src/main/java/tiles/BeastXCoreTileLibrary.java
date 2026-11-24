@@ -126,6 +126,7 @@ import tiles.substitutionmodels.MkTile;
 
 import tiles.trees.YuleTile;
 import tiles.trees.BirthDeathTile;
+import tiles.trees.BirthDeathRatesTile;
 import tiles.trees.CoalescentTile;
 import tiles.trees.ConstantPopulationFunctionTile;
 import tiles.trees.ExponentialPopulationFunctionTile;
@@ -273,6 +274,7 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         // BEAST X tree priors
         tiles.add(new YuleTile());
         tiles.add(new BirthDeathTile());
+        tiles.add(new BirthDeathRatesTile());
         tiles.add(new FossilizedBirthDeathTile());
         tiles.add(new CoalescentTile());
         tiles.add(new SkylineCoalescentTile());

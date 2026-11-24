@@ -6,6 +6,7 @@ import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.tiles.TemplateTile;
+import tiles.trees.RootAge;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
 
@@ -48,6 +49,8 @@ public class ObservedAsTreeTile extends TemplateTile<TreeModel, BeastXState> {
 
         String likelihoodId =
                 treeId + "_likelihood";
+
+        RootAge.bindObservedTree(this.getRootNode(), beastState, distribution.stateNode, observedTree);
 
         distribution.bind(observedTree);
 

@@ -33,8 +33,10 @@ public final class StrictClockTreeUpDownOperatorSelector implements JointOperato
         List<OperatorSpec> operators = new ArrayList<>();
         for (Map.Entry<TreeModel, List<Parameter>> entry : entries) {
             TreeModel tree = entry.getKey();
+            // Scaling all node heights would move a root fixed at rootAge.
             if (!(tree instanceof DefaultTreeModel)
-                    || !state.treePriorDistributions.containsKey(tree)) {
+                    || !state.treePriorDistributions.containsKey(tree)
+                    || state.rootConditionedTrees.contains(tree)) {
                 continue;
             }
 

@@ -16,8 +16,10 @@ import tiling.xml.XmlPlan;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,6 +55,9 @@ public class BeastXState {
     public final Map<TreeModel, AbstractModelLikelihood> treePriorDistributions;
     public final Map<TreeModel, AbstractModelLikelihood> observedTreeDistributions;
     public final Map<TreeModel, StartingTreeSpec> startingTreeSpecs;
+
+    /** Trees whose prior is conditioned on a fixed rootAge: their root must not move. */
+    public final Set<TreeModel> rootConditionedTrees;
     public final List<AbstractDistributionLikelihood> calibrationPriorDistributions;
     public final List<Likelihood> likelihoodDistributions;
 
@@ -94,6 +99,7 @@ public class BeastXState {
         this.treePriorDistributions = new HashMap<>();
         this.observedTreeDistributions = new HashMap<>();
         this.startingTreeSpecs = new HashMap<>();
+        this.rootConditionedTrees = Collections.newSetFromMap(new IdentityHashMap<>());
         this.calibrationPriorDistributions = new ArrayList<>();
         this.likelihoodDistributions = new ArrayList<>();
         this.treeClockRateParameters = new HashMap<>();
