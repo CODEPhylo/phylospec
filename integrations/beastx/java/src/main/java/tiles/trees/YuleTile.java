@@ -12,11 +12,13 @@ import org.phylospec.domain.NonNegativeReal;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
+import org.phylospec.typeresolver.Stochasticity;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
 import tiling.params.BeastXParameters;
 
 import java.util.IdentityHashMap;
+import java.util.Set;
 
 public class YuleTile extends GeneratorTile<
         BoundDistribution<TreeModel, SpeciationLikelihood>,
@@ -31,8 +33,9 @@ public class YuleTile extends GeneratorTile<
     GeneratorTileInput<RealScalar<? extends PositiveReal>, BeastXState> birthRateInput =
             new GeneratorTileInput<>("birthRate");
 
+    // The root is fixed at rootAge during MCMC, so a sampled rootAge is not supported.
     GeneratorTileInput<RealScalar<? extends NonNegativeReal>, BeastXState> rootAgeInput =
-            new GeneratorTileInput<>("rootAge", false);
+            new GeneratorTileInput<>("rootAge", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     GeneratorTileInput<Taxa, BeastXState> taxaInput =
             new GeneratorTileInput<>("taxa");
@@ -48,10 +51,11 @@ public class YuleTile extends GeneratorTile<
         RealScalar<? extends NonNegativeReal> rootAge =
                 this.rootAgeInput.apply(beastState, indexVariables);
 
-        UnsupportedRootAge.reject(this.getRootNode(), rootAge, "Yule");
-
         Taxa taxa =
                 this.taxaInput.apply(beastState, indexVariables);
+
+        Double conditioningAge =
+                RootAge.conditioningAge(this.getRootNode(), beastState, rootAge, taxa, null, "Yule");
 
         DefaultTreeModel defaultTreeModel =
                 new DefaultTreeModel(
@@ -60,13 +64,24 @@ public class YuleTile extends GeneratorTile<
                 );
 
         BirthDeathGernhard08Model yuleModel =
-                new BirthDeathGernhard08Model(
-                        BeastXParameters.toParameter(birthRate),
-                        new Parameter.Default(0.0),
-                        new Parameter.Default(1.0),
-                        BirthDeathGernhard08Model.TreeType.UNSCALED,
-                        Units.Type.YEARS
-                );
+                conditioningAge == null
+                        ? new BirthDeathGernhard08Model(
+                                BeastXParameters.toParameter(birthRate),
+                                new Parameter.Default(0.0),
+                                new Parameter.Default(1.0),
+                                BirthDeathGernhard08Model.TreeType.UNSCALED,
+                                Units.Type.YEARS
+                        )
+                        : RootAge.conditionedModel(
+                                "yule",
+                                BeastXParameters.toParameter(birthRate),
+                                new Parameter.Default(0.0),
+                                BirthDeathGernhard08Model.TreeType.UNSCALED
+                        );
+
+        if (conditioningAge != null) {
+            RootAge.fixRoot(beastState, defaultTreeModel);
+        }
 
         return new BoundDistribution<>(
                 defaultTreeModel,

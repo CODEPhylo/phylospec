@@ -13,11 +13,13 @@ import org.phylospec.domain.PositiveReal;
 import org.phylospec.domain.UnitInterval;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
+import org.phylospec.typeresolver.Stochasticity;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
 import tiling.params.BeastXParameters;
 
 import java.util.IdentityHashMap;
+import java.util.Set;
 
 public class BirthDeathTile extends GeneratorTile<
         BoundDistribution<TreeModel, SpeciationLikelihood>,
@@ -38,8 +40,9 @@ public class BirthDeathTile extends GeneratorTile<
     GeneratorTileInput<RealScalar<UnitInterval>, BeastXState> samplingProbabilityInput =
             new GeneratorTileInput<>("samplingProbability", false);
 
+    // The root is fixed at rootAge during MCMC, so a sampled rootAge is not supported.
     GeneratorTileInput<RealScalar<? extends NonNegativeReal>, BeastXState> rootAgeInput =
-            new GeneratorTileInput<>("rootAge", false);
+            new GeneratorTileInput<>("rootAge", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
 
     GeneratorTileInput<Taxa, BeastXState> taxaInput =
             new GeneratorTileInput<>("taxa");
@@ -61,10 +64,17 @@ public class BirthDeathTile extends GeneratorTile<
         RealScalar<? extends NonNegativeReal> rootAge =
                 this.rootAgeInput.apply(beastState, indexVariables);
 
-        UnsupportedRootAge.reject(this.getRootNode(), rootAge, "BirthDeath");
-
         Taxa taxa =
                 this.taxaInput.apply(beastState, indexVariables);
+
+        Parameter samplingProbabilityParameter =
+                samplingProbability == null
+                        ? null
+                        : BeastXParameters.toParameter(samplingProbability);
+
+        Double conditioningAge =
+                RootAge.conditioningAge(
+                        this.getRootNode(), beastState, rootAge, taxa, samplingProbabilityParameter, "BirthDeath");
 
         DefaultTreeModel defaultTreeModel =
                 new DefaultTreeModel(
@@ -72,19 +82,27 @@ public class BirthDeathTile extends GeneratorTile<
                         InitialTreeBuilder.balancedTree(taxa, "BirthDeath", rootAge)
                 );
 
-        Parameter samplingProbabilityParameter =
-                samplingProbability == null
-                        ? new Parameter.Default(1.0)
-                        : BeastXParameters.toParameter(samplingProbability);
-
         BirthDeathGernhard08Model birthDeathModel =
-                new BirthDeathGernhard08Model(
-                        BeastXParameters.toParameter(diversificationRate),
-                        BeastXParameters.toParameter(turnover),
-                        samplingProbabilityParameter,
-                        BirthDeathGernhard08Model.TreeType.LABELED,
-                        Units.Type.YEARS
-                );
+                conditioningAge == null
+                        ? new BirthDeathGernhard08Model(
+                                BeastXParameters.toParameter(diversificationRate),
+                                BeastXParameters.toParameter(turnover),
+                                samplingProbabilityParameter == null
+                                        ? new Parameter.Default(1.0)
+                                        : samplingProbabilityParameter,
+                                BirthDeathGernhard08Model.TreeType.LABELED,
+                                Units.Type.YEARS
+                        )
+                        : RootAge.conditionedModel(
+                                "birthDeath",
+                                BeastXParameters.toParameter(diversificationRate),
+                                BeastXParameters.toParameter(turnover),
+                                BirthDeathGernhard08Model.TreeType.LABELED
+                        );
+
+        if (conditioningAge != null) {
+            RootAge.fixRoot(beastState, defaultTreeModel);
+        }
 
         return new BoundDistribution<>(
                 defaultTreeModel,

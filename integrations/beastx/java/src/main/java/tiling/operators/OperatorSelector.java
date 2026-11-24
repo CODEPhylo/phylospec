@@ -124,6 +124,10 @@ public final class OperatorSelector {
         List<OperatorSpec> operators = new ArrayList<>();
         BeastXState.OperatorConfig config = state.operatorConfig;
         for (TreeModel tree : trees) {
+            if (state.rootConditionedTrees.contains(tree)) {
+                operators.addAll(fixedRootTreeOperators(tree, config));
+                continue;
+            }
             if (tree instanceof DefaultTreeModel) {
                 operators.add(treeOperator(
                         OperatorSpec.Family.TREE_NODE_HEIGHT_SCALE,
@@ -155,6 +159,28 @@ public final class OperatorSelector {
                     tree, config.treeWilsonBaldingWeight, NO_TUNING));
         }
         return operators;
+    }
+
+    /**
+     * Operators that never move the root, for a tree conditioned on a fixed rootAge: the node height
+     * operators skip the root and the exchanges keep all heights. Scaling, subtree slide and
+     * Wilson-Balding can change the root height, so they are left out. With two taxa the root is
+     * the only internal node and the tree is fully fixed.
+     */
+    private static List<OperatorSpec> fixedRootTreeOperators(TreeModel tree, BeastXState.OperatorConfig config) {
+        if (tree.getInternalNodeCount() < 2) {
+            return List.of();
+        }
+        return List.of(
+                treeOperator(OperatorSpec.Family.TREE_UNIFORM_HEIGHT,
+                        tree, config.treeUniformNodeHeightWeight, NO_TUNING),
+                treeOperator(OperatorSpec.Family.TREE_RANDOM_WALK_HEIGHT,
+                        tree, config.treeRandomWalkNodeHeightWeight, config.treeRandomWalkNodeHeightSize),
+                treeOperator(OperatorSpec.Family.TREE_NARROW_EXCHANGE,
+                        tree, config.treeNarrowExchangeWeight, NO_TUNING),
+                treeOperator(OperatorSpec.Family.TREE_WIDE_EXCHANGE,
+                        tree, config.treeWideExchangeWeight, NO_TUNING)
+        );
     }
 
     private static OperatorSpec parameterOperator(

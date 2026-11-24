@@ -15,10 +15,15 @@ import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import tiling.BeastXState;
+import tiling.params.BeastXBirthMinusDeathRate;
 import tiling.params.BeastXBirthRate;
 import tiling.params.BeastXDeathRate;
+import tiling.params.BeastXRelativeDeathRate;
 import tiling.params.BeastXDerivedScalarParameter;
 import tiling.xml.XmlElement;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Builds XML model and likelihood elements for supported tree priors.
@@ -102,9 +107,17 @@ public class TreePriorXmlBuilder {
             AbstractModelLikelihood treePrior,
             BirthDeathGernhard08Model yuleModel
     ) {
-        return XmlElement.element("yuleModel")
-                .withId(treePriorModelId(treePrior))
-                .withAttribute("units", "years")
+        XmlElement element =
+                XmlElement.element("yuleModel")
+                        .withId(treePriorModelId(treePrior))
+                        .withAttribute("units", "years");
+
+        if (isRootConditioned(state, treePrior)) {
+            element =
+                    element.withAttribute("conditionalOnRoot", "true");
+        }
+
+        return element
                 .withChild(
                         parameterElement(
                                 state,
@@ -123,43 +136,91 @@ public class TreePriorXmlBuilder {
             AbstractModelLikelihood treePrior,
             BirthDeathGernhard08Model birthDeathModel
     ) {
-        return XmlElement.element("birthDeathModel")
-                .withId(treePriorModelId(treePrior))
-                .withAttribute("type", "LABELED")
-                .withAttribute("units", "years")
-                .withChild(
-                        parameterElement(
-                                state,
-                                "birthMinusDeathRate",
-                                birthDeathVariable(birthDeathModel, 0),
-                                priorId(treePrior) + "_birthMinusDeathRate",
-                                birthDeathModel.getR(),
-                                0.0,
-                                null
-                        )
+        boolean rootConditioned =
+                isRootConditioned(state, treePrior);
+
+        XmlElement element =
+                XmlElement.element("birthDeathModel")
+                        .withId(treePriorModelId(treePrior))
+                        .withAttribute("type", "LABELED")
+                        .withAttribute("units", "years");
+
+        if (rootConditioned) {
+            element =
+                    element.withAttribute("conditionalOnRoot", "true");
+        }
+
+        element =
+                element
+                        .withChild(birthMinusDeathRate(state, treePrior, birthDeathVariable(birthDeathModel, 0)))
+                        .withChild(relativeDeathRate(state, treePrior, birthDeathVariable(birthDeathModel, 1)));
+
+        // BEAST X refuses a sampling probability together with conditionalOnRoot.
+        if (rootConditioned) {
+            return element;
+        }
+
+        return element.withChild(
+                parameterElement(
+                        state,
+                        "sampleProbability",
+                        birthDeathVariable(birthDeathModel, 2),
+                        priorId(treePrior) + "_sampleProbability",
+                        birthDeathModel.getRho(),
+                        0.0,
+                        1.0
                 )
-                .withChild(
-                        parameterElement(
-                                state,
-                                "relativeDeathRate",
-                                birthDeathVariable(birthDeathModel, 1),
-                                priorId(treePrior) + "_relativeDeathRate",
-                                birthDeathModel.getA(),
-                                0.0,
-                                1.0
-                        )
-                )
-                .withChild(
-                        parameterElement(
-                                state,
-                                "sampleProbability",
-                                birthDeathVariable(birthDeathModel, 2),
-                                priorId(treePrior) + "_sampleProbability",
-                                birthDeathModel.getRho(),
-                                0.0,
-                                1.0
-                        )
-                );
+        );
+    }
+
+    /**
+     * For BirthDeath(birthRate, deathRate) with a sampled rate, writes birthRate + (-1 * deathRate), so the
+     * XML follows both rates.
+     */
+    private XmlElement birthMinusDeathRate(BeastXState state, AbstractModelLikelihood treePrior, Parameter rate) {
+        String id = priorId(treePrior) + "_birthMinusDeathRate";
+
+        if (rate instanceof BeastXBirthMinusDeathRate derived && dependsOnStateNode(state, derived)) {
+            return XmlElement.element("birthMinusDeathRate")
+                    .withChild(
+                            XmlElement.element("sumParameter")
+                                    .withId(id)
+                                    .withChild(rateParameter(state, derived.getBirthRate(), id + "_birthRate"))
+                                    .withChild(
+                                            XmlElement.element("productParameter")
+                                                    .withId(id + "_minusDeathRate")
+                                                    .withChild(inlineParameterDefinition(id + "_minusOne", -1.0, null, null))
+                                                    .withChild(rateParameter(state, derived.getDeathRate(), id + "_deathRate"))
+                                    )
+                    );
+        }
+
+        return parameterElement(state, "birthMinusDeathRate", rate, id, rate.getParameterValue(0), 0.0, null);
+    }
+
+    /**
+     * For BirthDeath(birthRate, deathRate) with a sampled rate, writes deathRate * birthRate ^ -1, so the
+     * XML follows both rates.
+     */
+    private XmlElement relativeDeathRate(BeastXState state, AbstractModelLikelihood treePrior, Parameter rate) {
+        String id = priorId(treePrior) + "_relativeDeathRate";
+
+        if (rate instanceof BeastXRelativeDeathRate derived && dependsOnStateNode(state, derived)) {
+            return XmlElement.element("relativeDeathRate")
+                    .withChild(
+                            XmlElement.element("productParameter")
+                                    .withId(id)
+                                    .withChild(rateParameter(state, derived.getDeathRate(), id + "_deathRate"))
+                                    .withChild(
+                                            XmlElement.element("transformedParameter")
+                                                    .withId(id + "_inverseBirthRate")
+                                                    .withChild(rateParameter(state, derived.getBirthRate(), id + "_birthRate"))
+                                                    .withChild(powerTransform(-1.0))
+                                    )
+                    );
+        }
+
+        return parameterElement(state, "relativeDeathRate", rate, id, rate.getParameterValue(0), 0.0, 1.0);
     }
 
     /**
@@ -713,13 +774,21 @@ public class TreePriorXmlBuilder {
         return rootHeight + Math.max(1.0, rootHeight * 0.25);
     }
 
+    /** Conditioned on a fixed rootAge (see tiles.trees.RootAge). */
+    private static boolean isRootConditioned(BeastXState state, AbstractModelLikelihood treePrior) {
+        return state.rootConditionedTrees.contains(treeModelForPrior(state, treePrior));
+    }
+
     private static TreeModel treeModelForPrior(
             BeastXState state,
             AbstractModelLikelihood treePrior
     ) {
-        for (java.util.Map.Entry<TreeModel, AbstractModelLikelihood> entry : state.treePriorDistributions.entrySet()) {
-            if (entry.getValue() == treePrior) {
-                return entry.getKey();
+        for (Map<TreeModel, AbstractModelLikelihood> distributions
+                : List.of(state.treePriorDistributions, state.observedTreeDistributions)) {
+            for (Map.Entry<TreeModel, AbstractModelLikelihood> entry : distributions.entrySet()) {
+                if (entry.getValue() == treePrior) {
+                    return entry.getKey();
+                }
             }
         }
 

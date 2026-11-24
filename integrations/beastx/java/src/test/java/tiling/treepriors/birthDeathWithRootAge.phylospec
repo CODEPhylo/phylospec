@@ -1,10 +1,9 @@
-Real rootAge ~ LogNormal(mean=1.0, logSd=1.0)
 Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
 Taxa taxa = taxa(data)
 Tree tree ~ BirthDeath(
     diversificationRate=1.0,
     turnover=0.5,
-    rootAge=rootAge,
+    rootAge=10.0,
     taxa=taxa
 )
 
@@ -12,10 +11,7 @@ Tree tree ~ BirthDeath(
 // TILING_SUCCESS
 // EXPECTED_TILES
 
-// EXPECTED_APPLICATION_ERRORS
-// BEAST X does not support rootAge in BirthDeath yet. Remove rootAge, or calibrate the root with Age root = rootAge(tree) observed between [lower, upper].
-// EXPECTED_APPLICATION_ERRORS
-
 // EXPECTED BEASTX STATE
-// NO_STATE
+// TM: tree
+// TP: tree_prior
 // EXPECTED BEASTX STATE
