@@ -34,8 +34,7 @@ public class FileLoggerTile extends TemplateTile<Void, BeastXState> {
             new TemplateTileInput<>("$$fileName", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
     public TemplateTileInput<Integer, BeastXState> logEveryInput =
             new TemplateTileInput<>("$$logEvery", false, Set.of(Stochasticity.CONSTANT));
-    public TileInput<LoggerParameterNames, BeastXState> parametersInput =
-            new LoggerParameterNamesInput("$$parameters", false);
+    public TileInput<List<String>, BeastXState> parametersInput = new LoggerParameterNamesInput("$$parameters");
     public TemplateTileInput<List<String>, BeastXState> parameterNamesInput =
             new TemplateTileInput<>("$$parameterNames", false, Set.of(Stochasticity.CONSTANT));
 
@@ -44,13 +43,13 @@ public class FileLoggerTile extends TemplateTile<Void, BeastXState> {
         String fileName = this.fileNameInput.apply(beastState, indexVariables);
         if (fileName == null) fileName = OutputPaths.getLogFile(beastState.getOutputPrefix());
         Integer logEvery = this.logEveryInput.apply(beastState, indexVariables);
-        LoggerParameterNames parameters = this.parametersInput.apply(beastState, indexVariables);
+        List<String> parameters = this.parametersInput.apply(beastState, indexVariables);
         List<String> parameterNames = this.parameterNamesInput.apply(beastState, indexVariables);
 
         beastState.addFileLoggerSpec(new FileLoggerSpec<>(
                 logEvery != null ? logEvery : LoggerSpec.DEFAULT_LOG_EVERY,
                 fileName,
-                parameters != null ? parameters.names : null,
+                parameters,
                 parameterNames));
 
         return null;

@@ -30,20 +30,19 @@ public class ScreenLoggerTile extends TemplateTile<Void, BeastXState> {
 
     public TemplateTileInput<Integer, BeastXState> logEveryInput =
             new TemplateTileInput<>("$$logEvery", false, Set.of(Stochasticity.CONSTANT));
-    public TileInput<LoggerParameterNames, BeastXState> parametersInput =
-            new LoggerParameterNamesInput("$$parameters", false);
+    public TileInput<List<String>, BeastXState> parametersInput = new LoggerParameterNamesInput("$$parameters");
     public TemplateTileInput<List<String>, BeastXState> parameterNamesInput =
             new TemplateTileInput<>("$$parameterNames", false, Set.of(Stochasticity.CONSTANT));
 
     @Override
     protected Void applyTile(BeastXState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         Integer logEvery = this.logEveryInput.apply(beastState, indexVariables);
-        LoggerParameterNames parameters = this.parametersInput.apply(beastState, indexVariables);
+        List<String> parameters = this.parametersInput.apply(beastState, indexVariables);
         List<String> parameterNames = this.parameterNamesInput.apply(beastState, indexVariables);
 
         beastState.addScreenLoggerSpec(new ScreenLoggerSpec<>(
                 logEvery != null ? logEvery : LoggerSpec.DEFAULT_LOG_EVERY,
-                parameters != null ? parameters.names : null,
+                parameters,
                 parameterNames));
 
         return null;
