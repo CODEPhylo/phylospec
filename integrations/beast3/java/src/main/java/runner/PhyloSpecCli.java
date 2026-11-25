@@ -171,17 +171,8 @@ public final class PhyloSpecCli {
         if (options.command() == Command.RUN) {
             Path runDirectory = options.runDirectory(source);
             String runName = options.outputPrefix(source);
-            RunRecord record;
-            try {
-                record = runner.runManaged(runName, runDirectory, warningHandler, out::println, options.debug());
-            } finally {
-                if (Files.isRegularFile(runDirectory.resolve("run.json"))) {
-                    out.println("Run record: " + runDirectory.resolve("run.json"));
-                    if (Files.isRegularFile(runDirectory.resolve("console.log"))) {
-                        out.println("BEAST console log: " + runDirectory.resolve("console.log"));
-                    }
-                }
-            }
+            // the runner reports the record and console log paths once it has created them
+            RunRecord record = runner.runManaged(runName, runDirectory, warningHandler, out::println, options.debug());
             out.println("Run completed (engine: beast3; libraries: " + String.join(",", options.libraries()) + ").");
             for (var file : record.getOutputFiles()) {
                 String label =
@@ -353,6 +344,11 @@ public final class PhyloSpecCli {
                         xmlFile = Path.of(value);
                     }
                     case "--seed" -> seed = parseSeed(requireValue(arguments, ++index, "--seed"));
+                    case "--out" ->
+                        throw new IllegalArgumentException(
+                                "--out is no longer supported. Outputs are written to the working directory, so run"
+                                        + " the command from the directory that should hold them. To keep replicates"
+                                        + " apart, give each one its own --run-name or its own working directory.");
                     default -> {
                         if (argument.startsWith("-")) {
                             throw new IllegalArgumentException("Unknown option: " + argument);

@@ -63,6 +63,19 @@ public class PhyloSpecCliTest {
     }
 
     @Test
+    public void explainsHowToReplaceTheRemovedOutOption() {
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> PhyloSpecCli.execute(new String[] {"run", "model.phylospec", "--out", "results/run-01"}));
+
+        assertEquals(
+                "--out is no longer supported. Outputs are written to the working directory, so run the command"
+                        + " from the directory that should hold them. To keep replicates apart, give each one its"
+                        + " own --run-name or its own working directory.",
+                exception.getMessage());
+    }
+
+    @Test
     public void reportsRunnerDiagnosticsAtTheProcessBoundary(@TempDir Path directory) throws Exception {
         Path source = directory.resolve("invalid.phylospec");
         Files.writeString(source, "Real x ~ Uniform(lower=2.0, upper=1.0)\nInteger y = \"wrong\"\n");
@@ -469,6 +482,15 @@ public class PhyloSpecCliTest {
         assertEquals(trace, Files.readString(directory.resolve("model with spaces.log")));
         assertEquals(
                 "succeeded", readRecord(getOnlyRun(directory)).path("status").asText());
+
+        // neither a taken name nor a script error may point to the record of the earlier run
+        Files.writeString(source, "Integer value = \"wrong\"");
+        CliResult invalid = launch(directory, "run", source.toString());
+        assertEquals(1, invalid.exitCode(), invalid.stderr());
+        for (CliResult failure : List.of(repeated, invalid)) {
+            assertFalse(failure.stdout().contains("Run record:"), failure.stdout());
+            assertFalse(failure.stdout().contains("BEAST console log:"), failure.stdout());
+        }
     }
 
     @Test

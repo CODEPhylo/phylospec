@@ -87,4 +87,9 @@ Everything else (e.g. operator settings) should be in a specific engine block (e
 
 *Outputs*: logs, trees and state files are written to the working folder, with the run record next to them in *&lt;name&gt;.run/*. See [Output Files](output-files.md).
 
-*Replicates*: run the same model multiple times with different *--seed* and *--run-name* values.
+*Replicates*: run the same model multiple times with different *--seed* values, and keep the runs apart in one of two ways.
+
+- Give each replicate its own *--run-name* in the same working folder. Every default output and the run record carry the run name, so nothing collides. An output with a *file* set in the model keeps that name for every run name, so the second replicate is refused. Omit *file* to use this approach.
+- Run each replicate from its own working folder. Relative output paths use the working folder, so this also separates outputs with a *file* set in the model. Input paths still use the folder of the model file.
+
+There is no option naming the output folder. The run name is a plain name without a path, and *--out* is refused with a hint to use one of the two ways above.

@@ -299,6 +299,7 @@ public class PhyloSpecRunner {
         OutputPaths.claimRecordDirectory(runDirectory, this.overwrite);
         RunRecord record =
                 createRunRecord(runDirectory, source, sourceFile, sourceDirectory, checked.catalog, adapterBundles);
+        progress.accept("Run record: " + runDirectory.resolve("run.json"));
         AtomicBoolean cancellationRequested = new AtomicBoolean();
         Thread owner = Thread.currentThread();
         Thread shutdown = new Thread(
@@ -319,6 +320,7 @@ public class PhyloSpecRunner {
             Runtime.getRuntime().addShutdownHook(shutdown);
             hookRegistered = true;
             try (RunConsole console = RunConsole.open(runDirectory.resolve("console.log"), rawConsole)) {
+                progress.accept("BEAST console log: " + runDirectory.resolve("console.log"));
                 console.log().println(checking);
                 Consumer<String> report = message -> {
                     console.log().println(message);
