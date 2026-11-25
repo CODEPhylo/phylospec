@@ -4,6 +4,7 @@ import beastconfig.BEASTState;
 import java.util.IdentityHashMap;
 import java.util.Set;
 import org.phylospec.ast.Expr;
+import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.mcmc.McmcSamplerSpec;
 import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.typeresolver.Stochasticity;
@@ -34,6 +35,13 @@ public class McmcSamplerTile extends TemplateTile<Void, BEASTState> {
         Integer chainLength = this.chainLengthInput.apply(state, indexVariables);
 
         String stateFile = this.stateFileInput.apply(state, indexVariables);
+
+        if (stateFile != null && state.isXmlExport()) {
+            throw new TileApplicationError(
+                    this.getRootNode(),
+                    "`stateFile` cannot be exported, because the analysis XML does not name the state file.",
+                    "Remove `stateFile` from the sampler to export the model. BEAST chooses the state file when it runs the XML.");
+        }
 
         state.setSamplerSpec(new McmcSamplerSpec(
                 chainLength != null ? chainLength : McmcSamplerSpec.DEFAULT_CHAIN_LENGTH,

@@ -46,7 +46,7 @@ mcmc {
 
 - *mcmc*: a simple MCMC sampler. At most one sampler per block. If none is given, *mcmc()* with its defaults is used. Other samplers can be added later as further functions returning a *Sampler*.
   - *chainLength*: if not given, 10 million is used.
-  - *stateFile*: optional path of the file storing the final state. If not given, *&lt;run-name&gt;.state.xml* in the working folder is used. BEAST X does not support it.
+  - *stateFile*: optional path of the file storing the final state. If not given, *&lt;run-name&gt;.state.xml* in the working folder is used. BEAST X does not support it, and *export* rejects it because the analysis XML does not name the state file.
 - *screenLogger*, *fileLogger*: always log the posterior, prior and likelihood.
   - *parameters*: optional list of the logged parameters, which can have different types. It is not type-checked, and the engine rejects values it cannot log. If not given, all assigned parameters including inline assignments and tree statistics are logged.
   - *parameterNames*: optional list of names used in the log instead of the variable names. Must have the same length as *parameters*.

@@ -276,6 +276,22 @@ public class PhyloSpecCliTest {
     }
 
     @Test
+    void exportRejectsStateFile(@TempDir Path directory) throws Exception {
+        Path script = directory.resolve("normal.phylospec");
+        Files.writeString(script, """
+                Real x ~ Normal(mean=0.0, sd=1.0)
+                mcmc {
+                    Sampler sampler = mcmc(chainLength=19, stateFile="custom.state.xml")
+                }
+                """);
+        Path output = directory.resolve("analysis.xml");
+        CliResult result = invoke("export", script.toString(), "--xml", output.toString());
+        assertEquals(1, result.exitCode(), result.stderr());
+        assertTrue(result.stderr().contains("`stateFile` cannot be exported"), result.stderr());
+        assertFalse(Files.exists(output));
+    }
+
+    @Test
     void exportProtectsTheSourceAndPreservesTheDestinationOnFailure(@TempDir Path directory) throws Exception {
         Path script = directory.resolve("model.phylospec");
         String text = "Real x ~ Normal(mean=0.0, sd=1.0)";
