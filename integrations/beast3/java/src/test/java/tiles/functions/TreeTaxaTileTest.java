@@ -268,9 +268,9 @@ class TreeTaxaTileTest {
         runner.setSeed(42L);
         assertNotNull(runner.check());
         Path run = directory.resolve("run");
-        runner.runManaged(run.resolve("output/taxa").toString(), run, warning -> {});
+        runner.runManaged(run.resolve("output/taxa").toString(), run.resolve("record"), warning -> {});
 
-        var record = new ObjectMapper().readTree(run.resolve("run.json").toFile());
+        var record = new ObjectMapper().readTree(run.resolve("record/run.json").toFile());
         assertEquals("succeeded", record.path("status").asText());
         assertTrue(record.path("completionConfirmed").asBoolean());
         assertEquals(1, record.path("inputs").size());

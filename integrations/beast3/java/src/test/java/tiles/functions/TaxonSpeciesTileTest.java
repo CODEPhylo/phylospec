@@ -254,8 +254,8 @@ class TaxonSpeciesTileTest {
         runner.setSeed(42L);
         assertNotNull(runner.check());
         Path run = directory.resolve("run");
-        runner.runManaged(run.resolve("output/species").toString(), run, warning -> {});
-        var record = new ObjectMapper().readTree(run.resolve("run.json").toFile());
+        runner.runManaged(run.resolve("output/species").toString(), run.resolve("record"), warning -> {});
+        var record = new ObjectMapper().readTree(run.resolve("record/run.json").toFile());
         assertEquals("succeeded", record.path("status").asText());
         assertTrue(record.path("completionConfirmed").asBoolean());
         assertEquals(1, record.path("inputs").size());

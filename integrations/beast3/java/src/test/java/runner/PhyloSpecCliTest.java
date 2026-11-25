@@ -561,6 +561,22 @@ public class PhyloSpecCliTest {
     }
 
     @Test
+    void outputsNeverGoIntoTheRecordFolderEvenWithOverwrite(@TempDir Path directory) throws Exception {
+        List<String> recordFiles = List.of("model with spaces.run/run.json", "model with spaces.run/notes.log");
+        for (int i = 0; i < recordFiles.size(); i++) {
+            Path modelDirectory = Files.createDirectory(directory.resolve("case-" + i));
+            Path source = writeModel(
+                    modelDirectory, "Logger trace = fileLogger(logEvery=1000, file=\"" + recordFiles.get(i) + "\")");
+
+            CliResult result = launch(modelDirectory, "run", source.toString(), "--overwrite");
+
+            assertEquals(1, result.exitCode(), recordFiles.get(i) + "\n" + result.stderr());
+            assertTrue(result.stderr().contains("into the record folder"), result.stderr());
+            assertFalse(Files.exists(modelDirectory.resolve("model with spaces.run/notes.log")));
+        }
+    }
+
+    @Test
     void keepsALeftoverTemporaryStateFile(@TempDir Path directory) throws Exception {
         Path source = writeModel(directory, "");
         Path temporaryState = Files.writeString(directory.resolve("model with spaces.state.xml.new"), "last state");

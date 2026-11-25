@@ -172,12 +172,17 @@ public final class OutputPaths {
         }
     }
 
-    /**
-     * Prepares the destinations of a run before it starts. The state file is optional. All
-     * destinations are validated first, so nothing is changed if one of them is invalid. Only then
-     * are missing parent folders created and, with overwrite, existing output files deleted.
-     */
     public void prepare(List<String> loggerFiles, String stateFile) throws IOException {
+        this.prepare(loggerFiles, stateFile, null);
+    }
+
+    /**
+     * Prepares the destinations of a run before it starts. The state file and the record folder are
+     * optional. No output may be written into the record folder. All destinations are validated
+     * first, so nothing is changed if one of them is invalid. Only then are missing parent folders
+     * created and, with overwrite, existing output files deleted.
+     */
+    public void prepare(List<String> loggerFiles, String stateFile, Path recordDirectory) throws IOException {
         List<Path> destinations = new ArrayList<>();
         for (String file : loggerFiles) destinations.add(Path.of(this.resolve(file)));
         if (stateFile != null) destinations.add(Path.of(this.resolve(stateFile)));
@@ -189,6 +194,7 @@ public final class OutputPaths {
             if (!seen.add(path)) {
                 throw new IllegalArgumentException("Multiple outputs use the same file: " + path);
             }
+            this.validateOutsideRecord(path, recordDirectory);
             this.validateDestination(path);
         }
         for (Path path : destinations) {
@@ -205,6 +211,27 @@ public final class OutputPaths {
         if (this.overwrite) {
             for (Path path : destinations) Files.deleteIfExists(path);
         }
+    }
+
+    /**
+     * Makes sure that the given destination lies outside the record folder. Real locations are
+     * compared, so that symbolic links cannot hide the record folder.
+     */
+    private void validateOutsideRecord(Path path, Path recordDirectory) throws IOException {
+        if (recordDirectory == null) return;
+        if (getRealPath(path).startsWith(getRealPath(recordDirectory))) {
+            throw new IllegalArgumentException("An output would be written into the record folder of the run: " + path
+                    + ". Choose another file name.");
+        }
+    }
+
+    /** Returns the given path with its existing part resolved to its real location, following symbolic links. */
+    private static Path getRealPath(Path path) throws IOException {
+        Path absolute = path.toAbsolutePath().normalize();
+        Path existing = absolute;
+        while (existing != null && !Files.exists(existing)) existing = existing.getParent();
+        if (existing == null) return absolute;
+        return existing.toRealPath().resolve(existing.relativize(absolute));
     }
 
     /**

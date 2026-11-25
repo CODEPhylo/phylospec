@@ -193,6 +193,37 @@ class OutputPathsTest {
     }
 
     @Test
+    void prepareRejectsOutputsInsideTheRecordFolderEvenWithOverwrite() throws IOException {
+        Path trace = Files.writeString(directory.resolve("trace.log"), "previous analysis");
+        Path record = Files.createDirectory(directory.resolve("analysis.run"));
+        Path xml = Files.writeString(record.resolve("analysis.xml"), "<beast/>");
+        OutputPaths paths = new OutputPaths(directory, true);
+
+        for (String output : List.of("analysis.run/analysis.xml", "analysis.run/notes.log")) {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> paths.prepare(List.of("trace.log", output), null, record),
+                    output);
+        }
+        assertEquals("<beast/>", Files.readString(xml));
+        assertEquals("previous analysis", Files.readString(trace));
+        assertFalse(Files.exists(record.resolve("notes.log")));
+
+        // a sibling with the same prefix is not inside the folder
+        paths.prepare(List.of("analysis.run.log"), null, record);
+    }
+
+    @Test
+    void prepareRecognizesTheRecordFolderBehindASymbolicLink() throws IOException {
+        Path record = Files.createDirectory(directory.resolve("analysis.run"));
+        Path alias = Files.createSymbolicLink(directory.resolve("alias"), record);
+        OutputPaths paths = new OutputPaths(directory, true);
+
+        assertThrows(IllegalArgumentException.class, () -> paths.prepare(List.of("analysis.run/a.log"), null, alias));
+        assertThrows(IllegalArgumentException.class, () -> paths.prepare(List.of("alias/a.log"), null, record));
+    }
+
+    @Test
     void prepareKeepsExistingOutputsIfALaterParentIsAFile() throws IOException {
         Path trace = Files.writeString(directory.resolve("trace.log"), "previous analysis");
         Files.writeString(directory.resolve("trees"), "not a folder");

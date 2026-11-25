@@ -97,7 +97,7 @@ final class BeastXRunRecord {
         var files = new ArrayList<String>();
         for (var spec : state.fileLoggerSpecs) files.add(spec.fileName());
         for (var spec : state.treeLoggerSpecs) files.add(spec.fileName());
-        new OutputPaths(Path.of(""), overwrite).prepare(files, null);
+        new OutputPaths(Path.of(""), overwrite).prepare(files, null, this.directory);
         for (var spec : state.fileLoggerSpecs) addLogger(loggers, "log", spec.fileName(), spec.logEvery());
         for (var spec : state.treeLoggerSpecs) addLogger(loggers, "tree", spec.fileName(), spec.logEvery());
         save();

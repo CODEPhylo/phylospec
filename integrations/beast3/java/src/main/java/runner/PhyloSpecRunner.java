@@ -401,7 +401,7 @@ public class PhyloSpecRunner {
         String declaredStateFile = beastState.getSamplerSpec().stateFile();
         String stateFile = beastState.resolveOutputPath(
                 declaredStateFile != null ? declaredStateFile : OutputPaths.getStateFile(beastState.outputPrefix));
-        beastState.prepareOutputFiles(loggers, stateFile);
+        beastState.prepareOutputFiles(loggers, stateFile, record != null ? record.getDirectory() : null);
         mcmc.setStateFile(stateFile, false);
 
         // run

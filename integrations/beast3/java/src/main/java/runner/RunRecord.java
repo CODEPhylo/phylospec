@@ -166,6 +166,10 @@ final class RunRecord {
         save(next);
     }
 
+    Path getDirectory() {
+        return this.directory;
+    }
+
     synchronized void configuration(BEASTState state, List<Logger> loggers, String stateFile) throws IOException {
         ObjectNode next = editable();
         ObjectNode settings = next.putObject("settings");

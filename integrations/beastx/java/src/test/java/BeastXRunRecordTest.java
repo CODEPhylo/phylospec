@@ -17,14 +17,16 @@ import tiling.BeastXState;
 class BeastXRunRecordTest {
     @TempDir Path directory;
     private BeastXRunRecord record;
+    private Path recordDirectory;
     private Path xml;
     private Path output;
 
     @BeforeEach void prepare() throws IOException {
         Path source = Files.writeString(directory.resolve("original.phylospec"), "Real x = 1\n");
         output = Files.createDirectory(directory.resolve("output"));
-        xml = Files.writeString(directory.resolve("analysis.xml"), "<beast/>\n");
-        record = BeastXRunRecord.create(directory, source);
+        recordDirectory = Files.createDirectory(directory.resolve("analysis.run"));
+        xml = Files.writeString(recordDirectory.resolve("analysis.xml"), "<beast/>\n");
+        record = BeastXRunRecord.create(recordDirectory, source);
     }
 
     @Test void confirmsTheNativeLengthAndBothLogsBeforeRecordingSuccess() throws IOException {
@@ -75,13 +77,14 @@ class BeastXRunRecordTest {
         assertTrue(result.at("/error/message").asText().contains("XML"));
     }
 
-    @Test void loggersCannotOverwriteTheRunRecord() throws IOException {
-        for (String name : List.of(directory.resolve("run.json").toString(), xml.toString())) {
+    @Test void loggersCannotWriteIntoTheRunRecordEvenWithOverwrite() throws IOException {
+        for (Path file : List.of(recordDirectory.resolve("run.json"), xml, recordDirectory.resolve("notes.log"))) {
             BeastXState state = new BeastXState("analysis");
-            state.addFileLoggerSpec(new FileLoggerSpec<>(1, name, List.of(), null));
-            assertThrows(IOException.class, () -> record.configure(state, xml, 101L, false), name);
-            assertEquals("<beast/>\n", Files.readString(xml));
+            state.addFileLoggerSpec(new FileLoggerSpec<>(1, file.toString(), List.of(), null));
+            assertThrows(IllegalArgumentException.class, () -> record.configure(state, xml, 101L, true), file.toString());
         }
+        assertEquals("<beast/>\n", Files.readString(xml));
+        assertFalse(Files.exists(recordDirectory.resolve("notes.log")));
     }
 
     @Test void existingOutputIsNeverOverwritten() throws IOException {
@@ -101,6 +104,6 @@ class BeastXRunRecordTest {
     }
 
     private JsonNode read() throws IOException {
-        return new ObjectMapper().readTree(directory.resolve("run.json").toFile());
+        return new ObjectMapper().readTree(recordDirectory.resolve("run.json").toFile());
     }
 }

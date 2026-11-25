@@ -244,7 +244,8 @@ class RootAgeBindingTest {
         Path runDirectory = directory.resolve("root-age-run-" + family);
         PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
         runner.setSeed(41235L);
-        runner.runManaged(runDirectory.resolve("output/root-age").toString(), runDirectory, warning -> {});
+        runner.runManaged(
+                runDirectory.resolve("output/root-age").toString(), runDirectory.resolve("record"), warning -> {});
         List<String> lines = Files.readAllLines(runDirectory.resolve("output/root-age.log")).stream()
                 .filter(line -> !line.startsWith("#") && !line.isBlank())
                 .toList();
@@ -280,7 +281,8 @@ class RootAgeBindingTest {
         Path runDirectory = directory.resolve("fixed-root-" + family);
         PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
         runner.setSeed(41235L);
-        runner.runManaged(runDirectory.resolve("output/fixed-root").toString(), runDirectory, warning -> {});
+        runner.runManaged(
+                runDirectory.resolve("output/fixed-root").toString(), runDirectory.resolve("record"), warning -> {});
         List<String> lines = Files.readAllLines(runDirectory.resolve("output/fixed-root.log")).stream()
                 .filter(line -> !line.startsWith("#") && !line.isBlank())
                 .toList();
@@ -327,7 +329,8 @@ class RootAgeBindingTest {
         // Exercise the real runner from source, with no test-harness initialization of its graph.
         PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
         runner.setSeed(41235L);
-        runner.runManaged(runDirectory.resolve("output/observed").toString(), runDirectory, warning -> {});
+        runner.runManaged(
+                runDirectory.resolve("output/observed").toString(), runDirectory.resolve("record"), warning -> {});
         List<String> lines = Files.readAllLines(runDirectory.resolve("output/observed.log")).stream()
                 .filter(line -> !line.startsWith("#") && !line.isBlank())
                 .toList();
