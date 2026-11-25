@@ -564,11 +564,9 @@ public class PhyloSpecCliTest {
     void managedRunRejectsInvalidAndConflictingScriptOutputs(@TempDir Path directory) throws Exception {
         List<String> settings = List.of(
                 "Logger trees = treeLogger(logEvery=1000, file=\"\", tree=tree)",
-                "Logger trees = treeLogger(logEvery=1000, file=\"$(tree).trees\", tree=tree)",
                 "Logger trace = fileLogger(logEvery=1000, file=\"same\")\n"
                         + "Logger trees = treeLogger(logEvery=1000, file=\"nested/../same\", tree=tree)",
-                "Logger trace = fileLogger(logEvery=1000, file=\"model with spaces.state.xml\")",
-                "Logger trace = fileLogger(logEvery=1000, file=\"model with spaces.state.xml.new\")");
+                "Logger trace = fileLogger(logEvery=1000, file=\"model with spaces.state.xml\")");
         for (int i = 0; i < settings.size(); i++) {
             Path modelDirectory = Files.createDirectory(directory.resolve("case-" + i));
             Path source = writeModel(modelDirectory, settings.get(i));

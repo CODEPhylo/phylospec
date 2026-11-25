@@ -38,6 +38,8 @@ public final class McmcBlockValidator {
     private static String getReplacementHint(Stmt.Assignment assignment) {
         String value = getLiteralValue(assignment.expression);
 
+        // earlier versions configured settings like chainLength with plain assignments in the mcmc block
+        // (e.g. `chainLength = 1000000`). these hints point users to where each setting now lives
         return switch (assignment.name) {
             case "chainLength" -> "Set it on the sampler: `Sampler sampler = mcmc(chainLength=" + value + ")`.";
             case "defaultLogEvery" ->

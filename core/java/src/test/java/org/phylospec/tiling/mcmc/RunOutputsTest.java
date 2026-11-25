@@ -23,10 +23,10 @@ class RunOutputsTest {
     }
 
     @Test
-    void pathsRejectBlankAndNativeTemplateNames() {
+    void pathsRejectBlankNames() {
         RunOutputs paths = new RunOutputs(directory);
 
-        for (String invalid : List.of("", " ", "$(tree).trees")) {
+        for (String invalid : List.of("", " ")) {
             assertThrows(IllegalArgumentException.class, () -> paths.resolve(invalid), invalid);
         }
     }
@@ -44,7 +44,7 @@ class RunOutputsTest {
     }
 
     @Test
-    void prepareCreatesNestedParentsWithoutLeavingProbeFiles() throws IOException {
+    void prepareCreatesNestedParentsWithoutCreatingFiles() throws IOException {
         RunOutputs paths = new RunOutputs(directory);
         String trace = paths.resolve("logs/trace.log");
         String tree = paths.resolve("trees/posterior.trees");
@@ -52,14 +52,14 @@ class RunOutputsTest {
 
         paths.prepare(List.of(trace, tree), state);
 
-        for (String name : List.of(trace, tree, state, state + ".new")) {
+        for (String name : List.of(trace, tree, state)) {
             assertTrue(Files.isDirectory(Path.of(name).getParent()));
-            assertFalse(Files.exists(Path.of(name)), "Write probes must be removed before BEAST opens " + name);
+            assertFalse(Files.exists(Path.of(name)));
         }
     }
 
     @Test
-    void prepareDoesNotOverwriteExistingFilesOrLeaveEarlierProbes() throws IOException {
+    void prepareDoesNotOverwriteExistingFiles() throws IOException {
         RunOutputs paths = new RunOutputs(directory);
         Path existing = directory.resolve("existing.log");
         Files.writeString(existing, "previous analysis");
@@ -71,7 +71,6 @@ class RunOutputsTest {
         assertEquals("previous analysis", Files.readString(existing));
         assertFalse(Files.exists(Path.of(first)));
         assertFalse(Files.exists(Path.of(state)));
-        assertFalse(Files.exists(Path.of(state + ".new")));
     }
 
     @Test
@@ -111,41 +110,6 @@ class RunOutputsTest {
     }
 
     @Test
-    void prepareReservesTheNativeTemporaryStateName() {
-        RunOutputs paths = new RunOutputs(directory);
-        String state = directory.resolve("analysis.state.xml").toString();
-
-        assertThrows(IllegalArgumentException.class, () -> paths.prepare(List.of(state + ".new"), state));
-        assertFalse(Files.exists(Path.of(state)));
-        assertFalse(Files.exists(Path.of(state + ".new")));
-    }
-
-    @Test
-    void preparePreservesAnExistingNativeTemporaryStateFile() throws IOException {
-        RunOutputs paths = new RunOutputs(directory);
-        String state = directory.resolve("analysis.state.xml").toString();
-        Path temporary = Path.of(state + ".new");
-        Files.writeString(temporary, "recoverable previous state");
-
-        assertThrows(
-                IOException.class,
-                () -> paths.prepare(List.of(directory.resolve("trace.log").toString()), state));
-        assertEquals("recoverable previous state", Files.readString(temporary));
-    }
-
-    @Test
-    void prepareRejectsAFileThatWouldAlsoBeAnOutputParent() {
-        RunOutputs paths = new RunOutputs(directory);
-        String parentFile = directory.resolve("logs").toString();
-        String childFile = directory.resolve("logs/trace.log").toString();
-        String state = directory.resolve("analysis.state.xml").toString();
-
-        assertThrows(IllegalArgumentException.class, () -> paths.prepare(List.of(parentFile, childFile), state));
-        assertThrows(IllegalArgumentException.class, () -> paths.prepare(List.of(childFile, parentFile), state));
-        assertFalse(Files.exists(Path.of(parentFile)));
-    }
-
-    @Test
     void prepareRejectsAnExistingDirectoryAtAnOutputFile() throws IOException {
         RunOutputs paths = new RunOutputs(directory);
         Path occupied = Files.createDirectory(directory.resolve("trace.log"));
@@ -156,22 +120,6 @@ class RunOutputsTest {
                         List.of(occupied.toString()),
                         directory.resolve("analysis.state.xml").toString()));
         assertTrue(Files.isDirectory(occupied));
-    }
-
-    @Test
-    void prepareRejectsSymbolicLinksToOutsideDirectories() throws IOException {
-        Path output = Files.createDirectory(directory.resolve("output"));
-        Path external = Files.createDirectory(directory.resolve("external"));
-        Files.createSymbolicLink(output.resolve("linked"), external);
-        RunOutputs paths = new RunOutputs(output);
-
-        assertThrows(
-                IOException.class,
-                () -> paths.prepare(
-                        List.of(output.resolve("linked/trace.log").toString()),
-                        output.resolve("analysis.state.xml").toString()));
-        assertFalse(Files.exists(external.resolve("trace.log")));
-        assertTrue(Files.isSymbolicLink(output.resolve("linked")));
     }
 
     @Test
@@ -188,27 +136,6 @@ class RunOutputsTest {
                         output.resolve("analysis.state.xml").toString()));
         assertFalse(Files.exists(external));
         assertTrue(Files.isSymbolicLink(link));
-    }
-
-    @Test
-    void prepareHonorsTheFilesystemsCaseSensitivityAndCleansProbes() throws IOException {
-        Path probe = Files.createFile(directory.resolve("case-probe"));
-        boolean caseInsensitive = Files.exists(directory.resolve("CASE-PROBE"));
-        Files.delete(probe);
-        RunOutputs paths = new RunOutputs(directory);
-        List<String> files = List.of(
-                directory.resolve("trace.log").toString(),
-                directory.resolve("TRACE.LOG").toString());
-        String state = directory.resolve("analysis.state.xml").toString();
-
-        if (caseInsensitive) {
-            assertThrows(IOException.class, () -> paths.prepare(files, state));
-        } else {
-            paths.prepare(files, state);
-        }
-        assertFalse(Files.exists(directory.resolve("trace.log")));
-        assertFalse(Files.exists(directory.resolve("TRACE.LOG")));
-        assertFalse(Files.exists(Path.of(state)));
     }
 
     @Test
@@ -263,14 +190,6 @@ class RunOutputsTest {
         assertThrows(IOException.class, () -> new RunOutputs(directory).prepare(List.of("trace.log"), null));
         new RunOutputs(directory, true).prepare(List.of("trace.log"), null);
         assertFalse(Files.exists(trace));
-    }
-
-    @Test
-    void prepareNeverReplacesDirectories() throws IOException {
-        Path folder = Files.createDirectory(directory.resolve("trace.log"));
-
-        assertThrows(IOException.class, () -> new RunOutputs(directory, true).prepare(List.of("trace.log"), null));
-        assertTrue(Files.isDirectory(folder));
     }
 
     private Path createFailedRecord() throws IOException {

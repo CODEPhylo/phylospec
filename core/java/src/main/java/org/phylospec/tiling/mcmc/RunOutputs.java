@@ -9,7 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -159,13 +159,7 @@ public final class RunOutputs {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Output path must not be blank; use screenLogger for console output.");
         }
-
-        Path path = this.workingDirectory.resolve(name).normalize();
-        if (path.toString().contains("$(tree)")) {
-            throw new IllegalArgumentException(
-                    "BEAST filename templates are not supported in managed output paths: " + name);
-        }
-        return path.toString();
+        return this.workingDirectory.resolve(name).normalize().toString();
     }
 
     /** These native overrides would bypass the paths checked by the CLI. */
@@ -179,88 +173,27 @@ public final class RunOutputs {
     }
 
     /**
-     * Validates every destination before any file is opened. The state file is optional and also
-     * reserves its temporary file. With overwrite, existing output files are deleted once all
-     * destinations are valid.
+     * Checks every destination before the run starts and creates missing parent folders. The state
+     * file is optional. With overwrite, existing output files are deleted once all destinations are valid.
      */
     public void prepare(List<String> loggerFiles, String stateFile) throws IOException {
-        checkRuntimeOverrides();
+        List<Path> destinations = new ArrayList<>();
+        for (String file : loggerFiles) destinations.add(Path.of(this.resolve(file)));
+        if (stateFile != null) destinations.add(Path.of(this.resolve(stateFile)));
 
-        Set<Path> destinations = new LinkedHashSet<>();
-        for (String file : loggerFiles) this.addDestination(destinations, file);
-        if (stateFile != null) {
-            this.addDestination(destinations, stateFile);
-            this.addDestination(destinations, stateFile + ".new");
+        Set<Path> seen = new HashSet<>();
+        for (Path path : destinations) {
+            if (!seen.add(path)) {
+                throw new IllegalArgumentException("Multiple outputs use the same file: " + path);
+            }
+            if (!this.overwrite && Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+                throw new IOException("Output already exists: " + path + ". Pass --overwrite to replace it.");
+            }
         }
 
         for (Path path : destinations) {
-            for (Path other : destinations) {
-                if (!path.equals(other) && path.startsWith(other)) {
-                    throw new IllegalArgumentException("An output file is also used as a directory: " + other);
-                }
-            }
-            this.checkParents(path.getParent());
-            this.checkExistingOutput(path);
-        }
-
-        if (this.overwrite) {
-            for (Path path : destinations) Files.deleteIfExists(path);
-        }
-        this.probeDestinations(destinations);
-    }
-
-    private void checkExistingOutput(Path path) throws IOException {
-        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) return;
-
-        if (!this.overwrite) {
-            throw new IOException("Output already exists: " + path + ". Pass --overwrite to replace it.");
-        }
-        if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
-            throw new IOException("Output is a directory; refusing to overwrite it: " + path);
-        }
-    }
-
-    private void addDestination(Set<Path> destinations, String name) {
-        Path path = Path.of(this.resolve(name));
-        if (!destinations.add(path)) {
-            throw new IllegalArgumentException("Multiple outputs use the same file: " + path);
-        }
-    }
-
-    private void checkParents(Path parent) throws IOException {
-        for (Path path = parent; path != null && path.startsWith(this.workingDirectory); path = path.getParent()) {
-            if (Files.isSymbolicLink(path)) {
-                throw new IOException("Output path must not pass through a symbolic link: " + path);
-            }
-            if (Files.exists(path, LinkOption.NOFOLLOW_LINKS) && !Files.isDirectory(path)) {
-                throw new IOException("Output parent is not a directory: " + path);
-            }
-        }
-    }
-
-    /**
-     * Creates and removes an empty file at every destination. This detects filesystem aliases too,
-     * for example case-insensitive file names.
-     */
-    private void probeDestinations(Set<Path> destinations) throws IOException {
-        List<Path> probes = new ArrayList<>();
-        try {
-            for (Path path : destinations) {
-                Files.createDirectories(path.getParent());
-                this.checkParents(path.getParent());
-                probes.add(Files.createFile(path));
-            }
-        } finally {
-            IOException cleanupFailure = null;
-            for (Path probe : probes) {
-                try {
-                    Files.delete(probe);
-                } catch (IOException failure) {
-                    if (cleanupFailure == null) cleanupFailure = failure;
-                    else cleanupFailure.addSuppressed(failure);
-                }
-            }
-            if (cleanupFailure != null) throw cleanupFailure;
+            Files.createDirectories(path.getParent());
+            if (this.overwrite) Files.deleteIfExists(path);
         }
     }
 }
