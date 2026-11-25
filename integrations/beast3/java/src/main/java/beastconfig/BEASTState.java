@@ -124,13 +124,17 @@ public class BEASTState {
         return outputPaths == null ? path : outputPaths.resolve(path);
     }
 
-    /** Checks logger and state destinations together before native output begins. */
+    /**
+     * Checks logger and state destinations together before native output begins. BEAST writes the
+     * state to {@code <stateFile>.new} before moving it into place, so that file is reserved too.
+     */
     public void prepareOutputFiles(List<Logger> loggers, String stateFile) throws java.io.IOException {
         if (outputPaths == null) return;
-        List<String> files = loggers.stream()
+        List<String> files = new ArrayList<>(loggers.stream()
                 .map(logger -> logger.fileNameInput.get())
                 .filter(name -> name != null && !name.isEmpty())
-                .toList();
+                .toList());
+        files.add(stateFile + ".new");
         outputPaths.prepare(files, stateFile);
     }
 
