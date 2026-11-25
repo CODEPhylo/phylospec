@@ -173,27 +173,60 @@ public final class OutputPaths {
     }
 
     /**
-     * Checks every destination before the run starts and creates missing parent folders. The state
-     * file is optional. With overwrite, existing output files are deleted once all destinations are valid.
+     * Prepares the destinations of a run before it starts. The state file is optional. All
+     * destinations are validated first, so nothing is changed if one of them is invalid. Only then
+     * are missing parent folders created and, with overwrite, existing output files deleted.
      */
     public void prepare(List<String> loggerFiles, String stateFile) throws IOException {
         List<Path> destinations = new ArrayList<>();
         for (String file : loggerFiles) destinations.add(Path.of(this.resolve(file)));
         if (stateFile != null) destinations.add(Path.of(this.resolve(stateFile)));
 
+        // validate every destination before changing anything
+
         Set<Path> seen = new HashSet<>();
         for (Path path : destinations) {
             if (!seen.add(path)) {
                 throw new IllegalArgumentException("Multiple outputs use the same file: " + path);
             }
-            if (!this.overwrite && Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
-                throw new IOException("Output already exists: " + path + ". Pass --overwrite to replace it.");
+            this.validateDestination(path);
+        }
+        for (Path path : destinations) {
+            for (Path other : destinations) {
+                if (!path.equals(other) && path.startsWith(other)) {
+                    throw new IllegalArgumentException("An output file is also used as a folder: " + other);
+                }
             }
         }
 
-        for (Path path : destinations) {
-            Files.createDirectories(path.getParent());
-            if (this.overwrite) Files.deleteIfExists(path);
+        // create the folders first, so that a failure there does not delete any earlier output
+
+        for (Path path : destinations) Files.createDirectories(path.getParent());
+        if (this.overwrite) {
+            for (Path path : destinations) Files.deleteIfExists(path);
+        }
+    }
+
+    /**
+     * Makes sure that a file can be written at the given destination.
+     * @throws IOException if the destination is a folder, already exists without overwrite, or has a
+     *     parent that is not a folder
+     */
+    private void validateDestination(Path path) throws IOException {
+        if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
+            throw new IOException("Output is a folder: " + path);
+        }
+        if (!this.overwrite && Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+            throw new IOException("Output already exists: " + path + ". Pass --overwrite to replace it.");
+        }
+
+        // the closest existing parent decides whether the missing folders can be created
+        for (Path parent = path.getParent(); parent != null; parent = parent.getParent()) {
+            if (!Files.exists(parent)) continue;
+            if (!Files.isDirectory(parent)) {
+                throw new IOException("Output parent is not a folder: " + parent);
+            }
+            return;
         }
     }
 }

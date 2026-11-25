@@ -192,6 +192,39 @@ class OutputPathsTest {
         assertFalse(Files.exists(trace));
     }
 
+    @Test
+    void prepareKeepsExistingOutputsIfALaterParentIsAFile() throws IOException {
+        Path trace = Files.writeString(directory.resolve("trace.log"), "previous analysis");
+        Files.writeString(directory.resolve("trees"), "not a folder");
+        OutputPaths paths = new OutputPaths(directory, true);
+
+        assertThrows(IOException.class, () -> paths.prepare(List.of("trace.log", "trees/posterior.trees"), null));
+        assertEquals("previous analysis", Files.readString(trace));
+    }
+
+    @Test
+    void prepareKeepsExistingOutputsIfALaterOutputIsAFolder() throws IOException {
+        Path trace = Files.writeString(directory.resolve("trace.log"), "previous analysis");
+        Path folder = Files.createDirectory(directory.resolve("posterior.trees"));
+        OutputPaths paths = new OutputPaths(directory, true);
+
+        assertThrows(IOException.class, () -> paths.prepare(List.of("trace.log", "posterior.trees"), null));
+        assertEquals("previous analysis", Files.readString(trace));
+        assertTrue(Files.isDirectory(folder));
+    }
+
+    @Test
+    void prepareKeepsExistingOutputsIfAnOutputIsAlsoAParent() throws IOException {
+        Path trace = Files.writeString(directory.resolve("trace.log"), "previous analysis");
+        OutputPaths paths = new OutputPaths(directory, true);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> paths.prepare(List.of("trace.log", "logs", "logs/trace.log"), null));
+        assertEquals("previous analysis", Files.readString(trace));
+        assertFalse(Files.exists(directory.resolve("logs")));
+    }
+
     private Path createFailedRecord() throws IOException {
         Path run = Files.createDirectory(directory.resolve("run"));
         Files.writeString(run.resolve("run.json"), "{\"status\": \"failed\", \"generatedOutputs\": []}");
