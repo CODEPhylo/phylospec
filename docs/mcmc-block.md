@@ -55,8 +55,6 @@ mcmc {
 - *logEvery*: defaults to 1000 for every logger.
 - *No loggers*: a missing kind of logger is added with its defaults. This gives a screen logger, a file logger writing to *&lt;run-name&gt;.log* and, if a tree is sampled, a tree logger writing to *&lt;run-name&gt;.trees*.
 
-*Change:*
-
 The MCMC block is type-checked like the rest of the model. *Sampler* and *Logger* are core types, and *mcmc*, *screenLogger*, *fileLogger* and *treeLogger* are core components.
 
 - The type checker treats its statements like any other statement: every argument must be known and have the right type. Only the logged *parameters* are exempt.
@@ -66,15 +64,11 @@ Everything else (e.g. operator settings) should be in a specific engine block (e
 
 ## Command Line Arguments
 
-Entries marked *new* are proposed, all others exist.
-
-
 | Command                                             | Purpose                                                                        |
 | --------------------------------------------------- | ------------------------------------------------------------------------------ |
 | *check &lt;model.phylospec&gt;*                     | Check syntax, types and engine mappings.                                       |
 | *export &lt;model.phylospec&gt; --xml &lt;file&gt;* | Write the analysis XML to the given file without running it. BEAST 2 / BEAST X specific. |
 | *run &lt;model.phylospec&gt;*                       | Check and run the model.                                                       |
-| *resume &lt;run-dir&gt;* (*new*)                    | Continue a run from its last checkpoint, with the engine recorded for the run. |
 
 
 
@@ -83,6 +77,7 @@ Entries marked *new* are proposed, all others exist.
 | *--engine &lt;id&gt;* | check, export, run | Engine to use: beast3 (default) or beastx.          |
 | *--run-name &lt;name&gt;* | run                | Name of the output files and the run record. Defaults to the name of the model file. |
 | *--seed &lt;n&gt;*    | export, run        | Random seed. If not given, *run* chooses one uniformly and *export* sets none. |
+| *--overwrite*         | run                | Replace existing output files and the record of an earlier run with the same name. Without it, existing outputs are never replaced. |
 | *--library &lt;ids&gt;* | check, export, run | Tile libraries to use, in order of preference.    |
 | *--adapter-path &lt;dir&gt;* | check, export, run | Directory of an unpacked adapter to load. Can be repeated. |
 | *--debug*             | all                | Show raw engine output and stack traces.            |
