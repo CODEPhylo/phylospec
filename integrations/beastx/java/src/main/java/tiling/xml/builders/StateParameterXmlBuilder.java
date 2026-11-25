@@ -1,7 +1,5 @@
 package tiling.xml.builders;
 
-import dr.inference.distribution.DistributionLikelihood;
-import dr.inference.distribution.UniformDistributionModel;
 import dr.inference.model.Bounds;
 import dr.inference.model.Parameter;
 import tiling.BeastXState;
@@ -31,33 +29,18 @@ public class StateParameterXmlBuilder {
             double upper =
                     bounds.getUpperLimit(0);
 
-            if (Double.isFinite(lower) && !isSampledUniformBound(state, parameter, 0)) {
+            if (Double.isFinite(lower)) {
                 element =
                         element.withAttribute("lower", format(lower));
             }
 
-            if (Double.isFinite(upper) && !isSampledUniformBound(state, parameter, 1)) {
+            if (Double.isFinite(upper)) {
                 element =
                         element.withAttribute("upper", format(upper));
             }
         }
 
         return element;
-    }
-
-    /**
-     * Returns whether the given bound (0 = lower, 1 = upper) comes from a Uniform prior whose
-     * limit is itself sampled. XML can only store fixed bounds, so such a bound is left out;
-     * the Uniform prior density still rejects values outside the current limits.
-     */
-    private static boolean isSampledUniformBound(BeastXState state, Parameter parameter, int boundIndex) {
-        if (state.priorDistributions.get(parameter) instanceof DistributionLikelihood likelihood
-                && likelihood.getDistribution() instanceof UniformDistributionModel uniform) {
-            return uniform.getVariable(boundIndex) instanceof Parameter bound
-                    && state.stateNodes.containsKey(bound);
-        }
-
-        return false;
     }
 
     private static String parameterValues(Parameter parameter) {

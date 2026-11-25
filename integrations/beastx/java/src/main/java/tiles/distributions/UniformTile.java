@@ -2,7 +2,6 @@ package tiles.distributions;
 
 import dr.inference.distribution.DistributionLikelihood;
 import dr.inference.distribution.UniformDistributionModel;
-import dr.inference.model.Bounds;
 import dr.inference.model.Parameter;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.Real;
@@ -64,8 +63,18 @@ public class UniformTile extends GeneratorTile<
 
         double defaultValue = (lower.get() + upper.get()) / 2.0;
 
+        // A sampled limit is left open, as in the XML, which can only store fixed bounds. The Uniform
+        // density still rejects values outside the current limits, and in memory and in XML the
+        // operators see the same bounds.
+        double lowerBound = beastState.stateNodes.containsKey(lowerParameter)
+                ? Double.NEGATIVE_INFINITY
+                : lower.get();
+        double upperBound = beastState.stateNodes.containsKey(upperParameter)
+                ? Double.POSITIVE_INFINITY
+                : upper.get();
+
         Parameter.Default defaultParameter = new Parameter.Default(defaultValue);
-        defaultParameter.addBounds(new LiveBounds(lowerParameter, upperParameter));
+        defaultParameter.addBounds(new Parameter.DefaultBounds(upperBound, lowerBound, 1));
 
         BeastXRealScalarParam<Real> defaultState =
                 new BeastXRealScalarParam<>(defaultParameter, Real.INSTANCE);
@@ -75,27 +84,5 @@ public class UniformTile extends GeneratorTile<
                 defaultState,
                 state -> likelihood.addData(state.getParameter())
         );
-    }
-
-    /**
-     * Parameter bounds that always reflect the current values of the lower and upper parameters,
-     * so operators respect the bounds even when they are sampled.
-     */
-    private record LiveBounds(Parameter lower, Parameter upper) implements Bounds<Double> {
-
-        @Override
-        public Double getLowerLimit(int dimension) {
-            return this.lower.getParameterValue(0);
-        }
-
-        @Override
-        public Double getUpperLimit(int dimension) {
-            return this.upper.getParameterValue(0);
-        }
-
-        @Override
-        public int getBoundsDimension() {
-            return 1;
-        }
     }
 }
