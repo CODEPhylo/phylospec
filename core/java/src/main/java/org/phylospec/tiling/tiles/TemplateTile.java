@@ -4,7 +4,6 @@ import java.lang.reflect.Field;
 import java.util.*;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
-import org.phylospec.ast.Stmt;
 import org.phylospec.components.Argument__1;
 import org.phylospec.components.Generator__1;
 import org.phylospec.templatematching.AstTemplateMatcher;
@@ -110,16 +109,14 @@ public abstract class TemplateTile<T, S> extends Tile<T, S> implements Candidate
 
     /**
      * Returns the engine-specification entry for every call in the templates. A tile whose template spans
-     * multiple statements handles all the generators called in these statements. Templates in the mcmc block
-     * are skipped, as they configure the engine and their calls are no generators of the component library.
+     * multiple statements handles all the generators called in these statements. This includes templates in
+     * the mcmc block, whose samplers and loggers are components of the core library.
      */
     @Override
     public List<Generator__1> getGeneratorPatterns() {
         List<Generator__1> generators = new ArrayList<>();
 
         for (AstTemplateMatcher templateMatcher : this.getAstTemplateMatchers()) {
-            if (templateMatcher.getBlock() instanceof Stmt.Block.Mcmc) continue;
-
             for (Expr.Call templateCall : templateMatcher.getCalls()) {
                 generators.add(this.getGeneratorPattern(templateCall));
             }
