@@ -28,6 +28,10 @@ public final class OperatorXmlBuilder {
                     "randomWalkOperator", spec, "randomWalk",
                     "windowSize", format(spec.tuning()))
                     .withAttribute("boundaryCondition", "reflecting");
+            case LOGIT_RANDOM_WALK -> parameterOperator(
+                    "randomWalkOperator", spec, "randomWalk",
+                    "windowSize", format(spec.tuning()))
+                    .withAttribute("boundaryCondition", "logit");
             case DELTA_EXCHANGE -> parameterOperator(
                     "deltaExchange", spec, "deltaExchange",
                     "delta", format(spec.tuning()));

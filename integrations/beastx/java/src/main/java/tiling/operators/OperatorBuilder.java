@@ -49,6 +49,10 @@ public final class OperatorBuilder {
                     spec.parameter(), spec.tuning(),
                     RandomWalkOperator.BoundaryCondition.reflecting,
                     spec.weight(), AdaptationMode.DEFAULT);
+            case LOGIT_RANDOM_WALK -> new RandomWalkOperator(
+                    spec.parameter(), spec.tuning(),
+                    RandomWalkOperator.BoundaryCondition.logit,
+                    spec.weight(), AdaptationMode.DEFAULT);
             case DELTA_EXCHANGE -> deltaExchangeOperator(spec);
             case INTEGER_RANDOM_WALK -> new RandomWalkIntegerOperator(
                     spec.parameter(), (int) spec.tuning(), spec.weight());
@@ -142,6 +146,8 @@ public final class OperatorBuilder {
             case SCALE -> "ScaleOperator(parameter=%s, weight=%s, scaleFactor=%s)"
                     .formatted(parameter, spec.weight(), spec.tuning());
             case RANDOM_WALK -> "RandomWalkOperator(parameter=%s, weight=%s, windowSize=%s, boundary=reflecting)"
+                    .formatted(parameter, spec.weight(), spec.tuning());
+            case LOGIT_RANDOM_WALK -> "RandomWalkOperator(parameter=%s, weight=%s, windowSize=%s, boundary=logit)"
                     .formatted(parameter, spec.weight(), spec.tuning());
             case DELTA_EXCHANGE -> "DeltaExchangeOperator(parameter=%s, weight=%s)"
                     .formatted(parameter, spec.weight());
