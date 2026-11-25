@@ -186,24 +186,36 @@ public class LoggerBuilder {
             String loggableName = loggableNames.get(i);
 
             Loggable loggable = findLoggable(beastState, loggableName);
-            loggables.add(labels != null ? labelLoggable(loggable, labels.get(i)) : loggable);
+            loggables.add(labels != null
+                    ? labelLoggable(loggable, labels.get(i))
+                    : numberVectorColumns(loggable, loggableName));
         }
 
         return loggables;
     }
 
     /**
-     * Returns a loggable with the columns of the given one under a new label. Like the BEAST X XML
-     * {@code column} element, several columns are numbered starting at 1.
+     * Returns a loggable with the columns of the given one under a new label. Like in BEAST 3,
+     * several columns are numbered as label.1, label.2, ...
      */
     private Loggable labelLoggable(Loggable loggable, String label) {
         LogColumn[] columns = loggable.getColumns();
 
         for (int i = 0; i < columns.length; i++) {
-            columns[i].setLabel(columns.length > 1 ? label + (i + 1) : label);
+            columns[i].setLabel(columns.length > 1 ? label + "." + (i + 1) : label);
         }
 
         return () -> columns;
+    }
+
+    /**
+     * Numbers the columns of a vector parameter or statistic as name.1, name.2, ... like BEAST 3,
+     * instead of BEAST X's name1, name2, ... Other loggables are returned unchanged.
+     */
+    private Loggable numberVectorColumns(Loggable loggable, String name) {
+        boolean isVector = (loggable instanceof Parameter || loggable instanceof Statistic)
+                && loggable.getColumns().length > 1;
+        return isVector ? labelLoggable(loggable, name) : loggable;
     }
 
     /**
@@ -221,7 +233,9 @@ public class LoggerBuilder {
             loggables.add(TreeStatisticsLoggable.all(treeModel, treeName));
         }
 
-        loggables.addAll(beastState.stateNodes.keySet());
+        for (Parameter parameter : beastState.stateNodes.keySet()) {
+            loggables.add(numberVectorColumns(parameter, parameter.getId()));
+        }
         loggables.addAll(beastState.calculationNodes.keySet());
 
         return loggables;

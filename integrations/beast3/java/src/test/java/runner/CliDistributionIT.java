@@ -229,7 +229,7 @@ class CliDistributionIT {
         Path trace = workingDirectory.resolve("hky-yule.log");
         assertFiniteTrace(trace);
         assertTrue(Files.readString(trace).contains("[seed=12345]"), "BEAST X must report the effective seed");
-        assertHkyTrace(trace, "joint", "baseFrequencies");
+        assertHkyTrace(trace);
         String trees = Files.readString(workingDirectory.resolve("hky-yule.trees"));
         assertEquals(
                 31,
@@ -420,7 +420,7 @@ class CliDistributionIT {
         assertEquals(1, record.path("libraries").size());
         assertEquals("beast2", record.path("libraries").get(0).path("id").asText());
 
-        assertHkyTrace(workingDirectory.resolve("hky-yule.log"), "posterior", "baseFrequencies.");
+        assertHkyTrace(workingDirectory.resolve("hky-yule.log"));
         String trees = Files.readString(workingDirectory.resolve("hky-yule.trees"));
         assertEquals(
                 31,
@@ -612,7 +612,7 @@ class CliDistributionIT {
         assertEquals(30, lastSample, "The short chain must reach its requested last sample");
     }
 
-    private static void assertHkyTrace(Path trace, String posterior, String frequencyPrefix) throws Exception {
+    private static void assertHkyTrace(Path trace) throws Exception {
         List<String> lines = Files.readAllLines(trace).stream()
                 .map(String::strip)
                 .filter(line -> !line.isEmpty() && !line.startsWith("#"))
@@ -620,16 +620,16 @@ class CliDistributionIT {
         List<String> columns = Arrays.asList(lines.getFirst().split("\\s+"));
         assertTrue(
                 columns.containsAll(List.of(
-                        posterior,
+                        "posterior",
                         "prior",
                         "likelihood",
                         "kappa",
                         "tree.height",
                         "tree.treeLength",
-                        frequencyPrefix + "1",
-                        frequencyPrefix + "2",
-                        frequencyPrefix + "3",
-                        frequencyPrefix + "4")),
+                        "baseFrequencies.1",
+                        "baseFrequencies.2",
+                        "baseFrequencies.3",
+                        "baseFrequencies.4")),
                 columns.toString());
         assertEquals(32, lines.size(), "Header and samples 0 through 30 must be present");
         for (int sample = 0; sample <= 30; sample++) {
@@ -639,7 +639,7 @@ class CliDistributionIT {
             assertEquals(
                     Double.parseDouble(values[columns.indexOf("prior")])
                             + Double.parseDouble(values[columns.indexOf("likelihood")]),
-                    Double.parseDouble(values[columns.indexOf(posterior)]),
+                    Double.parseDouble(values[columns.indexOf("posterior")]),
                     1e-8,
                     "Posterior must equal prior plus likelihood at sample " + sample);
             assertTrue(Double.parseDouble(values[columns.indexOf("kappa")]) > 0.0);
@@ -647,7 +647,7 @@ class CliDistributionIT {
             assertTrue(Double.parseDouble(values[columns.indexOf("tree.treeLength")]) > 0.0);
             double total = 0.0;
             for (int base = 1; base <= 4; base++) {
-                double frequency = Double.parseDouble(values[columns.indexOf(frequencyPrefix + base)]);
+                double frequency = Double.parseDouble(values[columns.indexOf("baseFrequencies." + base)]);
                 assertTrue(frequency >= 0.0 && frequency <= 1.0);
                 total += frequency;
             }

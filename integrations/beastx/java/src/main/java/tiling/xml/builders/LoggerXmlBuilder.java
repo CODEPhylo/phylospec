@@ -149,7 +149,12 @@ public class LoggerXmlBuilder {
                 new ArrayList<>();
 
         for (String distributionName : distributionNames) {
-            loggedElements.add(getLoggedElement(state, distributionName));
+            XmlElement distribution = getLoggedElement(state, distributionName);
+
+            // BEAST X calls the posterior "joint"
+            loggedElements.add(distributionName.equals(POSTERIOR_LOG_NAME)
+                    ? labelElement(distribution, POSTERIOR_LOG_NAME, 1)
+                    : distribution);
         }
 
         if (parameterNames == null) {
@@ -166,9 +171,12 @@ public class LoggerXmlBuilder {
             }
 
             XmlElement loggedElement = getLoggedElement(state, parameterName);
+            int dimension = getDimension(state, parameterName);
 
             if (labels != null) {
-                loggedElements.add(labelElement(loggedElement, labels.get(i)));
+                loggedElements.add(labelElement(loggedElement, labels.get(i), dimension));
+            } else if (dimension > 1) {
+                loggedElements.add(labelElement(loggedElement, parameterName, dimension));
             } else if (!distributionNames.contains(getDistributionName(parameterName))) {
                 loggedElements.add(loggedElement);
             }
@@ -177,16 +185,22 @@ public class LoggerXmlBuilder {
         return loggedElements;
     }
 
+    /** Returns the number of columns a logged value has. Only sampled parameters can have several. */
+    private static int getDimension(BeastXState state, String parameterName) {
+        Parameter parameter = state.stateNodesByPhyloSpecName.get(parameterName);
+        return parameter != null ? parameter.getDimension() : 1;
+    }
+
     /**
-     * Returns the statistics logged for a tree. Like the columns of a labelled loggable, they are
-     * numbered starting at 1 if a label is given.
+     * Returns the statistics logged for a tree. Like the columns of a labelled vector, they are
+     * numbered as label.1 and label.2 if a label is given.
      */
     private List<XmlElement> getLoggedTreeStatistics(BeastXState state, String treeName, String label) {
         XmlElement height = getLoggedElement(state, treeName + ".height");
         XmlElement treeLength = getLoggedElement(state, treeName + ".treeLength");
 
         if (label == null) return List.of(height, treeLength);
-        return List.of(labelElement(height, label + 1), labelElement(treeLength, label + 2));
+        return List.of(labelElement(height, label + ".1", 1), labelElement(treeLength, label + ".2", 1));
     }
 
     /** Returns the name under which a distribution is always logged, resolving the alias of the posterior. */
@@ -216,10 +230,14 @@ public class LoggerXmlBuilder {
         return parameterReference(parameter);
     }
 
-    /** Wraps a logged element into a {@code column} element that logs it under the given label. */
-    private XmlElement labelElement(XmlElement loggedElement, String label) {
+    /**
+     * Wraps a logged element into a {@code column} element that logs it under the given label. BEAST X
+     * appends the index to the label of each column of a vector, so a trailing dot numbers them like
+     * BEAST 3 does: label.1, label.2, ...
+     */
+    private XmlElement labelElement(XmlElement loggedElement, String label, int dimension) {
         return XmlElement.element("column")
-                .withAttribute("label", label)
+                .withAttribute("label", dimension > 1 ? label + "." : label)
                 .withChild(loggedElement);
     }
 
