@@ -295,6 +295,23 @@ public class PhyloSpecCliTest {
     }
 
     @Test
+    void checkRejectsASecondSamplerAtItsLine(@TempDir Path directory) throws Exception {
+        Path source = directory.resolve("model.phylospec");
+        Files.writeString(source, """
+                Real x ~ Normal(mean=0.0, sd=1.0)
+                mcmc {
+                    Sampler sampler = mcmc(chainLength=10)
+                    Sampler other = mcmc(chainLength=20)
+                }
+                """);
+        CliResult result = invoke("check", source.toString());
+
+        assertEquals(1, result.exitCode(), result.stderr());
+        assertTrue(result.stderr().contains("only have one sampler"), result.stderr());
+        assertTrue(result.stderr().contains("Sampler other = mcmc(chainLength=20)"), result.stderr());
+    }
+
+    @Test
     void checkPreservesNonfatalWarningsAndBothCommandsReportWarningsOnce(@TempDir Path directory) throws Exception {
         Path source = directory.resolve("model.phylospec");
         String warningModel = "Real x ~ Uniform(lower=2.0, upper=1.0)\n";

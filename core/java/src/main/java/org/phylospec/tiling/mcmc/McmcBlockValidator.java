@@ -6,8 +6,9 @@ import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.tiling.errors.TileApplicationError;
 
-/// Rejects settings that earlier versions of PhyloSpec declared as plain values in the mcmc block.
-/// Such values have no effect anymore, so they would silently fall back to the defaults.
+/// Rejects mcmc blocks whose meaning would be ambiguous: a second sampler, and settings that earlier
+/// versions of PhyloSpec declared as plain values. Such values have no effect anymore, so they would
+/// silently fall back to the defaults.
 public final class McmcBlockValidator {
 
     private static final Set<String> DECLARING_TYPES = Set.of("Sampler", "Logger");
@@ -16,12 +17,23 @@ public final class McmcBlockValidator {
 
     /**
      * Validates the mcmc block among the given statements.
-     * @throws TileApplicationError if the block declares one of the former settings
+     * @throws TileApplicationError if the block declares more than one sampler or one of the former settings
      */
     public static void validate(List<Stmt> statements) {
+        Stmt.Assignment sampler = null;
         for (Stmt statement : statements) {
             if (!(statement.block instanceof Stmt.Block.Mcmc)) continue;
             if (!(statement instanceof Stmt.Assignment assignment)) continue;
+
+            if (assignment.type != null && assignment.type.name.equals("Sampler")) {
+                if (sampler != null) {
+                    throw new TileApplicationError(
+                            assignment,
+                            "The mcmc block can only have one sampler, but `" + sampler.name + "` is already set.",
+                            "Remove `" + assignment.name + "` or move its settings into `" + sampler.name + "`.");
+                }
+                sampler = assignment;
+            }
             if (assignment.type != null && DECLARING_TYPES.contains(assignment.type.name)) continue;
 
             String hint = getReplacementHint(assignment);
