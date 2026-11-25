@@ -6,16 +6,22 @@ import dr.math.UnivariateFunction;
 import dr.math.distributions.Distribution;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.Real;
+import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
-import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.types.RealScalar;
+import tiling.params.BeastXParameters;
 import tiling.params.BeastXRealScalarParam;
 import tiling.BeastXState;
+import tiling.model.BeastXTruncatedLikelihood;
 import tiling.model.BoundDistribution;
 
 import java.util.IdentityHashMap;
-import java.util.Set;
+import java.util.List;
 
+/**
+ * Offset(base, offset): the base distribution shifted by offset. As in BEAST 3, the offset may be
+ * sampled, and the base may be any real distribution, including Truncated.
+ */
 public class OffsetTile extends GeneratorTile<
         BoundDistribution<BeastXRealScalarParam<Real>, DistributionLikelihood>,
         BeastXState
@@ -35,12 +41,8 @@ public class OffsetTile extends GeneratorTile<
             > baseInput =
             new GeneratorTileInput<>("base");
 
-    // The offset is stored as a plain double, so a sampled offset would be frozen.
     GeneratorTileInput<RealScalar<? extends Real>, BeastXState> offsetInput =
-            new GeneratorTileInput<>(
-                    "offset",
-                    Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC)
-            );
+            new GeneratorTileInput<>("offset");
 
     @Override
     public BoundDistribution<BeastXRealScalarParam<Real>, DistributionLikelihood> applyTile(
@@ -53,80 +55,112 @@ public class OffsetTile extends GeneratorTile<
                 > base =
                 this.baseInput.apply(beastState, indexVariables);
 
-        RealScalar<? extends Real> offset =
-                this.offsetInput.apply(beastState, indexVariables);
+        Parameter offset =
+                BeastXParameters.toParameter(this.offsetInput.apply(beastState, indexVariables));
 
         double offsetValue =
-                offset.get();
-
-        Distribution offsetDistribution =
-                new OffsetDistribution(
-                        base.distribution.getDistribution(),
-                        offsetValue
-                );
+                offset.getParameterValue(0);
 
         DistributionLikelihood likelihood =
-                new DistributionLikelihood(offsetDistribution);
+                new DistributionLikelihood(
+                        new OffsetDistribution(
+                                base.distribution.getDistribution(),
+                                offset
+                        )
+                );
+
+        double lower =
+                Double.NEGATIVE_INFINITY;
+
+        double upper =
+                Double.POSITIVE_INFINITY;
+
+        // The distribution of a truncated likelihood is its base without the truncation, so the
+        // truncation is moved outside: Offset(Truncated(b, l, u), o) = Truncated(Offset(b, o), l + o, u + o).
+        if (base.distribution instanceof BeastXTruncatedLikelihood truncated) {
+            if (beastState.stateNodes.containsKey(offset)) {
+                throw new TileApplicationError(
+                        this.getRootNode(),
+                        "Offset of a Truncated distribution needs a fixed offset.",
+                        "The truncation bounds move with the offset, but BEAST X keeps them fixed. Use a fixed offset.",
+                        List.of("Real x ~ Offset(base=Truncated(base=Normal(mean=0.0, sd=1.0), lower=0.0), offset=2.0)")
+                );
+            }
+
+            lower = truncated.getLower() + offsetValue;
+            upper = truncated.getUpper() + offsetValue;
+            likelihood = new BeastXTruncatedLikelihood(likelihood, lower, upper);
+        }
 
         // BEAST X throws when the bounds of a parameter without bounds are read.
         Parameter.Default defaultParameter = new Parameter.Default(base.stateNode.get() + offsetValue);
-        defaultParameter.addBounds(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+        defaultParameter.addBounds(new Parameter.DefaultBounds(upper, lower, 1));
 
         BeastXRealScalarParam<Real> defaultState =
                 new BeastXRealScalarParam<>(defaultParameter, Real.INSTANCE);
 
+        DistributionLikelihood boundLikelihood =
+                likelihood;
+
         return new BoundDistribution<>(
-                likelihood,
+                boundLikelihood,
                 defaultState,
-                state -> likelihood.addData(state.getParameter())
+                state -> boundLikelihood.addData(state.getParameter())
         );
     }
 
-    /** The base distribution shifted by a fixed offset. Public so the XML export can read both. */
+    /**
+     * The base distribution shifted by the offset, which is read on every call so that a sampled
+     * offset is followed. Public so the XML export can read both.
+     */
     public static final class OffsetDistribution implements Distribution {
 
         private final Distribution base;
-        private final double offset;
+        private final Parameter offset;
 
         public Distribution getBase() {
             return base;
         }
 
-        public double getOffset() {
+        public Parameter getOffset() {
             return offset;
         }
 
         private OffsetDistribution(
                 Distribution base,
-                double offset
+                Parameter offset
         ) {
             this.base = base;
             this.offset = offset;
         }
 
+        private double offset() {
+            return this.offset.getParameterValue(0);
+        }
+
         @Override
         public double pdf(double x) {
-            return this.base.pdf(x - this.offset);
+            return this.base.pdf(x - offset());
         }
 
         @Override
         public double logPdf(double x) {
-            return this.base.logPdf(x - this.offset);
+            return this.base.logPdf(x - offset());
         }
 
         @Override
         public double cdf(double x) {
-            return this.base.cdf(x - this.offset);
+            return this.base.cdf(x - offset());
         }
 
         @Override
         public double quantile(double y) {
-            return this.base.quantile(y) + this.offset;
+            return this.base.quantile(y) + offset();
         }
 
         @Override
         public double mean() {
-            return this.base.mean() + this.offset;
+            return this.base.mean() + offset();
         }
 
         @Override
@@ -142,17 +176,17 @@ public class OffsetTile extends GeneratorTile<
             return new UnivariateFunction() {
                 @Override
                 public double evaluate(double x) {
-                    return baseDensity.evaluate(x - offset);
+                    return baseDensity.evaluate(x - offset());
                 }
 
                 @Override
                 public double getLowerBound() {
-                    return baseDensity.getLowerBound() + offset;
+                    return baseDensity.getLowerBound() + offset();
                 }
 
                 @Override
                 public double getUpperBound() {
-                    return baseDensity.getUpperBound() + offset;
+                    return baseDensity.getUpperBound() + offset();
                 }
             };
         }

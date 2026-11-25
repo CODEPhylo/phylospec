@@ -1,7 +1,10 @@
 package tiling;
 
 import dr.inference.model.CompoundLikelihood;
+import dr.inference.model.DefaultModel;
+import dr.inference.model.DummyLikelihood;
 import dr.inference.model.Likelihood;
+import dr.inference.model.Parameter;
 import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
 
 import java.util.ArrayList;
@@ -91,6 +94,14 @@ public class BeastXModel {
         priorLikelihoods.addAll(beastState.priorDistributions.values());
         priorLikelihoods.addAll(beastState.treePriorDistributions.values());
         priorLikelihoods.addAll(beastState.calibrationPriorDistributions);
+
+        for (Parameter parameter : beastState.sampledParametersWithoutPriorModel()) {
+            DummyLikelihood registration =
+                    new DummyLikelihood(new DefaultModel(parameter));
+
+            registration.setId(beastState.getAvailableID(parameter.getId() + "_dummy"));
+            priorLikelihoods.add(registration);
+        }
 
         CompoundLikelihood prior =
                 new CompoundLikelihood(priorLikelihoods);

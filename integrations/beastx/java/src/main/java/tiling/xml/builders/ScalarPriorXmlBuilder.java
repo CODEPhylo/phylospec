@@ -23,6 +23,9 @@ import tiling.params.BeastXExponentialMean;
 import tiling.params.BeastXLogNormalMu;
 import tiling.xml.XmlElement;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Builds XML elements for supported scalar parameter priors.
  *
@@ -33,8 +36,7 @@ public class ScalarPriorXmlBuilder {
 
     public boolean supports(Distribution distribution) {
         if (distribution instanceof OffsetTile.OffsetDistribution offsetDistribution) {
-            return offsetDistribution.getBase() instanceof GammaDistributionModel
-                    || offsetDistribution.getBase() instanceof ExponentialDistributionModel;
+            return supports(offsetDistribution.getBase());
         }
 
         return distribution instanceof NormalDistributionModel
@@ -56,56 +58,70 @@ public class ScalarPriorXmlBuilder {
             Parameter parameter,
             DistributionLikelihood likelihood
     ) {
+        XmlElement data =
+                parameterReference(parameter);
+
+        int dimension =
+                parameter.getDimension();
+
         if (likelihood instanceof BeastXTruncatedLikelihood truncated) {
-            return truncatedPrior(state, parameter, truncated);
+            return truncatedPrior(state, data, dimension, truncated);
         }
 
-        return prior(state, parameter, likelihood.getId(), likelihood.getDistribution());
+        return prior(state, data, dimension, likelihood.getId(), likelihood.getDistribution());
     }
 
+    /**
+     * Writes the prior of {@code data}, an element that refers to the parameter or to a value
+     * derived from it, with {@code dimension} values.
+     */
     private XmlElement prior(
             BeastXState state,
-            Parameter parameter,
+            XmlElement data,
+            int dimension,
             String priorId,
             Distribution distribution
     ) {
+        // Offset(base, offset) is the base distribution of x - offset, so any base can be shifted.
+        // Nested offsets are all subtracted in one element.
+        if (distribution instanceof OffsetTile.OffsetDistribution) {
+            List<Parameter> offsets = new ArrayList<>();
+            Distribution base = distribution;
+
+            while (base instanceof OffsetTile.OffsetDistribution offsetDistribution) {
+                offsets.add(offsetDistribution.getOffset());
+                base = offsetDistribution.getBase();
+            }
+
+            return prior(state, shiftedData(state, data, dimension, priorId, offsets), dimension, priorId, base);
+        }
+
         if (distribution instanceof NormalDistributionModel normalDistribution) {
-            return normalPrior(state, parameter, priorId, normalDistribution);
+            return normalPrior(state, data, priorId, normalDistribution);
         }
 
         if (distribution instanceof LogNormalDistributionModel logNormalDistribution) {
             return prior(
-                    parameter,
+                    data,
                     priorId,
                     logNormalDistributionModel(state, priorId + "_distribution", logNormalDistribution)
             );
         }
 
         if (distribution instanceof GammaDistributionModel gammaDistribution) {
-            return gammaPrior(state, parameter, priorId, gammaDistribution, 0.0);
+            return gammaPrior(state, data, priorId, gammaDistribution);
         }
 
         if (distribution instanceof ExponentialDistributionModel exponentialDistribution) {
-            return exponentialPrior(state, parameter, priorId, exponentialDistribution, 0.0);
+            return exponentialPrior(state, data, priorId, exponentialDistribution);
         }
 
         if (distribution instanceof UniformDistributionModel uniformDistribution) {
-            return uniformPrior(state, parameter, priorId, uniformDistribution);
+            return uniformPrior(state, data, priorId, uniformDistribution);
         }
 
         if (distribution instanceof BetaDistributionModel betaDistribution) {
-            return betaPrior(state, parameter, priorId, betaDistribution);
-        }
-
-        // Offset shifts Gamma and Exponential through the offset attribute of their BEAST X models.
-        if (distribution instanceof OffsetTile.OffsetDistribution offsetDistribution) {
-            if (offsetDistribution.getBase() instanceof GammaDistributionModel gammaDistribution) {
-                return gammaPrior(state, parameter, priorId, gammaDistribution, offsetDistribution.getOffset());
-            }
-
-            if (offsetDistribution.getBase() instanceof ExponentialDistributionModel exponentialDistribution) {
-                return exponentialPrior(state, parameter, priorId, exponentialDistribution, offsetDistribution.getOffset());
-            }
+            return betaPrior(state, data, priorId, betaDistribution);
         }
 
         if (distribution instanceof CauchyTile.Cauchy cauchy) {
@@ -113,7 +129,7 @@ public class ScalarPriorXmlBuilder {
                     .withId(priorId)
                     .withAttribute("median", format(cauchy.getLocation()))
                     .withAttribute("scale", format(cauchy.getScale()))
-                    .withChild(parameterReference(parameter));
+                    .withChild(data);
         }
 
         if (distribution instanceof DiscreteUniformTile.DiscreteUniform discreteUniform) {
@@ -121,12 +137,12 @@ public class ScalarPriorXmlBuilder {
                     .withId(priorId)
                     .withAttribute("lower", format(discreteUniform.getLower()))
                     .withAttribute("upper", format(discreteUniform.getUpper()))
-                    .withChild(parameterReference(parameter));
+                    .withChild(data);
         }
 
         if (distribution instanceof PoissonDistributionModel poisson) {
             return prior(
-                    parameter,
+                    data,
                     priorId,
                     XmlElement.element("poissonDistributionModel")
                             .withId(priorId + "_distribution")
@@ -143,16 +159,16 @@ public class ScalarPriorXmlBuilder {
         }
 
         if (distribution instanceof BinomialTile.BinomialCountDistribution binomial) {
-            return binomialPrior(state, parameter, priorId, binomial.getNumTrials(), binomial.getP());
+            return binomialPrior(state, data, dimension, priorId, binomial.getNumTrials(), binomial.getP());
         }
 
         // Bernoulli(p) is Binomial(1, p) on 0 and 1.
         if (distribution instanceof BernoulliTile.BernoulliDistribution bernoulli) {
-            return binomialPrior(state, parameter, priorId, 1, bernoulli.getP());
+            return binomialPrior(state, data, dimension, priorId, 1, bernoulli.getP());
         }
 
         if (distribution instanceof GeometricTile.GeometricCountDistribution geometric) {
-            return geometricPrior(state, parameter, priorId, geometric.getP());
+            return geometricPrior(state, data, priorId, geometric.getP());
         }
 
         throw new UnsupportedOperationException(
@@ -166,13 +182,14 @@ public class ScalarPriorXmlBuilder {
      */
     private XmlElement binomialPrior(
             BeastXState state,
-            Parameter parameter,
+            XmlElement data,
+            int dimension,
             String priorId,
             int numTrials,
             Parameter p
     ) {
         StringBuilder trials = new StringBuilder();
-        for (int i = 0; i < parameter.getDimension(); i++) {
+        for (int i = 0; i < dimension; i++) {
             trials.append(i == 0 ? "" : " ").append(numTrials);
         }
 
@@ -186,7 +203,7 @@ public class ScalarPriorXmlBuilder {
                                                 .withAttribute("value", trials.toString())
                                 )
                 )
-                .withChild(XmlElement.element("counts").withChild(parameterReference(parameter)))
+                .withChild(XmlElement.element("counts").withChild(data))
                 .withChild(distributionParameter(state, "proportion", priorId + "_proportion", p, p.getParameterValue(0)));
     }
 
@@ -197,7 +214,7 @@ public class ScalarPriorXmlBuilder {
      */
     private XmlElement geometricPrior(
             BeastXState state,
-            Parameter parameter,
+            XmlElement data,
             String priorId,
             Parameter p
     ) {
@@ -217,7 +234,7 @@ public class ScalarPriorXmlBuilder {
                         : inlineParameterDefinition(meanId, (1.0 - p.getParameterValue(0)) / p.getParameterValue(0));
 
         return prior(
-                parameter,
+                data,
                 priorId,
                 XmlElement.element("negativeBinomialDistributionModel")
                         .withId(priorId + "_distribution")
@@ -239,29 +256,47 @@ public class ScalarPriorXmlBuilder {
      */
     private XmlElement truncatedPrior(
             BeastXState state,
-            Parameter parameter,
+            XmlElement data,
+            int dimension,
             BeastXTruncatedLikelihood truncated
     ) {
         String priorId =
                 truncated.getId();
 
+        // BEAST X checks the bounds against the data of the base prior. With an Offset base,
+        // that data is x - offset, so the bounds are shifted the same way.
+        double shift = 0.0;
+
+        for (Distribution base = truncated.getDistribution();
+             base instanceof OffsetTile.OffsetDistribution offsetDistribution;
+             base = offsetDistribution.getBase()) {
+            if (state.stateNodes.containsKey(offsetDistribution.getOffset())) {
+                throw new UnsupportedOperationException(
+                        "Truncated over an Offset with a sampled offset is not supported in BEAST X XML: "
+                                + "the truncation bounds would have to move with the offset."
+                );
+            }
+
+            shift += offsetDistribution.getOffset().getParameterValue(0);
+        }
+
         XmlElement element =
                 XmlElement.element("truncatedDistributionLikelihood")
                         .withId(priorId)
-                        .withChild(prior(state, parameter, priorId + "_base", truncated.getDistribution()));
+                        .withChild(prior(state, data, dimension, priorId + "_base", truncated.getDistribution()));
 
         // A missing low or high element means no bound on that side.
         if (Double.isFinite(truncated.getLower())) {
             element = element.withChild(
                     XmlElement.element("low")
-                            .withChild(inlineParameterDefinition(priorId + "_low", truncated.getLower()))
+                            .withChild(inlineParameterDefinition(priorId + "_low", truncated.getLower() - shift))
             );
         }
 
         if (Double.isFinite(truncated.getUpper())) {
             element = element.withChild(
                     XmlElement.element("high")
-                            .withChild(inlineParameterDefinition(priorId + "_high", truncated.getUpper()))
+                            .withChild(inlineParameterDefinition(priorId + "_high", truncated.getUpper() - shift))
             );
         }
 
@@ -318,12 +353,12 @@ public class ScalarPriorXmlBuilder {
 
     private XmlElement normalPrior(
             BeastXState state,
-            Parameter parameter,
+            XmlElement data,
             String priorId,
             NormalDistributionModel distribution
     ) {
         return prior(
-                parameter,
+                data,
                 priorId,
                 XmlElement.element("normalDistributionModel")
                         .withId(priorId + "_distribution")
@@ -350,17 +385,15 @@ public class ScalarPriorXmlBuilder {
 
     private XmlElement gammaPrior(
             BeastXState state,
-            Parameter parameter,
+            XmlElement data,
             String priorId,
-            GammaDistributionModel distribution,
-            double offset
+            GammaDistributionModel distribution
     ) {
         return prior(
-                parameter,
+                data,
                 priorId,
                 XmlElement.element("gammaDistributionModel")
                         .withId(priorId + "_distribution")
-                        .withAttribute("offset", format(offset))
                         .withChild(
                                 distributionParameter(
                                         state,
@@ -384,17 +417,15 @@ public class ScalarPriorXmlBuilder {
 
     private XmlElement exponentialPrior(
             BeastXState state,
-            Parameter parameter,
+            XmlElement data,
             String priorId,
-            ExponentialDistributionModel distribution,
-            double offset
+            ExponentialDistributionModel distribution
     ) {
         return prior(
-                parameter,
+                data,
                 priorId,
                 XmlElement.element("exponentialDistributionModel")
                         .withId(priorId + "_distribution")
-                        .withAttribute("offset", format(offset))
                         .withChild(
                                 XmlElement.element("mean")
                                         .withChild(exponentialMean(state, priorId + "_mean", distribution))
@@ -424,12 +455,12 @@ public class ScalarPriorXmlBuilder {
 
     private XmlElement uniformPrior(
             BeastXState state,
-            Parameter parameter,
+            XmlElement data,
             String priorId,
             UniformDistributionModel distribution
     ) {
         return prior(
-                parameter,
+                data,
                 priorId,
                 XmlElement.element("uniformDistributionModel")
                         .withId(priorId + "_distribution")
@@ -456,7 +487,7 @@ public class ScalarPriorXmlBuilder {
 
     private XmlElement betaPrior(
             BeastXState state,
-            Parameter parameter,
+            XmlElement data,
             String priorId,
             BetaDistributionModel distribution
     ) {
@@ -467,7 +498,7 @@ public class ScalarPriorXmlBuilder {
                 betaDistributionVariable(distribution, 1);
 
         return prior(
-                parameter,
+                data,
                 priorId,
                 XmlElement.element("betaDistributionModel")
                         .withId(priorId + "_distribution")
@@ -493,7 +524,7 @@ public class ScalarPriorXmlBuilder {
     }
 
     private XmlElement prior(
-            Parameter parameter,
+            XmlElement data,
             String priorId,
             XmlElement distributionModel
     ) {
@@ -505,9 +536,64 @@ public class ScalarPriorXmlBuilder {
                 )
                 .withChild(
                         XmlElement.element("data")
-                                .withChild(parameterReference(parameter))
+                                .withChild(data)
                 );
     }
+
+    /**
+     * Writes {@code data - offset_1 - offset_2 ...}, with each offset repeated for every value of
+     * data. A sampled offset is written as a reference times -1, so the shifted value follows it
+     * during the run.
+     */
+    private XmlElement shiftedData(
+            BeastXState state,
+            XmlElement data,
+            int dimension,
+            String priorId,
+            List<Parameter> offsets
+    ) {
+        String id =
+                priorId + "_shifted";
+
+        XmlElement shifted =
+                XmlElement.element("sumParameter")
+                        .withId(id)
+                        .withChild(data);
+
+        for (int i = 0; i < offsets.size(); i++) {
+            Parameter offset =
+                    offsets.get(i);
+
+            String offsetId =
+                    id + "_negativeOffset" + (i + 1);
+
+            if (!state.stateNodes.containsKey(offset)) {
+                shifted = shifted.withChild(repeatedParameterDefinition(offsetId, -offset.getParameterValue(0), dimension));
+                continue;
+            }
+
+            XmlElement sampledOffset =
+                    dimension == 1
+                            ? parameterReference(offset)
+                            : XmlElement.element("duplicatedParameter")
+                                    .withId(offsetId + "_copies")
+                                    .withChild(parameterReference(offset))
+                                    .withChild(
+                                            XmlElement.element("copies")
+                                                    .withChild(inlineParameterDefinition(offsetId + "_copyCount", dimension))
+                                    );
+
+            shifted = shifted.withChild(
+                    XmlElement.element("productParameter")
+                            .withId(offsetId)
+                            .withChild(repeatedParameterDefinition(offsetId + "_minusOne", -1.0, dimension))
+                            .withChild(sampledOffset)
+            );
+        }
+
+        return shifted;
+    }
+
 
     /**
      * Writes a distribution parameter as a reference when it is an MCMC state node,
@@ -582,6 +668,22 @@ public class ScalarPriorXmlBuilder {
         return XmlElement.element("parameter")
                 .withId(id)
                 .withAttribute("value", format(value));
+    }
+
+    private XmlElement repeatedParameterDefinition(
+            String id,
+            double value,
+            int dimension
+    ) {
+        StringBuilder values = new StringBuilder();
+
+        for (int i = 0; i < dimension; i++) {
+            values.append(i == 0 ? "" : " ").append(format(value));
+        }
+
+        return XmlElement.element("parameter")
+                .withId(id)
+                .withAttribute("value", values.toString());
     }
 
     private String parameterId(Parameter parameter) {

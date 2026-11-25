@@ -17,6 +17,7 @@ import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Parameter;
 import dr.math.distributions.DirichletDistribution;
 import dr.math.distributions.Distribution;
+import tiles.distributions.CategoricalTile;
 import tiling.BeastXModel;
 import tiling.BeastXState;
 import tiling.xml.builders.CalibrationPriorXmlBuilder;
@@ -113,7 +114,9 @@ public class XmlExportValidator {
 
         if (!scalarPriorXmlBuilder.supports(distribution)) {
             throw unsupported(
-                    "This distribution prior is not supported in BEAST X XML. Categorical, and Offset with a base other than Gamma or Exponential, are not supported yet."
+                    distribution instanceof CategoricalTile.CategoricalDistribution
+                            ? "Categorical is not supported in BEAST X XML: BEAST X has no XML element for a categorical distribution."
+                            : "This distribution prior is not supported in BEAST X XML."
             );
         }
     }

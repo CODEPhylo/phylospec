@@ -349,6 +349,16 @@ public class XmlPlanBuilder {
 
             throw unsupported("Only scalar DistributionLikelihood and Dirichlet multivariate priors are supported.");
         }
+
+        // As in memory: register parameters whose prior is not a model, see BeastXState.
+        for (Parameter parameter : state.sampledParametersWithoutPriorModel()) {
+            plan.add(
+                    XmlPlan.Section.MCMC_PRIOR,
+                    XmlElement.element("dummyLikelihood")
+                            .withId(parameterId(parameter) + "_dummy")
+                            .withChild(XmlElement.ref("parameter", parameterId(parameter)))
+            );
+        }
     }
 
     private void addTreePriors(

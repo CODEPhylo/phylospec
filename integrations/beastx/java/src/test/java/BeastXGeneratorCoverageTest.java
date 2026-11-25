@@ -4,6 +4,7 @@ import dr.inference.model.CompoundLikelihood;
 import dr.inference.model.Likelihood;
 import dr.inference.model.Model;
 import dr.inference.model.Parameter;
+import dr.inference.model.SumParameter;
 import dr.util.Attribute;
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.special.Erf;
@@ -12,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import tiling.BeastXModel;
 import tiling.BeastXState;
 import tiling.runner.RunMode;
 import tiling.runner.RunnerOptions;
@@ -263,6 +266,63 @@ public class BeastXGeneratorCoverageTest {
                         "Real x ~ Offset(base=Gamma(shape=2.0, rate=3.0), offset=-1.0)",
                         state(Map.of("x", -0.5), gamma(0.5, 2.0, 3.0)),
                         state(Map.of("x", 1.0), gamma(2.0, 2.0, 3.0))),
+
+                // Offset with any base: the XML writes the base prior of x - offset
+                row("Offset Normal, fixed",
+                        "Real x ~ Offset(base=Normal(mean=0.0, sd=1.0), offset=1.5)",
+                        state(Map.of("x", 2.0), normal(0.5, 0.0, 1.0)),
+                        state(Map.of("x", 0.0), normal(-1.5, 0.0, 1.0))),
+                row("Offset LogNormal, fixed",
+                        "Real x ~ Offset(base=LogNormal(logMean=0.0, logSd=1.0), offset=-1.0)",
+                        state(Map.of("x", 0.5), logNormal(1.5, 0.0, 1.0)),
+                        state(Map.of("x", 2.0), logNormal(3.0, 0.0, 1.0))),
+                row("Offset Uniform, fixed",
+                        "Real x ~ Offset(base=Uniform(lower=0.0, upper=2.0), offset=1.0)",
+                        state(Map.of("x", 2.5), Math.log(0.5)),
+                        state(Map.of("x", 0.5), Double.NEGATIVE_INFINITY)),
+                row("Offset Beta, fixed",
+                        "Real x ~ Offset(base=Beta(alpha=2.0, beta=3.0), offset=1.0)",
+                        state(Map.of("x", 1.4), beta(0.4, 2.0, 3.0)),
+                        state(Map.of("x", 1.8), beta(0.8, 2.0, 3.0))),
+                row("Offset Cauchy, fixed",
+                        "Real x ~ Offset(base=Cauchy(location=0.0, scale=1.0), offset=3.0)",
+                        state(Map.of("x", 4.0), cauchy(1.0, 0.0, 1.0)),
+                        state(Map.of("x", 0.0), cauchy(-3.0, 0.0, 1.0))),
+                row("Offset of Offset, fixed",
+                        "Real x ~ Offset(base=Offset(base=Exponential(rate=2.0), offset=1.0), offset=1.0)",
+                        state(Map.of("x", 2.5), exponential(0.5, 2.0)),
+                        state(Map.of("x", 4.0), exponential(2.0, 2.0))),
+                row("Offset, sampled offset",
+                        """
+                        Real o ~ Normal(mean=0.0, sd=1.0)
+                        Real x ~ Offset(base=Normal(mean=0.0, sd=1.0), offset=o)
+                        """,
+                        state(Map.of("x", 2.0, "o", 1.5), normal(0.5, 0.0, 1.0)),
+                        state(Map.of("x", 2.0, "o", -0.5), normal(2.5, 0.0, 1.0))),
+                row("Offset Normal, sampled base mean",
+                        """
+                        Real m ~ Normal(mean=0.0, sd=1.0)
+                        Real x ~ Offset(base=Normal(mean=m, sd=1.0), offset=1.5)
+                        """,
+                        state(Map.of("x", 2.0, "m", 0.0), normal(0.5, 0.0, 1.0)),
+                        state(Map.of("x", 2.0, "m", 1.2), normal(0.5, 1.2, 1.0))),
+                row("Offset of Truncated, fixed (the truncation is kept)",
+                        "Real x ~ Offset(base=Truncated(base=Normal(mean=0.0, sd=1.0), lower=0.0), offset=2.0)",
+                        state(Map.of("x", 2.5), truncatedNormal(0.5, 0.0, 1.0, 0.0, Double.POSITIVE_INFINITY)),
+                        state(Map.of("x", 1.5), Double.NEGATIVE_INFINITY)),
+                row("Truncated of Offset, fixed",
+                        "Real x ~ Truncated(base=Offset(base=Normal(mean=0.0, sd=1.0), offset=2.0), lower=2.0)",
+                        state(Map.of("x", 2.5), truncatedNormal(2.5, 2.0, 1.0, 2.0, Double.POSITIVE_INFINITY)),
+                        state(Map.of("x", 1.5), Double.NEGATIVE_INFINITY)),
+                row("IID Offset, sampled offset",
+                        """
+                        Real o ~ Normal(mean=0.0, sd=1.0)
+                        Vector<Real> x ~ IID(base=Offset(base=Normal(mean=0.0, sd=1.0), offset=o), num=2)
+                        """,
+                        vectorState(Map.of("x", new double[]{1.5, 2.0}, "o", new double[]{1.0}),
+                                normal(0.5, 0.0, 1.0) + normal(1.0, 0.0, 1.0)),
+                        vectorState(Map.of("x", new double[]{1.5, 2.0}, "o", new double[]{-1.0}),
+                                normal(2.5, 0.0, 1.0) + normal(3.0, 0.0, 1.0))),
                 row("IID Binomial, sampled p",
                         """
                         Probability p ~ Beta(alpha=2.0, beta=2.0)
@@ -281,14 +341,19 @@ public class BeastXGeneratorCoverageTest {
      */
     static Stream<Arguments> xmlUnsupportedRows() {
         return Stream.of(
+                // BEAST X has no XML element for a categorical distribution.
                 row("Categorical, fixed (categories start at 1)",
                         "PositiveInteger x ~ Categorical(probabilities=[0.1, 0.2, 0.7])",
                         state(Map.of("x", 1.0), Math.log(0.1)),
                         state(Map.of("x", 3.0), Math.log(0.7))),
-                row("Offset Normal, fixed",
-                        "Real x ~ Offset(base=Normal(mean=0.0, sd=1.0), offset=1.5)",
-                        state(Map.of("x", 2.0), normal(0.5, 0.0, 1.0)),
-                        state(Map.of("x", 0.0), normal(-1.5, 0.0, 1.0)))
+                // The truncation bounds of the shifted base would have to move with the offset.
+                row("Truncated of Offset, sampled offset",
+                        """
+                        Real o ~ Normal(mean=0.0, sd=1.0)
+                        Real x ~ Truncated(base=Offset(base=Normal(mean=0.0, sd=1.0), offset=o), lower=2.0)
+                        """,
+                        state(Map.of("x", 2.5, "o", 1.0), truncatedNormal(2.5, 1.0, 1.0, 2.0, Double.POSITIVE_INFINITY)),
+                        state(Map.of("x", 2.5, "o", 0.0), truncatedNormal(2.5, 0.0, 1.0, 2.0, Double.POSITIVE_INFINITY)))
         );
     }
 
@@ -328,6 +393,70 @@ public class BeastXGeneratorCoverageTest {
         Exception error = assertThrows(Exception.class, () -> parseXmlPriors(name, row.source()));
 
         assertTrue(error.getMessage().contains("supported"), name + ": " + error.getMessage());
+    }
+
+    /**
+     * Priors whose density is not a BEAST X model: BEAST X restores a parameter after a rejected
+     * proposal only if it is registered with a model. Before the fix these parameters kept the
+     * rejected value, and the chain sampled a wrong distribution (or, from XML, stopped).
+     */
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "Real x ~ Cauchy(location=0.0, scale=1.0)",
+            "Real x ~ Truncated(base=Normal(mean=0.0, sd=1.0), lower=0.0)",
+            "Real x ~ Offset(base=Normal(mean=0.0, sd=1.0), offset=1.0)",
+            "NonNegativeInteger x ~ Geometric(p=0.3)",
+            "PositiveInteger x ~ Categorical(probabilities=[0.1, 0.2, 0.7])"
+    })
+    public void rejectedProposalIsRestored(String source) throws Exception {
+        BeastXModel model = new PhyloSpecRunner(source).buildModel("restore");
+        assertRestored(model.posterior.getModel(), model.beastState.stateNodesByPhyloSpecName.get("x"), source);
+
+        if (source.contains("Categorical")) {
+            return;
+        }
+
+        List<Likelihood> priors = parseXmlPriors("restore " + source, source);
+        Likelihood posterior = parsedPosterior("restore " + source);
+        assertRestored(posterior.getModel(), dataParameter(priors, "x"), source + " (XML)");
+    }
+
+    /**
+     * Prior sampling of Offset(Truncated(Normal(0, 1), lower=0), 2), in memory and from XML:
+     * x = 2 + |z| has mean 2 + sqrt(2 / pi) and variance 1 - 2 / pi.
+     */
+    @Test
+    public void offsetOfTruncatedNormalSamplesTheIntendedDistribution() throws Exception {
+        for (boolean viaXml : new boolean[]{false, true}) {
+            String runName = viaXml ? "offsetTruncatedXml" : "offsetTruncatedInMemory";
+            Path logPath = XmlTestSupport.logPath(runName);
+            XmlTestSupport.prepare(logPath);
+
+            PhyloSpecRunner runner = new PhyloSpecRunner("""
+                    Real x ~ Offset(base=Truncated(base=Normal(mean=0.0, sd=1.0), lower=0.0), offset=2.0)
+
+                    mcmc {
+                        Integer chainLength = 1000000
+                        Integer randomSeed = 42
+                        Logger fileLogger = fileLogger(logEvery=100, file="%s", parameters=[x])
+                    }
+                    """.formatted(XmlTestSupport.unixPath(logPath)));
+
+            if (viaXml) {
+                Path xmlPath = XmlTestSupport.xmlPath(runName);
+                XmlTestSupport.prepare(xmlPath);
+                runner.executeXmlRun(XmlRunnerOptions.builder(runName, xmlPath).build());
+            } else {
+                runner.run(RunnerOptions.builder(runName).mode(RunMode.EXECUTE_MCMC).build());
+            }
+
+            List<Double> samples = readColumn(logPath, "x").stream().skip(1000).toList();
+            double mean = samples.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
+            double variance = samples.stream().mapToDouble(v -> (v - mean) * (v - mean)).sum() / (samples.size() - 1);
+
+            assertEquals(2.0 + Math.sqrt(2.0 / Math.PI), mean, 0.03, runName + " mean of x");
+            assertEquals(1.0 - 2.0 / Math.PI, variance, 0.03, runName + " variance of x");
+        }
     }
 
     /** StrictClock's clockRate is optional and defaults to 1. */
@@ -550,6 +679,24 @@ public class BeastXGeneratorCoverageTest {
         return likelihood.getLogLikelihood();
     }
 
+    /** Stores the model state, moves the parameter as a proposal would, and restores it as on rejection. */
+    private static void assertRestored(Model model, Parameter parameter, String name) {
+        double before = parameter.getParameterValue(0);
+
+        model.storeModelState();
+        parameter.setParameterValue(0, before + 1.0);
+        model.restoreModelState();
+
+        assertEquals(before, parameter.getParameterValue(0), TOLERANCE, name + ": rejected proposal was not restored");
+    }
+
+    private static final Map<String, Likelihood> PARSED_POSTERIORS = new java.util.HashMap<>();
+
+    /** The posterior of the last XML parsed by {@link #parseXmlPriors} for this name. */
+    private static Likelihood parsedPosterior(String name) {
+        return PARSED_POSTERIORS.get(name);
+    }
+
     /** Exports the model to XML, parses it with BEAST X, and returns its prior terms. */
     private static List<Likelihood> parseXmlPriors(String name, String source) throws Exception {
         String fileName = "coverage-" + name.replaceAll("\\W+", "-");
@@ -567,6 +714,8 @@ public class BeastXGeneratorCoverageTest {
                 .buildXmlRun(XmlRunnerOptions.builder("coverage", xmlPath).build())
                 .mcmc()
                 .getLikelihood();
+
+        PARSED_POSTERIORS.put(name, posterior);
 
         List<Likelihood> leaves = new ArrayList<>();
         collectLeaves(posterior, leaves);
@@ -619,8 +768,37 @@ public class BeastXGeneratorCoverageTest {
 
     private static Parameter dataOf(AbstractDistributionLikelihood prior, String id) {
         for (Attribute<double[]> data : prior.getDataList()) {
-            if (data instanceof Parameter parameter && id.equals(parameter.getId())) {
-                return parameter;
+            if (data instanceof Parameter parameter) {
+                Parameter found = find(parameter, id);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Finds the parameter with the given id in a parameter or, for a shifted prior such as Offset,
+     * in the parts of a sumParameter. BEAST X does not expose those parts, so they are read by reflection.
+     */
+    @SuppressWarnings("unchecked")
+    private static Parameter find(Parameter parameter, String id) {
+        if (id.equals(parameter.getId())) {
+            return parameter;
+        }
+        if (parameter instanceof SumParameter sum) {
+            try {
+                java.lang.reflect.Field parts = SumParameter.class.getDeclaredField("parameterList");
+                parts.setAccessible(true);
+                for (Parameter part : (List<Parameter>) parts.get(sum)) {
+                    Parameter found = find(part, id);
+                    if (found != null) {
+                        return found;
+                    }
+                }
+            } catch (ReflectiveOperationException exception) {
+                throw new IllegalStateException(exception);
             }
         }
         return null;

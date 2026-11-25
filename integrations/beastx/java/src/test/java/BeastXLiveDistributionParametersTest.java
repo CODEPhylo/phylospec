@@ -79,6 +79,10 @@ public class BeastXLiveDistributionParametersTest {
                                 + "Simplex x ~ Dirichlet(concentration=h)",
                         "Simplex x ~ Dirichlet(concentration=[2.0, 3.0, 4.0])",
                         new double[]{2.0, 3.0, 4.0}, new double[]{0.2, 0.3, 0.5}),
+                Arguments.of("Offset offset",
+                        "Real h ~ Normal(mean=0.0, sd=1.0)\nReal x ~ Offset(base=Exponential(rate=1.0), offset=h)",
+                        "Real x ~ Offset(base=Exponential(rate=1.0), offset=3.0)",
+                        new double[]{3.0}, new double[]{4.5}),
                 Arguments.of("Truncated base Normal mean",
                         "Real h ~ Normal(mean=0.0, sd=1.0)\n"
                                 + "Real x ~ Truncated(base=Normal(mean=h, sd=1.0), lower=-10.0, upper=10.0)",
@@ -141,12 +145,13 @@ public class BeastXLiveDistributionParametersTest {
         );
     }
 
+    /** The truncation bounds would have to move with a sampled offset, which BEAST X keeps fixed. */
     @Test
-    public void offsetRejectsSampledOffset() {
+    public void offsetOfTruncatedRejectsSampledOffset() {
         assertRejected(
-                "Real h ~ Normal(mean=0.0, sd=1.0)\nReal x ~ Offset(base=Exponential(rate=1.0), offset=h)",
-                "offset",
-                "Offset"
+                "Real h ~ Normal(mean=0.0, sd=1.0)\n"
+                        + "Real x ~ Offset(base=Truncated(base=Normal(mean=0.0, sd=1.0), lower=0.0), offset=h)",
+                "Offset of a Truncated distribution needs a fixed offset"
         );
     }
 
