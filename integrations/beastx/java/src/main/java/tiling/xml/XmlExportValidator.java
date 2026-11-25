@@ -1,5 +1,6 @@
 package tiling.xml;
 
+import dr.evomodel.coalescent.BayesianSkylineLikelihood;
 import dr.evomodel.coalescent.CoalescentLikelihood;
 import dr.evomodel.coalescent.demographicmodel.ConstantPopulationModel;
 import dr.evomodel.coalescent.demographicmodel.DemographicModel;
@@ -152,8 +153,9 @@ public class XmlExportValidator {
                 validateSpeciationTreePrior(speciationLikelihood);
             } else if (treePrior instanceof CoalescentLikelihood coalescentLikelihood) {
                 validateCoalescentTreePrior(coalescentLikelihood);
-            } else {
-                throw unsupported("Only SpeciationLikelihood and CoalescentLikelihood tree priors are supported.");
+            } else if (!(treePrior instanceof BayesianSkylineLikelihood)) {
+                throw unsupported(
+                        "Only SpeciationLikelihood, CoalescentLikelihood and BayesianSkylineLikelihood tree priors are supported.");
             }
         }
     }

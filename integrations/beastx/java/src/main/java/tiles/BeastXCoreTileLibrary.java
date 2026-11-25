@@ -134,6 +134,7 @@ import tiles.trees.CoalescentPopulationFunctionTile;
 import tiles.trees.LogisticPopulationFunctionTile;
 import tiles.trees.CompoundPopulationFunctionTile;
 import tiles.trees.SkylineCoalescentTile;
+import tiles.trees.BayesianSkylineTile;
 import tiles.trees.FossilizedBirthDeathTile;
 
 import tiling.BeastXState;
@@ -278,6 +279,7 @@ public class BeastXCoreTileLibrary extends TileLibrary<BeastXState> {
         tiles.add(new FossilizedBirthDeathTile());
         tiles.add(new CoalescentTile());
         tiles.add(new SkylineCoalescentTile());
+        tiles.add(new BayesianSkylineTile());
         tiles.add(new ConstantPopulationFunctionTile());
         tiles.add(new LogisticPopulationFunctionTile());
         tiles.add(new ExponentialPopulationFunctionTile());

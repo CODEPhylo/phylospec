@@ -121,7 +121,7 @@ public class SkylineCoalescentTile extends GeneratorTile<
         );
     }
 
-    private static Parameter toParameter(RealVector<? extends PositiveReal> vector) {
+    static Parameter toParameter(RealVector<? extends PositiveReal> vector) {
         if (vector instanceof BeastXRealVectorParam<?> beastXVector) {
             return beastXVector.getParameter();
         }
