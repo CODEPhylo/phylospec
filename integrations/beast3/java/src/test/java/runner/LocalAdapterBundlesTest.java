@@ -22,6 +22,7 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.phylospec.tiling.mcmc.RunRecord;
 
 class LocalAdapterBundlesTest {
 

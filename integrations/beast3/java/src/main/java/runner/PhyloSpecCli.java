@@ -16,6 +16,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.phylospec.errors.Error;
 import org.phylospec.tiling.errors.WrappedTileApplicationError;
 import org.phylospec.tiling.mcmc.OutputPaths;
+import org.phylospec.tiling.mcmc.RunRecord;
 import org.xml.sax.SAXException;
 
 /** Command-line entry point for checking scripts, exporting analysis XML and running managed analyses. */
@@ -182,7 +183,7 @@ public final class PhyloSpecCli {
                 }
             }
             out.println("Run completed (engine: beast3; libraries: " + String.join(",", options.libraries()) + ").");
-            for (var file : record.outputFiles()) {
+            for (var file : record.getOutputFiles()) {
                 String label =
                         switch (file.kind()) {
                             case "tree" -> "Trees";
