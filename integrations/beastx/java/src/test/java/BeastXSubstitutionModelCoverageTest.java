@@ -335,7 +335,7 @@ public class BeastXSubstitutionModelCoverageTest {
 
                     mcmc {
                         Sampler sampler = mcmc(chainLength=1)
-                        Logger treeLogger = treeLogger(logEvery=1, file="%s", trees=[tree])
+                        Logger treeLogger = treeLogger(logEvery=1, file="%s", tree=tree)
                     }
                     """.formatted(XmlTestSupport.unixPath(treeLogPath)))
                     .buildXmlRun(XmlRunnerOptions.builder("substitution", xmlPath).build())

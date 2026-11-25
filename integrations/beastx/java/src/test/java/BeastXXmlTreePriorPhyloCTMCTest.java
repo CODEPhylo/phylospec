@@ -631,8 +631,7 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
-                        file="%s",
-                        parameters=[clockRate]
+                        file="%s"
                     )
 
                     Logger treeLogger = treeLogger(
@@ -641,7 +640,9 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
                         tree=tree
                     )
                 }
-                """.formatted(XmlTestSupport.unixPath(XmlTestSupport.treeLogPath("logisticCoalescentPhyloCTMC")));
+                """.formatted(
+                        XmlTestSupport.unixPath(XmlTestSupport.logPath("logisticCoalescentPhyloCTMC")),
+                        XmlTestSupport.unixPath(XmlTestSupport.treeLogPath("logisticCoalescentPhyloCTMC")));
 
         Exception error = assertThrows(
                 Exception.class,

@@ -321,8 +321,8 @@ public class BeastXTreePriorCoverageTest {
             String run = source + """
 
                     mcmc {
-                        Integer chainLength = 2000
-                        Logger treeLogger = treeLogger(logEvery=500, file="%s", trees=[tree])
+                        Sampler sampler = mcmc(chainLength=2000)
+                        Logger treeLogger = treeLogger(logEvery=500, file="%s", tree=tree)
                     }
                     """.formatted(XmlTestSupport.unixPath(treeLogPath));
 
@@ -397,7 +397,7 @@ public class BeastXTreePriorCoverageTest {
         Likelihood posterior = new PhyloSpecRunner("PositiveReal z ~ LogNormal(logMean=0.0, logSd=1.0)\n" + source + """
 
                 mcmc {
-                    Integer chainLength = 1
+                    Sampler sampler = mcmc(chainLength=1)
                     Logger screenLogger = screenLogger(logEvery=1, parameters=[z])
                 }
                 """)
@@ -567,7 +567,7 @@ public class BeastXTreePriorCoverageTest {
 
                 mcmc {
                     Sampler sampler = mcmc(chainLength=1)
-                    Logger treeLogger = treeLogger(logEvery=1, file="%s", trees=[tree])
+                    Logger treeLogger = treeLogger(logEvery=1, file="%s", tree=tree)
                 }
                 """.formatted(XmlTestSupport.unixPath(treeLogPath)))
                 .buildXmlRun(XmlRunnerOptions.builder("treePrior", xmlPath).build())

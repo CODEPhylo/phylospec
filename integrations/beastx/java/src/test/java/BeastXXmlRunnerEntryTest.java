@@ -1,6 +1,7 @@
 import dr.inference.mcmc.MCMC;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.io.TempDir;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
@@ -20,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@ExtendWith(SkipWithoutBeagle.class)
 public class BeastXXmlRunnerEntryTest {
 
     @Test

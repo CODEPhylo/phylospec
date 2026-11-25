@@ -7,6 +7,7 @@ import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -43,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Checks that sampled base frequencies of the amino-acid (JTT, WAG, LG) and codon (GY94)
  * substitution models stay live, in memory and after an XML round trip through BEAST X.
  */
+@ExtendWith(SkipWithoutBeagle.class)
 public class BeastXLiveFrequencyParametersTest {
 
     private static final double TOLERANCE = 1e-8;

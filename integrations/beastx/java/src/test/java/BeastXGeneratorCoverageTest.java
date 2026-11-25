@@ -436,11 +436,11 @@ public class BeastXGeneratorCoverageTest {
                     Real x ~ Offset(base=Truncated(base=Normal(mean=0.0, sd=1.0), lower=0.0), offset=2.0)
 
                     mcmc {
-                        Integer chainLength = 1000000
-                        Integer randomSeed = 42
+                        Sampler sampler = mcmc(chainLength=1000000)
                         Logger fileLogger = fileLogger(logEvery=100, file="%s", parameters=[x])
                     }
                     """.formatted(XmlTestSupport.unixPath(logPath)));
+            runner.setSeed(42L);
 
             if (viaXml) {
                 Path xmlPath = XmlTestSupport.xmlPath(runName);
