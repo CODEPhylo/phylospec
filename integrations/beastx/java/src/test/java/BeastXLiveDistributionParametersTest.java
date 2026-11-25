@@ -116,15 +116,21 @@ public class BeastXLiveDistributionParametersTest {
         assertEquals(childLogDensity(constant), afterProposal, TOLERANCE, name + " density uses a stale hyperparameter.");
     }
 
+    /**
+     * A sampled Uniform limit is left open, as in the XML, so the operators are the same in memory
+     * and in XML; the Uniform density rejects values above the current limit.
+     */
     @Test
-    public void uniformStateBoundsFollowSampledUpperBound() throws Exception {
+    public void uniformLeavesSampledUpperBoundOpen() throws Exception {
         BeastXState state = buildState("Real h ~ Normal(mean=5.0, sd=0.1)\nReal x ~ Uniform(lower=0.0, upper=h)");
 
-        setValues(state, "h", new double[]{10.0});
-
         Parameter x = state.stateNodesByPhyloSpecName.get("x");
-        assertEquals(10.0, x.getBounds().getUpperLimit(0), TOLERANCE);
+        assertEquals(Double.POSITIVE_INFINITY, x.getBounds().getUpperLimit(0));
         assertEquals(0.0, x.getBounds().getLowerLimit(0), TOLERANCE);
+
+        setValues(state, "h", new double[]{5.0});
+        setValues(state, "x", new double[]{6.0});
+        assertEquals(Double.NEGATIVE_INFINITY, childLogDensity(state));
     }
 
     @Test
