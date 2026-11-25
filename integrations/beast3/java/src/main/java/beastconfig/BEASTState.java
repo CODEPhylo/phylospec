@@ -119,9 +119,19 @@ public class BEASTState {
         this.inputObserver = Objects.requireNonNull(inputObserver, "inputObserver");
     }
 
-    /** Resolves output names against the working directory of a managed run. */
+    /**
+     * Resolves output names against the working directory of a managed run. BEAST replaces
+     * {@code $(tree)} in a logger's file name only when it opens the file, so such names are rejected:
+     * the checked and recorded name would differ from the written file.
+     */
     public String resolveOutputPath(String path) {
-        return outputPaths == null ? path : outputPaths.resolve(path);
+        if (outputPaths == null) return path;
+        if (path != null && path.contains("$(tree)")) {
+            throw new IllegalArgumentException(
+                    "BEAST file name templates like $(tree) are not supported in output names: " + path
+                            + ". Give every tree logger its own file name instead.");
+        }
+        return outputPaths.resolve(path);
     }
 
     /**
