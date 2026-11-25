@@ -14,6 +14,7 @@ import dr.inference.model.Parameter;
 import dr.inference.model.Statistic;
 import tiling.BeastXState;
 import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
+import tiling.rpn.BeastXRPNStatistic;
 import tiling.xml.XmlElement;
 
 import java.util.ArrayList;
@@ -311,6 +312,10 @@ public class LoggerXmlBuilder {
 
         if (statistic instanceof TMRCAStatistic) {
             return XmlElement.ref("tmrcaStatistic", loggableName);
+        }
+
+        if (statistic instanceof BeastXRPNStatistic) {
+            return XmlElement.ref("RPNcalculator", statistic.getId());
         }
 
         return null;
