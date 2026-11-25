@@ -58,6 +58,7 @@ mcmc {
 The MCMC block is type-checked like the rest of the model. *Sampler* and *Logger* are core types, and *mcmc*, *screenLogger*, *fileLogger* and *treeLogger* are core components.
 
 - The type checker treats its statements like any other statement: every argument must be known and have the right type. Only the logged *parameters* are exempt.
+- The block may only declare a *Sampler* and *Logger*s. Any other statement (e.g. *Real logEvery = 2.5*) and a second sampler are rejected, since they would have no effect.
 - The sampler and the loggers are collected in specs shared by all engines. The specs only check what types cannot express: *file* is not blank, and *parameterNames* has the same length as *parameters*.
 
 Everything else (e.g. operator settings) should be in a specific engine block (e.g. "beastX").

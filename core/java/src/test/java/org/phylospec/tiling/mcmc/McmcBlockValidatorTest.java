@@ -48,6 +48,27 @@ class McmcBlockValidatorTest {
         assertTrue(error.getMessage().contains("mcmc(chainLength=10)"), error.getMessage());
     }
 
+    @Test
+    void rejectsEveryOtherStatementAndPointsAtIt() {
+        for (String statement :
+                List.of("Real logEvery = 2.5", "Real other = 1.0", "Real x ~ Normal(mean=0.0, sd=1.0)")) {
+            List<Stmt> statements =
+                    parse("mcmc {\n    Sampler sampler = mcmc(chainLength=10)\n    " + statement + "\n}");
+
+            TileApplicationError error =
+                    assertThrows(TileApplicationError.class, () -> McmcBlockValidator.validate(statements));
+            assertSame(statements.get(1), error.getAstNode(), statement);
+        }
+    }
+
+    @Test
+    void pointsLoggerSettingsToTheLoggers() {
+        TileApplicationError error = assertThrows(
+                TileApplicationError.class,
+                () -> McmcBlockValidator.validate(parse("mcmc {\n    Real logEvery = 2.5\n}")));
+        assertTrue(error.getMessage().contains("fileLogger(logEvery=2.5)"), error.getMessage());
+    }
+
     private static List<Stmt> parse(String source) {
         return new Parser(new Lexer(source).scanTokens()).parse();
     }
