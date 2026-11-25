@@ -13,7 +13,7 @@ import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.LoggerSpec;
 import org.phylospec.tiling.mcmc.McmcSamplerSpec;
-import org.phylospec.tiling.mcmc.RunOutputs;
+import org.phylospec.tiling.mcmc.OutputPaths;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import tiling.model.StartingTreeSpec;
@@ -349,7 +349,7 @@ public class BeastXState {
             this.addScreenLoggerSpec(new ScreenLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, null, null));
         }
         if (this.fileLoggerSpecs.isEmpty()) {
-            this.addFileLoggerSpec(new FileLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, RunOutputs.getLogFile(prefix), null, null));
+            this.addFileLoggerSpec(new FileLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, OutputPaths.getLogFile(prefix), null, null));
         }
         if (this.treeLoggerSpecs.isEmpty()) {
             this.treeLoggerSpecs.addAll(this.getDefaultTreeLoggerSpecs(prefix));
@@ -419,7 +419,7 @@ public class BeastXState {
 
         List<String> trees = this.treeModelsByPhyloSpecName.keySet().stream().sorted().toList();
         for (String tree : trees) {
-            String fileName = trees.size() == 1 ? RunOutputs.getTreeFile(prefix) : RunOutputs.getTreeFile(prefix, tree);
+            String fileName = trees.size() == 1 ? OutputPaths.getTreeFile(prefix) : OutputPaths.getTreeFile(prefix, tree);
             specs.add(new TreeLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, fileName, tree));
         }
 

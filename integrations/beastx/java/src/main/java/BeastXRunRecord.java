@@ -16,7 +16,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HexFormat;
-import org.phylospec.tiling.mcmc.RunOutputs;
+import org.phylospec.tiling.mcmc.OutputPaths;
 import tiling.BeastXState;
 
 /** Journal for the isolated BEAST X process. All result paths are relative to the managed run. */
@@ -97,7 +97,7 @@ final class BeastXRunRecord {
         var files = new ArrayList<String>();
         for (var spec : state.fileLoggerSpecs) files.add(spec.fileName());
         for (var spec : state.treeLoggerSpecs) files.add(spec.fileName());
-        new RunOutputs(Path.of(""), overwrite).prepare(files, null);
+        new OutputPaths(Path.of(""), overwrite).prepare(files, null);
         for (var spec : state.fileLoggerSpecs) addLogger(loggers, "log", spec.fileName(), spec.logEvery());
         for (var spec : state.treeLoggerSpecs) addLogger(loggers, "tree", spec.fileName(), spec.logEvery());
         save();
@@ -110,7 +110,7 @@ final class BeastXRunRecord {
 
     private void addLogger(ArrayNode loggers, String kind, String name, long every) throws IOException {
         ObjectNode logger = loggers.addObject().put("kind", kind).put("logEvery", every)
-                .put("path", RunOutputs.getRecordPath(directory, Path.of(name)));
+                .put("path", OutputPaths.getRecordPath(directory, Path.of(name)));
         data.withArray("expectedOutputs").add(logger.deepCopy());
     }
 

@@ -12,7 +12,7 @@ import dr.inference.model.Parameter;
 import dr.inference.model.Statistic;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.LoggerSpec;
-import org.phylospec.tiling.mcmc.RunOutputs;
+import org.phylospec.tiling.mcmc.OutputPaths;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import tiling.BeastXModel;
@@ -87,7 +87,7 @@ public class LoggerBuilder {
                     model,
                     beastState,
                     new FileLoggerSpec<>(
-                            LoggerSpec.DEFAULT_LOG_EVERY, RunOutputs.getLogFile(beastState.outputPrefix), null, null)));
+                            LoggerSpec.DEFAULT_LOG_EVERY, OutputPaths.getLogFile(beastState.outputPrefix), null, null)));
         }
 
         if (beastState.treeLoggerSpecs.isEmpty()) {

@@ -9,7 +9,7 @@ import java.util.function.BiConsumer;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.McmcSamplerSpec;
-import org.phylospec.tiling.mcmc.RunOutputs;
+import org.phylospec.tiling.mcmc.OutputPaths;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 
@@ -22,7 +22,7 @@ public class BEASTState {
 
     public final String runName;
     private final Path sourceDirectory;
-    private final RunOutputs outputPaths;
+    private final OutputPaths outputPaths;
     private final boolean xmlExport;
     private BiConsumer<String, Path> inputObserver = (reference, path) -> {};
     public String outputPrefix;
@@ -62,16 +62,16 @@ public class BEASTState {
      * PhyloSpec source file.
      */
     public BEASTState(String runName, Path sourceDirectory) {
-        this(runName, sourceDirectory, (RunOutputs) null);
+        this(runName, sourceDirectory, (OutputPaths) null);
     }
 
     /** Creates a managed state when outputDirectory is supplied; null preserves legacy behavior. */
     public BEASTState(String runName, Path sourceDirectory, Path outputDirectory) {
-        this(runName, sourceDirectory, outputDirectory == null ? null : new RunOutputs(outputDirectory));
+        this(runName, sourceDirectory, outputDirectory == null ? null : new OutputPaths(outputDirectory));
     }
 
     /** Creates a managed state writing to the given outputs; null preserves legacy behavior. */
-    public BEASTState(String runName, Path sourceDirectory, RunOutputs outputPaths) {
+    public BEASTState(String runName, Path sourceDirectory, OutputPaths outputPaths) {
         this(runName, sourceDirectory, outputPaths, false);
     }
 
@@ -83,7 +83,7 @@ public class BEASTState {
         return xmlExport;
     }
 
-    private BEASTState(String runName, Path sourceDirectory, RunOutputs outputPaths, boolean xmlExport) {
+    private BEASTState(String runName, Path sourceDirectory, OutputPaths outputPaths, boolean xmlExport) {
         this.runName = runName;
         this.xmlExport = xmlExport;
         this.outputPaths = outputPaths;

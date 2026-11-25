@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
-import org.phylospec.tiling.mcmc.RunOutputs;
+import org.phylospec.tiling.mcmc.OutputPaths;
 
 /** Runs the isolated engine in the working directory of the command. */
 final class InstalledBeastXRun {
@@ -21,11 +21,11 @@ final class InstalledBeastXRun {
             int check = InstalledEngineTool.run(PhyloSpecCli.Command.CHECK, options, source, quiet, err);
             if (check != 0) return check;
         }
-        RunOutputs.checkRuntimeOverrides();
+        OutputPaths.checkRuntimeOverrides();
         Path directory = options.runDirectory(source);
         String prefix = options.outputPrefix(source);
         Path lib = InstalledEngineTool.runtimeLib("beastx", "run");
-        RunOutputs.claimRecordDirectory(directory, options.overwrite());
+        OutputPaths.claimRecordDirectory(directory, options.overwrite());
         Path console = directory.resolve("console.log");
         Path record = directory.resolve("run.json");
         out.println("Saving analysis.xml and running BEAST X. Console log: " + console);

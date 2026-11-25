@@ -22,7 +22,7 @@ import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
 import org.phylospec.tiling.TileCatalog;
-import org.phylospec.tiling.mcmc.RunOutputs;
+import org.phylospec.tiling.mcmc.OutputPaths;
 
 /** Persistent journal for one managed run. It records observations, not scientific validity. */
 final class RunRecord {
@@ -291,7 +291,7 @@ final class RunRecord {
     }
 
     private String getRecordPath(String file) {
-        return RunOutputs.getRecordPath(this.directory, Path.of(file));
+        return OutputPaths.getRecordPath(this.directory, Path.of(file));
     }
 
     /** Publish a complete JSON document before accepting the corresponding in-memory transition. */

@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 import javax.xml.parsers.ParserConfigurationException;
 import org.phylospec.errors.Error;
 import org.phylospec.tiling.errors.WrappedTileApplicationError;
-import org.phylospec.tiling.mcmc.RunOutputs;
+import org.phylospec.tiling.mcmc.OutputPaths;
 import org.xml.sax.SAXException;
 
 /** Command-line entry point for checking scripts, exporting analysis XML and running managed analyses. */
@@ -383,7 +383,7 @@ public final class PhyloSpecCli {
                     throw new IllegalArgumentException("The export subcommand requires --xml <file>.");
                 }
                 if (command == Command.RUN && runName != null) {
-                    RunOutputs.validateRunName(runName);
+                    OutputPaths.validateRunName(runName);
                 }
                 if (command != Command.EXPORT && xmlFile != null) {
                     throw new IllegalArgumentException("--xml is only supported for the export subcommand.");
@@ -421,7 +421,7 @@ public final class PhyloSpecCli {
         }
 
         Path runDirectory(Path source) {
-            return new RunOutputs(Path.of("")).getRecordDirectory(this.outputPrefix(source));
+            return new OutputPaths(Path.of("")).getRecordDirectory(this.outputPrefix(source));
         }
 
         String outputPrefix(Path source) {

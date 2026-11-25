@@ -16,7 +16,7 @@ import java.util.stream.Stream;
 
 /// Defines where a managed run writes its files. Results are named after the run and live in the
 /// working directory, next to a {@code <name>.run} folder holding the record of the run.
-public final class RunOutputs {
+public final class OutputPaths {
 
     private static final List<String> RECORD_FILES =
             List.of("run.json", "console.log", "model.phylospec", "analysis.xml");
@@ -24,12 +24,12 @@ public final class RunOutputs {
     private final Path workingDirectory;
     private final boolean overwrite;
 
-    public RunOutputs(Path workingDirectory) {
+    public OutputPaths(Path workingDirectory) {
         this(workingDirectory, false);
     }
 
     /** Creates the outputs of a run. With overwrite, existing output files are replaced. */
-    public RunOutputs(Path workingDirectory, boolean overwrite) {
+    public OutputPaths(Path workingDirectory, boolean overwrite) {
         this.workingDirectory = workingDirectory.toAbsolutePath().normalize();
         this.overwrite = overwrite;
     }
