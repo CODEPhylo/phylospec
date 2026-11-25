@@ -601,7 +601,7 @@ public class BeastXMCMCBuilderTest {
         assertEquals(List.of("posterior", "prior", "likelihood", "y"), columnLabels(logger));
 
         assertEquals(
-                List.of("prior", "parameter:y"),
+                List.of("column:", "prior", "likelihood", "parameter:y"),
                 xmlLoggedReferences(new StateXmlGenerator().toXml(model))
         );
     }
@@ -639,7 +639,9 @@ public class BeastXMCMCBuilderTest {
 
         assertEquals(
                 List.of(
+                        "column:",
                         "prior",
+                        "likelihood",
                         "treeHeightStatistic:tree.height",
                         "treeLengthStatistic:tree.treeLength",
                         "parameter:birthRate"

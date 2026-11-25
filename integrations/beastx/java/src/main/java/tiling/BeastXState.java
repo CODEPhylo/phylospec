@@ -357,19 +357,11 @@ public class BeastXState {
     }
 
     /**
-     * Returns the names of the distributions every screen and file logger writes to the XML: the
-     * prior and, if the model has a likelihood, the posterior and the likelihood.
+     * Returns the names of the distributions every screen and file logger writes to the XML. A model
+     * without a likelihood still logs all three: its posterior equals its prior and its likelihood is 0.
      */
     public List<String> getXmlLoggedDistributionNames() {
-        boolean hasLikelihood =
-                !this.likelihoodDistributions.isEmpty() || !this.observedTreeDistributions.isEmpty();
-
-        List<String> names = new ArrayList<>();
-        if (hasLikelihood) names.add("posterior");
-        names.add("prior");
-        if (hasLikelihood) names.add("likelihood");
-
-        return names;
+        return List.of("posterior", "prior", "likelihood");
     }
 
     /**

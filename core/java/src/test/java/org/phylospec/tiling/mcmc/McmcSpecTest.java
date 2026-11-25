@@ -42,6 +42,22 @@ public class McmcSpecTest {
                 () -> new ScreenLoggerSpec<String>(10, null, List.of("first")), "parameter names but no parameters");
     }
 
+    @Test
+    public void loggersRejectDuplicateParameterNames() {
+        assertFails(
+                () -> new FileLoggerSpec<>(10, "run.log", List.of("a", "b"), List.of("same", "same")),
+                "`same` is used more than once");
+    }
+
+    @Test
+    public void loggersRejectParameterNamesOfTheAlwaysLoggedColumns() {
+        for (String name : List.of("posterior", "prior", "likelihood")) {
+            assertFails(
+                    () -> new ScreenLoggerSpec<>(10, List.of("a", "b"), List.of("first", name)),
+                    "clashes with the `" + name + "` column");
+        }
+    }
+
     private static void assertFails(Executable construction, String description) {
         TileApplicationError error = assertThrows(TileApplicationError.class, construction);
         assertTrue(error.getMessage().contains(description), error.getMessage());

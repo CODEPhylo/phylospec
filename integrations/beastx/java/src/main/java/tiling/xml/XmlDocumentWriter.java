@@ -124,12 +124,12 @@ public class XmlDocumentWriter {
 
         writer.writeOpenTag("mcmc", attributes);
 
-        if (plan.has(XmlPlan.Section.MCMC_LIKELIHOOD)) {
-            writer.writeOpenTag(
-                    CompoundLikelihoodParser.JOINT,
-                    new Attribute.Default<>(XMLParser.ID, "joint")
-            );
-        }
+        // the joint and likelihood are written even without a likelihood, so the posterior,
+        // prior and likelihood can always be logged
+        writer.writeOpenTag(
+                CompoundLikelihoodParser.JOINT,
+                new Attribute.Default<>(XMLParser.ID, "joint")
+        );
 
         writer.writeOpenTag(
                 CompoundLikelihoodParser.PRIOR,
@@ -138,15 +138,13 @@ public class XmlDocumentWriter {
         writeSection(writer, plan, XmlPlan.Section.MCMC_PRIOR);
         writer.writeCloseTag(CompoundLikelihoodParser.PRIOR);
 
-        if (plan.has(XmlPlan.Section.MCMC_LIKELIHOOD)) {
-            writer.writeOpenTag(
-                    CompoundLikelihoodParser.LIKELIHOOD,
-                    new Attribute.Default<>(XMLParser.ID, "likelihood")
-            );
-            writeSection(writer, plan, XmlPlan.Section.MCMC_LIKELIHOOD);
-            writer.writeCloseTag(CompoundLikelihoodParser.LIKELIHOOD);
-            writer.writeCloseTag(CompoundLikelihoodParser.JOINT);
-        }
+        writer.writeOpenTag(
+                CompoundLikelihoodParser.LIKELIHOOD,
+                new Attribute.Default<>(XMLParser.ID, "likelihood")
+        );
+        writeSection(writer, plan, XmlPlan.Section.MCMC_LIKELIHOOD);
+        writer.writeCloseTag(CompoundLikelihoodParser.LIKELIHOOD);
+        writer.writeCloseTag(CompoundLikelihoodParser.JOINT);
 
         writer.writeIDref(SimpleOperatorScheduleParser.OPERATOR_SCHEDULE, "operators");
         writeSection(writer, plan, XmlPlan.Section.MCMC_LOGGERS);

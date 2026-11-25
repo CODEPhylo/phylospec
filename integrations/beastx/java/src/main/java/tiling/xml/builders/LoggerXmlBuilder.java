@@ -256,15 +256,8 @@ public class LoggerXmlBuilder {
             case PRIOR_LOG_NAME ->
                     XmlElement.ref("prior", "prior");
 
-            case LIKELIHOOD_LOG_NAME -> {
-                if (state.likelihoodDistributions.isEmpty() && state.observedTreeDistributions.isEmpty()) {
-                    throw new IllegalArgumentException(
-                            "Cannot log 'likelihood' because this BEAST X XML model has no likelihood block."
-                    );
-                }
-
-                yield XmlElement.ref("likelihood", "likelihood");
-            }
+            case LIKELIHOOD_LOG_NAME ->
+                    XmlElement.ref("likelihood", "likelihood");
 
             default ->
                     componentLikelihoodReference(state, loggableName);
