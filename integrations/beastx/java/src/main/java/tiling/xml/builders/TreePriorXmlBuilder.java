@@ -1,6 +1,7 @@
 package tiling.xml.builders;
 
 import dr.evolution.coalescent.PiecewiseConstantPopulation;
+import dr.evomodel.coalescent.BayesianSkylineLikelihood;
 import dr.evomodel.coalescent.CoalescentLikelihood;
 import dr.evomodel.coalescent.demographicmodel.ConstantPopulationModel;
 import dr.evomodel.coalescent.demographicmodel.DemographicModel;
@@ -88,6 +89,7 @@ public class TreePriorXmlBuilder {
     }
 
     public XmlElement buildPrior(
+            BeastXState state,
             TreeModel treeModel,
             AbstractModelLikelihood treePrior
     ) {
@@ -99,7 +101,12 @@ public class TreePriorXmlBuilder {
             return coalescentTreePrior(treeModel, treePrior);
         }
 
-        throw unsupported("Only SpeciationLikelihood and CoalescentLikelihood tree priors are supported.");
+        if (treePrior instanceof BayesianSkylineLikelihood skyline) {
+            return bayesianSkylineTreePrior(state, treeModel, skyline);
+        }
+
+        throw unsupported(
+                "Only SpeciationLikelihood, CoalescentLikelihood and BayesianSkylineLikelihood tree priors are supported.");
     }
 
     private XmlElement yuleModelDefinition(
@@ -494,6 +501,48 @@ public class TreePriorXmlBuilder {
                         XmlElement.element("model")
                                 .withChild(
                                         XmlElement.ref(modelTag, treePriorModelId(treePrior))
+                                )
+                )
+                .withChild(
+                        XmlElement.element("populationTree")
+                                .withChild(treeReference(treeModel))
+                );
+    }
+
+    /** The classic Bayesian skyline, stepwise as in BEAST 3. The group sizes are always fixed. */
+    private XmlElement bayesianSkylineTreePrior(
+            BeastXState state,
+            TreeModel treeModel,
+            BayesianSkylineLikelihood skyline
+    ) {
+        Parameter populationSizes =
+                skyline.getPopSizeParameter();
+
+        return XmlElement.element("generalizedSkyLineLikelihood")
+                .withId(priorId(skyline))
+                .withAttribute("type", "stepwise")
+                .withChild(
+                        XmlElement.element("populationSizes")
+                                .withChild(
+                                        state.stateNodes.containsKey(populationSizes)
+                                                ? parameterReference(populationSizes)
+                                                : inlineParameterDefinition(
+                                                priorId(skyline) + "_populationSizes",
+                                                populationSizes,
+                                                0.0,
+                                                null
+                                        )
+                                )
+                )
+                .withChild(
+                        XmlElement.element("groupSizes")
+                                .withChild(
+                                        inlineParameterDefinition(
+                                                priorId(skyline) + "_groupSizes",
+                                                skyline.getGroupSizeParameter(),
+                                                null,
+                                                null
+                                        )
                                 )
                 )
                 .withChild(

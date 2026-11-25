@@ -1,5 +1,6 @@
 package tiling.xml;
 
+import dr.evomodel.coalescent.BayesianSkylineLikelihood;
 import dr.evomodel.tree.TMRCAStatistic;
 import dr.evomodel.tree.TreeHeightStatistic;
 import dr.evomodel.tree.TreeModel;
@@ -172,10 +173,13 @@ public class XmlPlanBuilder {
                     emittedTaxonIds
             );
 
-            plan.add(
-                    XmlPlan.Section.TREE_PRIOR_MODELS,
-                    treePriorModelDefinition(state, entry.getValue())
-            );
+            // A Bayesian skyline likelihood holds its population sizes itself, with no separate model.
+            if (!(entry.getValue() instanceof BayesianSkylineLikelihood)) {
+                plan.add(
+                        XmlPlan.Section.TREE_PRIOR_MODELS,
+                        treePriorModelDefinition(state, entry.getValue())
+                );
+            }
         }
 
         List<Map.Entry<TreeModel, AbstractModelLikelihood>> observedEntries =
@@ -373,7 +377,7 @@ public class XmlPlanBuilder {
         for (Map.Entry<TreeModel, AbstractModelLikelihood> entry : entries) {
             plan.add(
                     XmlPlan.Section.MCMC_PRIOR,
-                    treePrior(entry.getKey(), entry.getValue())
+                    treePrior(state, entry.getKey(), entry.getValue())
             );
         }
     }
@@ -390,16 +394,17 @@ public class XmlPlanBuilder {
         for (Map.Entry<TreeModel, AbstractModelLikelihood> entry : entries) {
             plan.add(
                     XmlPlan.Section.MCMC_LIKELIHOOD,
-                    treePriorXmlBuilder.buildPrior(entry.getKey(), entry.getValue())
+                    treePriorXmlBuilder.buildPrior(state, entry.getKey(), entry.getValue())
             );
         }
     }
 
     private XmlElement treePrior(
+            BeastXState state,
             TreeModel treeModel,
             AbstractModelLikelihood treePrior
     ) {
-        return treePriorXmlBuilder.buildPrior(treeModel, treePrior);
+        return treePriorXmlBuilder.buildPrior(state, treeModel, treePrior);
     }
 
     private void addOperators(
