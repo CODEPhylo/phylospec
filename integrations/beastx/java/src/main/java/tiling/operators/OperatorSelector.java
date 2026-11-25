@@ -79,8 +79,11 @@ public final class OperatorSelector {
                         parameter,
                         state.operatorConfig.parameterOperatorWeight));
             } else if (hasFiniteBounds(parameter)) {
+                // A reflecting walk is accepted every time under a flat prior, so its adaptive window
+                // grows without limit and the reflected values lose precision, then become NaN.
+                // A walk on the logit scale stays inside the bounds and keeps a finite window.
                 operators.add(parameterOperator(
-                        OperatorSpec.Family.RANDOM_WALK,
+                        OperatorSpec.Family.LOGIT_RANDOM_WALK,
                         parameter,
                         state.operatorConfig.parameterOperatorWeight,
                         state.operatorConfig.randomWalkWindowSize));

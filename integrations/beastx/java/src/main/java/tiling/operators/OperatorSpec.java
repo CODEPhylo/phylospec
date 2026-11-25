@@ -14,6 +14,7 @@ public record OperatorSpec(
     public enum Family {
         SCALE,
         RANDOM_WALK,
+        LOGIT_RANDOM_WALK,
         DELTA_EXCHANGE,
         INTEGER_RANDOM_WALK,
         INTEGER_SWAP,
