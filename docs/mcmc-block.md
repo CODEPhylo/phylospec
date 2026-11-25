@@ -76,7 +76,7 @@ Everything else (e.g. operator settings) should be in a specific engine block (e
 | --------------------- | ------------------ | --------------------------------------------------- |
 | *--engine &lt;id&gt;* | check, export, run | Engine to use: beast3 (default) or beastx.          |
 | *--run-name &lt;name&gt;* | run                | Name of the output files and the run record. Defaults to the name of the model file. |
-| *--seed &lt;n&gt;*    | export, run        | Random seed. If not given, *run* chooses one uniformly and *export* sets none. |
+| *--seed &lt;n&gt;*    | export, run        | Random seed, a positive integer. If not given, *run* chooses one uniformly and *export* sets none. |
 | *--overwrite*         | run                | Replace existing output files and the record of an earlier run with the same name. Without it, existing outputs are never replaced. |
 | *--library &lt;ids&gt;* | check, export, run | Tile libraries to use, in order of preference.    |
 | *--adapter-path &lt;dir&gt;* | check, export, run | Directory of an unpacked adapter to load. Can be repeated. |

@@ -41,7 +41,7 @@ public final class PhyloSpecCli {
               --adapter-path <dir>   check/export/run: unpacked local adapter bundle (repeatable)
               --xml <file>           Export only: destination XML (default log prefix: XML file stem)
               --run-name <name>      Run only: name of the output files (default: script name)
-              --seed <n>             export/run: random seed (default: chosen at random)
+              --seed <n>             export/run: positive random seed (default: chosen at random)
               --overwrite            Run only: replace existing output files and the run record
               --debug                Show raw BEAST console output and failure stack traces
               -h, --help              Show this help
@@ -437,11 +437,11 @@ public final class PhyloSpecCli {
         private static long parseSeed(String value) {
             try {
                 long seed = Long.parseLong(value);
-                if (seed >= 0) return seed;
+                if (seed > 0) return seed;
             } catch (NumberFormatException malformed) {
-                // reported below together with negative seeds
+                // reported below together with seeds that are not positive
             }
-            throw new IllegalArgumentException("--seed requires a non-negative integer.");
+            throw new IllegalArgumentException("--seed requires a positive integer.");
         }
 
         private static String requireValue(String[] arguments, int index, String option) {

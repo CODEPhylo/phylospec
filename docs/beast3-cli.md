@@ -132,7 +132,7 @@ reports the script's seed (`12345`). For this example, look for state 30 in the
 trace and `tree STATE_30` in the tree log. The BEAST X `run.json` records the
 XML's SHA-256 digest, the effective seed and the result files. When rerunning
 the XML with BEAST X, use the recorded seed and a fresh working directory for
-its relative log paths. Supply a positive seed in the script or omit it to let
+its relative log paths. Supply a positive seed with `--seed` or omit it to let
 the managed run select and record one.
 
 `check` validates syntax, static types, and available BEAST mappings. It does not

@@ -53,7 +53,7 @@ public final class RunRecord {
                 Files.writeString(record.directory.resolve("model.phylospec"), source, StandardOpenOption.CREATE_NEW);
 
         ObjectNode initial = JSON.createObjectNode();
-        initial.put("schemaVersion", 1);
+        initial.put("schemaVersion", 2);
         initial.put("status", "preparing");
         initial.put("completionConfirmed", false);
         initial.put(
