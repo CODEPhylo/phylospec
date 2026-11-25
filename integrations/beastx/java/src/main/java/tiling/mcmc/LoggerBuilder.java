@@ -185,6 +185,15 @@ public class LoggerBuilder {
         for (int i = 0; i < loggableNames.size(); i++) {
             String loggableName = loggableNames.get(i);
 
+            // a renamed tree keeps its statistic names (label.height, label.treeLength)
+            // instead of being numbered, as the numbers would not tell the statistics apart
+            TreeModel treeModel = beastState.treeModelsByPhyloSpecName.get(loggableName);
+            if (treeModel != null) {
+                String treeLabel = labels != null ? labels.get(i) : loggableName;
+                loggables.add(TreeStatisticsLoggable.all(treeModel, treeLabel));
+                continue;
+            }
+
             Loggable loggable = findLoggable(beastState, loggableName);
             loggables.add(labels != null
                     ? labelLoggable(loggable, labels.get(i))

@@ -192,15 +192,15 @@ public class LoggerXmlBuilder {
     }
 
     /**
-     * Returns the statistics logged for a tree. Like the columns of a labelled vector, they are
-     * numbered as label.1 and label.2 if a label is given.
+     * Returns the statistics logged for a tree. They are always named after the statistic
+     * (label.height and label.treeLength), as numbering them would hide which one is which.
      */
     private List<XmlElement> getLoggedTreeStatistics(BeastXState state, String treeName, String label) {
         XmlElement height = getLoggedElement(state, treeName + ".height");
         XmlElement treeLength = getLoggedElement(state, treeName + ".treeLength");
 
         if (label == null) return List.of(height, treeLength);
-        return List.of(labelElement(height, label + ".1", 1), labelElement(treeLength, label + ".2", 1));
+        return List.of(labelElement(height, label + ".height", 1), labelElement(treeLength, label + ".treeLength", 1));
     }
 
     /** Returns the name under which a distribution is always logged, resolving the alias of the posterior. */

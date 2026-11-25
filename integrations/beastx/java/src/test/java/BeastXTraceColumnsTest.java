@@ -9,7 +9,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 /**
  * Checks the exact trace columns BEAST X writes, in memory and from the saved XML. They follow the
  * BEAST 3 names: the posterior is called posterior, and the columns of a vector are numbered as
- * name.1, name.2, ...
+ * name.1, name.2, ... A renamed tree keeps
+ * its statistic names (name.height, name.treeLength).
  */
 class BeastXTraceColumnsTest {
 
@@ -47,7 +48,7 @@ class BeastXTraceColumnsTest {
 
     @ParameterizedTest(name = "viaXml={0}")
     @ValueSource(booleans = {false, true})
-    void numbersRenamedTreesLikeVectors(boolean viaXml) throws Exception {
+    void namesRenamedTreeStatistics(boolean viaXml) throws Exception {
         String name = "traceColumnsTree" + (viaXml ? "Xml" : "InMemory");
         Path log = XmlTestSupport.logPath(name);
         String source = TREE_DATA + """
@@ -71,8 +72,8 @@ class BeastXTraceColumnsTest {
                         "posterior",
                         "prior",
                         "likelihood",
-                        "myTree.1",
-                        "myTree.2",
+                        "myTree.height",
+                        "myTree.treeLength",
                         "freq.1",
                         "freq.2",
                         "freq.3"));
