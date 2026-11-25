@@ -105,6 +105,17 @@ public class BeastXSampledStructuralInputsTest {
     }
 
     @Test
+    public void rejectsSampledSkylineGroupSizes() {
+        assertRejected(
+                PRIMATE_TAXA + """
+                Vector<PositiveInteger> groups ~ IID(base=Categorical(probabilities=[0.5, 0.5]), num=2)
+                Tree tree ~ SkylineCoalescent(populationSizes=[1.0, 2.0], groupSizes=groups, taxa=taxa)
+                """,
+                "groupSizes"
+        );
+    }
+
+    @Test
     public void rejectsSampledCompoundChangeTimes() {
         assertRejected(
                 """

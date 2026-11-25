@@ -5,6 +5,8 @@ import tiling.xml.XmlRunner;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class XmlTestSupport {
 
@@ -99,6 +101,30 @@ public final class XmlTestSupport {
                 Files.size(path) > 0,
                 "Expected " + description + " to be non-empty: " + path
         );
+    }
+
+    /** The values of one column of a tab-separated MCMC log. */
+    public static List<Double> readColumn(Path logPath, String column) throws Exception {
+        List<Double> values = new ArrayList<>();
+        int index = -1;
+
+        for (String line : Files.readAllLines(logPath)) {
+            if (line.isBlank() || line.startsWith("#")) {
+                continue;
+            }
+
+            List<String> columns = List.of(line.trim().split("\t"));
+
+            if (index < 0) {
+                index = columns.indexOf(column);
+                Assertions.assertTrue(index >= 0, "Column " + column + " not found in " + logPath);
+                continue;
+            }
+
+            values.add(Double.parseDouble(columns.get(index)));
+        }
+
+        return values;
     }
 
     public static void assertXmlContains(String xml, String expected) {
