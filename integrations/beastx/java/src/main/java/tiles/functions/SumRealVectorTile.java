@@ -2,7 +2,6 @@ package tiles.functions;
 
 import dr.inference.model.Parameter;
 import dr.inference.model.Statistic;
-import dr.inference.model.SumStatistic;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.Real;
 import org.phylospec.tiling.TypeToken;
@@ -11,6 +10,7 @@ import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.types.RealVector;
 import tiling.params.BeastXParam;
 import tiling.rpn.BeastXRPNCalculationResult;
+import tiling.rpn.BeastXSumStatistic;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;
@@ -43,16 +43,10 @@ public class SumRealVectorTile extends GeneratorTile<BeastXRPNCalculationResult,
         String sumId =
                 beastState.getAvailableID("sum");
 
-        // "elementwise" = true makes BEAST X add up the elements of the vector into one value.
-        // With false it returns the vector itself, and the RPN calculation only reads its first element.
-        SumStatistic sumStatistic =
-                new SumStatistic(
-                        sumId,
-                        true,
-                        new double[0]
-                );
+        BeastXSumStatistic sumStatistic =
+                new BeastXSumStatistic(sumId, vectorStatistic);
 
-        sumStatistic.addStatistic(vectorStatistic);
+        sumStatistic.setId(sumId);
 
         return BeastXRPNCalculationResult.from(
                 sumStatistic,

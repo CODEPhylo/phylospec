@@ -16,8 +16,10 @@ import dr.math.distributions.DirichletDistribution;
 import tiling.BeastXModel;
 import tiling.BeastXState;
 import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
+import tiling.rpn.BeastXRPNStatistic;
 import tiling.xml.builders.BranchRateModelXmlBuilder;
 import tiling.xml.builders.CalibrationPriorXmlBuilder;
+import tiling.xml.builders.DerivedValueXmlBuilder;
 import tiling.xml.builders.DirichletPriorXmlBuilder;
 import tiling.xml.builders.LoggerXmlBuilder;
 import tiling.xml.builders.OperatorXmlBuilder;
@@ -66,6 +68,9 @@ public class XmlPlanBuilder {
     private final StateParameterXmlBuilder stateParameterXmlBuilder =
             new StateParameterXmlBuilder();
 
+    private final DerivedValueXmlBuilder derivedValueXmlBuilder =
+            new DerivedValueXmlBuilder();
+
     private final DirichletPriorXmlBuilder dirichletPriorXmlBuilder =
             new DirichletPriorXmlBuilder();
 
@@ -94,7 +99,7 @@ public class XmlPlanBuilder {
         addTreePriors(plan, state);
         addObservedTreeDistributions(plan, state);
         addCalibrationPriors(plan, state);
-        addTreeStatistics(plan, state);
+        addLoggedStatistics(plan, state);
         addOperators(plan, state);
         addLoggers(plan, state);
 
@@ -419,7 +424,7 @@ public class XmlPlanBuilder {
         }
     }
 
-    private void addTreeStatistics(
+    private void addLoggedStatistics(
             XmlPlan plan,
             BeastXState state
     ) {
@@ -427,15 +432,15 @@ public class XmlPlanBuilder {
                 new HashSet<>();
 
         for (BeastXState.ScreenLoggerSpec spec : state.screenLoggerSpecs) {
-            addTreeStatistics(plan, state, spec.parameterNames(), emittedStatisticIds);
+            addLoggedStatistics(plan, state, spec.parameterNames(), emittedStatisticIds);
         }
 
         for (BeastXState.FileLoggerSpec spec : state.fileLoggerSpecs) {
-            addTreeStatistics(plan, state, spec.parameterNames(), emittedStatisticIds);
+            addLoggedStatistics(plan, state, spec.parameterNames(), emittedStatisticIds);
         }
     }
 
-    private void addTreeStatistics(
+    private void addLoggedStatistics(
             XmlPlan plan,
             BeastXState state,
             List<String> loggableNames,
@@ -446,6 +451,15 @@ public class XmlPlanBuilder {
         }
 
         for (String loggableName : loggableNames) {
+            // A value computed from other values, such as Real s = sum(vector=v).
+            if (state.calculationNodesByPhyloSpecName.get(loggableName) instanceof BeastXRPNStatistic rpn) {
+                plan.addAll(
+                        XmlPlan.Section.STATISTICS,
+                        derivedValueXmlBuilder.buildDefinitions(state, rpn, emittedStatisticIds)
+                );
+                continue;
+            }
+
             XmlElement statistic =
                     treeStatistic(state, loggableName);
 

@@ -18,12 +18,20 @@ import org.phylospec.types.RealScalar;
 import org.phylospec.types.RealVector;
 import tiles.BeastXCoreTileLibrary;
 import tiling.BeastXState;
+import tiling.runner.RunMode;
+import tiling.runner.RunnerOptions;
+import tiling.runner.XmlRunnerOptions;
 
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Values of BEAST X functions, checked against what the PhyloSpec reference says they should be.
@@ -132,6 +140,78 @@ public class BeastXFunctionValuesTest {
 
         tree.setNodeHeight(tree.getRoot(), 2.0 * height);
         assertEquals(2.0 * height, rootAge.getStatisticValue(0), 1e-12);
+    }
+
+    /**
+     * Values computed from sampled values (sum, exp, log, sqrt, arithmetic, a computed value of a
+     * computed value, and the root age) are logged in memory and from XML, and in every logged row
+     * each one equals its formula applied to the inputs logged in the same row.
+     */
+    @Test
+    public void computedValuesAreLoggedInMemoryAndFromXml() throws Exception {
+        String model = """
+                Vector<Real> v ~ IID(base=Normal(mean=0.0, sd=1.0), num=3)
+                PositiveReal r ~ LogNormal(logMean=0.0, logSd=0.5)
+                Taxa taxa = taxa(tree=fromNewick("((A:1.0,B:1.0):1.0,C:2.0);"))
+                Tree tree ~ Yule(birthRate=1.0, taxa=taxa)
+                Age root = rootAge(tree=tree)
+                Real s = sum(vector=v)
+                Real k = s / 4.0
+                Real m = 2.0 * r + 1.0
+                Real e = exp(x=r)
+                Real l = log(x=r, base=2)
+                Real q = sqrt(x=r)
+                Real n = -r
+                Real h = rootAge(tree=tree) * 2.0
+                Real u = sum(vector=[1.0, 2.0]) + r
+                """;
+
+        for (boolean viaXml : new boolean[]{false, true}) {
+            String runName = "computedValues" + (viaXml ? "Xml" : "InMemory");
+            Path logPath = XmlTestSupport.logPath(runName);
+            XmlTestSupport.prepare(logPath);
+
+            PhyloSpecRunner runner = new PhyloSpecRunner(model + """
+
+                    mcmc {
+                        Integer chainLength = 20000
+                        Integer randomSeed = 7
+                        Logger fileLogger = fileLogger(logEvery=100, file="%s", parameters=[v, r, root, s, k, m, e, l, q, n, h, u])
+                    }
+                    """.formatted(XmlTestSupport.unixPath(logPath)));
+
+            if (viaXml) {
+                Path xmlPath = XmlTestSupport.xmlPath(runName);
+                XmlTestSupport.prepare(xmlPath);
+                runner.executeXmlRun(XmlRunnerOptions.builder(runName, xmlPath).build());
+            } else {
+                runner.run(RunnerOptions.builder(runName).mode(RunMode.EXECUTE_MCMC).build());
+            }
+
+            Map<String, List<Double>> log = new HashMap<>();
+            for (String column : List.of("v1", "v2", "v3", "r", "root", "s", "k", "m", "e", "l", "q", "n", "h", "u")) {
+                log.put(column, XmlTestSupport.readColumn(logPath, column));
+            }
+
+            // The inputs must move, or the check would only see the starting values.
+            assertTrue(new HashSet<>(log.get("r")).size() > 10, runName + ": r did not move");
+
+            for (int row = 0; row < log.get("r").size(); row++) {
+                double r = log.get("r").get(row);
+                double sum = log.get("v1").get(row) + log.get("v2").get(row) + log.get("v3").get(row);
+                String at = runName + ", row " + row + ": ";
+
+                assertEquals(sum, log.get("s").get(row), 1e-9, at + "s");
+                assertEquals(sum / 4.0, log.get("k").get(row), 1e-9, at + "k");
+                assertEquals(2.0 * r + 1.0, log.get("m").get(row), 1e-9, at + "m");
+                assertEquals(Math.exp(r), log.get("e").get(row), 1e-9, at + "e");
+                assertEquals(Math.log(r) / Math.log(2.0), log.get("l").get(row), 1e-9, at + "l");
+                assertEquals(Math.sqrt(r), log.get("q").get(row), 1e-9, at + "q");
+                assertEquals(-r, log.get("n").get(row), 1e-9, at + "n");
+                assertEquals(2.0 * log.get("root").get(row), log.get("h").get(row), 1e-9, at + "h");
+                assertEquals(3.0 + r, log.get("u").get(row), 1e-9, at + "u");
+            }
+        }
     }
 
     private static double statistic(BeastXState state, String name) {

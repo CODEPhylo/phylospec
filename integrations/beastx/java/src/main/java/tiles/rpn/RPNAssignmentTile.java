@@ -7,6 +7,7 @@ import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.tiles.AstNodeTile;
 import org.phylospec.tiling.tiles.TilePriority;
 import tiling.rpn.BeastXRPNCalculationResult;
+import tiling.rpn.BeastXRPNStatistic;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;
@@ -30,11 +31,10 @@ public class RPNAssignmentTile extends AstNodeTile<BeastXRPNCalculationResult, S
         String id =
                 this.getId(this.getRootNode().name, indexVariables, "");
 
-        RPNcalculatorStatistic statistic =
-                new RPNcalculatorStatistic(
+        BeastXRPNStatistic statistic =
+                new BeastXRPNStatistic(
                         id,
-                        new String[]{calculationResult.calculation()},
-                        new String[]{id},
+                        calculationResult.calculation(),
                         calculationResult.variables()
                 );
 
