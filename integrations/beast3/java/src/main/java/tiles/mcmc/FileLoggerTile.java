@@ -10,7 +10,6 @@ import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.LoggerSpec;
 import org.phylospec.tiling.mcmc.OutputPaths;
 import org.phylospec.tiling.tiles.TemplateTile;
-import org.phylospec.tiling.tiles.TileInput;
 import org.phylospec.typeresolver.Stochasticity;
 
 /// Matches a `fileLogger(...)` declaration in the `mcmc` block and registers a
@@ -34,7 +33,8 @@ public class FileLoggerTile extends TemplateTile<Void, BEASTState> {
             new TemplateTileInput<>("$$fileName", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
     public TemplateTileInput<Integer, BEASTState> logEveryInput =
             new TemplateTileInput<>("$$logEvery", false, Set.of(Stochasticity.CONSTANT));
-    public TileInput<List<BEASTObject>, BEASTState> parametersInput = new LoggerParametersInput("$$parameters");
+    public TemplateTileInput<List<? extends BEASTObject>, BEASTState> parametersInput =
+            new TemplateTileInput<>("$$parameters", false);
     public TemplateTileInput<List<String>, BEASTState> parameterNamesInput =
             new TemplateTileInput<>("$$parameterNames", false, Set.of(Stochasticity.CONSTANT));
 
@@ -43,7 +43,8 @@ public class FileLoggerTile extends TemplateTile<Void, BEASTState> {
         String fileName = this.fileNameInput.apply(state, indexVariables);
         fileName = state.resolveOutputPath(fileName != null ? fileName : OutputPaths.getLogFile(state.outputPrefix));
         Integer logEvery = this.logEveryInput.apply(state, indexVariables);
-        List<BEASTObject> parameters = this.parametersInput.apply(state, indexVariables);
+        @SuppressWarnings("unchecked")
+        List<BEASTObject> parameters = (List<BEASTObject>) this.parametersInput.apply(state, indexVariables);
         List<String> parameterNames = this.parameterNamesInput.apply(state, indexVariables);
 
         state.addFileLoggerSpec(new FileLoggerSpec<>(
