@@ -109,17 +109,24 @@ public class LoggerSelector {
 
     /**
      * Returns the objects a screen or file logger logs for the given parameters. Without parameters,
-     * these are all loggable objects of the state. Parameters with a name are logged under that name.
+     * these are all loggable objects of the state. A tree is logged as its height and length.
+     * Parameters with a name are logged under that name.
      */
     private static List<BEASTObject> getLoggedParameters(
             List<BEASTObject> parameters, List<String> parameterNames, BEASTState beastState) {
         if (parameters == null) return getLoggableObjects(beastState);
-        if (parameterNames == null) return parameters;
+
+        // a tree itself would write newick strings into the trace
+        List<BEASTObject> loggables = new ArrayList<>();
+        for (BEASTObject parameter : parameters) {
+            loggables.add(parameter instanceof Tree tree ? getTreeStatistics(tree, beastState) : parameter);
+        }
+        if (parameterNames == null) return loggables;
 
         List<BEASTObject> renamedParameters = new ArrayList<>();
-        for (int i = 0; i < parameters.size(); i++) {
+        for (int i = 0; i < loggables.size(); i++) {
             RenamedLoggable renamedParameter = new RenamedLoggable();
-            beastState.setInput(renamedParameter, renamedParameter.loggableInput, parameters.get(i));
+            beastState.setInput(renamedParameter, renamedParameter.loggableInput, loggables.get(i));
             beastState.setInput(renamedParameter, renamedParameter.labelInput, parameterNames.get(i));
             renamedParameters.add(renamedParameter);
         }
@@ -159,9 +166,7 @@ public class LoggerSelector {
             }
 
             if (object instanceof Tree tree) {
-                TreeStatLogger treeStatLogger = new TreeStatLogger();
-                beastState.setInput(treeStatLogger, treeStatLogger.treeInput, tree);
-                loggables.add(treeStatLogger);
+                loggables.add(getTreeStatistics(tree, beastState));
             }
         }
         for (BEASTObject object : beastState.calculationNodes.keySet()) {
@@ -171,6 +176,13 @@ public class LoggerSelector {
         }
 
         return loggables;
+    }
+
+    /** Returns a loggable that logs the height and the length of a tree. */
+    private static TreeStatLogger getTreeStatistics(Tree tree, BEASTState beastState) {
+        TreeStatLogger treeStatLogger = new TreeStatLogger();
+        beastState.setInput(treeStatLogger, treeStatLogger.treeInput, tree);
+        return treeStatLogger;
     }
 
     /**

@@ -628,6 +628,20 @@ public class PhyloSpecCliTest {
     }
 
     @Test
+    void aTreeInTheTraceIsLoggedAsItsHeightAndLength(@TempDir Path directory) throws Exception {
+        Path source = writeModel(directory, "Logger log = fileLogger(file=\"trace.log\", parameters=[tree])");
+        CliResult result = launch(directory, "run", source.toString());
+
+        assertEquals(0, result.exitCode(), result.stderr());
+        Path trace = directory.resolve("trace.log");
+        assertTrace(trace);
+        String log = Files.readString(trace);
+        assertTrue(log.contains("tree.height\ttree.treeLength"), log);
+        assertFalse(log.contains("STATE_"), log);
+        assertFalse(log.contains("#NEXUS"), log);
+    }
+
+    @Test
     void staticFailureDoesNotCreateARunDirectory(@TempDir Path directory) throws Exception {
         Path source = directory.resolve("invalid.phylospec");
         Files.writeString(source, "Integer value = \"wrong\"");

@@ -208,6 +208,45 @@ public class LoggerTest {
     }
 
     @Test
+    public void testTreesAreLoggedAsTheirHeightAndLength() {
+        Built built = tile(MODEL + """
+                                mcmc {
+                                    Logger screen = screenLogger(parameters=[tree])
+                                    Logger file = fileLogger(file="out.log", parameters=[birthRate, tree])
+                                    Logger named = fileLogger(
+                                        file="named.log", parameters=[tree], parameterNames=["myTree"]
+                                    )
+                                }
+                                """);
+
+        List<Logger> loggers = buildLoggers(built);
+        built.state().initializeBEASTObjects();
+
+        assertEquals(
+                "tree.height\ttree.treeLength",
+                header(loggers.get(0).loggersInput.get().get(3)));
+        List<BEASTObject> file = loggables(this.getLogger(loggers, "out.log"));
+        assertEquals("birthRate", file.get(3).getID());
+        assertEquals("tree.height\ttree.treeLength", header(file.get(4)));
+        assertEquals(
+                "myTree.1\tmyTree.2",
+                header(loggables(this.getLogger(loggers, "named.log")).get(3)));
+    }
+
+    private Logger getLogger(List<Logger> loggers, String fileName) {
+        return loggers.stream()
+                .filter(logger -> fileName.equals(fileName(logger)))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private static String header(BEASTObject loggable) {
+        ByteArrayOutputStream header = new ByteArrayOutputStream();
+        ((Loggable) loggable).init(new PrintStream(header));
+        return header.toString().trim();
+    }
+
+    @Test
     public void testParameterNamesHaveToMatchTheParameters() {
         TileApplicationError error = assertThrows(TileApplicationError.class, () -> tile(MODEL + """
                                 mcmc {
