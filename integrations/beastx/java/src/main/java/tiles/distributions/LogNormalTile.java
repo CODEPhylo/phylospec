@@ -25,8 +25,8 @@ public class LogNormalTile extends GeneratorTile<
         return "LogNormal";
     }
 
-    GeneratorTileInput<RealScalar<Real>, BeastXState> logMeanInput =
-            new GeneratorTileInput<>("logMean");
+    GeneratorTileInput<RealScalar<? extends Real>, BeastXState> logMeanInput =
+            new RealArgumentInput("logMean");
 
     GeneratorTileInput<RealScalar<PositiveReal>, BeastXState> logSdInput =
             new GeneratorTileInput<>("logSd");
@@ -36,7 +36,7 @@ public class LogNormalTile extends GeneratorTile<
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
-        RealScalar<Real> logMean =
+        RealScalar<? extends Real> logMean =
                 this.logMeanInput.apply(beastState, indexVariables);
 
         RealScalar<PositiveReal> logSd =
