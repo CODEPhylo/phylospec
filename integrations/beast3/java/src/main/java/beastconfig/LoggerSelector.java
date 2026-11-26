@@ -44,9 +44,7 @@ public class LoggerSelector {
 
         if (!loggableTrees.isEmpty() && beastState.treeLoggerSpecs.isEmpty()) {
             for (Tree tree : loggableTrees) {
-                String fileName = loggableTrees.size() == 1
-                        ? OutputPaths.getTreeFile(beastState.outputPrefix)
-                        : OutputPaths.getTreeFile(beastState.outputPrefix, tree.getID());
+                String fileName = OutputPaths.getTreeFile(beastState.outputPrefix, tree.getID(), loggableTrees.size());
                 beastState.addTreeLoggerSpec(new TreeLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, fileName, tree));
             }
         }

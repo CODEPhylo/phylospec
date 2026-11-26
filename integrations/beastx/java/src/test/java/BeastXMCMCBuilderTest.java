@@ -397,6 +397,28 @@ public class BeastXMCMCBuilderTest {
     }
 
     @Test
+    public void treeLoggersWithoutFileGetOneFilePerTree() throws Exception {
+        String source = """
+            Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
+            Taxa taxa = taxa(data)
+
+            Tree first ~ Yule(birthRate=1.0, taxa=taxa)
+            Tree second ~ Yule(birthRate=1.0, taxa=taxa)
+
+            mcmc {
+                Logger firstLogger = treeLogger(tree=first)
+                Logger secondLogger = treeLogger(tree=second)
+            }
+            """;
+
+        BeastXState state = new PhyloSpecRunner(source).buildState("test");
+
+        assertEquals(
+                List.of("test-first.trees", "test-second.trees"),
+                state.treeLoggerSpecs.stream().map(spec -> spec.fileName()).sorted().toList());
+    }
+
+    @Test
     public void buildsTreeLoggerForSelectedTree() throws Exception {
         String source = """
             Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")

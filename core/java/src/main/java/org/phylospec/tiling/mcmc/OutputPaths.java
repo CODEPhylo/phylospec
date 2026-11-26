@@ -48,6 +48,15 @@ public final class OutputPaths {
         return prefix + "-" + treeName + ".trees";
     }
 
+    /**
+     * Returns the default tree file of a tree. A model with a single tree writes it to
+     * {@code <prefix>.trees}, a model with several trees to {@code <prefix>-<tree>.trees} each, so
+     * that their files do not clash.
+     */
+    public static String getTreeFile(String prefix, String treeName, int treeCount) {
+        return treeCount == 1 ? getTreeFile(prefix) : getTreeFile(prefix, treeName);
+    }
+
     public static String getStateFile(String prefix) {
         return prefix + ".state.xml";
     }

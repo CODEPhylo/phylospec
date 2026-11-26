@@ -46,6 +46,7 @@ public class BEASTState {
     public final List<ScreenLoggerSpec<BEASTObject>> screenLoggerSpecs;
     public final List<FileLoggerSpec<BEASTObject>> fileLoggerSpecs;
     public final List<TreeLoggerSpec<Tree>> treeLoggerSpecs;
+    private final List<Integer> defaultFileTreeLoggerIndices = new ArrayList<>();
 
     /// The loggers built from the specs, cached so that they are only built once.
     private List<beast.base.inference.Logger> builtLoggers;
@@ -355,6 +356,25 @@ public class BEASTState {
      */
     public void addTreeLoggerSpec(TreeLoggerSpec<Tree> logger) {
         this.treeLoggerSpecs.add(logger);
+    }
+
+    /**
+     * Adds a tree logger which writes to the default tree file. As soon as several loggers use
+     * the default, each of them writes to the file of its tree instead, so that they do not clash.
+     */
+    public void addTreeLoggerSpecWithDefaultFile(int logEvery, Tree tree) {
+        this.defaultFileTreeLoggerIndices.add(this.treeLoggerSpecs.size());
+        this.treeLoggerSpecs.add(new TreeLoggerSpec<>(
+                logEvery, this.resolveOutputPath(OutputPaths.getTreeFile(this.outputPrefix)), tree));
+
+        int count = this.defaultFileTreeLoggerIndices.size();
+        for (int index : this.defaultFileTreeLoggerIndices) {
+            TreeLoggerSpec<Tree> spec = this.treeLoggerSpecs.get(index);
+            String fileName =
+                    OutputPaths.getTreeFile(this.outputPrefix, spec.tree().getID(), count);
+            this.treeLoggerSpecs.set(
+                    index, new TreeLoggerSpec<>(spec.logEvery(), this.resolveOutputPath(fileName), spec.tree()));
+        }
     }
 
     /**

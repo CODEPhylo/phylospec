@@ -79,6 +79,7 @@ public class BeastXState {
     public final List<ScreenLoggerSpec<String>> screenLoggerSpecs;
     public final List<FileLoggerSpec<String>> fileLoggerSpecs;
     public final List<TreeLoggerSpec<String>> treeLoggerSpecs;
+    private final List<Integer> defaultFileTreeLoggerIndices = new ArrayList<>();
 
     public final OperatorConfig operatorConfig;
     public final XmlPlan xmlPlan;
@@ -411,7 +412,7 @@ public class BeastXState {
 
         List<String> trees = this.treeModelsByPhyloSpecName.keySet().stream().sorted().toList();
         for (String tree : trees) {
-            String fileName = trees.size() == 1 ? OutputPaths.getTreeFile(prefix) : OutputPaths.getTreeFile(prefix, tree);
+            String fileName = OutputPaths.getTreeFile(prefix, tree, trees.size());
             specs.add(new TreeLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, fileName, tree));
         }
 
@@ -428,6 +429,22 @@ public class BeastXState {
 
     public void addTreeLoggerSpec(TreeLoggerSpec<String> spec) {
         this.treeLoggerSpecs.add(spec);
+    }
+
+    /**
+     * Adds a tree logger which writes to the default tree file. As soon as several loggers use
+     * the default, each of them writes to the file of its tree instead, so that they do not clash.
+     */
+    public void addTreeLoggerSpecWithDefaultFile(int logEvery, String treeName) {
+        this.defaultFileTreeLoggerIndices.add(this.treeLoggerSpecs.size());
+        this.treeLoggerSpecs.add(new TreeLoggerSpec<>(logEvery, OutputPaths.getTreeFile(this.getOutputPrefix()), treeName));
+
+        int count = this.defaultFileTreeLoggerIndices.size();
+        for (int index : this.defaultFileTreeLoggerIndices) {
+            TreeLoggerSpec<String> spec = this.treeLoggerSpecs.get(index);
+            String fileName = OutputPaths.getTreeFile(this.getOutputPrefix(), spec.tree(), count);
+            this.treeLoggerSpecs.set(index, new TreeLoggerSpec<>(spec.logEvery(), fileName, spec.tree()));
+        }
     }
 
     /** Returns the PhyloSpec name under which the given tree is registered, or null if it is not. */

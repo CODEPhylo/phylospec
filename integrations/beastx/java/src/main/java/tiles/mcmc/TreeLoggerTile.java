@@ -4,7 +4,6 @@ import dr.evomodel.tree.TreeModel;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.mcmc.LoggerSpec;
-import org.phylospec.tiling.mcmc.OutputPaths;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.typeresolver.Stochasticity;
@@ -38,7 +37,6 @@ public class TreeLoggerTile extends TemplateTile<Void, BeastXState> {
     @Override
     protected Void applyTile(BeastXState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         String fileName = this.fileNameInput.apply(beastState, indexVariables);
-        if (fileName == null) fileName = OutputPaths.getTreeFile(beastState.getOutputPrefix());
         TreeModel tree = this.treeInput.apply(beastState, indexVariables);
         Integer logEvery = this.logEveryInput.apply(beastState, indexVariables);
 
@@ -50,8 +48,12 @@ public class TreeLoggerTile extends TemplateTile<Void, BeastXState> {
                     "Pass a tree that has a prior, for example tree=tree with `Tree tree ~ Yule(...)`.");
         }
 
-        beastState.addTreeLoggerSpec(new TreeLoggerSpec<>(
-                logEvery != null ? logEvery : LoggerSpec.DEFAULT_LOG_EVERY, fileName, treeName));
+        int effectiveLogEvery = logEvery != null ? logEvery : LoggerSpec.DEFAULT_LOG_EVERY;
+        if (fileName == null) {
+            beastState.addTreeLoggerSpecWithDefaultFile(effectiveLogEvery, treeName);
+        } else {
+            beastState.addTreeLoggerSpec(new TreeLoggerSpec<>(effectiveLogEvery, fileName, treeName));
+        }
 
         return null;
     }

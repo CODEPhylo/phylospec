@@ -6,7 +6,6 @@ import java.util.IdentityHashMap;
 import java.util.Set;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.mcmc.LoggerSpec;
-import org.phylospec.tiling.mcmc.OutputPaths;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import org.phylospec.tiling.tiles.TemplateTile;
 import org.phylospec.typeresolver.Stochasticity;
@@ -36,12 +35,15 @@ public class TreeLoggerTile extends TemplateTile<Void, BEASTState> {
     @Override
     protected Void applyTile(BEASTState state, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
         String fileName = this.fileNameInput.apply(state, indexVariables);
-        fileName = state.resolveOutputPath(fileName != null ? fileName : OutputPaths.getTreeFile(state.outputPrefix));
         Tree tree = this.treeInput.apply(state, indexVariables);
         Integer logEvery = this.logEveryInput.apply(state, indexVariables);
 
-        state.addTreeLoggerSpec(
-                new TreeLoggerSpec<>(logEvery != null ? logEvery : LoggerSpec.DEFAULT_LOG_EVERY, fileName, tree));
+        int effectiveLogEvery = logEvery != null ? logEvery : LoggerSpec.DEFAULT_LOG_EVERY;
+        if (fileName == null) {
+            state.addTreeLoggerSpecWithDefaultFile(effectiveLogEvery, tree);
+        } else {
+            state.addTreeLoggerSpec(new TreeLoggerSpec<>(effectiveLogEvery, state.resolveOutputPath(fileName), tree));
+        }
 
         return null;
     }
