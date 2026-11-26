@@ -1,14 +1,13 @@
 package tiles.trees;
 
 import dr.evomodel.coalescent.demographicmodel.DemographicModel;
-import dr.inference.model.Parameter;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.NonNegativeReal;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.domain.Real;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
-import tiling.params.BeastXRealScalarParam;
+import tiling.params.BeastXParameters;
 import tiling.BeastXState;
 import tiling.population.BeastXLogisticPopulationModel;
 
@@ -46,17 +45,9 @@ public class LogisticPopulationFunctionTile extends GeneratorTile<DemographicMod
 
         return new BeastXLogisticPopulationModel(
                 "logisticPopulation",
-                toParameter(carryingCapacity),
-                toParameter(growthRate),
-                toParameter(inflectionAge)
+                BeastXParameters.toParameter(carryingCapacity),
+                BeastXParameters.toParameter(growthRate),
+                BeastXParameters.toParameter(inflectionAge)
         );
-    }
-
-    private static Parameter toParameter(RealScalar<?> scalar) {
-        if (scalar instanceof BeastXRealScalarParam<?> beastXScalar) {
-            return beastXScalar.getParameter();
-        }
-
-        return new Parameter.Default(scalar.get());
     }
 }

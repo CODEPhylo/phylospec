@@ -1,4 +1,8 @@
+import dr.inference.model.Likelihood;
+import dr.inference.model.Parameter;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import tiling.BeastXState;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -12,6 +16,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * value during MCMC, so these models must be rejected with a clear error.
  */
 public class BeastXSampledStructuralInputsTest {
+
+    private static final String THREE_TAXA_TREE = """
+            Alignment data = fromNexus("src/test/java/resources/three-taxa.nex")
+            Taxa taxa = taxa(data)
+            Tree tree ~ Yule(birthRate=1.0, taxa=taxa)
+            """;
 
     private static final String PRIMATE_TAXA = """
             Alignment data = fromNexus("src/test/java/resources/primate-mtDNA.nex")
@@ -160,6 +170,43 @@ public class BeastXSampledStructuralInputsTest {
                 """).buildState("fixedIndex");
 
         assertTrue(state.stateNodesByPhyloSpecName.containsKey("b"));
+    }
+
+    /**
+     * rootAge, mrca and age of a sampled tree change during MCMC. Where BEAST X copies a value
+     * into a new parameter, these would stay at their starting value, so they are rejected.
+     */
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "Real x ~ Normal(mean=rootAge(tree=tree), sd=1.0)",
+            "Real x ~ Offset(base=Normal(mean=0.0, sd=1.0), offset=rootAge(tree=tree))",
+            "Age h = rootAge(tree=tree)\nReal x ~ Offset(base=Normal(mean=0.0, sd=1.0), offset=h)",
+            "PopulationFunction f = exponentialPopulationFunction(populationSize=3.0, growthRate=rootAge(tree=tree))\n"
+                    + "Tree x ~ Coalescent(populationSize=f, taxa=taxa)",
+            "PopulationFunction f = logisticPopulationFunction(carryingCapacity=3.0, growthRate=0.5, "
+                    + "inflectionAge=mrca(clade=[\"A\", \"B\"], tree=tree))\n"
+                    + "Tree x ~ Coalescent(populationSize=f, taxa=taxa)",
+            "Alignment x ~ PhyloCTMC(tree=tree, qMatrix=jc69(), rate=mrca(clade=[\"A\", \"B\"], tree=tree)) observed as data"
+    })
+    public void rejectsValueComputedFromSampledTree(String statements) {
+        assertRejected(THREE_TAXA_TREE + statements, "computed from a sampled tree");
+    }
+
+    /** The root age of a fixed tree does not change, so it can still be used as a value. */
+    @Test
+    public void acceptsRootAgeOfFixedTree() throws Exception {
+        BeastXState state = new PhyloSpecRunner("""
+                Tree tree = fromNewick(newickString="((A:1.0,B:1.0):0.5,C:1.5);")
+                Real x ~ Offset(base=Normal(mean=0.0, sd=1.0), offset=rootAge(tree=tree))
+                """).buildState("fixedTreeRootAge");
+
+        Parameter x = state.stateNodesByPhyloSpecName.get("x");
+        Likelihood prior = state.priorDistributions.get(x);
+        x.setParameterValue(0, 1.5);
+        prior.makeDirty();
+
+        // The root age is 1.5, so x = 1.5 is shifted to 0, the mean of Normal(0, 1).
+        assertEquals(-0.5 * Math.log(2.0 * Math.PI), prior.getLogLikelihood(), 1e-12);
     }
 
     private static void assertRejected(String source, String... expectedMessageParts) {

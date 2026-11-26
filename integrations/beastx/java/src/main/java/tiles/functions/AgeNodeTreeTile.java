@@ -76,7 +76,8 @@ public class AgeNodeTreeTile extends GeneratorTile<RealScalar<NonNegativeReal>, 
 
         return new BeastXStatisticRealScalar<>(
                 statistic,
-                NonNegativeReal.INSTANCE
+                NonNegativeReal.INSTANCE,
+                beastState.treePriorDistributions.containsKey(tree)
         );
     }
 }

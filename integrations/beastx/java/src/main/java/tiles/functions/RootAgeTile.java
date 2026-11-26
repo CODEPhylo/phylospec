@@ -56,7 +56,8 @@ public class RootAgeTile extends GeneratorTile<RealScalar<NonNegativeReal>, Beas
 
         return new BeastXStatisticRealScalar<>(
                 statistic,
-                NonNegativeReal.INSTANCE
+                NonNegativeReal.INSTANCE,
+                beastState.treePriorDistributions.containsKey(tree)
         );
     }
 }

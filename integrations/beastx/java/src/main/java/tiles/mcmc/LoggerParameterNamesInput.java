@@ -4,11 +4,13 @@ import org.phylospec.Utils;
 import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.tiling.errors.InconsistentTilingException;
 import org.phylospec.tiling.tiles.TileInput;
 import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import tiling.BeastXState;
+import tiling.WiredInputs;
 
 import java.util.EnumSet;
 import java.util.ArrayList;
@@ -137,6 +139,11 @@ public class LoggerParameterNamesInput extends TileInput<LoggerParameterNames, B
         ) {
             this.names = List.copyOf(names);
             this.inputTiles = List.copyOf(inputTiles);
+        }
+
+        @Override
+        public Map<AstNode, Tile<?, ?>> getWiredUpInputs() throws InconsistentTilingException {
+            return WiredInputs.of(this.inputTiles);
         }
 
         @Override

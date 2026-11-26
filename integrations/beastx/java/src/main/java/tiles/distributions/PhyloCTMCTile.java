@@ -21,7 +21,7 @@ import org.phylospec.types.RealScalar;
 import tiling.BeastXState;
 import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
 import tiling.model.UnboundDistribution;
-import tiling.params.BeastXRealScalarParam;
+import tiling.params.BeastXParameters;
 
 import java.util.IdentityHashMap;
 
@@ -75,7 +75,7 @@ public class PhyloCTMCTile extends GeneratorTile<
         Parameter relativeRateParameter =
                 rate == null
                         ? new Parameter.Default(1.0)
-                        : toParameter(rate);
+                        : BeastXParameters.toParameter(rate);
 
         GammaSiteRateModel siteRateModel =
                 partialSiteRateModel != null
@@ -115,14 +115,6 @@ public class PhyloCTMCTile extends GeneratorTile<
 
             beastState.addLikelihoodDistribution(likelihoodSpec, id);
         });
-    }
-
-    private static Parameter toParameter(RealScalar<? extends NonNegativeReal> scalar) {
-        if (scalar instanceof BeastXRealScalarParam<?> beastXScalar) {
-            return beastXScalar.getParameter();
-        }
-
-        return new Parameter.Default(scalar.get());
     }
 
     private Alignment observedAlignmentForSubstitutionModel(

@@ -5,12 +5,14 @@ import org.phylospec.ast.AstNode;
 import org.phylospec.ast.Expr;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.tiling.errors.InconsistentTilingException;
 import org.phylospec.tiling.tiles.AstNodeTile;
 import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.typeresolver.Stochasticity;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.VariableResolver;
 import tiling.BeastXState;
+import tiling.WiredInputs;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -117,6 +119,11 @@ public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array, BeastX
         }
 
         return vectorTiles;
+    }
+
+    @Override
+    public Map<AstNode, Tile<?, ?>> getWiredUpInputs() throws InconsistentTilingException {
+        return WiredInputs.of(this.inputTiles);
     }
 
     @Override

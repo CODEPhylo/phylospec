@@ -25,8 +25,8 @@ public class NormalTile extends GeneratorTile<
         return "Normal";
     }
 
-    GeneratorTileInput<RealScalar<Real>, BeastXState> meanInput =
-            new GeneratorTileInput<>("mean");
+    GeneratorTileInput<RealScalar<? extends Real>, BeastXState> meanInput =
+            new RealArgumentInput("mean");
 
     GeneratorTileInput<RealScalar<PositiveReal>, BeastXState> sdInput =
             new GeneratorTileInput<>("sd");
@@ -36,7 +36,7 @@ public class NormalTile extends GeneratorTile<
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
-        RealScalar<Real> mean =
+        RealScalar<? extends Real> mean =
                 this.meanInput.apply(beastState, indexVariables);
 
         RealScalar<PositiveReal> sd =

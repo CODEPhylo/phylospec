@@ -26,21 +26,21 @@ public class UniformTile extends GeneratorTile<
         return "Uniform";
     }
 
-    GeneratorTileInput<RealScalar<Real>, BeastXState> lowerInput =
-            new GeneratorTileInput<>("lower");
+    GeneratorTileInput<RealScalar<? extends Real>, BeastXState> lowerInput =
+            new RealArgumentInput("lower");
 
-    GeneratorTileInput<RealScalar<Real>, BeastXState> upperInput =
-            new GeneratorTileInput<>("upper");
+    GeneratorTileInput<RealScalar<? extends Real>, BeastXState> upperInput =
+            new RealArgumentInput("upper");
 
     @Override
     public BoundDistribution<BeastXRealScalarParam<Real>, DistributionLikelihood> applyTile(
             BeastXState beastState,
             IdentityHashMap<Expr.Variable, Integer> indexVariables
     ) {
-        RealScalar<Real> lower =
+        RealScalar<? extends Real> lower =
                 this.lowerInput.apply(beastState, indexVariables);
 
-        RealScalar<Real> upper =
+        RealScalar<? extends Real> upper =
                 this.upperInput.apply(beastState, indexVariables);
 
         if (lower.get() > upper.get()) {

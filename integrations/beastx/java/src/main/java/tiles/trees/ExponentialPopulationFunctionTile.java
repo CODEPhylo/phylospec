@@ -3,13 +3,12 @@ package tiles.trees;
 import dr.evolution.util.Units;
 import dr.evomodel.coalescent.demographicmodel.DemographicModel;
 import dr.evomodel.coalescent.demographicmodel.ExponentialGrowthModel;
-import dr.inference.model.Parameter;
 import org.phylospec.ast.Expr;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.domain.Real;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
-import tiling.params.BeastXRealScalarParam;
+import tiling.params.BeastXParameters;
 import tiling.BeastXState;
 
 import java.util.IdentityHashMap;
@@ -40,18 +39,10 @@ public class ExponentialPopulationFunctionTile extends GeneratorTile<Demographic
 
         return new ExponentialGrowthModel(
                 "exponentialPopulation",
-                toParameter(populationSize),
-                toParameter(growthRate),
+                BeastXParameters.toParameter(populationSize),
+                BeastXParameters.toParameter(growthRate),
                 Units.Type.YEARS,
                 true
         );
-    }
-
-    private static Parameter toParameter(RealScalar<?> scalar) {
-        if (scalar instanceof BeastXRealScalarParam<?> beastXScalar) {
-            return beastXScalar.getParameter();
-        }
-
-        return new Parameter.Default(scalar.get());
     }
 }
