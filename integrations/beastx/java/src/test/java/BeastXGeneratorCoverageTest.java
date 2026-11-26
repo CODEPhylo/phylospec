@@ -64,6 +64,14 @@ public class BeastXGeneratorCoverageTest {
                         """,
                         state(Map.of("x", 1.5, "m", 0.5, "s", 0.8), logNormal(1.5, 0.5, 0.8)),
                         state(Map.of("x", 1.5, "m", -0.3, "s", 1.4), logNormal(1.5, -0.3, 1.4))),
+                // A sampled variable of a subtype of Real (here a Probability) is also a valid logMean.
+                row("LogNormal(logMean, logSd), sampled Probability logMean",
+                        """
+                        Probability q ~ Beta(alpha=2.0, beta=2.0)
+                        PositiveReal x ~ LogNormal(logMean=q, logSd=0.8)
+                        """,
+                        state(Map.of("x", 1.5, "q", 0.3), logNormal(1.5, 0.3, 0.8)),
+                        state(Map.of("x", 1.5, "q", 0.9), logNormal(1.5, 0.9, 0.8))),
                 row("LogNormal(mean, logSd), fixed",
                         "PositiveReal x ~ LogNormal(mean=2.0, logSd=0.5)",
                         state(Map.of("x", 1.5), logNormalWithMean(1.5, 2.0, 0.5)),
@@ -115,6 +123,13 @@ public class BeastXGeneratorCoverageTest {
                         """,
                         state(Map.of("x", 1.0, "m", 0.5, "s", 2.0), normal(1.0, 0.5, 2.0)),
                         state(Map.of("x", 1.0, "m", -1.0, "s", 0.7), normal(1.0, -1.0, 0.7))),
+                row("Normal, sampled PositiveReal mean",
+                        """
+                        PositiveReal a ~ LogNormal(logMean=0.0, logSd=0.5)
+                        Real x ~ Normal(mean=a, sd=2.0)
+                        """,
+                        state(Map.of("x", 1.0, "a", 0.5), normal(1.0, 0.5, 2.0)),
+                        state(Map.of("x", 1.0, "a", 3.0), normal(1.0, 3.0, 2.0))),
                 row("Gamma, fixed",
                         "PositiveReal x ~ Gamma(shape=2.0, rate=3.0)",
                         state(Map.of("x", 0.5), gamma(0.5, 2.0, 3.0)),
@@ -151,6 +166,14 @@ public class BeastXGeneratorCoverageTest {
                         """,
                         state(Map.of("x", 1.0, "l", 0.0, "u", 4.0), -Math.log(4.0)),
                         state(Map.of("x", 1.0, "l", -1.0, "u", 2.0), -Math.log(3.0))),
+                row("Uniform, sampled PositiveReal bounds",
+                        """
+                        PositiveReal l ~ LogNormal(logMean=0.0, logSd=0.5)
+                        PositiveReal u ~ LogNormal(logMean=2.0, logSd=0.5)
+                        Real x ~ Uniform(lower=l, upper=u)
+                        """,
+                        state(Map.of("x", 3.0, "l", 1.0, "u", 5.0), -Math.log(4.0)),
+                        state(Map.of("x", 3.0, "l", 2.5, "u", 9.0), -Math.log(6.5))),
                 row("Exponential, fixed",
                         "PositiveReal x ~ Exponential(rate=2.0)",
                         state(Map.of("x", 0.5), exponential(0.5, 2.0)),

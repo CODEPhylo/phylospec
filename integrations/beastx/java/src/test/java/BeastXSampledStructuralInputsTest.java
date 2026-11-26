@@ -178,6 +178,7 @@ public class BeastXSampledStructuralInputsTest {
      */
     @ParameterizedTest
     @ValueSource(strings = {
+            "Real x ~ Normal(mean=rootAge(tree=tree), sd=1.0)",
             "Real x ~ Offset(base=Normal(mean=0.0, sd=1.0), offset=rootAge(tree=tree))",
             "Age h = rootAge(tree=tree)\nReal x ~ Offset(base=Normal(mean=0.0, sd=1.0), offset=h)",
             "PopulationFunction f = exponentialPopulationFunction(populationSize=3.0, growthRate=rootAge(tree=tree))\n"
