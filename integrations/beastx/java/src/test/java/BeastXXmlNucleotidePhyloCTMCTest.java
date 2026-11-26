@@ -416,14 +416,12 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                 Vector<Rate> firstSiteRates ~ DiscreteGammaInv(
                     shape=firstShape,
                     numCategories=4,
-                    invariantProportion=0.05,
                     numSites=numSites(firstPartition)
                 )
 
                 Vector<Rate> secondSiteRates ~ DiscreteGammaInv(
                     shape=secondShape,
                     numCategories=4,
-                    invariantProportion=0.10,
                     numSites=numSites(secondPartition)
                 )
 
@@ -576,9 +574,8 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
         assertTrue(xml.contains("<treeHeightStatistic idref=\"tree.height\""), xml);
         assertTrue(xml.contains("<treeLengthStatistic idref=\"tree.treeLength\""), xml);
 
-        assertTrue(xml.contains("<proportionInvariant>"), xml);
-        assertTrue(xml.contains("value=\"0.05\""), xml);
-        assertTrue(xml.contains("value=\"0.1\""), xml);
+        // BEAST X computes a non-zero proportion of invariant sites incorrectly (#152), so none is used.
+        assertFalse(xml.contains("<proportionInvariant>"), xml);
 
         assertTrue(xml.contains("<strictClockBranchRates id=\"tree_strictClockBranchRates\""), xml);
         assertTrue(xml.contains("<strictClockBranchRates idref=\"tree_strictClockBranchRates\""), xml);

@@ -1,7 +1,6 @@
 Vector<Rate> siteRates ~ DiscreteGammaInv(
     shape=1.0,
     numCategories=4,
-    invariantProportion=0.1,
     numSites=100
 )
 

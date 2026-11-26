@@ -9,5 +9,10 @@ Vector<Rate> siteRates ~ DiscreteGammaInv(
 // TILING_SUCCESS
 // EXPECTED_TILES
 
+// EXPECTED_APPLICATION_ERRORS
+// BEAST X computes DiscreteGammaInv with a non-zero invariantProportion incorrectly (wrong site-rate weights and mean rate), so it is not supported yet. Leave out invariantProportion, or use the BEAST 3 engine for +I+G models (see CODEPhylo/phylospec#152).
+// EXPECTED_APPLICATION_ERRORS
+
 // EXPECTED BEASTX STATE
+// NO_STATE
 // EXPECTED BEASTX STATE
