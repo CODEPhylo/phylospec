@@ -30,7 +30,9 @@ class EngineRegistry {
 
         try {
             loadedRepository = PhyloSpecRepository.loadCentral();
-            libraries = loadedRepository.getLatestLibraries();
+            // also consider the bundled library: the repository may only hold versions in a format
+            // this package cannot read, which are skipped, or older versions than the bundled one
+            libraries = loadedRepository.getLatestLibraries(loadBundledLibraries());
         } catch (IOException | RuntimeException e) {
             // the repository can neither be reached nor found in the cache. we fall back to the
             // bundled core library, so that a document is still lexed, parsed and type checked

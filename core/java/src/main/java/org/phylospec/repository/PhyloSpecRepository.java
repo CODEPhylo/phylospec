@@ -36,7 +36,8 @@ public class PhyloSpecRepository {
     private final List<ComponentLibrary> libraries;
     private final List<EngineSpecificationSchema> engines;
 
-    private PhyloSpecRepository(List<ComponentLibrary> libraries, List<EngineSpecificationSchema> engines) {
+    // package-private for tests
+    PhyloSpecRepository(List<ComponentLibrary> libraries, List<EngineSpecificationSchema> engines) {
         this.libraries = List.copyOf(libraries);
         this.engines = List.copyOf(engines);
     }
@@ -152,6 +153,21 @@ public class PhyloSpecRepository {
      */
     public List<ComponentLibrary> getLatestLibraries() {
         return getLatest(libraries, ComponentLibrary::getName, ComponentLibrary::getVersion);
+    }
+
+    /**
+     * Returns the newest version of every component library, choosing among the libraries in
+     * the repository and the given additional libraries, such as the ones bundled with this
+     * package. If both hold the same version, the repository's copy is used.
+     *
+     * <p>Libraries this package cannot parse are skipped when the repository is loaded, so this
+     * makes sure a library is still available when the repository only holds versions in a
+     * format this package does not read, or holds no version of it at all.
+     */
+    public List<ComponentLibrary> getLatestLibraries(List<ComponentLibrary> additionalLibraries) {
+        List<ComponentLibrary> candidates = new ArrayList<>(libraries);
+        candidates.addAll(additionalLibraries);
+        return getLatest(candidates, ComponentLibrary::getName, ComponentLibrary::getVersion);
     }
 
     /**
