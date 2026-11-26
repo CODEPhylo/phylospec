@@ -340,6 +340,83 @@ public class BeastXTreePriorCoverageTest {
         }
     }
 
+    /**
+     * A sampled rootAge is the root height of the tree. The tree density is conditioned on the root
+     * and integrates to the same value for every root age, so the root age keeps exactly its own
+     * prior: prior-only MCMC of LogNormal(logMean=1, logSd=0.3) must give mean exp(1.045) and
+     * variance (exp(0.09) - 1) exp(2.09), in memory and from XML. In every logged row the rootAge
+     * equals the root height.
+     */
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {
+            "Yule(birthRate=1.0, rootAge=a, taxa=taxa)",
+            "BirthDeath(diversificationRate=1.0, turnover=0.5, rootAge=a, taxa=taxa)"
+    })
+    public void sampledRootAgeKeepsItsPrior(String prior) throws Exception {
+        double expectedMean = Math.exp(1.0 + 0.3 * 0.3 / 2.0);
+        double expectedVariance = (Math.exp(0.3 * 0.3) - 1.0) * Math.exp(2.0 + 0.3 * 0.3);
+
+        for (boolean viaXml : new boolean[]{false, true}) {
+            String runName = "sampledRootAge" + (viaXml ? "Xml" : "InMemory");
+            Path logPath = XmlTestSupport.logPath(runName);
+            XmlTestSupport.prepare(logPath);
+
+            PhyloSpecRunner runner = new PhyloSpecRunner(TAXA + """
+                    PositiveReal a ~ LogNormal(logMean=1.0, logSd=0.3)
+                    Tree tree ~ %s
+                    Age root = rootAge(tree=tree)
+
+                    mcmc {
+                        Integer chainLength = 1000000
+                        Integer randomSeed = 42
+                        Logger fileLogger = fileLogger(logEvery=100, file="%s", parameters=[a, root])
+                    }
+                    """.formatted(prior, XmlTestSupport.unixPath(logPath)));
+
+            if (viaXml) {
+                Path xmlPath = XmlTestSupport.xmlPath(runName);
+                XmlTestSupport.prepare(xmlPath);
+                runner.executeXmlRun(XmlRunnerOptions.builder(runName, xmlPath).build());
+            } else {
+                runner.run(RunnerOptions.builder(runName).mode(RunMode.EXECUTE_MCMC).build());
+            }
+
+            List<Double> rootAges = XmlTestSupport.readColumn(logPath, "a");
+            List<Double> rootHeights = XmlTestSupport.readColumn(logPath, "root");
+            for (int row = 0; row < rootAges.size(); row++) {
+                assertEquals(rootHeights.get(row), rootAges.get(row), 1e-9, runName + " row " + row);
+            }
+
+            List<Double> samples = rootAges.stream().skip(1000).toList();
+            double mean = samples.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
+            double variance = samples.stream().mapToDouble(v -> (v - mean) * (v - mean)).sum() / (samples.size() - 1);
+
+            assertEquals(expectedMean, mean, 0.05, runName + " mean of rootAge");
+            assertEquals(expectedVariance, variance, 0.1 * expectedVariance, runName + " variance of rootAge");
+        }
+    }
+
+    static Stream<Arguments> unsupportedSampledRootAges() {
+        String rootAge = "PositiveReal a ~ LogNormal(logMean=1.0, logSd=0.3)\n";
+        return Stream.of(
+                // The rootAge variable is replaced by the root height, so elsewhere it would stay fixed.
+                Arguments.of(rootAge + "Tree tree ~ Yule(birthRate=1.0, rootAge=a, taxa=taxa)\n"
+                        + "Real z ~ Normal(mean=0.0, sd=a)\n", "can only be used as rootAge"),
+                Arguments.of(rootAge + "Tree tree ~ Yule(birthRate=1.0, rootAge=a, taxa=taxa) observed as source\n",
+                        "observed tree cannot have a sampled rootAge"),
+                Arguments.of("Tree other ~ Yule(birthRate=1.0, taxa=taxa)\n"
+                                + "Tree tree ~ Yule(birthRate=1.0, rootAge=rootAge(tree=other), taxa=taxa)\n",
+                        "not a value computed from sampled values")
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("unsupportedSampledRootAges")
+    public void unsupportedSampledRootAgesFailExplicitly(String source, String expected) {
+        Exception error = assertThrows(Exception.class, () -> XmlTestSupport.buildModel("treePrior", TAXA + source));
+        assertTrue(error.getMessage().contains(expected), error.getMessage());
+    }
+
     /** BirthDeath(birthRate, deathRate) equals BirthDeath(birthRate - deathRate, deathRate / birthRate). */
     @Test
     public void birthDeathRatesFollowSampledRates() throws Exception {
