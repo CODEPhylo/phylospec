@@ -8,6 +8,7 @@ import org.phylospec.domain.PositiveInt;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.domain.UnitInterval;
 import org.phylospec.tiling.Partial;
+import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.IntScalar;
 import org.phylospec.types.RealScalar;
@@ -16,6 +17,7 @@ import tiling.BeastXState;
 import tiling.params.BeastXRealScalarParam;
 
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Set;
 
 public class SiteModelTile extends GeneratorTile<
@@ -60,10 +62,20 @@ public class SiteModelTile extends GeneratorTile<
         Parameter shapeParameter =
                 toParameter(shape);
 
-        Parameter invariantProportionParameter =
-                invariantProportion == null
-                        ? null
-                        : toParameter(invariantProportion);
+        // BEAST X 10.5 (still in 10.6) gives +I+G the wrong category weights and mean rate, even for
+        // an explicit 0 (CODEPhylo/phylospec#152). A proportion of 0 is the same model as none, so it
+        // is left out; a sampled or non-zero proportion is rejected until BEAST X is fixed.
+        if (invariantProportion != null
+                && (isSampled(beastState, invariantProportion) || invariantProportion.get() != 0.0)) {
+            throw new TileApplicationError(
+                    this.getRootNode(),
+                    "BEAST X computes DiscreteGammaInv with a non-zero invariantProportion incorrectly"
+                            + " (wrong site-rate weights and mean rate), so it is not supported yet.",
+                    "Leave out invariantProportion, or use the BEAST 3 engine for +I+G models"
+                            + " (see CODEPhylo/phylospec#152).",
+                    List.of("DiscreteGammaInv(shape=1.0, numCategories=4, numSites=numSites(data))")
+            );
+        }
 
         // PhyloCTMC completes the site model with its partition rate, which BEAST X
         // only registers as a model variable when it is passed to the constructor.
@@ -75,9 +87,14 @@ public class SiteModelTile extends GeneratorTile<
                         1.0,
                         shapeParameter,
                         numCategories.get(),
-                        invariantProportionParameter
+                        null
                 )
         );
+    }
+
+    private static boolean isSampled(BeastXState beastState, RealScalar<?> scalar) {
+        return scalar instanceof BeastXRealScalarParam<?> beastXScalar
+                && beastState.stateNodes.containsKey(beastXScalar.getParameter());
     }
 
     private Parameter toParameter(RealScalar<?> scalar) {

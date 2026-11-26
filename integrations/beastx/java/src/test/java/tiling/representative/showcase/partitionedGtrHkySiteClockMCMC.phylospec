@@ -42,14 +42,12 @@ PositiveReal secondShape ~ LogNormal(
 Vector<Rate> firstSiteRates ~ DiscreteGammaInv(
     shape=firstShape,
     numCategories=4,
-    invariantProportion=0.05,
     numSites=numSites(firstPartition)
 )
 
 Vector<Rate> secondSiteRates ~ DiscreteGammaInv(
     shape=secondShape,
     numCategories=4,
-    invariantProportion=0.1,
     numSites=numSites(secondPartition)
 )
 
