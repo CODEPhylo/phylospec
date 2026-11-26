@@ -122,6 +122,32 @@ class PhyloSpecRunnerTest {
     }
 
     @Test
+    void loggedConstantsAreNamedAfterTheirVariable(@TempDir Path directory) throws Exception {
+        Path log = directory.resolve("constants.log");
+        String source = """
+                Real x ~ Normal(mean=0.0, sd=1.0)
+                Integer count = 3
+                Real half = 0.5
+                mcmc {
+                    Sampler sampler = mcmc(chainLength=10, stateFile="%s")
+                    Logger logger = fileLogger(file="%s", logEvery=1, parameters=[x, count, half])
+                }
+                """.formatted(
+                        directory.resolve("constants.state.xml").toString().replace("\\", "\\\\"),
+                        log.toString().replace("\\", "\\\\"));
+
+        runner(source).runPhyloSpec("constants");
+
+        String header = Files.readAllLines(log).stream()
+                .filter(line -> !line.startsWith("#"))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(
+                List.of("Sample", "posterior", "prior", "likelihood", "x", "count", "half"),
+                List.of(header.trim().split("\\s+")));
+    }
+
+    @Test
     void acceptsLiveSquareRootMapping() throws Exception {
         String source = Files.readString(Path.of("src/test/java/tiling/functions/sqrtOfRV.phylospec"));
         assertDoesNotThrow(() -> runner(source).check());

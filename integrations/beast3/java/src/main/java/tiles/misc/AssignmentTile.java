@@ -1,5 +1,6 @@
 package tiles.misc;
 
+import beast.base.core.BEASTObject;
 import beast.base.spec.type.IntScalar;
 import beast.base.spec.type.RealScalar;
 import beastconfig.BEASTState;
@@ -53,7 +54,15 @@ public class AssignmentTile extends AstNodeTile<Object, Stmt.Assignment, BEASTSt
 
     @Override
     public Object applyTile(BEASTState beastState, IdentityHashMap<Expr.Variable, Integer> indexVariables) {
-        return this.expressionInput.apply(beastState, indexVariables);
+        Object value = this.expressionInput.apply(beastState, indexVariables);
+
+        // a constant is not registered anywhere else, so it is named after its variable
+        // to be loggable under that name (without a state, only plain values are built)
+        if (beastState != null && value instanceof BEASTObject beastObject && beastObject.getID() == null) {
+            beastObject.setID(beastState.getAvailableID(this.getRootNode().name));
+        }
+
+        return value;
     }
 
     @Override
