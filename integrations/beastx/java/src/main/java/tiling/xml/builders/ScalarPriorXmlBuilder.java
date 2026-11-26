@@ -13,6 +13,7 @@ import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
 import tiles.distributions.BernoulliTile;
 import tiles.distributions.BinomialTile;
+import tiles.distributions.CategoricalTile;
 import tiles.distributions.CauchyTile;
 import tiles.distributions.DiscreteUniformTile;
 import tiles.distributions.GeometricTile;
@@ -50,7 +51,8 @@ public class ScalarPriorXmlBuilder {
                 || distribution instanceof BinomialTile.BinomialCountDistribution
                 || distribution instanceof BernoulliTile.BernoulliDistribution
                 || distribution instanceof GeometricTile.GeometricCountDistribution
-                || distribution instanceof DiscreteUniformTile.DiscreteUniform;
+                || distribution instanceof DiscreteUniformTile.DiscreteUniform
+                || distribution instanceof CategoricalTile.CategoricalDistribution;
     }
 
     public XmlElement buildPrior(
@@ -171,6 +173,10 @@ public class ScalarPriorXmlBuilder {
             return geometricPrior(state, data, priorId, geometric.getP());
         }
 
+        if (distribution instanceof CategoricalTile.CategoricalDistribution categorical) {
+            return categoricalPrior(state, data, dimension, priorId, categorical.getProbabilities());
+        }
+
         throw new UnsupportedOperationException(
                 "This scalar prior is not supported in BEAST X XML."
         );
@@ -240,6 +246,66 @@ public class ScalarPriorXmlBuilder {
                         .withId(priorId + "_distribution")
                         .withChild(XmlElement.element("mean").withChild(mean))
                         .withChild(XmlElement.element("alpha").withChild(inlineParameterDefinition(priorId + "_alpha", 1.0)))
+        );
+    }
+
+    /**
+     * Writes Categorical(probabilities) on 1..K as a mixture of K uniform priors of width 1, one
+     * around each category, weighted by the probabilities: for an integer k the mixture density is
+     * the sum of p[i] * 1(k = i), which is p[k]. BEAST X has a point-mass mixture model, but its
+     * parser is not registered in the release.
+     *
+     * <p>The mixture is right for one value only: for a vector it would mix products of the
+     * indicators, not multiply mixtures. IID categorical values do not tile yet; if they do, the
+     * XML export fails explicitly instead of writing a wrong prior.</p>
+     */
+    private XmlElement categoricalPrior(
+            BeastXState state,
+            XmlElement data,
+            int dimension,
+            String priorId,
+            Parameter probabilities
+    ) {
+        if (dimension != 1) {
+            throw new UnsupportedOperationException(
+                    "Categorical of a vector (IID) is not supported in BEAST X XML: "
+                            + "it is written as a mixture, which is only right for one value."
+            );
+        }
+
+        XmlElement element =
+                XmlElement.element("mixtureModelLikelihood")
+                        .withId(priorId);
+
+        for (int category = 1; category <= probabilities.getDimension(); category++) {
+            element = element.withChild(
+                    XmlElement.element("uniformPrior")
+                            .withAttribute("lower", format(category - 0.5))
+                            .withAttribute("upper", format(category + 0.5))
+                            .withChild(data)
+            );
+        }
+
+        // The mixture weights: a sampled simplex is referenced so the prior follows it.
+        if (state.stateNodes.containsKey(probabilities)) {
+            return element.withChild(parameterReference(probabilities));
+        }
+
+        if (probabilities.getClass() != Parameter.Default.class) {
+            throw new UnsupportedOperationException(
+                    "Categorical probabilities computed from sampled values are not supported in BEAST X XML."
+            );
+        }
+
+        StringBuilder values = new StringBuilder();
+        for (int i = 0; i < probabilities.getDimension(); i++) {
+            values.append(i == 0 ? "" : " ").append(format(probabilities.getParameterValue(i)));
+        }
+
+        return element.withChild(
+                XmlElement.element("parameter")
+                        .withId(priorId + "_probabilities")
+                        .withAttribute("value", values.toString())
         );
     }
 

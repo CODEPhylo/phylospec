@@ -331,7 +331,18 @@ public class BeastXGeneratorCoverageTest {
                         vectorState(Map.of("x", new double[]{0, 4, 10}, "p", new double[]{0.3}),
                                 binomial(0, 10, 0.3) + binomial(4, 10, 0.3) + binomial(10, 10, 0.3)),
                         vectorState(Map.of("x", new double[]{0, 4, 10}, "p", new double[]{0.75}),
-                                binomial(0, 10, 0.75) + binomial(4, 10, 0.75) + binomial(10, 10, 0.75)))
+                                binomial(0, 10, 0.75) + binomial(4, 10, 0.75) + binomial(10, 10, 0.75))),
+                row("Categorical, fixed (categories start at 1)",
+                        "PositiveInteger x ~ Categorical(probabilities=[0.1, 0.2, 0.7])",
+                        state(Map.of("x", 1.0), Math.log(0.1)),
+                        state(Map.of("x", 3.0), Math.log(0.7))),
+                row("Categorical, sampled probabilities",
+                        """
+                        Simplex p ~ Dirichlet(concentration=[1.0, 1.0, 1.0])
+                        PositiveInteger x ~ Categorical(probabilities=p)
+                        """,
+                        vectorState(Map.of("x", new double[]{2}, "p", new double[]{0.1, 0.2, 0.7}), Math.log(0.2)),
+                        vectorState(Map.of("x", new double[]{2}, "p", new double[]{0.5, 0.3, 0.2}), Math.log(0.3)))
         );
     }
 
@@ -341,11 +352,6 @@ public class BeastXGeneratorCoverageTest {
      */
     static Stream<Arguments> xmlUnsupportedRows() {
         return Stream.of(
-                // BEAST X has no XML element for a categorical distribution.
-                row("Categorical, fixed (categories start at 1)",
-                        "PositiveInteger x ~ Categorical(probabilities=[0.1, 0.2, 0.7])",
-                        state(Map.of("x", 1.0), Math.log(0.1)),
-                        state(Map.of("x", 3.0), Math.log(0.7))),
                 // The truncation bounds of the shifted base would have to move with the offset.
                 row("Truncated of Offset, sampled offset",
                         """
@@ -412,10 +418,6 @@ public class BeastXGeneratorCoverageTest {
         BeastXModel model = new PhyloSpecRunner(source).buildModel("restore");
         assertRestored(model.posterior.getModel(), model.beastState.stateNodesByPhyloSpecName.get("x"), source);
 
-        if (source.contains("Categorical")) {
-            return;
-        }
-
         List<Likelihood> priors = parseXmlPriors("restore " + source, source);
         Likelihood posterior = parsedPosterior("restore " + source);
         assertRestored(posterior.getModel(), dataParameter(priors, "x"), source + " (XML)");
@@ -456,6 +458,47 @@ public class BeastXGeneratorCoverageTest {
 
             assertEquals(2.0 + Math.sqrt(2.0 / Math.PI), mean, 0.03, runName + " mean of x");
             assertEquals(1.0 - 2.0 / Math.PI, variance, 0.03, runName + " variance of x");
+        }
+    }
+
+    /**
+     * Prior sampling of Categorical, in memory and from XML: each category is drawn with its
+     * probability, and a category with probability 0 is never drawn.
+     */
+    @Test
+    public void categoricalSamplesItsProbabilities() throws Exception {
+        double[] probabilities = {0.2, 0.0, 0.5, 0.3};
+
+        for (boolean viaXml : new boolean[]{false, true}) {
+            String runName = viaXml ? "categoricalXml" : "categoricalInMemory";
+            Path logPath = XmlTestSupport.logPath(runName);
+            XmlTestSupport.prepare(logPath);
+
+            PhyloSpecRunner runner = new PhyloSpecRunner("""
+                    PositiveInteger x ~ Categorical(probabilities=[0.2, 0.0, 0.5, 0.3])
+
+                    mcmc {
+                        Integer chainLength = 1000000
+                        Integer randomSeed = 42
+                        Logger fileLogger = fileLogger(logEvery=100, file="%s", parameters=[x])
+                    }
+                    """.formatted(XmlTestSupport.unixPath(logPath)));
+
+            if (viaXml) {
+                Path xmlPath = XmlTestSupport.xmlPath(runName);
+                XmlTestSupport.prepare(xmlPath);
+                runner.executeXmlRun(XmlRunnerOptions.builder(runName, xmlPath).build());
+            } else {
+                runner.run(RunnerOptions.builder(runName).mode(RunMode.EXECUTE_MCMC).build());
+            }
+
+            List<Double> samples = readColumn(logPath, "x").stream().skip(1000).toList();
+            for (int category = 1; category <= probabilities.length; category++) {
+                double value = category;
+                double frequency = samples.stream().filter(sample -> sample == value).count() / (double) samples.size();
+
+                assertEquals(probabilities[category - 1], frequency, 0.02, runName + " frequency of category " + category);
+            }
         }
     }
 
