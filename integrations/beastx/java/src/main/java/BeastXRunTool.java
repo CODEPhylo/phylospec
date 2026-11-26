@@ -8,6 +8,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.ServiceConfigurationError;
 import java.util.concurrent.ThreadLocalRandom;
 import org.phylospec.tiling.mcmc.OutputPaths;
@@ -131,7 +132,7 @@ public final class BeastXRunTool {
 
         List<String> files = loggers.stream()
                 .map(RunRecord.LoggerSetting::file)
-                .filter(file -> file != null)
+                .filter(Objects::nonNull)
                 .toList();
         new OutputPaths(Path.of(""), overwrite).prepare(files, null, record.getDirectory());
 

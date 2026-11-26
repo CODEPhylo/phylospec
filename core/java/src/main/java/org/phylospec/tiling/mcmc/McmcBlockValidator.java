@@ -49,13 +49,14 @@ public final class McmcBlockValidator {
     }
 
     private static TileApplicationError getUnknownStatementError(Stmt statement) {
-        String hint = statement instanceof Stmt.Assignment assignment ? getReplacementHint(assignment) : null;
-        if (hint != null) {
-            Stmt.Assignment assignment = (Stmt.Assignment) statement;
-            return new TileApplicationError(
-                    statement,
-                    "`" + assignment.name + "` is not a setting of the mcmc block and would be ignored.",
-                    hint);
+        if (statement instanceof Stmt.Assignment assignment) {
+            String hint = getReplacementHint(assignment);
+            if (hint != null) {
+                return new TileApplicationError(
+                        assignment,
+                        "`" + assignment.name + "` is not a setting of the mcmc block and would be ignored.",
+                        hint);
+            }
         }
 
         return new TileApplicationError(

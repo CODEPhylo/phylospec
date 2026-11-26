@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiConsumer;
 import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.mcmc.DefaultFileTreeLoggers;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.McmcSamplerSpec;
 import org.phylospec.tiling.mcmc.OutputPaths;
@@ -46,7 +47,7 @@ public class BEASTState {
     public final List<ScreenLoggerSpec<BEASTObject>> screenLoggerSpecs;
     public final List<FileLoggerSpec<BEASTObject>> fileLoggerSpecs;
     public final List<TreeLoggerSpec<Tree>> treeLoggerSpecs;
-    private final List<Integer> defaultFileTreeLoggerIndices = new ArrayList<>();
+    private final DefaultFileTreeLoggers<Tree> defaultFileTreeLoggers;
 
     /// The loggers built from the specs, cached so that they are only built once.
     private List<beast.base.inference.Logger> builtLoggers;
@@ -103,6 +104,8 @@ public class BEASTState {
         this.screenLoggerSpecs = new ArrayList<>();
         this.fileLoggerSpecs = new ArrayList<>();
         this.treeLoggerSpecs = new ArrayList<>();
+        this.defaultFileTreeLoggers =
+                new DefaultFileTreeLoggers<>(this.treeLoggerSpecs, Tree::getID, this::resolveOutputPath);
     }
 
     /** Resolves a file named by the model, preserving absolute paths. */
@@ -363,18 +366,7 @@ public class BEASTState {
      * the default, each of them writes to the file of its tree instead, so that they do not clash.
      */
     public void addTreeLoggerSpecWithDefaultFile(int logEvery, Tree tree) {
-        this.defaultFileTreeLoggerIndices.add(this.treeLoggerSpecs.size());
-        this.treeLoggerSpecs.add(new TreeLoggerSpec<>(
-                logEvery, this.resolveOutputPath(OutputPaths.getTreeFile(this.outputPrefix)), tree));
-
-        int count = this.defaultFileTreeLoggerIndices.size();
-        for (int index : this.defaultFileTreeLoggerIndices) {
-            TreeLoggerSpec<Tree> spec = this.treeLoggerSpecs.get(index);
-            String fileName =
-                    OutputPaths.getTreeFile(this.outputPrefix, spec.tree().getID(), count);
-            this.treeLoggerSpecs.set(
-                    index, new TreeLoggerSpec<>(spec.logEvery(), this.resolveOutputPath(fileName), spec.tree()));
-        }
+        this.defaultFileTreeLoggers.add(this.outputPrefix, logEvery, tree);
     }
 
     /**

@@ -10,6 +10,7 @@ import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
 import dr.inference.model.Statistic;
 import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.mcmc.DefaultFileTreeLoggers;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
 import org.phylospec.tiling.mcmc.LoggerSpec;
 import org.phylospec.tiling.mcmc.McmcSamplerSpec;
@@ -79,7 +80,7 @@ public class BeastXState {
     public final List<ScreenLoggerSpec<String>> screenLoggerSpecs;
     public final List<FileLoggerSpec<String>> fileLoggerSpecs;
     public final List<TreeLoggerSpec<String>> treeLoggerSpecs;
-    private final List<Integer> defaultFileTreeLoggerIndices = new ArrayList<>();
+    private final DefaultFileTreeLoggers<String> defaultFileTreeLoggers;
 
     public final OperatorConfig operatorConfig;
     public final XmlPlan xmlPlan;
@@ -117,6 +118,7 @@ public class BeastXState {
         this.screenLoggerSpecs = new ArrayList<>();
         this.fileLoggerSpecs = new ArrayList<>();
         this.treeLoggerSpecs = new ArrayList<>();
+        this.defaultFileTreeLoggers = new DefaultFileTreeLoggers<>(this.treeLoggerSpecs, name -> name, name -> name);
         this.operatorConfig = new OperatorConfig();
         this.xmlPlan = new XmlPlan();
         this.ids = new HashSet<>();
@@ -436,15 +438,7 @@ public class BeastXState {
      * the default, each of them writes to the file of its tree instead, so that they do not clash.
      */
     public void addTreeLoggerSpecWithDefaultFile(int logEvery, String treeName) {
-        this.defaultFileTreeLoggerIndices.add(this.treeLoggerSpecs.size());
-        this.treeLoggerSpecs.add(new TreeLoggerSpec<>(logEvery, OutputPaths.getTreeFile(this.getOutputPrefix()), treeName));
-
-        int count = this.defaultFileTreeLoggerIndices.size();
-        for (int index : this.defaultFileTreeLoggerIndices) {
-            TreeLoggerSpec<String> spec = this.treeLoggerSpecs.get(index);
-            String fileName = OutputPaths.getTreeFile(this.getOutputPrefix(), spec.tree(), count);
-            this.treeLoggerSpecs.set(index, new TreeLoggerSpec<>(spec.logEvery(), fileName, spec.tree()));
-        }
+        this.defaultFileTreeLoggers.add(this.getOutputPrefix(), logEvery, treeName);
     }
 
     /** Returns the PhyloSpec name under which the given tree is registered, or null if it is not. */
