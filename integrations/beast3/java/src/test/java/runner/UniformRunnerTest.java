@@ -19,15 +19,15 @@ class UniformRunnerTest {
                 Real x ~ Uniform(lower=-1.0, upper=1.0)
                 Integer n ~ DiscreteUniform(lower=1, upper=10)
                 mcmc {
-                    Integer chainLength = 200
-                    Integer randomSeed = 20261026
-                    Integer defaultLogEvery = 1
-                    String outputPrefix = "%s"
+                    Sampler sampler = mcmc(chainLength=200)
+                    Logger fileLogger = fileLogger(file="%s.log", logEvery=1)
                 }
                 """.formatted(prefix.toString().replace("\\", "\\\\"));
 
         // Source failures propagate as exceptions and fail the test directly.
-        new PhyloSpecRunner(source, List.of("beast2")).runPhyloSpec("uniform");
+        PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(20261026L);
+        runner.runPhyloSpec(prefix.toString());
 
         List<String> lines = Files.readAllLines(Path.of(prefix + ".log")).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))

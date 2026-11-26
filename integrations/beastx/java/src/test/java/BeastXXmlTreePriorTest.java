@@ -76,13 +76,12 @@ public class BeastXXmlTreePriorTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(XmlTestSupport.unixPath(treeLogPath));
@@ -136,13 +135,12 @@ public class BeastXXmlTreePriorTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(XmlTestSupport.unixPath(treeLogPath));
@@ -212,8 +210,7 @@ public class BeastXXmlTreePriorTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -224,7 +221,7 @@ public class BeastXXmlTreePriorTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -289,8 +286,7 @@ public class BeastXXmlTreePriorTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -301,7 +297,7 @@ public class BeastXXmlTreePriorTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -423,13 +419,12 @@ public class BeastXXmlTreePriorTest {
                 Age root = rootAge(tree=tree) observed between [3.0, 8.0]
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(XmlTestSupport.unixPath(treeLogPath));
@@ -490,13 +485,12 @@ public class BeastXXmlTreePriorTest {
                 ) observed between [0.5, 3.0]
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(XmlTestSupport.unixPath(treeLogPath));
@@ -574,8 +568,7 @@ public class BeastXXmlTreePriorTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 100000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=100000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -586,7 +579,7 @@ public class BeastXXmlTreePriorTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -668,8 +661,7 @@ public class BeastXXmlTreePriorTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 1000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=1000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -680,7 +672,7 @@ public class BeastXXmlTreePriorTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(

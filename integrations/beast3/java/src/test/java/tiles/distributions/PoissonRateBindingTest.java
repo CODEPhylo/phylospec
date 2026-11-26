@@ -161,19 +161,20 @@ class PoissonRateBindingTest {
 
     @Test
     void shortChainEstimatesRateForAnObservedCount(@TempDir Path directory) throws Exception {
+        Path prefix = directory.resolve("poisson-rate");
         String source = """
                 PositiveReal lambda ~ Gamma(shape=2.0, rate=1.0)
                 NonNegativeInteger count ~ Poisson(rate=lambda) observed as 3
 
                 mcmc {
-                    Integer chainLength = 200
-                    Integer defaultLogEvery = 10
-                    Integer randomSeed = 12345
+                    Sampler sampler = mcmc(chainLength=200)
+                    Logger fileLogger = fileLogger(file="%s.log", logEvery=10)
                 }
-                """;
+                """.formatted(prefix.toString().replace("\\", "\\\\"));
 
-        Path prefix = directory.resolve("poisson-rate");
-        new PhyloSpecRunner(source, List.of("beast2")).runPhyloSpec(prefix.toString());
+        PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(12345L);
+        runner.runPhyloSpec(prefix.toString());
 
         List<String> lines = Files.readAllLines(Path.of(prefix + ".log")).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))

@@ -1,5 +1,6 @@
 package tiles.misc;
 
+import beast.base.core.BEASTObject;
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.IntScalarParam;
@@ -21,7 +22,8 @@ import org.phylospec.typeresolver.VariableResolver;
 
 /**
  * Creates a list of the original element objects. Prefer matching concrete element types;
- * otherwise allow different scalar implementations within the same numeric family.
+ * otherwise allow different scalar implementations within the same numeric family, and finally
+ * any mix of BEAST objects.
  */
 public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array, BEASTState> {
 
@@ -80,6 +82,9 @@ public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array, BEASTS
                     new TypeToken<IntScalar<? extends Int>>() {},
                     new TypeToken<IntScalarParam<Int>>() {});
         }
+        if (compatibleTilesByType.isEmpty() && !array.elements.isEmpty()) {
+            addScalarFamily(compatibleTilesByType, array, allPossibleInputTiles, TypeToken.of(BEASTObject.class), null);
+        }
 
         Set<Tile<?, BEASTState>> wiredUpTiles = new HashSet<>();
         for (var entry : compatibleTilesByType.entrySet()) {
@@ -115,7 +120,8 @@ public class ListVectorTile extends AstNodeTile<List<Object>, Expr.Array, BEASTS
             // This fallback exposes only the broad scalar family, so reuse its broad-domain
             // literal rather than multiplying these equivalent choices across a long list.
             // Named bindings and derived expressions retain all their candidate mappings.
-            if (array.elements.get(i) instanceof Expr.Literal
+            if (literalType != null
+                    && array.elements.get(i) instanceof Expr.Literal
                     && candidates.stream()
                             .anyMatch(candidate -> candidate instanceof LiteralTile<?>
                                     && literalType.equals(candidate.getTypeToken()))) {

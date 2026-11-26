@@ -9,8 +9,11 @@ import beast.base.inference.Logger;
 import java.util.ArrayList;
 import java.util.List;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
+import org.phylospec.tiling.mcmc.LoggerSpec;
+import org.phylospec.tiling.mcmc.OutputPaths;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
+import tiling.RenamedLoggable;
 
 /// Selects and adds logger specs and loggers to the BEAST state based on the available loggable objects.
 ///
@@ -27,20 +30,22 @@ public class LoggerSelector {
         List<BEASTObject> loggableObjects = getLoggableObjects(beastState);
 
         if (beastState.screenLoggerSpecs.isEmpty()) {
-            beastState.addScreenLoggerSpec(new ScreenLoggerSpec<>(beastState.defaultLogEvery, loggableObjects));
+            beastState.addScreenLoggerSpec(new ScreenLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, loggableObjects, null));
         }
         if (beastState.fileLoggerSpecs.isEmpty()) {
             beastState.addFileLoggerSpec(new FileLoggerSpec<>(
-                    beastState.defaultLogEvery, beastState.outputPrefix + ".log", loggableObjects));
+                    LoggerSpec.DEFAULT_LOG_EVERY,
+                    OutputPaths.getLogFile(beastState.outputPrefix),
+                    loggableObjects,
+                    null));
         }
 
         List<Tree> loggableTrees = getLoggableTrees(beastState);
 
         if (!loggableTrees.isEmpty() && beastState.treeLoggerSpecs.isEmpty()) {
             for (Tree tree : loggableTrees) {
-                String name = loggableTrees.size() == 1 ? "" : "-" + tree.getID();
-                beastState.addTreeLoggerSpec(new TreeLoggerSpec<>(
-                        beastState.defaultLogEvery, beastState.outputPrefix + name + ".trees", tree));
+                String fileName = OutputPaths.getTreeFile(beastState.outputPrefix, tree.getID(), loggableTrees.size());
+                beastState.addTreeLoggerSpec(new TreeLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, fileName, tree));
             }
         }
     }
@@ -59,7 +64,7 @@ public class LoggerSelector {
         beastState.setInput(logger, logger.sortModeInput, Logger.SORTMODE.smart);
         beastState.setInput(logger, logger.sanitiseHeadersInput, true);
 
-        List<BEASTObject> parameters = spec.parameters() != null ? spec.parameters() : getLoggableObjects(beastState);
+        List<BEASTObject> parameters = getLoggedParameters(spec.parameters(), spec.parameterNames(), beastState);
         beastState.setInput(logger, logger.loggersInput, withDistributions(parameters, posterior, prior, likelihood));
 
         return logger;
@@ -80,7 +85,7 @@ public class LoggerSelector {
         beastState.setInput(logger, logger.sortModeInput, Logger.SORTMODE.smart);
         beastState.setInput(logger, logger.sanitiseHeadersInput, true);
 
-        List<BEASTObject> parameters = spec.parameters() != null ? spec.parameters() : getLoggableObjects(beastState);
+        List<BEASTObject> parameters = getLoggedParameters(spec.parameters(), spec.parameterNames(), beastState);
         beastState.setInput(logger, logger.loggersInput, withDistributions(parameters, posterior, prior, likelihood));
 
         return logger;
@@ -88,7 +93,6 @@ public class LoggerSelector {
 
     /**
      * Builds a BEAST tree logger according to the given specs.
-     * If the spec does not name a tree, all loggable trees in the state are logged.
      */
     public static Logger buildTreeLogger(TreeLoggerSpec<Tree> spec, BEASTState beastState) {
         Logger logger = new Logger();
@@ -96,20 +100,36 @@ public class LoggerSelector {
         beastState.setInput(logger, logger.fileNameInput, beastState.resolveOutputPath(spec.fileName()));
         beastState.setInput(logger, logger.modeInput, beast.base.inference.Logger.LOGMODE.tree);
 
-        List<BEASTObject> trees =
-                spec.tree() != null ? List.of(spec.tree()) : new ArrayList<>(getLoggableTrees(beastState));
-
-        if (trees.isEmpty()) {
-            throw new RuntimeException(
-                    "A custom tree logger is provided, but the model does not seem to contain a tree.");
-        } else if (1 < trees.size()) {
-            throw new RuntimeException(
-                    "A custom tree logger is provided, but the model has more than one tree. Specify the tree to log with 'tree=<treeName>'");
-        }
-
-        beastState.setInput(logger, logger.loggersInput, trees);
+        beastState.setInput(logger, logger.loggersInput, new ArrayList<BEASTObject>(List.of(spec.tree())));
 
         return logger;
+    }
+
+    /**
+     * Returns the objects a screen or file logger logs for the given parameters. Without parameters,
+     * these are all loggable objects of the state. A tree is logged as its height and length.
+     * Parameters with a name are logged under that name.
+     */
+    private static List<BEASTObject> getLoggedParameters(
+            List<BEASTObject> parameters, List<String> parameterNames, BEASTState beastState) {
+        if (parameters == null) return getLoggableObjects(beastState);
+
+        // a tree itself would write newick strings into the trace
+        List<BEASTObject> loggables = new ArrayList<>();
+        for (BEASTObject parameter : parameters) {
+            loggables.add(parameter instanceof Tree tree ? getTreeStatistics(tree, beastState) : parameter);
+        }
+        if (parameterNames == null) return loggables;
+
+        List<BEASTObject> renamedParameters = new ArrayList<>();
+        for (int i = 0; i < loggables.size(); i++) {
+            RenamedLoggable renamedParameter = new RenamedLoggable();
+            beastState.setInput(renamedParameter, renamedParameter.loggableInput, loggables.get(i));
+            beastState.setInput(renamedParameter, renamedParameter.labelInput, parameterNames.get(i));
+            renamedParameters.add(renamedParameter);
+        }
+
+        return renamedParameters;
     }
 
     /**
@@ -144,9 +164,7 @@ public class LoggerSelector {
             }
 
             if (object instanceof Tree tree) {
-                TreeStatLogger treeStatLogger = new TreeStatLogger();
-                beastState.setInput(treeStatLogger, treeStatLogger.treeInput, tree);
-                loggables.add(treeStatLogger);
+                loggables.add(getTreeStatistics(tree, beastState));
             }
         }
         for (BEASTObject object : beastState.calculationNodes.keySet()) {
@@ -156,6 +174,13 @@ public class LoggerSelector {
         }
 
         return loggables;
+    }
+
+    /** Returns a loggable that logs the height and the length of a tree. */
+    private static TreeStatLogger getTreeStatistics(Tree tree, BEASTState beastState) {
+        TreeStatLogger treeStatLogger = new TreeStatLogger();
+        beastState.setInput(treeStatLogger, treeStatLogger.treeInput, tree);
+        return treeStatLogger;
     }
 
     /**

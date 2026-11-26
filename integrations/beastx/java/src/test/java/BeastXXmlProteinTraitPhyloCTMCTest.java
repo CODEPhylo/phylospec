@@ -6,11 +6,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.Tag;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@ExtendWith(SkipWithoutBeagle.class)
 public class BeastXXmlProteinTraitPhyloCTMCTest {
 
     @Test
@@ -71,8 +73,7 @@ public class BeastXXmlProteinTraitPhyloCTMCTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 10000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=10000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -83,7 +84,7 @@ public class BeastXXmlProteinTraitPhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -190,8 +191,7 @@ public class BeastXXmlProteinTraitPhyloCTMCTest {
                 ) observed as codonData
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -202,7 +202,7 @@ public class BeastXXmlProteinTraitPhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="target/beastx-xml-execution/gy94CodonPhyloCTMC.trees",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """;

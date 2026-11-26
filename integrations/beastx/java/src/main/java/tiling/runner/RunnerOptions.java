@@ -1,5 +1,6 @@
 package tiling.runner;
 
+import org.phylospec.tiling.mcmc.McmcSamplerSpec;
 import tiling.BeastXState;
 
 import java.nio.file.Path;
@@ -12,7 +13,6 @@ public record RunnerOptions(
         RunMode mode,
         Long chainLengthOverride,
         boolean materializePhyloCTMC,
-        Long defaultLogEveryOverride,
         Path outputDirectory,
         String outputFilePrefix
 ) {
@@ -26,12 +26,8 @@ public record RunnerOptions(
             throw new IllegalArgumentException("mode must not be null.");
         }
 
-        if (chainLengthOverride != null && chainLengthOverride < 0) {
-            throw new IllegalArgumentException("chainLengthOverride must be non-negative.");
-        }
-
-        if (defaultLogEveryOverride != null && defaultLogEveryOverride <= 0) {
-            throw new IllegalArgumentException("defaultLogEveryOverride must be positive.");
+        if (chainLengthOverride != null && chainLengthOverride <= 0) {
+            throw new IllegalArgumentException("chainLengthOverride must be positive.");
         }
 
         if (outputFilePrefix != null && outputFilePrefix.isBlank()) {
@@ -52,18 +48,13 @@ public record RunnerOptions(
                 .mode(this.mode)
                 .chainLengthOverride(this.chainLengthOverride)
                 .materializePhyloCTMC(this.materializePhyloCTMC)
-                .defaultLogEveryOverride(this.defaultLogEveryOverride)
                 .outputDirectory(this.outputDirectory)
                 .outputFilePrefix(this.outputFilePrefix);
     }
 
     public void applyTo(BeastXState beastState) {
         if (chainLengthOverride != null) {
-            beastState.chainLength = chainLengthOverride;
-        }
-
-        if (defaultLogEveryOverride != null) {
-            beastState.defaultLogEvery = defaultLogEveryOverride;
+            beastState.setSamplerSpec(new McmcSamplerSpec(chainLengthOverride));
         }
 
         String resolvedOutputPrefix =
@@ -91,7 +82,6 @@ public record RunnerOptions(
         private RunMode mode = RunMode.BUILD_MCMC;
         private Long chainLengthOverride;
         private boolean materializePhyloCTMC;
-        private Long defaultLogEveryOverride;
         private Path outputDirectory;
         private String outputFilePrefix;
 
@@ -119,16 +109,6 @@ public record RunnerOptions(
             return this;
         }
 
-        public Builder defaultLogEveryOverride(Long defaultLogEveryOverride) {
-            this.defaultLogEveryOverride = defaultLogEveryOverride;
-            return this;
-        }
-
-        public Builder defaultLogEveryOverride(long defaultLogEveryOverride) {
-            this.defaultLogEveryOverride = defaultLogEveryOverride;
-            return this;
-        }
-
         public Builder outputDirectory(Path outputDirectory) {
             this.outputDirectory = outputDirectory;
             return this;
@@ -151,7 +131,6 @@ public record RunnerOptions(
                     this.mode,
                     this.chainLengthOverride,
                     this.materializePhyloCTMC,
-                    this.defaultLogEveryOverride,
                     this.outputDirectory,
                     this.outputFilePrefix
             );

@@ -100,17 +100,17 @@ PHYLOSPEC="$HOME/phylospec-cli/phylospec-beast3-0.0.1-SNAPSHOT/bin/phylospec"
 ADAPTER="$PWD/integrations/beast3/phylonco/target/phylospec-adapter"
 cd integrations/beast3/phylonco/examples
 "$PHYLOSPEC" check CRC09.phylospec --adapter-path "$ADAPTER" --library phylonco
-"$PHYLOSPEC" run CRC09.phylospec --adapter-path "$ADAPTER" --library phylonco --out "$PWD/results/crc09"
+"$PHYLOSPEC" run CRC09.phylospec --adapter-path "$ADAPTER" --library phylonco
 ```
 
 `CRC09-explicit.phylospec` runs the same way. Without `--adapter-path`, `use phylonco` fails
 with a hint to load the bundle. Neither example has an `mcmc` block, so `run` uses the CLI
-defaults; append one to set the chain length:
+defaults; append one to set the chain length and how often the screen logger reports:
 
 ```
 mcmc {
-    Integer chainLength = 10000
-    Integer defaultLogEvery = 100
+    Sampler sampler = mcmc(chainLength=10000)
+    Logger screenLogger = screenLogger(logEvery=100)
 }
 ```
 

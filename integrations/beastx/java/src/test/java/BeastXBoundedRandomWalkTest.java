@@ -48,7 +48,7 @@ public class BeastXBoundedRandomWalkTest {
         String xml = XmlTestSupport.buildAndWriteXml("boundedOperators", source + """
 
                 mcmc {
-                    Integer chainLength = 1
+                    Sampler sampler = mcmc(chainLength=1)
                     Logger screenLogger = screenLogger(logEvery=1, parameters=[p])
                 }
                 """, xmlPath);
@@ -90,11 +90,11 @@ public class BeastXBoundedRandomWalkTest {
             PhyloSpecRunner runner = new PhyloSpecRunner(prior + """
 
                     mcmc {
-                        Integer chainLength = 1000000
-                        Integer randomSeed = 42
+                        Sampler sampler = mcmc(chainLength=1000000)
                         Logger fileLogger = fileLogger(logEvery=100, file="%s", parameters=[x])
                     }
                     """.formatted(XmlTestSupport.unixPath(logPath)));
+            runner.setSeed(42L);
 
             if (viaXml) {
                 Path xmlPath = XmlTestSupport.xmlPath(runName);

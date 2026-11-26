@@ -20,14 +20,14 @@ class ScalarDistributionRunnerTest {
                 Real cauchy ~ Cauchy(location=0.0, scale=1.0)
                 NonNegativeInteger count ~ Poisson(rate=2.3)
                 mcmc {
-                    Integer chainLength = 200
-                    Integer randomSeed = 20261028
-                    Integer defaultLogEvery = 1
-                    String outputPrefix = "%s"
+                    Sampler sampler = mcmc(chainLength=200)
+                    Logger fileLogger = fileLogger(file="%s.log", logEvery=1)
                 }
                 """.formatted(prefix.toString().replace("\\", "\\\\"));
 
-        new PhyloSpecRunner(source, List.of("beast2")).runPhyloSpec("scalar-distributions");
+        PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(20261028L);
+        runner.runPhyloSpec(prefix.toString());
 
         List<String> lines = Files.readAllLines(Path.of(prefix + ".log")).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))

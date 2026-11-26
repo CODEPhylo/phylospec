@@ -104,8 +104,12 @@ public class BeastXComparisonH1N1Test {
         BeastXRunResult result;
 
         try {
+            PhyloSpecRunner runner =
+                    new PhyloSpecRunner(source);
+            runner.setSeed(741852963L);
+
             result =
-                    new PhyloSpecRunner(source)
+                    runner
                             .run(
                                     RunnerOptions.builder(RUN_NAME)
                                             .mode(RunMode.EXECUTE_MCMC)

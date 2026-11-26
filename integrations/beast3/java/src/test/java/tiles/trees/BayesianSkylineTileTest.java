@@ -159,8 +159,7 @@ class BayesianSkylineTileTest {
                 Alignment alignment ~ PhyloCTMC(tree=tree, qMatrix=qMatrix) observed as data
 
                 mcmc {
-                    Integer chainLength = 20000
-                    Integer defaultLogEvery = 1000
+                    Sampler sampler = mcmc(chainLength=20000)
                 }
                 """);
         String prefix = this.directory.resolve("analysis").toString();

@@ -10,6 +10,9 @@ import dr.inference.operators.MCMCOperator;
 import org.phylospec.tiling.TypeToken;
 
 import tiling.BeastXModel;
+import org.phylospec.tiling.mcmc.FileLoggerSpec;
+import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
+import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import tiling.BeastXState;
 import tiling.operators.OperatorBuilder;
 
@@ -145,35 +148,35 @@ public class BeastXModelSummary {
 
         List<String> screenLoggers = new ArrayList<>();
 
-        for (BeastXState.ScreenLoggerSpec spec : model.beastState.screenLoggerSpecs) {
+        for (ScreenLoggerSpec<String> spec : model.beastState.screenLoggerSpecs) {
             screenLoggers.add(
                     "screenLogger(logEvery=%d, parameters=%s)".formatted(
                             spec.logEvery(),
-                            formatParameterNames(spec.parameterNames())
+                            formatParameterNames(spec.parameters())
                     )
             );
         }
 
         List<String> fileLoggers = new ArrayList<>();
 
-        for (BeastXState.FileLoggerSpec spec : model.beastState.fileLoggerSpecs) {
+        for (FileLoggerSpec<String> spec : model.beastState.fileLoggerSpecs) {
             fileLoggers.add(
                     "fileLogger(logEvery=%d, file=%s, parameters=%s)".formatted(
                             spec.logEvery(),
                             spec.fileName(),
-                            formatParameterNames(spec.parameterNames())
+                            formatParameterNames(spec.parameters())
                     )
             );
         }
 
         List<String> treeLoggers = new ArrayList<>();
 
-        for (BeastXState.TreeLoggerSpec spec : model.beastState.treeLoggerSpecs) {
+        for (TreeLoggerSpec<String> spec : model.beastState.treeLoggerSpecs) {
             treeLoggers.add(
-                    "treeLogger(logEvery=%d, file=%s, trees=%s)".formatted(
+                    "treeLogger(logEvery=%d, file=%s, tree=%s)".formatted(
                             spec.logEvery(),
                             spec.fileName(),
-                            spec.treeNames()
+                            spec.tree()
                     )
             );
         }
@@ -190,7 +193,7 @@ public class BeastXModelSummary {
                 sorted(likelihoods),
                 sorted(operators),
                 sorted(operatorDetails),
-                model.beastState.chainLength,
+                model.beastState.getSamplerSpec().chainLength(),
                 sorted(screenLoggers),
                 sorted(fileLoggers),
                 sorted(treeLoggers)

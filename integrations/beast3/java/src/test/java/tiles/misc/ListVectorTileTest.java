@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import beast.base.core.BEASTObject;
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.domain.PositiveReal;
@@ -199,7 +200,9 @@ public class ListVectorTileTest {
             Set<Tile<?, BEASTState>> candidates = new ListVectorTile()
                     .tryToTile(array, Map.of(first, Set.of(firstTile), second, Set.of(secondTile)), null, null);
 
-            assertTrue(candidates.isEmpty(), pair.toString());
+            // only the fallback to a list of BEAST objects may mix them
+            TypeToken<?> beastObjects = TypeToken.listOf(TypeToken.of(BEASTObject.class));
+            assertTrue(candidates.stream().allMatch(tile -> tile.getTypeToken().equals(beastObjects)), pair.toString());
             assertEquals(0, firstTile.applications);
             assertEquals(0, secondTile.applications);
         }

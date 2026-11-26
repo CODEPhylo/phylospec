@@ -245,16 +245,17 @@ class TaxonSpeciesTileTest {
                 Tree tree ~ Coalescent(populationSize=100.0, taxa=samples)
                 Alignment observed ~ PhyloCTMC(tree=tree, qMatrix=jc69()) observed as data
                 mcmc {
-                    Integer chainLength = 10
-                    Integer defaultLogEvery = 1
-                    Integer randomSeed = 42
+                    Sampler sampler = mcmc(chainLength=10)
+                    Logger fileLogger = fileLogger(logEvery=1)
+                    Logger treeLogger = treeLogger(logEvery=1, tree=tree)
                 }
                 """.formatted(file));
         PhyloSpecRunner runner = new PhyloSpecRunner(source, List.of("beast2"));
+        runner.setSeed(42L);
         assertNotNull(runner.check());
         Path run = directory.resolve("run");
-        runner.runManaged("species", run, warning -> {});
-        var record = new ObjectMapper().readTree(run.resolve("run.json").toFile());
+        runner.runManaged(run.resolve("output/species").toString(), run.resolve("record"), warning -> {});
+        var record = new ObjectMapper().readTree(run.resolve("record/run.json").toFile());
         assertEquals("succeeded", record.path("status").asText());
         assertTrue(record.path("completionConfirmed").asBoolean());
         assertEquals(1, record.path("inputs").size());

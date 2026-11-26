@@ -19,8 +19,8 @@ Alignment alignment ~ PhyloCTMC(
 
 // Short setup example only: 30 steps do not establish posterior convergence.
 mcmc {
-    Integer chainLength = 30
-    Integer defaultLogEvery = 1
-    Integer randomSeed = 12345
-    String outputPrefix = "hky-yule"
+    Sampler sampler = mcmc(chainLength=30)
+    Logger screenLogger = screenLogger(logEvery=1)
+    Logger fileLogger = fileLogger(logEvery=1)
+    Logger treeLogger = treeLogger(logEvery=1, tree)
 }

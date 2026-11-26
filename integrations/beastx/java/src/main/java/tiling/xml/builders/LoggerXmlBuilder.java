@@ -12,13 +12,15 @@ import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
 import dr.inference.model.Statistic;
+import org.phylospec.tiling.mcmc.FileLoggerSpec;
+import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
+import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import tiling.BeastXState;
 import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
 import tiling.rpn.BeastXRPNStatistic;
 import tiling.xml.XmlElement;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -46,26 +48,26 @@ public class LoggerXmlBuilder {
         int loggerIndex =
                 1;
 
-        for (BeastXState.ScreenLoggerSpec spec : state.screenLoggerSpecs) {
+        for (ScreenLoggerSpec<String> spec : state.screenLoggerSpecs) {
             loggers.add(
                     parameterLogger(
                             "screenLogger" + loggerIndex,
                             spec.logEvery(),
                             null,
-                            getLoggedElements(state, spec.parameterNames())
+                            getLoggedElements(state, spec.parameters(), spec.parameterNames())
                     )
             );
 
             loggerIndex++;
         }
 
-        for (BeastXState.FileLoggerSpec spec : state.fileLoggerSpecs) {
+        for (FileLoggerSpec<String> spec : state.fileLoggerSpecs) {
             loggers.add(
                     parameterLogger(
                             "fileLogger" + loggerIndex,
                             spec.logEvery(),
                             spec.fileName(),
-                            getLoggedElements(state, spec.parameterNames())
+                            getLoggedElements(state, spec.parameters(), spec.parameterNames())
                     )
             );
 
@@ -75,13 +77,13 @@ public class LoggerXmlBuilder {
         int treeLoggerIndex =
                 1;
 
-        for (BeastXState.TreeLoggerSpec spec : state.treeLoggerSpecs) {
+        for (TreeLoggerSpec<String> spec : state.treeLoggerSpecs) {
             loggers.add(
                     treeLogger(
                             "treeLogger" + treeLoggerIndex,
                             spec.logEvery(),
                             spec.fileName(),
-                            getLoggedTrees(state, spec.treeNames())
+                            getLoggedTree(state, spec.tree())
                     )
             );
 
@@ -120,75 +122,123 @@ public class LoggerXmlBuilder {
             String id,
             long logEvery,
             String fileName,
-            List<TreeModel> treeModels
+            TreeModel treeModel
     ) {
-        XmlElement logger =
-                XmlElement.element("logTree")
-                        .withId(id)
-                        .withAttribute("logEvery", logEvery)
-                        .withAttribute("fileName", fileName)
-                        .withAttribute("overwrite", "true")
-                        .withAttribute("nexusFormat", "true");
-
-        for (TreeModel treeModel : treeModels) {
-            logger =
-                    logger.withChild(treeReference(treeModel));
-        }
-
-        return logger;
+        return XmlElement.element("logTree")
+                .withId(id)
+                .withAttribute("logEvery", logEvery)
+                .withAttribute("fileName", fileName)
+                .withAttribute("overwrite", "true")
+                .withAttribute("nexusFormat", "true")
+                .withChild(treeReference(treeModel));
     }
 
+    /**
+     * Returns the elements logged by a screen or file logger. The posterior, prior and likelihood
+     * are always logged first. Without parameters, the tree statistics and all sampled parameters
+     * are logged as well.
+     */
     private List<XmlElement> getLoggedElements(
             BeastXState state,
-            List<String> parameterNames
+            List<String> parameterNames,
+            List<String> labels
     ) {
-        if (parameterNames == null) {
-            return defaultLoggedElements(state);
-        }
+        List<String> distributionNames = state.getXmlLoggedDistributionNames();
 
         List<XmlElement> loggedElements =
                 new ArrayList<>();
 
-        for (String parameterName : parameterNames) {
-            XmlElement compoundLikelihoodReference =
-                    compoundLikelihoodReference(state, parameterName);
+        for (String distributionName : distributionNames) {
+            XmlElement distribution = getLoggedElement(state, distributionName);
 
-            if (compoundLikelihoodReference != null) {
-                loggedElements.add(compoundLikelihoodReference);
+            // BEAST X calls the posterior "joint"
+            loggedElements.add(distributionName.equals(POSTERIOR_LOG_NAME)
+                    ? labelElement(distribution, POSTERIOR_LOG_NAME, 1)
+                    : distribution);
+        }
+
+        if (parameterNames == null) {
+            parameterNames = state.getXmlDefaultLoggedParameterNames();
+        }
+
+        for (int i = 0; i < parameterNames.size(); i++) {
+            String parameterName = parameterNames.get(i);
+
+            if (state.treeModelsByPhyloSpecName.containsKey(parameterName)) {
+                String label = labels != null ? labels.get(i) : null;
+                loggedElements.addAll(getLoggedTreeStatistics(state, parameterName, label));
                 continue;
             }
 
-            Parameter parameter =
-                    state.stateNodesByPhyloSpecName.get(parameterName);
+            XmlElement loggedElement = getLoggedElement(state, parameterName);
+            int dimension = getDimension(state, parameterName);
 
-            if (parameter == null) {
-                throw new IllegalArgumentException(
-                        "No BEAST X state node or XML loggable named '"
-                                + parameterName
-                                + "' exists for XML logger."
-                );
+            if (labels != null) {
+                loggedElements.add(labelElement(loggedElement, labels.get(i), dimension));
+            } else if (dimension > 1) {
+                loggedElements.add(labelElement(loggedElement, parameterName, dimension));
+            } else if (!distributionNames.contains(getDistributionName(parameterName))) {
+                loggedElements.add(loggedElement);
             }
-
-            loggedElements.add(parameterReference(parameter));
         }
 
         return loggedElements;
     }
 
-    private List<XmlElement> defaultLoggedElements(BeastXState state) {
-        List<Parameter> parameters =
-                new ArrayList<>(state.stateNodes.keySet());
+    /** Returns the number of columns a logged value has. Only sampled parameters can have several. */
+    private static int getDimension(BeastXState state, String parameterName) {
+        Parameter parameter = state.stateNodesByPhyloSpecName.get(parameterName);
+        return parameter != null ? parameter.getDimension() : 1;
+    }
 
-        parameters.sort(Comparator.comparing(LoggerXmlBuilder::parameterId));
+    /**
+     * Returns the statistics logged for a tree. They are always named after the statistic
+     * (label.height and label.treeLength), as numbering them would hide which one is which.
+     */
+    private List<XmlElement> getLoggedTreeStatistics(BeastXState state, String treeName, String label) {
+        XmlElement height = getLoggedElement(state, treeName + ".height");
+        XmlElement treeLength = getLoggedElement(state, treeName + ".treeLength");
 
-        List<XmlElement> loggedElements =
-                new ArrayList<>();
+        if (label == null) return List.of(height, treeLength);
+        return List.of(labelElement(height, label + ".height", 1), labelElement(treeLength, label + ".treeLength", 1));
+    }
 
-        for (Parameter parameter : parameters) {
-            loggedElements.add(parameterReference(parameter));
+    /** Returns the name under which a distribution is always logged, resolving the alias of the posterior. */
+    private static String getDistributionName(String loggableName) {
+        return JOINT_LOG_NAME.equals(loggableName) ? POSTERIOR_LOG_NAME : loggableName;
+    }
+
+    private XmlElement getLoggedElement(BeastXState state, String parameterName) {
+        XmlElement compoundLikelihoodReference =
+                compoundLikelihoodReference(state, parameterName);
+
+        if (compoundLikelihoodReference != null) {
+            return compoundLikelihoodReference;
         }
 
-        return loggedElements;
+        Parameter parameter =
+                state.stateNodesByPhyloSpecName.get(parameterName);
+
+        if (parameter == null) {
+            throw new IllegalArgumentException(
+                    "No BEAST X state node or XML loggable named '"
+                            + parameterName
+                            + "' exists for XML logger."
+            );
+        }
+
+        return parameterReference(parameter);
+    }
+
+    /**
+     * Wraps a logged element into a {@code column} element that logs it under the given label. BEAST X
+     * appends the index to the label of each column of a vector, so a trailing dot numbers them like
+     * BEAST 3 does: label.1, label.2, ...
+     */
+    private XmlElement labelElement(XmlElement loggedElement, String label, int dimension) {
+        return XmlElement.element("column")
+                .withAttribute("label", dimension > 1 ? label + "." : label)
+                .withChild(loggedElement);
     }
 
     private XmlElement compoundLikelihoodReference(
@@ -206,15 +256,8 @@ public class LoggerXmlBuilder {
             case PRIOR_LOG_NAME ->
                     XmlElement.ref("prior", "prior");
 
-            case LIKELIHOOD_LOG_NAME -> {
-                if (state.likelihoodDistributions.isEmpty() && state.observedTreeDistributions.isEmpty()) {
-                    throw new IllegalArgumentException(
-                            "Cannot log 'likelihood' because this BEAST X XML model has no likelihood block."
-                    );
-                }
-
-                yield XmlElement.ref("likelihood", "likelihood");
-            }
+            case LIKELIHOOD_LOG_NAME ->
+                    XmlElement.ref("likelihood", "likelihood");
 
             default ->
                     componentLikelihoodReference(state, loggableName);
@@ -340,33 +383,20 @@ public class LoggerXmlBuilder {
         return null;
     }
 
-    private List<TreeModel> getLoggedTrees(
+    private TreeModel getLoggedTree(
             BeastXState state,
-            List<String> treeNames
+            String treeName
     ) {
-        List<TreeModel> trees =
-                new ArrayList<>();
+        TreeModel treeModel =
+                state.treeModelsByPhyloSpecName.get(treeName);
 
-        if (treeNames == null) {
-            trees.addAll(state.treePriorDistributions.keySet());
-        } else {
-            for (String treeName : treeNames) {
-                TreeModel treeModel =
-                        state.treeModelsByPhyloSpecName.get(treeName);
-
-                if (treeModel == null) {
-                    throw new IllegalArgumentException(
-                            "No BEAST X tree model named '" + treeName + "' exists for XML tree logger."
-                    );
-                }
-
-                trees.add(treeModel);
-            }
+        if (treeModel == null) {
+            throw new IllegalArgumentException(
+                    "No BEAST X tree model named '" + treeName + "' exists for XML tree logger."
+            );
         }
 
-        trees.sort(Comparator.comparing(LoggerXmlBuilder::treeId));
-
-        return trees;
+        return treeModel;
     }
 
     private XmlElement parameterReference(Parameter parameter) {

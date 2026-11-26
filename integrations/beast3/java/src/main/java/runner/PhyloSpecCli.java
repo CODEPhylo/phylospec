@@ -10,12 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.ServiceConfigurationError;
-import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
 import javax.xml.parsers.ParserConfigurationException;
 import org.phylospec.errors.Error;
 import org.phylospec.tiling.errors.WrappedTileApplicationError;
+import org.phylospec.tiling.mcmc.OutputPaths;
+import org.phylospec.tiling.mcmc.RunRecord;
 import org.xml.sax.SAXException;
 
 /** Command-line entry point for checking scripts, exporting analysis XML and running managed analyses. */
@@ -39,8 +40,9 @@ public final class PhyloSpecCli {
               --library <id[,id...]>  Tile libraries in preference order
               --adapter-path <dir>   check/export/run: unpacked local adapter bundle (repeatable)
               --xml <file>           Export only: destination XML (default log prefix: XML file stem)
-              --out <directory>      Run only: exact run directory (must be absent or empty)
-              --run-name <prefix>    Run only: relative output prefix (default: script name)
+              --run-name <name>      Run only: name of the output files (default: script name)
+              --seed <n>             export/run: positive random seed (default: chosen at random)
+              --overwrite            Run only: replace existing output files and the run record
               --debug                Show raw BEAST console output and failure stack traces
               -h, --help              Show this help
               --version              Show PhyloSpec and the default BEAST 3 runtime versions
@@ -54,14 +56,12 @@ public final class PhyloSpecCli {
             The host PhyloSpec/BEAST runtime is retained; bundle copies do not replace it.
             Bundles are local executable Java code. No packages are downloaded or installed.
             Legacy run requires --library and preserves its exact library order.
-            New run writes to --out/output/, or beside the script in runs/<name>-<run-id>/output/.
-            Relative --out paths use the command's working directory; input paths use the script directory.
-            Script outputPrefix overrides --run-name; explicit logger names are relative to output/.
-            Output paths must stay inside output/. Absolute script output paths are rejected.
-            Managed runs save model.phylospec, run.json and console.log beside output/.
-            BEAST X also saves the executed analysis.xml in the run directory.
+            Logs, trees and state files are written to the working directory. Input paths use the script directory.
+            Existing outputs are never replaced without --overwrite.
+            The run record (run.json, console.log, model.phylospec) is saved next to them in <name>.run/.
+            BEAST X also saves the executed analysis.xml in the run record.
             A nonterminal or unconfirmed run.json does not confirm that a process is still running.
-            Legacy run retains its existing --run-name path and script output behavior; --out is unavailable.
+            Legacy run retains its existing --run-name path and script output behavior.
             """;
     private static final String BASE_LIBRARY = "beast2";
 
@@ -143,6 +143,8 @@ public final class PhyloSpecCli {
             Options options, Path source, LocalAdapterBundles adapters, PrintStream out, PrintStream err)
             throws IOException, ParserConfigurationException, SAXException {
         PhyloSpecRunner runner = new PhyloSpecRunner(source, options.libraries(), adapters.bundles());
+        runner.setSeed(options.seed());
+        runner.setOverwrite(options.overwrite());
         Consumer<PhyloSpecDiagnostic> warningHandler = warning -> err.println(warning.format());
         if (options.command() == Command.CHECK) {
             try {
@@ -169,20 +171,10 @@ public final class PhyloSpecCli {
         if (options.command() == Command.RUN) {
             Path runDirectory = options.runDirectory(source);
             String runName = options.outputPrefix(source);
-            RunRecord record;
-            try {
-                record = runner.runManaged(runName, runDirectory, warningHandler, out::println, options.debug());
-            } finally {
-                if (Files.isRegularFile(runDirectory.resolve("run.json"))) {
-                    out.println("Results directory: " + runDirectory);
-                    out.println("Run record: " + runDirectory.resolve("run.json"));
-                    if (Files.isRegularFile(runDirectory.resolve("console.log"))) {
-                        out.println("BEAST console log: " + runDirectory.resolve("console.log"));
-                    }
-                }
-            }
+            // the runner reports the record and console log paths once it has created them
+            RunRecord record = runner.runManaged(runName, runDirectory, warningHandler, out::println, options.debug());
             out.println("Run completed (engine: beast3; libraries: " + String.join(",", options.libraries()) + ").");
-            for (var file : record.outputFiles()) {
+            for (var file : record.getOutputFiles()) {
                 String label =
                         switch (file.kind()) {
                             case "tree" -> "Trees";
@@ -258,10 +250,11 @@ public final class PhyloSpecCli {
             String engine,
             Path source,
             String runName,
-            Path outputDirectory,
             Path xmlFile,
+            Long seed,
             List<String> libraries,
             List<Path> adapterPaths,
+            boolean overwrite,
             boolean help,
             boolean version,
             boolean debug) {
@@ -284,13 +277,14 @@ public final class PhyloSpecCli {
             String selectedEngine = null;
             Path source = null;
             String runName = null;
-            Path outputDirectory = null;
             Path xmlFile = null;
+            Long seed = null;
             List<String> libraries = new ArrayList<>();
             List<Path> adapterPaths = new ArrayList<>();
             boolean help = false;
             boolean version = false;
             boolean debug = false;
+            boolean overwrite = false;
             boolean fileNamesOnly = false;
 
             for (int index = firstOption; index < arguments.length; index++) {
@@ -305,6 +299,7 @@ public final class PhyloSpecCli {
                     case "-h", "--help" -> help = true;
                     case "--version" -> version = true;
                     case "--debug" -> debug = true;
+                    case "--overwrite" -> overwrite = true;
                     case "--" -> fileNamesOnly = true;
                     case "--engine" -> {
                         String engine = requireValue(arguments, ++index, "--engine");
@@ -343,17 +338,17 @@ public final class PhyloSpecCli {
                             throw new IllegalArgumentException("--adapter-path requires a non-blank directory.");
                         adapterPaths.add(Path.of(value));
                     }
-                    case "--out" -> {
-                        String value = requireValue(arguments, ++index, "--out");
-                        if (value.isBlank())
-                            throw new IllegalArgumentException("--out requires a non-blank directory.");
-                        outputDirectory = Path.of(value);
-                    }
                     case "--xml" -> {
                         String value = requireValue(arguments, ++index, "--xml");
                         if (value.isBlank()) throw new IllegalArgumentException("--xml requires a non-blank file.");
                         xmlFile = Path.of(value);
                     }
+                    case "--seed" -> seed = parseSeed(requireValue(arguments, ++index, "--seed"));
+                    case "--out" ->
+                        throw new IllegalArgumentException(
+                                "--out is no longer supported. Outputs are written to the working directory, so run"
+                                        + " the command from the directory that should hold them. To keep replicates"
+                                        + " apart, give each one its own --run-name or its own working directory.");
                     default -> {
                         if (argument.startsWith("-")) {
                             throw new IllegalArgumentException("Unknown option: " + argument);
@@ -384,11 +379,17 @@ public final class PhyloSpecCli {
                 if (command == Command.EXPORT && xmlFile == null) {
                     throw new IllegalArgumentException("The export subcommand requires --xml <file>.");
                 }
+                if (command == Command.RUN && runName != null) {
+                    OutputPaths.validateRunName(runName);
+                }
                 if (command != Command.EXPORT && xmlFile != null) {
                     throw new IllegalArgumentException("--xml is only supported for the export subcommand.");
                 }
-                if (command != Command.RUN && outputDirectory != null) {
-                    throw new IllegalArgumentException("--out is only supported for the run subcommand.");
+                if (command != Command.RUN && overwrite) {
+                    throw new IllegalArgumentException("--overwrite is only supported for run.");
+                }
+                if (command == Command.CHECK && seed != null) {
+                    throw new IllegalArgumentException("--seed is only supported for export and run.");
                 }
                 if (command == Command.LEGACY_RUN && !adapterPaths.isEmpty()) {
                     throw new IllegalArgumentException("--adapter-path is only supported for check/export/run.");
@@ -406,21 +407,18 @@ public final class PhyloSpecCli {
                     engine,
                     source,
                     runName,
-                    outputDirectory,
                     xmlFile,
+                    seed,
                     List.copyOf(libraries),
                     List.copyOf(adapterPaths),
+                    overwrite,
                     help,
                     version,
                     debug);
         }
 
         Path runDirectory(Path source) {
-            return outputDirectory == null
-                    ? source.getParent()
-                            .resolve("runs")
-                            .resolve(withoutExtension(source).getFileName() + "-" + UUID.randomUUID())
-                    : outputDirectory.toAbsolutePath().normalize();
+            return new OutputPaths(Path.of("")).getRecordDirectory(this.outputPrefix(source));
         }
 
         String outputPrefix(Path source) {
@@ -434,6 +432,16 @@ public final class PhyloSpecCli {
                 case EXPORT -> "export the analysis XML";
                 default -> "run the PhyloSpec model";
             };
+        }
+
+        private static long parseSeed(String value) {
+            try {
+                long seed = Long.parseLong(value);
+                if (seed > 0) return seed;
+            } catch (NumberFormatException malformed) {
+                // reported below together with seeds that are not positive
+            }
+            throw new IllegalArgumentException("--seed requires a positive integer.");
         }
 
         private static String requireValue(String[] arguments, int index, String option) {

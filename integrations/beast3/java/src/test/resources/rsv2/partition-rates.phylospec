@@ -29,7 +29,5 @@ QMatrix q3 = hky(kappa=kappa3, baseFrequencies=pi3)
 Alignment a3 ~ PhyloCTMC(tree=tree,qMatrix=q3,branchRates=clock,rate=2.9952380952380953 * weights[3]) observed as codon3
 
 mcmc {
-  Integer chainLength = 5
-  Integer defaultLogEvery = 1
-  Integer randomSeed = 12345
+  Sampler sampler = mcmc(chainLength=5)
 }

@@ -3,6 +3,7 @@ package tiling;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import beast.pkgmgmt.BEASTVersion;
 import java.io.IOException;
@@ -89,6 +90,14 @@ public class EngineSpecificationTest {
                 assertNotNull(argument.getRequired());
                 assertNotNull(argument.getCanBeStochastic());
             }
+        }
+
+        // the samplers and loggers of the mcmc block are components too
+
+        List<String> generatorNames =
+                generators.stream().map(Generator__1::getName).toList();
+        for (String mcmcComponent : List.of("mcmc", "screenLogger", "fileLogger", "treeLogger")) {
+            assertTrue(generatorNames.contains(mcmcComponent), "The engine specification lacks " + mcmcComponent + ".");
         }
 
         Generator__1 strictClock = generators.stream()

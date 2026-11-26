@@ -8,9 +8,13 @@ import dr.inference.loggers.Logger;
 import dr.inference.loggers.MCLogger;
 import dr.inference.loggers.NumberColumn;
 import dr.inference.loggers.TabDelimitedFormatter;
-import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
 import dr.inference.model.Statistic;
+import org.phylospec.tiling.mcmc.FileLoggerSpec;
+import org.phylospec.tiling.mcmc.LoggerSpec;
+import org.phylospec.tiling.mcmc.OutputPaths;
+import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
+import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import tiling.BeastXModel;
 import tiling.BeastXState;
 import tiling.loggables.TreeStatisticsLoggable;
@@ -51,32 +55,16 @@ public class LoggerBuilder {
             BeastXState beastState,
             List<Logger> loggers
     ) {
-        for (BeastXState.ScreenLoggerSpec spec : beastState.screenLoggerSpecs) {
-            MCLogger logger =
-                    new MCLogger(new TabDelimitedFormatter(System.out), spec.logEvery(), true);
-
-            for (Loggable loggable : getLoggedLoggables(model, beastState, spec.parameterNames())) {
-                logger.add(loggable);
-            }
-
-            loggers.add(logger);
+        for (ScreenLoggerSpec<String> spec : beastState.screenLoggerSpecs) {
+            loggers.add(buildScreenLogger(model, beastState, spec));
         }
 
-        for (BeastXState.FileLoggerSpec spec : beastState.fileLoggerSpecs) {
-            MCLogger logger =
-                    buildFileLogger(spec);
-
-            for (Loggable loggable : getLoggedLoggables(model, beastState, spec.parameterNames())) {
-                logger.add(loggable);
-            }
-
-            loggers.add(logger);
+        for (FileLoggerSpec<String> spec : beastState.fileLoggerSpecs) {
+            loggers.add(buildFileLogger(model, beastState, spec));
         }
 
-        for (BeastXState.TreeLoggerSpec spec : beastState.treeLoggerSpecs) {
-            for (TreeModel treeModel : getLoggedTrees(beastState, spec.treeNames())) {
-                loggers.add(buildTreeLogger(spec, treeModel));
-            }
+        for (TreeLoggerSpec<String> spec : beastState.treeLoggerSpecs) {
+            loggers.add(buildTreeLogger(spec, findTreeModel(beastState, spec.tree())));
         }
     }
 
@@ -90,75 +78,65 @@ public class LoggerBuilder {
         }
 
         if (beastState.screenLoggerSpecs.isEmpty()) {
-            BeastXState.ScreenLoggerSpec screenLoggerSpec =
-                    new BeastXState.ScreenLoggerSpec(
-                            beastState.defaultLogEvery,
-                            null
-                    );
-
-            MCLogger logger =
-                    new MCLogger(new TabDelimitedFormatter(System.out), screenLoggerSpec.logEvery(), true);
-
-            for (Loggable loggable : getLoggedLoggables(model, beastState, screenLoggerSpec.parameterNames())) {
-                logger.add(loggable);
-            }
-
-            loggers.add(logger);
+            loggers.add(buildScreenLogger(
+                    model, beastState, new ScreenLoggerSpec<>(LoggerSpec.DEFAULT_LOG_EVERY, null, null)));
         }
 
         if (beastState.fileLoggerSpecs.isEmpty()) {
-            BeastXState.FileLoggerSpec fileLoggerSpec =
-                    new BeastXState.FileLoggerSpec(
-                            beastState.defaultLogEvery,
-                            beastState.outputPrefix + ".log",
-                            null
-                    );
-
-            MCLogger logger =
-                    buildFileLogger(fileLoggerSpec);
-
-            for (Loggable loggable : getLoggedLoggables(model, beastState, null)) {
-                logger.add(loggable);
-            }
-
-            loggers.add(logger);
+            loggers.add(buildFileLogger(
+                    model,
+                    beastState,
+                    new FileLoggerSpec<>(
+                            LoggerSpec.DEFAULT_LOG_EVERY, OutputPaths.getLogFile(beastState.outputPrefix), null, null)));
         }
 
-        if (beastState.treeLoggerSpecs.isEmpty() && !beastState.treePriorDistributions.isEmpty()) {
-            BeastXState.TreeLoggerSpec treeLoggerSpec =
-                    new BeastXState.TreeLoggerSpec(
-                            beastState.defaultLogEvery,
-                            beastState.outputPrefix + ".trees",
-                            new ArrayList<>(beastState.treeModelsByPhyloSpecName.keySet())
-                    );
-
-            for (TreeModel treeModel : getLoggedTrees(beastState, treeLoggerSpec.treeNames())) {
-                loggers.add(buildTreeLogger(treeLoggerSpec, treeModel));
+        if (beastState.treeLoggerSpecs.isEmpty()) {
+            for (TreeLoggerSpec<String> spec : beastState.getDefaultTreeLoggerSpecs(beastState.outputPrefix)) {
+                loggers.add(buildTreeLogger(spec, findTreeModel(beastState, spec.tree())));
             }
         }
     }
 
-    private MCLogger buildFileLogger(BeastXState.FileLoggerSpec spec) {
+    private MCLogger buildScreenLogger(BeastXModel model, BeastXState beastState, ScreenLoggerSpec<String> spec) {
+        MCLogger logger =
+                new MCLogger(new TabDelimitedFormatter(System.out), spec.logEvery(), true);
+
+        for (Loggable loggable : getLoggedLoggables(model, beastState, spec.parameters(), spec.parameterNames())) {
+            logger.add(loggable);
+        }
+
+        return logger;
+    }
+
+    private MCLogger buildFileLogger(BeastXModel model, BeastXState beastState, FileLoggerSpec<String> spec) {
+        MCLogger logger;
+
         try {
             ensureParentDirectoryExists(spec.fileName());
 
-            return new MCLogger(spec.fileName(), spec.logEvery(), false, 0);
+            logger = new MCLogger(spec.fileName(), spec.logEvery(), false, 0);
         } catch (IOException e) {
             throw new IllegalStateException(
                     "Could not create BEAST X file logger for '" + spec.fileName() + "'.",
                     e
             );
         }
+
+        for (Loggable loggable : getLoggedLoggables(model, beastState, spec.parameters(), spec.parameterNames())) {
+            logger.add(loggable);
+        }
+
+        return logger;
     }
 
-    private TreeLogger buildTreeLogger(BeastXState.TreeLoggerSpec spec, TreeModel treeModel) {
+    private TreeLogger buildTreeLogger(TreeLoggerSpec<String> spec, TreeModel treeModel) {
         try {
             ensureParentDirectoryExists(spec.fileName());
 
             return new TreeLogger(
                     treeModel,
                     new TabDelimitedFormatter(new PrintWriter(new FileWriter(spec.fileName()))),
-                    Math.toIntExact(spec.logEvery()),
+                    spec.logEvery(),
                     true,
                     true,
                     false
@@ -186,34 +164,76 @@ public class LoggerBuilder {
     private List<Loggable> getLoggedLoggables(
             BeastXModel model,
             BeastXState beastState,
-            List<String> loggableNames
-    ) {
-        if (loggableNames == null) {
-            return getDefaultLoggedLoggables(model, beastState);
-        }
-
-        List<Loggable> loggables =
-                new ArrayList<>();
-
-        for (String loggableName : loggableNames) {
-            loggables.add(findLoggable(model, beastState, loggableName));
-        }
-
-        return loggables;
-    }
-
-    private List<Loggable> getDefaultLoggedLoggables(
-            BeastXModel model,
-            BeastXState beastState
+            List<String> loggableNames,
+            List<String> labels
     ) {
         List<Loggable> loggables =
                 new ArrayList<>();
 
+        // the posterior, prior and likelihood are always logged
         if (model != null) {
             loggables.add(model.posterior);
             loggables.add(model.prior);
             loggables.add(model.likelihood);
         }
+
+        if (loggableNames == null) {
+            loggables.addAll(getDefaultLoggedLoggables(beastState));
+            return loggables;
+        }
+
+        for (int i = 0; i < loggableNames.size(); i++) {
+            String loggableName = loggableNames.get(i);
+
+            // a renamed tree keeps its statistic names (label.height, label.treeLength)
+            // instead of being numbered, as the numbers would not tell the statistics apart
+            TreeModel treeModel = beastState.treeModelsByPhyloSpecName.get(loggableName);
+            if (treeModel != null) {
+                String treeLabel = labels != null ? labels.get(i) : loggableName;
+                loggables.add(TreeStatisticsLoggable.all(treeModel, treeLabel));
+                continue;
+            }
+
+            Loggable loggable = findLoggable(beastState, loggableName);
+            loggables.add(labels != null
+                    ? labelLoggable(loggable, labels.get(i))
+                    : numberVectorColumns(loggable, loggableName));
+        }
+
+        return loggables;
+    }
+
+    /**
+     * Returns a loggable with the columns of the given one under a new label. Like in BEAST 3,
+     * several columns are numbered as label.1, label.2, ...
+     */
+    private Loggable labelLoggable(Loggable loggable, String label) {
+        LogColumn[] columns = loggable.getColumns();
+
+        for (int i = 0; i < columns.length; i++) {
+            columns[i].setLabel(columns.length > 1 ? label + "." + (i + 1) : label);
+        }
+
+        return () -> columns;
+    }
+
+    /**
+     * Numbers the columns of a vector parameter or statistic as name.1, name.2, ... like BEAST 3,
+     * instead of BEAST X's name1, name2, ... Other loggables are returned unchanged.
+     */
+    private Loggable numberVectorColumns(Loggable loggable, String name) {
+        boolean isVector = (loggable instanceof Parameter || loggable instanceof Statistic)
+                && loggable.getColumns().length > 1;
+        return isVector ? labelLoggable(loggable, name) : loggable;
+    }
+
+    /**
+     * Returns what a logger without explicit parameters logs besides the posterior, prior and
+     * likelihood: the statistics of every tree, all sampled parameters and all deterministic values.
+     */
+    private List<Loggable> getDefaultLoggedLoggables(BeastXState beastState) {
+        List<Loggable> loggables =
+                new ArrayList<>();
 
         for (String treeName : beastState.treeModelsByPhyloSpecName.keySet()) {
             TreeModel treeModel =
@@ -222,45 +242,20 @@ public class LoggerBuilder {
             loggables.add(TreeStatisticsLoggable.all(treeModel, treeName));
         }
 
-        loggables.addAll(beastState.stateNodes.keySet());
+        for (Parameter parameter : beastState.stateNodes.keySet()) {
+            loggables.add(numberVectorColumns(parameter, parameter.getId()));
+        }
         loggables.addAll(beastState.calculationNodes.keySet());
 
         return loggables;
     }
 
-    private Loggable findLoggable(
-            BeastXModel model,
-            BeastXState beastState,
-            String loggableName
-    ) {
-        if (model != null) {
-            switch (loggableName) {
-                case "posterior" -> {
-                    return model.posterior;
-                }
-                case "prior" -> {
-                    return model.prior;
-                }
-                case "likelihood" -> {
-                    return model.likelihood;
-                }
-                default -> {
-                }
-            }
-        }
+    private Loggable findLoggable(BeastXState beastState, String loggableName) {
+        TreeModel treeModel =
+                beastState.treeModelsByPhyloSpecName.get(loggableName);
 
-        if (model == null && isModelLevelLoggable(loggableName)) {
-            throw new IllegalArgumentException(
-                    "Model-level loggable '" + loggableName + "' requires a BeastXModel. " +
-                            "Use buildLoggers(BeastXModel) or buildMCMC(BeastXModel)."
-            );
-        }
-
-        Loggable treeStatistic =
-                findTreeStatisticLoggable(beastState, loggableName);
-
-        if (treeStatistic != null) {
-            return treeStatistic;
+        if (treeModel != null) {
+            return TreeStatisticsLoggable.all(treeModel, loggableName);
         }
 
         Parameter parameter =
@@ -301,104 +296,9 @@ public class LoggerBuilder {
             }
         }
 
-        Loggable likelihoodComponent =
-                findLikelihoodComponent(beastState, loggableName);
-
-        if (likelihoodComponent != null) {
-            return likelihoodComponent;
-        }
-
         throw new IllegalArgumentException(
                 "No BEAST X loggable named '" + loggableName + "' exists for logger."
         );
-    }
-
-    private Loggable findLikelihoodComponent(
-            BeastXState beastState,
-            String loggableName
-    ) {
-        for (Likelihood candidate : beastState.priorDistributions.values()) {
-            if (loggableName.equals(candidate.getId())) {
-                return candidate;
-            }
-        }
-
-        for (Likelihood candidate : beastState.treePriorDistributions.values()) {
-            if (loggableName.equals(candidate.getId())) {
-                return candidate;
-            }
-        }
-
-        for (Likelihood candidate : beastState.observedTreeDistributions.values()) {
-            if (loggableName.equals(candidate.getId())) {
-                return candidate;
-            }
-        }
-
-        for (Likelihood candidate : beastState.calibrationPriorDistributions) {
-            if (loggableName.equals(candidate.getId())) {
-                return candidate;
-            }
-        }
-
-        for (Likelihood candidate : beastState.likelihoodDistributions) {
-            if (loggableName.equals(candidate.getId())) {
-                return candidate;
-            }
-        }
-
-        return null;
-    }
-
-    private Loggable findTreeStatisticLoggable(
-            BeastXState beastState,
-            String loggableName
-    ) {
-        if (loggableName.endsWith(".height")) {
-            String treeName =
-                    loggableName.substring(0, loggableName.length() - ".height".length());
-
-            TreeModel treeModel =
-                    beastState.treeModelsByPhyloSpecName.get(treeName);
-
-            if (treeModel != null) {
-                return TreeStatisticsLoggable.height(treeModel, treeName);
-            }
-        }
-
-        if (loggableName.endsWith(".treeLength")) {
-            String treeName =
-                    loggableName.substring(0, loggableName.length() - ".treeLength".length());
-
-            TreeModel treeModel =
-                    beastState.treeModelsByPhyloSpecName.get(treeName);
-
-            if (treeModel != null) {
-                return TreeStatisticsLoggable.treeLength(treeModel, treeName);
-            }
-        }
-
-        return null;
-    }
-
-    private static boolean isModelLevelLoggable(String loggableName) {
-        return loggableName.equals("posterior")
-                || loggableName.equals("prior")
-                || loggableName.equals("likelihood");
-    }
-
-    private List<TreeModel> getLoggedTrees(
-            BeastXState beastState,
-            List<String> treeNames
-    ) {
-        List<TreeModel> trees =
-                new ArrayList<>();
-
-        for (String treeName : treeNames) {
-            trees.add(findTreeModel(beastState, treeName));
-        }
-
-        return trees;
     }
 
     private TreeModel findTreeModel(BeastXState beastState, String treeName) {

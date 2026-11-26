@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
+import org.phylospec.tiling.mcmc.RunRecord;
 
 /**
  * Makes explicitly supplied, unpacked adapter bundles visible to the existing ServiceLoader

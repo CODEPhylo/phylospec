@@ -1,6 +1,5 @@
 package runner;
 
-import beastconfig.OutputPaths;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -10,8 +9,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
+import org.phylospec.tiling.mcmc.OutputPaths;
 
-/** Runs the isolated engine with its native loggers' working directory set to output/. */
+/** Runs the isolated engine in the working directory of the command. */
 final class InstalledBeastXRun {
     private InstalledBeastXRun() {}
 
@@ -24,12 +24,10 @@ final class InstalledBeastXRun {
         OutputPaths.checkRuntimeOverrides();
         Path directory = options.runDirectory(source);
         String prefix = options.outputPrefix(source);
-        new OutputPaths(directory.resolve("output")).resolveUserPath(prefix);
         Path lib = InstalledEngineTool.runtimeLib("beastx", "run");
-        Path output = OutputPaths.createRunDirectory(directory);
+        OutputPaths.claimRecordDirectory(directory, options.overwrite());
         Path console = directory.resolve("console.log");
         Path record = directory.resolve("run.json");
-        out.println("Results directory: " + directory);
         out.println("Saving analysis.xml and running BEAST X. Console log: " + console);
 
         String executable = java.io.File.separatorChar == '\\' ? "java.exe" : "java";
@@ -43,9 +41,10 @@ final class InstalledBeastXRun {
         }
         args.addAll(List.of(
                 "-cp", lib.resolve("*").toString(), "BeastXRunTool", source.toString(), directory.toString(), prefix));
+        if (options.seed() != null) args.addAll(List.of("--seed", options.seed().toString()));
+        if (options.overwrite()) args.add("--overwrite");
         if (options.debug()) args.add("--debug");
-        ProcessBuilder builder =
-                new ProcessBuilder(args).directory(output.toFile()).redirectErrorStream(true);
+        ProcessBuilder builder = new ProcessBuilder(args).redirectErrorStream(true);
         if (!options.debug()) builder.redirectOutput(console.toFile());
         int exit = execute(builder, console, options.debug(), out);
 
@@ -64,7 +63,8 @@ final class InstalledBeastXRun {
         out.println("Analysis XML: " + directory.resolve("analysis.xml"));
         for (var file : result.path("expectedOutputs")) {
             String label = "tree".equals(file.path("kind").asText()) ? "Trees" : "Trace/log";
-            out.println(label + ": " + directory.resolve(file.path("path").asText()));
+            out.println(
+                    label + ": " + directory.resolve(file.path("path").asText()).normalize());
         }
         out.println("Execution and output checks succeeded; MCMC convergence has not been assessed.");
         return 0;

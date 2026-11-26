@@ -335,9 +335,9 @@ model {
 }
 
 mcmc {
-    Integer chainLength = 1e8
-    String logFile = "output.log"
-    String treesFile = "output.trees"
+    Sampler sampler = mcmc(chainLength=100000000)
+    Logger fileLogger = fileLogger(file="output.log")
+    Logger treeLogger = treeLogger(file="output.trees", tree)
 }
 ```
 

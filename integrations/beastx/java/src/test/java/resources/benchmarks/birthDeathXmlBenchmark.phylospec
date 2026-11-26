@@ -19,8 +19,7 @@ Tree tree ~ BirthDeath(
 )
 
 mcmc {
-    Integer chainLength = 10000
-    Integer randomSeed = 1234
+    Sampler sampler = mcmc(chainLength=10000)
 
     Logger fileLogger = fileLogger(
         logEvery=1,
@@ -31,6 +30,6 @@ mcmc {
     Logger treeLogger = treeLogger(
         logEvery=1,
         file="{{TREE_LOG}}",
-        trees=[tree]
+        tree=tree
     )
 }

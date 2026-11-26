@@ -61,8 +61,7 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 10000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=10000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -73,7 +72,7 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -173,8 +172,7 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 10000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=10000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -185,7 +183,7 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -289,8 +287,7 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -301,7 +298,7 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -409,8 +406,7 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 10000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=10000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -421,7 +417,7 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -536,8 +532,7 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 10000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=10000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -548,7 +543,7 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -632,10 +627,22 @@ public class BeastXXmlTreePriorPhyloCTMCTest {
                 )
 
                 mcmc {
-                    Integer chainLength = 10
-                    Logger treeLogger = treeLogger(logEvery=1, file="%s", trees=[tree])
+                    Sampler sampler = mcmc(chainLength=10)
+
+                    Logger fileLogger = fileLogger(
+                        logEvery=1,
+                        file="%s"
+                    )
+
+                    Logger treeLogger = treeLogger(
+                        logEvery=1,
+                        file="%s",
+                        tree=tree
+                    )
                 }
-                """.formatted(XmlTestSupport.unixPath(XmlTestSupport.treeLogPath("logisticCoalescentPhyloCTMC")));
+                """.formatted(
+                        XmlTestSupport.unixPath(XmlTestSupport.logPath("logisticCoalescentPhyloCTMC")),
+                        XmlTestSupport.unixPath(XmlTestSupport.treeLogPath("logisticCoalescentPhyloCTMC")));
 
         Exception error = assertThrows(
                 Exception.class,

@@ -6,7 +6,8 @@ Alignment alignment ~ PhyloCTMC(tree, qMatrix) observed as data
 
 // This short chain tests the workflow, not convergence.
 mcmc {
-    Integer chainLength = 30
-    Integer defaultLogEvery = 10
-    Integer randomSeed = 42
+    Sampler sampler = mcmc(chainLength=30)
+    Logger screenLogger = screenLogger(logEvery=10)
+    Logger fileLogger = fileLogger(logEvery=10)
+    Logger treeLogger = treeLogger(logEvery=10, tree)
 }

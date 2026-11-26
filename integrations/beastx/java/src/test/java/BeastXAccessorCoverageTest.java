@@ -110,8 +110,8 @@ class BeastXAccessorCoverageTest {
         MCMC mcmc = xmlMcmc("taxonList", source + """
 
                 mcmc {
-                    Integer chainLength = 1
-                    Logger treeLogger = treeLogger(logEvery=1, file="%s", trees=[tree])
+                    Sampler sampler = mcmc(chainLength=1)
+                    Logger treeLogger = treeLogger(logEvery=1, file="%s", tree=tree)
                 }
                 """.formatted(XmlTestSupport.unixPath(XmlTestSupport.treeLogPath("accessors-taxonList"))));
         assertTipHeights("from XML", findModel(mcmc.getLikelihood().getModel(), TreeModel.class), expected);
@@ -240,7 +240,7 @@ class BeastXAccessorCoverageTest {
         return """
 
                 mcmc {
-                    Integer chainLength = 1
+                    Sampler sampler = mcmc(chainLength=1)
                     Logger fileLogger = fileLogger(logEvery=1, file="%s", parameters=[%s])
                 }
                 """.formatted(XmlTestSupport.unixPath(XmlTestSupport.logPath(fileName)), String.join(", ", names));

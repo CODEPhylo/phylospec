@@ -34,6 +34,7 @@
         <provider classname="tiling.RealVectorFromScalars"/>
         <provider classname="tiling.RealVectorSum"/>
         <provider classname="tiling.ReciprocalValue"/>
+        <provider classname="tiling.RenamedLoggable"/>
         <provider classname="tiling.RootAgeValue"/>
         <provider classname="tiling.ScaledScalar"/>
         <provider classname="tiling.SkylineCoalescentModel"/>

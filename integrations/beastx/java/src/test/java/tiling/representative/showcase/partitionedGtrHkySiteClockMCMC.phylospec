@@ -109,7 +109,7 @@ Alignment secondAlignment ~ PhyloCTMC(
 ) observed as secondPartition
 
 mcmc {
-    Integer chainLength = 50000
+    Sampler sampler = mcmc(chainLength=50000)
 
     Logger screenLogger = screenLogger(
         logEvery=5000,
@@ -125,7 +125,7 @@ mcmc {
     Logger treeLogger = treeLogger(
         logEvery=5000,
         file="target/partitionedGtrHkySiteClockMCMC.trees",
-        trees=[tree]
+        tree=tree
     )
 }
 

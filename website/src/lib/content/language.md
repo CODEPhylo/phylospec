@@ -356,7 +356,9 @@ model {
 }
 
 mcmc {
-    // some general technicalities like chain length and output files
+  Sampler sampler = mcmc(chainLength=1000000)
+  Logger screenLogger = screenLogger(logEvery=1000)
+  Logger fileLogger = fileLogger(file="model.log", logEvery=1000)
 }
 ```
 
@@ -364,7 +366,15 @@ All blocks are optional. Statements in the `data` and `model` can also be put ou
 
 The `data` block cannot contain any random variables drawn from distributions. No statement in the `data` can reference a variable defined in another block. Statements in the `model` block can reference variables defined in the `data` block.
 
-An engine should choose reasonable defaults if no `mcmc` or engine-specific block is given. There will be a concrete list of allowed variables in the `mcmc` block (tbd).
+The `mcmc` block describes how the posterior is sampled and what is logged. It can declare one sampler and any number of loggers:
+
+- `mcmc(chainLength, stateFile)` is a simple MCMC sampler. The chain length defaults to 10 million. `stateFile` optionally sets where the final state is stored.
+- `screenLogger(logEvery, parameters, parameterNames)` logs to the screen and `fileLogger(file, logEvery, parameters, parameterNames)` to a file. `parameters` is the list of logged parameters, which can have different types. Without it, all parameters as well as the posterior, prior and likelihood are logged. `parameterNames` optionally gives the names used in the log.
+- `treeLogger(file, tree, logEvery)` logs a tree to a file.
+
+`file` is optional and defaults to a file named after the run in the working folder. Use a relative or absolute path to write somewhere else.
+
+`logEvery` defaults to 1000. An engine chooses reasonable defaults if no `mcmc` block is given. Settings of a single engine (e.g. its operators) go into a block named after the engine, and everything that leaves the analysis statistically equivalent (e.g. the random seed or the run name) is set on the command line.
 
 ### Numerical Expressions
 

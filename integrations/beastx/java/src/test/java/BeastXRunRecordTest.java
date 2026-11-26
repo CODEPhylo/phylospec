@@ -9,95 +9,92 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.phylospec.tiling.mcmc.FileLoggerSpec;
+import org.phylospec.tiling.mcmc.McmcSamplerSpec;
+import org.phylospec.tiling.mcmc.RunRecord;
+import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 import tiling.BeastXState;
 
+/** Checks the BEAST X additions to the shared run record. */
 class BeastXRunRecordTest {
     @TempDir Path directory;
-    private BeastXRunRecord record;
+    private RunRecord record;
+    private Path recordDirectory;
     private Path xml;
     private Path output;
 
     @BeforeEach void prepare() throws IOException {
         Path source = Files.writeString(directory.resolve("original.phylospec"), "Real x = 1\n");
         output = Files.createDirectory(directory.resolve("output"));
-        xml = Files.writeString(directory.resolve("analysis.xml"), "<beast/>\n");
-        record = BeastXRunRecord.create(directory, source);
+        recordDirectory = Files.createDirectory(directory.resolve("analysis.run"));
+        xml = Files.writeString(recordDirectory.resolve("analysis.xml"), "<beast/>\n");
+        record = BeastXRunTool.createRunRecord(recordDirectory, source, Files.readString(source));
     }
 
     @Test void confirmsTheNativeLengthAndBothLogsBeforeRecordingSuccess() throws IOException {
         BeastXState state = new BeastXState("analysis");
-        state.chainLength = 10;
-        state.addFileLoggerSpec(2, "./results/trace.log", List.of("posterior"));
-        state.addTreeLoggerSpec(2, "tree.trees", List.of("tree"));
-        Path data = Files.writeString(directory.resolve("data.txt"), "abc");
-        record.input(data);
-        record.input(data);
-        record.seed("modelBuilding", null, 101L);
-        record.seed("mcmc", null, 101L);
-        record.configure(state, xml, 101L);
+        state.setSamplerSpec(new McmcSamplerSpec(10));
+        state.addFileLoggerSpec(new FileLoggerSpec<>(2, output.resolve("results/trace.log").toString(), List.of("posterior"), null));
+        state.addTreeLoggerSpec(new TreeLoggerSpec<>(2, output.resolve("tree.trees").toString(), "tree"));
+        String xmlHash = BeastXRunTool.configure(record, state, xml, 101L, false);
         JsonNode prepared = read();
-        assertEquals("preparing", prepared.path("status").asText());
-        assertFalse(prepared.has("mcmcStartedAt"));
+        assertEquals("beastx", prepared.at("/runtime/engine").asText());
+        assertEquals("Real x = 1\n", Files.readString(recordDirectory.resolve("model.phylospec")));
         assertEquals(101L, prepared.at("/settings/randomSeed").asLong());
-        assertTrue(prepared.at("/seeds/mcmc/requested").isNull());
-        record.running();
-        assertEquals("running", read().path("status").asText());
-        assertFalse(read().path("completionConfirmed").asBoolean());
-        assertThrows(IOException.class, () -> record.succeeded(5));
+        assertEquals("analysis.xml", prepared.at("/xml/path").asText());
+        assertEquals(xmlHash, prepared.at("/xml/sha256").asText());
+
+        record.markRunning();
+        assertThrows(IOException.class, () -> BeastXRunTool.checkResults(record, 10, 5, xml, xmlHash));
         Files.writeString(output.resolve("results/trace.log"), "state\tposterior\n10\t-1\n");
-        assertThrows(IOException.class, () -> record.succeeded(10));
+        assertThrows(IOException.class, () -> BeastXRunTool.checkResults(record, 10, 10, xml, xmlHash));
         Files.writeString(output.resolve("tree.trees"), "tree STATE_10 = (A:1,B:1);\n");
-        record.succeeded(10);
+        BeastXRunTool.checkResults(record, 10, 10, xml, xmlHash);
+        record.markSucceeded();
+
         JsonNode result = read();
         assertEquals("succeeded", result.path("status").asText());
-        assertTrue(result.path("completionConfirmed").asBoolean());
         assertEquals(10, result.path("completedChainLength").asLong());
-        assertEquals("beastx", result.at("/runtime/engine").asText());
-        assertEquals(101, result.at("/seeds/mcmc/observed").asLong());
         assertEquals(2, result.path("generatedOutputs").size());
-        assertEquals(1, result.path("inputs").size());
-        assertEquals("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", result.at("/inputs/0/sha256").asText());
     }
 
     @Test void alteredAnalysisCannotBeReportedAsSuccessful() throws IOException {
         BeastXState state = new BeastXState("analysis");
-        record.configure(state, xml, 101L);
-        record.running();
+        String xmlHash = BeastXRunTool.configure(record, state, xml, 101L, false);
         Files.writeString(xml, "<changed/>\n");
-        IOException failure = assertThrows(IOException.class, () -> record.succeeded(state.chainLength));
-        record.failed(failure);
-        JsonNode result = read();
-        assertEquals("failed", result.path("status").asText());
-        assertTrue(result.path("completionConfirmed").asBoolean());
-        assertTrue(result.at("/error/message").asText().contains("XML"));
+        long chainLength = state.getSamplerSpec().chainLength();
+        IOException failure = assertThrows(
+                IOException.class, () -> BeastXRunTool.checkResults(record, chainLength, chainLength, xml, xmlHash));
+        assertTrue(failure.getMessage().contains("XML"));
     }
 
-    @Test void rejectsLoggerPathsOutsideOutput() throws IOException {
-        for (String name : List.of("../run.json", "../analysis.xml", xml.toString(), ".//" + xml.getFileName())) {
+    @Test void loggersCannotWriteIntoTheRunRecordEvenWithOverwrite() throws IOException {
+        for (Path file : List.of(recordDirectory.resolve("run.json"), xml, recordDirectory.resolve("notes.log"))) {
             BeastXState state = new BeastXState("analysis");
-            state.addFileLoggerSpec(1, name, List.of());
-            assertThrows(IOException.class, () -> record.configure(state, xml, 101L), name);
-            assertEquals("<beast/>\n", Files.readString(xml));
+            state.addFileLoggerSpec(new FileLoggerSpec<>(1, file.toString(), List.of(), null));
+            assertThrows(IllegalArgumentException.class, () -> BeastXRunTool.configure(record, state, xml, 101L, true), file.toString());
         }
+        assertEquals("<beast/>\n", Files.readString(xml));
+        assertFalse(Files.exists(recordDirectory.resolve("notes.log")));
     }
 
     @Test void existingOutputIsNeverOverwritten() throws IOException {
         Path existing = Files.writeString(output.resolve("existing.log"), "keep");
         BeastXState state = new BeastXState("analysis");
-        state.addFileLoggerSpec(1, "existing.log", List.of());
-        assertThrows(IOException.class, () -> record.configure(state, xml, 101L));
+        state.addFileLoggerSpec(new FileLoggerSpec<>(1, existing.toString(), List.of(), null));
+        assertThrows(IOException.class, () -> BeastXRunTool.configure(record, state, xml, 101L, false));
         assertEquals("keep", Files.readString(existing));
     }
 
     @Test void duplicateLoggerPathsAreRejected() {
         BeastXState state = new BeastXState("analysis");
-        state.addFileLoggerSpec(1, "same.log", List.of());
-        state.addTreeLoggerSpec(1, "./same.log", List.of());
-        assertThrows(IOException.class, () -> record.configure(state, xml, 101L));
+        state.addFileLoggerSpec(new FileLoggerSpec<>(1, output.resolve("same.log").toString(), List.of(), null));
+        state.addTreeLoggerSpec(new TreeLoggerSpec<>(1, output.resolve("nested/../same.log").toString(), "tree"));
+        assertThrows(IllegalArgumentException.class, () -> BeastXRunTool.configure(record, state, xml, 101L, false));
         assertFalse(Files.exists(output.resolve("same.log")));
     }
 
     private JsonNode read() throws IOException {
-        return new ObjectMapper().readTree(directory.resolve("run.json").toFile());
+        return new ObjectMapper().readTree(recordDirectory.resolve("run.json").toFile());
     }
 }

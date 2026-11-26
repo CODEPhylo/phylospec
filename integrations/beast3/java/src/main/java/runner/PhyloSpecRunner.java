@@ -1,13 +1,15 @@
 package runner;
 
+import beast.base.core.BEASTVersion2;
 import beast.base.inference.*;
 import beast.base.parser.XMLParser;
 import beast.base.parser.XMLParserException;
 import beast.base.parser.XMLProducer;
 import beast.base.util.Randomizer;
 import beastconfig.BEASTState;
-import beastconfig.OutputPaths;
 import beastconfig.ReportingTreeLikelihood;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -31,7 +33,6 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import org.phylospec.ast.AstNode;
-import org.phylospec.ast.Expr;
 import org.phylospec.ast.Stmt;
 import org.phylospec.ast.transformers.EvaluateLiterals;
 import org.phylospec.ast.transformers.EvaluateScalarFunctions;
@@ -45,6 +46,8 @@ import org.phylospec.parser.Parser;
 import org.phylospec.tiling.EvaluateTiles;
 import org.phylospec.tiling.TileCatalog;
 import org.phylospec.tiling.errors.TileApplicationError;
+import org.phylospec.tiling.mcmc.OutputPaths;
+import org.phylospec.tiling.mcmc.RunRecord;
 import org.phylospec.typeresolver.StochasticityResolver;
 import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
@@ -64,6 +67,8 @@ public class PhyloSpecRunner {
     private final Path sourceDirectory;
     private final Path sourceFile;
     private final List<LocalAdapterBundles.Bundle> adapterBundles;
+    private Long seed;
+    private boolean overwrite;
 
     /**
      * Constructs a runner for the given PhyloSpec source code.
@@ -101,6 +106,19 @@ public class PhyloSpecRunner {
         this.sourceDirectory = absoluteSource.getParent();
         this.sourceFile = absoluteSource;
         this.adapterBundles = List.copyOf(adapterBundles);
+    }
+
+    /**
+     * Sets the random seed used to build and run the model. Without a seed, managed runs choose
+     * one and all other runs leave the random number generator as it is.
+     */
+    public void setSeed(Long seed) {
+        this.seed = seed;
+    }
+
+    /** Sets whether managed runs replace existing output files and run records. */
+    public void setOverwrite(boolean overwrite) {
+        this.overwrite = overwrite;
     }
 
     /**
@@ -221,9 +239,9 @@ public class PhyloSpecRunner {
         if (sourceFile != null) inputs.add(sourceFile);
         state.setInputObserver((reference, path) -> inputs.add(path));
         CheckedModel checked = check(warningHandler);
-        Long seed = declaredSeed(checked.statements);
         Randomizer.getSeed();
-        if (seed != null) Randomizer.setSeed(seed);
+        if (this.seed != null) Randomizer.setSeed(this.seed);
+        state.randomSeed = this.seed;
 
         MCMC mcmc = new MCMC();
         buildMcmc(checked, state, mcmc);
@@ -275,11 +293,13 @@ public class PhyloSpecRunner {
         progress.accept(checking);
         CheckedModel checked = check(warningHandler);
         OutputPaths.checkRuntimeOverrides();
-        // Reject an invalid CLI prefix before claiming a directory.
-        new OutputPaths(runDirectory.resolve("output")).resolveUserPath(runName);
-        Path outputDirectory = OutputPaths.createRunDirectory(runDirectory);
+        Path outputDirectory = Path.of("").toAbsolutePath();
+        // reject an invalid prefix before claiming a directory
+        new OutputPaths(outputDirectory).resolve(runName);
+        OutputPaths.claimRecordDirectory(runDirectory, this.overwrite);
         RunRecord record =
-                RunRecord.create(runDirectory, source, sourceFile, sourceDirectory, checked.catalog, adapterBundles);
+                createRunRecord(runDirectory, source, sourceFile, sourceDirectory, checked.catalog, adapterBundles);
+        progress.accept("Run record: " + runDirectory.resolve("run.json"));
         AtomicBoolean cancellationRequested = new AtomicBoolean();
         Thread owner = Thread.currentThread();
         Thread shutdown = new Thread(
@@ -288,7 +308,7 @@ public class PhyloSpecRunner {
                     cancellationRequested.set(true);
                     try {
                         owner.join(2000);
-                        record.unconfirmed("The JVM shut down before the runner confirmed a terminal outcome.");
+                        record.markUnconfirmed("The JVM shut down before the runner confirmed a terminal outcome.");
                     } catch (IOException | InterruptedException error) {
                         System.err.println("Could not finalize run record during shutdown: " + error.getMessage());
                     }
@@ -300,17 +320,19 @@ public class PhyloSpecRunner {
             Runtime.getRuntime().addShutdownHook(shutdown);
             hookRegistered = true;
             try (RunConsole console = RunConsole.open(runDirectory.resolve("console.log"), rawConsole)) {
+                progress.accept("BEAST console log: " + runDirectory.resolve("console.log"));
                 console.log().println(checking);
                 Consumer<String> report = message -> {
                     console.log().println(message);
                     progress.accept(message);
                 };
-                record.warnings(checked.warnings);
+                for (PhyloSpecDiagnostic warning : checked.warnings) record.addWarning(warning.format());
                 checked.warnings.forEach(warning -> console.log().println(warning.format()));
-                BEASTState state = new BEASTState(runName, sourceDirectory, outputDirectory);
+                BEASTState state =
+                        new BEASTState(runName, sourceDirectory, new OutputPaths(outputDirectory, this.overwrite));
                 state.setInputObserver((reference, path) -> {
                     try {
-                        record.input(reference, path);
+                        record.addInput(reference, path);
                     } catch (IOException error) {
                         throw new UncheckedIOException("Could not record an input file.", error);
                     }
@@ -322,7 +344,7 @@ public class PhyloSpecRunner {
             if (cancellationRequested.get() || owner.isInterrupted()) {
                 throw new CancellationException("The managed run was interrupted before completion was recorded.");
             }
-            record.succeeded();
+            record.markSucceeded();
             return record;
         } catch (IOException
                 | ParserConfigurationException
@@ -340,8 +362,8 @@ public class PhyloSpecRunner {
             }
             appendFailure(runDirectory, reported);
             try {
-                if (cancelled) record.cancelled(reported);
-                else record.failed(reported);
+                if (cancelled) record.markCancelled(reported, getDiagnostic(reported));
+                else record.markFailed(reported, getDiagnostic(reported));
             } catch (IOException recordFailure) {
                 reported.addSuppressed(recordFailure);
             }
@@ -359,6 +381,73 @@ public class PhyloSpecRunner {
         }
     }
 
+    /** Starts the run record and adds the BEAST 3 libraries, components and adapter bundles. */
+    static RunRecord createRunRecord(
+            Path runDirectory,
+            String source,
+            Path sourceFile,
+            Path sourceDirectory,
+            TileCatalog<BEASTState> catalog,
+            List<LocalAdapterBundles.Bundle> adapterBundles)
+            throws IOException {
+        RunRecord record = RunRecord.create(
+                runDirectory,
+                source,
+                sourceFile,
+                sourceDirectory,
+                "beast3",
+                BEASTVersion2.INSTANCE.getVersionString(),
+                PhyloSpecCli.phyloSpecVersion());
+        record.update(data -> {
+            ObjectNode runtime = (ObjectNode) data.get("runtime");
+            ArrayNode bundles = runtime.putArray("adapterBundles");
+            for (var bundle : adapterBundles) {
+                ObjectNode entry = bundles.addObject();
+                entry.put("path", bundle.path());
+                entry.put("fingerprintedAt", bundle.fingerprintedAt());
+                ArrayNode jars = entry.putArray("jars");
+                for (var jar : bundle.jars()) {
+                    jars.addObject()
+                            .put("path", jar.path())
+                            .put("sha256", jar.sha256())
+                            .put("size", jar.size())
+                            .put("use", jar.use());
+                }
+            }
+            runtime.put(
+                    "adapterLoading",
+                    "Explicit local bundle inventory, fingerprinted before execution; not a list of every class used. "
+                            + "Parent runtime classes take precedence. Host PhyloSpec/BEAST JAR copies are not added. "
+                            + "Selected providers and their actual code sources are recorded under libraries. "
+                            + "Bundles are not copied; native global registrations are not hot-unloaded.");
+
+            ArrayNode libraries = data.putArray("libraries");
+            for (var library : catalog.getLibraries()) {
+                Class<?> implementation = library.getClass();
+                var codeSource = implementation.getProtectionDomain().getCodeSource();
+                libraries
+                        .addObject()
+                        .put("id", library.getId())
+                        .put("class", implementation.getName())
+                        .put("version", implementation.getPackage().getImplementationVersion())
+                        .put(
+                                "location",
+                                codeSource == null
+                                        ? null
+                                        : codeSource.getLocation().toExternalForm());
+            }
+            ArrayNode components = data.putArray("components");
+            for (var component : catalog.getComponentLibraries()) {
+                components.addObject().put("name", component.getName()).put("version", component.getVersion());
+            }
+
+            data.put(
+                    "inputCoverage",
+                    "Only input references reported through BEASTState.resolvePath are recorded. Hashes are observed before the native reader and do not prove parsing succeeded. Input data are not copied; this is not a self-contained archive.");
+        });
+        return record;
+    }
+
     private void runChecked(
             CheckedModel checked,
             BEASTState beastState,
@@ -368,23 +457,24 @@ public class PhyloSpecRunner {
             throws IOException, ParserConfigurationException, SAXException {
         progress.accept("[2/4] Building and initializing the BEAST 3 model...");
         // Native inputs can initialize randomly during tile application, before the MCMC is built.
-        Long scriptSeed = declaredSeed(checked.statements);
-        Long constructionSeed = scriptSeed;
-        if (record == null) {
-            if (scriptSeed != null) Randomizer.setSeed(scriptSeed);
-        } else {
-            long seed = scriptSeed == null ? new SecureRandom().nextLong(1, Integer.MAX_VALUE) : scriptSeed;
-            constructionSeed = seed;
-            beastState.randomSeed = seed;
-            Randomizer.setSeed(seed);
-            record.seed("modelBuilding", seed, Randomizer.getSeed(), scriptSeed == null);
+        boolean seedIsGenerated = this.seed == null && record != null;
+        beastState.randomSeed =
+                seedIsGenerated ? Long.valueOf(new SecureRandom().nextLong(1, Integer.MAX_VALUE)) : this.seed;
+        if (beastState.randomSeed != null) {
+            Randomizer.setSeed(beastState.randomSeed);
+        }
+        if (record != null) {
+            record.recordSeed("modelBuilding", beastState.randomSeed, Randomizer.getSeed(), seedIsGenerated);
         }
 
         MCMC mcmc = record == null ? new MCMC() : new ManagedMCMC(cancellationRequested);
         CompoundDistribution likelihood = buildMcmc(checked, beastState, mcmc);
+        long chainLength = beastState.getSamplerSpec().chainLength();
         List<Logger> loggers = mcmc.loggersInput.get();
-        String stateFile = beastState.resolveOutputPath(beastState.outputPrefix + ".state.xml");
-        beastState.prepareOutputFiles(loggers, stateFile);
+        String declaredStateFile = beastState.getSamplerSpec().stateFile();
+        String stateFile = beastState.resolveOutputPath(
+                declaredStateFile != null ? declaredStateFile : OutputPaths.getStateFile(beastState.outputPrefix));
+        beastState.prepareOutputFiles(loggers, stateFile, record != null ? record.getDirectory() : null);
         mcmc.setStateFile(stateFile, false);
 
         // run
@@ -398,12 +488,9 @@ public class PhyloSpecRunner {
             mcmc.run();
         } else {
             ManagedMCMC managed = (ManagedMCMC) mcmc;
-            record.configuration(beastState, loggers, stateFile);
-            record.seed(
-                    "mcmc",
-                    beastState.randomSeed,
-                    Randomizer.getSeed(),
-                    scriptSeed == null && Objects.equals(constructionSeed, beastState.randomSeed));
+            record.configure(
+                    chainLength, beastState.randomSeed, beastState.runName, getLoggerSettings(loggers), stateFile);
+            record.recordSeed("mcmc", beastState.randomSeed, Randomizer.getSeed(), seedIsGenerated);
             try {
                 managed.checkCancellation();
                 beastState.initializeBEASTObjects();
@@ -411,7 +498,7 @@ public class PhyloSpecRunner {
                 for (Distribution distribution : beastState.likelihoodDistributions) {
                     if (distribution instanceof ReportingTreeLikelihood treeLikelihood) {
                         var backend = treeLikelihood.backend();
-                        record.likelihoodBackend(treeLikelihood.getID(), backend);
+                        recordLikelihoodBackend(record, treeLikelihood.getID(), backend);
                         progress.accept("Likelihood " + treeLikelihood.getID() + ": " + backend.implementation()
                                 + (backend.version() == null
                                         ? " (BEAGLE is not active)."
@@ -420,13 +507,13 @@ public class PhyloSpecRunner {
                     }
                 }
                 managed.checkCancellation();
-                record.running();
-                progress.accept("[3/4] Running MCMC (chain length: " + beastState.chainLength + ")...");
+                record.markRunning();
+                progress.accept("[3/4] Running MCMC (chain length: " + chainLength + ")...");
                 managed.run();
                 managed.checkCancellation();
                 progress.accept("[4/4] Checking result files and final state...");
                 managed.verifyLogs();
-                verifyOutputs(loggers, Path.of(stateFile), beastState.chainLength);
+                verifyOutputs(loggers, Path.of(stateFile), chainLength);
             } catch (IOException
                     | ParserConfigurationException
                     | SAXException
@@ -443,6 +530,40 @@ public class PhyloSpecRunner {
                 throw failure;
             }
         }
+    }
+
+    static List<RunRecord.LoggerSetting> getLoggerSettings(List<Logger> loggers) {
+        List<RunRecord.LoggerSetting> settings = new ArrayList<>();
+        for (Logger logger : loggers) {
+            String file = logger.fileNameInput.get();
+            if (file == null || file.isEmpty()) {
+                settings.add(new RunRecord.LoggerSetting("screen", logger.everyInput.get(), null));
+            } else {
+                String kind = logger.modeInput.get() == Logger.LOGMODE.tree ? "tree" : "log";
+                settings.add(new RunRecord.LoggerSetting(kind, logger.everyInput.get(), file));
+            }
+        }
+        return settings;
+    }
+
+    /** Records an initialized likelihood, rather than inferring activation from library availability. */
+    private static void recordLikelihoodBackend(RunRecord record, String id, ReportingTreeLikelihood.Backend backend)
+            throws IOException {
+        record.update(data -> ((ObjectNode) data.get("runtime"))
+                .withArray("likelihoodBackends")
+                .addObject()
+                .put("likelihood", id)
+                .put("implementation", backend.implementation())
+                .put("version", backend.version())
+                .put("resourceNumber", backend.resourceNumber())
+                .put("resourceName", backend.resourceName())
+                .put("resourceFlags", backend.resourceFlags()));
+    }
+
+    private static String getDiagnostic(Throwable failure) {
+        return failure instanceof PhyloSpecException diagnostic
+                ? diagnostic.diagnostic().format()
+                : null;
     }
 
     /** Builds the same BEAST state, distributions, proposals and loggers for execution and export. */
@@ -486,7 +607,8 @@ public class PhyloSpecRunner {
 
         // create MCMC object
 
-        beastState.setInput(mcmc, mcmc.chainLengthInput, beastState.chainLength);
+        beastState.setInput(
+                mcmc, mcmc.chainLengthInput, beastState.getSamplerSpec().chainLength());
         beastState.setInput(mcmc, mcmc.startStateInput, state);
         beastState.setInput(mcmc, mcmc.posteriorInput, posterior);
 
@@ -501,22 +623,6 @@ public class PhyloSpecRunner {
         // Subsequent parameter/tree proposals retain the normal BEAST dirty traversal.
         for (Distribution distribution : state.likelihoodDistributions) distribution.calculateLogP();
         likelihood.calculateLogP();
-    }
-
-    /** Finds the same constant seed used by the existing construction and initialization stages. */
-    private static Long declaredSeed(List<Stmt> statements) {
-        Long seed = null;
-        for (Stmt statement : statements) {
-            if (statement instanceof Stmt.Assignment assignment
-                    && Stmt.Block.MCMC.equals(assignment.block)
-                    && assignment.name.equals("randomSeed")
-                    && assignment.expression instanceof Expr.Literal literal
-                    && literal.value instanceof Number number
-                    && number.longValue() >= 0) {
-                seed = number.longValue();
-            }
-        }
-        return seed;
     }
 
     static void verifyOutputs(List<Logger> loggers, Path stateFile, long chainLength) throws IOException {

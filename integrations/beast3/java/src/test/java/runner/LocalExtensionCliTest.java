@@ -36,9 +36,8 @@ class LocalExtensionCliTest {
             use fixture.distributions
             Real x ~ CustomNormal(mean=0.0, sd=1.0)
             mcmc {
-                Integer chainLength = 30
-                Integer defaultLogEvery = 10
-                Integer randomSeed = 42
+                Sampler sampler = mcmc(chainLength=30)
+                Logger fileLogger = fileLogger(file="custom.log", logEvery=10)
             }
             """;
 
@@ -64,7 +63,7 @@ class LocalExtensionCliTest {
         assertTrue(selected.stdout().contains("libraries: local-fixture,beast2"), selected.stdout());
         assertTrue(selected.stdout().contains("No MCMC was run."), selected.stdout());
         assertSame(original, Thread.currentThread().getContextClassLoader());
-        assertFalse(Files.exists(directory.resolve("runs")));
+        assertNoRunRecords(directory);
 
         CliResult later = invoke("check", source.toString(), "--library", LIBRARY_ID);
         assertEquals(1, later.exitCode(), later.stderr());
@@ -79,7 +78,6 @@ class LocalExtensionCliTest {
         Path dependencies = Files.createDirectory(directory.resolve("separate dependencies"));
         Path helper = Files.move(
                 fixture.helperJar(), dependencies.resolve(fixture.helperJar().getFileName()));
-        Path run = directory.resolve("results");
 
         // Both repeatable paths are resolved from the command's working directory, including spaces.
         CliResult result = launch(
@@ -91,10 +89,9 @@ class LocalExtensionCliTest {
                 "--adapter-path",
                 dependencies.getFileName().toString(),
                 "--library",
-                LIBRARY_ID,
-                "--out",
-                run.getFileName().toString());
+                LIBRARY_ID);
         assertEquals(0, result.exitCode(), result.stderr() + "\n" + result.stdout());
+        Path run = getRunRecords(directory).getFirst();
         assertTrue(result.stdout().contains("Run completed"), result.stdout());
         JsonNode record = JSON.readTree(run.resolve("run.json").toFile());
         assertEquals("succeeded", record.path("status").asText(), record.toPrettyString());
@@ -114,7 +111,7 @@ class LocalExtensionCliTest {
         assertBundle(bundles.get(0), fixture.bundle(), fixture.adapterJar());
         assertBundle(bundles.get(1), dependencies, helper);
 
-        Path trace = run.resolve("output/custom.log");
+        Path trace = directory.resolve("custom.log");
         List<String> lines = Files.readAllLines(trace).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))
                 .toList();
@@ -126,7 +123,7 @@ class LocalExtensionCliTest {
                 assertTrue(Double.isFinite(Double.parseDouble(values[column])), lines.get(index));
             }
         }
-        assertTrue(Files.size(run.resolve("output/custom.state.xml")) > 0);
+        assertTrue(Files.size(directory.resolve("custom.state.xml")) > 0);
         assertTrue(Files.size(run.resolve("console.log")) > 0);
     }
 
@@ -136,7 +133,6 @@ class LocalExtensionCliTest {
         Fixture fixture = fixture(directory);
         Files.delete(fixture.helperJar());
         Path source = Files.writeString(directory.resolve("custom.phylospec"), MODEL);
-        Path run = directory.resolve("failed-run");
         ClassLoader original = Thread.currentThread().getContextClassLoader();
 
         for (String command : List.of("check", "run")) {
@@ -148,7 +144,6 @@ class LocalExtensionCliTest {
                     "--library",
                     LIBRARY_ID,
                     "--debug"));
-            if (command.equals("run")) arguments.addAll(List.of("--out", run.toString()));
             CliResult result = invoke(arguments.toArray(String[]::new));
             assertEquals(1, result.exitCode(), result.stderr());
             assertTrue(
@@ -156,7 +151,6 @@ class LocalExtensionCliTest {
                             || result.stderr().contains("fixture.dependency.FixtureDependency"),
                     result.stderr());
             assertSame(original, Thread.currentThread().getContextClassLoader());
-            assertFalse(Files.exists(run));
             assertFalse(result.stdout().contains("Run completed"));
         }
     }
@@ -169,7 +163,7 @@ class LocalExtensionCliTest {
                 "check", source.toString(), "--adapter-path", fixture.bundle().toString());
         assertEquals(0, result.exitCode(), result.stderr());
         assertTrue(result.stdout().contains("libraries: beast2"), result.stdout());
-        assertFalse(Files.exists(directory.resolve("runs")));
+        assertNoRunRecords(directory);
     }
 
     @Test
@@ -195,7 +189,6 @@ class LocalExtensionCliTest {
     private static void assertPreflightFailure(Path directory, Fixture fixture, String... expectedMessages)
             throws Exception {
         Path source = Files.writeString(directory.resolve("custom.phylospec"), MODEL);
-        Path run = directory.resolve("failed-run");
         ClassLoader original = Thread.currentThread().getContextClassLoader();
         for (String command : List.of("check", "run")) {
             List<String> arguments = new ArrayList<>(List.of(
@@ -205,7 +198,6 @@ class LocalExtensionCliTest {
                     fixture.bundle().toString(),
                     "--library",
                     LIBRARY_ID));
-            if (command.equals("run")) arguments.addAll(List.of("--out", run.toString()));
             CliResult result = invoke(arguments.toArray(String[]::new));
             assertEquals(1, result.exitCode(), result.stderr());
             for (String expected : expectedMessages) {
@@ -214,8 +206,7 @@ class LocalExtensionCliTest {
             assertFalse(result.stderr().contains("\tat "), result.stderr());
             assertFalse(result.stderr().contains("Usage:"), result.stderr());
             assertSame(original, Thread.currentThread().getContextClassLoader());
-            assertFalse(Files.exists(run));
-            assertFalse(Files.exists(directory.resolve("runs")));
+            assertNoRunRecords(directory);
             assertFalse(result.stdout().contains("Run completed"));
         }
     }
@@ -367,6 +358,20 @@ class LocalExtensionCliTest {
     private record Fixture(Path bundle, Path adapterJar, Path helperJar) {}
 
     private record CliResult(int exitCode, String stdout, String stderr) {}
+
+    private static void assertNoRunRecords(Path directory) throws Exception {
+        for (Path root : List.of(directory, Path.of("").toAbsolutePath())) {
+            assertTrue(getRunRecords(root).isEmpty(), "Unexpected run record in " + root);
+        }
+    }
+
+    private static List<Path> getRunRecords(Path directory) throws Exception {
+        try (var entries = Files.list(directory)) {
+            return entries.filter(path -> path.getFileName().toString().endsWith(".run"))
+                    .filter(Files::isDirectory)
+                    .toList();
+        }
+    }
 
     private static CliResult invoke(String... arguments) {
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();

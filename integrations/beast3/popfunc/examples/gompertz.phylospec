@@ -24,8 +24,8 @@ model {
 }
 
 mcmc {
-    Integer chainLength = 30
-    Integer defaultLogEvery = 1
-    String outputPrefix = "analysis"
-    Integer randomSeed = 12345
+    Sampler sampler = mcmc(chainLength=30)
+    Logger screenLogger = screenLogger(logEvery=1)
+    Logger fileLogger = fileLogger(logEvery=1)
+    Logger treeLogger = treeLogger(logEvery=1, tree)
 }

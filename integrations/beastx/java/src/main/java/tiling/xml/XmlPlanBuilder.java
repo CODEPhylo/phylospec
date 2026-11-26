@@ -14,6 +14,8 @@ import dr.inference.model.Parameter;
 import dr.inference.model.Statistic;
 import dr.math.distributions.DirichletDistribution;
 import tiling.BeastXModel;
+import org.phylospec.tiling.mcmc.FileLoggerSpec;
+import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import tiling.BeastXState;
 import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
 import tiling.rpn.BeastXRPNStatistic;
@@ -431,12 +433,12 @@ public class XmlPlanBuilder {
         Set<String> emittedStatisticIds =
                 new HashSet<>();
 
-        for (BeastXState.ScreenLoggerSpec spec : state.screenLoggerSpecs) {
-            addLoggedStatistics(plan, state, spec.parameterNames(), emittedStatisticIds);
+        for (ScreenLoggerSpec<String> spec : state.screenLoggerSpecs) {
+            addLoggedStatistics(plan, state, spec.parameters(), emittedStatisticIds);
         }
 
-        for (BeastXState.FileLoggerSpec spec : state.fileLoggerSpecs) {
-            addLoggedStatistics(plan, state, spec.parameterNames(), emittedStatisticIds);
+        for (FileLoggerSpec<String> spec : state.fileLoggerSpecs) {
+            addLoggedStatistics(plan, state, spec.parameters(), emittedStatisticIds);
         }
     }
 
@@ -447,10 +449,10 @@ public class XmlPlanBuilder {
             Set<String> emittedStatisticIds
     ) {
         if (loggableNames == null) {
-            return;
+            loggableNames = state.getXmlDefaultLoggedParameterNames();
         }
 
-        for (String loggableName : loggableNames) {
+        for (String loggableName : state.expandLoggedTrees(loggableNames)) {
             // A value computed from other values, such as Real s = sum(vector=v).
             if (state.calculationNodesByPhyloSpecName.get(loggableName) instanceof BeastXRPNStatistic rpn) {
                 plan.addAll(

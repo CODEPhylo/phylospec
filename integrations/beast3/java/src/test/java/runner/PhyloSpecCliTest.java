@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -21,6 +22,7 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -58,6 +60,19 @@ public class PhyloSpecCliTest {
                 assertThrows(IllegalArgumentException.class, () -> PhyloSpecCli.execute(new String[] {"--unknown"}));
 
         assertEquals("Unknown option: --unknown", exception.getMessage());
+    }
+
+    @Test
+    public void explainsHowToReplaceTheRemovedOutOption() {
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> PhyloSpecCli.execute(new String[] {"run", "model.phylospec", "--out", "results/run-01"}));
+
+        assertEquals(
+                "--out is no longer supported. Outputs are written to the working directory, so run the command"
+                        + " from the directory that should hold them. To keep replicates apart, give each one its"
+                        + " own --run-name or its own working directory.",
+                exception.getMessage());
     }
 
     @Test
@@ -112,13 +127,26 @@ public class PhyloSpecCliTest {
     @Test
     void selectsBeastXForManagedRuns() {
         var options = PhyloSpecCli.Options.parse(
-                new String[] {"run", "--engine", "beastx", "model.phylospec", "--run-name", "sample", "--out", "results"
-                });
+                new String[] {"run", "--engine", "beastx", "model.phylospec", "--run-name", "sample"});
         assertEquals(PhyloSpecCli.Command.RUN, options.command());
         assertEquals("beastx", options.engine());
         assertEquals(List.of("beastX"), options.libraries());
         assertEquals("sample", options.runName());
-        assertEquals(Path.of("results"), options.outputDirectory());
+    }
+
+    @Test
+    void parsesTheSeedForExportAndRun() {
+        assertEquals(
+                42L,
+                PhyloSpecCli.Options.parse(new String[] {"run", "model.phylospec", "--seed", "42"})
+                        .seed());
+        assertEquals(
+                7L,
+                PhyloSpecCli.Options.parse(
+                                new String[] {"export", "model.phylospec", "--xml", "model.xml", "--seed", "7"})
+                        .seed());
+        assertNull(PhyloSpecCli.Options.parse(new String[] {"run", "model.phylospec"})
+                .seed());
     }
 
     @Test
@@ -180,13 +208,18 @@ public class PhyloSpecCliTest {
                 new String[] {"check", "model.phylospec", "--engine"},
                 new String[] {"check", "model.phylospec", "--run-name", "analysis"},
                 new String[] {"run", "model.phylospec", "--run-name", " "},
+                new String[] {"run", "model.phylospec", "--run-name", "nested/name"},
+                new String[] {"check", "model.phylospec", "--seed", "42"},
+                new String[] {"run", "model.phylospec", "--seed"},
+                new String[] {"run", "model.phylospec", "--seed", "abc"},
+                new String[] {"run", "model.phylospec", "--seed", "-1"},
+                new String[] {"run", "model.phylospec", "--seed", "0"},
+                new String[] {"export", "model.phylospec", "--xml", "analysis.xml", "--seed", "0"},
+                new String[] {"run", "model.phylospec", "--engine", "beastx", "--seed", "0"},
                 new String[] {"run", "model.phylospec", "--library", "beast2,beast2"},
                 new String[] {"run", "model.phylospec", "--library", "beast2,"},
                 new String[] {"check", "model.phylospec", "--unknown"},
-                new String[] {"run", "model.phylospec", "--out"},
-                new String[] {"run", "model.phylospec", "--out", " "},
-                new String[] {"check", "model.phylospec", "--out", "results"},
-                new String[] {"--library", "beast2", "model.phylospec", "--out", "results"},
+                new String[] {"run", "model.phylospec", "--out", "results"},
                 new String[] {"check", "model.phylospec", "--adapter-path"},
                 new String[] {"check", "model.phylospec", "--adapter-path", " "},
                 new String[] {"--library", "beast2", "model.phylospec", "--adapter-path", "adapter"})) {
@@ -223,7 +256,7 @@ public class PhyloSpecCliTest {
         Files.writeString(script, """
                 Real x ~ Normal(mean=0.0, sd=1.0)
                 mcmc {
-                    Integer chainLength = 19
+                    Sampler sampler = mcmc(chainLength=19)
                 }
                 """);
         Path output = directory.resolve("analysis.xml");
@@ -240,6 +273,22 @@ public class PhyloSpecCliTest {
         try (var files = Files.list(directory)) {
             assertEquals(List.of(output, script), files.sorted().toList());
         }
+    }
+
+    @Test
+    void exportRejectsStateFile(@TempDir Path directory) throws Exception {
+        Path script = directory.resolve("normal.phylospec");
+        Files.writeString(script, """
+                Real x ~ Normal(mean=0.0, sd=1.0)
+                mcmc {
+                    Sampler sampler = mcmc(chainLength=19, stateFile="custom.state.xml")
+                }
+                """);
+        Path output = directory.resolve("analysis.xml");
+        CliResult result = invoke("export", script.toString(), "--xml", output.toString());
+        assertEquals(1, result.exitCode(), result.stderr());
+        assertTrue(result.stderr().contains("`stateFile` cannot be exported"), result.stderr());
+        assertFalse(Files.exists(output));
     }
 
     @Test
@@ -278,6 +327,23 @@ public class PhyloSpecCliTest {
     }
 
     @Test
+    void checkRejectsASecondSamplerAtItsLine(@TempDir Path directory) throws Exception {
+        Path source = directory.resolve("model.phylospec");
+        Files.writeString(source, """
+                Real x ~ Normal(mean=0.0, sd=1.0)
+                mcmc {
+                    Sampler sampler = mcmc(chainLength=10)
+                    Sampler other = mcmc(chainLength=20)
+                }
+                """);
+        CliResult result = invoke("check", source.toString());
+
+        assertEquals(1, result.exitCode(), result.stderr());
+        assertTrue(result.stderr().contains("only have one sampler"), result.stderr());
+        assertTrue(result.stderr().contains("Sampler other = mcmc(chainLength=20)"), result.stderr());
+    }
+
+    @Test
     void checkPreservesNonfatalWarningsAndBothCommandsReportWarningsOnce(@TempDir Path directory) throws Exception {
         Path source = directory.resolve("model.phylospec");
         String warningModel = "Real x ~ Uniform(lower=2.0, upper=1.0)\n";
@@ -299,7 +365,7 @@ public class PhyloSpecCliTest {
                 assertEquals(
                         "[1/4] Checking syntax, static types and BEAST 3 mappings..." + System.lineSeparator(),
                         failure.stdout());
-                assertFalse(Files.exists(directory.resolve("runs")));
+                assertNoRunRecords(directory);
             }
         }
     }
@@ -318,18 +384,12 @@ public class PhyloSpecCliTest {
         Files.writeString(source, """
                 Tree tree = fromNewick("(")
                 mcmc {
-                    Integer chainLength = 1
+                    Sampler sampler = mcmc(chainLength=1)
                 }
                 """);
-        Path normalRun = directory.resolve("normal");
-        CliResult normal = launch(directory, "run", source.toString(), "--out", normalRun.toString());
-        CliResult debug = launch(
-                directory,
-                "run",
-                source.toString(),
-                "--out",
-                directory.resolve("debug").toString(),
-                "--debug");
+        CliResult normal = launch(directory, "run", source.toString());
+        Path normalRun = getOnlyRun(directory);
+        CliResult debug = launch(directory, "run", source.toString(), "--debug");
 
         assertEquals(1, normal.exitCode(), normal.stderr());
         assertTrue(normal.stderr().contains("MODEL_BUILDING"), normal.stderr());
@@ -370,7 +430,7 @@ public class PhyloSpecCliTest {
     }
 
     @Test
-    void managedRunUsesOutputDirectoryAndLegacyRunKeepsItsPrefixBehavior(@TempDir Path directory) throws Exception {
+    void managedRunUsesWorkingDirectoryAndLegacyRunKeepsItsPrefixBehavior(@TempDir Path directory) throws Exception {
         Path work = Files.createDirectory(directory.resolve("working directory"));
         Files.copy(Path.of("src/test/java/resources/primate-mtDNA.nex"), directory.resolve("alignment.nex"));
         Path source = directory.resolve("model with spaces.phylospec");
@@ -380,25 +440,17 @@ public class PhyloSpecCliTest {
                 QMatrix qMatrix = jc69()
                 Alignment alignment ~ PhyloCTMC(tree, qMatrix) observed as data
                 mcmc {
-                    Integer chainLength = 30
-                    Integer defaultLogEvery = 10
-                    Integer randomSeed = 42
+                    Sampler sampler = mcmc(chainLength=3000)
                 }
                 """);
-        String newPrefix = work.resolve("new analysis/output/nested/new prefix").toString();
+        String newPrefix = work.resolve("new prefix").toString();
         String legacyPrefix = directory.resolve("legacy analysis").toString();
-        CliResult result = launch(
-                work,
-                "run",
-                "../model with spaces.phylospec",
-                "--out",
-                "new analysis",
-                "--run-name",
-                "nested/new prefix");
+        CliResult result =
+                launch(work, "run", "../model with spaces.phylospec", "--run-name", "new prefix", "--seed", "42");
         assertEquals(0, result.exitCode(), result.stderr());
         assertTrue(result.stdout().contains("Run completed"));
         assertNativeOutputs(newPrefix);
-        JsonNode backend = readRecord(work.resolve("new analysis"))
+        JsonNode backend = readRecord(getOnlyRun(work))
                 .path("runtime")
                 .path("likelihoodBackends")
                 .get(0);
@@ -407,7 +459,8 @@ public class PhyloSpecCliTest {
         assertTrue(backend.path("resourceNumber").isNull());
         assertTrue(result.stdout().contains(": Java (BEAGLE is not active)."));
 
-        CliResult legacy = launch(work, "--library", "beast2", "--run-name", legacyPrefix, source.toString());
+        CliResult legacy =
+                launch(work, "--library", "beast2", "--run-name", legacyPrefix, "--seed", "42", source.toString());
         assertEquals(0, legacy.exitCode(), legacy.stderr());
         assertNativeOutputs(legacyPrefix);
         assertEquals(
@@ -418,120 +471,236 @@ public class PhyloSpecCliTest {
     }
 
     @Test
-    void defaultRunsCreateSeparateDirectoriesBesideTheOriginalScript(@TempDir Path directory) throws Exception {
+    void runRecordsAreNamedAfterTheRunAndLiveNextToTheOutputs(@TempDir Path directory) throws Exception {
         Path work = Files.createDirectory(directory.resolve("working directory"));
         Path source = writeModel(directory, "");
-        for (int i = 0; i < 2; i++) {
-            CliResult result = launch(work, "run", source.toString());
+        for (String runName : List.of("first", "second")) {
+            CliResult result = launch(work, "run", source.toString(), "--run-name", runName);
             assertEquals(0, result.exitCode(), result.stderr());
-            assertTrue(result.stdout().contains("Results directory: " + directory.resolve("runs")));
+            assertNativeOutputs(work.resolve(runName).toString());
+            JsonNode record = readRecord(work.resolve(runName + ".run"));
+            assertEquals(runName, record.at("/settings/runName").asText());
+            assertEquals(
+                    "../" + runName + ".log",
+                    record.at("/generatedOutputs/0/path").asText());
         }
-        try (var entries = Files.list(directory.resolve("runs"))) {
-            List<Path> runs = entries.toList();
-            assertEquals(2, runs.size());
-            for (Path run : runs) {
-                assertTrue(run.getFileName().toString().startsWith("model with spaces-"));
-                assertNativeOutputs(run.resolve("output/model with spaces").toString());
-            }
-        }
-        assertFalse(Files.exists(work.resolve("runs")));
-        assertFalse(Files.exists(directory.resolve("model with spaces.log")));
+        assertEquals(2, getRunRecords(work).size());
+        assertNoRunRecords(directory);
     }
 
     @Test
-    void scriptPrefixAndExplicitLoggersShareTheManagedOutputRoot(@TempDir Path directory) throws Exception {
+    void aSuccessfulRunReservesItsName(@TempDir Path directory) throws Exception {
+        Path source = writeModel(directory, "");
+        assertEquals(0, launch(directory, "run", source.toString()).exitCode());
+        String trace = Files.readString(directory.resolve("model with spaces.log"));
+
+        CliResult repeated = launch(directory, "run", source.toString());
+
+        assertEquals(1, repeated.exitCode(), repeated.stderr());
+        assertTrue(repeated.stderr().contains("already exists"), repeated.stderr());
+        assertEquals(trace, Files.readString(directory.resolve("model with spaces.log")));
+        assertEquals(
+                "succeeded", readRecord(getOnlyRun(directory)).path("status").asText());
+
+        // neither a taken name nor a script error may point to the record of the earlier run
+        Files.writeString(source, "Integer value = \"wrong\"");
+        CliResult invalid = launch(directory, "run", source.toString());
+        assertEquals(1, invalid.exitCode(), invalid.stderr());
+        for (CliResult failure : List.of(repeated, invalid)) {
+            assertFalse(failure.stdout().contains("Run record:"), failure.stdout());
+            assertFalse(failure.stdout().contains("BEAST console log:"), failure.stdout());
+        }
+    }
+
+    @Test
+    void overwriteReplacesTheOutputsAndRecordOfAnEarlierRun(@TempDir Path directory) throws Exception {
+        Path source = writeModel(directory, "");
+        assertEquals(0, launch(directory, "run", source.toString()).exitCode());
+        Files.writeString(directory.resolve("model with spaces.log"), "outdated");
+
+        CliResult repeated = launch(directory, "run", source.toString(), "--overwrite");
+
+        assertEquals(0, repeated.exitCode(), repeated.stderr());
+        assertNativeOutputs(directory.resolve("model with spaces").toString());
+        assertEquals(
+                "succeeded", readRecord(getOnlyRun(directory)).path("status").asText());
+    }
+
+    @Test
+    void overwriteIsOnlySupportedForRun(@TempDir Path directory) throws Exception {
+        CliResult result = invoke("check", directory.resolve("model.phylospec").toString(), "--overwrite");
+
+        assertEquals(2, result.exitCode());
+        assertTrue(result.stderr().contains("--overwrite is only supported for run."), result.stderr());
+    }
+
+    @Test
+    void outputPathsCanUseEnvironmentVariables(@TempDir Path directory) throws Exception {
+        Path source = writeModel(directory, """
+                Logger trace = fileLogger(file=env("TRACE_FILE"), logEvery=1000)
+                """);
+
+        CliResult result =
+                launchWithEnvironment(directory, Map.of("TRACE_FILE", "logs/custom.log"), "run", source.toString());
+
+        assertEquals(0, result.exitCode(), result.stderr());
+        assertTrace(directory.resolve("logs/custom.log"));
+        JsonNode outputs = readRecord(getOnlyRun(directory)).path("generatedOutputs");
+        assertTrue(outputs.toString().contains("\"../logs/custom.log\""), outputs.toString());
+    }
+
+    @Test
+    void aFailedRunWithoutOutputsCanBeRepeated(@TempDir Path directory) throws Exception {
+        Path source = writeModel(directory, "");
+        Path alignment = directory.resolve("alignment.nex");
+        Path moved = Files.move(alignment, directory.resolve("moved.nex"));
+        assertEquals(1, launch(directory, "run", source.toString()).exitCode());
+        assertEquals("failed", readRecord(getOnlyRun(directory)).path("status").asText());
+
+        Files.move(moved, alignment);
+        CliResult repeated = launch(directory, "run", source.toString());
+
+        assertEquals(0, repeated.exitCode(), repeated.stderr());
+        assertEquals(
+                "succeeded", readRecord(getOnlyRun(directory)).path("status").asText());
+    }
+
+    @Test
+    void runNameAndExplicitLoggersResolveAgainstTheWorkingDirectory(@TempDir Path directory) throws Exception {
+        Path work = Files.createDirectory(directory.resolve("working directory"));
+        Path absoluteTrees = directory.resolve("elsewhere/custom.trees");
+        Path source = writeModel(directory, """
+                Logger trace = fileLogger(logEvery=1000, file="traces/custom.log")
+                Logger trees = treeLogger(logEvery=1000, file="%s", tree=tree)
+                """.formatted(absoluteTrees));
+        CliResult result = launch(work, "run", source.toString(), "--run-name", "my analysis");
+        assertEquals(0, result.exitCode(), result.stderr());
+        Path realWork = work.toRealPath();
+        assertTrace(work.resolve("traces/custom.log"));
+        assertTrue(Files.readString(absoluteTrees).contains("STATE_3000"));
+        assertTrue(Files.size(work.resolve("my analysis.state.xml")) > 0);
+        assertTrue(result.stdout().contains("Trace/log: " + realWork.resolve("traces/custom.log")));
+        assertTrue(result.stdout().contains("Trees: " + absoluteTrees));
+        assertTrue(result.stdout().contains("Final state: " + realWork.resolve("my analysis.state.xml")));
+        assertFalse(Files.exists(directory.resolve("traces")));
+    }
+
+    @Test
+    void loggersWithoutFileAndCustomStateFileUseTheWorkingDirectory(@TempDir Path directory) throws Exception {
         Path work = Files.createDirectory(directory.resolve("working directory"));
         Path source = writeModel(directory, """
-                String outputPrefix = "state/my analysis"
-                Logger trace = fileLogger(logEvery=10, file="traces/custom.log")
-                Logger trees = treeLogger(logEvery=10, file="trees/custom.trees", tree=tree)
+                Logger trace = fileLogger(logEvery=1000)
+                Logger trees = treeLogger(logEvery=1000, tree=tree)
                 """);
-        Path run = Files.createDirectory(directory.resolve("existing empty run"));
-        CliResult result = launch(work, "run", source.toString(), "--out", run.toString(), "--run-name", "ignored");
+        Files.writeString(
+                source,
+                Files.readString(source)
+                        .replace("mcmc(chainLength=3000)", "mcmc(chainLength=3000, stateFile=\"states/custom.xml\")"));
+        CliResult result = launch(work, "run", source.toString(), "--run-name", "analysis");
         assertEquals(0, result.exitCode(), result.stderr());
-        assertTrace(run.resolve("output/traces/custom.log"));
-        assertTrue(Files.readString(run.resolve("output/trees/custom.trees")).contains("STATE_30"));
-        assertTrue(Files.size(run.resolve("output/state/my analysis.state.xml")) > 0);
-        assertTrue(result.stdout().contains("Trace/log: " + run.resolve("output/traces/custom.log")));
-        assertTrue(result.stdout().contains("Trees: " + run.resolve("output/trees/custom.trees")));
-        assertTrue(result.stdout().contains("Final state: " + run.resolve("output/state/my analysis.state.xml")));
-        try (var paths = Files.walk(run.resolve("output"))) {
-            assertEquals(3, paths.filter(Files::isRegularFile).count());
-        }
-        assertFalse(Files.exists(directory.resolve("state")));
-        assertFalse(Files.exists(work.resolve("traces")));
+        assertTrace(work.resolve("analysis.log"));
+        assertTrue(Files.readString(work.resolve("analysis.trees")).contains("STATE_3000"));
+        assertTrue(Files.size(work.resolve("states/custom.xml")) > 0);
+        assertFalse(Files.exists(work.resolve("analysis.state.xml")));
     }
 
     @Test
-    void refusesAnExistingRunBeforeNativeFileHandling(@TempDir Path directory) throws Exception {
+    void refusesExistingOutputsBeforeNativeFileHandling(@TempDir Path directory) throws Exception {
         Path source = writeModel(directory, "");
-        Path run = directory.resolve("results");
-        CliResult first = launch(directory, "run", source.toString(), "--out", run.toString());
+        CliResult first = launch(directory, "run", source.toString());
         assertEquals(0, first.exitCode(), first.stderr());
-        Path trace = run.resolve("output/model with spaces.log");
+        Path trace = directory.resolve("model with spaces.log");
         String originalTrace = Files.readString(trace);
-        CliResult repeated = launch(directory, "run", source.toString(), "--out", run.toString());
+        CliResult repeated = launch(directory, "run", source.toString());
         assertEquals(1, repeated.exitCode(), repeated.stderr());
-        assertTrue(repeated.stderr().contains("not empty"), repeated.stderr());
+        assertTrue(repeated.stderr().contains("already exists"), repeated.stderr());
         assertFalse(repeated.stderr().contains("Usage:"));
-        assertFalse(repeated.stdout().contains("overwrite"));
         assertEquals(originalTrace, Files.readString(trace));
     }
 
     @Test
-    void managedRunRejectsUnsafeAndConflictingScriptOutputs(@TempDir Path directory) throws Exception {
-        List<String> settings = List.of(
-                "String outputPrefix = \"../escape\"",
-                "String outputPrefix = \"" + directory.resolve("absolute prefix") + "\"",
-                "Logger trace = fileLogger(logEvery=10, file=\"../escape.log\")",
-                "Logger trace = fileLogger(logEvery=10, file=\"" + directory.resolve("absolute.log") + "\")",
-                "Logger trees = treeLogger(logEvery=10, file=\"\", tree=tree)",
-                "Logger trees = treeLogger(logEvery=10, file=\"$(tree).trees\", tree=tree)",
-                "Logger trace = fileLogger(logEvery=10, file=\"same\")\n"
-                        + "Logger trees = treeLogger(logEvery=10, file=\"nested/../same\", tree=tree)",
-                "Logger trace = fileLogger(logEvery=10, file=\"model with spaces.state.xml\")",
-                "Logger trace = fileLogger(logEvery=10, file=\"model with spaces.state.xml.new\")");
-        for (int i = 0; i < settings.size(); i++) {
+    void outputsNeverGoIntoTheRecordFolderEvenWithOverwrite(@TempDir Path directory) throws Exception {
+        List<String> recordFiles = List.of("model with spaces.run/run.json", "model with spaces.run/notes.log");
+        for (int i = 0; i < recordFiles.size(); i++) {
             Path modelDirectory = Files.createDirectory(directory.resolve("case-" + i));
-            Path source = writeModel(modelDirectory, settings.get(i));
-            Path run = modelDirectory.resolve("results");
-            CliResult result = launch(modelDirectory, "run", source.toString(), "--out", run.toString());
-            assertEquals(1, result.exitCode(), settings.get(i) + "\n" + result.stderr());
-            assertFalse(result.stderr().contains("Usage:"), result.stderr());
-            assertFalse(result.stdout().contains("Run completed"));
-            try (var paths = Files.walk(run.resolve("output"))) {
-                assertEquals(0, paths.filter(Files::isRegularFile).count(), result.stderr());
-            }
+            Path source = writeModel(
+                    modelDirectory, "Logger trace = fileLogger(logEvery=1000, file=\"" + recordFiles.get(i) + "\")");
+
+            CliResult result = launch(modelDirectory, "run", source.toString(), "--overwrite");
+
+            assertEquals(1, result.exitCode(), recordFiles.get(i) + "\n" + result.stderr());
+            assertTrue(result.stderr().contains("into the record folder"), result.stderr());
+            assertFalse(Files.exists(modelDirectory.resolve("model with spaces.run/notes.log")));
         }
-        assertFalse(Files.exists(directory.resolve("absolute.log")));
     }
 
     @Test
-    void staticFailureDoesNotCreateTheRequestedRunDirectory(@TempDir Path directory) throws Exception {
+    void keepsALeftoverTemporaryStateFile(@TempDir Path directory) throws Exception {
+        Path source = writeModel(directory, "");
+        Path temporaryState = Files.writeString(directory.resolve("model with spaces.state.xml.new"), "last state");
+
+        CliResult result = launch(directory, "run", source.toString());
+
+        assertEquals(1, result.exitCode(), result.stderr());
+        assertTrue(result.stderr().contains("already exists"), result.stderr());
+        assertEquals("last state", Files.readString(temporaryState));
+    }
+
+    @Test
+    void managedRunRejectsInvalidAndConflictingScriptOutputs(@TempDir Path directory) throws Exception {
+        List<String> settings = List.of(
+                "Logger trees = treeLogger(logEvery=1000, file=\"\", tree=tree)",
+                "Logger trees = treeLogger(logEvery=1000, file=\"$(tree).trees\", tree=tree)",
+                "Logger trace = fileLogger(logEvery=1000, file=\"same\")\n"
+                        + "Logger trees = treeLogger(logEvery=1000, file=\"nested/../same\", tree=tree)",
+                "Logger trace = fileLogger(logEvery=1000, file=\"model with spaces.state.xml\")",
+                "Logger trace = fileLogger(logEvery=1000, file=\"model with spaces.state.xml.new\")");
+        for (int i = 0; i < settings.size(); i++) {
+            Path modelDirectory = Files.createDirectory(directory.resolve("case-" + i));
+            Path source = writeModel(modelDirectory, settings.get(i));
+            CliResult result = launch(modelDirectory, "run", source.toString());
+            assertEquals(1, result.exitCode(), settings.get(i) + "\n" + result.stderr());
+            assertFalse(result.stderr().contains("Usage:"), result.stderr());
+            assertFalse(result.stdout().contains("Run completed"));
+            assertFalse(Files.exists(modelDirectory.resolve("same")));
+            assertFalse(Files.exists(modelDirectory.resolve("tree.trees")));
+            assertFalse(Files.exists(modelDirectory.resolve("model with spaces.state.xml")));
+        }
+    }
+
+    @Test
+    void aTreeInTheTraceIsLoggedAsItsHeightAndLength(@TempDir Path directory) throws Exception {
+        Path source = writeModel(directory, "Logger log = fileLogger(file=\"trace.log\", parameters=[tree])");
+        CliResult result = launch(directory, "run", source.toString());
+
+        assertEquals(0, result.exitCode(), result.stderr());
+        Path trace = directory.resolve("trace.log");
+        assertTrace(trace);
+        String log = Files.readString(trace);
+        assertTrue(log.contains("tree.height\ttree.treeLength"), log);
+        assertFalse(log.contains("STATE_"), log);
+        assertFalse(log.contains("#NEXUS"), log);
+    }
+
+    @Test
+    void staticFailureDoesNotCreateARunDirectory(@TempDir Path directory) throws Exception {
         Path source = directory.resolve("invalid.phylospec");
         Files.writeString(source, "Integer value = \"wrong\"");
-        Path run = directory.resolve("results");
-        CliResult result = invoke("run", source.toString(), "--out", run.toString());
+        CliResult result = invoke("run", source.toString());
         assertEquals(1, result.exitCode(), result.stderr());
         assertTrue(result.stderr().contains("TYPE_CHECKING"));
-        assertFalse(Files.exists(run));
+        assertNoRunRecords(directory);
     }
 
     @Test
     void nativePathOverridesCannotBypassTheManagedDirectory(@TempDir Path directory) throws Exception {
         Path source = writeModel(directory, "");
         for (String property : List.of("file.name.prefix", "state.file.name")) {
-            Path run = directory.resolve(property);
-            CliResult result = launchWithJvmOptions(
-                    directory,
-                    List.of("-D" + property + "=outside"),
-                    "run",
-                    source.toString(),
-                    "--out",
-                    run.toString());
+            CliResult result =
+                    launchWithJvmOptions(directory, List.of("-D" + property + "=outside"), "run", source.toString());
             assertEquals(1, result.exitCode(), result.stderr());
             assertTrue(result.stderr().contains(property), result.stderr());
-            assertFalse(Files.exists(run));
+            assertNoRunRecords(directory);
         }
     }
 
@@ -546,11 +715,11 @@ public class PhyloSpecCliTest {
                 .replace("fromNexus(\"alignment.nex\")", "fromNexus(\"" + directory.resolve("alignment.nex") + "\")");
         for (String treePath : List.of(treeFile.getFileName().toString(), treeFile.toString())) {
             Files.writeString(source, "Tree reference = fromTree(\"" + treePath + "\")\n" + model);
-            Path run = directory.resolve(treePath.equals(treeFile.toString()) ? "absolute tree" : "relative tree");
-            CliResult result = launch(work, "run", source.toString(), "--out", run.toString());
+            String runName = treePath.equals(treeFile.toString()) ? "absolute tree" : "relative tree";
+            CliResult result = launch(work, "run", source.toString(), "--run-name", runName);
             assertEquals(0, result.exitCode(), result.stderr());
-            assertTrace(run.resolve("output/model with spaces.log"));
-            assertTrue(Files.size(run.resolve("output/model with spaces.state.xml")) > 0);
+            assertTrace(work.resolve(runName + ".log"));
+            assertTrue(Files.size(work.resolve(runName + ".state.xml")) > 0);
         }
     }
 
@@ -561,26 +730,25 @@ public class PhyloSpecCliTest {
         // A real CWD input must not hide the missing file beside the script.
         Files.copy(Path.of("src/test/java/resources/primate-mtDNA.nex"), work.resolve("missing.nex"));
         Files.copy(Path.of("src/test/java/resources/valid.newick"), work.resolve("missing.newick"));
-        Path source = directory.resolve("model.phylospec");
         List<String> declarations = List.of(
                 "Alignment data = fromNexus(\"missing.nex\")",
                 "Tree tree = fromTree(\"missing.nex\")",
                 "Tree tree = fromTree(\"missing.newick\")");
         for (int i = 0; i < declarations.size(); i++) {
-            Files.writeString(source, declarations.get(i));
-            Path run = directory.resolve("missing-input-" + i);
-            CliResult result = launch(work, "run", source.toString(), "--out", run.toString());
+            Path modelDirectory = Files.createDirectory(directory.resolve("missing-input-" + i));
+            Path source = Files.writeString(modelDirectory.resolve("model.phylospec"), declarations.get(i));
+            CliResult result = launch(work, "run", source.toString());
             assertEquals(1, result.exitCode(), result.stderr());
             assertTrue(result.stderr().contains("MODEL_BUILDING"), result.stderr());
             assertTrue(result.stderr().contains("Could not read input file"), result.stderr());
             assertTrue(
                     result.stderr()
-                            .contains(directory
+                            .contains(modelDirectory
                                     .resolve(i == 2 ? "missing.newick" : "missing.nex")
                                     .toString()),
                     result.stderr());
             assertFalse(result.stderr().contains("Usage:"), result.stderr());
-            JsonNode failed = readRecord(run);
+            JsonNode failed = readRecord(getOnlyRun(work));
             assertEquals("failed", failed.path("status").asText());
             assertEquals(
                     "unavailable", failed.path("inputs").get(0).path("status").asText());
@@ -591,9 +759,9 @@ public class PhyloSpecCliTest {
     @Test
     void recordsTheActualSourceInputsConfigurationAndGeneratedOutputs(@TempDir Path directory) throws Exception {
         Path source = writeModel(directory, "");
-        Path run = directory.resolve("recorded run");
-        CliResult result = launch(directory, "run", source.toString(), "--out", run.toString());
+        CliResult result = launch(directory, "run", source.toString(), "--seed", "42");
         assertEquals(0, result.exitCode(), result.stderr());
+        Path run = getOnlyRun(directory);
         JsonNode record = readRecord(run);
         assertEquals("succeeded", record.path("status").asText());
         assertTrue(record.path("completionConfirmed").asBoolean());
@@ -611,8 +779,7 @@ public class PhyloSpecCliTest {
                 input.path("path").asText());
         assertEquals(
                 sha256(directory.resolve("alignment.nex")), input.path("sha256").asText());
-        assertEquals(30, record.path("settings").path("chainLength").asLong());
-        assertEquals(10, record.path("settings").path("defaultLogEvery").asInt());
+        assertEquals(3000, record.path("settings").path("chainLength").asLong());
         assertEquals(42, record.path("settings").path("randomSeed").asLong());
         for (String phase : List.of("modelBuilding", "mcmc")) {
             assertEquals(42, record.path("seeds").path(phase).path("requested").asLong());
@@ -642,8 +809,9 @@ public class PhyloSpecCliTest {
                 previous = position;
             }
         }
-        assertTrue(result.stdout().contains("Run record: " + run.resolve("run.json")));
-        assertTrue(result.stdout().contains("BEAST console log: " + run.resolve("console.log")));
+        Path realRun = run.toRealPath();
+        assertTrue(result.stdout().contains("Run record: " + realRun.resolve("run.json")));
+        assertTrue(result.stdout().contains("BEAST console log: " + realRun.resolve("console.log")));
         assertTrue(result.stdout().contains("MCMC convergence has not been assessed"));
         assertFalse(Files.exists(run.resolve("alignment.nex")), "Snapshot does not relocate or copy the input data");
     }
@@ -651,35 +819,29 @@ public class PhyloSpecCliTest {
     @Test
     void automaticallyChosenSeedCanReproduceTheRecordedShortChain(@TempDir Path directory) throws Exception {
         Path source = writeModel(directory, "");
-        String model = Files.readString(source).replace("Integer randomSeed = 42", "");
-        Files.writeString(source, model);
-        Path first = directory.resolve("generated seed");
-        CliResult generated = launch(directory, "run", source.toString(), "--out", first.toString());
+        CliResult generated = launch(directory, "run", source.toString(), "--run-name", "generated");
         assertEquals(0, generated.exitCode(), generated.stderr());
+        Path first = getOnlyRun(directory);
         JsonNode seeds = readRecord(first).path("seeds");
         long seed = seeds.path("modelBuilding").path("requested").asLong();
         assertTrue(seed > 0);
         assertTrue(seeds.path("modelBuilding").path("generated").asBoolean());
         assertTrue(seeds.path("mcmc").path("generated").asBoolean());
         assertEquals(seed, seeds.path("mcmc").path("requested").asLong());
-        Files.writeString(source, model.replace("mcmc {", "mcmc {\nInteger randomSeed = " + seed));
-        Path repeated = directory.resolve("explicit seed");
-        CliResult replay = launch(directory, "run", source.toString(), "--out", repeated.toString());
+        CliResult replay =
+                launch(directory, "run", source.toString(), "--run-name", "explicit", "--seed", Long.toString(seed));
         assertEquals(0, replay.exitCode(), replay.stderr());
+        assertEquals(traceLines(directory.resolve("generated.log")), traceLines(directory.resolve("explicit.log")));
         assertEquals(
-                traceLines(first.resolve("output/model with spaces.log")),
-                traceLines(repeated.resolve("output/model with spaces.log")));
-        assertEquals(
-                Files.readString(first.resolve("output/model with spaces.trees")),
-                Files.readString(repeated.resolve("output/model with spaces.trees")));
+                Files.readString(directory.resolve("generated.trees")),
+                Files.readString(directory.resolve("explicit.trees")));
     }
 
     @Test
     void orderlyTerminationRecordsCancellationAndKeepsPartialOutputs(@TempDir Path directory) throws Exception {
         Path source = longModel(directory, 1_000_000_000);
-        Path run = directory.resolve("cancelled");
-        try (RunningCli child = start(directory, List.of(), "run", source.toString(), "--out", run.toString())) {
-            awaitRunning(child, run);
+        try (RunningCli child = start(directory, List.of(), "run", source.toString())) {
+            Path run = awaitRunning(child, directory);
             child.process().destroy();
             assertTrue(child.process().waitFor(15, TimeUnit.SECONDS), "Cancellation did not finish promptly");
             assertTrue(child.process().exitValue() != 0);
@@ -695,9 +857,8 @@ public class PhyloSpecCliTest {
     @Test
     void forcedTerminationLeavesAnExplicitlyUnconfirmedRecord(@TempDir Path directory) throws Exception {
         Path source = longModel(directory, 1_000_000_000);
-        Path run = directory.resolve("killed");
-        try (RunningCli child = start(directory, List.of(), "run", source.toString(), "--out", run.toString())) {
-            awaitRunning(child, run);
+        try (RunningCli child = start(directory, List.of(), "run", source.toString())) {
+            Path run = awaitRunning(child, directory);
             child.process().destroyForcibly();
             assertTrue(child.process().waitFor(15, TimeUnit.SECONDS));
             assertTrue(child.process().exitValue() != 0);
@@ -712,10 +873,9 @@ public class PhyloSpecCliTest {
     @Test
     void nativeStateWriteFailureCannotBeReportedAsSuccess(@TempDir Path directory) throws Exception {
         Path source = longModel(directory, 100_000);
-        Path run = directory.resolve("state write failure");
-        try (RunningCli child = start(directory, List.of(), "run", source.toString(), "--out", run.toString())) {
-            awaitRunning(child, run);
-            Path blockedState = run.resolve("output/model with spaces.state.xml");
+        try (RunningCli child = start(directory, List.of(), "run", source.toString())) {
+            Path run = awaitRunning(child, directory);
+            Path blockedState = directory.resolve("model with spaces.state.xml");
             Files.createDirectory(blockedState);
             Files.writeString(
                     blockedState.resolve("blocker"), "Keep the directory nonempty so BEAST cannot replace it.");
@@ -726,29 +886,48 @@ public class PhyloSpecCliTest {
             assertTrue(record.path("completionConfirmed").asBoolean());
             assertFalse(record.path("mcmcStartedAt").asText().isBlank());
             assertTrue(record.path("generatedOutputs").size() > 0);
-            assertTrue(Files.size(run.resolve("output/model with spaces.log")) > 0);
+            assertTrue(Files.size(directory.resolve("model with spaces.log")) > 0);
             assertFalse(Files.readString(child.stdout()).contains("Run completed"));
         }
     }
 
     private static Path longModel(Path directory, int chainLength) throws Exception {
         Path source = writeModel(directory, "");
-        Files.writeString(
-                source,
-                Files.readString(source)
-                        .replace("chainLength = 30", "chainLength = " + chainLength)
-                        .replace("defaultLogEvery = 10", "defaultLogEvery = 10000"));
+        Files.writeString(source, Files.readString(source).replace("chainLength=3000", "chainLength=" + chainLength));
         return source;
     }
 
-    private static void awaitRunning(RunningCli child, Path run) throws Exception {
+    private static Path awaitRunning(RunningCli child, Path directory) throws Exception {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(15);
         while (System.nanoTime() < deadline && child.process().isAlive()) {
-            if (Files.isRegularFile(run.resolve("run.json"))
-                    && readRecord(run).path("status").asText().equals("running")) return;
+            if (!getRunRecords(directory).isEmpty()) {
+                Path run = getOnlyRun(directory);
+                if (Files.isRegularFile(run.resolve("run.json"))
+                        && readRecord(run).path("status").asText().equals("running")) return run;
+            }
             Thread.sleep(10);
         }
         throw new AssertionError("Run did not enter running state: " + Files.readString(child.stderr()));
+    }
+
+    private static Path getOnlyRun(Path directory) throws Exception {
+        List<Path> records = getRunRecords(directory);
+        assertEquals(1, records.size());
+        return records.getFirst();
+    }
+
+    private static void assertNoRunRecords(Path directory) throws Exception {
+        for (Path root : List.of(directory, Path.of("").toAbsolutePath())) {
+            assertTrue(getRunRecords(root).isEmpty(), "Unexpected run record in " + root);
+        }
+    }
+
+    private static List<Path> getRunRecords(Path directory) throws Exception {
+        try (var entries = Files.list(directory)) {
+            return entries.filter(path -> path.getFileName().toString().endsWith(".run"))
+                    .filter(Files::isDirectory)
+                    .toList();
+        }
     }
 
     private static JsonNode readRecord(Path run) throws Exception {
@@ -774,9 +953,7 @@ public class PhyloSpecCliTest {
                 QMatrix qMatrix = jc69()
                 Alignment alignment ~ PhyloCTMC(tree, qMatrix) observed as data
                 mcmc {
-                    Integer chainLength = 30
-                    Integer defaultLogEvery = 10
-                    Integer randomSeed = 42
+                    Sampler sampler = mcmc(chainLength=3000)
                     %s
                 }
                 """.formatted(settings));
@@ -785,7 +962,7 @@ public class PhyloSpecCliTest {
 
     private static void assertNativeOutputs(String prefix) throws Exception {
         assertTrace(Path.of(prefix + ".log"));
-        assertTrue(Files.readString(Path.of(prefix + ".trees")).contains("STATE_30"));
+        assertTrue(Files.readString(Path.of(prefix + ".trees")).contains("STATE_3000"));
         assertTrue(Files.size(Path.of(prefix + ".state.xml")) > 0);
     }
 
@@ -793,11 +970,11 @@ public class PhyloSpecCliTest {
         List<String> trace = Files.readAllLines(file).stream()
                 .filter(line -> !line.isBlank() && !line.startsWith("#"))
                 .toList();
-        assertEquals(5, trace.size(), "Header and samples 0, 10, 20, 30");
+        assertEquals(5, trace.size(), "Header and samples 0, 1000, 2000, 3000");
         List<String> columns = List.of(trace.getFirst().trim().split("\\s+"));
         for (int sample = 1; sample < trace.size(); sample++) {
             String[] values = trace.get(sample).trim().split("\\s+");
-            assertEquals((sample - 1) * 10, Integer.parseInt(values[0]));
+            assertEquals((sample - 1) * 1000, Integer.parseInt(values[0]));
             for (String name : List.of("posterior", "prior", "likelihood")) {
                 assertTrue(columns.contains(name), columns.toString());
                 assertTrue(Double.isFinite(Double.parseDouble(values[columns.indexOf(name)])));
@@ -828,7 +1005,18 @@ public class PhyloSpecCliTest {
 
     private static CliResult launchWithJvmOptions(Path directory, List<String> jvmOptions, String... arguments)
             throws Exception {
-        try (RunningCli child = start(directory, jvmOptions, arguments)) {
+        return launch(directory, jvmOptions, Map.of(), arguments);
+    }
+
+    private static CliResult launchWithEnvironment(Path directory, Map<String, String> environment, String... arguments)
+            throws Exception {
+        return launch(directory, List.of(), environment, arguments);
+    }
+
+    private static CliResult launch(
+            Path directory, List<String> jvmOptions, Map<String, String> environment, String... arguments)
+            throws Exception {
+        try (RunningCli child = start(directory, jvmOptions, environment, arguments)) {
             assertTrue(child.process().waitFor(30, TimeUnit.SECONDS), "CLI timed out: " + String.join(" ", arguments));
             return new CliResult(
                     child.process().exitValue(), Files.readString(child.stdout()), Files.readString(child.stderr()));
@@ -846,6 +1034,12 @@ public class PhyloSpecCliTest {
     }
 
     private static RunningCli start(Path directory, List<String> jvmOptions, String... arguments) throws Exception {
+        return start(directory, jvmOptions, Map.of(), arguments);
+    }
+
+    private static RunningCli start(
+            Path directory, List<String> jvmOptions, Map<String, String> environment, String... arguments)
+            throws Exception {
         Path stdout = Files.createTempFile(directory, "cli-stdout-", ".txt");
         Path stderr = Files.createTempFile(directory, "cli-stderr-", ".txt");
         String classpath = System.getProperty("surefire.test.class.path", System.getProperty("java.class.path"));
@@ -854,8 +1048,9 @@ public class PhyloSpecCliTest {
         command.addAll(jvmOptions);
         command.addAll(List.of("-Djava.only=true", "-cp", classpath, "runner.PhyloSpecCli"));
         command.addAll(List.of(arguments));
-        Process process = new ProcessBuilder(command)
-                .directory(directory.toFile())
+        ProcessBuilder builder = new ProcessBuilder(command);
+        builder.environment().putAll(environment);
+        Process process = builder.directory(directory.toFile())
                 .redirectOutput(stdout.toFile())
                 .redirectError(stderr.toFile())
                 .start();

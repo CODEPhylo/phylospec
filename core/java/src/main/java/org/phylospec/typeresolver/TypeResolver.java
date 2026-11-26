@@ -1192,7 +1192,8 @@ public class TypeResolver implements AstVisitor<ResolvedTypeSet, ResolvedTypeSet
      * Check if the type resolver ignores the statement because it is in a custom block.
      */
     private boolean ignoreStmt(Stmt stmt) {
-        Set<Stmt.Block> blocksConsidered = Set.of(Stmt.Block.NO_BLOCK, Stmt.Block.MODEL, Stmt.Block.DATA);
+        Set<Stmt.Block> blocksConsidered =
+                Set.of(Stmt.Block.NO_BLOCK, Stmt.Block.MODEL, Stmt.Block.DATA, Stmt.Block.MCMC);
         return (!blocksConsidered.contains(stmt.block));
     }
 

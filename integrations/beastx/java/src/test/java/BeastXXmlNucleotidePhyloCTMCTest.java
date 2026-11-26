@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Assumptions;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -15,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@ExtendWith(SkipWithoutBeagle.class)
 public class BeastXXmlNucleotidePhyloCTMCTest {
 
     @Test
@@ -65,8 +67,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 5
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=5)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -77,7 +78,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -252,8 +253,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 10000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=10000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -273,7 +273,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -486,26 +486,17 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                 ) observed as secondPartition
 
                 mcmc {
-                    Integer chainLength = 10000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=10000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
                         file="%s",
                         parameters=[
+                            tree,
                             birthRate,
                             clockRate,
                             firstShape,
                             secondShape,
-                            posterior,
-                            prior,
-                            likelihood,
-                            "birthRate_prior",
-                            "clockRate_prior",
-                            "tree_prior",
-                            "firstAlignment_likelihood",
-                            "tree.height",
-                            "tree.treeLength",
                             firstRateAC,
                             firstRateAG,
                             firstRateAT,
@@ -520,7 +511,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -569,10 +560,6 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
         assertTrue(xml.contains("<joint idref=\"joint\""), xml);
         assertTrue(xml.contains("<prior idref=\"prior\""), xml);
         assertTrue(xml.contains("<likelihood idref=\"likelihood\""), xml);
-        assertTrue(xml.contains("<distributionLikelihood idref=\"birthRate_prior\""), xml);
-        assertTrue(xml.contains("<distributionLikelihood idref=\"clockRate_prior\""), xml);
-        assertTrue(xml.contains("<speciationLikelihood idref=\"tree_prior\""), xml);
-        assertTrue(xml.contains("<treeLikelihood idref=\"firstAlignment_likelihood\""), xml);
         assertTrue(xml.contains("<treeHeightStatistic idref=\"tree.height\""), xml);
         assertTrue(xml.contains("<treeLengthStatistic idref=\"tree.treeLength\""), xml);
 
@@ -674,8 +661,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 10000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=10000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -686,7 +672,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -787,8 +773,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 10000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=10000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -799,7 +784,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(
@@ -899,8 +884,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                 ) observed as data
 
                 mcmc {
-                    Integer chainLength = 10000
-                    Integer randomSeed = 1234
+                    Sampler sampler = mcmc(chainLength=10000)
 
                     Logger fileLogger = fileLogger(
                         logEvery=1,
@@ -911,7 +895,7 @@ public class BeastXXmlNucleotidePhyloCTMCTest {
                     Logger treeLogger = treeLogger(
                         logEvery=1,
                         file="%s",
-                        trees=[tree]
+                        tree=tree
                     )
                 }
                 """.formatted(

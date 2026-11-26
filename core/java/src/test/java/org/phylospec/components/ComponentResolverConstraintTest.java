@@ -131,7 +131,7 @@ public class ComponentResolverConstraintTest {
     private static ComponentResolver resolverWithGenerator(String generatorJson) throws IOException {
         String libraryJson = """
                 {
-                  "$schema": "https://phylospec.org/schemas/component-library-schema-v5.json",
+                  "$schema": "https://phylospec.org/schemas/component-library-schema-v6.json",
                   "componentLibrary": {
                     "name": "Constraint Test Library",
                     "version": "1.0.0",

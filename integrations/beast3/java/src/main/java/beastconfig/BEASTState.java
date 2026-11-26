@@ -7,7 +7,10 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiConsumer;
 import org.phylospec.tiling.TypeToken;
+import org.phylospec.tiling.mcmc.DefaultFileTreeLoggers;
 import org.phylospec.tiling.mcmc.FileLoggerSpec;
+import org.phylospec.tiling.mcmc.McmcSamplerSpec;
+import org.phylospec.tiling.mcmc.OutputPaths;
 import org.phylospec.tiling.mcmc.ScreenLoggerSpec;
 import org.phylospec.tiling.mcmc.TreeLoggerSpec;
 
@@ -23,8 +26,6 @@ public class BEASTState {
     private final OutputPaths outputPaths;
     private final boolean xmlExport;
     private BiConsumer<String, Path> inputObserver = (reference, path) -> {};
-    public long chainLength = 10_00_000;
-    public int defaultLogEvery = 1000;
     public String outputPrefix;
     public Long randomSeed;
     /** Optional adapter preparation of the initialized graph immediately before XML serialization. */
@@ -42,9 +43,11 @@ public class BEASTState {
 
     public final List<Operator> operators;
 
+    private McmcSamplerSpec samplerSpec;
     public final List<ScreenLoggerSpec<BEASTObject>> screenLoggerSpecs;
     public final List<FileLoggerSpec<BEASTObject>> fileLoggerSpecs;
     public final List<TreeLoggerSpec<Tree>> treeLoggerSpecs;
+    private final DefaultFileTreeLoggers<Tree> defaultFileTreeLoggers;
 
     /// The loggers built from the specs, cached so that they are only built once.
     private List<beast.base.inference.Logger> builtLoggers;
@@ -61,12 +64,17 @@ public class BEASTState {
      * PhyloSpec source file.
      */
     public BEASTState(String runName, Path sourceDirectory) {
-        this(runName, sourceDirectory, null);
+        this(runName, sourceDirectory, (OutputPaths) null);
     }
 
     /** Creates a managed state when outputDirectory is supplied; null preserves legacy behavior. */
     public BEASTState(String runName, Path sourceDirectory, Path outputDirectory) {
-        this(runName, sourceDirectory, outputDirectory, false);
+        this(runName, sourceDirectory, outputDirectory == null ? null : new OutputPaths(outputDirectory));
+    }
+
+    /** Creates a managed state writing to the given outputs; null preserves legacy behavior. */
+    public BEASTState(String runName, Path sourceDirectory, OutputPaths outputPaths) {
+        this(runName, sourceDirectory, outputPaths, false);
     }
 
     public static BEASTState forXmlExport(String runName, Path sourceDirectory) {
@@ -77,11 +85,11 @@ public class BEASTState {
         return xmlExport;
     }
 
-    private BEASTState(String runName, Path sourceDirectory, Path outputDirectory, boolean xmlExport) {
+    private BEASTState(String runName, Path sourceDirectory, OutputPaths outputPaths, boolean xmlExport) {
         this.runName = runName;
         this.xmlExport = xmlExport;
-        this.outputPaths = outputDirectory == null ? null : new OutputPaths(outputDirectory);
-        this.outputPrefix = resolveUserOutputPath(runName);
+        this.outputPaths = outputPaths;
+        this.outputPrefix = resolveOutputPath(runName);
         this.sourceDirectory = Objects.requireNonNull(sourceDirectory, "sourceDirectory")
                 .toAbsolutePath()
                 .normalize();
@@ -96,6 +104,8 @@ public class BEASTState {
         this.screenLoggerSpecs = new ArrayList<>();
         this.fileLoggerSpecs = new ArrayList<>();
         this.treeLoggerSpecs = new ArrayList<>();
+        this.defaultFileTreeLoggers =
+                new DefaultFileTreeLoggers<>(this.treeLoggerSpecs, Tree::getID, this::resolveOutputPath);
     }
 
     /** Resolves a file named by the model, preserving absolute paths. */
@@ -113,24 +123,35 @@ public class BEASTState {
         this.inputObserver = Objects.requireNonNull(inputObserver, "inputObserver");
     }
 
-    /** Resolves a name declared by the user, preserving the old policy for unmanaged callers. */
-    public String resolveUserOutputPath(String path) {
-        return outputPaths == null ? path : outputPaths.resolveUserPath(path);
-    }
-
-    /** Resolves output names, including already resolved names contributed by packages. */
+    /**
+     * Resolves output names against the working directory of a managed run. BEAST replaces
+     * {@code $(tree)} in a logger's file name only when it opens the file, so such names are rejected:
+     * the checked and recorded name would differ from the written file.
+     */
     public String resolveOutputPath(String path) {
-        return outputPaths == null ? path : outputPaths.resolve(path);
+        if (outputPaths == null) return path;
+        if (path != null && path.contains("$(tree)")) {
+            throw new IllegalArgumentException(
+                    "BEAST file name templates like $(tree) are not supported in output names: " + path
+                            + ". Give every tree logger its own file name instead.");
+        }
+        return outputPaths.resolve(path);
     }
 
-    /** Checks logger and state destinations together before native output begins. */
-    public void prepareOutputFiles(List<Logger> loggers, String stateFile) throws java.io.IOException {
+    /**
+     * Checks logger and state destinations together before native output begins. BEAST writes the
+     * state to {@code <stateFile>.new} before moving it into place, so that file is reserved too. No
+     * destination may lie inside the record folder of the run.
+     */
+    public void prepareOutputFiles(List<Logger> loggers, String stateFile, Path recordDirectory)
+            throws java.io.IOException {
         if (outputPaths == null) return;
-        List<String> files = loggers.stream()
+        List<String> files = new ArrayList<>(loggers.stream()
                 .map(logger -> logger.fileNameInput.get())
                 .filter(name -> name != null && !name.isEmpty())
-                .toList();
-        outputPaths.prepare(files, stateFile);
+                .toList());
+        files.add(stateFile + ".new");
+        outputPaths.prepare(files, stateFile, recordDirectory);
     }
 
     /**
@@ -306,6 +327,20 @@ public class BEASTState {
     }
 
     /**
+     * Sets the sampler of the analysis.
+     */
+    public void setSamplerSpec(McmcSamplerSpec samplerSpec) {
+        this.samplerSpec = samplerSpec;
+    }
+
+    /**
+     * Returns the sampler of the analysis. This is the default sampler if none has been set.
+     */
+    public McmcSamplerSpec getSamplerSpec() {
+        return this.samplerSpec != null ? this.samplerSpec : new McmcSamplerSpec();
+    }
+
+    /**
      * Adds a given screen logger to the BEAST state.
      */
     public void addScreenLoggerSpec(ScreenLoggerSpec<BEASTObject> logger) {
@@ -324,6 +359,14 @@ public class BEASTState {
      */
     public void addTreeLoggerSpec(TreeLoggerSpec<Tree> logger) {
         this.treeLoggerSpecs.add(logger);
+    }
+
+    /**
+     * Adds a tree logger which writes to the default tree file. As soon as several loggers use
+     * the default, each of them writes to the file of its tree instead, so that they do not clash.
+     */
+    public void addTreeLoggerSpecWithDefaultFile(int logEvery, Tree tree) {
+        this.defaultFileTreeLoggers.add(this.outputPrefix, logEvery, tree);
     }
 
     /**

@@ -16,7 +16,10 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
+/// Matches an operator setting in the `beastX` block and stores it in the operator config of the state.
 public class AutoOperatorConfigTile extends Tile<Void, BeastXState> implements CandidateTile<BeastXState> {
+
+    public static final String BLOCK_NAME = "beastX";
 
     private final String settingName;
 
@@ -41,7 +44,7 @@ public class AutoOperatorConfigTile extends Tile<Void, BeastXState> implements C
             throw new FailedTilingAttempt.Irrelevant();
         }
 
-        if (!(assignment.block instanceof Stmt.Block.Mcmc)) {
+        if (!(assignment.block instanceof Stmt.Block.Custom block) || !block.blockName().equals(BLOCK_NAME)) {
             throw new FailedTilingAttempt.Irrelevant();
         }
 

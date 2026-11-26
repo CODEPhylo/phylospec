@@ -34,7 +34,7 @@ class PhyloSpecRunnerTest {
 
     @Test
     void rejectsIncompleteSyntaxInsteadOfCheckingARecoveredScript() {
-        for (String source : List.of("Real x =", "mcmc { Integer chainLength = 10")) {
+        for (String source : List.of("Real x =", "mcmc { Sampler sampler = mcmc(chainLength=10)")) {
             PhyloSpecException failure =
                     assertThrows(PhyloSpecException.class, () -> runner(source).check());
             assertDiagnostic(failure, PhyloSpecDiagnostic.Stage.PARSING);
@@ -79,6 +79,72 @@ class PhyloSpecRunnerTest {
         assertDiagnostic(failure, PhyloSpecDiagnostic.Stage.MAPPING);
         assertInstanceOf(TileApplicationError.class, failure.getCause());
         assertTrue(failure.diagnostic().error().hint().contains("random variable"));
+    }
+
+    @Test
+    void formerMcmcSettingsPointToTheSampler() {
+        String source = """
+                Real x ~ Normal(mean=0.0, sd=1.0)
+                mcmc {
+                    Integer chainLength = 5
+                }
+                """;
+        PhyloSpecException failure =
+                assertThrows(PhyloSpecException.class, () -> runner(source).check());
+
+        assertDiagnostic(failure, PhyloSpecDiagnostic.Stage.MAPPING);
+        assertTrue(failure.diagnostic().error().hint().contains("mcmc(chainLength=5)"));
+    }
+
+    @Test
+    void loggedValuesOfDifferentTypesCanBeCombined() throws Exception {
+        runner("""
+                Real x ~ Normal(mean=0.0, sd=1.0)
+                Simplex y ~ Dirichlet(repeat(value=2.0, num=3))
+                mcmc {
+                    Logger logger = screenLogger(parameters=[x, y])
+                }
+                """).check();
+    }
+
+    @Test
+    void loggedValuesWhichCannotBeLoggedAreRejected() {
+        for (String parameter : List.of("label", "\"x\"")) {
+            String source = """
+                    Real x ~ Normal(mean=0.0, sd=1.0)
+                    String label = "label"
+                    mcmc {
+                        Logger logger = screenLogger(parameters=[%s])
+                    }
+                    """.formatted(parameter);
+            assertThrows(PhyloSpecException.class, () -> runner(source).check(), parameter);
+        }
+    }
+
+    @Test
+    void loggedConstantsAreNamedAfterTheirVariable(@TempDir Path directory) throws Exception {
+        Path log = directory.resolve("constants.log");
+        String source = """
+                Real x ~ Normal(mean=0.0, sd=1.0)
+                Integer count = 3
+                Real half = 0.5
+                mcmc {
+                    Sampler sampler = mcmc(chainLength=10, stateFile="%s")
+                    Logger logger = fileLogger(file="%s", logEvery=1, parameters=[x, count, half])
+                }
+                """.formatted(
+                        directory.resolve("constants.state.xml").toString().replace("\\", "\\\\"),
+                        log.toString().replace("\\", "\\\\"));
+
+        runner(source).runPhyloSpec("constants");
+
+        String header = Files.readAllLines(log).stream()
+                .filter(line -> !line.startsWith("#"))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(
+                List.of("Sample", "posterior", "prior", "likelihood", "x", "count", "half"),
+                List.of(header.trim().split("\\s+")));
     }
 
     @Test
@@ -189,8 +255,8 @@ class PhyloSpecRunnerTest {
     void legacyRunStillExecutesTheBasicPhylogeneticModel(@TempDir Path directory) throws Exception {
         Files.copy(Path.of("src/test/java/resources/primate-mtDNA.nex"), directory.resolve("alignment.nex"));
         Path source = directory.resolve("model.phylospec");
-        Files.writeString(source, PHYLOGENETIC_MODEL + mcmc(null));
         String prefix = directory.resolve("analysis").toString();
+        Files.writeString(source, PHYLOGENETIC_MODEL + mcmc(prefix));
 
         new PhyloSpecRunner(source, LIBRARIES).runPhyloSpec(prefix);
 
@@ -209,6 +275,55 @@ class PhyloSpecRunnerTest {
         }
         assertTrue(Files.readString(directory.resolve("analysis.trees")).contains("STATE_30"));
         assertTrue(Files.size(directory.resolve("analysis.state.xml")) > 0);
+    }
+
+    @Test
+    void sameSeedReproducesTheSampledValues(@TempDir Path directory) throws Exception {
+        Files.copy(Path.of("src/test/java/resources/primate-mtDNA.nex"), directory.resolve("alignment.nex"));
+        Path source = directory.resolve("model.phylospec");
+
+        List<List<String>> traces = new ArrayList<>();
+        for (String run : List.of("first", "second")) {
+            String prefix = directory.resolve(run).toString();
+            Files.writeString(source, PHYLOGENETIC_MODEL + mcmc(prefix));
+
+            PhyloSpecRunner runner = new PhyloSpecRunner(source, LIBRARIES);
+            runner.setSeed(2468L);
+            runner.runPhyloSpec(prefix);
+
+            traces.add(Files.readAllLines(Path.of(prefix + ".log")).stream()
+                    .filter(line -> !line.isBlank() && !line.startsWith("#"))
+                    .toList());
+        }
+
+        assertEquals(5, traces.getFirst().size(), "Header and samples 0, 10, 20, 30");
+        assertEquals(traces.getFirst(), traces.getLast());
+    }
+
+    @Test
+    void engineBlocksOfOtherEnginesAreIgnored(@TempDir Path directory) throws Exception {
+        Path source = directory.resolve("model.phylospec");
+        Files.writeString(
+                source, """
+                Real x ~ Normal(mean=0.0, sd=1.0)
+                beastX {
+                    Real parameterScaleFactor = 0.5
+                }
+                mcmc {
+                    Sampler sampler = mcmc(chainLength=10)
+                    Logger fileLogger = fileLogger(file="%s", logEvery=10)
+                }
+                """.formatted(directory.resolve("x.log").toString().replace("\\", "\\\\")));
+
+        new PhyloSpecRunner(source, LIBRARIES)
+                .runPhyloSpec(directory.resolve("x").toString());
+
+        List<String> header = Files.readAllLines(directory.resolve("x.log")).stream()
+                .filter(line -> !line.isBlank() && !line.startsWith("#"))
+                .map(line -> List.of(line.trim().split("\\s+")))
+                .findFirst()
+                .orElseThrow();
+        assertFalse(header.contains("parameterScaleFactor"), header.toString());
     }
 
     @Test
@@ -234,12 +349,11 @@ class PhyloSpecRunnerTest {
     private static String mcmc(String prefix) {
         return """
                 mcmc {
-                    Integer chainLength = 30
-                    Integer defaultLogEvery = 10
-                    Integer randomSeed = 42
-                    %s
+                    Sampler sampler = mcmc(chainLength=30)
+                    Logger fileLogger = fileLogger(file="%1$s.log", logEvery=10)
+                    Logger treeLogger = treeLogger(file="%1$s.trees", logEvery=10, tree)
                 }
-                """.formatted(prefix == null ? "" : "String outputPrefix = \"" + prefix + "\"");
+                """.formatted(prefix.replace("\\", "\\\\"));
     }
 
     private static void assertDiagnostic(PhyloSpecException failure, PhyloSpecDiagnostic.Stage stage) {

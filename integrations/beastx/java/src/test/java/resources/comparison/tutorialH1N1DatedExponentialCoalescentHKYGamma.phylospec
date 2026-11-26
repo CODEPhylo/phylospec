@@ -66,29 +66,13 @@ Alignment alignment ~ PhyloCTMC(
 ) observed as data
 
 mcmc {
-    Integer chainLength = 10000000
-    Integer randomSeed = 741852963
+    Sampler sampler = mcmc(chainLength=10000000)
 
     Logger fileLogger = fileLogger(
         logEvery=1000,
         file="target/comparison/phylo-beastx-tutorial-h1n1-dated-exponential-coalescent-hky-gamma.log",
         parameters=[
-            "posterior",
-            "prior",
-            "likelihood",
-
-            "populationSize_prior",
-            "growthRate_prior",
-            "kappa_prior",
-            "baseFrequencies_prior",
-            "gammaShape_prior",
-            "tree_prior",
-            "clockRate_prior",
-            "alignment_likelihood",
-
-            "tree.height",
-            "tree.treeLength",
-
+            tree,
             clockRate,
             populationSize,
             growthRate,
@@ -101,22 +85,7 @@ mcmc {
     Logger screenLogger = screenLogger(
         logEvery= 10000,
         parameters=[
-            "posterior",
-            "prior",
-            "likelihood",
-
-            "populationSize_prior",
-            "growthRate_prior",
-            "kappa_prior",
-            "baseFrequencies_prior",
-            "gammaShape_prior",
-            "tree_prior",
-            "clockRate_prior",
-            "alignment_likelihood",
-
-            "tree.height",
-            "tree.treeLength",
-
+            tree,
             clockRate,
             populationSize,
             growthRate,
@@ -129,6 +98,6 @@ mcmc {
     Logger treeLogger = treeLogger(
         logEvery=1000,
         file="target/comparison/phylo-beastx-tutorial-h1n1-dated-exponential-coalescent-hky-gamma.trees",
-        trees=[tree]
+        tree=tree
     )
 }

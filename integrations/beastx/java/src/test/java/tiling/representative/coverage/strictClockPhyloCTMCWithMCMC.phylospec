@@ -15,7 +15,7 @@ Alignment alignment ~ PhyloCTMC(
 ) observed as data
 
 mcmc {
-    Integer chainLength = 10000
+    Sampler sampler = mcmc(chainLength=10000)
 
     Logger screenLogger = screenLogger(
         logEvery=1000,
@@ -31,7 +31,7 @@ mcmc {
     Logger treeLogger = treeLogger(
         logEvery=1000,
         file="target/strictClockPhyloCTMC.trees",
-        trees=[tree]
+        tree=tree
     )
 }
 
