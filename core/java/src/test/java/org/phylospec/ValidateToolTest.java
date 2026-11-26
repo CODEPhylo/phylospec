@@ -165,5 +165,50 @@ public class ValidateToolTest {
     public void missingArgumentIsAUsageError() {
         assertEquals(2, run("validate", "--json").exitCode());
         assertEquals(2, run("validate", "--unknown", "model.phylospec").exitCode());
+        assertEquals(2, run("validate", "model.phylospec", "--engine").exitCode());
+    }
+
+    private static final String TEST_ENGINE = "src/test/resources/test-engine-specification.json";
+
+    @Test
+    public void engineFlagReportsUnsupportedGeneratorsAsWarnings() throws IOException {
+        // the test engine does not implement Normal
+        Path file = writeModel("Real x ~ Normal(mean=0, sd=1)\n");
+
+        Run run = run("validate", "--json", "--engine", TEST_ENGINE, file.toString());
+        JsonNode report = MAPPER.readTree(run.out());
+
+        assertEquals(0, run.exitCode());
+        assertTrue(report.get("valid").asBoolean());
+        assertEquals(1, report.get("warningCount").asInt());
+        assertEquals("warning", report.get("diagnostics").get(0).get("severity").asText());
+        assertEquals(1, report.get("engines").size());
+    }
+
+    @Test
+    public void withoutEngineFlagNoEngineWarnings() throws IOException {
+        Path file = writeModel("Real x ~ Normal(mean=0, sd=1)\n");
+
+        JsonNode report =
+                MAPPER.readTree(run("validate", "--json", file.toString()).out());
+
+        assertEquals(0, report.get("warningCount").asInt());
+        assertEquals(0, report.get("engines").size());
+    }
+
+    @Test
+    public void unreadableEngineSpecificationIsAUsageError() throws IOException {
+        Path file = writeModel("Real x ~ Normal(mean=0, sd=1)\n");
+
+        Run run = run(
+                "validate",
+                "--json",
+                "--engine",
+                tempDir.resolve("missing.json").toString(),
+                file.toString());
+
+        assertEquals(2, run.exitCode());
+        assertTrue(run.out().isEmpty());
+        assertTrue(run.err().contains("missing.json"));
     }
 }
