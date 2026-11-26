@@ -198,7 +198,7 @@ public class TreeModelXmlBuilder {
                         XmlElement.element("rootHeight")
                                 .withChild(
                                         XmlElement.element("parameter")
-                                                .withId(id + ".rootHeight")
+                                                .withId(state.rootHeightId(treeModel))
                                 )
                 )
                 .withChild(

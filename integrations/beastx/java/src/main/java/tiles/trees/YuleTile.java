@@ -12,13 +12,11 @@ import org.phylospec.domain.NonNegativeReal;
 import org.phylospec.domain.PositiveReal;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
-import org.phylospec.typeresolver.Stochasticity;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
 import tiling.params.BeastXParameters;
 
 import java.util.IdentityHashMap;
-import java.util.Set;
 
 public class YuleTile extends GeneratorTile<
         BoundDistribution<TreeModel, SpeciationLikelihood>,
@@ -33,9 +31,9 @@ public class YuleTile extends GeneratorTile<
     GeneratorTileInput<RealScalar<? extends PositiveReal>, BeastXState> birthRateInput =
             new GeneratorTileInput<>("birthRate");
 
-    // The root is fixed at rootAge during MCMC, so a sampled rootAge is not supported.
+    // A fixed rootAge keeps the root fixed; a sampled rootAge is the root height (see RootAge).
     GeneratorTileInput<RealScalar<? extends NonNegativeReal>, BeastXState> rootAgeInput =
-            new GeneratorTileInput<>("rootAge", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
+            new GeneratorTileInput<>("rootAge", false);
 
     GeneratorTileInput<Taxa, BeastXState> taxaInput =
             new GeneratorTileInput<>("taxa");
@@ -80,7 +78,7 @@ public class YuleTile extends GeneratorTile<
                         );
 
         if (conditioningAge != null) {
-            RootAge.fixRoot(beastState, defaultTreeModel);
+            RootAge.bindRoot(this.getRootNode(), beastState, rootAge, defaultTreeModel, "Yule");
         }
 
         return new BoundDistribution<>(

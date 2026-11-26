@@ -14,7 +14,6 @@ import org.phylospec.domain.UnitInterval;
 import org.phylospec.tiling.errors.TileApplicationError;
 import org.phylospec.tiling.tiles.GeneratorTile;
 import org.phylospec.types.RealScalar;
-import org.phylospec.typeresolver.Stochasticity;
 import tiling.BeastXState;
 import tiling.model.BoundDistribution;
 import tiling.params.BeastXBirthMinusDeathRate;
@@ -23,7 +22,6 @@ import tiling.params.BeastXRelativeDeathRate;
 
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Set;
 
 /**
  * BirthDeath(birthRate, deathRate). BEAST X's model takes the diversification rate and the turnover,
@@ -53,9 +51,9 @@ public class BirthDeathRatesTile extends GeneratorTile<
     GeneratorTileInput<RealScalar<UnitInterval>, BeastXState> samplingProbabilityInput =
             new GeneratorTileInput<>("samplingProbability", false);
 
-    // The root is fixed at rootAge during MCMC, so a sampled rootAge is not supported.
+    // A fixed rootAge keeps the root fixed; a sampled rootAge is the root height (see RootAge).
     GeneratorTileInput<RealScalar<? extends NonNegativeReal>, BeastXState> rootAgeInput =
-            new GeneratorTileInput<>("rootAge", false, Set.of(Stochasticity.CONSTANT, Stochasticity.DETERMINISTIC));
+            new GeneratorTileInput<>("rootAge", false);
 
     GeneratorTileInput<Taxa, BeastXState> taxaInput =
             new GeneratorTileInput<>("taxa");
@@ -140,7 +138,7 @@ public class BirthDeathRatesTile extends GeneratorTile<
                         );
 
         if (conditioningAge != null) {
-            RootAge.fixRoot(beastState, defaultTreeModel);
+            RootAge.bindRoot(this.getRootNode(), beastState, rootAge, defaultTreeModel, "BirthDeath");
         }
 
         return new BoundDistribution<>(

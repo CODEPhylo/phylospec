@@ -59,6 +59,12 @@ public class BeastXState {
 
     /** Trees whose prior is conditioned on a fixed rootAge: their root must not move. */
     public final Set<TreeModel> rootConditionedTrees;
+
+    /**
+     * Trees whose prior is conditioned on a sampled rootAge, with that rootAge variable. The tree's
+     * root height takes its place (see tiles.trees.RootAge).
+     */
+    public final Map<TreeModel, Parameter> sampledRootAges;
     public final List<AbstractDistributionLikelihood> calibrationPriorDistributions;
     public final List<Likelihood> likelihoodDistributions;
 
@@ -101,6 +107,7 @@ public class BeastXState {
         this.observedTreeDistributions = new HashMap<>();
         this.startingTreeSpecs = new HashMap<>();
         this.rootConditionedTrees = Collections.newSetFromMap(new IdentityHashMap<>());
+        this.sampledRootAges = new IdentityHashMap<>();
         this.calibrationPriorDistributions = new ArrayList<>();
         this.likelihoodDistributions = new ArrayList<>();
         this.treeClockRateParameters = new HashMap<>();
@@ -147,6 +154,12 @@ public class BeastXState {
         parameter.setId(this.getAvailableID(id));
         this.stateNodes.put(parameter, typeToken);
         this.stateNodesByPhyloSpecName.put(id, parameter);
+    }
+
+    /** The id of a tree's root height parameter: the name of its sampled rootAge, if it has one. */
+    public String rootHeightId(TreeModel tree) {
+        Parameter rootAge = this.sampledRootAges.get(tree);
+        return rootAge != null ? rootAge.getId() : tree.getId() + ".rootHeight";
     }
 
     // Registers a deterministic or derived statistic created during tiling.
