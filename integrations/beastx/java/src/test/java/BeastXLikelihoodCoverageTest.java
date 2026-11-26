@@ -84,7 +84,33 @@ class BeastXLikelihoodCoverageTest {
                         PositiveReal r ~ LogNormal(logMean=0.0, logSd=0.5)
                         Vector<Rate> sr ~ DiscreteGammaInv(shape=0.5, numCategories=4, numSites=numSites(data))""",
                         ", siteRates=sr, rate=r",
-                        (tree, p) -> jc69(tree, node -> value(p, "r"), gammaCategories(0.5, 4)), "r")
+                        (tree, p) -> jc69(tree, node -> value(p, "r"), gammaCategories(0.5, 4)), "r"),
+                // BEAST X adds a zero-weight invariant category for an explicit 0 and then gets the mean
+                // rate wrong (#152); a proportion of 0 is the same model as none.
+                row("DiscreteGammaInv with invariantProportion 0",
+                        """
+                        PositiveReal shape ~ LogNormal(logMean=0.0, logSd=0.5)
+                        Vector<Rate> sr ~ DiscreteGammaInv(shape=shape, numCategories=4, invariantProportion=0.0, numSites=numSites(data))""",
+                        ", siteRates=sr",
+                        (tree, p) -> jc69(tree, node -> 1.0, gammaCategories(value(p, "shape"), 4)), "shape")
+        );
+    }
+
+    /** BEAST X gets +I+G wrong (#152), so a fixed non-zero or a sampled proportion is rejected. */
+    @ParameterizedTest
+    @MethodSource("invariantProportions")
+    void nonZeroInvariantProportionIsRejected(String prior, String invariantProportion) {
+        Exception error = assertThrows(Exception.class, () -> buildModel(TREE + prior + "\n"
+                + "Vector<Rate> sr ~ DiscreteGammaInv(shape=1.0, numCategories=4, invariantProportion="
+                + invariantProportion + ", numSites=numSites(data))\n"
+                + "Alignment x ~ PhyloCTMC(tree=tree, qMatrix=jc69(), siteRates=sr) observed as data\n"));
+        assertTrue(error.getMessage().contains("non-zero invariantProportion"), error.getMessage());
+    }
+
+    static Stream<Arguments> invariantProportions() {
+        return Stream.of(
+                Arguments.of("", "0.2"),
+                Arguments.of("Probability pInv ~ Beta(alpha=1.0, beta=4.0)", "pInv")
         );
     }
 
