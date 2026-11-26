@@ -18,7 +18,6 @@ import dr.inference.model.AbstractModelLikelihood;
 import dr.inference.model.Parameter;
 import dr.math.distributions.DirichletDistribution;
 import dr.math.distributions.Distribution;
-import tiles.distributions.CategoricalTile;
 import tiling.BeastXModel;
 import tiling.BeastXState;
 import tiling.xml.builders.CalibrationPriorXmlBuilder;
@@ -114,11 +113,7 @@ public class XmlExportValidator {
                 likelihood.getDistribution();
 
         if (!scalarPriorXmlBuilder.supports(distribution)) {
-            throw unsupported(
-                    distribution instanceof CategoricalTile.CategoricalDistribution
-                            ? "Categorical is not supported in BEAST X XML: BEAST X has no XML element for a categorical distribution."
-                            : "This distribution prior is not supported in BEAST X XML."
-            );
+            throw unsupported("This distribution prior is not supported in BEAST X XML.");
         }
     }
 

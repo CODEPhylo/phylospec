@@ -127,13 +127,17 @@ public class CategoricalTile extends GeneratorTile<
         return bestCategory;
     }
 
-    /** Categorical distribution on 1..K. Public so the XML export can name it in its error. */
+    /** Categorical distribution on 1..K. Public so the XML export can write it. */
     public static final class CategoricalDistribution implements Distribution {
 
         private final Parameter probabilities;
 
         private CategoricalDistribution(Parameter probabilities) {
             this.probabilities = probabilities;
+        }
+
+        public Parameter getProbabilities() {
+            return probabilities;
         }
 
         @Override
