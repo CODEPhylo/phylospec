@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -16,6 +17,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.phylospec.components.ComponentResolver;
+import org.phylospec.components.EngineSpecificationSchema;
 import org.phylospec.errors.Diagnostic;
 import org.phylospec.workspace.Workspace;
 
@@ -27,7 +29,7 @@ public class ValidateToolTest {
 
     private List<Diagnostic> validate(String source) throws IOException {
         ComponentResolver resolver = new ComponentResolver(ComponentResolver.loadCoreComponentLibraries());
-        return new Validator(resolver, new Workspace()).validate(source);
+        return new Validator(resolver, new Workspace()).validate(source).diagnostics();
     }
 
     /** Runs the validate tool and returns its exit code, stdout and stderr. */
@@ -52,6 +54,35 @@ public class ValidateToolTest {
     @Test
     public void validModelHasNoDiagnostics() throws IOException {
         assertTrue(validate("Real x ~ Normal(mean=0, sd=1)\n").isEmpty());
+    }
+
+    @Test
+    public void unsupportedGeneratorsAreWarningsWhenAnEngineIsGiven() throws IOException {
+        EngineSpecificationSchema engine;
+        try (InputStream stream = getClass().getResourceAsStream("/test-engine-specification.json")) {
+            engine = MAPPER.readValue(stream, EngineSpecificationSchema.class);
+        }
+        ComponentResolver resolver = new ComponentResolver(ComponentResolver.loadCoreComponentLibraries());
+
+        // the test engine does not implement Normal
+        Validator.Result result =
+                new Validator(resolver, new Workspace(), List.of(engine)).validate("Real x ~ Normal(mean=0, sd=1)\n");
+
+        assertEquals(1, result.diagnostics().size());
+        assertFalse(result.diagnostics().getFirst().isError());
+        assertEquals(1, result.diagnostics().getFirst().line());
+    }
+
+    @Test
+    public void resultKeepsTheAnalysisForEditorFeatures() throws IOException {
+        ComponentResolver resolver = new ComponentResolver(ComponentResolver.loadCoreComponentLibraries());
+        Validator.Result result =
+                new Validator(resolver, new Workspace()).validate("Real x ~ Normal(mean=0, sd=1)\nReal y = x * 2\n");
+
+        assertEquals(2, result.statements().size());
+        assertFalse(result.tokens().isEmpty());
+        assertFalse(result.typeResolver().resolveVariable("y").isEmpty());
+        assertTrue(result.parser().getRangeForAstNode(result.statements().getFirst()) != null);
     }
 
     @Test

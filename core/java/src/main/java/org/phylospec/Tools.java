@@ -124,7 +124,7 @@ public class Tools {
         List<Diagnostic> diagnostics;
         if (json) System.setOut(err);
         try {
-            diagnostics = validator.validate(phylospecSource);
+            diagnostics = validator.validate(phylospecSource).diagnostics();
         } finally {
             if (json) System.setOut(originalOut);
         }

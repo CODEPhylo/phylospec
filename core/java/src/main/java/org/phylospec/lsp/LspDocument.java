@@ -6,18 +6,14 @@ import java.nio.file.Path;
 import java.util.*;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.phylospec.Validator;
 import org.phylospec.ast.*;
 import org.phylospec.components.*;
-import org.phylospec.engines.EngineSupport;
-import org.phylospec.errors.Error;
-import org.phylospec.errors.ErrorEventListener;
-import org.phylospec.lexer.Lexer;
 import org.phylospec.lexer.Range;
 import org.phylospec.lexer.Token;
 import org.phylospec.lexer.TokenType;
 import org.phylospec.parser.Parser;
 import org.phylospec.typeresolver.ResolvedType;
-import org.phylospec.typeresolver.TypeError;
 import org.phylospec.typeresolver.TypeResolver;
 import org.phylospec.workspace.Workspace;
 
@@ -26,7 +22,7 @@ import org.phylospec.workspace.Workspace;
  * It supports parsing and type error diagnostics, hover information,
  * and basic auto-completion.
  */
-class LspDocument implements ErrorEventListener {
+class LspDocument {
     private final String uri;
     private LanguageClient client;
     private final Workspace workspace;
@@ -39,7 +35,6 @@ class LspDocument implements ErrorEventListener {
     private Parser parser;
     private List<Stmt> statements;
     TypeResolver typeResolver;
-    private final List<Diagnostic> foundDiagnostics = new ArrayList<>();
 
     LspDocument(String uri, String content, LanguageClient client, EngineRegistry engineRegistry) {
         this.uri = uri;
@@ -63,85 +58,36 @@ class LspDocument implements ErrorEventListener {
      * Updates the document content and re-runs the static analysis.
      */
     void updateContent(String newContent) {
-        foundDiagnostics.clear();
-
         content = newContent;
 
-        // run lexer
+        Validator validator = new Validator(componentResolver, workspace, engineRegistry.getSelectedEngines());
+        Validator.Result result = validator.validate(newContent);
 
-        Lexer lexer = new Lexer(newContent);
-        lexer.registerEventListener(this);
-        tokens = lexer.scanTokens();
+        tokens = result.tokens();
+        parser = result.parser();
+        statements = result.statements();
+        typeResolver = result.typeResolver();
 
-        // run parser
-
-        parser = new Parser(tokens);
-        parser.registerEventListener(this);
-        statements = parser.parse();
-
-        // run type resolver
-
-        typeResolver = new TypeResolver(componentResolver, workspace);
-        typeResolver.registerEventListener(this);
-        for (Stmt statement : statements) {
-            try {
-                statement.accept(typeResolver);
-            } catch (TypeError error) {
-                errorDetected(error, statement);
-            }
+        List<Diagnostic> diagnostics = new ArrayList<>();
+        for (org.phylospec.errors.Diagnostic diagnostic : result.diagnostics()) {
+            diagnostics.add(toLspDiagnostic(diagnostic));
+            System.out.println(diagnostic.error().toStdOutString(content, !diagnostic.isError()));
         }
 
-        // check whether the engines can run the model
-
-        EngineSupport engineSupport = new EngineSupport(engineRegistry.getSelectedEngines());
-        engineSupport.supports(statements).getWarnings().forEach(this::warningDetected);
-
-        // publish diagnostics
-
-        this.client.publishDiagnostics(new PublishDiagnosticsParams(this.uri, foundDiagnostics));
+        this.client.publishDiagnostics(new PublishDiagnosticsParams(this.uri, diagnostics));
     }
 
-    @Override
-    public void errorDetected(Error error) {
-        emitDiagnostic(error, false);
-    }
+    private static Diagnostic toLspDiagnostic(org.phylospec.errors.Diagnostic diagnostic) {
+        Range range = diagnostic.error().range();
+        // LSP positions are 0-based; place errors without a known position at the start
+        Position start = range == null ? new Position(0, 0) : new Position(range.startLine - 1, range.start);
+        Position end = range == null ? new Position(0, 0) : new Position(range.endLine - 1, range.end);
 
-    @Override
-    public void warningDetected(Error warning) {
-        emitDiagnostic(warning, true);
-    }
-
-    private void emitDiagnostic(Error error, boolean isWarning) {
-        StringBuilder text = new StringBuilder(error.description());
-
-        if (!error.hint().isBlank()) {
-            text.append("\n\n").append(error.hint());
-        }
-
-        if (!error.examples().isEmpty()) {
-            text.append("\n\nFor example:\n");
-            for (String example : error.examples()) {
-                text.append("\n\t").append(example);
-            }
-        }
-
-        foundDiagnostics.add(new Diagnostic(
-                new org.eclipse.lsp4j.Range(
-                        new Position(error.range().startLine - 1, error.range().start),
-                        new Position(error.range().endLine - 1, error.range().end)),
-                text.toString(),
-                isWarning ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error,
-                null));
-
-        System.out.println(error.toStdOutString(content, isWarning));
-    }
-
-    public void errorDetected(TypeError astNodeError, Stmt stmt) {
-        Range range = parser.getRangeForAstNode(astNodeError.getAstNode());
-        if (range == null) {
-            range = parser.getRangeForAstNode(stmt);
-        }
-        this.errorDetected(astNodeError.toError(range));
+        return new Diagnostic(
+                new org.eclipse.lsp4j.Range(start, end),
+                diagnostic.error().toString(),
+                diagnostic.isError() ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning,
+                null);
     }
 
     /**
