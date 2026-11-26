@@ -69,7 +69,8 @@ public class MRCATile extends GeneratorTile<RealScalar<NonNegativeReal>, BeastXS
 
         return new BeastXStatisticRealScalar<>(
                 statistic,
-                NonNegativeReal.INSTANCE
+                NonNegativeReal.INSTANCE,
+                beastState.treePriorDistributions.containsKey(tree)
         );
     }
 }
