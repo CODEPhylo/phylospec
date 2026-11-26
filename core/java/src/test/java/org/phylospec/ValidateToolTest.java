@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -16,6 +17,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.phylospec.components.ComponentResolver;
+import org.phylospec.components.EngineSpecificationSchema;
 import org.phylospec.errors.Diagnostic;
 import org.phylospec.workspace.Workspace;
 
@@ -27,7 +29,7 @@ public class ValidateToolTest {
 
     private List<Diagnostic> validate(String source) throws IOException {
         ComponentResolver resolver = new ComponentResolver(ComponentResolver.loadCoreComponentLibraries());
-        return new Validator(resolver, new Workspace()).validate(source);
+        return new Validator(resolver, new Workspace()).validate(source).diagnostics();
     }
 
     /** Runs the validate tool and returns its exit code, stdout and stderr. */
@@ -52,6 +54,35 @@ public class ValidateToolTest {
     @Test
     public void validModelHasNoDiagnostics() throws IOException {
         assertTrue(validate("Real x ~ Normal(mean=0, sd=1)\n").isEmpty());
+    }
+
+    @Test
+    public void unsupportedGeneratorsAreWarningsWhenAnEngineIsGiven() throws IOException {
+        EngineSpecificationSchema engine;
+        try (InputStream stream = getClass().getResourceAsStream("/test-engine-specification.json")) {
+            engine = MAPPER.readValue(stream, EngineSpecificationSchema.class);
+        }
+        ComponentResolver resolver = new ComponentResolver(ComponentResolver.loadCoreComponentLibraries());
+
+        // the test engine does not implement Normal
+        Validator.Result result =
+                new Validator(resolver, new Workspace(), List.of(engine)).validate("Real x ~ Normal(mean=0, sd=1)\n");
+
+        assertEquals(1, result.diagnostics().size());
+        assertFalse(result.diagnostics().getFirst().isError());
+        assertEquals(1, result.diagnostics().getFirst().line());
+    }
+
+    @Test
+    public void resultKeepsTheAnalysisForEditorFeatures() throws IOException {
+        ComponentResolver resolver = new ComponentResolver(ComponentResolver.loadCoreComponentLibraries());
+        Validator.Result result =
+                new Validator(resolver, new Workspace()).validate("Real x ~ Normal(mean=0, sd=1)\nReal y = x * 2\n");
+
+        assertEquals(2, result.statements().size());
+        assertFalse(result.tokens().isEmpty());
+        assertFalse(result.typeResolver().resolveVariable("y").isEmpty());
+        assertTrue(result.parser().getRangeForAstNode(result.statements().getFirst()) != null);
     }
 
     @Test
@@ -134,5 +165,50 @@ public class ValidateToolTest {
     public void missingArgumentIsAUsageError() {
         assertEquals(2, run("validate", "--json").exitCode());
         assertEquals(2, run("validate", "--unknown", "model.phylospec").exitCode());
+        assertEquals(2, run("validate", "model.phylospec", "--engine").exitCode());
+    }
+
+    private static final String TEST_ENGINE = "src/test/resources/test-engine-specification.json";
+
+    @Test
+    public void engineFlagReportsUnsupportedGeneratorsAsWarnings() throws IOException {
+        // the test engine does not implement Normal
+        Path file = writeModel("Real x ~ Normal(mean=0, sd=1)\n");
+
+        Run run = run("validate", "--json", "--engine", TEST_ENGINE, file.toString());
+        JsonNode report = MAPPER.readTree(run.out());
+
+        assertEquals(0, run.exitCode());
+        assertTrue(report.get("valid").asBoolean());
+        assertEquals(1, report.get("warningCount").asInt());
+        assertEquals("warning", report.get("diagnostics").get(0).get("severity").asText());
+        assertEquals(1, report.get("engines").size());
+    }
+
+    @Test
+    public void withoutEngineFlagNoEngineWarnings() throws IOException {
+        Path file = writeModel("Real x ~ Normal(mean=0, sd=1)\n");
+
+        JsonNode report =
+                MAPPER.readTree(run("validate", "--json", file.toString()).out());
+
+        assertEquals(0, report.get("warningCount").asInt());
+        assertEquals(0, report.get("engines").size());
+    }
+
+    @Test
+    public void unreadableEngineSpecificationIsAUsageError() throws IOException {
+        Path file = writeModel("Real x ~ Normal(mean=0, sd=1)\n");
+
+        Run run = run(
+                "validate",
+                "--json",
+                "--engine",
+                tempDir.resolve("missing.json").toString(),
+                file.toString());
+
+        assertEquals(2, run.exitCode());
+        assertTrue(run.out().isEmpty());
+        assertTrue(run.err().contains("missing.json"));
     }
 }
