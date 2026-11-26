@@ -28,7 +28,7 @@ import java.util.List;
 public final class OperatorBuilder {
 
     public List<MCMCOperator> build(BeastXState state) {
-        return selected(state).stream().map(this::build).toList();
+        return selected(state).stream().map(spec -> build(state, spec)).toList();
     }
 
     public List<String> summarize(BeastXState state) {
@@ -41,7 +41,7 @@ public final class OperatorBuilder {
                 .toList();
     }
 
-    private MCMCOperator build(OperatorSpec spec) {
+    private MCMCOperator build(BeastXState state, OperatorSpec spec) {
         return switch (spec.family()) {
             case SCALE -> new ScaleOperator(
                     spec.parameter(), spec.tuning(), AdaptationMode.DEFAULT, spec.weight());
@@ -60,7 +60,7 @@ public final class OperatorBuilder {
             case INTEGER_UNIFORM -> uniformIntegerOperator(spec);
             case BIT_FLIP -> new BitFlipOperator(spec.parameter(), spec.weight(), false);
             case TREE_NODE_HEIGHT_SCALE -> nodeHeightScaleOperator(spec);
-            case TREE_ROOT_SCALE -> rootScaleOperator(spec);
+            case TREE_ROOT_SCALE -> rootScaleOperator(state, spec);
             case TREE_UNIFORM_HEIGHT ->
                     new UniformNodeHeightOperator(spec.tree(), spec.weight());
             case TREE_RANDOM_WALK_HEIGHT -> new RandomWalkNodeHeightOperator(
@@ -115,10 +115,10 @@ public final class OperatorBuilder {
                 false);
     }
 
-    private ScaleOperator rootScaleOperator(OperatorSpec spec) {
+    private ScaleOperator rootScaleOperator(BeastXState state, OperatorSpec spec) {
         DefaultTreeModel tree = defaultTree(spec);
         Parameter rootHeight = tree.getRootHeightParameter();
-        rootHeight.setId(tree.getId() + ".rootHeight");
+        rootHeight.setId(state.rootHeightId(tree));
         return new ScaleOperator(
                 rootHeight, spec.tuning(), AdaptationMode.DEFAULT, spec.weight());
     }

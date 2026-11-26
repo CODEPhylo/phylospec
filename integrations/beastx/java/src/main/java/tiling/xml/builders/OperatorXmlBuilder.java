@@ -15,11 +15,11 @@ public final class OperatorXmlBuilder {
     public List<XmlElement> buildOperators(BeastXState state) {
         return new OperatorSelector().select(state).stream()
                 .filter(spec -> spec.weight() > 0.0)
-                .map(this::build)
+                .map(spec -> build(state, spec))
                 .toList();
     }
 
-    private XmlElement build(OperatorSpec spec) {
+    private XmlElement build(BeastXState state, OperatorSpec spec) {
         return switch (spec.family()) {
             case SCALE -> parameterOperator(
                     "scaleOperator", spec, "scale",
@@ -50,7 +50,7 @@ public final class OperatorXmlBuilder {
                     .withAttribute("weight", format(spec.weight()))
                     .withChild(parameterReference(spec.parameter()));
             case TREE_NODE_HEIGHT_SCALE -> nodeHeightScaleOperator(spec);
-            case TREE_ROOT_SCALE -> rootScaleOperator(spec);
+            case TREE_ROOT_SCALE -> rootScaleOperator(state, spec);
             case TREE_UNIFORM_HEIGHT -> treeOperator(
                     "nodeHeightOperator", spec, "uniformNodeHeight")
                     .withAttribute("type", "uniform");
@@ -99,13 +99,13 @@ public final class OperatorXmlBuilder {
                         "parameter", treeId + ".allInternalNodeHeights"));
     }
 
-    private XmlElement rootScaleOperator(OperatorSpec spec) {
+    private XmlElement rootScaleOperator(BeastXState state, OperatorSpec spec) {
         String treeId = treeId(spec.tree());
         return XmlElement.element("scaleOperator")
                 .withId(treeId + "_rootScale")
                 .withAttribute("scaleFactor", format(spec.tuning()))
                 .withAttribute("weight", format(spec.weight()))
-                .withChild(XmlElement.ref("parameter", treeId + ".rootHeight"));
+                .withChild(XmlElement.ref("parameter", state.rootHeightId(spec.tree())));
     }
 
     private XmlElement treeOperator(String element, OperatorSpec spec, String suffix) {

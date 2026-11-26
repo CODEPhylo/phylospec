@@ -5,6 +5,7 @@ import dr.inference.model.DefaultModel;
 import dr.inference.model.DummyLikelihood;
 import dr.inference.model.Likelihood;
 import dr.inference.model.Parameter;
+import tiles.trees.RootAge;
 import tiling.model.BeastXPhyloCTMCLikelihoodSpec;
 
 import java.util.ArrayList;
@@ -58,6 +59,8 @@ public class BeastXModel {
 
         CompoundLikelihood posterior =
                 buildPosterior(beastState, prior, likelihood);
+
+        RootAge.requireSampledRootAgesUsedOnlyAsRootAge(beastState, posterior.getModel());
 
         return new BeastXModel(
                 beastState,

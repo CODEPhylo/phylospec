@@ -823,9 +823,10 @@ public class TreePriorXmlBuilder {
         return rootHeight + Math.max(1.0, rootHeight * 0.25);
     }
 
-    /** Conditioned on a fixed rootAge (see tiles.trees.RootAge). */
+    /** Conditioned on a fixed or sampled rootAge (see tiles.trees.RootAge). */
     private static boolean isRootConditioned(BeastXState state, AbstractModelLikelihood treePrior) {
-        return state.rootConditionedTrees.contains(treeModelForPrior(state, treePrior));
+        TreeModel tree = treeModelForPrior(state, treePrior);
+        return state.rootConditionedTrees.contains(tree) || state.sampledRootAges.containsKey(tree);
     }
 
     private static TreeModel treeModelForPrior(
