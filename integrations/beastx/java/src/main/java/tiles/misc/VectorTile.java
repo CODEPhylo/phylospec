@@ -6,6 +6,7 @@ import org.phylospec.domain.Real;
 import org.phylospec.domain.UnitInterval;
 import org.phylospec.tiling.TypeToken;
 import org.phylospec.tiling.errors.FailedTilingAttempt;
+import org.phylospec.tiling.errors.InconsistentTilingException;
 import org.phylospec.tiling.tiles.AstNodeTile;
 import org.phylospec.tiling.tiles.Tile;
 import org.phylospec.typeresolver.Stochasticity;
@@ -14,6 +15,7 @@ import org.phylospec.typeresolver.VariableResolver;
 import org.phylospec.types.RealScalar;
 import org.phylospec.types.RealVector;
 import tiling.BeastXState;
+import tiling.WiredInputs;
 import tiling.params.BeastXParam;
 import tiling.params.BeastXRealVectorParam;
 import tiling.params.BeastXSimplexParam;
@@ -303,6 +305,13 @@ public class VectorTile<T> extends AstNodeTile<T, Expr.Array, BeastXState> {
         }
 
         return tiles;
+    }
+
+    @Override
+    public Map<AstNode, Tile<?, ?>> getWiredUpInputs() throws InconsistentTilingException {
+        return this.singleElementTile == null
+                ? super.getWiredUpInputs()
+                : WiredInputs.of(List.of(this.singleElementTile));
     }
 
     @Override
